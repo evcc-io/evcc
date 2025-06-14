@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -127,6 +128,13 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	))
 
 	// site api
+	smartCostLimit := func(lp loadpoint.API, limit *float64) {
+		lp.SetSmartCostLimit(limit)
+	}
+	smartFeedinLimit := func(lp loadpoint.API, limit *float64) {
+		lp.SetSmartFeedinLimit(limit)
+	}
+
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
@@ -138,8 +146,10 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"batterymodedelete":       {"DELETE", "/batterymode", updateBatteryMode(site)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
-		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site)},
+		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
+		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
+		"smartfeedin":             {"POST", "/smartfeedinlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartFeedinLimit)},
+		"smartfeedindelete":       {"DELETE", "/smartfeedinlimit", updateSmartCostLimit(site, smartFeedinLimit)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
@@ -198,6 +208,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"disableDelay":         {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
 			"smartCost":            {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"smartCostDelete":      {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartFeedin":          {"POST", "/smartfeedinlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedinLimit), lp.GetSmartFeedinLimit)},
+			"smartFeedinDelete":    {"DELETE", "/smartfeedinlimit", floatPtrHandler(pass(lp.SetSmartFeedinLimit), lp.GetSmartFeedinLimit)},
 			"priority":             {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":         {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 		}

@@ -548,6 +548,20 @@ func (mr *MockAPIMockRecorder) GetSmartCostLimit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartCostLimit))
 }
 
+// GetSmartFeedinLimit mocks base method.
+func (m *MockAPI) GetSmartFeedinLimit() *float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSmartFeedinLimit")
+	ret0, _ := ret[0].(*float64)
+	return ret0
+}
+
+// GetSmartFeedinLimit indicates an expected call of GetSmartFeedinLimit.
+func (mr *MockAPIMockRecorder) GetSmartFeedinLimit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartFeedinLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartFeedinLimit))
+}
+
 // GetSocConfig mocks base method.
 func (m *MockAPI) GetSocConfig() SocConfig {
 	m.ctrl.T.Helper()
@@ -906,6 +920,18 @@ func (m *MockAPI) SetSmartCostLimit(limit *float64) {
 func (mr *MockAPIMockRecorder) SetSmartCostLimit(limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartCostLimit), limit)
+}
+
+// SetSmartFeedinLimit mocks base method.
+func (m *MockAPI) SetSmartFeedinLimit(limit *float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetSmartFeedinLimit", limit)
+}
+
+// SetSmartFeedinLimit indicates an expected call of SetSmartFeedinLimit.
+func (mr *MockAPIMockRecorder) SetSmartFeedinLimit(limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartFeedinLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartFeedinLimit), limit)
 }
 
 // SetSocConfig mocks base method.
