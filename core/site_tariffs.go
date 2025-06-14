@@ -174,10 +174,10 @@ func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
 	return site.GetTariff(usage).Type() != api.TariffTypePriceStatic
 }
 
-func rateAt(rates api.Rates, t time.Time) (api.Rate, error) {
-	rate, err := rates.At(time.Now())
+func rateAt(rates api.Rates, now time.Time) (api.Rate, error) {
+	rate, err := rates.At(now)
 	if len(rates) > 0 && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
+		msg := fmt.Sprintf("no matching rate for: %s", now.Format(time.RFC3339))
 		if len(rates) > 0 {
 			msg += fmt.Sprintf(", %d rates (%s to %s)", len(rates),
 				rates[0].Start.Local().Format(time.RFC3339),
