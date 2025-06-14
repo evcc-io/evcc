@@ -24,7 +24,7 @@ params:
   - name: capacity
     advanced: true
   - name: dischargepower
-    default: -4000
+    default: 4000
 render: |
   type: custom
   power:
@@ -68,7 +68,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: {{ .dischargepower }} # W
+            value: {{ if lt .dischargepower 0 }}{{ .dischargepower }}{{ else }}{{ mul -1 .dischargepower }}{{ end }} # W
             set:
               source: modbus
               uri: {{ .host }}:{{ .port }}
