@@ -60,8 +60,6 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
-  capacity: {{ .capacity }} # kWh
-  {{- end }}
   batterymode:
       source: switch
       switch:
@@ -93,3 +91,5 @@ render: |
                 address: 1074  # discharge power
                 type: writeholding
                 decode: int16
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
