@@ -45,7 +45,7 @@ export default defineComponent({
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		limitEnergy: { type: Number, required: true },
+		limitEnergy: { type: Number, default: 0 },
 		socPerKwh: Number,
 		chargedEnergy: { type: Number, required: true },
 		capacity: Number,
