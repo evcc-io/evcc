@@ -5,7 +5,7 @@ import {
   expectModalVisible,
   expectModalHidden,
   editorClear,
-  editorType,
+  editorPaste,
 } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
@@ -86,22 +86,21 @@ test.describe("circuit", async () => {
 
     const editor = circuitsModal.getByTestId("yaml-editor");
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "- name: main",
-      "  meter: db:1",
-      "maxcurrent: 16",
-      "Shift+Tab",
-      "- name: house",
-      "  title: House",
-      "maxcurrent: 10",
-      "parent: main",
-      "Shift+Tab",
-      "- name: garage",
-      "  title: Garage",
-      "maxcurrent: 8",
-      "parent: main",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `- name: main
+  meter: db:1
+  maxcurrent: 16
+- name: house
+  title: House
+  maxcurrent: 10
+  parent: main
+- name: garage
+  title: Garage
+  maxcurrent: 8
+  parent: main`
+    );
 
     await circuitsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitsModal);
