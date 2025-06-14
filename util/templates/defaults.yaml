@@ -354,9 +354,6 @@ params:
   - name: refreshtoken
     description:
       generic: Refresh token
-  - name: server
-    description:
-      generic: Server
   - name: serial
     description:
       en: Serial
