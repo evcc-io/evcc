@@ -42,7 +42,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // measurement is used as slice element for publishing structured data
@@ -114,6 +114,9 @@ type Site struct {
 	batteryMode              api.BatteryMode // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time       // Battery mode timer for external control
+
+	smartFeedinDisableLimit  *float64 // Feed-in limit
+	smartFeedinDisableActive bool     // Feed-in limit active
 }
 
 // MetersConfig contains the site's meter configuration
@@ -158,6 +161,16 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
 			telemetry.Persist(log)
+		})
+	}
+
+	if site.smartFeedinDisableAvailable() {
+		shutdown.Register(func() {
+			if site.SmartFeedinDisableActive() {
+				if err := site.setFeedinDisable(false); err != nil {
+					site.log.ERROR.Printf("smart feed-in disable: %v", err)
+				}
+			}
 		})
 	}
 
@@ -878,13 +891,18 @@ func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
 	// smart cost and battery mode handling
-	rates, err := site.plannerRates()
+	consumption, err := site.tariffRates(api.TariffUsagePlanner)
 	if err != nil {
 		site.log.WARN.Println("planner:", err)
 	}
 
+	feedin, err := site.tariffRates(api.TariffUsageFeedIn)
+	if err != nil {
+		site.log.WARN.Println("feed-in:", err)
+	}
+
 	// update loadpoints
-	totalChargePower := site.updateLoadpoints(rates)
+	totalChargePower := site.updateLoadpoints(consumption)
 
 	// update all circuits' power and currents
 	if site.circuit != nil {
@@ -901,22 +919,25 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	rate, err := rates.At(time.Now())
-	if rates != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(rates) > 0 {
-			msg += fmt.Sprintf(", %d rates (%s to %s)", len(rates),
-				rates[0].Start.Local().Format(time.RFC3339),
-				rates[len(rates)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
+	rate, err := rateAt(consumption, time.Now())
+	if err != nil {
+		site.log.WARN.Printf("planner: %v", err)
 	}
 
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
+
+	// smart feed-in disable
+	if site.smartFeedinDisableAvailable() {
+		if feedinRate, err := rateAt(feedin, time.Now()); err == nil {
+			if err := site.UpdateSmartFeedinDisable(feedinRate); err != nil {
+				site.log.WARN.Printf("set feed-in limit: %v", err)
+			}
+		} else {
+			site.log.WARN.Printf("feed-in: %v", err)
+		}
+	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
@@ -930,8 +951,9 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
+		// TODO
 		lp.Update(
-			sitePower, max(0, site.batteryPower), rates, batteryBuffered, batteryStart,
+			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 		)
 
@@ -969,6 +991,8 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
+	site.publish(keys.SmartFeedinDisableAvailable, site.smartFeedinDisableAvailable())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {
