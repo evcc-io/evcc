@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, editorClear, editorType } from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
 const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
@@ -436,18 +436,25 @@ test.describe("loadpoint", async () => {
     await expect(editor).toContainText("status: # charger status [A..F]");
 
     await editorClear(editor, 10);
-    await editorType(editor, [
-      // prettier-ignore
-      "status:\n  source: const\nvalue: 'C'",
-      "Shift+Tab",
-      "enabled:\n  source: const\nvalue: true",
-      "Shift+Tab",
-      "enable:\n  source: js\nscript: console.log(enable)",
-      "Shift+Tab",
-      "maxcurrent:\n  source: js\nscript: console.log(maxcurrent)",
-      "Shift+Tab",
-      "power:\n  source: const\nvalue: 11000",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `status:
+  source: const
+  value: 'C'
+enabled:
+  source: const
+  value: true
+enable:
+  source: js
+  script: console.log(enable)
+maxcurrent:
+  source: js
+  script: console.log(maxcurrent)
+power:
+  source: const
+  value: 11000`
+    );
 
     const restResult = chargerModal.getByTestId("test-result");
     await expect(restResult).toContainText("Status: unknown");
