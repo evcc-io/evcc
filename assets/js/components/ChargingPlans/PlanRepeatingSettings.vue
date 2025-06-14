@@ -189,6 +189,7 @@ export default defineComponent({
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
+		paused: Boolean,
 		showPrecondition: Boolean,
 	},
 	emits: ["updated", "removed"],
@@ -199,6 +200,7 @@ export default defineComponent({
 			selectedSoc: this.soc,
 			selectedActive: this.active,
 			selectedPrecondition: this.precondition,
+			selectedPaused: this.paused,
 		};
 	},
 	computed: {
@@ -208,7 +210,8 @@ export default defineComponent({
 				this.time !== this.selectedTime ||
 				this.soc !== this.selectedSoc ||
 				this.active !== this.selectedActive ||
-				this.precondition !== this.selectedPrecondition
+				this.precondition !== this.selectedPrecondition ||
+				this.paused !== this.selectedPaused
 			);
 		},
 		showApply(): boolean {
@@ -245,6 +248,9 @@ export default defineComponent({
 		precondition(newValue: number) {
 			this.selectedPrecondition = newValue;
 		},
+		paused(newValue: boolean) {
+			this.selectedPaused = newValue;
+		},
 	},
 	methods: {
 		id(): number {
@@ -269,6 +275,7 @@ export default defineComponent({
 				tz: this.tz,
 				active: this.selectedActive,
 				precondition: this.selectedPrecondition,
+				paused: this.selectedPaused,
 			};
 
 			if (forceSave || !this.selectedActive) {
@@ -285,5 +292,10 @@ export default defineComponent({
 .plan-id {
 	width: 2.5rem;
 	color: var(--evcc-gray);
+}
+
+.icon-size {
+	height: 24px;
+	width: 24px;
 }
 </style>

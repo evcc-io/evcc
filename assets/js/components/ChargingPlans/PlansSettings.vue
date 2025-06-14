@@ -26,6 +26,20 @@
 						</h5>
 					</div>
 
+					<div class="d-flex justify-content-between align-items-center">
+						<button
+							v-if="hasPausedPlans"
+							class="btn btn-link"
+							:class="{ 'text-warning': resumeAll }"
+							data-testid="resume-all-plans"
+							@click="resumeAll"
+						>
+							<PausePlanIcon v-if="!hasPausedPlans" class="icon-size" />
+							<PlayPlanIcon v-else class="icon-size" />
+							<span class="ms-2">{{ $t(`main.chargingPlan.resumeAll`) }}</span>
+						</button>
+					</div>
+
 					<ChargingPlansRepeatingSettings
 						:id="id"
 						:rangePerSoc="rangePerSoc"
@@ -61,7 +75,7 @@
 				</span>
 			</div>
 		</h5>
-		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
+		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" @pause-plan="pausePlan" />
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 	</div>
 </template>
@@ -75,6 +89,8 @@ import Warnings from "./Warnings.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import api from "@/api";
+import PausePlanIcon from "../MaterialIcon/PausePlan.vue";
+import PlayPlanIcon from "../MaterialIcon/PlayPlan.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "@/utils/deepEqual";
 import convertRates from "@/utils/convertRates";
@@ -97,6 +113,8 @@ export default defineComponent({
 		ChargingPlansRepeatingSettings: RepeatingSettings,
 		ChargingPlanWarnings: Warnings,
 		CustomSelect,
+		PausePlanIcon,
+		PlayPlanIcon,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -150,8 +168,9 @@ export default defineComponent({
 			const { duration, plan, power, planTime } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
+			const canPause = !this.noActivePlan && !this.alreadyReached && !this.plan.paused;
 			return rates
-				? { duration, plan, power, rates, targetTime, currency, smartCostType }
+				? { duration, plan, power, rates, targetTime, currency, smartCostType, canPause }
 				: null;
 		},
 		previewPlanOptions(): SelectOption<number>[] {
@@ -184,6 +203,12 @@ export default defineComponent({
 			const values = new Set(slots.map(({ value }) => value));
 			return values.size > 1;
 		},
+		allPlansPaused(): boolean {
+			return this.repeatingPlans.every((plan) => plan.paused);
+		},
+		hasPausedPlans(): boolean {
+			return this.repeatingPlans.some((plan) => plan.paused);
+		},
 	},
 	watch: {
 		effectivePlanTime(newValue: string) {
@@ -213,6 +238,17 @@ export default defineComponent({
 		this.updatePlanDebounced();
 	},
 	methods: {
+		pausePlan(): void {
+			this.plan.paused = true;
+			if (this.plan.planId < 2) {
+				this.removeStaticPlan(0);
+			} else {
+				const updatedPlans = [...this.repeatingPlans];
+				updatedPlans[this.plan.planId - 2].paused = true;
+				this.updateRepeatingPlans(updatedPlans);
+			}
+			this.updatePlanDebounced();
+		},
 		selectPreviewPlan(id: number): void {
 			this.selectedPreviewId = id;
 			this.updatePlanDebounced();
@@ -247,7 +283,7 @@ export default defineComponent({
 			);
 		},
 		async fetchRepeatingPreview(
-			plan: PartialBy<RepeatingPlan, "active">
+			plan: PartialBy<RepeatingPlan, "active" | "paused" | "pausedUntil">
 		): Promise<PlanResponse | undefined> {
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/repeating/preview/${plan.soc}/${plan.weekdays}/${plan.time}/${encodeURIComponent(plan.tz)}`
@@ -356,6 +392,15 @@ export default defineComponent({
 			this.staticPlanPreview = plan;
 			this.updatePlanPreviewDebounced();
 		},
+		resumeAll(): void {
+			// Update all repeating plans
+			const updatedRepeatingPlans = this.repeatingPlans.map((plan) => ({
+				...plan,
+				paused: false,
+				pausedUntil: undefined,
+			}));
+			this.updateRepeatingPlans(updatedRepeatingPlans);
+		},
 	},
 });
 </script>
@@ -376,5 +421,10 @@ h5 .inner {
 	color: var(--evcc-gray);
 	text-transform: uppercase;
 	text-align: center;
+}
+
+.icon-size {
+	height: 24px;
+	width: 24px;
 }
 </style>

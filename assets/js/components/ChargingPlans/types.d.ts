@@ -6,6 +6,8 @@ export interface RepeatingPlan {
 	tz: string; // timezone like "Europe/Berlin"
 	soc: number;
 	active: boolean;
+	paused: boolean;
+	pausedUntil?: Date;
 	precondition: number;
 }
 
@@ -15,6 +17,9 @@ export interface PlanWrapper {
 	duration: number;
 	plan: Rate[];
 	power: number;
+	active?: boolean;
+	paused: boolean;
+	pausedUntil?: Date;
 }
 
 export interface PlanResponse {

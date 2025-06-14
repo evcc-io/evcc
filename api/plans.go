@@ -7,4 +7,6 @@ type RepeatingPlanStruct struct {
 	Soc          int    `json:"soc"`          // target soc
 	Precondition int64  `json:"precondition"` // precondition duration in seconds
 	Active       bool   `json:"active"`       // active flag
+	Paused       bool   `json:"paused"`       // paused flag
+	PausedUntil  string `json:"pausedUntil"`  // paused until timestamp
 }

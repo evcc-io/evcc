@@ -70,7 +70,7 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, _, soc, _ := lp.nextVehiclePlan()
+		_, _, soc, _, _, _ := lp.nextVehiclePlan()
 		return float64(soc), true
 	}
 
@@ -84,7 +84,7 @@ func (lp *Loadpoint) GetPlanPreCondDuration() time.Duration {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, precondition, _, _ := lp.nextVehiclePlan()
+		_, precondition, _, _, _, _ := lp.nextVehiclePlan()
 		return precondition
 	}
 

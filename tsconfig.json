@@ -12,6 +12,7 @@
     "composite": true,
     "allowJs": true,
     "baseUrl": ".",
+    "moduleResolution": "node",
     "paths": {
       "@/*": ["assets/js/*"]
     },

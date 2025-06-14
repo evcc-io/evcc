@@ -37,6 +37,8 @@ type plan struct {
 	End          time.Time // user-selected finish time
 	Precondition time.Duration
 	Soc          int
+	Paused       bool      // paused state
+	PausedUntil  time.Time // paused until time, if paused
 }
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
@@ -59,15 +61,15 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	return nil
 }
 
-// NextVehiclePlan returns the next vehicle plan time, soc and id
-func (lp *Loadpoint) NextVehiclePlan() (time.Time, time.Duration, int, int) {
+// NextVehiclePlan returns the next vehicle plan time, soc, id and paused state
+func (lp *Loadpoint) NextVehiclePlan() (time.Time, time.Duration, int, int, bool, time.Time) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.nextVehiclePlan()
 }
 
-// nextVehiclePlan returns the next vehicle plan time, precondition duration, soc and id
-func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
+// nextVehiclePlan returns the next vehicle plan time, precondition duration, soc, id and paused state
+func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int, bool, time.Time) {
 	if v := lp.GetVehicle(); v != nil {
 		var plans []plan
 
@@ -82,34 +84,58 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 				continue
 			}
 
-			planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
+			loc, err := time.LoadLocation(rp.Tz)
+			if err != nil {
+				lp.log.DEBUG.Printf("invalid timezone: %v", err)
+				continue
+			}
+
+			planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz, time.Now().In(loc))
 			if err != nil {
 				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
 				continue
 			}
 
+			var pausedUntil time.Time = time.Time{}
+
+			if rp.Paused {
+				pausedUntil, err = time.ParseInLocation(time.RFC3339, rp.PausedUntil, loc)
+				if err != nil {
+					lp.log.DEBUG.Printf("invalid pausedUntil: pausedUntil=%s", rp.PausedUntil)
+					continue
+				}
+
+				if pausedUntil.After(time.Now().In(loc)) {
+					planTime, err = util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz, pausedUntil)
+					if err != nil {
+						lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
+						continue
+					}
+				}
+			}
+
 			precondition := time.Duration(rp.Precondition) * time.Second
-			plans = append(plans, plan{Id: index + 2, Precondition: precondition, Soc: rp.Soc, End: planTime})
+			plans = append(plans, plan{Id: index + 2, Precondition: precondition, Soc: rp.Soc, End: planTime, Paused: rp.Paused, PausedUntil: pausedUntil})
 		}
 
 		// calculate earliest required plan start
 		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), plans); plan != nil {
-			return plan.End, plan.Precondition, plan.Soc, plan.Id
+			return plan.End, plan.Precondition, plan.Soc, plan.Id, plan.Paused, plan.PausedUntil
 		}
 	}
-	return time.Time{}, 0, 0, 0
+	return time.Time{}, 0, 0, 0, false, time.Time{}
 }
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, _, soc, _ := lp.NextVehiclePlan()
+	_, _, soc, _, _, _ := lp.NextVehiclePlan()
 	return soc
 }
 
 // EffectivePlanId returns the id for the current plan
 func (lp *Loadpoint) EffectivePlanId() int {
 	if lp.socBasedPlanning() {
-		_, _, _, id := lp.NextVehiclePlan()
+		_, _, _, id, _, _ := lp.NextVehiclePlan()
 		return id
 	}
 	if lp.planEnergy > 0 {
@@ -122,12 +148,31 @@ func (lp *Loadpoint) EffectivePlanId() int {
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if lp.socBasedPlanning() {
-		ts, _, _, _ := lp.NextVehiclePlan()
+		ts, _, _, _, _, _ := lp.NextVehiclePlan()
 		return ts
 	}
 
 	ts, _, _ := lp.GetPlanEnergy()
 	return ts
+}
+
+func (lp *Loadpoint) IsEffectivelyPaused() bool {
+	if lp.socBasedPlanning() {
+		_, _, _, _, paused, _ := lp.NextVehiclePlan()
+		return paused
+	}
+
+	return false
+}
+
+// GetEffectivePausedUntil returns the effective paused until time
+func (lp *Loadpoint) GetEffectivePausedUntil() time.Time {
+	if lp.socBasedPlanning() {
+		_, _, _, _, _, pausedUntil := lp.NextVehiclePlan()
+		return pausedUntil
+	}
+
+	return time.Time{}
 }
 
 // SocBasedPlanning returns true if soc based planning is enabled

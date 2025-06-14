@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// GetNextOccurrence returns the next occurrence of the given time on the specified weekdays.
-func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, error) {
+// GetNextOccurrence returns the next occurrence of the given time on the specified weekdays, as of a certain comparing timestamp.
+func GetNextOccurrence(weekdays []int, timeStr string, tz string, compTime time.Time) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid timezone: %w", err)
@@ -19,15 +19,13 @@ func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, er
 
 	hour, minute := parsedTime.Hour(), parsedTime.Minute()
 
-	now := time.Now().In(loc)
-
 	target := time.Date(
-		now.Year(), now.Month(), now.Day(),
+		compTime.Year(), compTime.Month(), compTime.Day(),
 		hour, minute, 0, 0, loc,
 	)
 
 	// If the target time has passed today, start from tomorrow
-	if target.Before(now) {
+	if !target.After(compTime) {
 		target = target.AddDate(0, 0, 1)
 	}
 
