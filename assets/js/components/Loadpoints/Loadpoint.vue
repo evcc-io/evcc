@@ -100,7 +100,7 @@ import VehicleComponent from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.js";
 import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
@@ -108,7 +108,14 @@ import SessionInfo from "./SessionInfo.vue";
 import smartCostAvailable from "@/utils/smartCostAvailable";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
-import type { CHARGE_MODE, PHASES, Timeout, Vehicle, Forecast } from "@/types/evcc";
+import type {
+	CHARGE_MODE,
+	PHASES,
+	Timeout,
+	Vehicle,
+	Forecast,
+	SMART_COST_TYPE,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -199,7 +206,7 @@ export default defineComponent({
 		pvRemaining: { type: Number, default: 0 },
 		pvAction: String,
 		smartCostLimit: { type: Number, default: null },
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostActive: Boolean,
 		smartCostNextStart: String,
 		tariffGrid: Number,

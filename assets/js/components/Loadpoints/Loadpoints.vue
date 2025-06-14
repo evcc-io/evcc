@@ -61,7 +61,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { LoadpointCompact, Timeout, Vehicle } from "@/types/evcc";
+import type { LoadpointCompact, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -69,7 +69,7 @@ export default defineComponent({
 	props: {
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		vehicles: { type: Array as PropType<Vehicle[]> },
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

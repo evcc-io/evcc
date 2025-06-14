@@ -37,9 +37,8 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import { CO2_TYPE } from "@/units";
 import TariffChart from "../Tariff/TariffChart.vue";
-import type { CURRENCY, Rate, Slot } from "@/types/evcc";
+import { SMART_COST_TYPE, type CURRENCY, type Rate, type Slot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
@@ -50,7 +49,7 @@ export default defineComponent({
 		power: Number,
 		rates: Array as PropType<Rate[]>,
 		plan: Array as PropType<Rate[]>,
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 		targetTime: [Date, null],
 		currency: String as PropType<CURRENCY>,
 	},
@@ -81,7 +80,7 @@ export default defineComponent({
 			return null;
 		},
 		isCo2(): boolean {
-			return this.smartCostType === CO2_TYPE;
+			return this.smartCostType === SMART_COST_TYPE.CO2;
 		},
 		hasTariff(): boolean {
 			return (this.rates?.length || 0) > 1;
