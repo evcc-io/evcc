@@ -12,9 +12,6 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
 render: |
   type: sgready
   getmode:

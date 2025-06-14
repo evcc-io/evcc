@@ -18,8 +18,10 @@ params:
   - name: uri
     required: true
     description:
-      en: ioBroker URL inlcuding ioBroker.simple-api Port
-      de: ioBroker URL einschliesslich ioBroker.simple-api Port
+      generic: ioBroker URL
+    help:
+      en: including ioBroker.simple-api Port
+      de: einschliesslich ioBroker.simple-api Port
   - name: id
     default: 0
     type: int
