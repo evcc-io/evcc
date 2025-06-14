@@ -171,7 +171,8 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
-	return site.GetTariff(usage).Type() != api.TariffTypePriceStatic
+	tariff := site.GetTariff(usage)
+	return tariff != nil && tariff.Type() != api.TariffTypePriceStatic
 }
 
 func rateAt(rates api.Rates, now time.Time) (api.Rate, error) {

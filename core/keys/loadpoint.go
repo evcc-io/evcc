@@ -41,9 +41,10 @@ const (
 	OfferedCurrent = "offeredCurrent" // offered current
 
 	// smart charging
-	SmartCostActive      = "smartCostActive"      // smart cost active
-	SmartCostLimit       = "smartCostLimit"       // smart cost limit
-	SmartCostNextStart   = "smartCostNextStart"   // smart cost next start
+	SmartCostActive    = "smartCostActive"    // smart cost active
+	SmartCostLimit     = "smartCostLimit"     // smart cost limit
+	SmartCostNextStart = "smartCostNextStart" // smart cost next start
+
 	SmartFeedinActive    = "smartFeedinActive"    // smart feed-in active
 	SmartFeedinLimit     = "smartFeedinLimit"     // smart feed-in limit
 	SmartFeedinNextStart = "smartFeedinNextStart" // smart feed-in next start
