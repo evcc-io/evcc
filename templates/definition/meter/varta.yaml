@@ -23,6 +23,8 @@ params:
     default: 502
   - name: capacity
     advanced: true
+  - name: dischargepower
+    default: -4000
 render: |
   type: custom
   power:
@@ -60,3 +62,34 @@ render: |
       decode: int16
   capacity: {{ .capacity }} # kWh
   {{- end }}
+  batterymode:
+      source: switch
+      switch:
+      - case: 1  # normal
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: {{ .dischargepower }} # W
+            set:
+              source: modbus
+              uri: {{ .host }}:{{ .port }}
+              id: 255
+              register:
+                address: 1074  # discharge power
+                type: writeholding
+                decode: int16
+      - case: 2  # hold
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              uri: {{ .host }}:{{ .port }}
+              id: 255
+              register:
+                address: 1074  # discharge power
+                type: writeholding
+                decode: int16
