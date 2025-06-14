@@ -99,6 +99,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		totalEnergy = m.totalEnergy
 	}
 
+	// decorate api.FeedinDisableController
+	var feedinDisableLimitEnable func(bool) error
+	if usage == "pv" {
+		feedinDisableLimitEnable = m.feedinDisableLimitEnable
+	}
+
 	// decorate api.Battery
 	var batterySoc func() (float64, error)
 	var batteryMode func(api.BatteryMode) error
@@ -154,7 +160,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, batteryMode, capacity), nil
+	return decorateRCT(m, totalEnergy, feedinDisableLimitEnable, batterySoc, batteryMode, capacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {
@@ -258,6 +264,15 @@ func (m *RCT) totalEnergy() (float64, error) {
 func (m *RCT) batterySoc() (float64, error) {
 	res, err := m.queryFloat(rct.BatterySoC)
 	return res * 100, err
+}
+
+// feedinDisableLimitEnable implements the api.FeedinDisableController interface
+func (m *RCT) feedinDisableLimitEnable(b bool) error {
+	r := float32(1)
+	if b {
+		r = 0
+	}
+	return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
 }
 
 func (m *RCT) bo() *backoff.ExponentialBackOff {
