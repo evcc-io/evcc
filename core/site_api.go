@@ -394,3 +394,28 @@ func (site *Site) batteryModeWatchdogExpired() bool {
 
 	return false
 }
+
+func (site *Site) GetSmartFeedinDisableLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.smartFeedinDisableLimit
+}
+
+func (site *Site) SetSmartFeedinDisableLimit(val *float64) {
+	site.log.DEBUG.Println("set feed in limit:", printPtr("%.1f", val))
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.smartFeedinDisableLimit, val) {
+		site.smartFeedinDisableLimit = val
+
+		if val == nil {
+			settings.SetString(keys.SmartFeedinDisableLimit, "")
+			site.publish(keys.SmartFeedinDisableLimit, nil)
+		} else {
+			settings.SetFloat(keys.SmartFeedinDisableLimit, *val)
+			site.publish(keys.SmartFeedinDisableLimit, *val)
+		}
+	}
+}

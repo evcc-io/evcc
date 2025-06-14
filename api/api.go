@@ -175,6 +175,16 @@ type SocLimiter interface {
 	GetLimitSoc() (int64, error)
 }
 
+type FeedinDisableController interface {
+	// SetMaxFeedinLimit(float64) error
+	FeedinDisableLimitEnable(bool) error
+}
+
+// type FeedinLimiter interface {
+// 	// GetMaxFeedinLimit() (float64, error)
+// 	FeedinLimitEnabled() (bool, error)
+// }
+
 // ChargeController allows to start/stop the charging session on the vehicle side
 type ChargeController interface {
 	ChargeEnable(bool) error
