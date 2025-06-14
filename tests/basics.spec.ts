@@ -86,7 +86,7 @@ test.describe("network requests", async () => {
   test("no failed requests", async ({ page }) => {
     await page.waitForLoadState("networkidle");
 
-    const failedRequests = [];
+    const failedRequests: string[] = [];
     page.on("requestfailed", (request) => failedRequests.push(request.url()));
 
     await page.reload();

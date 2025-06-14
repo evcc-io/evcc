@@ -1,4 +1,4 @@
-import { expect, Page, Locator } from "@playwright/test";
+import { expect, type Page, type Locator } from "@playwright/test";
 
 export async function enableExperimental(page: Page): Promise<void> {
 	await page.getByTestId("topnavigation-button").click();

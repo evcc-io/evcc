@@ -239,14 +239,28 @@
 	</form>
 </template>
 
-<script>
+<script lang="ts">
 import axios from "axios";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "Simulator",
 	data() {
 		return {
-			state: null,
+			state: null as {
+				site: {
+					grid: { power: number };
+					pv: { power: number; energy: number };
+					battery: { power: number; soc: number };
+				};
+				loadpoints: {
+					power: number;
+					energy: number;
+					enabled: boolean;
+					status: string;
+				}[];
+				vehicles: { soc: number; range: number }[];
+			} | null,
 		};
 	},
 	mounted() {
@@ -262,24 +276,24 @@ export default {
 		},
 		addVehicle() {
 			// push a duplacate of the last entry
-			this.state.vehicles.push({
+			this.state?.vehicles.push({
 				...this.state.vehicles[this.state.vehicles.length - 1],
 			});
 		},
-		removeVehicle(index) {
-			this.state.vehicles.splice(index, 1);
+		removeVehicle(index: number) {
+			this.state?.vehicles.splice(index, 1);
 		},
 		addLoadpoint() {
 			// push a duplacate of the last entry
-			this.state.loadpoints.push({
+			this.state?.loadpoints.push({
 				...this.state.loadpoints[this.state.loadpoints.length - 1],
 			});
 		},
-		removeLoadpoint(index) {
-			this.state.loadpoints.splice(index, 1);
+		removeLoadpoint(index: number) {
+			this.state?.loadpoints.splice(index, 1);
 		},
 	},
-};
+});
 </script>
 
 <style>
