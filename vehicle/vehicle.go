@@ -23,7 +23,7 @@ func init() {
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
-func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		Soc           plugin.Config

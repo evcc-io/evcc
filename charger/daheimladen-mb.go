@@ -59,7 +59,7 @@ func init() {
 }
 
 // NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
-func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}

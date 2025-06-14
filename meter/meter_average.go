@@ -12,7 +12,7 @@ func init() {
 }
 
 // NewMovingAverageFromConfig creates api.Meter from config
-func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Decay float64
 		Meter struct {

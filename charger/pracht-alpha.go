@@ -51,7 +51,7 @@ func init() {
 }
 
 // NewPrachtAlphaFromConfig creates a PrachtAlpha charger from generic config
-func NewPrachtAlphaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPrachtAlphaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`

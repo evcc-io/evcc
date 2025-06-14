@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewRandomFromConfig creates random provider
-func NewRandomFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewRandomFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Set Config
 	}
