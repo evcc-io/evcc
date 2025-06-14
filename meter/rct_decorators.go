@@ -6,64 +6,354 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateRCT(
-	base *RCT,
-	meterEnergy func() (float64, error),
-	zeroFeedin func(bool) error,
-	battery func() (float64, error),
-	batteryController func(api.BatteryMode) error,
-	batteryCapacity func() float64,
-) api.Meter {
-	type composed struct{ *RCT }
-	var result any = &composed{base}
+func decorateRCT(base *RCT, meterEnergy func() (float64, error), zeroFeedin func(bool) error, battery func() (float64, error), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
+	switch {
+	case battery == nil && meterEnergy == nil && zeroFeedin == nil:
+		return base
 
-	if meterEnergy != nil {
-		result = struct {
-			any
+	case battery == nil && meterEnergy != nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
 			api.MeterEnergy
 		}{
-			any:         result,
-			MeterEnergy: &decorateRCTMeterEnergyImpl{meterEnergy},
+			RCT: base,
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
 		}
-	}
-	if zeroFeedin != nil {
-		result = struct {
-			any
+
+	case battery == nil && meterEnergy == nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
 			api.FeedinDisableController
 		}{
-			any:                     result,
-			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{zeroFeedin},
+			RCT: base,
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
 		}
-	}
-	if battery != nil {
-		result = struct {
-			any
+
+	case battery == nil && meterEnergy != nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.MeterEnergy
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
 			api.Battery
 		}{
-			any:    result,
-			Battery: &decorateRCTBatteryImpl{battery},
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
 		}
-	}
-	if batteryController != nil {
-		result = struct {
-			any
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.MeterEnergy
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
 			api.BatteryController
 		}{
-			any:               result,
-			BatteryController: &decorateRCTBatteryControllerImpl{batteryController},
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
 		}
-	}
-	if batteryCapacity != nil {
-		result = struct {
-			any
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryController
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
 			api.BatteryCapacity
 		}{
-			any:             result,
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{batteryCapacity},
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.MeterEnergy
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil && zeroFeedin == nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil && zeroFeedin != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+			api.FeedinDisableController
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateRCTBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			FeedinDisableController: &decorateRCTFeedinDisableControllerImpl{
+				zeroFeedin: zeroFeedin,
+			},
 		}
 	}
 
-	return result.(api.Meter)
+	return nil
 }
 
 type decorateRCTBatteryImpl struct {
