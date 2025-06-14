@@ -164,6 +164,16 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		})
 	}
 
+	if site.smartFeedinDisableAvailable() {
+		shutdown.Register(func() {
+			if site.SmartFeedinDisableActive() {
+				if err := site.setFeedinDisable(false); err != nil {
+					site.log.ERROR.Printf("smart feed-in disable: %v", err)
+				}
+			}
+		})
+	}
+
 	tariff := site.GetTariff(api.TariffUsagePlanner)
 
 	// give loadpoints access to vehicles and database

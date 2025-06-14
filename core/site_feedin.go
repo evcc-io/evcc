@@ -31,7 +31,7 @@ func (site *Site) UpdateSmartFeedinDisable(rate api.Rate) error {
 		return nil
 	}
 
-	err := site.enableSmartFeedinLimit(enable)
+	err := site.setFeedinDisable(enable)
 	if err == nil {
 		site.Lock()
 		site.smartFeedinDisableActive = enable
@@ -42,7 +42,7 @@ func (site *Site) UpdateSmartFeedinDisable(rate api.Rate) error {
 	return err
 }
 
-func (site *Site) enableSmartFeedinLimit(enable bool) error {
+func (site *Site) setFeedinDisable(enable bool) error {
 	for _, dev := range site.pvMeters {
 		meter := dev.Instance()
 
