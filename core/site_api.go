@@ -402,7 +402,7 @@ func (site *Site) GetSmartFeedinDisableLimit() *float64 {
 }
 
 func (site *Site) SetSmartFeedinDisableLimit(val *float64) {
-	site.log.DEBUG.Println("set feed in limit:", printPtr("%.1f", val))
+	site.log.DEBUG.Println("set feed-in disable limit:", printPtr("%.1f", val))
 
 	site.Lock()
 	defer site.Unlock()

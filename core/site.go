@@ -928,12 +928,15 @@ func (site *Site) update(lp updater) {
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
 
-	if feedinRate, err := rateAt(feedin, time.Now()); err == nil {
-		if err := site.UpdateSmartFeedinDisable(feedinRate); err != nil {
-			site.log.WARN.Printf("set feed-in limit: %v", err)
+	// smart feed-in disable
+	if site.smartFeedinDisableAvailable() {
+		if feedinRate, err := rateAt(feedin, time.Now()); err == nil {
+			if err := site.UpdateSmartFeedinDisable(feedinRate); err != nil {
+				site.log.WARN.Printf("set feed-in limit: %v", err)
+			}
+		} else {
+			site.log.WARN.Printf("feed-in: %v", err)
 		}
-	} else {
-		site.log.WARN.Printf("feed-in: %v", err)
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
