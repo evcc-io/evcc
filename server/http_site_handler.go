@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
@@ -174,7 +175,7 @@ func getHandler[T any](get func() T) http.HandlerFunc {
 }
 
 // updateSmartCostLimit sets the smart cost limit globally
-func updateSmartCostLimit(site site.API) http.HandlerFunc {
+func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		var val *float64
@@ -190,7 +191,7 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 		}
 
 		for _, lp := range site.Loadpoints() {
-			lp.SetSmartCostLimit(val)
+			setLimit(lp, val)
 		}
 
 		jsonResult(w, val)

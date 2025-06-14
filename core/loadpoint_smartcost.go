@@ -6,15 +6,24 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func (lp *Loadpoint) smartCostActive(rates api.Rates) bool {
+func (lp *Loadpoint) updateSmartCost(limit *float64, rates api.Rates) (bool, time.Time) {
+	var nextStart time.Time
+
+	active := lp.smartCostActive(limit, rates)
+	if !active {
+		nextStart = lp.smartCostNextStart(limit, rates)
+	}
+
+	return active, nextStart
+}
+
+func (lp *Loadpoint) smartCostActive(limit *float64, rates api.Rates) bool {
 	rate, err := rates.At(time.Now())
-	limit := lp.GetSmartCostLimit()
 	return err == nil && limit != nil && rate.Value <= *limit
 }
 
 // smartCostNextStart returns the next start time for a smart cost rate below the limit
-func (lp *Loadpoint) smartCostNextStart(rates api.Rates) time.Time {
-	limit := lp.GetSmartCostLimit()
+func (lp *Loadpoint) smartCostNextStart(limit *float64, rates api.Rates) time.Time {
 	if limit == nil || rates == nil {
 		return time.Time{}
 	}
