@@ -656,6 +656,16 @@
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
       "solar": "Sonne"
     },
+    "loadpointPrio": {
+      "high": "hoch",
+      "higher": "höher",
+      "low": "niedrig",
+      "lower": "niedriger",
+      "normal": "normal",
+      "prioTooltip": "Das Fahrzeug überschreibt die Ladepunkt Priorität",
+      "veryHigh": "sehr hoch",
+      "veryLow": "sehr niedrig"
+    },
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Schnell aus Hausbatterie laden.",
