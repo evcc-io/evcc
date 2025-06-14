@@ -83,7 +83,7 @@ test.describe("basics", async () => {
 			.selectOption("⌀ Power");
 		await expect(page.getByTestId("sessions-head-avgPower")).toContainText("⌀ PowerkW");
 		await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible();
-		await expect(page.getByTestId("sessions-foot-avgPower")).toHaveText("1:30");
+		await expect(page.getByTestId("sessions-foot-avgPower")).toHaveText("10.0");
 
 		await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 	});
