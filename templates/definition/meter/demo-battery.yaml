@@ -17,7 +17,6 @@ params:
       en: Power
     unit: W
     type: int
-  - name: maxacpower
   - name: soc
     description:
       de: Ladestand
@@ -60,6 +59,7 @@ params:
     unit: A
     type: int
     advanced: true
+  - name: maxacpower # ignored on battery, for e2e test only
 
 render: |
   type: custom
