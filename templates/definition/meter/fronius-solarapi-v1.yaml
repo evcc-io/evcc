@@ -40,8 +40,11 @@ params:
     choice: ["/config", "/api/config"]
     default: /config
     description:
+      en: Battery configuration URI
+      de: Batteriekonfigurations-URI
+    help:
       de: Firmware Versionen ab 1.36.5-1 erfordern /api/config.
-      en: Firmware starting with 1.36.5-1 require /api/config.
+      en: Firmware starting with 1.36.5-1 requires /api/config.
 render: |
   type: custom
   power:

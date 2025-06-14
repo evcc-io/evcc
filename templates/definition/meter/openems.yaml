@@ -20,9 +20,9 @@ params:
     advanced: true
   - name: battery
     example: ess0
-    help:
-      de: steuerbare Batterie Komponente
-      en: controllable battery component
+    description:
+      de: Steuerbare Batterie Komponente
+      en: Controllable battery component
     usages: ["battery"]
     advanced: true
   - name: watchdog
