@@ -25,13 +25,6 @@ params:
     type: int
     advanced: true
   - name: maxchargepower
-    unit: W
-    type: int
-    usages: ["battery"]
-    description:
-      en: Maximum charge power
-      de: Maximale Ladeleistung
-    advanced: true
   - name: currentL1
     description:
       de: L1 Stromstärke
