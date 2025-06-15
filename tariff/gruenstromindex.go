@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/corrently"
 	"github.com/evcc-io/evcc/util"
@@ -85,21 +84,19 @@ func (t *GrünStromIndex) run(startupErr chan<- error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		retries := 0
-		res, err := backoff.Retry(context.Background(),
+		res, err := backoff.RetryNotifyWithData(
 			t.fetchForecast,
-			backoff.WithMaxElapsedTime(59*time.Minute),
-			backoff.WithBackOff(&backoff.ExponentialBackOff{
-				InitialInterval: time.Second,
-				MaxInterval:     10 * time.Minute,
-			}),
-			backoff.WithNotify(func(_ error, _ time.Duration) {
+			backoff.NewExponentialBackOff(
+				backoff.WithMaxElapsedTime(59*time.Minute),
+				backoff.WithInitialInterval(time.Second),
+			),
+			func(_ error, _ time.Duration) {
 				retries++
 				if retries >= 3 {
 					// we are stuck retrying non-permanent errors -> no need to delay startup
 					once.Do(func() { close(startupErr) })
 				}
-			},
-			))
+			})
 
 		if err == nil && res.Err {
 			if s, ok := res.Message.(string); ok {
