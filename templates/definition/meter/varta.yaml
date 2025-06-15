@@ -23,7 +23,8 @@ params:
     default: 502
   - name: capacity
     advanced: true
-  - name: dischargepower
+  # battery control
+  - name: maxdischargepower
     default: 4000
 render: |
   type: custom
@@ -68,13 +69,13 @@ render: |
           source: sequence
           set:
           - source: const
-            value: {{ if lt .dischargepower 0 }}{{ .dischargepower }}{{ else }}{{ mul -1 .dischargepower }}{{ end }} # W
+            value: {{ mul -1 .maxdischargepower }} # value must be negative
             set:
               source: modbus
               uri: {{ .host }}:{{ .port }}
               id: 255
               register:
-                address: 1074  # discharge power
+                address: 1074  # maximum discharge power
                 type: writeholding
                 decode: int16
       - case: 2  # hold
@@ -88,8 +89,12 @@ render: |
               uri: {{ .host }}:{{ .port }}
               id: 255
               register:
-                address: 1074  # discharge power
+                address: 1074  # maximum discharge power
                 type: writeholding
                 decode: int16
+      - case: 3  # charge (not implemented)
+        set:
+          source: error
+          message: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}
