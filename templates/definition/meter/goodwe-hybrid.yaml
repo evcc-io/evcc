@@ -14,6 +14,9 @@ params:
   - name: battery
     default: 1
     type: choice
+    description:
+      en: Battery number
+      de: Batteriespeichernummer
     choice: [1, 2]
   - name: capacity
     advanced: true

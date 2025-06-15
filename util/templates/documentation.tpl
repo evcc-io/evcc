@@ -103,9 +103,9 @@ params:
   {{- if and (not (eq .Name "usage")) (not .IsDeprecated) }}
   - name: {{ .Name | quote }}
     example: {{ .Example | quote }}
-    default: {{ .Default }}
-    choice: [{{ join ", " .Choice }}]
-    unit: {{ .Unit }}
+    default: {{ .Default | quote }}
+    choice: [{{ range $i, $v := .Choice }}{{ if $i }}, {{ end }}'{{ $v }}'{{ end }}]
+    unit: {{ .Unit | quote }}
     {{- $description := localize .Description | replace "\n" " " | trim }}
     description: {{ $description | quote }}
     {{- $help := localize .Help | replace "\n" " " | trim }}

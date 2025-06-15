@@ -22,6 +22,8 @@ params:
       de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
     usages: ["grid"]
   - name: integer
+    description:
+      generic: Integer
     deprecated: true
   - name: maxacpower
   - name: maxchargerate

@@ -147,6 +147,7 @@ import {
 	type ModbusCapability,
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
+	type TemplateType,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/meter.yaml?raw";
 
@@ -196,7 +197,7 @@ export default defineComponent({
 		id: Number,
 		name: String,
 		type: {
-			type: String as () => string | undefined,
+			type: String as () => "grid" | "pv" | "battery" | undefined,
 			default: undefined,
 		},
 		typeChoices: {
@@ -232,7 +233,8 @@ export default defineComponent({
 			}
 			return this.$t(`config.${this.meterType}.titleEdit`);
 		},
-		meterType() {
+		meterType(): Exclude<TemplateType, "vehicle" | "charger"> {
+			// @ts-expect-error either this.type or this.selectedType is given
 			return this.type || this.selectedType;
 		},
 		hasDeviceTitle() {
@@ -258,7 +260,11 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = (this.template?.Params || [])
-				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
+				.filter(
+					(p) =>
+						!CUSTOM_FIELDS.includes(p.Name) &&
+						(p.Usages && this.meterType ? p.Usages.includes(this.meterType) : true)
+				)
 				.map((p) => {
 					if (this.meterType === "battery" && p.Name === "capacity") {
 						p.Advanced = false;
