@@ -45,13 +45,13 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 	t := &GrünStromIndex{
 		log:    log,
 		zip:    cc.Zip,
-		Helper: request.NewHelper(log),
+		Helper: grünStromHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: corrently.TokenSource(request.NewHelper(log), &oauth2.Token{AccessToken: cc.Token}),
+		Source: corrently.TokenSource(grünStromHelper(log), &oauth2.Token{AccessToken: cc.Token}),
 	}
 
 	startupErr := make(chan error)
@@ -59,6 +59,12 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 	err := <-startupErr
 
 	return t, err
+}
+
+func grünStromHelper(log *util.Logger) *request.Helper {
+	helper := request.NewHelper(log)
+	helper.Client.Timeout = 30 * time.Second
+	return helper
 }
 
 func (t *GrünStromIndex) fetchForecast() (corrently.Forecast, error) {
