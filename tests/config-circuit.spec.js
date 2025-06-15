@@ -9,7 +9,6 @@ import {
 } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
@@ -41,7 +40,7 @@ test.describe("circuit", async () => {
   });
 
   test("via ui", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -110,7 +109,7 @@ test.describe("circuit", async () => {
       .getByTestId("bottom-banner")
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // assign loadpoint to circuit
@@ -123,7 +122,7 @@ test.describe("circuit", async () => {
 
     // save, restart and check values
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // verify the configuration matches the yaml test
@@ -156,7 +155,7 @@ test.describe("circuit", async () => {
 
     // save, restart and check values
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // verify circuits

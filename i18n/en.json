@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Cancel",
+    "demoMode": "Login is not supported in demo mode.",
     "error": "Login failed: ",
     "iframeHint": "Open evcc in a new tab.",
     "iframeIssue": "Your password is correct, but your browser seems to have dropped the authentication cookie. This can happen if you run evcc in an iframe via HTTP.",
