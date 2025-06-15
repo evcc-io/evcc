@@ -332,6 +332,17 @@ params:
       de: Für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
     default: 100
     advanced: true
+  - name: maxdischargepower
+    unit: W
+    type: int
+    usages: ["battery"]
+    description:
+      en: Maximum discharge power
+      de: Maximale Entladeleistung
+    help:
+      en: Maximum discharge power of the storage.
+      de: Maximale Entladeleistung des Speichers.
+    advanced: true
 
 presets:
   vehicle-base:
