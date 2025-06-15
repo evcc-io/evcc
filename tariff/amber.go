@@ -87,7 +87,7 @@ func (t *Amber) run(done chan error) {
 		var res []amber.PriceInfo
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(t.uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(t.uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
