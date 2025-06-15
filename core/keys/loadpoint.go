@@ -45,6 +45,10 @@ const (
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start
 
+	SmartFeedinActive    = "smartFeedinActive"    // smart feed-in active
+	SmartFeedinLimit     = "smartFeedinLimit"     // smart feed-in limit
+	SmartFeedinNextStart = "smartFeedinNextStart" // smart feed-in next start
+
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
 	EffectivePlanId     = "effectivePlanId"     // effective plan id
