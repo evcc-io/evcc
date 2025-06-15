@@ -1,13 +1,15 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"slices"
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/corrently"
 	"github.com/evcc-io/evcc/util"
@@ -52,23 +54,46 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 		Source: corrently.TokenSource(request.NewHelper(log), &oauth2.Token{AccessToken: cc.Token}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
+	startupErr := make(chan error)
+	go t.run(startupErr)
+	err := <-startupErr
 
 	return t, err
 }
 
-func (t *GrünStromIndex) run(done chan error) {
-	var once sync.Once
+func (t *GrünStromIndex) fetchForecast() (corrently.Forecast, error) {
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
-		var res corrently.Forecast
+	var res corrently.Forecast
+	err := t.GetJSON(uri, &res)
 
-		err := backoff.Retry(func() error {
-			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &res))
-		}, bo())
+	return res, request.BackoffDefaultHttpStatusCodesPermanently(
+		// do not stop the backoff handling when the API is down
+		request.BackoffHttpStatusCode(http.StatusInternalServerError, false),
+		request.BackoffHttpStatusCode(http.StatusTooManyRequests, false),
+	)(err)
+}
+
+func (t *GrünStromIndex) run(startupErr chan<- error) {
+	var once sync.Once
+
+	for tick := time.Tick(time.Hour); ; <-tick {
+		retries := 0
+		res, err := backoff.Retry(context.Background(),
+			t.fetchForecast,
+			backoff.WithMaxElapsedTime(59*time.Minute),
+			backoff.WithBackOff(&backoff.ExponentialBackOff{
+				InitialInterval: time.Second,
+				MaxInterval:     10 * time.Minute,
+			}),
+			backoff.WithNotify(func(_ error, _ time.Duration) {
+				retries++
+				if retries >= 3 {
+					// we are stuck retrying non-permanent errors -> no need to delay startup
+					once.Do(func() { close(startupErr) })
+				}
+			},
+			))
 
 		if err == nil && res.Err {
 			if s, ok := res.Message.(string); ok {
@@ -79,7 +104,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		}
 
 		if err != nil {
-			once.Do(func() { done <- err })
+			once.Do(func() { startupErr <- err })
 
 			t.log.ERROR.Println(err)
 			continue
@@ -95,7 +120,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		}
 
 		mergeRates(t.data, data)
-		once.Do(func() { close(done) })
+		once.Do(func() { close(startupErr) })
 	}
 }
 
