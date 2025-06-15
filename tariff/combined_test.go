@@ -15,7 +15,7 @@ type tariff struct {
 }
 
 func (t *tariff) Rates() (api.Rates, error) {
-	return t.rates, nil
+	return api.ConvertTo15mSlots(t.rates, t.Type()), nil
 }
 
 func (t *tariff) Type() api.TariffType {
