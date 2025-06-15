@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -28,17 +27,12 @@ func bo() backoff.BackOff {
 	)
 }
 
-// backoffPermanentError returns a permanent error in case of HTTP 400
+// backoffPermanentError returns a permanent error in case of non-recoverable http errors
 func backoffPermanentError(err error) error {
-	if se := new(request.StatusError); errors.As(err, &se) {
-		if code := se.StatusCode(); code >= 400 && code <= 599 {
-			return backoff.Permanent(se)
-		}
-	}
 	if err != nil && strings.HasPrefix(err.Error(), "jq: query failed") {
 		return backoff.Permanent(err)
 	}
-	return err
+	return request.BackoffDefaultHttpStatusCodesPermanently()(err)
 }
 
 // mergeRates blends new and existing rates, keeping existing rates after current hour
