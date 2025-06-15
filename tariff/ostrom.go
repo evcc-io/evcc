@@ -141,7 +141,7 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 
 	uri := fmt.Sprintf("%s?usage=1000&cityId=%d", ostrom.URI_GET_STATIC_PRICE, t.cityId)
 	if err := backoff.Retry(func() error {
-		return backoffPermanentError(t.GetJSON(uri, &tariffs))
+		return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &tariffs))
 	}, bo()); err != nil {
 		return 0, err
 	}
@@ -219,7 +219,7 @@ func (t *Ostrom) run(done chan error) {
 
 		uri := fmt.Sprintf("%s/spot-prices?%s", ostrom.URI_API, params.Encode())
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

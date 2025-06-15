@@ -67,7 +67,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		var res corrently.Forecast
 
 		err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &res))
 		}, bo())
 
 		if err == nil && res.Err {

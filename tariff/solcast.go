@@ -88,7 +88,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json", t.site)
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

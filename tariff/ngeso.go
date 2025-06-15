@@ -76,7 +76,7 @@ func (t *Ngeso) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		res, err := backoff.RetryWithData(func() (ngeso.CarbonForecastResponse, error) {
 			res, err := tReq.DoRequest(client)
-			return res, backoffPermanentError(err)
+			return res, request.BackoffDefaultHttpStatusCodesPermanently()(err)
 		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })

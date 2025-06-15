@@ -79,7 +79,7 @@ func (t *Pun) run(done chan error) {
 		// get today data
 		today, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now())
-			return res, backoffPermanentError(err)
+			return res, request.BackoffDefaultHttpStatusCodesPermanently()(err)
 		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })
@@ -90,7 +90,7 @@ func (t *Pun) run(done chan error) {
 		// get tomorrow data
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
-			return res, backoffPermanentError(err)
+			return res, request.BackoffDefaultHttpStatusCodesPermanently()(err)
 		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })

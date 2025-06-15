@@ -74,7 +74,7 @@ func (t *Energinet) run(done chan error) {
 			t.region)
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(client.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 

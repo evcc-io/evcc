@@ -122,7 +122,7 @@ func (t *Octopus) run(done chan error) {
 		var res octoRest.UnitRates
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(restQueryUri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(client.GetJSON(restQueryUri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 

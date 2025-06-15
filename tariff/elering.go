@@ -74,7 +74,7 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(client.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 

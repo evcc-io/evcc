@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/jinzhu/now"
 )
 
@@ -96,7 +97,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 				if strings.HasPrefix(err.Error(), "jq: query failed") {
 					return backoff.Permanent(err)
 				}
-				return backoffPermanentError(err)
+				return request.BackoffDefaultHttpStatusCodesPermanently()(err)
 			}
 			if err := json.Unmarshal([]byte(s), &data); err != nil {
 				return backoff.Permanent(err)

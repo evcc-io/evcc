@@ -72,7 +72,7 @@ func (t *Awattar) run(done chan error) {
 		uri := fmt.Sprintf("%s?start=%d&end=%d", t.uri, start, end)
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(client.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 

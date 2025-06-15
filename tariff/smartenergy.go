@@ -58,7 +58,7 @@ func (t *SmartEnergy) run(done chan error) {
 		var res smartenergy.Prices
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(smartenergy.URI, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(client.GetJSON(smartenergy.URI, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
