@@ -108,6 +108,10 @@ type API interface {
 	EffectiveMaxPower() float64
 	// PublishEffectiveValues publishes effective values for currently attached vehicle
 	PublishEffectiveValues()
+	// IsEffectivelyPaused indicates if the effective plan is paused
+	IsEffectivelyPaused() bool
+	// GetEffectivePausedUntil returns until when the effective plan is paused
+	GetEffectivePausedUntil() time.Time
 
 	//
 	// plan
