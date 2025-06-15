@@ -28,7 +28,12 @@ test.describe("pv meter", async () => {
 		await meterModal.getByRole("button", { name: "Add solar meter" }).click();
 		await meterModal.getByLabel("Title").fill("PV North");
 		await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-		await meterModal.getByLabel("Power").fill("5000");
+		await meterModal.getByLabel("Power optional").fill("5000");
+		await page.getByRole("button", { name: "Show advanced settings" }).click();
+		await expect(meterModal.getByLabel("Minimum charge")).not.toBeVisible(); // battery usage only
+		await expect(
+			meterModal.getByLabel("Maximum AC power of the hybrid inverter")
+		).toBeVisible(); // pv usage only
 		await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
 		await meterModal.getByRole("link", { name: "validate" }).click();
 		await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
@@ -40,7 +45,7 @@ test.describe("pv meter", async () => {
 		// edit #1
 		await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
 		await expectModalVisible(meterModal);
-		await meterModal.getByLabel("Power").fill("6000");
+		await meterModal.getByLabel("Power optional").fill("6000");
 		await meterModal.getByRole("button", { name: "Validate & save" }).click();
 		await expectModalHidden(meterModal);
 
