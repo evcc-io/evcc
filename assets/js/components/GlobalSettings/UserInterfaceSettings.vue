@@ -102,11 +102,11 @@ import {
 	removeLocalePreference,
 } from "@/i18n.ts";
 import { getThemePreference, setThemePreference } from "@/theme.ts";
-import { getUnits, setUnits, UNITS, is12hFormat, set12hFormat } from "@/units";
+import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { THEME, type Sponsor } from "@/types/evcc";
+import { LENGTH_UNIT, THEME, type Sponsor } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
@@ -126,7 +126,7 @@ export default defineComponent({
 			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
 			THEMES: Object.values(THEME),
-			UNITS,
+			UNITS: Object.values(LENGTH_UNIT),
 			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
 	},

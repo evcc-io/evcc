@@ -74,7 +74,7 @@ import Energyflow from "../Energyflow/Energyflow.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
@@ -84,6 +84,7 @@ import type {
 	Forecast,
 	LoadpointCompact,
 	Notification,
+	SMART_COST_TYPE,
 	Sponsor,
 } from "@/types/evcc";
 import type { Grid } from "./types";
@@ -144,7 +145,7 @@ export default defineComponent({
 		uploadMessage: String,
 		uploadProgress: Number,
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 		fatal: Object,
 		forecast: Object as PropType<Forecast>,
 	},
