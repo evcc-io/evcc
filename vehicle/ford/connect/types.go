@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"strings"
 	"time"
 )
 
@@ -39,40 +38,26 @@ type VehicleDetails struct {
 type TimedValue struct {
 	Value           float64
 	DistanceToEmpty float64
-	Timestamp       Timestamp // "05-24-2024 15:58:56"
+	Timestamp       time.Time `json:",format:'01-02-2006 15:04:05'"`
 }
 
 type VehicleStatus struct {
 	ChargingStatus struct {
 		Value           string    // "NotReady",
-		TimeStamp       Timestamp // "05-24-2024 15:58:56",
-		ChargeStartTime Timestamp // "01-01-2010 00:00:00",
-		ChargeEndTime   Timestamp // "05-24-2024 15:33:00"
+		TimeStamp       time.Time `json:",format:'01-02-2006 15:04:05'"`
+		ChargeStartTime time.Time `json:",format:'01-02-2006 15:04:05'"`
+		ChargeEndTime   time.Time `json:",format:'01-02-2006 15:04:05'"`
 	}
 	PlugStatus struct {
 		Value     bool      // false,
-		TimeStamp Timestamp // "05-24-2024 15:58:56"
+		TimeStamp time.Time `json:",format:'01-02-2006 15:04:05'"`
 	}
 }
 
 type VehicleLocation struct {
 	Speed     float64   // 0,
 	Direction string    // "SOUTHEAST",
-	TimeStamp Timestamp // "05-24-2024 15:58:56",
+	TimeStamp time.Time `json:",format:'01-02-2006 15:04:05'"`
 	Longitude float64   `json:",string"`
 	Latitude  float64   `json:",string"`
-}
-type Timestamp struct {
-	time.Time
-}
-
-// UnmarshalJSON decodes Ford timestamps into time.Time
-func (ts *Timestamp) UnmarshalJSON(data []byte) error {
-	t, err := time.Parse("01-02-2006 15:04:05", strings.Trim(string(data), `"`))
-
-	if err == nil {
-		ts.Time = t
-	}
-
-	return err
 }
