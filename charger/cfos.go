@@ -41,7 +41,7 @@ func init() {
 //go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
-func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}

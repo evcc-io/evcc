@@ -28,7 +28,7 @@ func init() {
 }
 
 // NewCfosPowerBrainFromConfig creates a cFos meter from generic config
-func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}

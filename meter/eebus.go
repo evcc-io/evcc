@@ -28,7 +28,7 @@ func init() {
 }
 
 // New creates an EEBus HEMS from generic config
-func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Ski     string
 		Ip      string

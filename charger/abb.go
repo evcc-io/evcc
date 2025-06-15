@@ -57,7 +57,7 @@ func init() {
 }
 
 // NewABBFromConfig creates a ABB charger from generic config
-func NewABBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewABBFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
