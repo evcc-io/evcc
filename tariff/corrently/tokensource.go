@@ -4,18 +4,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
 type tokenSource struct {
-	log *util.Logger
+	helper *request.Helper
 }
 
-func TokenSource(log *util.Logger, token *oauth2.Token) oauth2.TokenSource {
-	return oauth.RefreshTokenSource(token, &tokenSource{log})
+func TokenSource(helper *request.Helper, token *oauth2.Token) oauth2.TokenSource {
+	return oauth.RefreshTokenSource(token, &tokenSource{helper})
 }
 
 func (ts *tokenSource) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
@@ -29,7 +28,7 @@ func (ts *tokenSource) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	req, _ := request.New(http.MethodPost, "https://console.corrently.io/v2.0/auth/requestToken", nil, request.JSONEncoding)
-	err := request.NewHelper(ts.log).DoJSON(req, &res)
+	err := ts.helper.DoJSON(req, &res)
 
 	token := &oauth2.Token{
 		AccessToken: res.Token,

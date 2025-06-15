@@ -49,7 +49,7 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: corrently.TokenSource(log, &oauth2.Token{AccessToken: cc.Token}),
+		Source: corrently.TokenSource(request.NewHelper(log), &oauth2.Token{AccessToken: cc.Token}),
 	}
 
 	done := make(chan error)
