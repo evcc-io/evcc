@@ -72,11 +72,10 @@ func (t *GrünStromIndex) fetchForecast() (corrently.Forecast, error) {
 	var res corrently.Forecast
 	err := t.GetJSON(uri, &res)
 
-	return res, request.BackoffDefaultHttpStatusCodesPermanently(
-		// do not stop the backoff handling when the API is down
-		request.BackoffHttpStatusCode(http.StatusInternalServerError, false),
-		request.BackoffHttpStatusCode(http.StatusTooManyRequests, false),
-	)(err)
+	return res, request.BackoffHttpStatusCodesPermanently(
+		request.TemporaryBackoffHttpStatusCode(http.StatusInternalServerError,
+			request.TemporaryBackoffHttpStatusCode(http.StatusTooManyRequests,
+				request.DefaultPermanentBackoffHttpStatusCodes())))(err)
 }
 
 func (t *GrünStromIndex) run(startupErr chan<- error) {

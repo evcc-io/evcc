@@ -6,51 +6,45 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
-func BackoffDefaultHttpStatusCodesPermanently(options ...HttpBackoffOption) func(error) error {
-	// defaults will be matched last
-	return BackoffHttpStatusCodesPermanently(append(options, BackoffHttpStatusCodeRange(400, 599, true))...)
+func BackoffDefaultHttpStatusCodesPermanently() func(error) error {
+	return BackoffHttpStatusCodesPermanently(DefaultPermanentBackoffHttpStatusCodes())
 }
 
-func BackoffHttpStatusCodesPermanently(options ...HttpBackoffOption) func(error) error {
+type HttpStatusCodeIsPermanentErr func(statusCode int) bool
+
+func BackoffHttpStatusCodesPermanently(isPermanentErr HttpStatusCodeIsPermanentErr) func(error) error {
 	return func(err error) error {
 		se := new(StatusError)
 		if errors.As(err, &se) {
 			code := se.StatusCode()
-			for _, option := range options {
-				backoffResult := option.BackoffForStatusCode(code)
-				if backoffResult != nil {
-					if *backoffResult {
-						return backoff.Permanent(se)
-					} else {
-						return err
-					}
-				}
+			if isPermanentErr(code) {
+				return backoff.Permanent(se)
+			} else {
+				return err
 			}
 		}
 		return err
 	}
 }
 
-type HttpBackoffOption interface {
-	BackoffForStatusCode(statusCode int) *bool
+func DefaultPermanentBackoffHttpStatusCodes() HttpStatusCodeIsPermanentErr {
+	return PermanentBackoffHttpStatusCodeRange(400, 599)
 }
 
-func BackoffHttpStatusCodeRange(lowerBound int, upperBound int, permanentErr bool) HttpBackoffOption {
-	return httpBackoffStatusCodeRange{lowerBound, upperBound, permanentErr}
-}
-
-func BackoffHttpStatusCode(code int, permanentErr bool) HttpBackoffOption {
-	return BackoffHttpStatusCodeRange(code, code, permanentErr)
-}
-
-type httpBackoffStatusCodeRange struct {
-	lowerBound, upperBound int
-	permanentErr           bool
-}
-
-func (h httpBackoffStatusCodeRange) BackoffForStatusCode(statusCode int) *bool {
-	if statusCode >= h.lowerBound && statusCode <= h.upperBound {
-		return &h.permanentErr
+func PermanentBackoffHttpStatusCodeRange(lowerBound int, upperBound int) HttpStatusCodeIsPermanentErr {
+	return func(statusCode int) bool {
+		if statusCode >= lowerBound && statusCode <= upperBound {
+			return true
+		}
+		return false
 	}
-	return nil
+}
+
+func TemporaryBackoffHttpStatusCode(tempErrStatusCode int, fallback HttpStatusCodeIsPermanentErr) HttpStatusCodeIsPermanentErr {
+	return func(statusCode int) bool {
+		if statusCode == tempErrStatusCode {
+			return false
+		}
+		return fallback(statusCode)
+	}
 }
