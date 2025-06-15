@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -92,6 +93,9 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
 			if err != nil {
+				if strings.HasPrefix(err.Error(), "jq: query failed") {
+					return backoff.Permanent(err)
+				}
 				return backoffPermanentError(err)
 			}
 			if err := json.Unmarshal([]byte(s), &data); err != nil {

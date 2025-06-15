@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -29,9 +28,6 @@ func bo() backoff.BackOff {
 
 // backoffPermanentError returns a permanent error in case of non-recoverable http errors
 func backoffPermanentError(err error) error {
-	if err != nil && strings.HasPrefix(err.Error(), "jq: query failed") {
-		return backoff.Permanent(err)
-	}
 	return request.BackoffDefaultHttpStatusCodesPermanently()(err)
 }
 
