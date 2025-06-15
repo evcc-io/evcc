@@ -38,9 +38,11 @@ requirements:
 params:
   - preset: vehicle-common
   - name: clientId
+    description:
+      generic: Client ID
     help:
-      en: Client ID of your [Tesla Developer App](https://developer.tesla.com/dashboard).
-      de: Kunden ID deiner [Tesla Developer App](https://developer.tesla.com/dashboard).
+      en: from [Tesla Developer App](https://developer.tesla.com/dashboard).
+      de: von [Tesla Developer App](https://developer.tesla.com/dashboard).
     required: true
   - name: accessToken
     help:
@@ -57,15 +59,21 @@ params:
   - name: vin
     example: W...
   - name: control
+    description:
+      generic: Control
     deprecated: true
   - name: commandProxy
     default: https://api.myteslamate.com
     advanced: true
+    description:
+      generic: Command Proxy
     help:
       en: "When using a TWC3 (or other 'dumb' charger not capable of control), evcc can manage the charge directly by communicating with the vehicle through a Command Proxy. By default the [myteslamate.com](https://app.myteslamate.com/) proxy is used. With this parameter, you set the base URL of a custom Command Proxy. See for example [TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy) for a proxy sending commands via bluetooth."
       de: "Bei Verwendung eines TWC3 (oder eines anderen 'dummen' Ladegeräts, das nicht steuerbar ist) kann evcc die Ladung direkt verwalten, indem es über einen Command Proxy mit dem Fahrzeug kommuniziert. Standardmäßig wird der [myteslamate.com](https://app.myteslamate.com/) Proxy verwendet. Mit diesem Parameter kannst du die Basis-URL ändern. Siehe zum Beispiel [TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy) für einen Proxy, der Kommandos über Bluetooth sendet."
   - name: proxyToken
     advanced: true
+    description:
+      generic: Proxy Token
     help:
       en: Token for the [myteslamate.com](https://app.myteslamate.com/) command proxy (pay-per use). Ensure, that you've installed their Virtual Key and granted 'Charge Start', 'Charge Stop' and 'Set Charging Amps' permissions.
       de: Token für den Command Proxy von [myteslamate.com](https://app.myteslamate.com/) (nutzungsbasiert). Stelle sicher, dass du den Virtual Key installiert hast und die Berechtigungen 'Ladung starten', 'Ladung stoppen' und 'Ladestrom setzen' erteilt hast.

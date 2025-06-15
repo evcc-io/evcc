@@ -209,7 +209,11 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
+			return params.filter(
+				(p) =>
+					!CUSTOM_FIELDS.includes(p.Name) &&
+					(p.Usages ? p.Usages.includes("charger") : true)
+			);
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced);
