@@ -138,7 +138,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
 			log.INFO.Println("config file missing, create configuration using config UI")
 			// evcc.yaml not found, use default configuration
-			viper.UnmarshalExact(&conf)
+			if err := viper.UnmarshalExact(&conf); err != nil {
+				log.FATAL.Fatalf("failed to unmarshal default configuration: %v", err)
+			}
 		} else {
 			// evcc.yaml found, might have errors
 			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
