@@ -15,9 +15,6 @@ params:
   - name: tempsource
     choice: ["1", "2", "3"]
     default: "1"
-    description:
-      en: "Temperature sensor"
-      de: "Temperatursensor"
   - name: scale
     type: float
     default: 1

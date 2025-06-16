@@ -71,26 +71,24 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		wb.hires = true
 	}
 
-	// decorate Charger with Meter
-	var currentPower func() (float64, error)
+	// decorate meter
+	var (
+		power, energy      func() (float64, error)
+		currents, voltages func() (float64, float64, float64, error)
+	)
+
 	if cc.Meter.Power {
-		currentPower = wb.currentPower
+		power = wb.currentPower
 	}
 
-	// decorate Charger with MeterEnergy
-	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
+		energy = wb.totalEnergy
 	}
 
-	// decorate Charger with PhaseCurrents
-	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
 		currents = wb.currents
 	}
 
-	// decorate Charger with PhaseVoltages
-	var voltages func() (float64, float64, float64, error)
 	if cc.Meter.Voltages {
 		voltages = wb.voltages
 	}
@@ -108,7 +106,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateEVSE(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
+	return decorateEVSE(wb, power, energy, currents, voltages, maxCurrentMillis, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
