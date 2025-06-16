@@ -363,6 +363,10 @@ export default defineComponent({
 			}
 			return result;
 		},
+		fmtNumberWithSign(value: number) {
+			const sign = value > 0 ? "+" : value === 0 ? "±" : "";
+			return `${sign}${this.fmtNumber(value, 0)}`;
+		},
 		fmtPercentage(value: number, digits = 0, forceSign = false) {
 			const sign = forceSign && value > 0 ? "+" : "";
 			return `${sign}${new Intl.NumberFormat(this.$i18n?.locale, {
