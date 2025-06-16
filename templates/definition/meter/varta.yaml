@@ -31,10 +31,6 @@ params:
     advanced: true
   - name: maxdischargepower
     default: 4000
-    help:
-      de: maximale Entladeleistung (W)
-      en: maximum discharge power (W)
-    usages: ["battery"]
     advanced: true
   - name: capacity
     advanced: true
@@ -73,9 +69,9 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
- batterymode:
+  batterymode:
     source: watchdog
-    timeout: 120s
+    timeout: {{ .watchdog }} # re-write at timeout/2
     reset: 1
     set:
       source: switch
