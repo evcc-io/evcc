@@ -51,14 +51,24 @@ requirements:
 params:
   - preset: ocpp
   - name: autostart
+    description:
+      generic: Autostart
     deprecated: true
   - name: nostop
+    description:
+      generic: No stop
     deprecated: true
   - name: getconfiguration
+    description:
+      generic: Get configuration
     deprecated: true
   - name: bootnotification
+    description:
+      generic: Boot notification
     deprecated: true
   - name: chargingrateunit
+    description:
+      generic: Charging rate unit
     deprecated: true
 render: |
   {{ include "ocpp" . }}

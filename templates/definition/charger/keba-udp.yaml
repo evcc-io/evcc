@@ -21,6 +21,8 @@ requirements:
 params:
   - name: host
   - name: rfid
+    description:
+      generic: RFID
     example: 765765348
     advanced: true
     help:
