@@ -9,6 +9,6 @@ export function appDetection() {
 	}
 }
 
-export function sendToApp(data: any) {
+export function sendToApp(data: { type: string }) {
 	window.ReactNativeWebView?.postMessage(JSON.stringify(data));
 }

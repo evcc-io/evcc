@@ -1,5 +1,6 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
+import type { WebView } from "react-native-webview";
 
 declare global {
 	interface Window {
@@ -9,6 +10,9 @@ declare global {
 			commit: string;
 			customCss: string;
 		};
+	}
+	interface Window {
+		ReactNativeWebView?: WebView;
 	}
 }
 

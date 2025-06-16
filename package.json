@@ -53,6 +53,7 @@
     "mqtt": "^5.11.0",
     "prettier": "^3.0.0",
     "prettier-plugin-sh": "^0.17.4",
+    "react-native-webview": "^13.15.0",
     "rollup-plugin-visualizer": "^6.0.1",
     "smoothscroll-polyfill": "^0.4.4",
     "snarkdown": "^2.0.0",
