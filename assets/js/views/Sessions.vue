@@ -504,8 +504,8 @@ export default defineComponent({
 			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
 
 			// Aggregate energy to get sorted list of loadpoints/vehicles for coloring
-			const aggregateEnergy = (group: GROUPS) => {
-				return this.sessionsWithDefaults.reduce((acc, session) => {
+			const aggregateEnergy = (group: Exclude<GROUPS, GROUPS.NONE>) => {
+				return this.sessionsWithDefaults.reduce((acc: Record<string, number>, session) => {
 					if (new Date(session.created) >= lastThreeMonths) {
 						const key = session[group];
 						acc[key] = (acc[key] || 0) + session.chargedEnergy;
@@ -515,8 +515,11 @@ export default defineComponent({
 			};
 
 			// Assign colors based on energy usage
-			const assignColors = (energyAggregation: number[], colorType) => {
-				const result = {};
+			const assignColors = (
+				energyAggregation: Record<string, number>,
+				colorType: Exclude<GROUPS, GROUPS.NONE>
+			) => {
+				const result: Record<string, string> = {};
 				let colorIndex = 0;
 
 				// Assign colors by used energy in the last three months
@@ -540,11 +543,11 @@ export default defineComponent({
 				return result;
 			};
 
-			const loadpointEnergy = aggregateEnergy("loadpoint");
-			const loadpointColors = assignColors(loadpointEnergy, "loadpoint");
+			const loadpointEnergy = aggregateEnergy(GROUPS.LOADPOINT);
+			const loadpointColors = assignColors(loadpointEnergy, GROUPS.LOADPOINT);
 
-			const vehicleEnergy = aggregateEnergy("vehicle");
-			const vehicleColors = assignColors(vehicleEnergy, "vehicle");
+			const vehicleEnergy = aggregateEnergy(GROUPS.VEHICLE);
+			const vehicleColors = assignColors(vehicleEnergy, GROUPS.VEHICLE);
 
 			const solar = { self: colors.self, grid: colors.grid };
 			const cost = { price: colors.price, co2: colors.co2 };
@@ -589,15 +592,28 @@ export default defineComponent({
 			return this.showMonthNavigation || this.showYearNavigation;
 		},
 		groupEntriesAvailable() {
-			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) return false;
-			return new Set(this.currentSessions.map((s) => s[this.selectedGroup])).size > 1;
+			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) {
+				return false;
+			} else {
+				return (
+					new Set(
+						this.currentSessions.map(
+							(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
+						)
+					).size > 1
+				);
+			}
 		},
 		showSolarYearChart() {
 			return this.period !== PERIODS.MONTH && this.selectedGroup === GROUPS.NONE;
 		},
 		showExtraCharts() {
 			const hasMultipleEntries =
-				new Set(this.currentTypeSessions.map((s) => s[this.selectedGroup])).size > 1;
+				new Set(
+					this.currentTypeSessions.map(
+						(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
+					)
+				).size > 1;
 			const isGrouped = [GROUPS.LOADPOINT, GROUPS.VEHICLE].includes(this.selectedGroup);
 			const isSolar = this.activeType === TYPES.SOLAR;
 			const isNotMonth = this.period !== PERIODS.MONTH;
@@ -628,7 +644,7 @@ export default defineComponent({
 		suggestedMaxCo2() {
 			// returns the 98th percentile of total co2 emissions by time period
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2Map = sessionsWithCo2.reduce((acc, s) => {
+			const co2Map = sessionsWithCo2.reduce((acc: Record<string, number>, s) => {
 				const key = this.dateToPeriodKey(new Date(s.created));
 				acc[key] = (acc[key] || 0) + (s.co2PerKWh ?? 0) * s.chargedEnergy;
 				return acc;
@@ -639,9 +655,9 @@ export default defineComponent({
 		suggestedMaxPrice() {
 			// returns the 98th percentile of total price by time period
 			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
-			const priceMap = sessionsWithPrice.reduce((acc, s) => {
+			const priceMap = sessionsWithPrice.reduce((acc: Record<string, number>, s) => {
 				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + s.price;
+				acc[key] = (acc[key] || 0) + (s.price || 0);
 				return acc;
 			}, {});
 			const percentileValue = this.percentile(Object.values(priceMap), 98);

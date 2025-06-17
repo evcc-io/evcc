@@ -434,7 +434,15 @@ import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent } from "vue";
-import type { Charger, ConfigVehicle, Circuit, Loadpoint, Meter, Timeout } from "@/types/evcc";
+import type {
+	Charger,
+	ConfigVehicle,
+	Circuit,
+	Loadpoint,
+	Meter,
+	Timeout,
+	SelectedMeterType,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "Config",
@@ -483,7 +491,7 @@ export default defineComponent({
 			circuits: [] as Circuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
-			selectedMeterType: undefined as string | undefined,
+			selectedMeterType: undefined as SelectedMeterType | undefined,
 			selectedMeterTypeChoices: [] as string[],
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
@@ -763,12 +771,12 @@ export default defineComponent({
 			this.loadpointModal().hide();
 			this.$nextTick(() => this.editMeter("charge", meter?.id));
 		},
-		editMeter(type: string, id?: number) {
+		editMeter(type: SelectedMeterType, id?: number) {
 			this.selectedMeterType = type;
 			this.selectedMeterId = id;
 			this.$nextTick(() => this.meterModal().show());
 		},
-		newMeter(type: string) {
+		newMeter(type: SelectedMeterType) {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
