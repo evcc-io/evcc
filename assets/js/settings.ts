@@ -1,5 +1,4 @@
 import { reactive, watch } from "vue";
-import type { Column } from "./components/Sessions/types";
 import type { THEME } from "./types/evcc";
 import type { LOCALES } from "./i18n";
 
@@ -70,7 +69,7 @@ export interface Settings {
   energyflowBattery: boolean;
   energyflowLoadpoints: boolean;
   sessionInfo: string[];
-  sessionColumns: Column[];
+  sessionColumns: string[];
   savingsPeriod: string;
   savingsRegion: string;
   sessionsGroup: string;
@@ -108,7 +107,7 @@ watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));
 watch(() => settings.energyflowBattery, saveBool(SETTINGS_ENERGYFLOW_BATTERY));
 watch(() => settings.energyflowLoadpoints, saveBool(SETTINGS_ENERGYFLOW_LOADPOINTS));
 watch(() => settings.sessionInfo, saveArray(SESSION_INFO));
-watch(() => settings.sessionColumns as unknown as string[], saveArray(SESSION_COLUMNS));
+watch(() => settings.sessionColumns as string[], saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
 watch(() => settings.savingsRegion, save(SAVINGS_REGION));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));

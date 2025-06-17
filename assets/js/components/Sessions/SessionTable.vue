@@ -187,7 +187,7 @@ export default defineComponent({
 	emits: ["show-session"],
 	data() {
 		return {
-			selectedColumns: settings.sessionColumns,
+			selectedColumns: [] as string[],
 		};
 	},
 	computed: {
@@ -270,11 +270,11 @@ export default defineComponent({
 		sortedColumns() {
 			const columns = [...this.columns];
 			const sorted = [] as Column[];
-			for (const sc of this.selectedColumns) {
-				if (!sc && columns.length) {
+			for (const name of this.selectedColumns) {
+				if (!name && columns.length) {
 					sorted.push(columns.shift() as Column);
-				} else if (columns.some((c) => c.name === sc.name)) {
-					const column = columns.find((c) => c.name === sc.name);
+				} else if (columns.some((c) => c.name === name)) {
+					const column = columns.find((c) => c.name === name);
 					if (column) {
 						sorted.push(column);
 						const index = columns.indexOf(column);
@@ -417,7 +417,7 @@ export default defineComponent({
 				.filter(this.filterByVehicle)
 				.filter((s) => !loadpoint || s.loadpoint === loadpoint).length;
 		},
-		selectColumnPosition(index: number, value: Column) {
+		selectColumnPosition(index: number, value: string) {
 			this.selectedColumns[index] = value;
 			settings.sessionColumns = [...this.selectedColumns];
 		},
