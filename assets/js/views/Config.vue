@@ -970,18 +970,18 @@ export default defineComponent({
 		circuitTags(circuit: Circuit) {
 			const circuits = store.state?.circuits || {};
 			const data = circuits[circuit.name] || {};
-			const result = { powerRange: {}, currentRange: {}, power: {} };
+			const result: Record<string, object> = {};
 			const p = data.power || 0;
 			if (data.maxPower) {
-				result.powerRange = {
+				result["powerRange"] = {
 					value: [p, data.maxPower],
 					warning: data.power && data.power >= data.maxPower,
 				};
 			} else {
-				result.power = { value: p, muted: true };
+				result["power"] = { value: p, muted: true };
 			}
 			if (data.maxCurrent) {
-				result.currentRange = {
+				result["currentRange"] = {
 					value: [data.current || 0, data.maxCurrent],
 					warning: data.current && data.current >= data.maxCurrent,
 				};
