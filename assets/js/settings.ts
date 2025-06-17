@@ -1,5 +1,7 @@
 import { reactive, watch } from "vue";
 import type { Column } from "./components/Sessions/types";
+import type { THEME } from "./types/evcc";
+import type { LOCALES } from "./i18n";
 
 const SETTINGS_LOCALE = "settings_locale";
 const SETTINGS_THEME = "settings_theme";
@@ -18,82 +20,82 @@ const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 function read(key: string) {
-	return window.localStorage[key];
+  return window.localStorage[key];
 }
 
 function save(key: string) {
-	return (value: string) => {
-		try {
-			if (value) {
-				window.localStorage[key] = value;
-			} else {
-				delete window.localStorage[key];
-			}
-		} catch (e) {
-			console.error("unable to write to localstorage", { key, value, e });
-		}
-	};
+  return (value: string | null) => {
+    try {
+      if (value) {
+        window.localStorage[key] = value;
+      } else {
+        delete window.localStorage[key];
+      }
+    } catch (e) {
+      console.error("unable to write to localstorage", { key, value, e });
+    }
+  };
 }
 
 function readBool(key: string) {
-	return read(key) === "true";
+  return read(key) === "true";
 }
 
 function saveBool(key: string) {
-	return (value: boolean) => {
-		save(key)(value ? "true" : "false");
-	};
+  return (value: boolean) => {
+    save(key)(value ? "true" : "false");
+  };
 }
 
 function readArray(key: string) {
-	const value = read(key);
-	return value ? value.split(",") : [];
+  const value = read(key);
+  return value ? value.split(",") : [];
 }
 
 function saveArray(key: string) {
-	return (value: string[]) => {
-		save(key)(value.join(","));
-	};
+  return (value: string[]) => {
+    save(key)(value.join(","));
+  };
 }
 
 export interface Settings {
-	telemetry: boolean;
-	locale: string | null;
-	theme: string;
-	unit: string;
-	is12hFormat: boolean;
-	hiddenFeatures: boolean;
-	energyflowDetails: boolean;
-	energyflowPv: boolean;
-	energyflowBattery: boolean;
-	energyflowLoadpoints: boolean;
-	sessionInfo: string[];
-	sessionColumns: Column[];
-	savingsPeriod: string;
-	savingsRegion: string;
-	sessionsGroup: string;
-	sessionsType: string;
-	solarAdjusted: boolean;
+  telemetry: boolean;
+  locale: keyof typeof LOCALES | null;
+  theme: THEME | null;
+  unit: string;
+  is12hFormat: boolean;
+  hiddenFeatures: boolean;
+  energyflowDetails: boolean;
+  energyflowPv: boolean;
+  energyflowBattery: boolean;
+  energyflowLoadpoints: boolean;
+  sessionInfo: string[];
+  sessionColumns: Column[];
+  savingsPeriod: string;
+  savingsRegion: string;
+  sessionsGroup: string;
+  sessionsType: string;
+  solarAdjusted: boolean;
 }
 
 const settings: Settings = reactive({
-	telemetry: false,
-	locale: read(SETTINGS_LOCALE),
-	theme: read(SETTINGS_THEME),
-	unit: read(SETTINGS_UNIT),
-	is12hFormat: readBool(SETTINGS_12H_FORMAT),
-	hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
-	energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
-	energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
-	energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
-	energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
-	sessionInfo: readArray(SESSION_INFO),
-	sessionColumns: readArray(SESSION_COLUMNS),
-	savingsPeriod: read(SAVINGS_PERIOD),
-	savingsRegion: read(SAVINGS_REGION),
-	sessionsGroup: read(SESSIONS_GROUP),
-	sessionsType: read(SESSIONS_TYPE),
-	solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
+  telemetry: false,
+  locale: read(SETTINGS_LOCALE),
+  theme: read(SETTINGS_THEME),
+  unit: read(SETTINGS_UNIT),
+  is12hFormat: readBool(SETTINGS_12H_FORMAT),
+  hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
+  energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
+  energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
+  energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
+  energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
+  sessionInfo: readArray(SESSION_INFO),
+  sessionColumns: readArray(SESSION_COLUMNS),
+  savingsPeriod: read(SAVINGS_PERIOD),
+  savingsRegion: read(SAVINGS_REGION),
+  sessionsGroup: read(SESSIONS_GROUP),
+  sessionsType: read(SESSIONS_TYPE),
+  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));

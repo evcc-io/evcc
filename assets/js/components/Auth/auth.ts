@@ -72,10 +72,10 @@ export function getAndClearNextModal() {
 }
 
 export function openLoginModal(nextUrl: string | null = null, nextModal: Modal | null = null) {
-	auth.nextUrl = nextUrl;
-	auth.nextModal = nextModal;
-	const modal = Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement);
-	modal.show();
+  auth.nextUrl = nextUrl;
+  auth.nextModal = nextModal;
+  const modal = Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement);
+  modal.show();
 }
 
 // show/hide password modal based on auth status

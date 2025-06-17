@@ -151,16 +151,20 @@ export default defineComponent({
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		nextSessionInfo() {
-			const index = this.optionKeys.indexOf(this.selectedKey);
-			this.selectedKey = this.optionKeys[index + 1] || this.optionKeys[0];
-			this.presist();
+			if (this.selectedKey) {
+				const index = this.optionKeys.indexOf(this.selectedKey);
+				this.selectedKey = this.optionKeys[index + 1] || this.optionKeys[0];
+				this.presist();
+			}
 		},
 		selectOption(value: string) {
 			this.selectedKey = value;
 			this.presist();
 		},
 		presist() {
-			setSessionInfo(this.id, this.selectedKey);
+			if (this.selectedKey) {
+				setSessionInfo(this.id, this.selectedKey);
+			}
 		},
 	},
 });
