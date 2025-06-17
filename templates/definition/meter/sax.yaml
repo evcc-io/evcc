@@ -9,7 +9,7 @@ requirements:
     de: |
       Für Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
     en: |
-      SAX Power Home (Plus) is a multi-level inverter battery that can be controlled via Modbus/TCP. Registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
+      For battery control, registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
 params:
   - name: usage
     choice: ["grid", "battery"]
