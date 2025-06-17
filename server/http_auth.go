@@ -23,6 +23,11 @@ type loginRequest struct {
 
 func updatePasswordHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
+			return
+		}
+
 		var req updatePasswordRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
