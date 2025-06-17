@@ -79,10 +79,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	log := util.NewLogger("eebus")
 
-	protectedID, err := machine.ProtectedID("evcc-eebus")
-	if err != nil {
-		return nil, err
-	}
+	protectedID := machine.ProtectedID("evcc-eebus")
 	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 
 	if len(cc.ShipID) != 0 {
