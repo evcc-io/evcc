@@ -30,10 +30,7 @@ test.describe("mqtt", async () => {
   test.beforeAll(async () => {
     mqttReachable = await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD);
   });
-  test.skip(
-    !mqttReachable,
-    `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`
-  );
+  test.skip(!mqttReachable, `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`);
 
   test("mqtt not configured", async ({ page }) => {
     await expect(page.getByTestId("mqtt")).toBeVisible();
