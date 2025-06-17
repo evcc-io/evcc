@@ -45,6 +45,8 @@ params:
     unit: A
     type: int
     advanced: true
+  - name: minsoc # ignored, only relevant for battery meter, for e2e test only
+  - name: maxacpower
 
 render: |
   type: custom

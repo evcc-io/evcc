@@ -88,10 +88,10 @@ import TariffChart from "./TariffChart.vue";
 import { CO2_TYPE } from "@/units";
 import api, { allowClientError } from "@/api";
 import convertRates from "@/utils/convertRates";
-import type { PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import type { Tariff, CURRENCY, Rate, SelectOption, Slot } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "SmartCostLimit",
 	components: { TariffChart },
 	mixins: [formatter],
@@ -358,7 +358,7 @@ export default {
 			}
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

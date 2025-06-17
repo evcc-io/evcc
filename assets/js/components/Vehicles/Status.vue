@@ -66,7 +66,7 @@
 					:class="vehicleLimitClass"
 					data-bs-toggle="tooltip"
 					data-testid="vehicle-status-limit"
-					:role="vehicleLimitWarning ? 'button' : null"
+					:role="vehicleLimitWarning ? 'button' : undefined"
 					@click="vehicleLimitClicked"
 				>
 					<component :is="vehicleLimitIconComponent" />
@@ -158,7 +158,7 @@
 			>
 				<PlanEndIcon />
 				<span>
-					{{ fmtAbsoluteDate(new Date(planProjectedEnd)) }}
+					{{ planProjectedEnd ? fmtAbsoluteDate(new Date(planProjectedEnd)) : "" }}
 				</span>
 			</button>
 			<button
@@ -171,13 +171,13 @@
 				@click="planStartClicked"
 			>
 				<PlanStartIcon />
-				{{ fmtAbsoluteDate(new Date(planProjectedStart)) }}
+				{{ planProjectedStart ? fmtAbsoluteDate(new Date(planProjectedStart)) : "" }}
 			</button>
 		</div>
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
@@ -201,10 +201,12 @@ import VehicleLimitWarningIcon from "../MaterialIcon/VehicleLimitWarning.vue";
 import VehicleMinSocIcon from "../MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "../MaterialIcon/Welcome.vue";
 import BatteryBoostIcon from "../MaterialIcon/BatteryBoost.vue";
+import { defineComponent, type PropType } from "vue";
+import type { CURRENCY, Timeout } from "@/types/evcc";
 const REASON_AUTH = "waitingforauthorization";
 const REASON_DISCONNECT = "disconnectrequired";
 
-export default {
+export default defineComponent({
 	name: "VehicleStatus",
 	components: {
 		ClimaterIcon,
@@ -223,71 +225,74 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		vehicleSoc: Number,
+		vehicleSoc: { type: Number, default: 0 },
 		batteryBoostActive: Boolean,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
 		chargerStatusReason: String,
 		connected: Boolean,
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		effectiveLimitSoc: Number,
-		effectivePlanSoc: Number,
+		effectivePlanSoc: { type: Number, default: 0 },
 		effectivePlanTime: String,
 		enabled: Boolean,
 		heating: Boolean,
-		minSoc: Number,
-		phaseAction: String,
+		minSoc: { type: Number, default: 0 },
+		phaseAction: { type: String, default: "" },
 		phaseRemainingInterpolated: Number,
 		planActive: Boolean,
 		planOverrun: Number,
 		planProjectedEnd: String,
 		planProjectedStart: String,
 		planTimeUnreachable: Boolean,
-		pvAction: String,
+		pvAction: { type: String, default: "" },
 		pvRemainingInterpolated: Number,
 		smartCostActive: Boolean,
 		smartCostDisabled: Boolean,
 		smartCostLimit: { type: Number, default: null },
 		smartCostNextStart: String,
 		smartCostType: String,
-		tariffCo2: Number,
-		tariffGrid: Number,
+		tariffCo2: { type: Number, default: 0 },
+		tariffGrid: { type: Number, default: 0 },
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
-		vehicleLimitSoc: Number,
+		vehicleLimitSoc: { type: Number, default: 0 },
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
 	data() {
 		return {
-			pvTooltip: null,
-			phaseTooltip: null,
-			planStartTooltip: null,
-			planActiveTooltip: null,
-			minSocTooltip: null,
-			vehicleClimaterTooltip: null,
-			vehicleWelcomeTooltip: null,
-			smartCostTooltip: null,
-			vehicleLimitTooltip: null,
-			tempLimitTooltip: null,
-			awaitingAuthorizationTooltip: null,
-			disconnectRequiredTooltip: null,
-			batteryBoostTooltip: null,
-			interval: null,
-			planProjectedEndDuration: null,
-			smartCostNextStartDuration: null,
-			planProjectedStartDuration: null,
+			pvTooltip: null as Tooltip | null,
+			phaseTooltip: null as Tooltip | null,
+			planStartTooltip: null as Tooltip | null,
+			planActiveTooltip: null as Tooltip | null,
+			minSocTooltip: null as Tooltip | null,
+			vehicleClimaterTooltip: null as Tooltip | null,
+			vehicleWelcomeTooltip: null as Tooltip | null,
+			smartCostTooltip: null as Tooltip | null,
+			vehicleLimitTooltip: null as Tooltip | null,
+			tempLimitTooltip: null as Tooltip | null,
+			awaitingAuthorizationTooltip: null as Tooltip | null,
+			disconnectRequiredTooltip: null as Tooltip | null,
+			batteryBoostTooltip: null as Tooltip | null,
+			interval: null as Timeout,
+			planProjectedEndDuration: null as string | null,
+			smartCostNextStartDuration: null as string | null,
+			planProjectedStartDuration: null as string | null,
 		};
 	},
 	computed: {
 		phaseTimerActive() {
 			return (
+				this.phaseRemainingInterpolated &&
 				this.phaseRemainingInterpolated > 0 &&
 				["scale1p", "scale3p"].includes(this.phaseAction)
 			);
 		},
 		pvTimerActive() {
 			return (
-				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
+				this.pvRemainingInterpolated &&
+				this.pvRemainingInterpolated > 0 &&
+				["enable", "disable"].includes(this.pvAction)
 			);
 		},
 		pvTimerVisible() {
@@ -492,15 +497,15 @@ export default {
 			return this.$t("main.vehicleStatus.welcome");
 		},
 		chargerStatus() {
-			const t = (key, data) => {
+			const t = (key: string) => {
 				if (this.heating) {
 					// check for special heating status translation
 					const name = `main.heatingStatus.${key}`;
 					if (this.$te(name, DEFAULT_LOCALE)) {
-						return this.$t(name, data);
+						return this.$t(name);
 					}
 				}
-				return this.$t(`main.vehicleStatus.${key}`, data);
+				return this.$t(`main.vehicleStatus.${key}`);
 			};
 
 			if (!this.connected) {
@@ -590,7 +595,9 @@ export default {
 		this.updateBatteryBoostTooltip();
 	},
 	beforeUnmount() {
-		clearInterval(this.interval);
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
 	},
 	methods: {
 		updateDurations() {
@@ -643,21 +650,21 @@ export default {
 			this.pvTooltip = this.updateTooltip(
 				this.pvTooltip,
 				this.pvTimerContent,
-				this.$refs.pvTimer
+				this.$refs["pvTimer"]
 			);
 		},
 		updatePhaseTooltip() {
 			this.phaseTooltip = this.updateTooltip(
 				this.phaseTooltip,
 				this.phaseTimerContent,
-				this.$refs.phaseTimer
+				this.$refs["phaseTimer"]
 			);
 		},
 		updatePlanStartTooltip() {
 			this.planStartTooltip = this.updateTooltip(
 				this.planStartTooltip,
 				this.planStartTooltipContent,
-				this.$refs.planStart,
+				this.$refs["planStart"],
 				true
 			);
 		},
@@ -665,7 +672,7 @@ export default {
 			this.planActiveTooltip = this.updateTooltip(
 				this.planActiveTooltip,
 				this.planActiveTooltipContent,
-				this.$refs.planActive,
+				this.$refs["planActive"],
 				true
 			);
 		},
@@ -673,7 +680,7 @@ export default {
 			this.minSocTooltip = this.updateTooltip(
 				this.minSocTooltip,
 				this.minSocTooltipContent,
-				this.$refs.minSoc,
+				this.$refs["minSoc"],
 				true
 			);
 		},
@@ -681,28 +688,28 @@ export default {
 			this.vehicleClimaterTooltip = this.updateTooltip(
 				this.vehicleClimaterTooltip,
 				this.vehicleClimaterTooltipContent,
-				this.$refs.vehicleClimater
+				this.$refs["vehicleClimater"]
 			);
 		},
 		updateBatteryBoostTooltip() {
 			this.batteryBoostTooltip = this.updateTooltip(
 				this.batteryBoostTooltip,
 				this.batteryBoostTooltipContent,
-				this.$refs.batteryBoost
+				this.$refs["batteryBoost"]
 			);
 		},
 		updateVehicleWelcomeTooltip() {
 			this.vehicleWelcomeTooltip = this.updateTooltip(
 				this.vehicleWelcomeTooltip,
 				this.vehicleWelcomeTooltipContent,
-				this.$refs.vehicleWelcome
+				this.$refs["vehicleWelcome"]
 			);
 		},
 		updateSmartCostTooltip() {
 			this.smartCostTooltip = this.updateTooltip(
 				this.smartCostTooltip,
 				this.smartCostTooltipContent,
-				this.$refs.smartCost,
+				this.$refs["smartCost"],
 				true
 			);
 		},
@@ -710,7 +717,7 @@ export default {
 			this.vehicleLimitTooltip = this.updateTooltip(
 				this.vehicleLimitTooltip,
 				this.vehicleLimitTooltipContent,
-				this.$refs.vehicleLimit,
+				this.$refs["vehicleLimit"],
 				true
 			);
 		},
@@ -718,29 +725,34 @@ export default {
 			this.tempLimitTooltip = this.updateTooltip(
 				this.tempLimitTooltip,
 				this.tempLimitTooltipContent,
-				this.$refs.tempLimit
+				this.$refs["tempLimit"]
 			);
 		},
 		updateAwaitingAuthorizationTooltip() {
 			this.awaitingAuthorizationTooltip = this.updateTooltip(
 				this.awaitingAuthorizationTooltip,
 				this.awaitingAuthorizationTooltipContent,
-				this.$refs.awaitingAuthorization
+				this.$refs["awaitingAuthorization"]
 			);
 		},
 		updateDisconnectRequiredTooltip() {
-			this.updateTooltip(
+			this.disconnectRequiredTooltip = this.updateTooltip(
 				this.disconnectRequiredTooltip,
 				this.disconnectRequiredTooltipContent,
-				this.$refs.disconnectRequired
+				this.$refs["disconnectRequired"]
 			);
 		},
-		updateTooltip(instance, content, ref, hoverOnly = false) {
+		updateTooltip(
+			instance: Tooltip | null,
+			content: string,
+			ref: HTMLElement | undefined,
+			hoverOnly = false
+		): Tooltip | null {
 			if (!content || !ref) {
 				if (instance) {
 					instance.dispose();
 				}
-				return;
+				return null;
 			}
 			let newInstance = instance;
 			if (!newInstance) {
@@ -751,7 +763,7 @@ export default {
 			return newInstance;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

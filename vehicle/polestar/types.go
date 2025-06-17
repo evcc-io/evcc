@@ -23,7 +23,7 @@ type HealthData struct {
 
 type BatteryData struct {
 	VIN                                string
-	BatteryChargeLevelPercentage       int64
+	BatteryChargeLevelPercentage       float64
 	ChargingStatus                     string
 	EstimatedChargingTimeToFullMinutes int64
 	EstimatedDistanceToEmptyKm         int64

@@ -862,10 +862,9 @@
       "solarpercentage": "Napenergia (%)",
       "vehicle": "Jármű"
     },
-    "csvMonth": "Letöltés - {month} .CSV",
+    "csvPeriod": "Letöltés - {period} .CSV",
     "csvTotal": "Letöltés - Összes időszak .CSV",
     "date": "Kezdés",
-    "downloadCsv": "Letöltés mint: CSV",
     "energy": "Töltve",
     "filter": {
       "allLoadpoints": "minden töltőpont",

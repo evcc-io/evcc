@@ -58,6 +58,15 @@ func (t *Template) Validate() error {
 	}
 
 	for _, p := range t.Params {
+		if p.Description.String("en") == "" || p.Description.String("de") == "" {
+			return fmt.Errorf("description for param %s cant be empty in template %s", p.Name, t.Template)
+		}
+
+		maxLength := 50
+		if len(p.Description.String("en")) > maxLength || len(p.Description.String("de")) > maxLength {
+			return fmt.Errorf("description for param %s is too long in template %s. use help field for details: %s", p.Name, t.Template, p.Description.String("en"))
+		}
+
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {

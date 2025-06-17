@@ -3,7 +3,13 @@ covers: ["varta-energiespeicher", "varta-energiespeicher-battery-only"]
 products:
   - brand: VARTA
     description:
-      generic: pulse, pulse neo, element
+      generic: pulse
+  - brand: VARTA
+    description:
+      generic: pulse neo
+  - brand: VARTA
+    description:
+      generic: element
 requirements:
   description:
     de: PV nur verfügbar mit PV-Sensor

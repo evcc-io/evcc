@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Визначте настроюваний діапазон струму.",
       "chargerTypeLabel": "Тип зарядного пристрою",
       "chargingTitle": "Зарядка",
+      "circuitHelp": "Призначення керування навантаженням для забезпечення неперевищення обмежень потужності та струму.",
       "circuitLabel": "Схема",
       "circuitUnassigned": "непризначений",
       "defaultModeHelp": "Режим зарядки при підключенні автомобіля.",
@@ -873,10 +874,9 @@
       "solarpercentage": "Соляр (%)",
       "vehicle": "Транспортний засіб"
     },
-    "csvMonth": "Завантажити {month} CSV",
+    "csvPeriod": "Завантажити {period} CSV",
     "csvTotal": "Завантажити повний CSV",
     "date": "Почати",
-    "downloadCsv": "Завантажити як CSV",
     "energy": "Заряджено",
     "filter": {
       "allLoadpoints": "всі точки зарядки",

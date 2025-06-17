@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Nurodykite įkrovimo srovės ribas.",
       "chargerTypeLabel": "Įkroviklio tipas",
       "chargingTitle": "Įkrovimas",
+      "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitLabel": "Grandinė",
       "circuitUnassigned": "nepriskirtas",
       "defaultModeHelp": "Įkrovimo režimas prijungus automobilį.",
@@ -873,10 +874,9 @@
       "solarpercentage": "Saulės (%)",
       "vehicle": "Automobilis"
     },
-    "csvMonth": "Atsisiųsti {month} CSV",
+    "csvPeriod": "Atsisiųsti {period} CSV",
     "csvTotal": "Atsisiųsti visą CSV",
     "date": "Pradžia",
-    "downloadCsv": "Atsisiųsti CSV failą",
     "energy": "Įkrauta",
     "filter": {
       "allLoadpoints": "visi įkrovikliai",
