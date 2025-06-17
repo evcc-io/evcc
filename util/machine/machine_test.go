@@ -11,13 +11,12 @@ import (
 
 func TestProtectedMachineId(t *testing.T) {
 	const key = "foo"
-	id = ""
 
 	if mid, err := machineid.ProtectedID(key); err == nil {
-		pID := ProtectedID(key)
+		id := ProtectedID(key)
 
-		if mid != pID {
-			t.Errorf("machine id mismatch. expected %s, got %s", mid, pID)
+		if mid != id {
+			t.Errorf("machine id mismatch. expected %s, got %s", mid, id)
 		}
 	} else {
 		t.Skip("cannot get machineid, skipping test")
