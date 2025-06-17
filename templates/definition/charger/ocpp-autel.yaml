@@ -12,7 +12,7 @@ requirements:
   description:
     de: |
       Anleitung:
-      * Wichtig! Als erstes prüfen ob auf der Wallbox mindestens folgende Firmwareversion installiert ist: Ladesteuergerät: V1.51.00 und Leistungsregelmodul: V1.19.00
+      * Erforderliche Firmwareversion verifizieren: Ladesteuergerät: V1.51.00, Leistungsregelmodul: V1.19.00
       * In der Autel Charge app, klicken sie auf “OCPP Server”
       * Geben Sie "Custom" in das Feld ein und wählen Sie "Personalisierung" darunter
       * Server-URL: ws://[evcc-adresse]:8887/ (Verbindung über das lokale Netzwerk)
