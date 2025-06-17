@@ -81,7 +81,7 @@ render: |
             source: sequence
             set:
               - source: const
-                value: {{ mul -1 .maxdischargepower }} # value must be negative
+                value: -{{- .maxdischargepower }} # value must be negative
                 set:
                   source: modbus
                   uri: {{ .host }}:{{ .port }}
