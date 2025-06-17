@@ -3,8 +3,8 @@ import { describe, expect, test } from "vitest";
 import Status from "./Status.vue";
 import { CURRENCY } from "@/types/evcc";
 
-const serializeData = (data: Object) => (data ? `:${JSON.stringify(data)}` : "");
-config.global.mocks["$t"] = (key: string, data: Object) => `${key}${serializeData(data)}`;
+const serializeData = (data: object) => (data ? `:${JSON.stringify(data)}` : "");
+config.global.mocks["$t"] = (key: string, data: object) => `${key}${serializeData(data)}`;
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 
 const allEntries = {
@@ -19,7 +19,7 @@ const allEntries = {
   planstart: false,
 };
 
-const expectEntries = (props: InstanceType<typeof Status>["$props"], entries: Object) => {
+const expectEntries = (props: InstanceType<typeof Status>["$props"], entries: object) => {
   const expectedEntries = { ...allEntries, ...entries };
 
   const wrapper = mount(Status, { props });

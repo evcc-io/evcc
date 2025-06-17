@@ -5,7 +5,7 @@ export default defineComponent({
   methods: {
     // collect all target component properties from current instance
     collectProps(component: any, state?: State) {
-      let data: Record<string, any> = {};
+      const data: Record<string, any> = {};
       for (const prop in component.props) {
         const p = prop as keyof State;
         // check in optional state
