@@ -21,7 +21,6 @@ export type TemplateParam = {
   Required: boolean;
   Advanced: boolean;
   Deprecated: boolean;
-
   Default?: string | number | boolean;
   Choice?: string[];
   Usages?: TemplateType[];
