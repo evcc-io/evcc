@@ -6,8 +6,8 @@ const { protocol, hostname, port, pathname } = window.location;
 const base = protocol + "//" + hostname + (port ? ":" + port : "") + pathname;
 
 // override the way axios serializes arrays in query parameters (a=1&a=2&a=3 instead of a[]=1&a[]=2&a[]=3)
-function customParamsSerializer(params) {
-  const queryString = Object.keys(params)
+function customParamsSerializer(params: { [key: string]: any }) {
+  return Object.keys(params)
     .filter((key) => params[key] !== null)
     .map((key) => {
       const value = params[key];
@@ -17,7 +17,6 @@ function customParamsSerializer(params) {
       return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
     })
     .join("&");
-  return queryString;
 }
 
 const api = axios.create({
@@ -62,7 +61,7 @@ export const i18n = axios.create({
 });
 
 export const allowClientError = {
-  validateStatus(status) {
+  validateStatus(status: number) {
     return status >= 200 && status < 500;
   },
 };

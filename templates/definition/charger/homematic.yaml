@@ -7,8 +7,9 @@ params:
   - name: port
     default: 2010
     description:
-      en: XML-RPC server port number (BidCos-Wired=2000, BidCos-RF=2001, HmIP=2010)
-      de: XML-RPC-Server Port-Nummer (BidCos-Wired=2000, BidCos-RF=2001, HmIP=2010)
+      en: XML-RPC server port number
+      de: XML-RPC-Server Port-Nummer
+    example: BidCos-Wired=2000, BidCos-RF=2001, HmIP=2010
   - name: device
     description:
       de: Geräteadresse/Seriennummer
@@ -30,28 +31,30 @@ params:
     required: true
     advanced: true
     description:
-      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM=2)
-      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM=2)
+      en: Meter channel number
+      de: Kanalnummer des Power-Meters
     help:
       en: Homematic meter channel number like shown in the CCU web user interface.
       de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
+    example: HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM=2
   - name: switchchannel
     default: 3
     type: int
     required: true
     advanced: true
     description:
-      en: Switch/Actor channel number (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1)
-      de: Kanalnummer der schaltbaren Steckdose (HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1)
+      en: Switch/Actor channel number
+      de: Kanalnummer der schaltbaren Steckdose
     help:
       en: Homematic switch actor channel number like shown in the CCU web user interface.
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
+    example: HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1
   - name: cache
     advanced: true
     default: 1s
     description:
-      en: XML-RPC api cache duration - Default 1s. (valid units are s,m,h)
-      de: XML-RPC API Cache Zeitraum - Default 1s. (gültige Einheiten s,m,h)
+      en: XML-RPC API cache duration
+      de: XML-RPC API Cache Zeitraum
     help:
       en: In case of duty cycle problems try a cache setting of 30s.
       de: Bei Problemen mit dem Duty Cycle setze den Cache auf bspw 30s.

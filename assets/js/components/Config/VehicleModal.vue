@@ -291,10 +291,16 @@ export default defineComponent({
 			return params;
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
+			return this.templateParams.filter(
+				(p) =>
+					!p.Advanced && !p.Deprecated && (p.Usages ? p.Usages.includes("vehicle") : true)
+			);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
+			return this.templateParams.filter(
+				(p) =>
+					(p.Advanced || p.Deprecated) && (p.Usages ? p.Usages.includes("vehicle") : true)
+			);
 		},
 		description() {
 			return this.template?.Requirements?.Description;

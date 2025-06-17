@@ -9,6 +9,9 @@ params:
   - name: contractid
     example: ffffffff-4444-6666-2222-aaaaaabbbbbb
     required: true
+    description:
+      en: Contract ID
+      de: Vertragsnummer
     help:
       de: "Die Vertragsnummer bekommst du im Kundenportal https://i.spottyenergie.at/"
       en: "You can get your contract id from the customer portal https://i.spottyenergie.at/"
@@ -17,6 +20,9 @@ params:
     type: choice
     choice: ["MARKET", "CONSUMPTION", "GENERATION"]
     required: true
+    description:
+      en: Price type
+      de: Preistyp
     help:
       de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütung (falls vereinbart), siehe https://www.spottyenergie.at/blog/energie-smart-produzieren"
       en: "Price type, either spotmarket price, consumption price or generation compensation (if contractually agreed), more info at https://www.spottyenergie.at/blog/energie-smart-produzieren"

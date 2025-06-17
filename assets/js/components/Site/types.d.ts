@@ -1,3 +1,3 @@
 export interface Grid {
-	power?: number;
+  power?: number;
 }

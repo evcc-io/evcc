@@ -58,7 +58,7 @@ function saveArray(key: string) {
 
 export interface Settings {
 	telemetry: boolean;
-	locale: string;
+	locale: string | null;
 	theme: string;
 	unit: string;
 	is12hFormat: boolean;

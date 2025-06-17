@@ -1,6 +1,10 @@
-import { createRouter, createWebHashHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHashHistory,
+  type RouteLocationNormalizedGeneric,
+} from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
-import { ensureCurrentLocaleMessages } from "./i18n";
+import { ensureCurrentLocaleMessages } from "./i18n.ts";
 import {
   openLoginModal,
   statusUnknown,
@@ -8,6 +12,7 @@ import {
   isLoggedIn,
   isConfigured,
 } from "./components/Auth/auth";
+import type { VueI18nInstance } from "vue-i18n";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {
@@ -21,7 +26,7 @@ function hideAllModals() {
   });
 }
 
-async function ensureAuth(to) {
+async function ensureAuth(to: RouteLocationNormalizedGeneric) {
   await updateAuthStatus();
   if (!isConfigured()) {
     return false;
@@ -33,7 +38,7 @@ async function ensureAuth(to) {
   return true;
 }
 
-export default function setupRouter(i18n) {
+export default function setupRouter(i18n: VueI18nInstance) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
@@ -43,7 +48,7 @@ export default function setupRouter(i18n) {
         props: (route) => {
           const { lp } = route.query;
           return {
-            selectedLoadpointIndex: lp ? parseInt(lp, 10) - 1 : undefined,
+            selectedLoadpointIndex: lp ? parseInt(lp as string, 10) - 1 : undefined,
           };
         },
       },
@@ -59,8 +64,8 @@ export default function setupRouter(i18n) {
         props: (route) => {
           const { month, year, loadpoint, vehicle, period } = route.query;
           return {
-            month: month ? parseInt(month, 10) : undefined,
-            year: year ? parseInt(year, 10) : undefined,
+            month: month ? parseInt(month as string, 10) : undefined,
+            year: year ? parseInt(year as string, 10) : undefined,
             period,
             loadpointFilter: loadpoint,
             vehicleFilter: vehicle,
@@ -79,15 +84,15 @@ export default function setupRouter(i18n) {
         props: (route) => {
           const { areas, level } = route.query;
           return {
-            areas: areas ? areas.split(",") : undefined,
-            level,
+            areas: typeof areas === "string" ? areas.split(",") : undefined,
+            level: typeof level === "string" ? level : undefined,
           };
         },
       },
     ],
   });
   router.beforeEach(async () => {
-    await ensureCurrentLocaleMessages(i18n.global);
+    await ensureCurrentLocaleMessages(i18n);
     return true;
   });
   router.afterEach(() => {

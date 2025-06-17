@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, editorClear, editorType } from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
 const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
@@ -11,7 +11,7 @@ test.afterEach(async () => {
   await stop();
 });
 
-async function enableExperimental(page) {
+async function enableExperimental(page: Page) {
   await page
     .getByTestId("generalconfig-experimental")
     .getByRole("button", { name: "edit" })
@@ -20,7 +20,7 @@ async function enableExperimental(page) {
   await page.getByRole("button", { name: "Close" }).click();
 }
 
-async function addDemoCharger(page) {
+async function addDemoCharger(page: Page) {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal.getByRole("button", { name: "Add charger" }).click();
 
@@ -32,7 +32,7 @@ async function addDemoCharger(page) {
   await expectModalVisible(lpModal);
 }
 
-async function addDemoMeter(page, power = "0") {
+async function addDemoMeter(page: Page, power = "0") {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal.getByRole("button", { name: "Add dedicated charger meter" }).click();
 
@@ -45,7 +45,7 @@ async function addDemoMeter(page, power = "0") {
   await expectModalVisible(lpModal);
 }
 
-async function addVehicle(page, title) {
+async function addVehicle(page: Page, title: string) {
   await page.getByRole("button", { name: "Add vehicle" }).click();
   const modal = page.getByTestId("vehicle-modal");
   await expectModalVisible(modal);
@@ -55,7 +55,7 @@ async function addVehicle(page, title) {
   await expectModalHidden(modal);
 }
 
-async function newLoadpoint(page, title) {
+async function newLoadpoint(page: Page, title: string) {
   const lpModal = page.getByTestId("loadpoint-modal");
   await page.getByRole("button", { name: "Add charge point" }).click();
   await expectModalVisible(lpModal);
@@ -436,18 +436,25 @@ test.describe("loadpoint", async () => {
     await expect(editor).toContainText("status: # charger status [A..F]");
 
     await editorClear(editor, 10);
-    await editorType(editor, [
-      // prettier-ignore
-      "status:\n  source: const\nvalue: 'C'",
-      "Shift+Tab",
-      "enabled:\n  source: const\nvalue: true",
-      "Shift+Tab",
-      "enable:\n  source: js\nscript: console.log(enable)",
-      "Shift+Tab",
-      "maxcurrent:\n  source: js\nscript: console.log(maxcurrent)",
-      "Shift+Tab",
-      "power:\n  source: const\nvalue: 11000",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `status:
+  source: const
+  value: 'C'
+enabled:
+  source: const
+  value: true
+enable:
+  source: js
+  script: console.log(enable)
+maxcurrent:
+  source: js
+  script: console.log(maxcurrent)
+power:
+  source: const
+  value: 11000`
+    );
 
     const restResult = chargerModal.getByTestId("test-result");
     await expect(restResult).toContainText("Status: unknown");
