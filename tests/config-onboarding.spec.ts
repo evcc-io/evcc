@@ -38,7 +38,11 @@ test.describe("onboarding", async () => {
 
 		// config page
 		await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
-		await enableExperimental(page);
+		await expect(page.getByTestId("welcome-banner")).toBeVisible();
+		await page
+			.getByTestId("welcome-banner")
+			.getByRole("button", { name: "Enable experimental features" })
+			.click();
 
 		// create loadpoint with charger
 		await expect(page.getByTestId("loadpoint-required")).toBeVisible();
@@ -56,7 +60,9 @@ test.describe("onboarding", async () => {
 		await expectModalVisible(lpModal);
 		await lpModal.getByRole("button", { name: "Save" }).click();
 		await expectModalHidden(lpModal);
+		await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
 		await expect(page.getByTestId("loadpoint-required")).not.toBeVisible();
+		await expect(page.getByTestId("experimental-banner")).toBeVisible();
 
 		// create grid meter
 		await page.getByRole("button", { name: "Add grid meter" }).click();
