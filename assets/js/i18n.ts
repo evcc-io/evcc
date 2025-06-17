@@ -53,7 +53,7 @@ export function removeLocalePreference(i18n: VueI18nInstance) {
 }
 
 export function setLocalePreference(i18n: VueI18nInstance, locale: typeof i18n.locale) {
-	if (!LOCALES.hasOwnProperty(locale)) {
+	if (!(locale in LOCALES)) {
 		console.error("unknown locale", locale);
 		return;
 	}
