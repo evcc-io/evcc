@@ -1,4 +1,4 @@
-import { test, expect, devices } from "@playwright/test";
+import { test, expect, devices, type Page, type Locator } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
@@ -23,7 +23,11 @@ function getWeekday(offset = 1) {
   return date.toLocaleDateString("en-US", { weekday: "long" });
 }
 
-async function setAndVerifyPlan(page, lp, { soc, energy }) {
+async function setAndVerifyPlan(
+  page: Page,
+  lp: Locator,
+  { soc, energy }: { soc?: string; energy?: string }
+) {
   await lp.getByTestId("charging-plan-button").click();
 
   if (soc) {
@@ -39,10 +43,10 @@ async function setAndVerifyPlan(page, lp, { soc, energy }) {
   }
   await page.getByTestId("static-plan-active").click();
   await page.getByRole("button", { name: "Close" }).click();
-  await expect(lp.getByTestId("charging-plan")).toContainText(soc || energy);
+  await expect(lp.getByTestId("charging-plan")).toContainText(soc || energy!);
 }
 
-async function verifyRepeatingPlanAvailable(page, lp, expected) {
+async function verifyRepeatingPlanAvailable(page: Page, lp: Locator, expected: boolean) {
   await lp.getByTestId("charging-plan-button").click();
   if (expected) {
     await expect(page.getByTestId("repeating-plan-add")).toBeVisible();

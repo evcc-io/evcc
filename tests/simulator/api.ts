@@ -1,23 +1,34 @@
 import bodyParser from "body-parser";
+import type { Connect, ViteDevServer } from "vite";
+import type { ServerResponse } from "http";
 
 let state = {
   site: {
     grid: { power: 0 },
-    pv: { power: 0 },
+    pv: { power: 0, energy: 0 },
     battery: { power: 0, soc: 0 },
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
 };
 
-const loggingMiddleware = (req, res, next) => {
-  console.log(`[simulator] ${req.method} ${req.originalUrl}`);
+const loggingMiddleware = (
+  req: Connect.IncomingMessage,
+  _: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  console.log(`[simulator] ${req.method} ${req.url}`);
   next();
 };
 
-const stateApiMiddleware = (req, res, next) => {
+const stateApiMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
   if (req.method === "POST" && req.originalUrl === "/api/state") {
     console.log("[simulator] POST /api/state");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
     state = req.body;
     res.end();
   } else if (req.method === "POST" && req.originalUrl === "/api/shutdown") {
@@ -31,14 +42,18 @@ const stateApiMiddleware = (req, res, next) => {
   }
 };
 
-const openemsMiddleware = (req, res, next) => {
+const openemsMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
   const endpoints = {
     "/rest/channel/_sum/GridActivePower": { value: state.site.grid.power },
     "/rest/channel/_sum/ProductionActivePower": { value: state.site.pv.power },
     "/rest/channel/_sum/EssDischargePower": { value: state.site.battery.power },
     "/rest/channel/_sum/EssSoc": { value: state.site.battery.soc },
   };
-  const endpoint = endpoints[req.originalUrl];
+  const endpoint = endpoints[req.originalUrl as keyof typeof endpoints];
   if (req.method === "GET" && endpoint) {
     console.log("[simulator] GET", req.originalUrl);
     res.end(JSON.stringify(endpoint));
@@ -47,8 +62,12 @@ const openemsMiddleware = (req, res, next) => {
   }
 };
 
-const teslaloggerMiddleware = (req, res, next) => {
-  if (req.method === "GET" && req.originalUrl.startsWith("/currentjson/")) {
+const teslaloggerMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  if (req.method === "GET" && req.originalUrl && req.originalUrl.startsWith("/currentjson/")) {
     const id = parseInt(req.originalUrl.split("/")[2]);
     const vehicle = state.vehicles[id - 1];
     if (!vehicle) {
@@ -71,7 +90,11 @@ const teslaloggerMiddleware = (req, res, next) => {
   }
 };
 
-const shellyMiddleware = (req, res, next) => {
+const shellyMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
   // simulate a shelly gen2 switch device api. implement power and energy
   if (req.originalUrl === "/shelly") {
     res.end(JSON.stringify({ gen: 2 }));
@@ -79,7 +102,10 @@ const shellyMiddleware = (req, res, next) => {
     res.end(JSON.stringify({ methods: ["Switch.GetStatus"] }));
   } else if (req.originalUrl === "/rpc/Switch.GetStatus?id=0") {
     res.end(
-      JSON.stringify({ apower: state.site.pv.power, aenergy: { total: state.site.pv.energy } })
+      JSON.stringify({
+        apower: state.site.pv.power,
+        aenergy: { total: state.site.pv.energy },
+      })
     );
   } else {
     next();
@@ -89,7 +115,7 @@ const shellyMiddleware = (req, res, next) => {
 export default () => ({
   name: "api",
   enforce: "pre",
-  configureServer(server) {
+  configureServer(server: ViteDevServer) {
     console.log("[simulator] configured");
     return () => {
       server.middlewares.use(loggingMiddleware);

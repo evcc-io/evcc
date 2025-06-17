@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
   editorClear,
-  editorType,
+  editorPaste,
   enableExperimental,
   expectModalHidden,
   expectModalVisible,
@@ -213,14 +213,15 @@ test.describe("vehicles", async () => {
     await expect(editor).toContainText("title: green Honda");
 
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "title: blue Honda",
-      "capacity: 12.3",
-      "soc:",
-      "  source: const",
-      "value: 42",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `title: blue Honda
+capacity: 12.3
+soc:
+  source: const
+  value: 42`
+    );
 
     const restResult = modal.getByTestId("test-result");
     await expect(restResult).toContainText("Status: unknown");
@@ -247,14 +248,15 @@ test.describe("vehicles", async () => {
 
     // update
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "title: pink Honda",
-      "capacity: 23.4",
-      "soc:",
-      "  source: const",
-      "value: 32",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `title: pink Honda
+capacity: 23.4
+soc:
+  source: const
+  value: 32`
+    );
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");

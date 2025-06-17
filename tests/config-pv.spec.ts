@@ -28,24 +28,27 @@ test.describe("pv meter", async () => {
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power").fill("5000");
+    await meterModal.getByLabel("Power optional").fill("5000");
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await expect(meterModal.getByLabel("Minimum charge")).not.toBeVisible(); // battery usage only
+    await expect(meterModal.getByLabel("Maximum AC power of the hybrid inverter")).toBeVisible(); // pv usage only
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
-    await expect(page.getByTestId("pv")).toBeVisible(1);
+    await expect(page.getByTestId("pv")).toBeVisible();
     await expect(page.getByTestId("pv")).toContainText("PV North");
 
     // edit #1
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Power").fill("6000");
+    await meterModal.getByLabel("Power optional").fill("6000");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
 
     const pv = page.getByTestId("pv");
-    await expect(pv).toBeVisible(1);
+    await expect(pv).toBeVisible();
     await expect(pv).toContainText("PV North");
     await expect(pv.getByTestId("device-tag-power")).toContainText("6.0 kW");
 
@@ -85,7 +88,7 @@ test.describe("pv meter", async () => {
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
-    await expect(page.getByTestId("pv")).toBeVisible(1);
+    await expect(page.getByTestId("pv")).toBeVisible();
     await expect(page.getByTestId("pv")).toContainText("North Roof");
 
     // break meter
@@ -95,7 +98,7 @@ test.describe("pv meter", async () => {
 
     // remove meter
     await expect(page.getByTestId("fatal-error")).toBeVisible();
-    await expect(page.getByTestId("pv")).toBeVisible(1);
+    await expect(page.getByTestId("pv")).toBeVisible();
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();

@@ -1,5 +1,5 @@
 import { nextTick } from "vue";
-import { createI18n } from "vue-i18n";
+import { createI18n, type VueI18nInstance } from "vue-i18n";
 import en from "../../i18n/en.json";
 import { i18n as i18nApi } from "./api";
 import settings from "./settings";
@@ -39,21 +39,21 @@ export const LOCALES = {
 };
 
 export const DEFAULT_LOCALE = "en";
-const htmlLang = document.querySelector("html").getAttribute("lang");
+const htmlLang = document.querySelector("html")?.getAttribute("lang");
 const DEFAULT_BROWSER_LOCALE = htmlLang?.length == 2 ? htmlLang : DEFAULT_LOCALE;
 
 export function getLocalePreference() {
   return settings.locale;
 }
 
-export function removeLocalePreference(i18n) {
+export function removeLocalePreference(i18n: VueI18nInstance) {
   settings.locale = null;
-  setI18nLanguage(i18n, DEFAULT_BROWSER_LOCALE);
+  setI18nLanguage(i18n, DEFAULT_BROWSER_LOCALE as typeof i18n.locale);
   ensureCurrentLocaleMessages(i18n);
 }
 
-export function setLocalePreference(i18n, locale) {
-  if (!LOCALES[locale]) {
+export function setLocalePreference(i18n: VueI18nInstance, locale: typeof i18n.locale) {
+  if (!(locale in LOCALES)) {
     console.error("unknown locale", locale);
     return;
   }
@@ -73,21 +73,25 @@ export default function setupI18n() {
     silentTranslationWarn: true,
     locale: DEFAULT_LOCALE,
     fallbackLocale: DEFAULT_LOCALE,
-    messages: { en },
+    messages: { "en-US": en },
   });
   setI18nLanguage(i18n.global, getLocale());
   return i18n;
 }
 
-export function setI18nLanguage(i18n, locale) {
+export function setI18nLanguage(i18n: VueI18nInstance, locale: typeof i18n.locale) {
   i18n.locale = locale;
-  document.querySelector("html").setAttribute("lang", locale);
+  document.querySelector("html")?.setAttribute("lang", locale);
 }
 
-async function loadLocaleMessages(i18n, locale) {
+async function loadLocaleMessages(i18n: VueI18nInstance, locale: typeof i18n.locale) {
   try {
-    const response = await i18nApi.get(`${locale}.json`, { params: { v: window.evcc?.version } });
-    i18n.setLocaleMessage(locale, response.data);
+    const response = await i18nApi.get(`${locale}.json`, {
+      params: { v: window.evcc?.version },
+    });
+    if ("setLocaleMessage" in i18n) {
+      i18n.setLocaleMessage(locale, response.data);
+    }
   } catch (e) {
     console.error(`unable to load translation for [${locale}]`, e);
   }
@@ -95,7 +99,7 @@ async function loadLocaleMessages(i18n, locale) {
   return nextTick();
 }
 
-export async function ensureCurrentLocaleMessages(i18n) {
+export async function ensureCurrentLocaleMessages(i18n: VueI18nInstance) {
   const { locale } = i18n;
   if (!i18n.availableLocales.includes(locale)) {
     await loadLocaleMessages(i18n, locale);

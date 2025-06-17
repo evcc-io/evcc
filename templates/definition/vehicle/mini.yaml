@@ -21,6 +21,9 @@ params:
     required: true
     advanced: true
   - name: hcaptcha
+    description:
+      de: Captcha Token
+      en: Captcha Token
     required: true
   - preset: vehicle-features
 render: |

@@ -1,4 +1,4 @@
-import { expect, Page, Locator } from "@playwright/test";
+import { expect, type Page, type Locator } from "@playwright/test";
 
 export async function enableExperimental(page: Page): Promise<void> {
   await page.getByTestId("topnavigation-button").click();
@@ -37,4 +37,10 @@ export async function editorType(editor: Locator, text: string | string[]): Prom
       await editor.page().keyboard.type(line + "\n");
     }
   }
+}
+
+export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
+  await editor.locator(".view-line").nth(0).click();
+  await page.evaluate((text) => navigator.clipboard.writeText(text), text);
+  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 50 });
 }

@@ -14,13 +14,17 @@ export type Template = {
   };
 };
 
+export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
   Advanced: boolean;
   Deprecated: boolean;
-  Default: string | number | boolean | undefined;
+
+  Default?: string | number | boolean;
   Choice?: string[];
+  Usages?: TemplateType[];
 };
 
 export type ModbusCapability = "rs485" | "tcpip";

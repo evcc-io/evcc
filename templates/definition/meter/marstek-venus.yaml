@@ -20,9 +20,10 @@ params:
     default: 11
     type: int
     advanced: true
-    description:
-      de: Venus kann nur bis 11% entladen werden.
+    help:
       en: Venus can only be discharged down to 11%.
+      de: Venus kann nur bis 11% entladen werden.
+    example: 11
   - name: maxsoc
     default: 100
     type: int
@@ -30,15 +31,18 @@ params:
   - name: maxchargepower
     default: 2500
     advanced: true
-    description:
-      en: Charge power in watts for Charge mode. 2500W is the maximum for Venus.
-      de: Ladeleistung in Watt für den Charge-Modus. 2500W ist das Maximum für Venus.
+    help:
+      en: 2500W is the maximum for Venus.
+      de: 2500W ist das Maximum für Venus.
   - name: work_mode_normal
     default: 1
     advanced: true
     description:
-      en: Work mode for Normal state. 0 manual, 1 anti-feed, 2 trade mode.
-      de: Work mode für Normal-Modus. 0 manuell, 1 Eigenverbrauch, 2 AI-Optimierung.
+      en: Work mode for Normal state
+      de: Work mode für Normal-Modus
+    help:
+      en: 0=manual, 1=anti-feed, 2=trade mode.
+      de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
 render: |
   type: custom
   power:

@@ -17,6 +17,9 @@ params:
     required: true
   - name: contract
     example: 100523456
+    description:
+      en: Contract number
+      de: Vertragsnummer
     help:
       de: Nur erforderlich, wenn mehrere Verträge unter einem Benutzer existieren
       en: Only required if multiple contracts belong to the same user

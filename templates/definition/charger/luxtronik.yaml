@@ -41,8 +41,11 @@ params:
   - name: wwoffset
     type: float
     unit: K
+    description:
+      de: Anhebung der Warmwassertemperatur
+      en: Hot water temperature boost
     help:
-      de: Anhebung der Warmwassertemperatur. Erhöht evtl. den Verschleiss des Kompressors.
+      de: Erhöht evtl. den Verschleiss des Kompressors.
       en: Temperature boost offset for hot water. Possibly increases wear on compressor.
     default: 0.0
     example: 8.5
@@ -50,9 +53,9 @@ params:
   - name: heatoffset
     type: float
     unit: K
-    help:
-      de: Anhebung der Heizwassertemperatur.
-      en: Temperature boost offset for heating.
+    description:
+      de: Anhebung der Heizwassertemperatur
+      en: Heating temperature boost
     default: 0.0
     example: 2.0
 render: |

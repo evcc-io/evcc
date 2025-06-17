@@ -1,14 +1,17 @@
 template: ocpp-abl
 products:
-  - brand: ABL Sursum
+  - brand: ABL
     description:
-      generic: eMH2
-  - brand: ABL Sursum
+      generic: eMH2 (OCPP)
+  - brand: ABL
     description:
-      generic: eMH3
-  - brand: ABL Sursum
+      generic: eMH3 (OCPP)
+  - brand: ABL
     description:
-      generic: eMH4
+      generic: eM4 Single (OCPP)
+  - brand: ABL
+    description:
+      generic: eM4 Twin (OCPP)
 capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
