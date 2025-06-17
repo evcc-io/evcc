@@ -1,4 +1,4 @@
 interface Pv {
-	title?: string;
-	power: number;
+  title?: string;
+  power: number;
 }
