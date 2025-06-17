@@ -23,6 +23,8 @@ function loadpoint(opts = {}) {
     icon: "car",
     title: "Garage",
     power: 2100,
+    index: 0,
+    chargerFeatureHeating: false,
   };
   return { ...base, ...opts };
 }
@@ -47,11 +49,12 @@ export const Standard = Template.bind({});
 Standard.args = {
   vehicles: [],
   loadpoints: [
-    loadpoint({ title: "Carport" }),
+    loadpoint({ title: "Carport", index: 0 }),
     loadpoint({
       title: "Water Heater",
       chargerFeatureIntegratedDevice: true,
       chargerIcon: "waterheater",
+      index: 1,
     }),
   ],
 };

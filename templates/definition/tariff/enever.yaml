@@ -9,6 +9,9 @@ params:
   - name: token
     required: true
   - name: provider
+    description:
+      en: Provider
+      de: Anbieter
     type: choice
     choice:
       [
@@ -25,6 +28,7 @@ params:
         "GSL",
         "MDE",
         "NE",
+        "PE",
         "TI",
         "VDB",
         "VON",

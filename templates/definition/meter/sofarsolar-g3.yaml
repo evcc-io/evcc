@@ -28,8 +28,8 @@ params:
     deprecated: true
   - name: storageunit
     help:
-      de: Nummer des Batteriespeichers. Im Fall eines BTS Speichers nicht die Adresse eines BTS 5K Batteriemodules, sondern der Speicherturm (BTS 5K-BDU Steuerungseinheit mit 1-4 BTS 5K Modulen).
-      en: Number of the battery storage. In case of a BTS storage not the address of a BTS 5K battery module, but the storage tower (BTS 5K-BDU control unit with 1-4 BTS 5K modules).
+      de: Im Fall eines BTS Speichers nicht die Adresse eines BTS 5K Batteriemodules, sondern der Speicherturm (BTS 5K-BDU Steuerungseinheit mit 1-4 BTS 5K Modulen).
+      en: In case of a BTS storage not the address of a BTS 5K battery module, but the storage tower (BTS 5K-BDU control unit with 1-4 BTS 5K modules).
     type: int
     default: 1
     advanced: true
@@ -38,8 +38,8 @@ params:
   - name: maxacpower
   - name: defaultmode
     help:
-      de: Standardmodus für die aktive Batteriesteuerung. Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
-      en: Default mode for battery control. Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
+      de: Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
+      en: Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
     default: 0 # self use
     advanced: true
   # battery control

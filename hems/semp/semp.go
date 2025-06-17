@@ -342,10 +342,7 @@ func (s *SEMP) serialNumber(id int) string {
 func UniqueDeviceID() ([]byte, error) {
 	bytes := 6
 
-	mid, err := machine.ProtectedID("evcc-semp")
-	if err != nil {
-		return nil, err
-	}
+	mid := machine.ProtectedID("evcc-semp")
 
 	b, err := hex.DecodeString(mid)
 	if err != nil {

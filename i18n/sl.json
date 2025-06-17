@@ -790,10 +790,9 @@
       "solarpercentage": "Sončna energija (%)",
       "vehicle": "Vozilo"
     },
-    "csvMonth": "Prenesi {month} CSV",
+    "csvPeriod": "Prenesi {period} CSV",
     "csvTotal": "Prenesi celoten CSV",
     "date": "Začetek",
-    "downloadCsv": "Prenesi kot CSV",
     "energy": "Napolnjeno",
     "filter": {
       "allLoadpoints": "vsa polnilna mesta",

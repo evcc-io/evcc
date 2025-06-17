@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -99,12 +98,20 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			return nil, err
 		}
 
-		params, err := sanitizeMasked(class, conf.Other)
-		if err != nil {
-			return nil, err
+		if conf.Type == typeTemplate {
+			// template device, mask config
+			params, err := sanitizeMasked(class, conf.Other)
+			if err != nil {
+				return nil, err
+			}
+			dc["config"] = params
+		} else {
+			// custom device, no masking
+			dc["config"] = conf.Other
 		}
-		dc["config"] = params
-	} else {
+	}
+
+	if dc["config"] == nil {
 		// add title if available
 		config := make(map[string]any)
 		if title, ok := conf.Other["title"].(string); ok {
@@ -183,7 +190,7 @@ func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
 	return dev.Instance(), nil
 }
 
-// deviceStatusHandler returns a device configuration by class
+// deviceStatusHandler returns the device test status by class
 func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -225,7 +232,7 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, req.Other, config.WithProperties(req.Properties))
+	conf, err := config.AddConfig(class, req.Serialise(), config.WithProperties(req.Properties))
 	if err != nil {
 		return nil, err
 	}
@@ -243,8 +250,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -300,6 +307,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 	if !ok {
 		return errors.New("not configurable")
 	}
+
 	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
 }
 
@@ -319,8 +327,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -479,6 +487,14 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		case templates.Circuit:
 			err = deleteDevice(id, config.Circuits())
+
+			// cleanup references
+			for _, dev := range h.Devices() {
+				lp := dev.Instance()
+				if lp.GetCircuitRef() == config.NameForID(id) {
+					lp.SetCircuitRef("")
+				}
+			}
 		}
 
 		setConfigDirty()
@@ -528,8 +544,8 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}

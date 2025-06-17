@@ -724,10 +724,9 @@
       "solarpercentage": "Solarno (%)",
       "vehicle": "Vozilo"
     },
-    "csvMonth": "Preuzmi CSV za {month}",
+    "csvPeriod": "Preuzmi CSV za {period}",
     "csvTotal": "Preuzmi CSV za ukupno",
     "date": "Početak",
-    "downloadCsv": "Preuzmi kao CSV",
     "energy": "Napunjeno",
     "filter": {
       "allLoadpoints": "sva mjesta napajanja",

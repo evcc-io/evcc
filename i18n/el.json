@@ -861,10 +861,9 @@
       "solarpercentage": "Φ/Β (%)",
       "vehicle": "Όχημα"
     },
-    "csvMonth": "Λήψη CSV {month}",
+    "csvPeriod": "Λήψη CSV {period}",
     "csvTotal": "Λήψη CSV συνόλων",
     "date": "Ξεκίνησε",
-    "downloadCsv": "Λήψη ως CSV",
     "energy": "Φόρτιση",
     "filter": {
       "allLoadpoints": "όλα τα σημεία φόρτισης",

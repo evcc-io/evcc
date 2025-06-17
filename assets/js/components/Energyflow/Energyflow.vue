@@ -70,7 +70,7 @@
 				<div
 					class="col-12 col-md-6 pe-md-5 pb-4 d-flex flex-column justify-content-between"
 				>
-					<div class="d-flex justify-content-between align-items-end mb-4">
+					<div class="d-flex justify-content-between align-items-baseline mb-4">
 						<h3 class="m-0">In</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
@@ -154,7 +154,7 @@
 				<div
 					class="col-12 col-md-6 ps-md-5 pb-4 d-flex flex-column justify-content-between"
 				>
-					<div class="d-flex justify-content-between align-items-end mb-4">
+					<div class="d-flex justify-content-between align-items-baseline mb-4">
 						<h3 class="m-0">Out</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
@@ -196,10 +196,10 @@
 							:expanded="loadpointsExpanded"
 							@toggle="toggleLoadpoints"
 						>
-							<template v-if="activeLoadpointsCount > 1" #expanded>
+							<template v-if="activeLoadpointsCount > 0" #expanded>
 								<EnergyflowEntry
-									v-for="(lp, index) in activeLoadpoints"
-									:key="index"
+									v-for="lp in activeLoadpoints"
+									:key="lp.index"
 									:name="lp.title"
 									:power="lp.power"
 									:powerUnit="powerUnit"

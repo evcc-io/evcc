@@ -26,8 +26,6 @@ type API interface {
 	// references
 	//
 
-	// TODO SetCircuitRef
-
 	// GetChargerRef returns the loadpoint charger
 	GetChargerRef() string
 	// SetChargerRef sets the loadpoint charger
@@ -36,8 +34,10 @@ type API interface {
 	GetMeterRef() string
 	// SetMeterRef sets the loadpoint meter
 	SetMeterRef(string)
-	// GetCircuitRef returns the loadpoint circuit name
+	// GetCircuitRef returns the loadpoint circuit
 	GetCircuitRef() string
+	// SetCircuitRef sets the loadpoint circuit
+	SetCircuitRef(string)
 	// GetCircuit returns the loadpoint circuit
 	GetCircuit() api.Circuit
 	// GetDefaultVehicleRef returns the loadpoint default vehicle

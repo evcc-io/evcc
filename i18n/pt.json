@@ -113,6 +113,9 @@
       "batteryStorage": "“Bateria”",
       "solarSystem": "Sistema fotovoltaico"
     },
+    "editor": {
+      "loading": "A carregar editor YAML…"
+    },
     "eebus": {
       "description": "Configuração que permite o evcc comunicar com outros dispositivos EEBus.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Cancelar",
+      "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
+      "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
       "docsLink": "Ver documentação.",
       "experimental": "Experimental",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Conectar evcc a outro sistema de gestão de energia doméstica.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "alterar"
     },
     "influx": {
       "description": "Escreve dados de carregamento e outras métricas no InfluxDB. Use o Grafana ou outras ferramentas para visualizar os dados.",
@@ -185,6 +193,7 @@
       "chargerPowerCustomHelp": "Definir um intervalo de Correntes personalizado.",
       "chargerTypeLabel": "Tipo de Carregador",
       "chargingTitle": "A Carregar",
+      "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "não atribuído",
       "defaultModeHelp": "Modo de carregamento ao ligar o veículo.",
@@ -255,6 +264,7 @@
       "addVehicle": "Adicionar veículo",
       "configured": "configurado",
       "edit": "editar",
+      "loadpointRequired": "Tem de ser configurado pelo menos um ponto de carga.",
       "name": "Nome",
       "title": "Configuração",
       "unconfigured": "não configurado",
@@ -268,6 +278,7 @@
     "meter": {
       "cancel": "Cancelar",
       "delete": "Apagar",
+      "generic": "Integrações genéricas",
       "option": {
         "aux": "Adicionar aparelho autorregulável",
         "battery": "Adicionar Contador de bateria",
@@ -275,6 +286,7 @@
         "pv": "Adicionar Contador solar"
       },
       "save": "Guardar",
+      "specific": "Integrações específicas",
       "template": "Fabricante",
       "titleChoice": "O que quer adicionar?",
       "validateSave": "Validar e guardar"
@@ -416,6 +428,7 @@
       "minimumCurrent": "Corrente mínima",
       "minimumCurrentHelp": "Somente ir abaixo de 6A se souber o que está a fazer.",
       "online": "Veículos com API online",
+      "primary": "Integrações genéricas",
       "priority": "Prioridade",
       "priorityHelp": "Uma prioridade mais elevada significa que este veículo tem acesso preferencial ao excedente solar.",
       "save": "Guardar",
@@ -861,10 +874,9 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Veículo"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download tudo CSV",
     "date": "Início",
-    "downloadCsv": "Download como CSV",
     "energy": "Carregado",
     "filter": {
       "allLoadpoints": "todos os postos de carregamento",
@@ -930,6 +942,11 @@
       "dark": "escuro",
       "label": "Estilo",
       "light": "claro"
+    },
+    "time": {
+      "12h": "12 horas",
+      "24h": "24 horas",
+      "label": "Formato da hora"
     },
     "title": "Interface de utilizador",
     "unit": {

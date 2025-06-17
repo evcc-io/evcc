@@ -113,6 +113,9 @@
       "batteryStorage": "Thuisaccu",
       "solarSystem": "PV systeem"
     },
+    "editor": {
+      "loading": "YAML editor laden…"
+    },
     "eebus": {
       "description": "Configuratie voor communicatie met andere EEBus apparaten.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Annuleren",
+      "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
+      "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
       "docsLink": "Zie documentatie.",
       "experimental": "Experimenteel",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Verbind evcc met een ander thuis-energie managementsysteem.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "wijzig"
     },
     "influx": {
       "description": "Schrijft laad-data en andere cijfers naar InfluxDB. Gebruik Grafana of andere tools om de data te visualiseren.",
@@ -185,6 +193,7 @@
       "chargerPowerCustomHelp": "Definieer een aangepast stroombereik.",
       "chargerTypeLabel": "Type laadpunt",
       "chargingTitle": "Opladen",
+      "circuitHelp": "Toewijzing van Load management om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "niet toegewezen",
       "defaultModeHelp": "Laadmodus bij het aansluiten van een voertuig.",
@@ -269,6 +278,7 @@
     "meter": {
       "cancel": "Annuleren",
       "delete": "Verwijder",
+      "generic": "Generieke integraties",
       "option": {
         "aux": "Zelfregulerende consument toevoegen",
         "battery": "Batterijmeter toevoegen",
@@ -276,6 +286,7 @@
         "pv": "Zonne-energie meter toevoegen"
       },
       "save": "Opslaan",
+      "specific": "Specifieke integraties",
       "template": "Fabrikant",
       "titleChoice": "Wat wil je toevoegen?",
       "validateSave": "Valideren en opslaan"
@@ -417,6 +428,7 @@
       "minimumCurrent": "Minimale stroomsterkte",
       "minimumCurrentHelp": "Stel alleen lager in dan 6A waneer je weet wat je doet.",
       "online": "Voertuig met online API",
+      "primary": "Generieke integraties",
       "priority": "Prioriteit",
       "priorityHelp": "Hogere prioriteit betekent dat dit voertuig met voorrang toegang heeft tot zonneoverschot.",
       "save": "Opslaan",
@@ -862,10 +874,9 @@
       "solarpercentage": "Zonne-energie (%)",
       "vehicle": "Voertuig"
     },
-    "csvMonth": "Download CSV van {month}",
+    "csvPeriod": "Download CSV van {period}",
     "csvTotal": "Download totale CSV",
     "date": "Start",
-    "downloadCsv": "Download als CSV",
     "energy": "Geladen",
     "filter": {
       "allLoadpoints": "alle oplaadpunten",

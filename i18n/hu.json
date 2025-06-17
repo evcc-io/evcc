@@ -255,6 +255,7 @@
       "addVehicle": "Jármű hozzáadása",
       "configured": "konfigurálva",
       "edit": "szerkesztés",
+      "loadpointRequired": "Legalább egy töltőpontnak konfigurálva kell lennie.",
       "name": "Név",
       "title": "Konfiguráció",
       "unconfigured": "nincs konfigurálva",
@@ -280,6 +281,11 @@
       "validateSave": "Ellenőrzés & mentés"
     },
     "modbus": {
+      "baudrate": "Baud rate",
+      "comset": "ComSet",
+      "connection": "Modbus kapcsolat",
+      "connectionHintSerial": "Az eszköz közvetlenül van csatlakoztatva az evcc-hez RS485-ös interfészen keresztül.",
+      "connectionHintTcpip": "Az eszköz címezhető az evcc-ből LAN/Wifi-n keresztül.",
       "connectionValueSerial": "Soros / USB",
       "connectionValueTcpip": "Hálózat",
       "device": "Eszköz neve",
@@ -288,7 +294,11 @@
       "hostHint": "Példa: 192.0.2.2",
       "id": "Modbus ID",
       "port": "Port",
-      "protocol": "Modbus protokoll"
+      "protocol": "Modbus protokoll",
+      "protocolHintRtu": "Csatlakozás RS485-Ethernet adapteren keresztül protokollfordítás nélkül.",
+      "protocolHintTcp": "Az eszköz natív LAN/Wifi támogatással rendelkezik, vagy RS485-Ethernet adapteren keresztül csatlakozik protokollfordítással.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
       "description": "Több kliens csatlakozásának engedélyezése egy Modbus eszközhöz.",
@@ -579,6 +589,11 @@
       "modalTitle": "Töltési Tervezet",
       "none": "nincs",
       "planNumber": "Terv {number}",
+      "preconditionDescription": "Töltse {duration} indulás előtt az akkumulátor előkondícionálásához.",
+      "preconditionLong": "Késleltetett Töltés",
+      "preconditionOptionAll": "minden",
+      "preconditionOptionNo": "nem",
+      "preconditionShort": "Később",
       "remove": "Törlés",
       "repeating": "ismétlődő",
       "repeatingPlans": "Ismétlődő tervek",
@@ -847,10 +862,9 @@
       "solarpercentage": "Napenergia (%)",
       "vehicle": "Jármű"
     },
-    "csvMonth": "Letöltés - {month} .CSV",
+    "csvPeriod": "Letöltés - {period} .CSV",
     "csvTotal": "Letöltés - Összes időszak .CSV",
     "date": "Kezdés",
-    "downloadCsv": "Letöltés mint: CSV",
     "energy": "Töltve",
     "filter": {
       "allLoadpoints": "minden töltőpont",
@@ -916,6 +930,11 @@
       "dark": "sötét",
       "label": "Megjelenés",
       "light": "világos"
+    },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Idő formátum"
     },
     "title": "Felhasználói felület",
     "unit": {
