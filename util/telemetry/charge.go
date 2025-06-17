@@ -39,7 +39,7 @@ func Enable(enable bool) error {
 			return errors.New("telemetry requires sponsorship")
 		}
 		if instanceID == "" {
-			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
+			return fmt.Errorf("instance id not set")
 		}
 	}
 
@@ -48,31 +48,12 @@ func Enable(enable bool) error {
 	return nil
 }
 
-// getOrCreateID return instance id from settings if exists, otherwise creates and stores a new one
-func getOrCreateID() string {
-	if id, err := settings.String(keys.Plant); err == nil {
-		return id
-	}
-
-	id := machine.RandomID()
-	settings.SetString(keys.Plant, id)
-
-	return id
-}
-
 func Create(machineID string) {
-	// no machine id from config
-	if machineID == "" {
-		if id, err := machine.ProtectedID("evcc-api"); err == nil {
-			// use id from hardware
-			machineID = id
-		} else {
-			// use id from database, generate if needed (e.g. in docker environment)
-			machineID = getOrCreateID()
-		}
-	}
-
 	instanceID = machineID
+
+	if machineID == "" {
+		instanceID = machine.ProtectedID("evcc-api")
+	}
 }
 
 // UpdateChargeProgress uploads power and energy data every 30 seconds

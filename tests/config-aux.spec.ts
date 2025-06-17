@@ -38,7 +38,7 @@ test.describe("aux meter", async () => {
     await expectModalHidden(meterModal);
 
     // check
-    await expect(page.getByTestId("aux")).toBeVisible(1);
+    await expect(page.getByTestId("aux")).toBeVisible();
     await expect(page.getByTestId("aux")).toContainText("Water heater");
     await expect(page.getByTestId("aux")).toContainText("1.2 kW");
 
@@ -47,7 +47,7 @@ test.describe("aux meter", async () => {
     await page.reload();
 
     // recheck
-    await expect(page.getByTestId("aux")).toBeVisible(1);
+    await expect(page.getByTestId("aux")).toBeVisible();
     await expect(page.getByTestId("aux")).toContainText("Water heater");
     await expect(page.getByTestId("aux")).toContainText("1.2 kW");
 
