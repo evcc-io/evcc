@@ -2,23 +2,23 @@ import BatteryIcon from "./BatteryIcon.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
 export default {
-	title: "Energyflow/BatteryIcon",
-	component: BatteryIcon,
-	parameters: {
-		layout: "centered",
-	},
+  title: "Energyflow/BatteryIcon",
+  component: BatteryIcon,
+  parameters: {
+    layout: "centered",
+  },
 } as Meta<typeof BatteryIcon>;
 
 const Template: StoryFn<typeof BatteryIcon> = (args) => {
-	const story = () => ({
-		components: { BatteryIcon },
-		setup() {
-			return { args };
-		},
-		template: '<BatteryIcon v-bind="args" />',
-	});
-	story.args = args;
-	return story;
+  const story = () => ({
+    components: { BatteryIcon },
+    setup() {
+      return { args };
+    },
+    template: '<BatteryIcon v-bind="args" />',
+  });
+  story.args = args;
+  return story;
 };
 
 export const Empty = Template.bind({});
