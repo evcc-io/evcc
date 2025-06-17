@@ -990,11 +990,7 @@ export default defineComponent({
 		},
 		deviceError(type: string, name: string) {
 			const fatal = store.state?.fatal;
-			if (fatal) {
-				return fatal.class === type && fatal.device === name;
-			} else {
-				return false;
-			}
+			return fatal && fatal.class === type && fatal.device === name;
 		},
 		chargerIcon(chargerName: string) {
 			const charger = this.chargers.find((c) => c.name === chargerName);
