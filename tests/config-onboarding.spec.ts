@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
