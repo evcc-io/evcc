@@ -2,22 +2,22 @@ import { reactive } from "vue";
 import api from "./api";
 
 const restart = reactive({
-	restartNeeded: false,
-	restarting: false,
+  restartNeeded: false,
+  restarting: false,
 });
 
 export async function performRestart() {
-	try {
-		await api.post("/system/shutdown");
-		restart.restarting = true;
-	} catch (e) {
-		alert(`Unable to restart server. ${e}`);
-	}
+  try {
+    await api.post("/system/shutdown");
+    restart.restarting = true;
+  } catch (e) {
+    alert(`Unable to restart server. ${e}`);
+  }
 }
 
 export function restartComplete() {
-	restart.restarting = false;
-	restart.restartNeeded = false;
+  restart.restarting = false;
+  restart.restartNeeded = false;
 }
 
 export default restart;
