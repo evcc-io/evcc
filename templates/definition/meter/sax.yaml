@@ -22,7 +22,7 @@ params:
   - name: watchdog
     type: duration
     default: 240s
-    #advanced: true
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
