@@ -975,16 +975,15 @@ export default defineComponent({
 			if (data.maxPower) {
 				result.powerRange = {
 					value: [p, data.maxPower],
-					warning: p >= data.maxPower,
+					warning: data.power && data.power >= data.maxPower,
 				};
 			} else {
 				result.power = { value: p, muted: true };
 			}
 			if (data.maxCurrent) {
-				const c = data.current || 0;
 				result.currentRange = {
-					value: [c, data.maxCurrent],
-					warning: c >= data.maxCurrent,
+					value: [data.current || 0, data.maxCurrent],
+					warning: data.current && data.current >= data.maxCurrent,
 				};
 			}
 			return result;
