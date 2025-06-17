@@ -1,4 +1,3 @@
-# watchdog implementation is based on evcc/templates/definition/meter/huawei-smartlogger.yaml
 template: sax
 products:
   - brand: SAX
