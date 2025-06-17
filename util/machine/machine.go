@@ -59,7 +59,7 @@ func ID() string {
 
 // getOrCreateIDFromSettings return instance id from settings if exists, otherwise creates and stores a new one
 func getOrCreateIDFromSettings() string {
-	if id, err := settings.String(keys.Plant); err == nil {
+	if id, err := settings.String(keys.Plant); err == nil && id != "" {
 		return id
 	}
 
