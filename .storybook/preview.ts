@@ -1,4 +1,4 @@
-import { setup } from "@storybook/vue3";
+import { Preview, setup } from "@storybook/vue3";
 import "bootstrap/dist/css/bootstrap.min.css";
 import smoothscroll from "smoothscroll-polyfill";
 import setupI18n from "../assets/js/i18n";
@@ -9,8 +9,7 @@ smoothscroll.polyfill();
 watchThemeChanges();
 
 // Setup global parameters
-/** @type { import('@storybook/vue3').Preview } */
-const preview = {
+const preview: Preview = {
   parameters: {
     controls: {
       matchers: {

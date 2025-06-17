@@ -84,6 +84,7 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.5",
+    "@jest/types": "^29.6.3",
     "@storybook/addon-essentials": "^8.6.4",
     "@storybook/addon-interactions": "^8.6.4",
     "@storybook/blocks": "^8.6.4",
@@ -95,6 +96,7 @@
     "@types/smoothscroll-polyfill": "^0.3.4",
     "cross-env": "^7.0.3",
     "eslint-plugin-storybook": "^0.12.0",
+    "jiti": "^2.4.2",
     "prettier-plugin-sort-json": "^4.1.1",
     "storybook": "^8.6.4"
   }
