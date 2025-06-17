@@ -289,8 +289,8 @@ export default defineComponent({
 			}
 		},
 		updateQuery({ level, areas }: { level?: string; areas?: string[] }) {
-			let newLevel: string | undefined = level || this.level;
-			let newAreas = areas || this.areas;
+			const newLevel: string | undefined = level || this.level;
+			const newAreas = areas || this.areas;
 
 			this.$router.push({
 				query: {
