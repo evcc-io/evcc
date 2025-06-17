@@ -5,8 +5,10 @@
   "scripts": {
     "build": "vite build",
     "test": "cross-env TZ=Europe/Berlin vitest",
-    "lint": "prettier assets ./**/*.{yml,yaml,sh} ./i18n/*.json --write && eslint assets/**/*.js assets/**/*.vue --fix --max-warnings=0 && npm run tsc",
-    "tsc": "vue-tsc --noEmit",
+    "lint": "npm run lint:prettier && npm run lint:eslint && npm run lint:tsc",
+    "lint:prettier": "prettier assets tests **/*.{yaml,sh} i18n/*.json --write",
+    "lint:eslint": "eslint --fix --max-warnings=0",
+    "lint:tsc": "vue-tsc --noEmit",
     "dev": "vite",
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator",
