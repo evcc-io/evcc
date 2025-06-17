@@ -12,8 +12,10 @@ config.global.mocks["$t"] = (a: string) => a;
 
 const fmt = mount(
   defineComponent({
-    render() {},
     mixins: [formatter],
+    render() {
+      return null;
+    },
   })
 ).vm;
 
