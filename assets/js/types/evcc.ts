@@ -2,162 +2,170 @@ import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/type
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
 declare global {
-	interface Window {
-		app: any;
-		evcc: {
-			version: string;
-			commit: string;
-		};
-	}
+  interface Window {
+    app: any;
+    evcc: {
+      version: string;
+      commit: string;
+      customCss: string;
+    };
+  }
 }
 
 export interface Auth {
-	vehicles: VehicleLogins;
+  vehicles: VehicleLogins;
 }
 
 export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
 export interface FatalError {
-	error: any;
-	class?: any;
+  error: any;
+  class?: any;
 }
 
 export interface State {
-	offline: boolean;
-	startup?: boolean;
-	loadpoints: [];
-	forecast?: Forecast;
-	currency?: CURRENCY;
-	fatal?: FatalError;
-	auth?: Auth;
+  offline: boolean;
+  startup?: boolean;
+  loadpoints: [];
+  forecast?: Forecast;
+  currency?: CURRENCY;
+  fatal?: FatalError;
+  auth?: Auth;
+  vehicles: Vehicle[];
 }
 
 export interface LoadpointCompact {
-	icon: string;
-	title: string;
-	charging: boolean;
-	soc?: number;
-	power: number;
-	heating?: boolean;
-	chargePower: number;
-	connected: boolean;
-	index: number;
-	vehicleName: string;
-	chargerIcon?: string;
-	vehicleSoc: number;
-	chargerFeatureHeating: boolean;
+  icon: string;
+  title: string;
+  charging: boolean;
+  soc?: number;
+  power: number;
+  heating?: boolean;
+  chargePower: number;
+  connected: boolean;
+  index: number;
+  vehicleName: string;
+  chargerIcon?: string;
+  vehicleSoc: number;
+  chargerFeatureHeating: boolean;
+}
+
+export enum THEME {
+  AUTO = "auto",
+  LIGHT = "light",
+  DARK = "dark",
 }
 
 export enum CURRENCY {
-	AUD = "AUD",
-	BGN = "BGN",
-	BRL = "BRL",
-	CAD = "CAD",
-	CHF = "CHF",
-	CNY = "CNY",
-	EUR = "EUR",
-	GBP = "GBP",
-	ILS = "ILS",
-	NZD = "NZD",
-	PLN = "PLN",
-	USD = "USD",
-	DKK = "DKK",
-	SEK = "SEK",
+  AUD = "AUD",
+  BGN = "BGN",
+  BRL = "BRL",
+  CAD = "CAD",
+  CHF = "CHF",
+  CNY = "CNY",
+  EUR = "EUR",
+  GBP = "GBP",
+  ILS = "ILS",
+  NZD = "NZD",
+  PLN = "PLN",
+  USD = "USD",
+  DKK = "DKK",
+  SEK = "SEK",
 }
 
 export enum ICON_SIZE {
-	XS = "xs",
-	S = "s",
-	M = "m",
-	L = "l",
-	XL = "xl",
+  XS = "xs",
+  S = "s",
+  M = "m",
+  L = "l",
+  XL = "xl",
 }
 
 export enum CHARGE_MODE {
-	OFF = "off",
-	NOW = "now",
-	MINPV = "minpv",
-	PV = "pv",
+  OFF = "off",
+  NOW = "now",
+  MINPV = "minpv",
+  PV = "pv",
 }
 
 export enum PHASES {
-	AUTO = 0,
-	ONE_PHASE = 1,
-	TWO_PHASES = 2,
-	THREE_PHASES = 3,
+  AUTO = 0,
+  ONE_PHASE = 1,
+  TWO_PHASES = 2,
+  THREE_PHASES = 3,
 }
 
 export interface Sponsor {
-	name: string;
-	expiresAt: string;
-	expiresSoon: boolean;
+  name: string;
+  expiresAt: string;
+  expiresSoon: boolean;
 }
 
 export interface Notification {
-	message: string;
-	time: Date;
-	level: string;
-	lp: number;
-	count: number;
+  message: string;
+  time: Date;
+  level: string;
+  lp: number;
+  count: number;
 }
 
 export interface Battery {
-	power: number;
-	soc: number;
-	controllable: boolean;
-	capacity: number; // 0 when not specified
-	title?: string;
+  power: number;
+  soc: number;
+  controllable: boolean;
+  capacity: number; // 0 when not specified
+  title?: string;
 }
 
 export interface Vehicle {
-	name: string;
-	minSoc?: number;
-	limitSoc?: number;
-	plan?: StaticPlan;
-	repeatingPlans: RepeatingPlan[];
-	title: string;
-	features?: string[];
-	capacity?: number;
-	icon?: string;
+  name: string;
+  minSoc?: number;
+  limitSoc?: number;
+  plan?: StaticPlan;
+  repeatingPlans: RepeatingPlan[];
+  title: string;
+  features?: string[];
+  capacity?: number;
+  icon?: string;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;
 
 export interface Tariff {
-	rates: Rate[];
-	lastUpdate: Date;
+  rates: Rate[];
+  lastUpdate: Date;
 }
 
 export interface Rate {
-	start: Date;
-	end: Date;
-	value: number;
+  start: Date;
+  end: Date;
+  value: number;
 }
 
 export interface Slot {
-	day: string;
-	value?: number;
-	startHour: number;
-	endHour: number;
-	charging: boolean;
-	toLate?: boolean | null;
-	warning?: boolean | null;
-	isTarget?: boolean | null;
-	selectable?: boolean | null;
+  day: string;
+  value?: number;
+  startHour: number;
+  endHour: number;
+  charging: boolean;
+  toLate?: boolean | null;
+  warning?: boolean | null;
+  isTarget?: boolean | null;
+  selectable?: boolean | null;
 }
 
 export interface Forecast {
-	grid?: ForecastSlot[];
-	co2?: ForecastSlot[];
-	solar?: SolarDetails;
-	planner?: ForecastSlot[];
+  grid?: ForecastSlot[];
+  co2?: ForecastSlot[];
+  solar?: SolarDetails;
+  planner?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {
-	name: string;
-	value: T;
-	count?: number;
-	disabled?: boolean;
+  name: string;
+  value: T;
+  count?: number;
+  disabled?: boolean;
 }
 
 export type DeviceType = "charger" | "meter" | "vehicle";

@@ -7,17 +7,17 @@ import { spawn } from "child_process";
 import { Transform } from "stream";
 
 function workerPort() {
-  const index = process.env.TEST_WORKER_INDEX * 1;
+  const index = parseInt(process.env["TEST_WORKER_INDEX"] ?? "-1");
   return 12000 + index;
 }
 
 function logPrefix() {
-  return `[worker:${process.env.TEST_WORKER_INDEX}]`;
+  return `[worker:${process.env["TEST_WORKER_INDEX"]}]`;
 }
 
 function createSteamLog() {
   return new Transform({
-    transform(chunk, encoding, callback) {
+    transform(chunk: Buffer, _, callback) {
       const lines = chunk.toString().split("\n");
       lines.forEach((line) => {
         if (line.trim()) log(line);
@@ -27,7 +27,7 @@ function createSteamLog() {
   });
 }
 
-function log(...args) {
+function log(...args: any[]) {
   console.log(logPrefix(), ...args);
 }
 
@@ -55,7 +55,7 @@ export async function startSimulator() {
   log(`wait until port ${port} is available`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
 
-  const instance = spawn("npm", ["run", "simulator", "--", "--port", port]);
+  const instance = spawn("npm", ["run", "simulator", "--", "--port", port.toString()]);
 
   const steamLog = createSteamLog();
   instance.stdout.pipe(steamLog);

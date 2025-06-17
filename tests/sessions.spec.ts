@@ -1,4 +1,4 @@
-import { test, expect, devices } from "@playwright/test";
+import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
@@ -13,7 +13,7 @@ test.afterAll(async () => {
   await stop();
 });
 
-async function selectLoadpointFilter(page, value) {
+async function selectLoadpointFilter(page: Page, value: string) {
   await page
     .getByTestId("filter-loadpoint")
     .locator("visible=true")
@@ -21,7 +21,7 @@ async function selectLoadpointFilter(page, value) {
     .selectOption(value);
 }
 
-async function selectVehicleFilter(page, value) {
+async function selectVehicleFilter(page: Page, value: string) {
   await page
     .getByTestId("filter-vehicle")
     .locator("visible=true")
@@ -56,26 +56,32 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(9);
 
     await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
-    await expect(page.getByTestId("sessions-foot-energy")).toBeVisible("20.0");
+    await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-energy")).toHaveText("20.0");
 
     await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
-    await expect(page.getByTestId("sessions-foot-solar")).toBeVisible("67.3");
+    await expect(page.getByTestId("sessions-foot-solar")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-solar")).toHaveText("67.3");
 
     await expect(page.getByTestId("sessions-head-price")).toContainText("Cost€");
-    await expect(page.getByTestId("sessions-foot-price")).toBeVisible("5.50");
+    await expect(page.getByTestId("sessions-foot-price")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-price")).toHaveText("5.50");
 
     await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
-    await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible("27.5");
+    await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-avgPrice")).toHaveText("27.5");
 
     await expect(page.getByTestId("sessions-head-chargeDuration")).toContainText("Durationh:mm");
-    await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible("1:30");
+    await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-chargeDuration")).toHaveText("1:30");
 
     await page
       .getByTestId("sessions-head-chargeDuration")
       .getByRole("combobox")
       .selectOption("⌀ Power");
     await expect(page.getByTestId("sessions-head-avgPower")).toContainText("⌀ PowerkW");
-    await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible("1:30");
+    await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-avgPower")).toHaveText("10.0");
 
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
   });
@@ -89,19 +95,23 @@ test.describe("mobile basics", async () => {
     await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(5);
 
     await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
-    await expect(page.getByTestId("sessions-foot-energy")).toBeVisible("20.0");
+    await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-energy")).toHaveText("20.0");
 
     await page.getByTestId("sessions-head-energy").getByRole("combobox").selectOption("Solar");
     await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
-    await expect(page.getByTestId("sessions-foot-solar")).toBeVisible("67.3");
+    await expect(page.getByTestId("sessions-foot-solar")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-solar")).toHaveText("67.3");
 
     await page.getByTestId("sessions-head-solar").getByRole("combobox").selectOption("Cost");
     await expect(page.getByTestId("sessions-head-price")).toContainText("Cost€");
-    await expect(page.getByTestId("sessions-foot-price")).toBeVisible("5.50");
+    await expect(page.getByTestId("sessions-foot-price")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-price")).toHaveText("5.50");
 
     await page.getByTestId("sessions-head-price").getByRole("combobox").selectOption("⌀ Price");
     await expect(page.getByTestId("sessions-head-avgPrice")).toContainText("⌀ Pricect/kWh");
-    await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible("27.5");
+    await expect(page.getByTestId("sessions-foot-avgPrice")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-avgPrice")).toHaveText("27.5");
   });
 
   test("keep selection when paging", async ({ page }) => {

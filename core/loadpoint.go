@@ -648,8 +648,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	// vehicle
-	lp.publish(keys.VehicleName, "")
-	lp.publish(keys.VehicleOdometer, 0.0)
+	lp.unpublishVehicleIdentity()
+	lp.unpublishVehicle()
 
 	// assign and publish default vehicle
 	if lp.defaultVehicle != nil {

@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
   enableExperimental,
   expectModalHidden,
   expectModalVisible,
   editorClear,
-  editorType,
+  editorPaste,
 } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
@@ -18,7 +18,7 @@ test.afterEach(async () => {
   await stop();
 });
 
-async function goToConfig(page) {
+async function goToConfig(page: Page) {
   await page.goto("/#/config");
   await enableExperimental(page);
 }
@@ -47,19 +47,20 @@ test.describe("tariffs", async () => {
 
     // clear and enter invalid yaml
     await editorClear(editor);
-    await editorType(editor, "foo: bar");
+    await editorPaste(editor, page, "foo: bar");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).toContainText("invalid keys: foo");
 
     // clear and enter valid yaml
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "currency: CHF",
-      "grid:",
-      "  type: fixed",
-      "price: 0.123",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `currency: CHF
+grid:
+  type: fixed
+  price: 0.123`
+    );
 
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();

@@ -1,6 +1,7 @@
+import type { App } from "vue";
 import settings from "./settings";
 
-export function setHiddenFeatures(value) {
+export function setHiddenFeatures(value: boolean) {
   settings.hiddenFeatures = value;
 }
 
@@ -9,7 +10,7 @@ export function getHiddenFeatures() {
 }
 
 export default {
-  install: (app) => {
+  install: (app: App) => {
     app.config.globalProperties.$hiddenFeatures = getHiddenFeatures;
   },
 };

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
@@ -12,7 +12,7 @@ test.afterEach(async () => {
 
 const SELECT_ALL = "ControlOrMeta+KeyA";
 
-async function goToConfig(page) {
+async function goToConfig(page: Page) {
   await page.goto("/#/config");
   await enableExperimental(page);
 }

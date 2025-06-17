@@ -6,6 +6,14 @@ params:
     help:
       de: Wird in der Benutzeroberfläche angezeigt
       en: Will be displayed in the user interface
+  - name: usage
+    description:
+      de: Verwendung
+      en: Usage
+  - name: modbus
+    description:
+      en: Modbus Type
+      de: Modbus Typ
   - name: modbusid
     description:
       generic: Modbus ID
@@ -132,11 +140,11 @@ params:
     type: duration
   - name: mode
     description:
-      de: Standardlademodus, wenn ein Fahrzeug angeschlossen ist
-      en: Default charging mode when a vehicle is connected
+      de: Standardlademodus
+      en: Default charging mode
     help:
-      de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
-      en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
+      de: Wird beim Anschließen eines Fahrzeugs verwendet. Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
+      en: Used when a vehicle is connected. Possible values are Off, Now, MinPV and PV, or empty if none should be set
     type: chargemodes
   - name: minsoc
     unit: "%"
@@ -148,6 +156,7 @@ params:
       en: Lower limit when discharging the battery in normal operation
     example: 25
     type: int
+    usages: ["battery", "vehicle"]
   - name: maxsoc
     unit: "%"
     description:
@@ -158,6 +167,7 @@ params:
       en: Upper limit when charging the battery from the grid
     example: 95
     type: int
+    usages: ["battery"]
   - name: mincurrent
     unit: A
     description:
@@ -273,6 +283,9 @@ params:
     help:
       en: HTTP(S) address
       de: HTTP(S) Adresse
+  - name: url
+    description:
+      generic: URL
   - name: ain
     mask: true
     example: "307788992233"
@@ -284,10 +297,10 @@ params:
       de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
   - name: coarsecurrent
     type: bool
-    help:
+    description:
       en: 1A current control
       de: 1A Ladestromvorgabe
-    description:
+    help:
       en: Vehicle supports 1A current steps only
       de: Fahrzeug unterstützt nur 1A Schritte der Ladestromvorgabe
   - name: welcomecharge
@@ -318,6 +331,11 @@ params:
       en: For forced charging of the battery.
       de: Für erzwungenes Laden des Speichers.
     advanced: true
+  - name: chargepower
+    description:
+      en: Maximum charge power
+      de: Maximale Ladeleistung
+    deprecated: true
   - name: maxchargerate
     unit: "%"
     type: int
@@ -330,7 +348,86 @@ params:
       de: Für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
     default: 100
     advanced: true
-
+  - name: accesstoken
+    description:
+      generic: Access token
+  - name: refreshtoken
+    description:
+      generic: Refresh token
+  - name: serial
+    description:
+      en: Serial
+      de: Seriennummer
+  - name: region
+    description:
+      generic: Region
+  - name: channel
+    description:
+      en: Channel
+      de: Kanal
+  - name: clientid
+    description:
+      generic: Client ID
+  - name: clientsecret
+    description:
+      generic: Client Secret
+  - name: token
+    description:
+      generic: Token
+  - name: interval
+    description:
+      de: Intervall
+      en: Interval
+  - name: mac
+    description:
+      en: MAC Address
+      de: MAC Adresse
+  - name: pin
+    description:
+      generic: PIN
+  - name: serial_number
+    description:
+      en: Serial Number
+      de: Seriennummer
+  - name: watchdog
+    description:
+      generic: Watchdog
+  - name: uuid
+    description:
+      generic: UUID
+  - name: zip
+    description:
+      en: ZIP code
+      de: Postleitzahl
+  - name: storageunit
+    description:
+      en: Battery storage unit index
+      de: Nummer des Batteriespeichers
+  - name: delay
+    description:
+      en: Delay
+      de: Verzögerung
+  - name: id
+    description:
+      generic: ID
+  - name: stationid
+    type: string
+    description:
+      generic: Station ID
+  - name: meter
+    description:
+      en: Meter ID
+      de: Zählernummer
+  - name: domain
+    description:
+      generic: Domain
+  - name: apikey
+    description:
+      generic: API Key
+  - name: tempsource
+    description:
+      de: "Temperaturquelle"
+      en: "Temperature source"
 presets:
   vehicle-base:
     params:
@@ -485,11 +582,10 @@ presets:
       - name: stationid
         type: string
         description:
-          en: Station ID
-          de: Station ID
+          generic: Station ID
         help:
-          en: "Station ID of the charging point. Only required if multiple OCPP charging stations are set up to assign them correctly. A single OCPP charging station can also be automatically assigned. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form ws://<evcc-address>:8887/<stationid>. Most charging stations automatically add the ID internally."
-          de: "Station ID des Ladepunktes. Nur erforderlich wenn mehrere OCPP-Ladestationen eingerichtet sind um diese korrekt zuzuweisen. Eine einzelne OCPP-Ladestation kann auch automatisch zugeordnet werden. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form ws://<evcc-adresse>:8887/<stationid> anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
+          en: "Station ID of the charging point. Only required if multiple OCPP charging stations are set up to assign them correctly. A single OCPP charging station can also be automatically assigned. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form `ws://<evcc-address>:8887/<stationid>`. Most charging stations automatically add the ID internally."
+          de: "Station ID des Ladepunktes. Nur erforderlich wenn mehrere OCPP-Ladestationen eingerichtet sind um diese korrekt zuzuweisen. Eine einzelne OCPP-Ladestation kann auch automatisch zugeordnet werden. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form `ws://<evcc-adresse>:8887/<stationid>` anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
         example: EVB-P12354
       - name: connector
         description:
@@ -503,28 +599,31 @@ presets:
         advanced: true
         type: bool
         description:
-          de: Immer eine Remote-Transaktion starten (RemoteStartTransaction) sobald ein Fahrzeug angeschlossen wird
-          en: Always start a remote transaction (RemoteStartTransaction) as soon as a vehicle is connected
+          de: Remote-Transaktion bei Fahrzeugverbindung starten
+          en: Start remote transaction on vehicle connection
         help:
-          de: Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren! Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten. Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist. Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen!
-          en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary!
+          de: Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren! Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten. Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist. Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen! (Verwendet OCPP RemoteStartTransaction)
+          en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary! (Uses OCPP RemoteStartTransaction)
       - name: idtag
         advanced: true
         type: string
         description:
-          en: Identifier used for authentication of external transactions (RemoteStartTransaction)
-          de: Identifikator zur Authentifizierung von externen Transaktionen (RemoteStartTransaction)
+          en: Authentication token
+          de: Authentifizierungs-Token
         help:
-          de: Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert.
-          en: This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions.
+          de: "Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. (Verwendet OCPP RemoteStartTransaction)"
+          en: "This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. (Uses OCPP RemoteStartTransaction)"
         example: evcc
       - name: connecttimeout
         advanced: true
         type: duration
         default: 5m
         description:
-          de: Zeitlimit für die Registrierung des Ladepunktes
-          en: Timeout for the registration of the charging point
+          de: Zeitlimit für die Registrierung
+          en: Timeout for registration
+        help:
+          de: "Zeitlimit für die Registrierung des Ladepunktes"
+          en: "Timeout for the registration of the charging point"
       - name: timeout
         advanced: true
         type: duration
@@ -534,14 +633,20 @@ presets:
         type: duration
         default: 10s
         description:
-          de: Übertragungsintervall der Zählerwerte (MeterValueSampleInterval)
-          en: Transmission interval of meter values (MeterValueSampleInterval)
+          de: Übertragungsintervall der Zählerwerte
+          en: Transmission interval for meter values
+        help:
+          de: "Zeitintervall für die Übertragung der Zählerwerte (MeterValueSampleInterval)"
+          en: "Time interval for transmission of meter values (MeterValueSampleInterval)"
       - name: metervalues
         advanced: true
         type: string
         description:
-          de: Manuelle Vorgabe der zu konfigurierenden Zählerwerte (MeterValuesSampledData)
-          en: Manual specification of the meter values to be configured (MeterValuesSampledData)
+          de: Zählerwerte für die Übertragung
+          en: Meter values for transmission
+        help:
+          de: "Manuelle Vorgabe der zu konfigurierenden Zählerwerte (MeterValuesSampledData)"
+          en: "Manual specification of the meter values to be configured (MeterValuesSampledData)"
         example: Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage
 
   mqtt:
@@ -561,8 +666,7 @@ presets:
         advanced: true
       - name: topic
         description:
-          de: Topic
-          en: Topic
+          generic: Topic
         help:
           de: Topic (ohne / am Anfang)
           en: Topic (omit leading /)

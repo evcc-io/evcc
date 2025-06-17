@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
   editorClear,
-  editorType,
+  editorPaste,
   enableExperimental,
   expectModalHidden,
   expectModalVisible,
@@ -38,7 +38,7 @@ test.describe("aux meter", async () => {
     await expectModalHidden(meterModal);
 
     // check
-    await expect(page.getByTestId("aux")).toBeVisible(1);
+    await expect(page.getByTestId("aux")).toBeVisible();
     await expect(page.getByTestId("aux")).toContainText("Water heater");
     await expect(page.getByTestId("aux")).toContainText("1.2 kW");
 
@@ -47,7 +47,7 @@ test.describe("aux meter", async () => {
     await page.reload();
 
     // recheck
-    await expect(page.getByTestId("aux")).toBeVisible(1);
+    await expect(page.getByTestId("aux")).toBeVisible();
     await expect(page.getByTestId("aux")).toContainText("Water heater");
     await expect(page.getByTestId("aux")).toContainText("1.2 kW");
 
@@ -81,16 +81,16 @@ test.describe("aux meter", async () => {
     await expect(editor).toContainText("power: # current power");
 
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "power:",
-      "  source: const",
-      "value: 3000 # W",
-      "Shift+Tab",
-      "energy:",
-      "  source: const",
-      "value: 42.0 # kWh",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `power:
+  source: const
+  value: 3000 # W
+energy:
+  source: const
+  value: 42.0 # kWh`
+    );
 
     const restResult = modal.getByTestId("test-result");
     await expect(restResult).toContainText("Status: unknown");
@@ -122,16 +122,16 @@ test.describe("aux meter", async () => {
     // update
     await modal.getByLabel("Title").fill("Small heater");
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "power:",
-      "  source: const",
-      "value: 300 # W",
-      "Shift+Tab",
-      "energy:",
-      "  source: const",
-      "value: 4.2 # kWh",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `power:
+  source: const
+  value: 300 # W
+energy:
+  source: const
+  value: 4.2 # kWh`
+    );
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
@@ -175,11 +175,12 @@ test.describe("aux meter", async () => {
 
     // yaml syntax error
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "hello: world",
-      "  foo: bar",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `hello: world
+  foo: bar`
+    );
 
     // no errors
     await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
@@ -194,12 +195,13 @@ test.describe("aux meter", async () => {
 
     // invalid field error
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "apower:",
-      "  source: const",
-      "value: 3000 # W",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `apower:
+  source: const
+  value: 3000 # W`
+    );
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
@@ -208,12 +210,13 @@ test.describe("aux meter", async () => {
 
     // unknown source error
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "power:",
-      "  source: unknown",
-      "value: 3000 # W",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `power:
+  source: unknown
+  value: 3000 # W`
+    );
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
@@ -222,12 +225,13 @@ test.describe("aux meter", async () => {
 
     // missing required field error
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "energy:",
-      "  source: const",
-      "value: 300 # kWh",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `energy:
+  source: const
+  value: 300 # kWh`
+    );
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");

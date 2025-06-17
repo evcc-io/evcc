@@ -1,29 +1,25 @@
 import settings from "./settings";
+import { THEME } from "./types/evcc";
 
 const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
-const THEME_AUTO = "auto";
-const THEME_LIGHT = "light";
-const THEME_DARK = "dark";
-export const THEMES = [THEME_AUTO, THEME_LIGHT, THEME_DARK];
-
-export function getThemePreference() {
+export function getThemePreference(): THEME {
   const theme = settings.theme;
-  if (THEMES.includes(theme)) {
+  if (Object.values(THEME).includes(theme)) {
     return theme;
   }
-  return THEME_AUTO;
+  return THEME.AUTO;
 }
 
-export function setThemePreference(theme) {
-  if (!THEMES.includes(theme)) {
+export function setThemePreference(theme: THEME) {
+  if (!Object.values(THEME).includes(theme)) {
     return;
   }
   settings.theme = theme;
   updateTheme();
 }
 
-function setMetaThemeColor(theme) {
+function setMetaThemeColor(theme: Exclude<THEME, THEME.AUTO>) {
   const themeColors = { light: "#f3f3f7", dark: "#020318" };
   const $metaThemeColor = document.querySelector("meta[name=theme-color]");
   if ($metaThemeColor) {
@@ -33,8 +29,8 @@ function setMetaThemeColor(theme) {
 
 function getCurrentTheme() {
   let theme = getThemePreference();
-  if (theme === THEME_AUTO) {
-    theme = darkModeMatcher?.matches ? THEME_DARK : THEME_LIGHT;
+  if (theme === THEME.AUTO) {
+    theme = darkModeMatcher?.matches ? THEME.DARK : THEME.LIGHT;
   }
   return theme;
 }
@@ -47,17 +43,19 @@ function updateTheme() {
 
   // toggle the class on html root
   const $html = document.querySelector("html");
-  $html.classList.add("no-transitions");
-  $html.classList.toggle("dark", theme === THEME_DARK);
-  window.setTimeout(function () {
-    $html.classList.remove("no-transitions");
-  }, 100);
+  if ($html) {
+    $html.classList.add("no-transitions");
+    $html.classList.toggle("dark", theme === THEME.DARK);
+    window.setTimeout(function () {
+      $html.classList.remove("no-transitions");
+    }, 100);
+  }
 }
 
 function updateMetaThemeForBackdrop() {
   const $backdrop = document.querySelector("[data-bs-backdrop=true][aria-modal=true]");
   // dark if there is a backdrop, otherwise use the current theme
-  const theme = $backdrop ? THEME_DARK : getCurrentTheme();
+  const theme = $backdrop ? THEME.DARK : getCurrentTheme();
   setMetaThemeColor(theme);
 }
 
