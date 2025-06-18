@@ -418,6 +418,10 @@ test.describe("loadpoint", async () => {
   });
 
   test("physical current", async ({ page }) => {
+    await start(CONFIG_EMPTY);
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
     /**
      * 6A to 16A (default 11kW)
      */
