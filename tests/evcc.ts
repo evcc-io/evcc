@@ -30,7 +30,10 @@ function createSteamLog() {
 }
 
 function log(...args: any[]) {
-  console.log(logPrefix(), ...args);
+  // uncomment for debugging
+  if (process.env["EVCC_DEBUG"]) {
+    console.log(logPrefix(), ...args);
+  }
 }
 
 export function baseUrl() {
