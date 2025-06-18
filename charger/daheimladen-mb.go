@@ -208,11 +208,19 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*DaheimLadenMB)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *DaheimLadenMB) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
 	curr := uint16(current * 10)
+
 	err := wb.setCurrent(curr)
 	if err == nil {
 		wb.curr = curr
