@@ -318,7 +318,7 @@ export default defineComponent({
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
 		currentOption(value: number, isDefault: boolean) {
-			let name = `${this.fmtNumber(value, 0)} A`;
+			let name = `${this.fmtNumber(value, value < 11 ? 2 : 0)} A`;
 			if (isDefault) {
 				name += ` (${this.$t("main.loadpointSettings.default")})`;
 			}
