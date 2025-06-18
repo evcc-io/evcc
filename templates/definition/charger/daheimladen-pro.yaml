@@ -3,7 +3,7 @@ products:
   - brand: DaheimLaden
     description:
       generic: Pro
-capabilities: ["1p3p"]
+capabilities: ["1p3p", "mA"]
 params:
   - name: host
   - name: port
