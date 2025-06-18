@@ -1,0 +1,14 @@
+template: daheimladen-pro
+products:
+  - brand: DaheimLaden
+    description:
+      generic: Pro
+capabilities: ["1p3p"]
+params:
+  - name: host
+  - name: port
+    default: 502
+render: |
+  type: daheimladen-mb
+  uri: {{ .host }}:{{ .port }}
+  phases1p3p: true
