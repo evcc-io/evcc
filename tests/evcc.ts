@@ -130,7 +130,7 @@ async function _stop(instance?: ChildProcess) {
   log("shutting down evcc", { port });
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log("evcc is down", { port });
 }
 
