@@ -193,6 +193,7 @@
       "chargerPowerCustomHelp": "Kendine özgü bir akım aralığı tanımla.",
       "chargerTypeLabel": "“Doldurma gücü”",
       "chargingTitle": "“Dolduruyor”",
+      "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitLabel": "“Devre”",
       "circuitUnassigned": "“atanmamış”",
       "defaultModeHelp": "Araç bağlandığında doldurma şekli.",
