@@ -38,7 +38,7 @@ type DaheimLadenMB struct {
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
-	dlRegCurrents        = 6   // 3xUint32 RO 0.1A
+	dlRegCurrents        = 6   // 3xUint16 plus placeholder RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
@@ -51,7 +51,7 @@ const (
 	dlRegCurrentLimit    = 91  // Uint16 WR 0.1A
 	dlRegChargeControl   = 93  // Uint16 WR ENUM
 	dlRegChargeCmd       = 95  // Uint16 WR ENUM
-	dlRegVoltages        = 108 // 3xUint32 RO 0.1V
+	dlRegVoltages        = 109 // 3xUint16 plus placeholder RO 0.1V
 
 	// PRO only
 	dlRegPhaseSwitchState   = 184
@@ -254,7 +254,8 @@ func (wb *DaheimLadenMB) getPhaseValues(reg uint16) (float64, float64, float64, 
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
+		// 16-bit registers for currents/voltages spaced by 1 empty register
+		res[i] = float64(binary.BigEndian.Uint16(b[4*i:])) / 10
 	}
 
 	return res[0], res[1], res[2], nil
