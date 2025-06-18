@@ -38,7 +38,7 @@ type DaheimLadenMB struct {
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
-	dlRegCurrents        = 5   // 3xUint32 RO 0.1A
+	dlRegCurrents        = 6   // 3xUint32 RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
