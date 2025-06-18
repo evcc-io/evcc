@@ -21,10 +21,6 @@ params:
     advanced: true
   - name: watchdog
     description: 
-      en: |
-        Interval the discharging stop command is being repeated. Otherwise the battery is automatically being reset to it's default discharge power 0f 4600W. 
-      de: |
-        Intervall, in dem das Kommando für den Entladestopp wiederholt wird. Die Batterie wird sonst automatisch auf den default-Wert von 4600W Entladeleistung gesetzt. 
     type: duration
     default: 240s
     advanced: true
