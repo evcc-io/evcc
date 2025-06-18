@@ -300,11 +300,11 @@ var _ api.ChargerEx = (*Keba)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Keba) MaxCurrentMillis(current float64) error {
-	u := uint16(current * 1000)
-	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
+	curr := uint16(current * 1000)
 
+	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, curr)
 	if err == nil {
-		wb.current = u
+		wb.current = curr
 	}
 
 	return err
