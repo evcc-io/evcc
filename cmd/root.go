@@ -60,6 +60,12 @@ var rootCmd = &cobra.Command{
 func init() {
 	viper = vpr.NewWithOptions(vpr.ExperimentalBindStruct())
 
+	viper.SetEnvPrefix("evcc")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv() // read in environment variables that match
+
+	util.LogLevel("info", nil)
+
 	cobra.OnInitialize(initConfig)
 
 	// global options
@@ -105,14 +111,6 @@ func initConfig() {
 	if cfgDatabase != "" {
 		viper.Set("Database.Dsn", cfgDatabase)
 	}
-
-	viper.SetEnvPrefix("evcc")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// print version
-	util.LogLevel("info", nil)
-	log.INFO.Printf("evcc %s", util.FormattedVersion())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -125,6 +123,9 @@ func Execute() {
 
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
+
+	// print version
+	log.INFO.Printf("evcc %s", util.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
 	var err error
