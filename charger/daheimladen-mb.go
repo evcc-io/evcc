@@ -38,7 +38,7 @@ type DaheimLadenMB struct {
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
-	dlRegCurrents        = 5   // 3xUint32 RO 0.1A
+	dlRegCurrents        = 6   // 3xUint32 RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
@@ -52,27 +52,38 @@ const (
 	dlRegChargeControl   = 93  // Uint16 WR ENUM
 	dlRegChargeCmd       = 95  // Uint16 WR ENUM
 	dlRegVoltages        = 108 // 3xUint32 RO 0.1V
+
+	// PRO only
+	dlRegPhaseSwitchState   = 184
+	dlRegPhaseSwitchControl = 186
 )
 
 func init() {
 	registry.AddCtx("daheimladen-mb", NewDaheimLadenMBFromConfig)
 }
 
+//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLadenMB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+
 // NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
 func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Phases1p3p         bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 255,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDaheimLadenMB(ctx, cc.URI, cc.ID)
+	return NewDaheimLadenMB(ctx, cc.URI, cc.ID, cc.Phases1p3p)
 }
 
 // NewDaheimLadenMB creates DaheimLadenMB charger
-func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -105,7 +116,14 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, e
 		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
-	return wb, err
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
+	if phases {
+		phases1p3p = wb.phases1p3p
+		phasesG = wb.getPhases
+	}
+
+	return decorateDaheimLaden(wb, phases1p3p, phasesG), nil
 }
 
 func (wb *DaheimLadenMB) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -254,6 +272,25 @@ var _ api.PhaseVoltages = (*DaheimLadenMB)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (wb *DaheimLadenMB) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *DaheimLadenMB) phases1p3p(phases int) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(phases))
+
+	_, err := wb.conn.WriteMultipleRegisters(dlRegPhaseSwitchControl, 1, b)
+	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *DaheimLadenMB) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(binary.BigEndian.Uint16(b)), nil
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
