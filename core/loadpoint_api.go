@@ -654,10 +654,6 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if lp.minPhysicalCurrent != nil && current < *lp.minPhysicalCurrent {
-		return fmt.Errorf("min current must be greater or equal than min physical current: %.1fA", *lp.minPhysicalCurrent)
-	}
-
 	if current > lp.maxCurrent {
 		return errors.New("min current must be smaller or equal than max current")
 	}
@@ -694,10 +690,6 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if lp.maxPhysicalCurrent != nil && current > *lp.maxPhysicalCurrent {
-		return fmt.Errorf("max current must be smaller or equal than max physical current: %.1fA", *lp.maxPhysicalCurrent)
-	}
-
 	if current < lp.minCurrent {
 		return errors.New("max current must be greater or equal than min current")
 	}
@@ -705,80 +697,6 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.log.DEBUG.Println("set max current:", current)
 	if current != lp.maxCurrent {
 		lp.setMaxCurrent(current)
-	}
-
-	return nil
-}
-
-// GetMinPhysicalCurrent returns the min physical current
-func (lp *Loadpoint) GetMinPhysicalCurrent() *float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.getMinPhysicalCurrent()
-}
-
-// getMinPhysicalCurrent returns the min physical current
-func (lp *Loadpoint) getMinPhysicalCurrent() *float64 {
-	return lp.minPhysicalCurrent
-}
-
-// setMinPhysicalCurrent sets the min physical current (no mutex)
-func (lp *Loadpoint) setMinPhysicalCurrent(current *float64) {
-	lp.minPhysicalCurrent = current
-	lp.publish(keys.MinPhysicalCurrent, *current)
-	lp.settings.SetFloatPtr(keys.MinPhysicalCurrent, current)
-}
-
-// GetMaxPhysicalCurrent returns the max physical current
-func (lp *Loadpoint) GetMaxPhysicalCurrent() *float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.getMaxPhysicalCurrent()
-}
-
-// getMaxPhysicalCurrent returns the max physical current
-func (lp *Loadpoint) getMaxPhysicalCurrent() *float64 {
-	return lp.maxPhysicalCurrent
-}
-
-// setMaxPhysicalCurrent sets the max physical current (no mutex)
-func (lp *Loadpoint) setMaxPhysicalCurrent(current *float64) {
-	lp.maxPhysicalCurrent = current
-	lp.publish(keys.MaxPhysicalCurrent, *current)
-	lp.settings.SetFloatPtr(keys.MaxPhysicalCurrent, current)
-}
-
-// SetPhysicalCurrentRange sets min/max physical current
-func (lp *Loadpoint) SetPhysicalCurrentRange(min, max *float64) error {
-	lp.Lock()
-	defer lp.Unlock()
-
-	if min != nil && max != nil && *min > *max {
-		return fmt.Errorf("min physical current must be smaller or equal than max physical current: %.1fA", *max)
-	}
-
-	lp.log.DEBUG.Println("set physical current range:", printPtr("%.1f", min), printPtr("%.1f", max))
-	lp.setMinPhysicalCurrent(min)
-	lp.setMaxPhysicalCurrent(max)
-
-	// adjust to min limit
-	if min != nil && lp.minCurrent < *min {
-		lp.log.DEBUG.Println("adjust min current to comply with min physical current:", *min)
-		lp.setMinCurrent(*min)
-	}
-	if min != nil && lp.maxCurrent < *min {
-		lp.log.DEBUG.Println("adjust max current to comply with min physical current:", *min)
-		lp.setMaxCurrent(*min)
-	}
-
-	// adjust to max limit
-	if max != nil && lp.maxCurrent > *max {
-		lp.log.DEBUG.Println("adjust max current to comply with max physical current:", *max)
-		lp.setMaxCurrent(*max)
-	}
-	if max != nil && lp.minCurrent > *max {
-		lp.log.DEBUG.Println("adjust min current to comply with max physical current:", *max)
-		lp.setMinCurrent(*max)
 	}
 
 	return nil

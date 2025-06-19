@@ -17,20 +17,18 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title              string    `json:"title"`
-	DefaultMode        string    `json:"defaultMode"`
-	Priority           int       `json:"priority"`
-	PhasesConfigured   int       `json:"phasesConfigured"`
-	MinCurrent         float64   `json:"minCurrent"`
-	MaxCurrent         float64   `json:"maxCurrent"`
-	MinPhysicalCurrent *float64  `json:"minPhysicalCurrent"`
-	MaxPhysicalCurrent *float64  `json:"maxPhysicalCurrent"`
-	SmartCostLimit     *float64  `json:"smartCostLimit"`
-	PlanEnergy         float64   `json:"planEnergy"`
-	PlanTime           time.Time `json:"planTime"`
-	PlanPrecondition   int64     `json:"planPrecondition"`
-	LimitEnergy        float64   `json:"limitEnergy"`
-	LimitSoc           int       `json:"limitSoc"`
+	Title            string    `json:"title"`
+	DefaultMode      string    `json:"defaultMode"`
+	Priority         int       `json:"priority"`
+	PhasesConfigured int       `json:"phasesConfigured"`
+	MinCurrent       float64   `json:"minCurrent"`
+	MaxCurrent       float64   `json:"maxCurrent"`
+	SmartCostLimit   *float64  `json:"smartCostLimit"`
+	PlanEnergy       float64   `json:"planEnergy"`
+	PlanTime         time.Time `json:"planTime"`
+	PlanPrecondition int64     `json:"planPrecondition"`
+	LimitEnergy      float64   `json:"limitEnergy"`
+	LimitSoc         int       `json:"limitSoc"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
@@ -75,9 +73,6 @@ func (payload DynamicConfig) Apply(lp API) error {
 		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
 
-	if err == nil {
-		err = lp.SetPhysicalCurrentRange(payload.MinPhysicalCurrent, payload.MaxPhysicalCurrent)
-	}
 	if err == nil && payload.MinCurrent != 0 {
 		err = lp.SetMinCurrent(payload.MinCurrent)
 	}
