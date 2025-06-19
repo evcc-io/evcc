@@ -37,6 +37,15 @@ func NewHandler(site site.API) http.Handler {
 		loadpointsHandler(site),
 	)
 
+	s.AddTool(
+		mcp.NewTool(
+			"solar-forecast",
+			mcp.WithDescription("Solar forecast for remaining production today"),
+			mcp.WithReadOnlyHintAnnotation(true),
+		),
+		solarForecastHandler(site),
+	)
+
 	s.AddResource(
 		mcp.NewResource(
 			"loadpoints://{loadpoint_id}",
