@@ -67,6 +67,7 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.4
+	github.com/mark3labs/mcp-go v0.32.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
@@ -205,6 +206,7 @@ require (
 	github.com/teivah/onecontext v1.3.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect

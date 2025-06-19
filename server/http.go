@@ -347,3 +347,18 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		}
 	}
 }
+
+func (s *HTTPd) RegisterMcpHandler(handler http.Handler) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// mcp
+	mcp := router.PathPrefix("/mcp").Subrouter()
+	// mcp.Use(handlers.CompressHandler)
+	// mcp.Use(handlers.CORS(
+	// 	handlers.AllowedHeaders([]string{"Content-Type"}),
+	// ))
+
+	// mcp handler
+	mcp.PathPrefix("/").Handler(handler)
+	mcp.PathPrefix("").Handler(handler)
+}

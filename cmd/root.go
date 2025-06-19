@@ -14,6 +14,7 @@ import (
 
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/mcp"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
@@ -321,6 +322,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.Prepare(valueChan, pushChan)
 
 		httpd.RegisterSiteHandlers(site, valueChan)
+
+		httpd.RegisterMcpHandler(mcp.NewHandler(site))
 
 		go func() {
 			site.Run(stopC, conf.Interval)
