@@ -107,17 +107,15 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title              string   // UI title
-	priority           int      // Priority
-	minCurrent         float64  // PV mode: start current	Min+PV mode: min current
-	maxCurrent         float64  // Max allowed current. Physically ensured by the charger
-	minPhysicalCurrent *float64 // Min physical current
-	maxPhysicalCurrent *float64 // Max physical current
-	phasesConfigured   int      // Charger configured phase mode 0/1/3
-	limitSoc           int      // Session limit for soc
-	limitEnergy        float64  // Session limit for energy
-	smartCostLimit     *float64 // always charge if cost is below this value
-	batteryBoost       int      // battery boost state
+	title            string   // UI title
+	priority         int      // Priority
+	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
+	phasesConfigured int      // Charger configured phase mode 0/1/3
+	limitSoc         int      // Session limit for soc
+	limitEnergy      float64  // Session limit for energy
+	smartCostLimit   *float64 // always charge if cost is below this value
+	batteryBoost     int      // battery boost state
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -615,8 +613,6 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.Priority, lp.GetPriority())
 	lp.publish(keys.MinCurrent, lp.GetMinCurrent())
 	lp.publish(keys.MaxCurrent, lp.GetMaxCurrent())
-	lp.publish(keys.MinPhysicalCurrent, lp.GetMinPhysicalCurrent())
-	lp.publish(keys.MaxPhysicalCurrent, lp.GetMaxPhysicalCurrent())
 
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)

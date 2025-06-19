@@ -349,20 +349,6 @@ func (mr *MockAPIMockRecorder) GetMaxPhaseCurrent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhaseCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxPhaseCurrent))
 }
 
-// GetMaxPhysicalCurrent mocks base method.
-func (m *MockAPI) GetMaxPhysicalCurrent() *float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMaxPhysicalCurrent")
-	ret0, _ := ret[0].(*float64)
-	return ret0
-}
-
-// GetMaxPhysicalCurrent indicates an expected call of GetMaxPhysicalCurrent.
-func (mr *MockAPIMockRecorder) GetMaxPhysicalCurrent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhysicalCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxPhysicalCurrent))
-}
-
 // GetMeterRef mocks base method.
 func (m *MockAPI) GetMeterRef() string {
 	m.ctrl.T.Helper()
@@ -389,20 +375,6 @@ func (m *MockAPI) GetMinCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMinCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetMinCurrent))
-}
-
-// GetMinPhysicalCurrent mocks base method.
-func (m *MockAPI) GetMinPhysicalCurrent() *float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMinPhysicalCurrent")
-	ret0, _ := ret[0].(*float64)
-	return ret0
-}
-
-// GetMinPhysicalCurrent indicates an expected call of GetMinPhysicalCurrent.
-func (mr *MockAPIMockRecorder) GetMinPhysicalCurrent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinPhysicalCurrent", reflect.TypeOf((*MockAPI)(nil).GetMinPhysicalCurrent))
 }
 
 // GetMode mocks base method.
@@ -896,20 +868,6 @@ func (m *MockAPI) SetPhasesConfigured(arg0 int) error {
 func (mr *MockAPIMockRecorder) SetPhasesConfigured(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).SetPhasesConfigured), arg0)
-}
-
-// SetPhysicalCurrentRange mocks base method.
-func (m *MockAPI) SetPhysicalCurrentRange(arg0, arg1 *float64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPhysicalCurrentRange", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetPhysicalCurrentRange indicates an expected call of SetPhysicalCurrentRange.
-func (mr *MockAPIMockRecorder) SetPhysicalCurrentRange(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhysicalCurrentRange", reflect.TypeOf((*MockAPI)(nil).SetPhysicalCurrentRange), arg0, arg1)
 }
 
 // SetPlanEnergy mocks base method.
