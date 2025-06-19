@@ -185,7 +185,7 @@ export default defineComponent({
 			if (this.heating) {
 				return this.fmtTemperature(this.vehicleSoc);
 			}
-			return this.fmtPercentage(this.vehicleSoc);
+			return this.fmtPercentage(this.vehicleSoc,1);
 		},
 		vehicleSocTitle() {
 			if (this.heating) {

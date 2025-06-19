@@ -365,7 +365,7 @@ export default defineComponent({
 				return "";
 			}
 			return this.$t("main.vehicleStatus.minCharge", {
-				soc: this.fmtPercentage(this.minSoc),
+				soc: this.fmtPercentage(this.minSoc,1),
 			});
 		},
 		vehicleLimitReached() {

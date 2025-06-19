@@ -413,7 +413,7 @@ export default defineComponent({
 			return (this.pv?.length || 0) > 1;
 		},
 		fmtLoadpointSoc() {
-			return (soc: number) => this.fmtPercentage(soc, 0);
+			return (soc: number) => this.fmtPercentage(soc, 1);
 		},
 		fmtLoadpointTemp() {
 			return (temp: number) => this.fmtTemperature(temp);

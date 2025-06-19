@@ -252,7 +252,7 @@ export default defineComponent({
 			}
 			const value = this.heating
 				? this.fmtTemperature(this.vehicleLimitSoc)
-				: this.fmtPercentage(this.vehicleLimitSoc);
+				: this.fmtPercentage(this.vehicleLimitSoc,1);
 			const key = this.heating ? "heatingStatus" : "vehicleStatus";
 			const content = `${this.$t(`main.${key}.vehicleLimit`)}: ${value}`;
 			this.tooltip.setContent({ ".tooltip-inner": content });
