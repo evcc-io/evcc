@@ -78,7 +78,7 @@ export default defineComponent({
       if (d === undefined) {
         d =
           POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || (POWER_UNIT.W !== unit && 0 === watt)
-            ? 1
+            ? 2
             : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
@@ -357,7 +357,7 @@ export default defineComponent({
       let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;
       if (rangePerSoc && distanceUnit) {
         const range = soc * rangePerSoc;
-        result += ` (${this.fmtNumber(range, 0)} ${distanceUnit})`;
+        result += ` (${this.fmtNumber(range, 1)} ${distanceUnit})`;
       }
       return result;
     },
