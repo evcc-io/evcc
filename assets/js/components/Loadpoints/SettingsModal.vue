@@ -256,7 +256,7 @@ export default defineComponent({
 		},
 		minCurrentOptions() {
 			//rro added custom steps
-			const opt1 = [32,30,28,27,24,20,18,16,12,11,10,9.5,9,8.6,7.1,6,5.3,4.18,4.0,3.4,2.15,1.6,1.2,1.0,0.1];
+			const opt1 = [32,30,28,27,24,20,18,16,12,11,10,9.5,9,8.6,7.1,6,5.3,4.18,4.0,3.4,2.15,1.6,1.2,1.0,0.5,0.25,0.1];
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.minCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 6));
@@ -264,7 +264,7 @@ export default defineComponent({
 		maxCurrentOptions() {
 			//const opt1 = range(32, Math.ceil(this.minCurrent));
 			//rro added custom steps
-			const opt1 = [32,30,28,27,24,20,18,16,12,11,10,9.5,9,8.6,7.1,6,5.3,4.18,4.0,3.4,2.15,1.6,1.2,1.0,0.1];
+			const opt1 = [32,30,28,27,24,20,18,16,12,11,10,9.5,9,8.6,7.1,6,5.3,4.18,4.0,3.4,2.15,1.6,1.2,1.0,0.5,0.25,0.1];
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.maxCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 16));
