@@ -1,6 +1,10 @@
 template: renault
 products:
   - brand: Renault
+requirements:
+  description:
+    en: Renault Zoe requires a minimum charging current of 8A at 3p (older models even 10A).
+    de: Renault Zoe benötigt bei 3p ein minimalen Ladestrom von 8A (ältere Modelle sogar 10A).
 params:
   - preset: vehicle-base
   - name: vin
