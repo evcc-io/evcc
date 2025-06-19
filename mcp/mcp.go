@@ -11,13 +11,12 @@ import (
 
 func NewHandler(site site.API) http.Handler {
 	log := util.NewLogger("mcp")
-	_ = log
 
 	// Create a new MCP server
 	s := server.NewMCPServer(
 		"evcc ☀️🚘",
 		util.Version,
-		server.WithToolCapabilities(false),
+		server.WithToolCapabilities(true),
 	)
 
 	s.AddResource(
@@ -29,12 +28,29 @@ func NewHandler(site site.API) http.Handler {
 		nil, // TODO no handler needed
 	)
 
-	// // Start the stdio server
-	// if err := server.ServeStdio(s); err != nil {
-	// 	log.ERROR.Println("cannot start server:", err)
-	// }
+	s.AddTool(
+		mcp.NewTool(
+			"site-loadpoints",
+			mcp.WithDescription("Number of loadpoints"),
+			mcp.WithReadOnlyHintAnnotation(true),
+		),
+		loadpointsHandler(site),
+	)
 
-	// return server.NewStreamableHTTPServer(s, server.WithLogger(&logAdapter{log}))
-	sse := server.NewSSEServer(s, server.WithStaticBasePath("/mcp"))
-	return sse.SSEHandler()
+	s.AddResource(
+		mcp.NewResource(
+			"loadpoints://{loadpoint_id}",
+			"loadpoint-status",
+			mcp.WithResourceDescription("Loadpoint status information"),
+			mcp.WithMIMEType("application/json"),
+		),
+		loadpointStatusHandler(site),
+	)
+
+	ss := server.NewStreamableHTTPServer(s,
+		server.WithLogger(&logAdapter{log}),
+		server.WithEndpointPath("/"),
+	)
+
+	return ss
 }
