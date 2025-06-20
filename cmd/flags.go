@@ -12,6 +12,9 @@ const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
+	flagDemoMode            = "demo"
+	flagDemoModeDescription = "Enter demo mode. Disables auth, config ui and restart"
+
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 

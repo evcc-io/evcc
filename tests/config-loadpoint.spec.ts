@@ -2,7 +2,6 @@ import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
@@ -64,7 +63,7 @@ async function newLoadpoint(page: Page, title: string) {
 
 test.describe("loadpoint", async () => {
   test("create, update and delete", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -99,7 +98,7 @@ test.describe("loadpoint", async () => {
     await expect(restartButton).toBeVisible();
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport");
@@ -112,7 +111,7 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
@@ -135,7 +134,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(lpModal);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("not connected");
@@ -153,7 +152,7 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toHaveCount(0);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(0);
   });
@@ -213,7 +212,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("vehicle", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -258,7 +257,7 @@ test.describe("loadpoint", async () => {
     await lpModal.getByRole("button", { name: "Save" }).click();
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicles
@@ -272,7 +271,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("keep mode", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -291,13 +290,13 @@ test.describe("loadpoint", async () => {
     await lpModal.getByLabel("Default mode").selectOption("---");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
-    await restart(CONFIG_EMPTY);
+    await restart();
 
     // change on main ui
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Off" })).toHaveClass(/active/);
     await page.getByRole("button", { name: "Solar", exact: true }).click();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
 
@@ -309,7 +308,7 @@ test.describe("loadpoint", async () => {
     await lpModal.getByLabel("Default mode").selectOption("Fast");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
-    await restart(CONFIG_EMPTY);
+    await restart();
 
     // check loadpoint mode
     await page.goto("/");
@@ -317,7 +316,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("delete vehicle references", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -340,7 +339,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(vehicleModal);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicle
@@ -350,7 +349,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("delete charger references", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -371,7 +370,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(chargerModal);
 
     // restart without saving loadpoint
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicle
@@ -382,7 +381,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("delete meter references", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -404,7 +403,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(meterModal);
 
     // restart without saving loadpoint
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicle
@@ -418,7 +417,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("user-defined charger", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -475,7 +474,7 @@ power:
     await expect(page.getByTestId("loadpoint")).toContainText("Carport");
 
     // restart evcc
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     const lpEntry = page.getByTestId("loadpoint");

@@ -46,7 +46,7 @@ function dbPath() {
 }
 
 export async function start(
-  config: string,
+  config?: string,
   sqlDumps?: string | null,
   flags: string | string[] = "--disable-auth"
 ) {
@@ -62,7 +62,7 @@ export async function stop(instance?: ChildProcess) {
   await _clean();
 }
 
-export async function restart(config: string, flags = "--disable-auth") {
+export async function restart(config?: string, flags = "--disable-auth") {
   await _stop();
   await _start(config, flags);
 }
@@ -84,8 +84,8 @@ async function _restoreDatabase(sqlDumps: string) {
   }
 }
 
-async function _start(config: string, flags: string | string[] = []) {
-  const configFile = config.includes("/") ? config : `tests/${config}`;
+async function _start(config?: string, flags: string | string[] = []) {
+  const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
@@ -93,7 +93,7 @@ async function _start(config: string, flags: string | string[] = []) {
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
-  const instance = spawn(BINARY, ["--config", configFile, ...additionalFlags], {
+  const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
     stdio: ["pipe", "pipe", "pipe"],
   });
