@@ -17,7 +17,15 @@ requirements:
 params:
   - name: host
     required: true
-    default: 192.168.1.XXX
+    default: REQUIRED
+    description:
+      en: IP or hostname
+      de: IP-Adresse oder Hostname
+    help:
+      en: IP address or hostname of the Quatt controller in your local network.
+      de: IP-Adresse oder Hostname des Quatt-Controllers im lokalen Netzwerk.  - name: host
+    required: true
+    default: REQUIRED
     description:
       en: IP or hostname
       de: IP-Adresse oder Hostname
