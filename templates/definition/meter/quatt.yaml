@@ -1,0 +1,48 @@
+template: quatt
+products:
+  - brand: Quatt
+    description:
+      generic: Hybrid Heatpump
+group: meter
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: |
+      Integration for Quatt hybrid heat pumps via local API.
+      This read-only meter reports the heat pump's current power input and water outlet temperature.
+      No authentication required.
+    de: |
+      Integration für Quatt-Hybrid-Wärmepumpen über die lokale API.
+      Dieses read-only Meter liefert die aktuelle Leistungsaufnahme und die Vorlauftemperatur der Wärmepumpe.
+      Keine Authentifizierung erforderlich.
+params:
+  - name: host
+    required: true
+    default: REQUIRED
+    description:
+      en: IP or hostname
+      de: IP-Adresse oder Hostname
+    help:
+      en: IP address or hostname of the Quatt controller in your local network.
+      de: IP-Adresse oder Hostname des Quatt-Controllers im lokalen Netzwerk.
+  - name: port
+    required: false
+    default: 8080
+    description:
+      en: API port
+      de: API-Port
+    help:
+      en: Port used by the local Quatt API (default is 8080).
+      de: Port der lokalen Quatt-API (Standard ist 8080).
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/beta/feed/data.json
+    cache: 5s
+    jq: if .hp1.powerInput == null then 0 else .hp1.powerInput end
+  temp:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/beta/feed/data.json
+    cache: 5s
+    jq: if .hp1.temperatureWaterOut == null then 0 else .hp1.temperatureWaterOut end
