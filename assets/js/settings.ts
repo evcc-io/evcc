@@ -1,5 +1,5 @@
 import { reactive, watch } from "vue";
-import type { THEME } from "./types/evcc";
+import type { THEME, SessionInfoKey } from "./types/evcc";
 import type { LOCALES } from "./i18n";
 
 const SETTINGS_LOCALE = "settings_locale";
@@ -68,7 +68,7 @@ export interface Settings {
   energyflowPv: boolean;
   energyflowBattery: boolean;
   energyflowLoadpoints: boolean;
-  sessionInfo: string[];
+  sessionInfo: SessionInfoKey[];
   sessionColumns: string[];
   savingsPeriod: string;
   savingsRegion: string;
@@ -88,7 +88,7 @@ const settings: Settings = reactive({
   energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
   energyflowBattery: readBool(SETTINGS_ENERGYFLOW_BATTERY),
   energyflowLoadpoints: readBool(SETTINGS_ENERGYFLOW_LOADPOINTS),
-  sessionInfo: readArray(SESSION_INFO),
+  sessionInfo: readArray(SESSION_INFO) as SessionInfoKey[],
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
   savingsRegion: read(SAVINGS_REGION),
