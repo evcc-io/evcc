@@ -26,19 +26,6 @@ export async function editorClear(editor: Locator, iterations = 6): Promise<void
   }
 }
 
-export async function editorType(editor: Locator, text: string | string[]): Promise<void> {
-  const instructions = ["Shift+Tab"];
-  await editor.locator(".view-line").nth(0).click();
-  const lines = Array.isArray(text) ? text : [text];
-  for (const line of lines) {
-    if (instructions.includes(line)) {
-      await editor.page().keyboard.press(line);
-    } else {
-      await editor.page().keyboard.type(line + "\n");
-    }
-  }
-}
-
 export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
   await editor.locator(".view-line").nth(0).click();
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
