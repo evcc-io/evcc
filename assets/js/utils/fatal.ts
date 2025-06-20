@@ -12,7 +12,7 @@ export function isUserConfigError(fatal?: FatalError) {
   }
 
   const errorClass = fatal?.class;
-  if (FATALS.includes(errorClass)) {
+  if (errorClass && FATALS.includes(errorClass)) {
     return false;
   }
   return true;
