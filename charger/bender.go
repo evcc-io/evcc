@@ -237,12 +237,14 @@ func (wb *BenderCC) maxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
+	curr := uint16(current * 10) // 0.1A Steps
+
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current*10)) // 0.1A Steps
+	binary.BigEndian.PutUint16(b, curr)
 
 	_, err := wb.conn.WriteMultipleRegisters(bendRegHemsCurrentLimit10, 1, b)
 	if err == nil {
-		wb.current = uint16(current * 10) // 0.1A Steps
+		wb.current = curr
 	}
 
 	return err
