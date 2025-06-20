@@ -182,7 +182,7 @@ import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "@/units";
 
 import formatter from "@/mixins/formatter";
-import { energyOptions } from "@/utils/energyOptions";
+import { energyOptions } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
 import PreconditionSelect from "./PreconditionSelect.vue";
 
@@ -233,10 +233,10 @@ export default defineComponent({
 			const options = energyOptions(
 				0,
 				this.capacity || 100,
-				this.socPerKwh,
 				this.fmtWh,
 				this.fmtPercentage,
-				"-"
+				"-",
+				this.socPerKwh
 			);
 			// remove the first entry (0)
 			return options.slice(1);
