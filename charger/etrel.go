@@ -181,11 +181,11 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	f := float32(current)
+	curr := float32(current)
 
-	err := wb.setCurrent(f)
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.current = f
+		wb.current = curr
 	}
 
 	return err

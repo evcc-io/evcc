@@ -60,12 +60,19 @@ var rootCmd = &cobra.Command{
 func init() {
 	viper = vpr.NewWithOptions(vpr.ExperimentalBindStruct())
 
+	viper.SetEnvPrefix("evcc")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv() // read in environment variables that match
+
+	util.LogLevel("info", nil)
+
 	cobra.OnInitialize(initConfig)
 
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
+	rootCmd.PersistentFlags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
@@ -105,14 +112,6 @@ func initConfig() {
 	if cfgDatabase != "" {
 		viper.Set("Database.Dsn", cfgDatabase)
 	}
-
-	viper.SetEnvPrefix("evcc")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// print version
-	util.LogLevel("info", nil)
-	log.INFO.Printf("evcc %s", util.FormattedVersion())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -126,15 +125,27 @@ func Execute() {
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
+	// print version
+	log.INFO.Printf("evcc %s", util.FormattedVersion())
+
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-		log.INFO.Println("missing config file - switching into demo mode")
+	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
+		log.INFO.Println("switching into demo mode as requested through the --demo flag")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		err = wrapErrorWithClass(ClassConfigFile, cfgErr)
+		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
+			log.INFO.Println("config file missing, create configuration using config UI")
+			// evcc.yaml not found, use default configuration
+			if err := viper.UnmarshalExact(&conf); err != nil {
+				log.FATAL.Fatalf("failed to unmarshal default configuration: %v", err)
+			}
+		} else {
+			// evcc.yaml found, might have errors
+			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
+		}
 	}
 
 	// setup environment
@@ -295,13 +306,19 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(httpd.Router())
 
-	auth := auth.New()
+	authObject := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
-		auth.Disable()
+		authObject.SetAuthMode(auth.Disabled)
 	}
 
-	httpd.RegisterSystemHandler(site, valueChan, cache, auth, func() {
+	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
+		log.WARN.Println("Authentication is locked in demo mode. Login-features are disabled.")
+		authObject.SetAuthMode(auth.Locked)
+		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
+	}
+
+	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end

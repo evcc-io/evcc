@@ -2,11 +2,12 @@ template: daheimladen-mb
 products:
   - brand: DaheimLaden
     description:
-      generic: Wallbox
+      generic: Smart/Touch
 requirements:
   description:
     de: Die Wallbox muss über eine aktuelle Firmware mit Modbus-Unterstützung verfügen. In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
     en: Wallbox must be operated with a recent firmware including Modbus support. Furthermore, “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
+capabilities: ["mA"]
 params:
   - name: host
   - name: port

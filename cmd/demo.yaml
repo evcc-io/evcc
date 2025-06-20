@@ -234,7 +234,7 @@ vehicles:
     icon: waterheater
 
 site:
-  title: Zuhause
+  title: Demo Mode
   meters:
     grid: grid
     pv: pv
