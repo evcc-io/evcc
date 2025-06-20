@@ -114,6 +114,15 @@ export enum PHASES {
   THREE_PHASES = 3,
 }
 
+export type SessionInfoKey =
+  | "remaining"
+  | "finished"
+  | "duration"
+  | "solar"
+  | "avgPrice"
+  | "price"
+  | "co2";
+
 export interface Sponsor {
   name: string;
   expiresAt: string;
