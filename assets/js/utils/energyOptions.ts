@@ -12,12 +12,12 @@ export function optionStep(maxEnergy: number) {
 }
 
 export function fmtEnergy(
+  energy: number = 0,
   step: number,
   fmtWh: InstanceType<typeof formatter>["fmtWh"],
-  zeroText: any,
-  energy?: number
+  zeroText: any
 ) {
-  if (!energy) {
+  if (energy === 0) {
     return zeroText;
   }
   const inKWh = step >= 0.1;
@@ -41,7 +41,7 @@ export function energyOptions(
   const step = optionStep(maxEnergy);
   const result = [];
   for (let energy = 0; energy <= maxEnergy; energy += step) {
-    let text = fmtEnergy(step, fmtWh, zeroText, energy);
+    let text = fmtEnergy(energy, step, fmtWh, zeroText);
     const disabled = energy < fromEnergy / 1e3 && energy !== 0;
     const soc = estimatedSoc(energy, socPerKwh);
     if (soc) {

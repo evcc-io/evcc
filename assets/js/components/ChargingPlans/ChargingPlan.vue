@@ -227,10 +227,10 @@ export default defineComponent({
 				return this.fmtPercentage(this.effectivePlanSoc);
 			}
 			return fmtEnergy(
+				this.planEnergy,
 				optionStep(this.capacity || 100),
 				this.fmtWh,
-				this.$t("main.targetEnergy.noLimit"),
-				this.planEnergy
+				this.$t("main.targetEnergy.noLimit")
 			);
 		},
 		apiVehicle(): string {

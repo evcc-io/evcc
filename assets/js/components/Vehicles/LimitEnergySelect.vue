@@ -77,7 +77,7 @@ export default defineComponent({
 			);
 		},
 		fmtEnergy(value: number) {
-			return fmtEnergy(this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"), value);
+			return fmtEnergy(value, this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"));
 		},
 		fmtSoc(value: number) {
 			return `+${this.fmtPercentage(value)}`;

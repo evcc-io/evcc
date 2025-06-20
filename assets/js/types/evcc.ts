@@ -1,6 +1,10 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
-import type { WebView } from "react-native-webview";
+
+// react-native-webview
+interface WebView {
+  postMessage: (message: string) => void;
+}
 
 declare global {
   interface Window {

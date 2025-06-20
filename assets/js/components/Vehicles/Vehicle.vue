@@ -77,7 +77,7 @@ import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
-import { distanceUnit, distanceValue } from "@/units";
+import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
 import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
 
