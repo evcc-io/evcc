@@ -18,21 +18,8 @@ requirements:
 params:
   - name: host
     required: true
-    description:
-      en: IP or hostname
-      de: IP-Adresse oder Hostname
-    help:
-      en: IP address or hostname of the Quatt controller in your local network.
-      de: IP-Adresse oder Hostname des Quatt-Controllers im lokalen Netzwerk.
   - name: port
-    required: false
     default: 8080
-    description:
-      en: API port
-      de: API-Port
-    help:
-      en: Port used by the local Quatt API (default is 8080).
-      de: Port der lokalen Quatt-API (Standard ist 8080).
 render: |
   type: custom
   power:
