@@ -7,6 +7,7 @@ import path from "path";
 import { Transform } from "stream";
 
 const BINARY = "./evcc";
+const LOG_ENABLED = false;
 
 function workerPort() {
   const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
@@ -30,7 +31,9 @@ function createSteamLog() {
 }
 
 function log(...args: any[]) {
-  console.log(logPrefix(), ...args);
+  if (LOG_ENABLED) {
+    console.log(logPrefix(), ...args);
+  }
 }
 
 export function baseUrl() {
@@ -86,7 +89,7 @@ async function _start(config?: string, flags: string | string[] = []) {
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
@@ -101,7 +104,7 @@ async function _start(config?: string, flags: string | string[] = []) {
     log("evcc terminated", { code, port, config });
     steamLog.end();
   });
-  await waitOn({ resources: [baseUrl()], log: true });
+  await waitOn({ resources: [baseUrl()], log: LOG_ENABLED });
   return instance;
 }
 
@@ -110,7 +113,7 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
     log("evcc is down", { port });
     return;
   }
@@ -127,7 +130,7 @@ async function _stop(instance?: ChildProcess) {
   log("shutting down evcc", { port });
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log("evcc is down", { port });
 }
 
