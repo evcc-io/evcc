@@ -1,4 +1,4 @@
-import { CURRENCY, type Rate } from "@/types/evcc";
+import { CURRENCY, SMART_COST_TYPE, type Rate } from "@/types/evcc";
 import Preview from "./Preview.vue";
 import type { StoryFn } from "@storybook/vue3";
 
@@ -32,7 +32,7 @@ const co2Data = {
   ].map((value, i) => createRate(value, i)),
   duration: 8695,
   plan: [createRate(213, 4), createRate(336, 11), createRate(336, 12)],
-  smartCostType: "co2",
+  smartCostType: SMART_COST_TYPE.CO2,
   targetTime: createDate(14),
 };
 
@@ -40,7 +40,7 @@ const fixedData = {
   rates: [createRate(0.442, 0, 50)],
   duration: 8695,
   plan: [createRate(0.442, 12, 3)],
-  smartCostType: "price",
+  smartCostType: SMART_COST_TYPE.PRICE_DYNAMIC,
   currency: CURRENCY.EUR,
   targetTime: createDate(14),
 };
@@ -55,7 +55,7 @@ const zonedData = {
   ],
   duration: 8695,
   plan: [createRate(2.39, 13, 3)],
-  smartCostType: "price",
+  smartCostType: SMART_COST_TYPE.PRICE_FORECAST,
   currency: CURRENCY.DKK,
   targetTime: createDate(17),
 };
@@ -64,7 +64,7 @@ const unknownData = {
   rates: co2Data.rates.slice(0, 16),
   duration: 8695,
   plan: [createRate(213, 4), createRate(336, 11), createRate(336, 12)],
-  smartCostType: "co2",
+  smartCostType: SMART_COST_TYPE.CO2,
   targetTime: createDate(14),
 };
 
@@ -74,7 +74,7 @@ const dynamicData = {
   ),
   duration: 8695,
   plan: [createRate(0.23, 2, 5)],
-  smartCostType: "price",
+  smartCostType: SMART_COST_TYPE.PRICE_DYNAMIC,
   currency: CURRENCY.EUR,
   targetTime: createDate(13),
 };
