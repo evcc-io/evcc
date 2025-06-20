@@ -41,8 +41,3 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/beta/feed/data.json
     cache: 5s
     jq: if .hp1.powerInput == null then 0 else .hp1.powerInput end
-  temp:
-    source: http
-    uri: http://{{ .host }}:{{ .port }}/beta/feed/data.json
-    cache: 5s
-    jq: if .hp1.temperatureWaterOut == null then 0 else .hp1.temperatureWaterOut end
