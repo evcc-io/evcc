@@ -1,6 +1,6 @@
-import { POWER_UNIT } from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 
-export function optionStep(maxEnergy) {
+export function optionStep(maxEnergy: number) {
   if (maxEnergy < 0.1) return 0.005;
   if (maxEnergy < 1) return 0.05;
   if (maxEnergy < 2) return 0.1;
@@ -11,7 +11,12 @@ export function optionStep(maxEnergy) {
   return 5;
 }
 
-export function fmtEnergy(energy, step, fmtWh, zeroText) {
+export function fmtEnergy(
+  energy: number = 0,
+  step: number,
+  fmtWh: InstanceType<typeof formatter>["fmtWh"],
+  zeroText: any
+) {
   if (energy === 0) {
     return zeroText;
   }
@@ -20,12 +25,19 @@ export function fmtEnergy(energy, step, fmtWh, zeroText) {
   return fmtWh(energy * 1e3, inKWh ? POWER_UNIT.KW : POWER_UNIT.W, true, digits);
 }
 
-export function estimatedSoc(energy, socPerKwh) {
+export function estimatedSoc(energy: number, socPerKwh?: number) {
   if (!socPerKwh) return null;
   return Math.round(energy * socPerKwh);
 }
 
-export function energyOptions(fromEnergy, maxEnergy, socPerKwh, fmtWh, fmtPercentage, zeroText) {
+export function energyOptions(
+  fromEnergy: number,
+  maxEnergy: number,
+  fmtWh: InstanceType<typeof formatter>["fmtWh"],
+  fmtPercentage: InstanceType<typeof formatter>["fmtPercentage"],
+  zeroText: string,
+  socPerKwh?: number
+) {
   const step = optionStep(maxEnergy);
   const result = [];
   for (let energy = 0; energy <= maxEnergy; energy += step) {
@@ -36,7 +48,7 @@ export function energyOptions(fromEnergy, maxEnergy, socPerKwh, fmtWh, fmtPercen
       text += ` (+${fmtPercentage(soc)})`;
     }
     // prevent rounding errors
-    const energyNormal = energy.toFixed(3) * 1;
+    const energyNormal = parseFloat(energy.toFixed(3));
     result.push({ energy: energyNormal, text, disabled });
   }
   return result;

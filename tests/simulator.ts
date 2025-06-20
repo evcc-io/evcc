@@ -6,6 +6,8 @@ import axios from "axios";
 import { spawn } from "child_process";
 import { Transform } from "stream";
 
+const LOG_ENABLED = false;
+
 function workerPort() {
   const index = parseInt(process.env["TEST_WORKER_INDEX"] ?? "-1");
   return 12000 + index;
@@ -28,7 +30,10 @@ function createSteamLog() {
 }
 
 function log(...args: any[]) {
-  console.log(logPrefix(), ...args);
+  // uncomment for debugging
+  if (LOG_ENABLED) {
+    console.log(logPrefix(), ...args);
+  }
 }
 
 export function simulatorHost() {
@@ -53,7 +58,7 @@ export async function startSimulator() {
   const port = workerPort();
   log("starting simulator", { port });
   log(`wait until port ${port} is available`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
 
   const instance = spawn("npm", ["run", "simulator", "--", "--port", port.toString()]);
 
@@ -65,7 +70,7 @@ export async function startSimulator() {
     steamLog.end();
   });
 
-  await waitOn({ resources: [`${simulatorUrl()}/api/state`], log: true });
+  await waitOn({ resources: [`${simulatorUrl()}/api/state`], log: LOG_ENABLED });
 }
 
 export async function stopSimulator() {
@@ -73,5 +78,5 @@ export async function stopSimulator() {
   log("shutting down simulator", { port });
   await axios.post(`${simulatorUrl()}/api/shutdown`);
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true });
+  await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true, log: LOG_ENABLED });
 }
