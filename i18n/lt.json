@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} iš {total}",
+    "activeHours": "{active} iš {total}",
     "activeHoursLabel": "Aktyvumo valandos",
     "applyToAll": "Pritaikyti visur?",
     "batteryDescription": "Įkrauna kaupiklį energija iš tinklo.",

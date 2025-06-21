@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{total} saat içinde {charging}",
+    "activeHours": "{total} saat içinde {active}",
     "activeHoursLabel": "Aktif saatler",
     "applyToAll": "Heryerde uygulansın mı?",
     "batteryDescription": "Ev enerji deposunu şebekeden doldurur.",

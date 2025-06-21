@@ -27,9 +27,24 @@
 						<div class="container">
 							<SmartCostLimit
 								v-if="isModalVisible"
-								v-bind="smartCostLimitProps"
+								:current-limit="smartCostLimit"
+								:smart-cost-type="smartCostType"
+								:currency="currency"
+								:is-loadpoint="true"
+								:loadpoint-id="Number(loadpointId)"
+								:multiple-loadpoints="multipleLoadpoints"
 								:possible="smartCostAvailable"
-								:smartCostLimit="smartCostLimit"
+								:tariff="forecast?.planner"
+								class="mt-2"
+							/>
+							<SmartFeedinPriority
+								v-if="isModalVisible"
+								:current-limit="smartFeedinPriorityLimit"
+								:currency="currency"
+								:loadpoint-id="Number(loadpointId)"
+								:multiple-loadpoints="multipleLoadpoints"
+								:possible="smartFeedinAvailable"
+								:tariff="forecast?.feedin"
 								class="mt-2"
 							/>
 							<LoadpointSettingsBatteryBoost
@@ -160,9 +175,10 @@
 import collector from "@/mixins/collector.ts";
 import formatter from "@/mixins/formatter";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
+import SmartFeedinPriority from "../Tariff/SmartFeedinPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES, CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
+import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast } from "@/types/evcc";
 
 const V = 230;
 
@@ -182,7 +198,11 @@ const { AUTO, THREE_PHASES, ONE_PHASE } = PHASES;
 
 export default defineComponent({
 	name: "LoadpointSettingsModal",
-	components: { SmartCostLimit, LoadpointSettingsBatteryBoost: SettingsBatteryBoost },
+	components: {
+		SmartCostLimit,
+		SmartFeedinPriority,
+		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
+	},
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
@@ -199,9 +219,12 @@ export default defineComponent({
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
+		smartFeedinPriorityLimit: { type: Number as PropType<number | null>, default: null },
+		smartFeedinAvailable: Boolean,
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
+		forecast: Object as PropType<Forecast>,
 	},
 	emits: [
 		"phasesconfigured-updated",
@@ -266,9 +289,7 @@ export default defineComponent({
 			const opt2 = insertSorted(opt1, this.maxCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 16));
 		},
-		smartCostLimitProps() {
-			return this.collectProps(SmartCostLimit);
-		},
+
 		loadpointId() {
 			return this.id;
 		},
