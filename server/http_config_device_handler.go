@@ -100,15 +100,15 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 
 		// use of any: https://stackoverflow.com/questions/71587996/cannot-use-type-assertion-on-type-parameter-value
 		if instance := any(dev.Instance()); instance != nil {
-			if dc["title"] == nil {
+			if dc["deviceTitle"] == nil {
 				if i, ok := instance.(api.TitleDescriber); ok {
-					dc["title"] = i.GetTitle()
+					dc["deviceTitle"] = i.GetTitle()
 				}
 			}
 
-			if dc["icon"] == nil {
+			if dc["deviceIcon"] == nil {
 				if i, ok := instance.(api.IconDescriber); ok {
-					dc["icon"] = i.Icon()
+					dc["deviceIcon"] = i.Icon()
 				}
 			}
 		}
