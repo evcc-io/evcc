@@ -595,10 +595,15 @@ func (site *Site) updatePvMeters() {
 		}
 	}
 
-	// store
-	if err := settings.SetJson(keys.SolarAccYield, site.pvEnergy); err != nil {
+	// store - extract accumulated values to match expected read format
+	pvAccumulated := make(map[string]float64)
+	for name, energy := range site.pvEnergy {
+		pvAccumulated[name] = energy.Accumulated
+	}
+
+	if err := settings.SetJson(keys.SolarAccYield, pvAccumulated); err != nil {
 		site.log.ERROR.Println("accumulated solar yield:", err)
-		for k, v := range site.pvEnergy {
+		for k, v := range pvAccumulated {
 			site.log.ERROR.Printf("!! %s: %+v", k, v)
 		}
 	}

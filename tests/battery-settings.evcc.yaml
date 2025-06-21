@@ -69,3 +69,7 @@ tariffs:
         price: 0.05
       - hours: 17-21
         price: 0.5
+  solar:
+    type: template
+    template: test-solar-forecast-static
+    power: 1500  # 1.5kW constant solar forecast
