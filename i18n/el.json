@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} από {total}",
+    "activeHours": "{active} από {total}",
     "activeHoursLabel": "Ενεργές ώρες",
     "applyToAll": "Εφαρμογή παντού;",
     "batteryDescription": "Φορτίζει την οικιακή μπαταρία με ενέργεια από το δίκτυο.",

@@ -11,7 +11,7 @@ export default {
       description: "Charging mode",
     },
     pvPossible: { control: "boolean", description: "Whether PV is possible" },
-    hasSmartCost: { control: "boolean", description: "Whether smart cost is available" },
+    smartCostAvailable: { control: "boolean", description: "Whether smart cost is available" },
   },
   parameters: {
     layout: "centered",
@@ -37,12 +37,12 @@ export const Full = Template.bind({});
 Full.args = {
   mode: "pv",
   pvPossible: true,
-  hasSmartCost: true,
+  smartCostAvailable: true,
 };
 
 export const SmartGridOnly = Template.bind({});
 SmartGridOnly.args = {
   mode: "pv",
   pvPossible: false,
-  hasSmartCost: true,
+  smartCostAvailable: true,
 };

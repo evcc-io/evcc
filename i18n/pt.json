@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} de {total}",
+    "activeHours": "{active} de {total}",
     "activeHoursLabel": "Horas ativas",
     "applyToAll": "Aplicar em todo o lado?",
     "batteryDescription": "Carrega a bateria doméstica com energia da Rede.",

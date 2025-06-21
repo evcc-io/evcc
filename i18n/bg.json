@@ -944,7 +944,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} от {total}",
+    "activeHours": "{active} от {total}",
     "activeHoursLabel": "Активни часове",
     "applyToAll": "Приложи навсякъде?",
     "batteryDescription": "Зарежда домашната батерия с енергия от мрежата.",

@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} / {total}",
+    "activeHours": "{active} / {total}",
     "activeHoursLabel": "有效时段",
     "applyToAll": "应用于所有地方？",
     "batteryDescription": "使用电网能源为住宅电池充电。",

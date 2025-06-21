@@ -18,6 +18,8 @@
 					data-testid="loadpoint"
 					:vehicles="vehicles"
 					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
+					:smartFeedinPriorityAvailable="smartFeedinPriorityAvailable"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
 					:currency="currency"
@@ -70,6 +72,8 @@ export default defineComponent({
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		vehicles: { type: Array as PropType<Vehicle[]> },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
+		smartFeedinPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

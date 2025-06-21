@@ -723,7 +723,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} இன் {total} \"",
+    "activeHours": "{active} இன் {total} \"",
     "activeHoursLabel": "செயலில் நேரம்",
     "applyToAll": "எல்லா இடங்களிலும் விண்ணப்பிக்கவா?",
     "batteryDescription": "கட்டத்தில் இருந்து ஆற்றலுடன் வீட்டு பேட்டரியை வசூலிக்கிறது.",

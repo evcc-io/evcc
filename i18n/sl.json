@@ -888,7 +888,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} od {total}",
+    "activeHours": "{active} od {total}",
     "activeHoursLabel": "Aktivne ure",
     "applyToAll": "Uporabi povsod?",
     "batteryDescription": "Napolni domačo baterijo z energijo iz omrežja.",

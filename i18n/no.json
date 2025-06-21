@@ -347,7 +347,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} av {total}",
+    "activeHours": "{active} av {total}",
     "activeHoursLabel": "Aktive timer",
     "co2Label": "CO₂-utslipp",
     "co2Limit": "CO₂-grense",

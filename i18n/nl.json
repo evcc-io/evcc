@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} van {total}",
+    "activeHours": "{active} van {total}",
     "activeHoursLabel": "Actieve uren",
     "applyToAll": "Overal toepassen?",
     "batteryDescription": "Laadt de huisbatterij op met stroom uit het net.",
