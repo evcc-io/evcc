@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"slices"
 	"sync"
 	"time"
@@ -43,32 +44,58 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 	t := &GrünStromIndex{
 		log:    log,
 		zip:    cc.Zip,
-		Helper: request.NewHelper(log),
+		Helper: grünStromHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: corrently.TokenSource(log, &oauth2.Token{AccessToken: cc.Token}),
+		Source: corrently.TokenSource(grünStromHelper(log), &oauth2.Token{AccessToken: cc.Token}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
+	startupErr := make(chan error)
+	go t.run(startupErr)
+	err := <-startupErr
 
 	return t, err
 }
 
-func (t *GrünStromIndex) run(done chan error) {
-	var once sync.Once
+func grünStromHelper(log *util.Logger) *request.Helper {
+	helper := request.NewHelper(log)
+	helper.Client.Timeout = 30 * time.Second
+	return helper
+}
+
+func (t *GrünStromIndex) fetchForecast() (corrently.Forecast, error) {
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
-		var res corrently.Forecast
+	var res corrently.Forecast
+	err := t.GetJSON(uri, &res)
 
-		err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo())
+	return res, request.BackoffHttpStatusCodesPermanently(
+		request.TemporaryBackoffHttpStatusCode(http.StatusInternalServerError,
+			request.TemporaryBackoffHttpStatusCode(http.StatusTooManyRequests,
+				request.DefaultPermanentBackoffHttpStatusCodes())))(err)
+}
+
+func (t *GrünStromIndex) run(startupErr chan<- error) {
+	var once sync.Once
+
+	for tick := time.Tick(time.Hour); ; <-tick {
+		retries := 0
+		res, err := backoff.RetryNotifyWithData(
+			t.fetchForecast,
+			backoff.NewExponentialBackOff(
+				backoff.WithMaxElapsedTime(59*time.Minute),
+				backoff.WithInitialInterval(time.Second),
+			),
+			func(_ error, _ time.Duration) {
+				retries++
+				if retries >= 3 {
+					// we are stuck retrying non-permanent errors -> no need to delay startup
+					once.Do(func() { close(startupErr) })
+				}
+			})
 
 		if err == nil && res.Err {
 			if s, ok := res.Message.(string); ok {
@@ -79,7 +106,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		}
 
 		if err != nil {
-			once.Do(func() { done <- err })
+			once.Do(func() { startupErr <- err })
 
 			t.log.ERROR.Println(err)
 			continue
@@ -95,7 +122,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		}
 
 		mergeRates(t.data, data)
-		once.Do(func() { close(done) })
+		once.Do(func() { close(startupErr) })
 	}
 }
 

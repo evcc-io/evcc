@@ -97,7 +97,7 @@ func (t *Entsoe) run(done chan error) {
 			// Request the next 24 hours of data.
 			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
 			if err != nil {
-				return backoffPermanentError(err)
+				return request.BackoffDefaultHttpStatusCodesPermanently()(err)
 			}
 
 			var doc entsoe.Document

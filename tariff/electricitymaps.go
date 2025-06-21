@@ -86,7 +86,7 @@ func (t *ElectricityMaps) run(done chan error) {
 		var res CarbonIntensity
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			if res.Error != "" {
 				err = errors.New(res.Error)

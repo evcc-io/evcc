@@ -1,15 +1,12 @@
 package tariff
 
 import (
-	"errors"
-	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/jinzhu/now"
 )
 
@@ -26,19 +23,6 @@ func bo() backoff.BackOff {
 		backoff.WithInitialInterval(time.Second),
 		backoff.WithMaxElapsedTime(time.Minute),
 	)
-}
-
-// backoffPermanentError returns a permanent error in case of HTTP 400
-func backoffPermanentError(err error) error {
-	if se := new(request.StatusError); errors.As(err, &se) {
-		if code := se.StatusCode(); code >= 400 && code <= 599 {
-			return backoff.Permanent(se)
-		}
-	}
-	if err != nil && strings.HasPrefix(err.Error(), "jq: query failed") {
-		return backoff.Permanent(err)
-	}
-	return err
 }
 
 // mergeRates blends new and existing rates, keeping existing rates after current hour

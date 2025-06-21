@@ -126,7 +126,7 @@ func (t *EdfTempo) run(done chan error) {
 			strings.ReplaceAll(end.Format(time.RFC3339), "+", "%2B"))
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			return request.BackoffDefaultHttpStatusCodesPermanently()(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
