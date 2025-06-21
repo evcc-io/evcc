@@ -107,16 +107,16 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title            string   // UI title
-	priority         int      // Priority
-	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
-	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
-	phasesConfigured int      // Charger configured phase mode 0/1/3
-	limitSoc         int      // Session limit for soc
-	limitEnergy      float64  // Session limit for energy
-	smartCostLimit   *float64 // always charge if consumption cost is below this value
-	smartFeedinLimit *float64 // prevent charging if feed-in cost is above this value
-	batteryBoost     int      // battery boost state
+	title                    string   // UI title
+	priority                 int      // Priority
+	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
+	phasesConfigured         int      // Charger configured phase mode 0/1/3
+	limitSoc                 int      // Session limit for soc
+	limitEnergy              float64  // Session limit for energy
+	smartCostLimit           *float64 // always charge if consumption cost is below this value
+	smartFeedinPriorityLimit *float64 // prevent charging if feed-in cost is above this value
+	batteryBoost             int      // battery boost state
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -333,8 +333,8 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
 		lp.SetSmartCostLimit(&v)
 	}
-	if v, err := lp.settings.Float(keys.SmartFeedinLimit); err == nil {
-		lp.SetSmartFeedinLimit(&v)
+	if v, err := lp.settings.Float(keys.SmartFeedinPriorityLimit); err == nil {
+		lp.SetSmartFeedinPriorityLimit(&v)
 	}
 
 	var thresholds loadpoint.ThresholdsConfig
@@ -636,7 +636,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
-	lp.publish(keys.SmartFeedinLimit, lp.smartFeedinLimit)
+	lp.publish(keys.SmartFeedinPriorityLimit, lp.smartFeedinPriorityLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
@@ -1792,9 +1792,9 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 
-	smartFeedinActive, smartFeedinNextStart := lp.updateSmartCost(lp.GetSmartFeedinLimit(), feedin)
-	lp.publish(keys.SmartFeedinActive, smartFeedinActive)
-	lp.publish(keys.SmartFeedinNextStart, smartFeedinNextStart)
+	smartFeedinPriorityActive, smartFeedinPriorityNextStart := lp.updateSmartCost(lp.GetSmartFeedinPriorityLimit(), feedin)
+	lp.publish(keys.SmartFeedinPriorityActive, smartFeedinPriorityActive)
+	lp.publish(keys.SmartFeedinPriorityNextStart, smartFeedinPriorityNextStart)
 
 	// long-running tasks
 	lp.processTasks()
@@ -1913,7 +1913,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		}
 
 		// attractive feedin
-		if smartFeedinActive {
+		if smartFeedinPriorityActive {
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 

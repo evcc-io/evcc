@@ -58,5 +58,6 @@ const (
 	BatteryModeExternal = "batteryModeExternal"
 
 	// smart charging
-	SmartCostAvailable = "smartCostAvailable" // smart cost available
+	SmartCostAvailable   = "smartCostAvailable"   // smart cost available
+	SmartFeedinAvailable = "smartFeedinAvailable" // smart feed-in available
 )
