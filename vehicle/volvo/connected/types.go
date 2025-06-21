@@ -2,33 +2,62 @@ package connected
 
 import "time"
 
-type RechargeStatus struct {
-	Status      int
-	OperationID string
-	Data        struct {
-		BatteryChargeLevel struct {
-			Value     float64 `json:",string"`
-			Unit      string
-			Timestamp time.Time
-		}
-		ElectricRange struct {
-			Value     int64 `json:",string"`
-			Unit      string
-			Timestamp time.Time
-		}
-		EstimatedChargingTime struct {
-			Value     int64 `json:",string"`
-			Unit      string
-			Timestamp time.Time
-		}
-		ChargingConnectionStatus struct {
-			Value     string
-			Timestamp time.Time
-		}
-		ChargingSystemStatus struct {
-			Value     string
-			Timestamp time.Time
-		}
+type EnergyState struct {
+	BatteryChargeLevel struct {
+		Status    string
+		Value     float64
+		Unit      string
+		Timestamp time.Time
+	}
+	ElectricRange struct {
+		Status    string
+		Value     int64
+		Unit      string
+		Timestamp time.Time
+	}
+	ChargingConnectionStatus struct {
+		Status    string
+		Value     string
+		Timestamp time.Time
+	}
+	ChargingStatus struct {
+		Status    string
+		Value     string
+		Timestamp time.Time
+	}
+	ChargingType struct {
+		Status    string
+		Value     string
+		Timestamp time.Time
+	}
+	ChargerPowerStatus struct {
+		Status    string
+		Value     string
+		Timestamp time.Time
+	}
+	EstimatedChargingTimeTimeToTargetBatteryChargeLevel struct {
+		Status    string
+		Value     int64
+		Unit      string
+		Timestamp time.Time
+	}
+	ChargingCurrentLimit struct {
+		Status    string
+		Value     int64
+		Unit      string
+		Timestamp time.Time
+	}
+	TargetBatteryChargeLevel struct {
+		Status    string
+		Value     float64
+		Unit      string
+		Timestamp time.Time
+	}
+	ChargingPower struct {
+		Status    string
+		Value     int64
+		Unit      string
+		Timestamp time.Time
 	}
 }
 
