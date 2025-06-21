@@ -17,7 +17,7 @@ import (
 )
 
 func expectVehiclePublish(vehicle *api.MockVehicle) {
-	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Icon().AnyTimes()
 	vehicle.EXPECT().Features().AnyTimes()
@@ -156,7 +156,7 @@ func TestDefaultVehicle(t *testing.T) {
 	current := 66.6
 
 	dflt := api.NewMockVehicle(ctrl)
-	dflt.EXPECT().Title().Return("default").AnyTimes()
+	dflt.EXPECT().GetTitle().Return("default").AnyTimes()
 	dflt.EXPECT().Icon().Return("").AnyTimes()
 	dflt.EXPECT().Capacity().AnyTimes()
 	dflt.EXPECT().Phases().AnyTimes()
@@ -166,7 +166,7 @@ func TestDefaultVehicle(t *testing.T) {
 	}).AnyTimes()
 
 	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
 	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
@@ -184,7 +184,7 @@ func TestDefaultVehicle(t *testing.T) {
 		if v == nil {
 			return "<nil>"
 		}
-		return v.Title()
+		return v.GetTitle()
 	}
 
 	// non-default vehicle identified

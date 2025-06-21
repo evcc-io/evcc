@@ -502,6 +502,20 @@ func (mr *MockVehicleMockRecorder) Features() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Features", reflect.TypeOf((*MockVehicle)(nil).Features))
 }
 
+// GetTitle mocks base method.
+func (m *MockVehicle) GetTitle() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTitle")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetTitle indicates an expected call of GetTitle.
+func (mr *MockVehicleMockRecorder) GetTitle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTitle", reflect.TypeOf((*MockVehicle)(nil).GetTitle))
+}
+
 // Icon mocks base method.
 func (m *MockVehicle) Icon() string {
 	m.ctrl.T.Helper()
@@ -583,20 +597,6 @@ func (m *MockVehicle) Soc() (float64, error) {
 func (mr *MockVehicleMockRecorder) Soc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Soc", reflect.TypeOf((*MockVehicle)(nil).Soc))
-}
-
-// Title mocks base method.
-func (m *MockVehicle) Title() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Title")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Title indicates an expected call of Title.
-func (mr *MockVehicleMockRecorder) Title() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Title", reflect.TypeOf((*MockVehicle)(nil).Title))
 }
 
 // MockChargeRater is a mock of ChargeRater interface.

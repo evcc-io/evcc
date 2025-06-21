@@ -133,7 +133,7 @@ type Vehicle interface {
 	IconDescriber
 	FeatureDescriber
 	PhaseDescriber
-	Title() string
+	TitleDescriber
 	SetTitle(string)
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -206,6 +206,11 @@ type IconDescriber interface {
 // FeatureDescriber optionally provides a list of supported non-api features
 type FeatureDescriber interface {
 	Features() []Feature
+}
+
+// TitleDescriber optionally provides an title
+type TitleDescriber interface {
+	GetTitle() string
 }
 
 // CsvWriter converts to csv
