@@ -240,6 +240,7 @@ soc:
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await expect(page.getByTestId("vehicle").nth(0)).toContainText("blue Honda");
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
     await expect(modal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
@@ -265,6 +266,7 @@ soc:
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await expect(page.getByTestId("vehicle").nth(0)).toContainText("pink Honda");
 
     // delete
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();

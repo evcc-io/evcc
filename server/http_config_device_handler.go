@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v3"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
@@ -107,7 +108,25 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			dc["config"] = params
 		} else {
 			// custom device, no masking
-			dc["config"] = conf.Other
+			config := make(map[string]any)
+			for k, v := range conf.Other {
+				config[k] = v
+			}
+
+			// extract title & icon if possible (user-defined vehicle embeds)
+			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
+				var yamlData map[string]any
+				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
+					if title, ok := yamlData["title"].(string); ok {
+						config["title"] = title
+					}
+					if icon, ok := yamlData["icon"].(string); ok {
+						config["icon"] = icon
+					}
+				}
+			}
+
+			dc["config"] = config
 		}
 	}
 
