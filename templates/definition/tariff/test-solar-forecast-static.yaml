@@ -30,13 +30,13 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate static solar forecast for next 48 hours
+      // Generate static solar forecast for next 72 hours
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
       var rates = [];
       var constantPower = {{ .power }};
 
-      for (var day = 0; day < 2; day++) {
+      for (var day = 0; day < 3; day++) {
         for (var hour = 0; hour < 24; hour++) {
           var time = new Date(start.getTime() + (day * 24 + hour) * 60 * 60 * 1000);
           var nextTime = new Date(time.getTime() + 60 * 60 * 1000);
