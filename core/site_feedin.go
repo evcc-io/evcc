@@ -6,6 +6,10 @@ import (
 )
 
 func (site *Site) smartFeedinDisableAvailable() bool {
+	if !site.isDynamicTariff(api.TariffUsageFeedIn) {
+		return false
+	}
+
 	for _, dev := range site.pvMeters {
 		meter := dev.Instance()
 
