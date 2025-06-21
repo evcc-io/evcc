@@ -209,6 +209,8 @@ export default defineComponent({
 		smartCostAvailable: Boolean,
 		smartCostActive: Boolean,
 		smartCostNextStart: String,
+		smartFeedinPriorityLimit: { type: Number, default: null },
+		smartFeedinPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

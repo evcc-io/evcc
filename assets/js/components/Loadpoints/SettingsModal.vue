@@ -43,7 +43,7 @@
 								:currency="currency"
 								:loadpoint-id="Number(loadpointId)"
 								:multiple-loadpoints="multipleLoadpoints"
-								:possible="smartFeedinAvailable"
+								:possible="smartFeedinPriorityAvailable"
 								:tariff="forecast?.feedin"
 								class="mt-2"
 							/>
@@ -220,7 +220,7 @@ export default defineComponent({
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedinPriorityLimit: { type: Number as PropType<number | null>, default: null },
-		smartFeedinAvailable: Boolean,
+		smartFeedinPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
