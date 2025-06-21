@@ -12,6 +12,7 @@ requirements:
   description:
     de: |
       Anleitung:
+      * Erforderliche Firmwareversion verifizieren: Ladesteuergerät: V1.51.00, Leistungsregelmodul: V1.19.00
       * In der Autel Charge app, klicken sie auf “OCPP Server”
       * Geben Sie "Custom" in das Feld ein und wählen Sie "Personalisierung" darunter
       * Server-URL: ws://[evcc-adresse]:8887/ (Verbindung über das lokale Netzwerk)
@@ -19,6 +20,7 @@ requirements:
       * Autorisierungsschlüssel: leer lassen
     en: |
       Setup Guide:
+      * Validate required firmware version: Charge Control Module: V1.51.00, Power Control Module: V1.19.00
       * In the Autel Charge app, click on “OCPP Server”
       * In the search bar type “Custom” and select it.
       * Server URL: ws://[evcc-address]:8887/ (local network connection)

@@ -19,9 +19,12 @@ params:
   - name: topic
     default: warp
   - name: energymanager
+    description:
+      de: Energiemanager MQTT Topic
+      en: Energy manager MQTT topic
     help:
-      de: WEM Firmware v2 erforderlich. EnergyManager MQTT Topic (falls installiert)
-      en: WEM Firmware v2 required. EnergyManager MQTT topic (if installed)
+      de: WEM Firmware v2 erforderlich.
+      en: WEM Firmware v2 required.
 render: |
   type: warp2
   {{ include "mqtt" . }}

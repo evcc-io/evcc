@@ -9,6 +9,8 @@ params:
   - name: usage
     choice: ["pv", "battery"]
   - name: account
+    description:
+      generic: Account ID
     required: true
     example: dev@zendure.com
   - name: serial

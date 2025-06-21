@@ -14,6 +14,15 @@ import (
 
 const admin = "admin"
 
+// Possible authentication modes
+type AuthMode int
+
+const (
+	Enabled  AuthMode = iota // normal operation
+	Disabled                 // auth checks are skipped (free for all)
+	Locked                   // auth features are blocked (demo mode)
+)
+
 // Auth is the Auth api
 type Auth interface {
 	RemoveAdminPassword()
@@ -22,21 +31,21 @@ type Auth interface {
 	GenerateJwtToken(time.Duration) (string, error)
 	ValidateJwtToken(string) (bool, error)
 	IsAdminPasswordConfigured() bool
-	Disable()
-	Disabled() bool
+	SetAuthMode(AuthMode)
+	GetAuthMode() AuthMode
 }
 
 type auth struct {
 	settings settings.API
-	disabled bool
+	authMode AuthMode
 }
 
 func New() Auth {
-	return &auth{settings: new(settings.Settings), disabled: false}
+	return &auth{settings: new(settings.Settings), authMode: Enabled}
 }
 
 func NewMock(settings settings.API) Auth {
-	return &auth{settings: settings, disabled: false}
+	return &auth{settings: settings, authMode: Enabled}
 }
 
 func (a *auth) hashPassword(password string) (string, error) {
@@ -144,10 +153,10 @@ func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
 	return true, nil
 }
 
-func (a *auth) Disable() {
-	a.disabled = true
+func (a *auth) SetAuthMode(authMode AuthMode) {
+	a.authMode = authMode
 }
 
-func (a *auth) Disabled() bool {
-	return a.disabled
+func (a *auth) GetAuthMode() AuthMode {
+	return a.authMode
 }
