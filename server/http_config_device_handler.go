@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v3"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
@@ -98,21 +99,6 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			return nil, err
 		}
 
-		// use of any: https://stackoverflow.com/questions/71587996/cannot-use-type-assertion-on-type-parameter-value
-		if instance := any(dev.Instance()); instance != nil {
-			if dc["deviceTitle"] == nil {
-				if i, ok := instance.(api.TitleDescriber); ok {
-					dc["deviceTitle"] = i.GetTitle()
-				}
-			}
-
-			if dc["deviceIcon"] == nil {
-				if i, ok := instance.(api.IconDescriber); ok {
-					dc["deviceIcon"] = i.Icon()
-				}
-			}
-		}
-
 		if conf.Type == typeTemplate {
 			// template device, mask config
 			params, err := sanitizeMasked(class, conf.Other)
@@ -122,7 +108,40 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			dc["config"] = params
 		} else {
 			// custom device, no masking
-			dc["config"] = conf.Other
+			config := make(map[string]any)
+			for k, v := range conf.Other {
+				config[k] = v
+			}
+
+			// extract title & icon if possible (user-defined vehicle embeds)
+			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
+				var yamlData map[string]any
+				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
+					if title, ok := yamlData["title"].(string); ok {
+						config["title"] = title
+					}
+					if icon, ok := yamlData["icon"].(string); ok {
+						config["icon"] = icon
+					}
+				}
+			}
+
+			dc["config"] = config
+		}
+	}
+
+	if dc["config"] == nil {
+		// add title if available
+		config := make(map[string]any)
+		if title, ok := conf.Other["title"].(string); ok {
+			config["title"] = title
+		}
+		// add icon if available
+		if icon, ok := conf.Other["icon"].(string); ok {
+			config["icon"] = icon
+		}
+		if len(config) > 0 {
+			dc["config"] = config
 		}
 	}
 
