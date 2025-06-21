@@ -1,0 +1,84 @@
+template: test-solar-forecast-curve
+group: solar
+products:
+  - brand: Test
+    description:
+      de: Realistische Solarvorhersage (Glockenkurve)
+      en: Realistic solar forecast (bell curve)
+requirements:
+  description:
+    en: For testing purposes. Provides realistic solar production curve peaking at noon.
+    de: Zu Testzwecken. Liefert realistische Solarproduktionskurve mit Spitze zur Mittagszeit.
+params:
+  - name: peak
+    description:
+      de: Spitzenleistung zur Mittagszeit
+      en: Peak power at noon
+    type: float
+    unit: W
+    default: 4500
+    help:
+      de: Maximale Solarleistung zur Mittagszeit in Watt
+      en: Maximum solar power at noon in watts
+  - name: sunrise
+    description:
+      de: Sonnenaufgang (Stunde)
+      en: Sunrise hour
+    type: int
+    default: 6
+    help:
+      de: Stunde des Sonnenaufgangs (0-23)
+      en: Hour of sunrise (0-23)
+  - name: sunset
+    description:
+      de: Sonnenuntergang (Stunde)
+      en: Sunset hour
+    type: int
+    default: 18
+    help:
+      de: Stunde des Sonnenuntergangs (0-23)
+      en: Hour of sunset (0-23)
+  - name: interval
+    default: 1h
+    advanced: true
+
+render: |
+  type: custom
+  tariff: solar
+  forecast:
+    source: js
+    script: |
+      // Generate realistic solar forecast with bell curve for next 48 hours
+      var now = new Date();
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      var rates = [];
+      var peakPower = {{ .peak }};
+      var sunrise = {{ .sunrise }};
+      var sunset = {{ .sunset }};
+      var noon = sunrise + (sunset - sunrise) / 2;
+      var dayLength = sunset - sunrise;
+
+      for (var day = 0; day < 2; day++) {
+        for (var hour = 0; hour < 24; hour++) {
+          var time = new Date(start.getTime() + (day * 24 + hour) * 60 * 60 * 1000);
+          var nextTime = new Date(time.getTime() + 60 * 60 * 1000);
+
+          // Calculate solar power using bell curve
+          var solarValue = 0;
+          if (hour >= sunrise && hour <= sunset) {
+            // Normalize hour to range -1 to 1, with 0 at noon
+            var normalizedHour = (hour - noon) / (dayLength / 2);
+            // Bell curve: peak at noon, zero at sunrise/sunset
+            solarValue = Math.max(0, peakPower * (1 - Math.pow(normalizedHour, 2)));
+          }
+
+          rates.push({
+            start: time.toISOString(),
+            end: nextTime.toISOString(),
+            value: Math.round(solarValue)
+          });
+        }
+      }
+
+      JSON.stringify(rates);
+  interval: {{ .interval }}
