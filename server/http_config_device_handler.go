@@ -98,6 +98,21 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			return nil, err
 		}
 
+		// use of any: https://stackoverflow.com/questions/71587996/cannot-use-type-assertion-on-type-parameter-value
+		if instance := any(dev.Instance()); instance != nil {
+			if dc["title"] == nil {
+				if i, ok := instance.(api.TitleDescriber); ok {
+					dc["title"] = i.GetTitle()
+				}
+			}
+
+			if dc["icon"] == nil {
+				if i, ok := instance.(api.IconDescriber); ok {
+					dc["icon"] = i.Icon()
+				}
+			}
+		}
+
 		if conf.Type == typeTemplate {
 			// template device, mask config
 			params, err := sanitizeMasked(class, conf.Other)
@@ -108,23 +123,6 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		} else {
 			// custom device, no masking
 			dc["config"] = conf.Other
-		}
-	}
-
-	if dc["config"] == nil {
-		// add title if available
-		config := make(map[string]any)
-
-		// use of any: https://stackoverflow.com/questions/71587996/cannot-use-type-assertion-on-type-parameter-value
-		instance := any(dev.Instance())
-		if i, ok := instance.(api.TitleDescriber); ok {
-			config["title"] = i.GetTitle()
-		}
-		if i, ok := instance.(api.IconDescriber); ok {
-			config["icon"] = i.Icon()
-		}
-		if len(config) > 0 {
-			dc["config"] = config
 		}
 	}
 
