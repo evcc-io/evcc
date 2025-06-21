@@ -209,7 +209,7 @@ import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import settings from "@/settings";
+import settings from "@/settings.ts";
 import api, { allowClientError } from "@/api.ts";
 import { docsPrefix } from "@/i18n.ts";
 import { defineComponent, type PropType } from "vue";
