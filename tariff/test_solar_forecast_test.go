@@ -22,8 +22,8 @@ func TestSolarForecastStatic(t *testing.T) {
 	rates, err := tariff.Rates()
 	require.NoError(t, err)
 
-	// Should have 48 hours of data (2 days)
-	assert.Equal(t, 48, len(rates))
+	// Should have 72 hours of data (3 days)
+	assert.Equal(t, 72, len(rates))
 
 	// All rates should have the same power value
 	for _, rate := range rates {
@@ -49,18 +49,22 @@ func TestSolarForecastCurve(t *testing.T) {
 	rates, err := tariff.Rates()
 	require.NoError(t, err)
 
-	// Should have 48 hours of data (2 days)
-	assert.Equal(t, 48, len(rates))
+	// Should have 72 hours of data (3 days)
+	assert.Equal(t, 72, len(rates))
 
-	// Check that we have both days with similar patterns
+	// Check that we have all three days with similar patterns
 	day1Rates := rates[:24]
-	day2Rates := rates[24:]
+	day2Rates := rates[24:48]
+	day3Rates := rates[48:72]
 
 	// Verify bell curve characteristics for day 1
 	validateBellCurve(t, day1Rates, 4500.0, 6, 18)
 
 	// Verify bell curve characteristics for day 2 (should be similar)
 	validateBellCurve(t, day2Rates, 4500.0, 6, 18)
+
+	// Verify bell curve characteristics for day 3 (should be similar)
+	validateBellCurve(t, day3Rates, 4500.0, 6, 18)
 
 	// Check tariff type
 	assert.Equal(t, api.TariffTypeSolar, tariff.Type())
@@ -149,7 +153,7 @@ func TestSolarForecastTemplateDefaults(t *testing.T) {
 			rates, err := tariff.Rates()
 			require.NoError(t, err)
 
-			assert.Equal(t, 48, len(rates), "Should have 48 hours of data")
+			assert.Equal(t, 72, len(rates), "Should have 72 hours of data")
 			tt.checks(t, rates)
 		})
 	}
