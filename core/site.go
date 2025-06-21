@@ -319,9 +319,10 @@ func (site *Site) restoreSettings() error {
 
 	// restore accumulated energy
 	pvEnergy := make(map[string]float64)
-	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
+	fcstEnergy, fcstErr := settings.Float(keys.SolarAccForecast)
 
-	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
+	yieldErr := settings.Json(keys.SolarAccYield, &pvEnergy)
+	if fcstErr == nil && yieldErr == nil {
 		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
@@ -345,6 +346,12 @@ func (site *Site) restoreSettings() error {
 			for _, pe := range site.pvEnergy {
 				pe.Accumulated = 0
 			}
+		}
+	} else {
+		if yieldErr != nil {
+			site.log.ERROR.Printf("accumulated energy: error reading yield: %v", yieldErr)
+		} else {
+			site.log.ERROR.Printf("accumulated energy: error reading forecast: %v", fcstErr)
 		}
 	}
 
@@ -595,7 +602,7 @@ func (site *Site) updatePvMeters() {
 		}
 	}
 
-	// store - extract accumulated values to match expected read format
+	// store
 	pvAccumulated := make(map[string]float64)
 	for name, energy := range site.pvEnergy {
 		pvAccumulated[name] = energy.Accumulated
