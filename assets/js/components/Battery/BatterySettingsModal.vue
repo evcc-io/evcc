@@ -260,9 +260,8 @@ import GenericModal from "../Helper/GenericModal.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import collector from "@/mixins/collector.js";
 import api from "@/api";
-import smartCostAvailable from "@/utils/smartCostAvailable";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, SelectOption, SMART_COST_TYPE } from "@/types/evcc";
+import type { Battery, SelectOption } from "@/types/evcc";
 
 export default defineComponent({
 	name: "BatterySettingsModal",
@@ -276,7 +275,7 @@ export default defineComponent({
 		batteryDischargeControl: Boolean,
 		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		batteryGridChargeLimit: { type: Number, default: null },
-		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		tariffGrid: Number,
 		currency: String,
 	},
@@ -388,9 +387,6 @@ export default defineComponent({
 				...this.collectProps(SmartCostLimit),
 				smartCostLimit: this.batteryGridChargeLimit,
 			};
-		},
-		smartCostAvailable() {
-			return smartCostAvailable(this.smartCostType);
 		},
 	},
 	watch: {

@@ -50,6 +50,7 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
+				:smartCostAvailable="smartCostAvailable"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:currency="currency"
@@ -146,6 +147,7 @@ export default defineComponent({
 		uploadProgress: Number,
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		fatal: Object,
 		forecast: Object as PropType<Forecast>,
 	},
