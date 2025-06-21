@@ -114,12 +114,14 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 	if dc["config"] == nil {
 		// add title if available
 		config := make(map[string]any)
-		if title, ok := conf.Other["title"].(string); ok {
-			config["title"] = title
+
+		// use of any: https://stackoverflow.com/questions/71587996/cannot-use-type-assertion-on-type-parameter-value
+		instance := any(dev.Instance())
+		if i, ok := instance.(api.TitleDescriber); ok {
+			config["title"] = i.GetTitle()
 		}
-		// add icon if available
-		if icon, ok := conf.Other["icon"].(string); ok {
-			config["icon"] = icon
+		if i, ok := instance.(api.IconDescriber); ok {
+			config["icon"] = i.Icon()
 		}
 		if len(config) > 0 {
 			dc["config"] = config
