@@ -157,13 +157,12 @@
 </template>
 
 <script lang="ts">
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.ts";
 import formatter from "@/mixins/formatter";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
-import smartCostAvailable from "@/utils/smartCostAvailable";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { CURRENCY, PHASES } from "@/types/evcc";
+import { PHASES, CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
 
 const V = 230;
 
@@ -198,7 +197,8 @@ export default defineComponent({
 		minCurrent: { type: Number, default: 0 },
 		title: String,
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
@@ -271,9 +271,6 @@ export default defineComponent({
 		},
 		loadpointId() {
 			return this.id;
-		},
-		smartCostAvailable() {
-			return smartCostAvailable(this.smartCostType);
 		},
 	},
 	watch: {

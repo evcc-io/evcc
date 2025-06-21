@@ -5,11 +5,10 @@ import {
   expectModalVisible,
   expectModalHidden,
   editorClear,
-  editorType,
+  editorPaste,
 } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
@@ -41,7 +40,7 @@ test.describe("circuit", async () => {
   });
 
   test("via ui", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -86,22 +85,21 @@ test.describe("circuit", async () => {
 
     const editor = circuitsModal.getByTestId("yaml-editor");
     await editorClear(editor);
-    await editorType(editor, [
-      // prettier-ignore
-      "- name: main",
-      "  meter: db:1",
-      "maxcurrent: 16",
-      "Shift+Tab",
-      "- name: house",
-      "  title: House",
-      "maxcurrent: 10",
-      "parent: main",
-      "Shift+Tab",
-      "- name: garage",
-      "  title: Garage",
-      "maxcurrent: 8",
-      "parent: main",
-    ]);
+    await editorPaste(
+      editor,
+      page,
+      `- name: main
+  meter: db:1
+  maxcurrent: 16
+- name: house
+  title: House
+  maxcurrent: 10
+  parent: main
+- name: garage
+  title: Garage
+  maxcurrent: 8
+  parent: main`
+    );
 
     await circuitsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitsModal);
@@ -111,7 +109,7 @@ test.describe("circuit", async () => {
       .getByTestId("bottom-banner")
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // assign loadpoint to circuit
@@ -124,7 +122,7 @@ test.describe("circuit", async () => {
 
     // save, restart and check values
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // verify the configuration matches the yaml test
@@ -157,7 +155,7 @@ test.describe("circuit", async () => {
 
     // save, restart and check values
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // verify circuits

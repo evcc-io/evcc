@@ -1,27 +1,28 @@
 import fs from "fs";
 import waitOn from "wait-on";
 import axios from "axios";
-import { spawn, execSync } from "child_process";
+import { spawn, execSync, ChildProcess } from "child_process";
 import os from "os";
 import path from "path";
 import { Transform } from "stream";
 
 const BINARY = "./evcc";
+const LOG_ENABLED = false;
 
 function workerPort() {
-  const index = process.env.TEST_WORKER_INDEX * 1;
+  const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
   return 11000 + index;
 }
 
 function logPrefix() {
-  return `[worker:${process.env.TEST_WORKER_INDEX}]`;
+  return `[worker:${process.env["TEST_WORKER_INDEX"]}]`;
 }
 
 function createSteamLog() {
   return new Transform({
-    transform(chunk, encoding, callback) {
+    transform(chunk: Buffer, _, callback) {
       const lines = chunk.toString().split("\n");
-      lines.forEach((line) => {
+      lines.forEach((line: string) => {
         if (line.trim()) log(line);
       });
       callback();
@@ -29,8 +30,10 @@ function createSteamLog() {
   });
 }
 
-function log(...args) {
-  console.log(logPrefix(), ...args);
+function log(...args: any[]) {
+  if (LOG_ENABLED) {
+    console.log(logPrefix(), ...args);
+  }
 }
 
 export function baseUrl() {
@@ -42,7 +45,11 @@ function dbPath() {
   return path.join(os.tmpdir(), file);
 }
 
-export async function start(config, sqlDumps, flags = "--disable-auth") {
+export async function start(
+  config?: string,
+  sqlDumps?: string | null,
+  flags: string | string[] = "--disable-auth"
+) {
   await _clean();
   if (sqlDumps) {
     await _restoreDatabase(sqlDumps);
@@ -50,17 +57,17 @@ export async function start(config, sqlDumps, flags = "--disable-auth") {
   return await _start(config, flags);
 }
 
-export async function stop(instance) {
+export async function stop(instance?: ChildProcess) {
   await _stop(instance);
   await _clean();
 }
 
-export async function restart(config, flags = "--disable-auth") {
+export async function restart(config?: string, flags = "--disable-auth") {
   await _stop();
   await _start(config, flags);
 }
 
-export async function cleanRestart(config, sqlDumps) {
+export async function cleanRestart(config: string, sqlDumps: string) {
   await _stop();
   await _clean();
   if (sqlDumps) {
@@ -69,7 +76,7 @@ export async function cleanRestart(config, sqlDumps) {
   await _start(config);
 }
 
-async function _restoreDatabase(sqlDumps) {
+async function _restoreDatabase(sqlDumps: string) {
   const dumps = Array.isArray(sqlDumps) ? sqlDumps : [sqlDumps];
   for (const dump of dumps) {
     log("loading database", dbPath(), dump);
@@ -77,16 +84,16 @@ async function _restoreDatabase(sqlDumps) {
   }
 }
 
-async function _start(config, flags = []) {
-  const configFile = config.includes("/") ? config : `tests/${config}`;
+async function _start(config?: string, flags: string | string[] = []) {
+  const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
-  const instance = spawn(BINARY, ["--config", configFile, ...additionalFlags], {
+  const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
     stdio: ["pipe", "pipe", "pipe"],
   });
@@ -97,16 +104,16 @@ async function _start(config, flags = []) {
     log("evcc terminated", { code, port, config });
     steamLog.end();
   });
-  await waitOn({ resources: [baseUrl()], log: true });
+  await waitOn({ resources: [baseUrl()], log: LOG_ENABLED });
   return instance;
 }
 
-async function _stop(instance) {
+async function _stop(instance?: ChildProcess) {
   const port = workerPort();
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
     log("evcc is down", { port });
     return;
   }
@@ -123,7 +130,7 @@ async function _stop(instance) {
   log("shutting down evcc", { port });
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log("evcc is down", { port });
 }
 

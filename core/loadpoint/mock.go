@@ -548,18 +548,18 @@ func (mr *MockAPIMockRecorder) GetSmartCostLimit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartCostLimit))
 }
 
-// GetSmartFeedinLimit mocks base method.
-func (m *MockAPI) GetSmartFeedinLimit() *float64 {
+// GetSmartFeedinPriorityLimit mocks base method.
+func (m *MockAPI) GetSmartFeedinPriorityLimit() *float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSmartFeedinLimit")
+	ret := m.ctrl.Call(m, "GetSmartFeedinPriorityLimit")
 	ret0, _ := ret[0].(*float64)
 	return ret0
 }
 
-// GetSmartFeedinLimit indicates an expected call of GetSmartFeedinLimit.
-func (mr *MockAPIMockRecorder) GetSmartFeedinLimit() *gomock.Call {
+// GetSmartFeedinPriorityLimit indicates an expected call of GetSmartFeedinPriorityLimit.
+func (mr *MockAPIMockRecorder) GetSmartFeedinPriorityLimit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartFeedinLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartFeedinLimit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartFeedinPriorityLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartFeedinPriorityLimit))
 }
 
 // GetSocConfig mocks base method.
@@ -922,16 +922,16 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(limit any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartCostLimit), limit)
 }
 
-// SetSmartFeedinLimit mocks base method.
-func (m *MockAPI) SetSmartFeedinLimit(limit *float64) {
+// SetSmartFeedinPriorityLimit mocks base method.
+func (m *MockAPI) SetSmartFeedinPriorityLimit(limit *float64) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSmartFeedinLimit", limit)
+	m.ctrl.Call(m, "SetSmartFeedinPriorityLimit", limit)
 }
 
-// SetSmartFeedinLimit indicates an expected call of SetSmartFeedinLimit.
-func (mr *MockAPIMockRecorder) SetSmartFeedinLimit(limit any) *gomock.Call {
+// SetSmartFeedinPriorityLimit indicates an expected call of SetSmartFeedinPriorityLimit.
+func (mr *MockAPIMockRecorder) SetSmartFeedinPriorityLimit(limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartFeedinLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartFeedinLimit), limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartFeedinPriorityLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartFeedinPriorityLimit), limit)
 }
 
 // SetSocConfig mocks base method.

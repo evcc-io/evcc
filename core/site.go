@@ -76,9 +76,6 @@ type Site struct {
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
-	// TODO deprecated
-	CircuitRef_                        string  `mapstructure:"circuit"`                           // Circuit reference
-	MaxGridSupplyWhileBatteryCharging_ float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
 	circuit       api.Circuit                // Circuit
@@ -247,10 +244,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev)
-	}
-
-	if site.MaxGridSupplyWhileBatteryCharging_ != 0 {
-		site.log.WARN.Println("`MaxGridSupplyWhileBatteryCharging` is deprecated- use `maxACPower` in pv configuration instead")
 	}
 
 	// revert battery mode on shutdown
@@ -992,6 +985,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
+	site.publish(keys.SmartFeedinPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 	site.publish(keys.SmartFeedinDisableAvailable, site.smartFeedinDisableAvailable())
 
 	site.publish(keys.Currency, site.tariffs.Currency)

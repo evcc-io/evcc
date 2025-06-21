@@ -2,12 +2,15 @@
 	<GenericModal
 		id="loginModal"
 		:title="$t('loginModal.title')"
-		size="sm"
+		:size="modalSize"
 		data-testid="login-modal"
 		@open="open"
 		@closed="closed"
 	>
-		<form v-if="modalVisible" @submit.prevent="login">
+		<div v-if="demoMode" class="alert alert-warning" role="alert">
+			{{ $t("loginModal.demoMode") }}
+		</div>
+		<form v-else-if="modalVisible" @submit.prevent="login">
 			<div class="mb-4">
 				<label for="loginPassword" class="col-form-label">
 					<div class="w-100">
@@ -68,6 +71,9 @@ import { defineComponent } from "vue";
 export default defineComponent({
 	name: "LoginModal",
 	components: { GenericModal },
+	props: {
+		demoMode: Boolean,
+	},
 	data: () => {
 		return {
 			modalVisible: false,
@@ -84,6 +90,9 @@ export default defineComponent({
 		},
 		evccUrl() {
 			return window.location.href;
+		},
+		modalSize() {
+			return this.demoMode ? "md" : "sm";
 		},
 	},
 	methods: {
@@ -111,7 +120,7 @@ export default defineComponent({
 			try {
 				const data = { password: this.password };
 				const res = await api.post("/auth/login", data, {
-					validateStatus: (code) => [200, 401].includes(code),
+					validateStatus: (code) => [200, 401, 403].includes(code),
 				});
 				this.resetHint = false;
 				this.iframeHint = false;
@@ -134,6 +143,9 @@ export default defineComponent({
 				if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
 					this.resetHint = true;
+				}
+				if (res.status === 403) {
+					this.error = this.$t("loginModal.demoMode");
 				}
 			} catch (err) {
 				console.error(err);

@@ -26,7 +26,7 @@ export default defineComponent({
 	props: {
 		id: String,
 		options: Array as PropType<SelectOption<string>[]>,
-		modelValue: [Number, String, Boolean],
+		modelValue: [Number, String, Boolean, null],
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,

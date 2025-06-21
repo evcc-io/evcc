@@ -211,9 +211,9 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 				lp.SetSmartCostLimit(limit)
 			}
 		}))},
-		{"smartFeedinLimit", floatPtrSetter(pass(func(limit *float64) {
+		{"smartFeedinPriorityLimit", floatPtrSetter(pass(func(limit *float64) {
 			for _, lp := range site.Loadpoints() {
-				lp.SetSmartFeedinLimit(limit)
+				lp.SetSmartFeedinPriorityLimit(limit)
 			}
 		}))},
 		{"smartFeedinDisableLimit", floatPtrSetter(pass(site.SetSmartFeedinDisableLimit))},
@@ -247,7 +247,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"enableDelay", durationSetter(pass(lp.SetEnableDelay))},
 		{"disableDelay", durationSetter(pass(lp.SetDisableDelay))},
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
-		{"smartFeedinLimit", floatPtrSetter(pass(lp.SetSmartFeedinLimit))},
+		{"smartFeedinPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedinPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
 		{"planEnergy", func(payload string) error {
 			var plan struct {

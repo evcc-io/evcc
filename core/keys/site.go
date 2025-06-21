@@ -57,11 +57,13 @@ const (
 	// external battery control
 	BatteryModeExternal = "batteryModeExternal"
 
+	// smart charging
+	SmartCostAvailable = "smartCostAvailable" // smart cost available
+
 	// smart feed-in
 	SmartFeedinDisableLimit     = "smartFeedinDisableLimit"     // smart feed-in disable limit
 	SmartFeedinDisableActive    = "smartFeedinDisableActive"    // smart feed-in disable active
 	SmartFeedinDisableAvailable = "smartFeedinDisableAvailable" // smart feed-in disable available
 
-	// smart charging
-	SmartCostAvailable = "smartCostAvailable" // smart cost available
+	SmartFeedinPriorityAvailable = "smartFeedinPriorityAvailable" // smart feed-in priority available
 )

@@ -808,25 +808,25 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	}
 }
 
-// GetSmartFeedinLimit gets the smart feed-in limit
-func (lp *Loadpoint) GetSmartFeedinLimit() *float64 {
+// GetSmartFeedinPriorityLimit gets the smart feed-in limit
+func (lp *Loadpoint) GetSmartFeedinPriorityLimit() *float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.smartFeedinLimit
+	return lp.smartFeedinPriorityLimit
 }
 
-// SetSmartFeedinLimit sets the smart cost feed-in
-func (lp *Loadpoint) SetSmartFeedinLimit(val *float64) {
+// SetSmartFeedinPriorityLimit sets the smart cost feed-in
+func (lp *Loadpoint) SetSmartFeedinPriorityLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
 
-	if !ptrValueEqual(lp.smartFeedinLimit, val) {
-		lp.smartFeedinLimit = val
+	if !ptrValueEqual(lp.smartFeedinPriorityLimit, val) {
+		lp.smartFeedinPriorityLimit = val
 
-		lp.settings.SetFloatPtr(keys.SmartFeedinLimit, val)
-		lp.publish(keys.SmartFeedinLimit, val)
+		lp.settings.SetFloatPtr(keys.SmartFeedinPriorityLimit, val)
+		lp.publish(keys.SmartFeedinPriorityLimit, val)
 	}
 }
 
