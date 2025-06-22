@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { test } from "@playwright/test";
+import { start, baseUrl } from "./evcc";
 import { execSync } from "child_process";
 import path from "path";
 import os from "os";
@@ -37,8 +37,8 @@ test.describe("Solar Format Bug Test", async () => {
       );
 
       return result.trim() || null;
-    } catch (error) {
-      console.log("Database read error:", error);
+    } catch {
+      console.log("Database read error");
       return null;
     }
   };
@@ -47,7 +47,7 @@ test.describe("Solar Format Bug Test", async () => {
     const dbPath = getWorkerDbPath();
     try {
       execSync(`echo "DELETE FROM settings WHERE key IN ('solarAccYield', 'solarAccForecast');" | sqlite3 "${dbPath}"`);
-    } catch (error) {
+    } catch {
       console.log("Database might not exist yet, will be created by evcc");
     }
   };
@@ -74,7 +74,7 @@ test.describe("Solar Format Bug Test", async () => {
       await axios.post(`${baseUrl()}/api/system/shutdown`, {});
       // Give it a moment to shutdown
       await page.waitForTimeout(2000);
-    } catch (error) {
+    } catch {
       console.log("Graceful shutdown failed, using force kill");
       instance.kill("SIGKILL");
       await page.waitForTimeout(1000);
@@ -109,7 +109,7 @@ test.describe("Solar Format Bug Test", async () => {
         } else {
           throw new Error(`❌ UNEXPECTED FORMAT: ${format}`);
         }
-      } catch (e) {
+      } catch {
         throw new Error(`❌ INVALID JSON FORMAT: ${format}`);
       }
     }
