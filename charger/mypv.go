@@ -47,6 +47,7 @@ const (
 	elwaRegSetPower  = 1000
 	elwaRegTempLimit = 1002
 	elwaRegStatus    = 1003
+	elwaRegLoadState = 1059
 	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 )
 
@@ -152,14 +153,32 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
+	if wb.lp != nil && wb.lp.GetMode() == api.ModeOff {
+		return api.StatusA, nil
+	}
+
 	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
+	c, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	d, err := wb.conn.ReadHoldingRegisters(elwaRegSetPower, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
 	res := api.StatusB
-	if binary.BigEndian.Uint16(b) == wb.statusC {
+	if (binary.BigEndian.Uint16(b) == wb.statusC) && (binary.BigEndian.Uint16(d) > 10) {
 		res = api.StatusC
+	}
+
+	if binary.BigEndian.Uint16(c) == 0 {
+		res = api.StatusA
 	}
 
 	return res, nil
