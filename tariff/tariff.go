@@ -21,6 +21,7 @@ type Tariff struct {
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
 	typ    api.TariffType
+	cache  *SolarCacheManager
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -75,6 +76,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
+	// Initialize cache for solar forecast tariffs
+	if cc.Type == api.TariffTypeSolar && forecastG != nil {
+		t.cache = NewSolarCacheManager("custom", cc)
+	}
+
 	if forecastG != nil {
 		done := make(chan error)
 		go t.run(forecastG, done, cc.Interval)
@@ -87,19 +93,37 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
+	// Try to load from cache on startup for solar forecasts
+	if t.cache != nil {
+		if cached, ok := t.cache.Get(interval); ok {
+			t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
+			// Apply totalPrice to cached rates if needed
+			for i, r := range cached {
+				cached[i] = api.Rate{
+					Value: t.totalPrice(r.Value, r.Start),
+					Start: r.Start.Local(),
+					End:   r.End.Local(),
+				}
+			}
+			mergeRatesAfter(t.data, cached, beginningOfDay())
+			once.Do(func() { close(done) })
+		}
+	}
+
 	for tick := time.Tick(interval); ; <-tick {
-		var data api.Rates
+		var rawData api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
 			if err != nil {
 				return backoffPermanentError(err)
 			}
-			if err := json.Unmarshal([]byte(s), &data); err != nil {
+			if err := json.Unmarshal([]byte(s), &rawData); err != nil {
 				return backoff.Permanent(err)
 			}
-			for i, r := range data {
-				data[i] = api.Rate{
-					Value: t.totalPrice(r.Value, r.Start),
+			// Normalize timestamps to local time without applying totalPrice yet
+			for i, r := range rawData {
+				rawData[i] = api.Rate{
+					Value: r.Value,
 					Start: r.Start.Local(),
 					End:   r.End.Local(),
 				}
@@ -110,6 +134,23 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 
 			t.log.ERROR.Println(err)
 			continue
+		}
+
+		// Cache the raw data for solar forecasts (before totalPrice adjustments)
+		if t.cache != nil {
+			if err := t.cache.Set(rawData); err != nil {
+				t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
+			}
+		}
+
+		// Apply totalPrice to the data for use
+		data := make(api.Rates, len(rawData))
+		for i, r := range rawData {
+			data[i] = api.Rate{
+				Value: t.totalPrice(r.Value, r.Start),
+				Start: r.Start,
+				End:   r.End,
+			}
 		}
 
 		// only prune rates older than current period

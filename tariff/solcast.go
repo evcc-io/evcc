@@ -22,6 +22,7 @@ type Solcast struct {
 	site   string
 	fromTo FromTo
 	data   *util.Monitor[api.Rates]
+	cache  *SolarCacheManager
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -60,6 +61,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Helper: request.NewHelper(log),
 		fromTo: cc.FromTo,
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
+		cache:  NewSolarCacheManager("solcast", cc),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
@@ -73,6 +75,13 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
+
+	// Try to load from cache on startup
+	if cached, ok := t.cache.Get(interval); ok {
+		t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
+		mergeRatesAfter(t.data, cached, beginningOfDay())
+		once.Do(func() { close(done) })
+	}
 
 	for ; true; <-time.Tick(interval) {
 		// ensure we don't run when not needed, but execute once at startup
@@ -116,6 +125,11 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 				}
 			}
 			data = append(data, rr)
+		}
+
+		// Cache the new data
+		if err := t.cache.Set(data); err != nil {
+			t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
 		}
 
 		mergeRatesAfter(t.data, data, beginningOfDay())

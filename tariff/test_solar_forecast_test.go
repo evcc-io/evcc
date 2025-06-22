@@ -158,3 +158,57 @@ func TestSolarForecastTemplateDefaults(t *testing.T) {
 		})
 	}
 }
+
+func TestSolarTemplatesCaching(t *testing.T) {
+	// Test that template-based tariffs properly use caching
+	config := map[string]any{
+		"template": "test-solar-forecast-static",
+		"power":    5000.0,
+		"interval": "1h",
+	}
+
+	// Create first tariff instance
+	tariff1, err := NewFromConfig(context.TODO(), "template", config)
+	require.NoError(t, err)
+
+	// Get rates (should cache the result)
+	rates1, err := tariff1.Rates()
+	require.NoError(t, err)
+	require.NotEmpty(t, rates1)
+
+	// Create second tariff instance with same config
+	tariff2, err := NewFromConfig(context.TODO(), "template", config)
+	require.NoError(t, err)
+
+	// Get rates (should use cached result)
+	rates2, err := tariff2.Rates()
+	require.NoError(t, err)
+
+	// Verify rates are identical (indicating cache was used)
+	assert.Equal(t, len(rates1), len(rates2), "Cached rates should have same length")
+	for i, rate1 := range rates1 {
+		assert.Equal(t, rate1.Start, rates2[i].Start, "Cached start time should match for rate %d", i)
+		assert.Equal(t, rate1.End, rates2[i].End, "Cached end time should match for rate %d", i)
+		assert.Equal(t, rate1.Value, rates2[i].Value, "Cached value should match for rate %d", i)
+	}
+
+	// Test different config creates different cache
+	differentConfig := map[string]any{
+		"template": "test-solar-forecast-static",
+		"power":    3000.0, // Different power value
+		"interval": "1h",
+	}
+
+	tariff3, err := NewFromConfig(context.TODO(), "template", differentConfig)
+	require.NoError(t, err)
+
+	rates3, err := tariff3.Rates()
+	require.NoError(t, err)
+
+	// Verify different config produces different rates
+	assert.Equal(t, len(rates1), len(rates3), "Different config should still have same length")
+	for i, rate1 := range rates1 {
+		assert.NotEqual(t, rate1.Value, rates3[i].Value, "Different config should produce different values for rate %d", i)
+		assert.Equal(t, 3000.0, rates3[i].Value, "New config should use specified power value for rate %d", i)
+	}
+}
