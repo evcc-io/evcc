@@ -49,7 +49,7 @@ func (site *Site) publishVehicles() {
 		ac := instance.OnIdentified()
 
 		res[v.Name()] = vehicleStruct{
-			Title:          instance.Title(),
+			Title:          instance.GetTitle(),
 			Icon:           instance.Icon(),
 			Capacity:       instance.Capacity(),
 			Phases:         instance.Phases(),
