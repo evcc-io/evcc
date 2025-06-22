@@ -1,6 +1,8 @@
 package tariff
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -452,6 +454,41 @@ func TestSolarCacheManager_DatabaseRoundtrip(t *testing.T) {
 	// Should not find data when maxAge is very small
 	_, found = cache4.Get(5 * time.Millisecond) // Max age less than actual age
 	assert.False(t, found, "Should not find cached data when maxAge is exceeded")
+
+	// Dump database contents to see what's actually stored
+	t.Log("=== Database Contents ===")
+	allSettings := settings.All()
+	t.Logf("Total settings in database: %d", len(allSettings))
+
+	for _, setting := range allSettings {
+		if strings.HasPrefix(setting.Key, "solar_forecast_cache_") {
+			t.Logf("Cache Key: %s", setting.Key)
+			t.Logf("Raw Value: %s", setting.Value)
+
+			// Try to parse the JSON to see the structure
+			var cached SolarForecastCache
+			if err := json.Unmarshal([]byte(setting.Value), &cached); err == nil {
+				t.Logf("  ConfigHash: %s", cached.ConfigHash)
+				t.Logf("  Version: %s", cached.Version)
+				t.Logf("  Timestamp: %s", cached.Timestamp.Format(time.RFC3339Nano))
+				t.Logf("  Number of Rates: %d", len(cached.Rates))
+				if len(cached.Rates) > 0 {
+					for i, rate := range cached.Rates {
+						if i < 3 { // Only show first 3 rates to avoid spam
+							t.Logf("    Rate[%d]: Start=%s, End=%s, Value=%f",
+								i, rate.Start.Format(time.RFC3339Nano), rate.End.Format(time.RFC3339Nano), rate.Value)
+						}
+					}
+					if len(cached.Rates) > 3 {
+						t.Logf("    ... and %d more rates", len(cached.Rates)-3)
+					}
+				}
+			} else {
+				t.Logf("  JSON Parse Error: %v", err)
+			}
+			t.Log("---")
+		}
+	}
 }
 
 func setupTestDB(t *testing.T) func() {
