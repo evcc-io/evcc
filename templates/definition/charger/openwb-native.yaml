@@ -1,0 +1,138 @@
+template: openwb-native
+products:
+  - brand: openWB
+    description:
+      generic: Embedded software replacement
+capabilities: ["1p3p", "rfid", "mA"]
+requirements:
+  description:
+    de: |
+      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2.
+      mA Regelung wird automatisch benutzt wenn die EVSE-Firmware es unterstützt.
+
+      Achtung: Die Installation von evcc auf der OpenWB Hardware führt zum Verlust der Garantie!
+
+      Installation ohne Display:
+      - Raspberry Pi OS Lite (64bit) Image installieren und konfigurieren.
+      - Folgendes am Ende von `/boot/firmware/config.txt` hinzufügen:
+        ```ini
+        [all]
+        gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+        gpio=6,8,9,10,12,13,16,21=ip,pu
+        ```
+      - evcc nach Anleitung installieren.
+      - Notwendige Gruppen zum Zugriff auf die Hardware für user evcc setzen (als root): `usermod -a -G gpio,dialout,input evcc`
+      - evcc konfigurieren. Es gibt unterschiedliche Hardware Versionen, die bezüglich der verbauten Wallbox Zähler variieren (alle auf `/dev/ttyUSB0`):
+        - Bernecker Engineering MPM3PM (template: mpm3pm) mit ID 5
+        - SDM630/SDM72 (template: eastron) mit ID 105
+        - ABB B23 (template: abb-ab) mit ID 201
+
+      Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
+      - Datei `/home/pi/.config/labwc/autostart` mit folgendem Inhalt anlegen:
+        ```bash
+        /usr/bin/firefox --kiosk http://localhost:7070/ &
+        /usr/bin/swayidle -w timeout 600 'wlopm --off \*' resume 'wlopm --on \*' &
+        ```
+      - Datei `/home/pi/.config/systemd/user/kiosk.service` mit folgendem Inhalt anlegen:
+        ```ini
+        [Unit]
+        Description=Start Kiosk mode
+        [Service]
+        Type=simple
+        ExecStart=/usr/bin/labwc
+        [Install]
+        WantedBy=default.target
+        ```
+      - Kiosk Modus Autostart aktivieren: `systemctl --user enable kiosk`
+      - Als root: Starten von systemd user units ohne login des Users aktivieren: `loginctl enable-linger pi`
+    en: |
+      Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2.
+      mA control is used automatically if the EVSE firmware supports it.
+
+      Please be aware that installing evcc on the OpenWB Hardware will void your guarantee!
+
+      Installation without display:
+      - Install and configure Raspberry Pi OS Lite (64bit) image.
+      - Add the following at then end of `/boot/firmware/config.txt`:
+        ```ini
+        [all]
+        gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+        gpio=6,8,9,10,12,13,16,21=ip,pu
+        ```
+      - Install evcc according to the manual.
+      - Add the groups required for user evcc to access the hardware: `usermod -a -G gpio,dialout,input evcc`
+      - Configure evcc according to the manual. There are multiple distinct Hardware versions, which have different charge meters (all on `/dev/ttyUSB0`):
+        - Bernecker Engineering MPM3PM (template: mpm3pm) with ID 5
+        - SDM630/SDM72 (template: eastron) with ID 105
+        - ABB B23 (template: abb-ab) with ID 201
+
+      Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
+      - Create the file `/home/pi/.config/labwc/autostart` with the following contents:
+        ```bash
+        /usr/bin/firefox --kiosk http://localhost:7070/ &
+        /usr/bin/swayidle -w timeout 600 'wlopm --off \*' resume 'wlopm --on \*' &
+        ```
+      - Create file `/home/pi/.config/systemd/user/kiosk.service` with the following content:
+        ```ini
+        [Unit]
+        Description=Start Kiosk mode
+        [Service]
+        Type=simple
+        ExecStart=/usr/bin/labwc
+        [Install]
+        WantedBy=default.target
+        ```
+      - Enable autostart of kiosk mode: `systemctl --user enable kiosk`
+      - As root: Enable start of systemd user units without the user having to log-in: `loginctl enable-linger pi`
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
+  - name: phases1p3p
+    type: bool
+    description:
+      en: Phase switching
+      de: Phasenumschaltung
+    help:
+      en: Device is equipped with phase switching option
+      de: Gerät ist mit Phasenumschaltungsoption ausgestattet
+    default: false
+  - name: rfid
+    type: string
+    example: "413d:2107"
+    description:
+      en: RFID card reader USB VID:PID
+      de: RFID-Kartenleser USB VID:PID
+    help:
+      en: RFID card reader USB VID:PID value (as be obtained from lsusb), leave empty for no RFID card reader
+      de: RFID-Kartenleser USB VID:PID Wert (kann der Ausgabe von lsusb entnommen werden), leer wenn kein RFID Kartenleser vorhanden ist
+    default: ""
+  - name: cpwait
+    type: float
+    description:
+      en: Duration of CP interruption in seconds
+      de: Dauer der CP Unterbrechnung in Sekunden
+    help:
+      en: when phase-switching and waking up car.
+      de: bei der Phasenumschaltung und Aufwecken des Autos.
+    default: 10
+    advanced: true
+  - name: chargePoint
+    type: int
+    description:
+      en: Chargepoint id
+      de: Ladepunkt id
+    help:
+      en: 0 or 1, usually 0, except for Duo
+      de: 0 oder 1, normalerweise 0, ausser bei Duo
+    default: 0
+    advanced: true
+render: |
+  type: openwb-native
+  phases1p3p: {{ .phases1p3p }}
+  rfid: {{ .rfid }}
+  cpwait: {{ .cpwait }}
+  {{- include "modbus" . }}
