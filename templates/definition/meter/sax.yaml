@@ -10,14 +10,6 @@ requirements:
       Für Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
     en: |
       For battery control, registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
-      generic: SAX Power Home (Plus)
-capabilities: ["battery-control"]
-requirements:
-  description:
-    de: |
-      Für Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
-    en: |
-      For battery control, registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
 params:
   - name: usage
     choice: ["grid", "battery"]
@@ -25,12 +17,6 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 64
-  - name: capacity
-    advanced: true
-  - name: watchdog
-    type: duration
-    default: 240s
-    advanced: true
   - name: capacity
     advanced: true
   - name: watchdog
@@ -62,7 +48,6 @@ render: |
       # register details
       register:
         address: 47 # Leistung P[W] des Speichers 
-        address: 47 # Leistung P[W] des Speichers 
         type: holding
         decode: uint16
     - source: const
@@ -72,7 +57,6 @@ render: |
     {{- include "modbus" . | indent 2 }}
     # register details
     register:
-      address: 46 # SOC[%] des Speichers 
       address: 46 # SOC[%] des Speichers 
       type: holding
       decode: uint16
