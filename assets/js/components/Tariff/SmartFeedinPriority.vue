@@ -8,7 +8,8 @@
 		:tariff="tariff"
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
-		limit-operator="≥"
+		limit-direction="above"
+		highlight-color="text-warning"
 		@save-limit="saveLimit"
 		@delete-limit="deleteLimit"
 		@apply-to-all="applyToAll"
@@ -42,10 +43,10 @@ export default defineComponent({
 		labels() {
 			const t = (key: string) => this.$t(`smartFeedinPriority.${key}`);
 			return {
-				title: t("description"),
+				title: t("title"),
 				description: t("description"),
 				limitLabel: t("priceLimit"),
-				activeHoursLabel: t("pausedHoursLabel"),
+				activeHoursLabel: t("activeHoursLabel"),
 				currentPriceLabel: t("priceLabel"),
 				resetWarningText: t("resetWarning"),
 			};

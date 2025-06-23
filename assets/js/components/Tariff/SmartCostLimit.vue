@@ -9,7 +9,7 @@
 		:tariff="tariff"
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
-		limit-operator="≤"
+		limit-direction="below"
 		@save-limit="saveLimit"
 		@delete-limit="deleteLimit"
 		@apply-to-all="applyToAll"

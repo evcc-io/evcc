@@ -36,7 +36,7 @@
 				<div class="label">
 					{{ activeHoursLabel }}
 				</div>
-				<div class="value" :class="activeSlots.length ? 'text-primary' : 'value-inactive'">
+				<div class="value" :class="activeHoursClass">
 					{{ activeHoursText }}
 				</div>
 			</div>
@@ -79,6 +79,9 @@ import TariffChart from "./TariffChart.vue";
 import { defineComponent, type PropType } from "vue";
 import { type CURRENCY, type Rate, type SelectOption, type Slot } from "@/types/evcc";
 
+type LimitDirection = "above" | "below";
+type HighlightColor = "text-primary" | "text-warning";
+
 export default defineComponent({
 	name: "SmartTariffBase",
 	components: { TariffChart },
@@ -100,7 +103,8 @@ export default defineComponent({
 		activeHoursLabel: { type: String, required: true },
 		currentPriceLabel: String,
 		resetWarningText: String,
-		limitOperator: String,
+		limitDirection: { type: String as PropType<LimitDirection>, default: "below" },
+		highlightColor: { type: String as PropType<HighlightColor>, default: "text-primary" },
 		isSlotActive: {
 			type: Function as PropType<(value: number | undefined) => boolean>,
 			required: true,
@@ -195,11 +199,25 @@ export default defineComponent({
 				const day = this.weekdayShort(start);
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const active =
+					this.limitDirection === "below" &&
 					this.selectedLimit !== null &&
 					value !== undefined &&
 					value <= this.selectedLimit;
+				const warning =
+					this.limitDirection === "above" &&
+					this.selectedLimit !== null &&
+					value !== undefined &&
+					value >= this.selectedLimit;
 				const selectable = value !== undefined;
-				result.push({ day, value, startHour, endHour, charging: active, selectable });
+				result.push({
+					day,
+					value,
+					startHour,
+					endHour,
+					charging: active,
+					selectable,
+					warning,
+				});
 			}
 
 			return result;
@@ -209,6 +227,9 @@ export default defineComponent({
 		},
 		activeSlots() {
 			return this.totalSlots.filter((s) => s.charging);
+		},
+		warningSlots() {
+			return this.totalSlots.filter((s) => s.warning);
 		},
 		totalCostRange() {
 			return this.fmtCostRange(this.costRange(this.totalSlots));
@@ -234,12 +255,24 @@ export default defineComponent({
 			}
 			return null;
 		},
+		activeHoursClass() {
+			if (this.limitDirection === "below") {
+				return this.activeSlots.length ? "text-primary" : "value-inactive";
+			}
+			return this.warningSlots.length ? "text-warning" : "value-inactive";
+		},
 		activeHoursText() {
 			const params = {
-				active: this.activeSlots.length,
+				active:
+					this.limitDirection === "below"
+						? this.activeSlots.length
+						: this.warningSlots.length,
 				total: this.totalSlots.length,
 			};
 			return this.$t("smartCost.activeHours", params);
+		},
+		limitOperator() {
+			return this.limitDirection === "below" ? "≤" : "≥";
 		},
 	},
 	watch: {

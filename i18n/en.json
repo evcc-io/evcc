@@ -976,9 +976,9 @@
   },
   "smartFeedinPriority": {
     "activeHoursLabel": "Paused hours",
-    "description": "Pauses vehicle charging when feed-in rates are above limit to prioritize grid feed-in.",
+    "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
-    "priceLimit": "Feed-in rate limit",
+    "priceLimit": "Feed-in limit",
     "resetWarning": "There is no dynamic feed-in tariff configured. However, there is still a limit of {limit}. Clean up your configuration?",
     "title": "Feed-in Priority"
   },
