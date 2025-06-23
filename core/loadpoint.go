@@ -1090,7 +1090,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 						for _, v := range lp.availableVehicles() {
 							if slices.Contains(v.Features(), api.WelcomeCharge) {
 								welcomeCharge = true
-								lp.log.DEBUG.Printf("welcome charge: %s", v.Title())
+								lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
 								break
 							}
 						}

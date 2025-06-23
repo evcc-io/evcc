@@ -215,11 +215,11 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	}
 
 	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
-	cur := uint16(current / 0.06)
+	curr := uint16(current / 0.06)
 
-	err := wb.set(ablRegAmpsConfig, cur)
+	err := wb.set(ablRegAmpsConfig, curr)
 	if err == nil {
-		wb.curr = cur
+		wb.curr = curr
 	}
 
 	return err

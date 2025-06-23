@@ -85,11 +85,17 @@
 <script lang="ts">
 import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
-import { CO2_TYPE } from "@/units";
-import api, { allowClientError } from "@/api";
+import api, { allowClientError } from "@/api.ts";
 import convertRates from "@/utils/convertRates";
 import { defineComponent, type PropType } from "vue";
-import type { Tariff, CURRENCY, Rate, SelectOption, Slot } from "@/types/evcc";
+import {
+	type Tariff,
+	type CURRENCY,
+	type Rate,
+	type SelectOption,
+	type Slot,
+	SMART_COST_TYPE,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "SmartCostLimit",
@@ -100,7 +106,7 @@ export default defineComponent({
 			type: [Number, null] as PropType<number | null>,
 			required: true,
 		},
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		loadpointId: Number,
@@ -118,7 +124,7 @@ export default defineComponent({
 	},
 	computed: {
 		isCo2(): boolean {
-			return this.smartCostType === CO2_TYPE;
+			return this.smartCostType === SMART_COST_TYPE.CO2;
 		},
 		costOptions(): SelectOption<number>[] {
 			const { max } = this.costRange(this.totalSlots);

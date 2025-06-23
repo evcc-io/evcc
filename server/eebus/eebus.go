@@ -199,7 +199,7 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	defer c.mux.Unlock()
 
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
-		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx)
+		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx+1)
 	}
 }
 

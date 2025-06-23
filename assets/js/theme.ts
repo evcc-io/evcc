@@ -3,9 +3,9 @@ import { THEME } from "./types/evcc";
 
 const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 
-export function getThemePreference(): THEME {
+export function getThemePreference(): THEME | null {
   const theme = settings.theme;
-  if (Object.values(THEME).includes(theme)) {
+  if (theme && Object.values(THEME).includes(theme)) {
     return theme;
   }
   return THEME.AUTO;
@@ -19,10 +19,10 @@ export function setThemePreference(theme: THEME) {
   updateTheme();
 }
 
-function setMetaThemeColor(theme: Exclude<THEME, THEME.AUTO>) {
+function setMetaThemeColor(theme: Exclude<THEME, THEME.AUTO> | null) {
   const themeColors = { light: "#f3f3f7", dark: "#020318" };
   const $metaThemeColor = document.querySelector("meta[name=theme-color]");
-  if ($metaThemeColor) {
+  if ($metaThemeColor && theme) {
     $metaThemeColor.setAttribute("content", themeColors[theme]);
   }
 }

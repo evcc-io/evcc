@@ -111,7 +111,7 @@ import Arrival from "./Arrival.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import api from "@/api";
-import { optionStep, fmtEnergy } from "@/utils/energyOptions";
+import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Timeout, Vehicle } from "@/types/evcc";
 import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types";
