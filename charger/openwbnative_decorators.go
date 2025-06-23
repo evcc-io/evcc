@@ -6,44 +6,44 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenWbNative(base *OpenWbNative, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
+func decorateOpenWbHw(base *OpenWbHw, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
 	switch {
 	case identifier == nil && phaseSwitcher == nil:
 		return base
 
 	case identifier == nil && phaseSwitcher != nil:
 		return &struct {
-			*OpenWbNative
+			*OpenWbHw
 			api.PhaseSwitcher
 		}{
-			OpenWbNative: base,
-			PhaseSwitcher: &decorateOpenWbNativePhaseSwitcherImpl{
+			OpenWbHw: base,
+			PhaseSwitcher: &decorateOpenWbHwPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
 	case identifier != nil && phaseSwitcher == nil:
 		return &struct {
-			*OpenWbNative
+			*OpenWbHw
 			api.Identifier
 		}{
-			OpenWbNative: base,
-			Identifier: &decorateOpenWbNativeIdentifierImpl{
+			OpenWbHw: base,
+			Identifier: &decorateOpenWbHwIdentifierImpl{
 				identifier: identifier,
 			},
 		}
 
 	case identifier != nil && phaseSwitcher != nil:
 		return &struct {
-			*OpenWbNative
+			*OpenWbHw
 			api.Identifier
 			api.PhaseSwitcher
 		}{
-			OpenWbNative: base,
-			Identifier: &decorateOpenWbNativeIdentifierImpl{
+			OpenWbHw: base,
+			Identifier: &decorateOpenWbHwIdentifierImpl{
 				identifier: identifier,
 			},
-			PhaseSwitcher: &decorateOpenWbNativePhaseSwitcherImpl{
+			PhaseSwitcher: &decorateOpenWbHwPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
@@ -52,18 +52,18 @@ func decorateOpenWbNative(base *OpenWbNative, phaseSwitcher func(int) error, ide
 	return nil
 }
 
-type decorateOpenWbNativeIdentifierImpl struct {
+type decorateOpenWbHwIdentifierImpl struct {
 	identifier func() (string, error)
 }
 
-func (impl *decorateOpenWbNativeIdentifierImpl) Identify() (string, error) {
+func (impl *decorateOpenWbHwIdentifierImpl) Identify() (string, error) {
 	return impl.identifier()
 }
 
-type decorateOpenWbNativePhaseSwitcherImpl struct {
+type decorateOpenWbHwPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOpenWbNativePhaseSwitcherImpl) Phases1p3p(p0 int) error {
+func (impl *decorateOpenWbHwPhaseSwitcherImpl) Phases1p3p(p0 int) error {
 	return impl.phaseSwitcher(p0)
 }
