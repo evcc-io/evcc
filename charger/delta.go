@@ -190,8 +190,9 @@ func (wb *Delta) statusReasonDelta() (api.Reason, error) {
 	switch encoding.Uint16(b) {
 	case 1:
 		return api.ReasonWaitingForAuthorization, nil
-	case 7:
-		return api.ReasonDisconnectRequired, nil
+		// removed due to https://github.com/evcc-io/evcc/issues/21847
+		// case 7:
+		// 	return api.ReasonDisconnectRequired, nil
 	}
 
 	return api.ReasonUnknown, nil

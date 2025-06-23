@@ -268,7 +268,7 @@ func vehicleSelectHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 		res := struct {
 			Vehicle string `json:"vehicle"`
 		}{
-			Vehicle: v.Title(),
+			Vehicle: v.GetTitle(),
 		}
 
 		jsonResult(w, res)

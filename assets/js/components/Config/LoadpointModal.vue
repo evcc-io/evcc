@@ -656,7 +656,10 @@ export default {
 			const name = this.values.meter;
 			if (!name) return "";
 			const meter = this.meters.find((m) => m.name === name);
-			const title = meter?.deviceProduct || meter?.config?.template || "unknown";
+			const title =
+				meter?.deviceProduct ||
+				meter?.config?.template ||
+				this.$t("config.general.customOption");
 			return `${title} [${name}]`;
 		},
 		isDeletable() {
