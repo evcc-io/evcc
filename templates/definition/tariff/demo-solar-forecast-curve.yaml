@@ -1,14 +1,14 @@
-template: test-solar-forecast-curve
-group: solar
+template: demo-solar-forecast-curve
 products:
-  - brand: Test
-    description:
-      de: Realistische Solarvorhersage (Glockenkurve)
-      en: Realistic solar forecast (bell curve)
+  - description:
+      de: Demonstrations Solarvorhersage (Glockenkurve)
+      en: Demo Solar Forecast (Bell Curve)
 requirements:
   description:
-    en: For testing purposes. Provides realistic solar production curve peaking at noon.
-    de: Zu Testzwecken. Liefert realistische Solarproduktionskurve mit Spitze zur Mittagszeit.
+    en: For demonstration purposes. Provides realistic solar production curve peaking at noon.
+    de: Zu Demonstrationszwecken. Liefert realistische Solarproduktionskurve mit Spitze zur Mittagszeit.
+  evcc: ["skiptest"]
+group: solar
 params:
   - name: peak
     description:
