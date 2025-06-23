@@ -55,21 +55,77 @@ render: |
       var peakPower = {{ .peak }};
       var sunrise = {{ .sunrise }};
       var sunset = {{ .sunset }};
-      var noon = sunrise + (sunset - sunrise) / 2;
-      var dayLength = sunset - sunrise;
+
+      // Calculate day parameters with inclusive hours
+      var dayLength;
+      if (sunset >= sunrise) {
+        dayLength = sunset - sunrise + 1;  // +1 because both hours are inclusive
+      } else {
+        // Day spans midnight
+        dayLength = (24 - sunrise) + sunset + 1;  // +1 for inclusive hours
+      }
+
+      var solarDay = dayLength > 0;
+      var is24HourDaylight = dayLength === 24;
+
+      // For generalized calculation, we need the midpoint (solar noon)
+      // For 24-hour periods, noon is halfway through the period
+      var noon = (sunrise + dayLength / 2) % 24;
 
       for (var day = 0; day < 3; day++) {
         for (var hour = 0; hour < 24; hour++) {
           var time = new Date(start.getTime() + (day * 24 + hour) * 60 * 60 * 1000);
           var nextTime = new Date(time.getTime() + 60 * 60 * 1000);
 
-          // Calculate solar power using bell curve
+          // Calculate solar power using generalized approach
           var solarValue = 0;
-          if (hour >= sunrise && hour <= sunset) {
-            // Normalize hour to range -1 to 1, with 0 at noon
-            var normalizedHour = (hour - noon) / (dayLength / 2);
-            // Bell curve: peak at noon, zero at sunrise/sunset
-            solarValue = Math.max(0, peakPower * (1 - Math.pow(normalizedHour, 2)));
+
+          if (!solarDay) {
+            // No daylight (polar night)
+            solarValue = 0;
+          } else if (is24HourDaylight) {
+            // 24-hour daylight: continuous bell curve for any 24-hour period
+            // Calculate hours from noon, handling wrap-around
+            var hoursFromNoon;
+            if (noon <= hour) {
+              hoursFromNoon = Math.min(hour - noon, 24 - (hour - noon));
+            } else {
+              hoursFromNoon = Math.min(noon - hour, 24 - (noon - hour));
+            }
+
+            // The low point is always 12 hours from noon
+            var normalizedDistance = hoursFromNoon / 12;
+            var curve = 1 - (normalizedDistance * normalizedDistance * 0.89);
+            solarValue = Math.max(0, peakPower * curve);
+          } else {
+            // Regular day: Calculate hours from solar noon for bell curve
+            // First check if we're in daylight hours
+            var isDaylight = false;
+
+            if (sunrise <= sunset) {
+              // Normal day within same calendar day
+              isDaylight = hour >= sunrise && hour <= sunset;
+            } else {
+              // Day spans midnight (e.g., sunrise at 22:00, sunset at 4:00)
+              isDaylight = hour >= sunrise || hour <= sunset;
+            }
+
+            if (isDaylight) {
+              // Calculate position relative to solar noon
+              var hoursFromSunrise;
+              if (sunrise <= hour) {
+                hoursFromSunrise = hour - sunrise;
+              } else {
+                // Hour is after midnight but before sunrise
+                hoursFromSunrise = (24 - sunrise) + hour;
+              }
+
+              // Normalize to -1 to 1 range, where 0 is at solar noon
+              var normalizedHour = (hoursFromSunrise - dayLength / 2) / (dayLength / 2);
+
+              // Bell curve: peak at noon, zero at sunrise/sunset
+              solarValue = Math.max(0, peakPower * (1 - Math.pow(normalizedHour, 2)));
+            }
           }
 
           rates.push({
