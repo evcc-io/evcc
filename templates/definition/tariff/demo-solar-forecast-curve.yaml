@@ -57,17 +57,22 @@ render: |
       var sunset = {{ .sunset }};
 
       // Calculate day parameters with inclusive hours
-      var dayLength = sunset >= sunrise
-        ? sunset - sunrise + 1
-        : 24 - sunrise + sunset + 1;
+      // Using modulo to handle midnight-spanning days elegantly
+      var dayLength = (sunset - sunrise + 1 + 24) % 24 || 24;
 
       var is24HourDaylight = dayLength === 24;
       var noon = (sunrise + dayLength / 2) % 24;
 
-      // Helper function to calculate distance from noon with wrap-around
-      function distanceFromNoon(hour) {
-        var diff = Math.abs(hour - noon);
-        return Math.min(diff, 24 - diff);
+      // Helper function to calculate position within daylight period
+      function getPositionInPeriod(hour) {
+        if (is24HourDaylight) {
+          // 24-hour daylight: distance from noon with wrap-around
+          var diff = Math.abs(hour - noon);
+          return Math.min(diff, 24 - diff);
+        } else {
+          // Regular day: hours from sunrise
+          return hour >= sunrise ? hour - sunrise : 24 - sunrise + hour;
+        }
       }
 
       // Generate hourly rates for 3 days
@@ -77,26 +82,18 @@ render: |
           var solarValue = 0;
 
           if (dayLength > 0) {
-            if (is24HourDaylight) {
-              // 24-hour daylight: continuous bell curve
-              var normalized = distanceFromNoon(hour) / 12;
-              solarValue = peakPower * (1 - normalized * normalized * 0.89);
-            } else {
-              // Regular day: check if within daylight hours
-              var isDaylight = sunrise <= sunset
-                ? hour >= sunrise && hour <= sunset
-                : hour >= sunrise || hour <= sunset;
+            // Check if hour is within daylight period
+            var isDaylight = is24HourDaylight || (sunrise <= sunset
+              ? hour >= sunrise && hour <= sunset
+              : hour >= sunrise || hour <= sunset);
 
-              if (isDaylight) {
-                // Calculate position from sunrise
-                var hoursFromSunrise = hour >= sunrise
-                  ? hour - sunrise
-                  : 24 - sunrise + hour;
-
-                // Bell curve normalized to day length
-                var normalized = (hoursFromSunrise - dayLength / 2) / (dayLength / 2);
-                solarValue = peakPower * (1 - normalized * normalized);
-              }
+            if (isDaylight) {
+              var position = getPositionInPeriod(hour);
+              var normalized = is24HourDaylight
+                ? position / 12
+                : (position - dayLength / 2) / (dayLength / 2);
+              var curve = 1 - normalized * normalized * (is24HourDaylight ? 0.89 : 1);
+              solarValue = peakPower * curve;
             }
           }
 
