@@ -1,7 +1,6 @@
 package core
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -13,12 +12,7 @@ type meterEnergy struct {
 	clock       clock.Clock
 	updated     time.Time
 	meter       *float64 // kWh
-	Accumulated float64  // kWh
-}
-
-// match deserialization format
-func (m *meterEnergy) MarshalJSON() ([]byte, error) {
-	return []byte(strconv.FormatFloat(m.Accumulated, 'f', -1, 64)), nil
+	Accumulated float64  `json:"accumulated"` // kWh
 }
 
 func (m *meterEnergy) AccumulatedEnergy() float64 {
