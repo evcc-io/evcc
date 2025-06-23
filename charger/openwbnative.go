@@ -13,8 +13,8 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
-// OpenWbNative charger implementation
-type OpenWbNative struct {
+// OpenWbHw charger implementation
+type OpenWbHw struct {
 	conn        *modbus.Connection
 	current     int64
 	log         *util.Logger
@@ -23,12 +23,12 @@ type OpenWbNative struct {
 }
 
 const (
-	openwbnativeRegAmpsConfig    = 1000
-	openwbnativeRegVehicleStatus = 1002
+	openwbhwRegAmpsConfig    = 1000
+	openwbhwRegVehicleStatus = 1002
 )
 
 func init() {
-	registry.AddCtx("openwbnative", NewOpenWbNativeFromConfig)
+	registry.AddCtx("openwbhw", NewOpenWbHwFromConfig)
 }
 
 var scan_code_map = map[evdev.EvCode]string{
@@ -95,16 +95,16 @@ var scan_code_map = map[evdev.EvCode]string{
 	evdev.KEY_KPSLASH:    "/",
 }
 
-//     GPIO 5 => 1 phasig, Schütz A an, Schütz B aus.
-//    GPIO 26 => 3 phasig, Schütz A und B an.
-//    Die CP-Unterbrechung wird über ein normales Relais mit NC auf BCM 25/Board 22 gesteuert.
-//gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
-//gpio=6,8,9,10,12,13,16,21=ip,pu
+// GPIO 5 => 1 phasig, Schütz A an, Schütz B aus.
+// GPIO 26 => 3 phasig, Schütz A und B an.
+// Die CP-Unterbrechung wird über ein normales Relais mit NC auf BCM 25/Board 22 gesteuert.
+// gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+// gpio=6,8,9,10,12,13,16,21=ip,pu
 
-//go:generate go tool decorate -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateOpenWbHw -b *OpenWbHw -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
-// NewOpenWbNativeFromConfig creates an OpenWbNative DIN charger from generic config
-func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+// NewOpenWbHwFromConfig creates an OpenWbHw DIN charger from generic config
+func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Phases1p3p      bool
 		RfId            bool
@@ -120,7 +120,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	wb, err := NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	wb, err := NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	if cc.RfId {
-		log := util.NewLogger("openwbnative")
+		log := util.NewLogger("openwbhw")
 		log.INFO.Println("Trying to find RFID device")
 		devicePaths, err := evdev.ListDevicePaths()
 		if err != nil {
@@ -195,12 +195,12 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}
 		identify = wb.identify
 	}
 
-	return decorateOpenWbNative(wb, phases1p3p, identify), nil
+	return decorateOpenWbHw(wb, phases1p3p, identify), nil
 }
 
-// NewOpenWbNative creates OpenWbNative charger
-func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*OpenWbNative, error) {
-	log := util.NewLogger("openwbnative")
+// NewOpenWbHw creates OpenWbHw charger
+func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*OpenWbHw, error) {
+	log := util.NewLogger("openwbhw")
 
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
@@ -210,24 +210,24 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	conn.Logger(log.TRACE)
 	conn.Delay(200 * time.Millisecond)
 
-	openwbnative := &OpenWbNative{
+	wb := &OpenWbHw{
 		conn:    conn,
 		current: 6, // assume min current
 		log:     log,
 	}
 
-	openwbnative.log.INFO.Println("OpenWbNative Instantiated...")
+	wb.log.INFO.Println("OpenWbHw Instantiated...")
 
-	return openwbnative, nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface
-func (openwbnative *OpenWbNative) Status() (api.ChargeStatus, error) {
-	b, err := openwbnative.conn.ReadHoldingRegisters(openwbnativeRegVehicleStatus, 1)
+func (wb *OpenWbHw) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadHoldingRegisters(openwbhwRegVehicleStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
-	openwbnative.log.INFO.Printf("Read status %d", b[1])
+	wb.log.INFO.Printf("Read status %d", b[1])
 	switch b[1] {
 	case 1: // ready
 		return api.StatusA, nil
@@ -241,87 +241,87 @@ func (openwbnative *OpenWbNative) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (openwbnative *OpenWbNative) Enabled() (bool, error) {
-	b, err := openwbnative.conn.ReadHoldingRegisters(openwbnativeRegAmpsConfig, 1)
+func (wb *OpenWbHw) Enabled() (bool, error) {
+	b, err := wb.conn.ReadHoldingRegisters(openwbhwRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
 
 	enabled := b[1] != 0
 	if enabled {
-		openwbnative.current = int64(b[1])
+		wb.current = int64(b[1])
 	}
-	openwbnative.log.INFO.Printf("IsEnabled %t", enabled)
+	wb.log.INFO.Printf("IsEnabled %t", enabled)
 	return enabled, nil
 }
 
 // Enable implements the api.Charger interface
-func (openwbnative *OpenWbNative) Enable(enable bool) error {
+func (wb *OpenWbHw) Enable(enable bool) error {
 	b := []byte{0, 0}
 
 	if enable {
-		b[1] = byte(openwbnative.current)
+		b[1] = byte(wb.current)
 	}
 
-	openwbnative.log.INFO.Printf("Enable charger %t", enable)
+	wb.log.INFO.Printf("Enable charger %t", enable)
 
-	_, err := openwbnative.conn.WriteMultipleRegisters(openwbnativeRegAmpsConfig, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(openwbhwRegAmpsConfig, 1, b)
 
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
-func (openwbnative *OpenWbNative) MaxCurrent(current int64) error {
+func (wb *OpenWbHw) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
-	openwbnative.log.INFO.Printf("Set MaxCurrent %d", current)
-	_, err := openwbnative.conn.WriteMultipleRegisters(openwbnativeRegAmpsConfig, 1, b)
+	wb.log.INFO.Printf("Set MaxCurrent %d", current)
+	_, err := wb.conn.WriteMultipleRegisters(openwbhwRegAmpsConfig, 1, b)
 	if err == nil {
-		openwbnative.current = current
+		wb.current = current
 	}
 
 	return err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
-func (openwbnative *OpenWbNative) phases1p3p(phases int) error {
-	openwbnative.log.INFO.Println("Initiating phase switch...")
+func (wb *OpenWbHw) phases1p3p(phases int) error {
+	wb.log.INFO.Println("Initiating phase switch...")
 
-	return openwbnative.perform_phase_switch(phases, 60)
+	return wb.perform_phase_switch(phases, 60)
 }
 
-var _ api.Resurrector = (*OpenWbNative)(nil)
+var _ api.Resurrector = (*OpenWbHw)(nil)
 
 // WakeUp implements the api.Resurrector interface
-func (openwbnative *OpenWbNative) WakeUp() error {
-	openwbnative.log.INFO.Println("Triggering CP...")
-	return openwbnative.perform_cp_interruption(5)
+func (wb *OpenWbHw) WakeUp() error {
+	wb.log.INFO.Println("Triggering CP...")
+	return wb.perform_cp_interruption(5)
 }
 
 // Identify implements the api.Identifier interface
-func (openwbnative *OpenWbNative) identify() (string, error) {
-	openwbnative.log.INFO.Println("Reading RFID...")
+func (wb *OpenWbHw) identify() (string, error) {
+	wb.log.INFO.Println("Reading RFID...")
 	var completed bool = false
 	for !completed {
 		select {
-		case rfid := <-*openwbnative.rfIdChannel:
-			openwbnative.log.INFO.Printf("Read RFID \"%s\" from channel", rfid)
-			openwbnative.rfId = rfid
+		case rfid := <-*wb.rfIdChannel:
+			wb.log.INFO.Printf("Read RFID \"%s\" from channel", rfid)
+			wb.rfId = rfid
 		default:
-			openwbnative.log.INFO.Println("Nothing left to read from channel")
+			wb.log.INFO.Println("Nothing left to read from channel")
 			completed = true
 		}
 	}
-	openwbnative.log.INFO.Printf("Returning RFID \"%s\"", openwbnative.rfId)
-	return openwbnative.rfId, nil
+	wb.log.INFO.Printf("Returning RFID \"%s\"", wb.rfId)
+	return wb.rfId, nil
 }
 
-func (openwbnative *OpenWbNative) perform_phase_switch(phases_to_use int, seconds int) error {
+func (wb *OpenWbHw) perform_phase_switch(phases_to_use int, seconds int) error {
 	gpio_cp, gpio_relay := get_pins_phase_switch(phases_to_use)
-	openwbnative.log.INFO.Printf("gpio_cp pin %d", gpio_cp)
-	openwbnative.log.INFO.Printf("gpio_relay pin %d", gpio_relay)
+	wb.log.INFO.Printf("gpio_cp pin %d", gpio_cp)
+	wb.log.INFO.Printf("gpio_relay pin %d", gpio_relay)
 
-	openwbnative.log.INFO.Println("Setting MaxCurrent to zero")
-	if err := openwbnative.MaxCurrent(0); err != nil {
+	wb.log.INFO.Println("Setting MaxCurrent to zero")
+	if err := wb.MaxCurrent(0); err != nil {
 		return err
 	}
 
@@ -339,41 +339,41 @@ func (openwbnative *OpenWbNative) perform_phase_switch(phases_to_use int, second
 	pin_gpio_cp.Output()
 	pin_gpio_relay.Output()
 
-	openwbnative.log.INFO.Println("Sleeping for 1s")
+	wb.log.INFO.Println("Sleeping for 1s")
 	time.Sleep(time.Second)
 
-	openwbnative.log.INFO.Println("CP off")
+	wb.log.INFO.Println("CP off")
 	pin_gpio_cp.High() // CP off
 
-	openwbnative.log.INFO.Println("Toggle 1/3 relay high")
+	wb.log.INFO.Println("Toggle 1/3 relay high")
 	pin_gpio_relay.High() // 3 on/off
 
-	openwbnative.log.INFO.Printf("Sleeping for %d", seconds)
+	wb.log.INFO.Printf("Sleeping for %d", seconds)
 	time.Sleep(time.Second * time.Duration(seconds))
 
-	openwbnative.log.INFO.Println("Toggle 1/3 relay low")
+	wb.log.INFO.Println("Toggle 1/3 relay low")
 	pin_gpio_relay.Low() // 3 on off
 
-	openwbnative.log.INFO.Printf("Sleeping for %d", seconds)
+	wb.log.INFO.Printf("Sleeping for %d", seconds)
 	time.Sleep(time.Second * time.Duration(seconds))
 
-	openwbnative.log.INFO.Println("CP on")
+	wb.log.INFO.Println("CP on")
 	pin_gpio_cp.Low() // CP on
 
-	openwbnative.log.INFO.Println("Sleeping for 1s")
+	wb.log.INFO.Println("Sleeping for 1s")
 	time.Sleep(time.Second)
 
-	openwbnative.log.INFO.Println("Done with phase switch")
+	wb.log.INFO.Println("Done with phase switch")
 
 	return nil
 }
 
-func (openwbnative *OpenWbNative) perform_cp_interruption(seconds int) error {
+func (wb *OpenWbHw) perform_cp_interruption(seconds int) error {
 	gpio_cp := get_pins_cp_interruption()
-	openwbnative.log.INFO.Printf("gpio_cp pin %d", gpio_cp)
+	wb.log.INFO.Printf("gpio_cp pin %d", gpio_cp)
 
-	openwbnative.log.INFO.Println("Setting MaxCurrent to zero")
-	if err := openwbnative.MaxCurrent(0); err != nil {
+	wb.log.INFO.Println("Setting MaxCurrent to zero")
+	if err := wb.MaxCurrent(0); err != nil {
 		return err
 	}
 
@@ -389,16 +389,16 @@ func (openwbnative *OpenWbNative) perform_cp_interruption(seconds int) error {
 	// Set pin to output mode
 	pin_gpio_cp.Output()
 
-	openwbnative.log.INFO.Println("Sleeping for 1s")
+	wb.log.INFO.Println("Sleeping for 1s")
 	time.Sleep(time.Second)
 
-	openwbnative.log.INFO.Println("CP off")
+	wb.log.INFO.Println("CP off")
 	pin_gpio_cp.High()
-	openwbnative.log.INFO.Printf("Sleeping for %d", seconds)
+	wb.log.INFO.Printf("Sleeping for %d", seconds)
 	time.Sleep(time.Second * time.Duration(seconds))
-	openwbnative.log.INFO.Println("CP on")
+	wb.log.INFO.Println("CP on")
 	pin_gpio_cp.Low()
-	openwbnative.log.INFO.Println("Done with cp interrupt")
+	wb.log.INFO.Println("Done with cp interrupt")
 	return nil
 }
 
