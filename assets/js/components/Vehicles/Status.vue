@@ -133,6 +133,28 @@
 				</div>
 			</button>
 
+			<!-- smart feed-in priority -->
+			<button
+				v-if="smartFeedinPriorityVisible"
+				ref="smartFeedinPriority"
+				type="button"
+				class="entry"
+				:class="smartFeedinPriorityClass"
+				data-testid="vehicle-status-smartfeedinpriority"
+				data-bs-toggle="tooltip"
+				data-bs-trigger="hover"
+				@click="smartFeedinPriorityClicked"
+			>
+				<SunPauseIcon />
+				<div>
+					{{ fmtPricePerKWh(tariffGrid, currency, true) }} ≥
+					<span class="text-decoration-underline">{{ smartFeedinPriorityLimitFmt }}</span>
+					<span v-if="smartFeedinPriorityNextStart">
+						({{ fmtAbsoluteDate(new Date(smartFeedinPriorityNextStart)) }})
+					</span>
+				</div>
+			</button>
+
 			<!-- battery boost -->
 			<button
 				v-if="batteryBoostVisible"
@@ -200,6 +222,7 @@ import VehicleLimitWarningIcon from "../MaterialIcon/VehicleLimitWarning.vue";
 import VehicleMinSocIcon from "../MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "../MaterialIcon/Welcome.vue";
 import BatteryBoostIcon from "../MaterialIcon/BatteryBoost.vue";
+import SunPauseIcon from "../MaterialIcon/SunPause.vue";
 import { defineComponent, type PropType } from "vue";
 import { SMART_COST_TYPE, type CURRENCY, type Timeout } from "@/types/evcc";
 const REASON_AUTH = "waitingforauthorization";
@@ -221,6 +244,7 @@ export default defineComponent({
 		WelcomeIcon,
 		TempLimitIcon,
 		BatteryBoostIcon,
+		SunPauseIcon,
 	},
 	mixins: [formatter],
 	props: {
@@ -251,6 +275,10 @@ export default defineComponent({
 		smartCostLimit: { type: Number, default: null },
 		smartCostNextStart: String,
 		smartCostType: String,
+		smartFeedinPriorityActive: Boolean,
+		smartFeedinPriorityDisabled: Boolean,
+		smartFeedinPriorityLimit: { type: Number, default: null },
+		smartFeedinPriorityNextStart: String,
 		tariffCo2: { type: Number, default: 0 },
 		tariffGrid: { type: Number, default: 0 },
 		vehicleClimaterActive: Boolean,
@@ -268,6 +296,7 @@ export default defineComponent({
 			vehicleClimaterTooltip: null as Tooltip | null,
 			vehicleWelcomeTooltip: null as Tooltip | null,
 			smartCostTooltip: null as Tooltip | null,
+			smartFeedinPriorityTooltip: null as Tooltip | null,
 			vehicleLimitTooltip: null as Tooltip | null,
 			tempLimitTooltip: null as Tooltip | null,
 			awaitingAuthorizationTooltip: null as Tooltip | null,
@@ -276,6 +305,7 @@ export default defineComponent({
 			interval: null as Timeout,
 			planProjectedEndDuration: null as string | null,
 			smartCostNextStartDuration: null as string | null,
+			smartFeedinPriorityNextStartDuration: null as string | null,
 			planProjectedStartDuration: null as string | null,
 		};
 	},
@@ -453,6 +483,24 @@ export default defineComponent({
 			}
 			return this.$t(`${prefix}EnergySet`);
 		},
+		smartFeedinPriorityVisible() {
+			return this.smartFeedinPriorityActive || this.smartFeedinPriorityNextStart;
+		},
+		smartFeedinPriorityTooltipContent() {
+			if (!this.smartFeedinPriorityVisible) {
+				return "";
+			}
+			const prefix = `main.vehicleStatus.smartFeedinPriority`;
+			if (this.smartFeedinPriorityActive) {
+				return this.$t(`${prefix}Pausing`);
+			}
+			if (this.smartFeedinPriorityNextStart) {
+				return this.$t(`${prefix}NextStart`, {
+					duration: this.smartFeedinPriorityNextStartDuration,
+				});
+			}
+			return "";
+		},
 		smartCostPrice() {
 			return this.smartCostType !== SMART_COST_TYPE.CO2;
 		},
@@ -479,6 +527,18 @@ export default defineComponent({
 				return "opacity-25";
 			}
 			if (this.smartCostActive) {
+				return "text-primary";
+			}
+			return "";
+		},
+		smartFeedinPriorityLimitFmt() {
+			return this.fmtPricePerKWh(this.smartFeedinPriorityLimit, this.currency, true);
+		},
+		smartFeedinPriorityClass() {
+			if (this.smartFeedinPriorityDisabled) {
+				return "opacity-25";
+			}
+			if (this.smartFeedinPriorityActive) {
 				return "text-primary";
 			}
 			return "";
@@ -550,6 +610,9 @@ export default defineComponent({
 		smartCostTooltipContent() {
 			this.$nextTick(this.updateSmartCostTooltip);
 		},
+		smartFeedinPriorityTooltipContent() {
+			this.$nextTick(this.updateSmartFeedinPriorityTooltip);
+		},
 		vehicleLimitTooltipContent() {
 			this.$nextTick(this.updateVehicleLimitTooltip);
 		},
@@ -574,6 +637,9 @@ export default defineComponent({
 		smartCostNextStart() {
 			this.updateDurations();
 		},
+		smartFeedinPriorityNextStart() {
+			this.updateDurations();
+		},
 	},
 	mounted() {
 		this.updatePlanStartTooltip();
@@ -584,6 +650,7 @@ export default defineComponent({
 		this.updateVehicleClimaterTooltip();
 		this.updateVehicleWelcomeTooltip();
 		this.updateSmartCostTooltip();
+		this.updateSmartFeedinPriorityTooltip();
 		this.updateVehicleLimitTooltip();
 		this.updateTempLimitTooltip();
 		this.updateAwaitingAuthorizationTooltip();
@@ -615,6 +682,11 @@ export default defineComponent({
 					new Date(this.smartCostNextStart)
 				);
 			}
+			if (this.smartFeedinPriorityNextStart) {
+				this.smartFeedinPriorityNextStartDuration = this.fmtDurationToTime(
+					new Date(this.smartFeedinPriorityNextStart)
+				);
+			}
 		},
 		openLoadpointSettings() {
 			this.$emit("open-loadpoint-settings");
@@ -640,6 +712,10 @@ export default defineComponent({
 		smartCostClicked() {
 			this.openLoadpointSettings();
 			this.smartCostTooltip?.hide();
+		},
+		smartFeedinPriorityClicked() {
+			this.openLoadpointSettings();
+			this.smartFeedinPriorityTooltip?.hide();
 		},
 		batteryBoostClicked() {
 			this.batteryBoostTooltip?.hide();
@@ -709,6 +785,14 @@ export default defineComponent({
 				this.smartCostTooltip,
 				this.smartCostTooltipContent,
 				this.$refs["smartCost"],
+				true
+			);
+		},
+		updateSmartFeedinPriorityTooltip() {
+			this.smartFeedinPriorityTooltip = this.updateTooltip(
+				this.smartFeedinPriorityTooltip,
+				this.smartFeedinPriorityTooltipContent,
+				this.$refs["smartFeedinPriority"],
 				true
 			);
 		},
