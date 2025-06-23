@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Otkaži",
+    "demoMode": "Prijava nije podržana u demo načinu rada.",
     "error": "Prijava neuspješna: ",
     "iframeHint": "Otvoriti evcc u novoj kartici.",
     "iframeIssue": "Vaša lozinka je ispravna, ali se čini kako je vaš pretraživač odbacio validacijski kolačić. Ovo se može dogoditi ako koristiti evcc unutar iframe-a putem HTTP-a.",
