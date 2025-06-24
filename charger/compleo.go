@@ -40,6 +40,7 @@ type Compleo struct {
 
 const (
 	// global
+	compleoRegBase       = 0x0100 // input
 	compleoRegConnectors = 0x0008 // input
 
 	// per connector
@@ -47,9 +48,10 @@ const (
 	compleoRegStatus   = 0x1 // input
 	compleoRegPower    = 0x2 // input
 	compleoRegCurrents = 0x3 // input
+	compleoRegFallback = 0x5 // holding
 	compleoRegEnergy   = 0x8 // input
 	// compleoRegChargeDuration = 0x6 // input
-
+	compleoRegIdTag = 0x1000 - compleoRegBase // input
 )
 
 func init() {
@@ -89,33 +91,45 @@ func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16
 	log := util.NewLogger("compleo")
 	conn.Logger(log.TRACE)
 
-	if connector > 0 {
-		b, err := conn.ReadInputRegisters(compleoRegConnectors, 1)
-		if err != nil {
-			return nil, err
-		}
+	b, err := conn.ReadInputRegisters(compleoRegConnectors, 1)
+	if err != nil {
+		return nil, err
+	}
 
-		if connector > binary.BigEndian.Uint16(b) {
-			return nil, fmt.Errorf("invalid connector %d", connector)
-		}
+	if connector > binary.BigEndian.Uint16(b) {
+		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
 	wb := &Compleo{
 		conn:  conn,
-		base:  0x100 + (connector-1)*0x010,
+		base:  compleoRegBase + (connector-1)*0x010,
 		power: 3 * 230 * 6, // assume min power
 	}
 
 	// heartbeat
-	go func() {
-		for range time.Tick(30 * time.Second) {
-			if _, err := wb.status(); err != nil {
-				log.ERROR.Println("heartbeat:", err)
-			}
-		}
-	}()
+	b, err = wb.conn.ReadHoldingRegisters(compleoRegFallback, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(ctx, log, time.Duration(u)*time.Second/2)
+	}
 
 	return wb, nil
+}
+
+func (wb *Compleo) heartbeat(ctx context.Context, log *util.Logger, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		if _, err := wb.status(); err != nil {
+			log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 func (wb *Compleo) status() (byte, error) {
@@ -261,6 +275,18 @@ func (wb *Compleo) Currents() (float64, float64, float64, error) {
 // 	_, err := wb.conn.WriteSingleRegister(compleoRegPhases, b)
 // 	return err
 // }
+
+var _ api.Identifier = (*Delta)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *Compleo) Identify() (string, error) {
+	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag, 0x10)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(b), nil
+}
 
 var _ loadpoint.Controller = (*Compleo)(nil)
 
