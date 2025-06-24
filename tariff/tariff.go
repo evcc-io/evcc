@@ -91,6 +91,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 }
 
 // applyPriceAndTime transforms forecast values by applying totalPrice and ensuring local time
+// For solar forecasts: totalPrice is a no-op (charges=0, tax=0, no formula)
+// For price forecasts: applies charges, taxes, and custom formulas
 func (t *Tariff) applyPriceAndTime(rates api.Rates) api.Rates {
 	result := make(api.Rates, len(rates))
 	for i, r := range rates {
@@ -111,63 +113,12 @@ func (t *Tariff) periodStart() time.Time {
 	return now.With(time.Now()).BeginningOfHour()
 }
 
-// hasValidCoverage checks if rates cover at least until end of day for solar forecasts
-func (t *Tariff) hasValidCoverage(rates api.Rates) bool {
-	// Only validate solar forecasts
-	if t.typ != api.TariffTypeSolar {
-		return true
-	}
-
-	// Empty data is invalid for solar forecasts
-	if len(rates) == 0 {
-		t.log.DEBUG.Printf("cached solar forecast invalid: no data")
-		return false
-	}
-
-	// Find the latest end time in the rates
-	var latestEnd time.Time
-	for _, r := range rates {
-		if r.End.After(latestEnd) {
-			latestEnd = r.End
-		}
-	}
-
-	// Check if rates extend to at least end of today
-	endOfToday := now.With(time.Now()).EndOfDay()
-	if latestEnd.Before(endOfToday) {
-		t.log.DEBUG.Printf("cached solar forecast insufficient: covers until %v, need until %v",
-			latestEnd.Format("15:04"), endOfToday.Format("15:04"))
-		return false
-	}
-
-	t.log.DEBUG.Printf("cached solar forecast valid: covers until %v", latestEnd.Format("15:04"))
-	return true
-}
-
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
 	// Try to load from cache on startup for solar forecasts
-	if t.cache != nil {
-		if cached, cacheTime, ok := t.cache.GetWithTimestamp(interval); ok {
-			t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
-
-			// Check if cached data has sufficient coverage
-			if t.hasValidCoverage(cached) {
-				mergeRatesAfter(t.data, t.applyPriceAndTime(cached), t.periodStart())
-				once.Do(func() { close(done) })
-
-				// Calculate delay until next fetch based on cache age
-				cacheAge := time.Since(cacheTime)
-				if cacheAge < interval {
-					initialDelay := interval - cacheAge
-					t.log.DEBUG.Printf("delaying initial fetch by %v (cache age: %v)", initialDelay, cacheAge)
-					time.Sleep(initialDelay)
-				}
-			} else {
-				t.log.DEBUG.Printf("cached data insufficient, fetching fresh data")
-			}
-		}
+	if t.typ == api.TariffTypeSolar {
+		loadSolarCacheWithDelay(t.cache, t.data, t.log, interval, done, &once)
 	}
 
 	for tick := time.Tick(interval); ; <-tick {
@@ -180,14 +131,6 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			if err := json.Unmarshal([]byte(s), &forecastValues); err != nil {
 				return backoff.Permanent(err)
 			}
-			// Normalize timestamps to local time without applying totalPrice yet
-			for i, r := range forecastValues {
-				forecastValues[i] = api.Rate{
-					Value: r.Value,
-					Start: r.Start.Local(),
-					End:   r.End.Local(),
-				}
-			}
 			return nil
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
@@ -196,15 +139,18 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		// For solar forecasts: caches the computed solar production curve (Watts)
+		// Apply transformations once (time normalization + price adjustments)
+		processedRates := t.applyPriceAndTime(forecastValues)
+
+		// Cache the processed data for solar forecasts
 		if t.cache != nil {
-			if err := t.cache.Set(forecastValues); err != nil {
+			if err := t.cache.Set(processedRates); err != nil {
 				t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
 			}
 		}
 
-		// Apply totalPrice adjustments and update stored rates
-		mergeRatesAfter(t.data, t.applyPriceAndTime(forecastValues), t.periodStart())
+		// Update stored rates
+		mergeRatesAfter(t.data, processedRates, t.periodStart())
 
 		once.Do(func() { close(done) })
 	}

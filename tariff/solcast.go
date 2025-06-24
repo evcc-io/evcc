@@ -77,11 +77,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	// Try to load from cache on startup
-	if cached, ok := t.cache.Get(interval); ok {
-		t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
-		mergeRatesAfter(t.data, cached, beginningOfDay())
-		once.Do(func() { close(done) })
-	}
+	loadSolarCacheWithDelay(t.cache, t.data, t.log, interval, done, &once)
 
 	for ; true; <-time.Tick(interval) {
 		// ensure we don't run when not needed, but execute once at startup
