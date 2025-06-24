@@ -171,7 +171,6 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 	}
 
 	for tick := time.Tick(interval); ; <-tick {
-		// forecastValues holds the raw forecast data from the provider
 		var forecastValues api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()

@@ -578,11 +578,9 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	// Prune old solar forecast cache entries (older than 1 day)
-	go func() {
-		if err := tariff.PruneOldCaches(24 * time.Hour); err != nil {
-			log.DEBUG.Printf("solar cache pruning failed: %v", err)
-		}
-	}()
+	if err := tariff.PruneOldCaches(24 * time.Hour); err != nil {
+		log.DEBUG.Printf("solar cache pruning failed: %v", err)
+	}
 
 	persistSettings := func() {
 		if err := settings.Persist(); err != nil {
