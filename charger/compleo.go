@@ -232,7 +232,7 @@ var _ api.ChargeRater = (*Compleo)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Compleo) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegEnergy, 2)
+	b, err := wb.conn.ReadInputRegisters(compleoRegEnergy, 1)
 	if err != nil {
 		return 0, err
 	}
