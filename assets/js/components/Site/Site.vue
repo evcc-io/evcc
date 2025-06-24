@@ -54,6 +54,7 @@
 				:smartFeedinPriorityAvailable="smartFeedinPriorityAvailable"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
+				:tariffFeedIn="tariffFeedIn"
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"

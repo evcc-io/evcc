@@ -10,6 +10,7 @@
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
 		limit-direction="below"
+		:options-start-at-zero="isCo2"
 		@save-limit="saveLimit"
 		@delete-limit="deleteLimit"
 		@apply-to-all="applyToAll"

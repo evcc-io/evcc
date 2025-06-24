@@ -22,6 +22,7 @@
 					:smartFeedinPriorityAvailable="smartFeedinPriorityAvailable"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
 					:currency="currency"
 					:multipleLoadpoints="loadpoints.length > 1"
 					:gridConfigured="gridConfigured"
@@ -76,6 +77,7 @@ export default defineComponent({
 		smartFeedinPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		tariffFeedIn: Number,
 		currency: String,
 		selectedIndex: { type: Number, default: 0 },
 		gridConfigured: Boolean,

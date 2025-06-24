@@ -147,7 +147,8 @@
 			>
 				<SunPauseIcon />
 				<div>
-					{{ fmtPricePerKWh(tariffGrid, currency, true) }} ≥
+					<span v-if="smartFeedinPriorityActive">{{ feedInNow }}</span>
+					≥
 					<span class="text-decoration-underline">{{ smartFeedinPriorityLimitFmt }}</span>
 					<span v-if="smartFeedinPriorityNextStart">
 						({{ fmtAbsoluteDate(new Date(smartFeedinPriorityNextStart)) }})
@@ -281,6 +282,7 @@ export default defineComponent({
 		smartFeedinPriorityNextStart: String,
 		tariffCo2: { type: Number, default: 0 },
 		tariffGrid: { type: Number, default: 0 },
+		tariffFeedIn: { type: Number, default: 0 },
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
 		vehicleLimitSoc: { type: Number, default: 0 },
@@ -490,7 +492,7 @@ export default defineComponent({
 			if (!this.smartFeedinPriorityVisible) {
 				return "";
 			}
-			const prefix = `main.vehicleStatus.smartFeedinPriority`;
+			const prefix = `main.vehicleStatus.feedinPriority`;
 			if (this.smartFeedinPriorityActive) {
 				return this.$t(`${prefix}Pausing`);
 			}
@@ -516,6 +518,9 @@ export default defineComponent({
 			}
 			return this.fmtCo2Short(this.tariffCo2);
 		},
+		feedInNow() {
+			return this.fmtPricePerKWh(this.tariffFeedIn, this.currency, true);
+		},
 		smartCostLimitFmt() {
 			if (this.smartCostPrice) {
 				return this.fmtPricePerKWh(this.smartCostLimit, this.currency, true);
@@ -539,7 +544,7 @@ export default defineComponent({
 				return "opacity-25";
 			}
 			if (this.smartFeedinPriorityActive) {
-				return "text-primary";
+				return "text-warning";
 			}
 			return "";
 		},

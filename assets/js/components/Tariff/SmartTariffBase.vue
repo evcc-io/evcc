@@ -49,10 +49,10 @@
 					{{ activeSlotCost }}
 				</div>
 				<div v-else-if="activeSlots.length" class="value text-primary">
-					{{ activeCostRange }}
+					{{ fmtActiveCostRange }}
 				</div>
 				<div v-else class="value value-inactive">
-					{{ totalCostRange }}
+					{{ fmtTotalCostRange }}
 				</div>
 			</div>
 		</div>
@@ -100,6 +100,8 @@ export default defineComponent({
 		title: String,
 		description: String,
 		limitLabel: String,
+		optionsExtraHigh: Boolean,
+		optionsStartAtZero: Boolean,
 		activeHoursLabel: { type: String, required: true },
 		currentPriceLabel: String,
 		resetWarningText: String,
@@ -130,7 +132,7 @@ export default defineComponent({
 			return [];
 		},
 		limitOptions(): SelectOption<number>[] {
-			const { max } = this.costRange(this.totalSlots);
+			const { max } = this.optionsCostRange;
 
 			const values = [] as number[];
 			const stepSize = this.optionStepSize;
@@ -151,10 +153,10 @@ export default defineComponent({
 			if (!this.rates?.length) {
 				return 0;
 			}
-			const { min } = this.costRange(this.totalSlots);
+			const { min } = this.optionsCostRange;
 			const stepSize = this.optionStepSize;
 			// always show some negative values for price
-			const start = this.isCo2 ? 0 : stepSize * -11;
+			const start = this.optionsStartAtZero ? 0 : stepSize * -11;
 			const minValue = min !== undefined ? Math.min(start, min) : start;
 			return Math.floor(minValue / stepSize) * stepSize;
 		},
@@ -162,7 +164,7 @@ export default defineComponent({
 			if (!this.rates?.length) {
 				return 0.001;
 			}
-			const { min, max } = this.costRange(this.totalSlots);
+			const { min, max } = this.optionsCostRange;
 			if (min === undefined || max === undefined) {
 				return 0.001;
 			}
@@ -176,6 +178,13 @@ export default defineComponent({
 				}
 			}
 			return 1;
+		},
+		optionsCostRange() {
+			const { min, max } = this.costRange(this.totalSlots);
+			if (this.optionsExtraHigh && max) {
+				return { min, max: max * 2 };
+			}
+			return { min, max };
 		},
 		slots(): Slot[] {
 			if (!this.rates?.length) {
@@ -231,10 +240,10 @@ export default defineComponent({
 		warningSlots() {
 			return this.totalSlots.filter((s) => s.warning);
 		},
-		totalCostRange() {
+		fmtTotalCostRange() {
 			return this.fmtCostRange(this.costRange(this.totalSlots));
 		},
-		activeCostRange() {
+		fmtActiveCostRange() {
 			return this.fmtCostRange(this.costRange(this.activeSlots));
 		},
 		activeSlot(): Slot | null {

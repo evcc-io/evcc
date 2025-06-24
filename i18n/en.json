@@ -779,6 +779,8 @@
       "connected": "Connected.",
       "disconnectRequired": "Session terminated. Please reconnect.",
       "disconnected": "Disconnected.",
+      "feedinPriorityNextStart": "High feed-in rates start in {duration}.",
+      "feedinPriorityPausing": "Solar charging paused to maximize feed-in.",
       "finished": "Finished.",
       "minCharge": "Minimum charging to {soc}.",
       "pvDisable": "Not enough surplus. Pausing soon.",

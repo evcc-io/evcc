@@ -2,6 +2,8 @@ interval: 0.1s
 
 site:
   title: Smart Feed-in, No Grid & PV
+  meters:
+    grid: grid
 
 loadpoints:
   - title: Loadpoint
@@ -14,7 +16,13 @@ meters:
     power:
       source: js
       script: |
-        11000
+        0
+  - name: grid
+    type: custom
+    power:
+      source: js
+      script: |
+        -2000
 
 chargers:
   - name: charger
@@ -29,7 +37,7 @@ chargers:
     status:
       source: js
       script: |
-        "C"
+        "B"
     maxcurrent:
       source: js
       script:
@@ -38,7 +46,11 @@ tariffs:
   currency: EUR
   feedin:
     type: fixed
-    price: 0.4 # EUR/kWh
+    price: 0.2 # EUR/kWh
     zones:
-      - hours: 1-6
-        price: 0.2
+      - hours: 0-5
+        price: 0.4
+      - hours: 5-6
+        price: 0.6
+      - hours: 18-0
+        price: 0.4

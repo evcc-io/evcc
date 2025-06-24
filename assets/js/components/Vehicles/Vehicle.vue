@@ -129,10 +129,14 @@ export default defineComponent({
 		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartFeedinPriorityActive: Boolean,
+		smartFeedinPriorityNextStart: String,
+		smartFeedinPriorityLimit: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,
+		tariffFeedIn: Number,
 		vehicle: Object as PropType<Vehicle>,
 		vehicleDetectionActive: Boolean,
 		vehicleName: String,
@@ -220,6 +224,9 @@ export default defineComponent({
 			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
 		smartCostDisabled() {
+			return this.chargingPlanDisabled;
+		},
+		smartFeedinPriorityDisabled() {
 			return this.chargingPlanDisabled;
 		},
 	},

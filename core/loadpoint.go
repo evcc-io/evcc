@@ -1792,7 +1792,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 
-	smartFeedinPriorityActive, smartFeedinPriorityNextStart := lp.updateSmartCost(lp.GetSmartFeedinPriorityLimit(), feedin)
+	smartFeedinPriorityActive, smartFeedinPriorityNextStart := lp.updateFeedinPriority(lp.GetSmartFeedinPriorityLimit(), feedin)
 	lp.publish(keys.SmartFeedinPriorityActive, smartFeedinPriorityActive)
 	lp.publish(keys.SmartFeedinPriorityNextStart, smartFeedinPriorityNextStart)
 

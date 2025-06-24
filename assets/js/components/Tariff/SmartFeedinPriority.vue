@@ -8,6 +8,8 @@
 		:tariff="tariff"
 		:form-id="formId"
 		:is-slot-active="isSlotActive"
+		options-extra-high
+		options-start-at-zero
 		limit-direction="above"
 		highlight-color="text-warning"
 		@save-limit="saveLimit"
