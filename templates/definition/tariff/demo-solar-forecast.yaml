@@ -1,4 +1,4 @@
-template: demo-solar-forecast-curve
+template: demo-solar-forecast
 products:
   - description:
       de: Demonstrations Solarvorhersage (Glockenkurve)
@@ -10,10 +10,8 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: peak
-    description:
-      de: Spitzenleistung zur Mittagszeit
-      en: Peak power at noon
+  - preset: forecast-base
+  - name: kwp
     type: float
     unit: W
     default: 4500
@@ -52,7 +50,7 @@ render: |
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
       var rates = [];
-      var peakPower = {{ .peak }};
+      var peakPower = {{ .kwp }};
       var sunrise = {{ .sunrise }};
       var sunset = {{ .sunset }};
 
