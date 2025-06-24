@@ -209,7 +209,6 @@ func (wb *OpenWbHw) WakeUp() error {
 	gpioPinCP := rpio.Pin(hw.GPIO_CP)
 	gpioPinCP.Output()
 
-	// according to EV40 specification the CP level has to be set to -12V for at least 3 seconds
 	gpioPinCP.High()
 	time.Sleep(time.Second * time.Duration(3))
 	gpioPinCP.Low()
