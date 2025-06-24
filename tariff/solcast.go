@@ -102,7 +102,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		once.Do(func() { close(done) })
 
-		data := make(api.Rates, 0, len(res.Forecasts))
+		processedRates := make(api.Rates, 0, len(res.Forecasts))
 
 	NEXT:
 		for _, r := range res.Forecasts {
@@ -113,22 +113,23 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 				Value: r.PvEstimate * 1e3,
 			}
 			if r.Period.Duration() != time.Hour {
-				for i, r := range data {
+				for i, r := range processedRates {
 					if r.Start.Equal(rr.Start) {
-						data[i].Value = (r.Value + rr.Value) / 2
+						processedRates[i].Value = (r.Value + rr.Value) / 2
 						continue NEXT
 					}
 				}
 			}
-			data = append(data, rr)
+			processedRates = append(processedRates, rr)
 		}
 
-		// Cache the new data
-		if err := t.cache.Set(data); err != nil {
+		// Cache the processed data
+		if err := t.cache.Set(processedRates); err != nil {
 			t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
 		}
 
-		mergeRatesAfter(t.data, data, beginningOfDay())
+		// Update stored rates
+		mergeRatesAfter(t.data, processedRates, beginningOfDay())
 		once.Do(func() { close(done) })
 	}
 }
