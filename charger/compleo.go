@@ -45,13 +45,14 @@ const (
 	compleoRegConnectors = 0x0008 // input
 
 	// per connector
-	compleoRegMaxPower    = 0x0 // holding
-	compleoRegStatus      = 0x1 // input
-	compleoRegActualPower = 0x2 // input
-	compleoRegCurrents    = 0x3 // input
-	compleoRegDuration    = 0x6 // holding
-	compleoRegEnergy      = 0x8 // input
-	// compleoRegChargeDuration = 0x6 // input
+	compleoRegMaxPower       = 0x0 // holding
+	compleoRegStatus         = 0x1 // input
+	compleoRegActualPower    = 0x2 // input
+	compleoRegCurrents       = 0x3 // input
+	compleoRegChargeDuration = 0x6 // input
+	compleoRegEnergy         = 0x8 // input
+	compleoRegVoltages       = 0xD // input
+
 	compleoRegIdTag = 0x1000 - compleoRegBase // input
 )
 
@@ -262,11 +263,18 @@ func (wb *Compleo) Currents() (float64, float64, float64, error) {
 	return wb.getPhaseValues(compleoRegCurrents, 10)
 }
 
+var _ api.PhaseVoltages = (*Compleo)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Compleo) Voltages() (float64, float64, float64, error) {
+	return wb.getPhaseValues(compleoRegVoltages, 1)
+}
+
 var _ api.ChargeTimer = (*Compleo)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Compleo) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(compleoRegDuration, 2)
+	b, err := wb.conn.ReadHoldingRegisters(compleoRegChargeDuration, 2)
 	if err != nil {
 		return 0, err
 	}
