@@ -90,6 +90,27 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	return t, err
 }
 
+// applyPriceAndTime transforms forecast values by applying totalPrice and ensuring local time
+func (t *Tariff) applyPriceAndTime(rates api.Rates) api.Rates {
+	result := make(api.Rates, len(rates))
+	for i, r := range rates {
+		result[i] = api.Rate{
+			Value: t.totalPrice(r.Value, r.Start),
+			Start: r.Start.Local(),
+			End:   r.End.Local(),
+		}
+	}
+	return result
+}
+
+// periodStart returns the start of the current period for pruning old rates
+func (t *Tariff) periodStart() time.Time {
+	if t.typ == api.TariffTypeSolar {
+		return beginningOfDay()
+	}
+	return now.With(time.Now()).BeginningOfHour()
+}
+
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
@@ -97,32 +118,25 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 	if t.cache != nil {
 		if cached, ok := t.cache.Get(interval); ok {
 			t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
-			// Apply totalPrice to cached rates if needed
-			for i, r := range cached {
-				cached[i] = api.Rate{
-					Value: t.totalPrice(r.Value, r.Start),
-					Start: r.Start.Local(),
-					End:   r.End.Local(),
-				}
-			}
-			mergeRatesAfter(t.data, cached, beginningOfDay())
+			mergeRatesAfter(t.data, t.applyPriceAndTime(cached), t.periodStart())
 			once.Do(func() { close(done) })
 		}
 	}
 
 	for tick := time.Tick(interval); ; <-tick {
-		var rawData api.Rates
+		// forecastValues holds the raw forecast data from the provider
+		var forecastValues api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
 			if err != nil {
 				return backoffPermanentError(err)
 			}
-			if err := json.Unmarshal([]byte(s), &rawData); err != nil {
+			if err := json.Unmarshal([]byte(s), &forecastValues); err != nil {
 				return backoff.Permanent(err)
 			}
 			// Normalize timestamps to local time without applying totalPrice yet
-			for i, r := range rawData {
-				rawData[i] = api.Rate{
+			for i, r := range forecastValues {
+				forecastValues[i] = api.Rate{
 					Value: r.Value,
 					Start: r.Start.Local(),
 					End:   r.End.Local(),
@@ -136,29 +150,17 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		// Cache the raw data for solar forecasts (before totalPrice adjustments)
+		// Cache the forecast values to persist across restarts
+		// For solar forecasts: caches the computed solar production curve (Watts)
+		// Note: totalPrice adjustments below don't affect solar data (only prices)
 		if t.cache != nil {
-			if err := t.cache.Set(rawData); err != nil {
+			if err := t.cache.Set(forecastValues); err != nil {
 				t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
 			}
 		}
 
-		// Apply totalPrice to the data for use
-		data := make(api.Rates, len(rawData))
-		for i, r := range rawData {
-			data[i] = api.Rate{
-				Value: t.totalPrice(r.Value, r.Start),
-				Start: r.Start,
-				End:   r.End,
-			}
-		}
-
-		// only prune rates older than current period
-		periodStart := now.With(time.Now()).BeginningOfHour()
-		if t.typ == api.TariffTypeSolar {
-			periodStart = beginningOfDay()
-		}
-		mergeRatesAfter(t.data, data, periodStart)
+		// Apply totalPrice adjustments and update stored rates
+		mergeRatesAfter(t.data, t.applyPriceAndTime(forecastValues), t.periodStart())
 
 		once.Do(func() { close(done) })
 	}
