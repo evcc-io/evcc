@@ -3,13 +3,12 @@ package charger
 import (
 	"context"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/openwb/hw"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/holoplot/go-evdev"
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
@@ -35,73 +34,10 @@ func init() {
 	registry.AddCtx("openwbhw", NewOpenWbHwFromConfig)
 }
 
-var scanCodeMap = map[evdev.EvCode]string{
-	evdev.KEY_1:   "1",
-	evdev.KEY_2:   "2",
-	evdev.KEY_3:   "3",
-	evdev.KEY_4:   "4",
-	evdev.KEY_5:   "5",
-	evdev.KEY_6:   "6",
-	evdev.KEY_7:   "7",
-	evdev.KEY_8:   "8",
-	evdev.KEY_9:   "9",
-	evdev.KEY_0:   "0",
-	evdev.KEY_KP1: "1",
-	evdev.KEY_KP2: "2",
-	evdev.KEY_KP3: "3",
-	evdev.KEY_KP4: "4",
-	evdev.KEY_KP5: "5",
-	evdev.KEY_KP6: "6",
-	evdev.KEY_KP7: "7",
-	evdev.KEY_KP8: "8",
-	evdev.KEY_KP9: "9",
-	evdev.KEY_KP0: "0",
+// GPIO 25 => CP-Unterbrechung (NC) und Freigabe Phasenumschaltung (NO)
+// GPIO  5 => 1 phasig, Schütz B gesperrt, bistabiles Relais (A)
+// GPIO 26 => 3 phasig, Schütz B freigegeben, bistabiles Relais (B)
 
-	// latin letters
-	evdev.KEY_A: "A",
-	evdev.KEY_B: "B",
-	evdev.KEY_C: "C",
-	evdev.KEY_D: "D",
-	evdev.KEY_E: "E",
-	evdev.KEY_F: "F",
-	evdev.KEY_G: "G",
-	evdev.KEY_H: "H",
-	evdev.KEY_I: "I",
-	evdev.KEY_J: "J",
-	evdev.KEY_K: "K",
-	evdev.KEY_L: "L",
-	evdev.KEY_M: "M",
-	evdev.KEY_N: "N",
-	evdev.KEY_O: "O",
-	evdev.KEY_P: "P",
-	evdev.KEY_Q: "Q",
-	evdev.KEY_R: "R",
-	evdev.KEY_S: "S",
-	evdev.KEY_T: "T",
-	evdev.KEY_U: "U",
-	evdev.KEY_V: "V",
-	evdev.KEY_W: "W",
-	evdev.KEY_X: "X",
-	evdev.KEY_Y: "Y",
-	evdev.KEY_Z: "Z",
-
-	// punctuation marks and other characters
-	evdev.KEY_MINUS:      "-",
-	evdev.KEY_EQUAL:      "=",
-	evdev.KEY_SEMICOLON:  ";",
-	evdev.KEY_COMMA:      ",",
-	evdev.KEY_DOT:        ".",
-	evdev.KEY_SLASH:      "/",
-	evdev.KEY_KPASTERISK: "*",
-	evdev.KEY_KPMINUS:    "-",
-	evdev.KEY_KPPLUS:     "+",
-	evdev.KEY_KPDOT:      ".",
-	evdev.KEY_KPSLASH:    "/",
-}
-
-// GPIO 5 => 1 phasig, Schütz A an, Schütz B aus.
-// GPIO 26 => 3 phasig, Schütz A und B an.
-// Die CP-Unterbrechung wird über ein normales Relais mit NC auf BCM 25/Board 22 gesteuert.
 // gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
 // gpio=6,8,9,10,12,13,16,21=ip,pu
 
@@ -136,67 +72,12 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 	if cc.RfId {
 		log := util.NewLogger("openwbhw")
-		log.INFO.Println("Trying to find RFID device")
-		devicePaths, err := evdev.ListDevicePaths()
+		rfIdChannel, _, err := hw.NewRFIDHandler(ctx, log)
 		if err != nil {
-			fmt.Printf("Cannot list device paths: %s", err)
 			return nil, err
 		}
-		var keyboardPaths []string
-		for _, d := range devicePaths {
-			log.INFO.Printf("%s:\t%s\n", d.Path, d.Name)
-			dev, err := evdev.Open(d.Path)
-			if err != nil {
-				log.INFO.Printf("Cannot read %s: %v\n", d.Path, err)
-			}
-			events := dev.CapableEvents(evdev.EV_KEY)
-			if slices.Contains(events, evdev.KEY_ENTER) {
-				log.INFO.Println("detected 'enter' key, device seems to be a keyboard")
-				keyboardPaths = append(keyboardPaths, d.Path)
-			} else {
-				log.INFO.Println("no 'enter' key detected, skipping device")
-			}
-
-		}
-
-		rfIdChannel := make(chan string, 10)
+		// Optionally, defer cleanup or store it if needed for later use
 		wb.rfIdChannel = rfIdChannel
-		for _, p := range keyboardPaths {
-			go func(p string) {
-				log.INFO.Printf("Monitoring keyboard %s\n", p)
-				dev, err := evdev.Open(p)
-				if err != nil {
-					log.INFO.Printf("Cannot read %s: %v\n", p, err)
-					return // Add this to exit the goroutine if device can't be opened
-				}
-				var read string = ""
-				for {
-					e, err := dev.ReadOne()
-					if err != nil {
-						log.INFO.Printf("Error reading from device: %v\n", err)
-					}
-					log.INFO.Printf("Got event \"%s\"", e.String())
-					switch e.Type {
-					case evdev.EV_KEY:
-						if e.Value == 1 {
-							log.INFO.Printf("Received keystroke \"%s\"", e.CodeName())
-							if e.Code == evdev.KEY_ENTER || e.Code == evdev.KEY_KPENTER {
-								log.INFO.Printf("Complete rfid \"%s\"", read)
-								rfIdChannel <- read
-								read = ""
-							} else {
-								log.INFO.Printf("Adding key \"%s\"", scanCodeMap[e.Code])
-								if val, ok := scanCodeMap[e.Code]; ok {
-									read += val
-								} else {
-									log.INFO.Printf("Unknown key code: %v", e.Code)
-								}
-							}
-						}
-					}
-				}
-			}(p)
-		}
 	}
 
 	var identify func() (string, error)
@@ -298,7 +179,6 @@ func (wb *OpenWbHw) phases1p3p(phases int) error {
 		return err
 	}
 
-	// Unmap gpio memory when done
 	defer rpio.Close()
 
 	pinGpioCP := rpio.Pin(owbhwGpioCP)
@@ -306,19 +186,21 @@ func (wb *OpenWbHw) phases1p3p(phases int) error {
 	if phases == 1 {
 		pinGpioPhases = rpio.Pin(owbhwGpioRelay1)
 	}
-
-	// Set pins to output mode
 	pinGpioCP.Output()
 	pinGpioPhases.Output()
 
-	pinGpioCP.High() // enable CP disconnect relay
+	pinGpioCP.High() // enable CP disconnect relay (NC)
 	time.Sleep(time.Second)
 	pinGpioPhases.High() // move latching relay to desired position
 	time.Sleep(time.Second)
 	pinGpioPhases.Low() // lock latching relay
 	time.Sleep(time.Second)
-	pinGpioCP.Low() // disable CP disconnect relay
+	pinGpioCP.Low() // disable CP disconnect relay (NC)
 	time.Sleep(time.Second)
+
+	if err := wb.Enable(true); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -335,17 +217,18 @@ func (wb *OpenWbHw) WakeUp() error {
 		return err
 	}
 
-	// Unmap gpio memory when done
 	defer rpio.Close()
 
 	gpioPinCP := rpio.Pin(owbhwGpioCP)
-
-	// Set pin to output mode
 	gpioPinCP.Output()
 
 	gpioPinCP.High()
 	time.Sleep(time.Second * time.Duration(3))
 	gpioPinCP.Low()
+
+	if err := wb.Enable(true); err != nil {
+		return err
+	}
 
 	return nil
 }
