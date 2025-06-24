@@ -26,18 +26,17 @@ const VALID_USERNAME = "rw";
 const VALID_PASSWORD = "readwrite";
 
 test.describe("mqtt", async () => {
-  let mqttReachable = true;
-  test.beforeAll(async () => {
-    mqttReachable = await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD);
-  });
-  test.skip(!mqttReachable, `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`);
-
   test("mqtt not configured", async ({ page }) => {
     await expect(page.getByTestId("mqtt")).toBeVisible();
     await expect(page.getByTestId("mqtt")).toContainText(["Configured", "no"].join(""));
   });
 
   test("mqtt via ui", async ({ page }) => {
+    test.skip(
+      !(await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD)),
+      `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`
+    );
+
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("mqtt-modal");
     await expectModalVisible(modal);
