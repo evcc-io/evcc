@@ -41,15 +41,16 @@ type Compleo struct {
 const (
 	// global
 	compleoRegBase       = 0x0100 // input
+	compleoRegFallback   = 0x5    // holding
 	compleoRegConnectors = 0x0008 // input
 
 	// per connector
-	compleoRegMaxPower = 0x0 // holding
-	compleoRegStatus   = 0x1 // input
-	compleoRegPower    = 0x2 // input
-	compleoRegCurrents = 0x3 // input
-	compleoRegFallback = 0x5 // holding
-	compleoRegEnergy   = 0x8 // input
+	compleoRegMaxPower    = 0x0 // holding
+	compleoRegStatus      = 0x1 // input
+	compleoRegActualPower = 0x2 // input
+	compleoRegCurrents    = 0x3 // input
+	compleoRegDuration    = 0x6 // holding
+	compleoRegEnergy      = 0x8 // input
 	// compleoRegChargeDuration = 0x6 // input
 	compleoRegIdTag = 0x1000 - compleoRegBase // input
 )
@@ -219,7 +220,7 @@ var _ api.Meter = (*Compleo)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Compleo) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegPower, 1)
+	b, err := wb.conn.ReadInputRegisters(compleoRegActualPower, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -259,6 +260,18 @@ var _ api.PhaseCurrents = (*Compleo)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (wb *Compleo) Currents() (float64, float64, float64, error) {
 	return wb.getPhaseValues(compleoRegCurrents, 10)
+}
+
+var _ api.ChargeTimer = (*Compleo)(nil)
+
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *Compleo) ChargeDuration() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(compleoRegDuration, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(binary.LittleEndian.Uint32(b)) * time.Second, nil
 }
 
 var _ api.Identifier = (*Compleo)(nil)
