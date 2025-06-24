@@ -181,7 +181,7 @@ func (wb *Compleo) Enable(enable bool) error {
 
 // setPower writes the power limit in 100W steps
 func (wb *Compleo) setPower(power uint16) error {
-	_, err := wb.conn.WriteSingleRegister(compleoRegMaxPower, power/10)
+	_, err := wb.conn.WriteSingleRegister(compleoRegMaxPower, power/100)
 	return err
 }
 
@@ -260,19 +260,6 @@ var _ api.PhaseCurrents = (*Compleo)(nil)
 func (wb *Compleo) Currents() (float64, float64, float64, error) {
 	return wb.getPhaseValues(compleoRegCurrents, 10)
 }
-
-// var _ api.PhaseSwitcher = (*Compleo)(nil)
-
-// // Phases1p3p implements the api.PhaseSwitcher interface
-// func (wb *Compleo) Phases1p3p(phases int) error {
-// 	var b uint16 = 1
-// 	if phases != 1 {
-// 		b = 2 // 3p
-// 	}
-
-// 	_, err := wb.conn.WriteSingleRegister(compleoRegPhases, b)
-// 	return err
-// }
 
 var _ api.Identifier = (*Delta)(nil)
 
