@@ -24,22 +24,11 @@ type OpenWbHw struct {
 const (
 	owbhwRegAmpsConfig    = 1000
 	owbhwRegVehicleStatus = 1002
-
-	owbhwGpioCP     = 25
-	owbhwGpioRelay1 = 5
-	owbhwGpioRelay3 = 26
 )
 
 func init() {
 	registry.AddCtx("openwbhw", NewOpenWbHwFromConfig)
 }
-
-// GPIO 25 => CP-Unterbrechung (NC) und Freigabe Phasenumschaltung (NO)
-// GPIO  5 => 1 phasig, Schütz B gesperrt, bistabiles Relais (A)
-// GPIO 26 => 3 phasig, Schütz B freigegeben, bistabiles Relais (B)
-
-// gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
-// gpio=6,8,9,10,12,13,16,21=ip,pu
 
 //go:generate go tool decorate -f decorateOpenWbHw -b *OpenWbHw -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
@@ -173,29 +162,28 @@ func (wb *OpenWbHw) phases1p3p(phases int) error {
 	if err := wb.Enable(false); err != nil {
 		return err
 	}
-	time.Sleep(time.Second)
 
 	if err := rpio.Open(); err != nil {
 		return err
 	}
-
 	defer rpio.Close()
 
-	pinGpioCP := rpio.Pin(owbhwGpioCP)
-	pinGpioPhases := rpio.Pin(owbhwGpioRelay3)
+	pinGpioCP := rpio.Pin(hw.GPIO_CP)
+	pinGpioPhases := rpio.Pin(hw.GPIO_3P)
 	if phases == 1 {
-		pinGpioPhases = rpio.Pin(owbhwGpioRelay1)
+		pinGpioPhases = rpio.Pin(hw.GPIO_1P)
 	}
 	pinGpioCP.Output()
 	pinGpioPhases.Output()
 
-	pinGpioCP.High() // enable CP disconnect relay (NC)
+	time.Sleep(time.Second)
+	pinGpioCP.High() // enable phases switch relay (NO), disconnect CP
 	time.Sleep(time.Second)
 	pinGpioPhases.High() // move latching relay to desired position
 	time.Sleep(time.Second)
 	pinGpioPhases.Low() // lock latching relay
 	time.Sleep(time.Second)
-	pinGpioCP.Low() // disable CP disconnect relay (NC)
+	pinGpioCP.Low() // disable phase switching, reconnect CP
 	time.Sleep(time.Second)
 
 	if err := wb.Enable(true); err != nil {
@@ -216,12 +204,12 @@ func (wb *OpenWbHw) WakeUp() error {
 	if err := rpio.Open(); err != nil {
 		return err
 	}
-
 	defer rpio.Close()
 
-	gpioPinCP := rpio.Pin(owbhwGpioCP)
+	gpioPinCP := rpio.Pin(hw.GPIO_CP)
 	gpioPinCP.Output()
 
+	// according to EV40 specification the CP level has to be set to -12V for at least 3 seconds
 	gpioPinCP.High()
 	time.Sleep(time.Second * time.Duration(3))
 	gpioPinCP.Low()
