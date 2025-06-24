@@ -18,20 +18,24 @@ type OpenWbHw struct {
 	conn        *modbus.Connection
 	current     int64
 	log         *util.Logger
-	rfIdChannel *chan string
+	rfIdChannel chan string
 	rfId        string
 }
 
 const (
-	openwbhwRegAmpsConfig    = 1000
-	openwbhwRegVehicleStatus = 1002
+	owbhwRegAmpsConfig    = 1000
+	owbhwRegVehicleStatus = 1002
+
+	owbhwGpioCP     = 25
+	owbhwGpioRelay1 = 5
+	owbhwGpioRelay3 = 26
 )
 
 func init() {
 	registry.AddCtx("openwbhw", NewOpenWbHwFromConfig)
 }
 
-var scan_code_map = map[evdev.EvCode]string{
+var scanCodeMap = map[evdev.EvCode]string{
 	evdev.KEY_1:   "1",
 	evdev.KEY_2:   "2",
 	evdev.KEY_3:   "3",
@@ -156,13 +160,14 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 		}
 
 		rfIdChannel := make(chan string, 10)
-		wb.rfIdChannel = &rfIdChannel
+		wb.rfIdChannel = rfIdChannel
 		for _, p := range keyboardPaths {
 			go func(p string) {
 				log.INFO.Printf("Monitoring keyboard %s\n", p)
 				dev, err := evdev.Open(p)
 				if err != nil {
 					log.INFO.Printf("Cannot read %s: %v\n", p, err)
+					return // Add this to exit the goroutine if device can't be opened
 				}
 				var read string = ""
 				for {
@@ -180,8 +185,12 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 								rfIdChannel <- read
 								read = ""
 							} else {
-								log.INFO.Printf("Adding key \"%s\"", scan_code_map[e.Code])
-								read += scan_code_map[e.Code]
+								log.INFO.Printf("Adding key \"%s\"", scanCodeMap[e.Code])
+								if val, ok := scanCodeMap[e.Code]; ok {
+									read += val
+								} else {
+									log.INFO.Printf("Unknown key code: %v", e.Code)
+								}
 							}
 						}
 					}
@@ -216,18 +225,16 @@ func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, 
 		log:     log,
 	}
 
-	wb.log.INFO.Println("OpenWbHw Instantiated...")
-
 	return wb, nil
 }
 
 // Status implements the api.Charger interface
 func (wb *OpenWbHw) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(openwbhwRegVehicleStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(owbhwRegVehicleStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
-	wb.log.INFO.Printf("Read status %d", b[1])
+
 	switch b[1] {
 	case 1: // ready
 		return api.StatusA, nil
@@ -242,7 +249,7 @@ func (wb *OpenWbHw) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *OpenWbHw) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(openwbhwRegAmpsConfig, 1)
+	b, err := wb.conn.ReadHoldingRegisters(owbhwRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
@@ -251,7 +258,7 @@ func (wb *OpenWbHw) Enabled() (bool, error) {
 	if enabled {
 		wb.current = int64(b[1])
 	}
-	wb.log.INFO.Printf("IsEnabled %t", enabled)
+
 	return enabled, nil
 }
 
@@ -263,9 +270,7 @@ func (wb *OpenWbHw) Enable(enable bool) error {
 		b[1] = byte(wb.current)
 	}
 
-	wb.log.INFO.Printf("Enable charger %t", enable)
-
-	_, err := wb.conn.WriteMultipleRegisters(openwbhwRegAmpsConfig, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(owbhwRegAmpsConfig, 1, b)
 
 	return err
 }
@@ -273,8 +278,8 @@ func (wb *OpenWbHw) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *OpenWbHw) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
-	wb.log.INFO.Printf("Set MaxCurrent %d", current)
-	_, err := wb.conn.WriteMultipleRegisters(openwbhwRegAmpsConfig, 1, b)
+
+	_, err := wb.conn.WriteMultipleRegisters(owbhwRegAmpsConfig, 1, b)
 	if err == nil {
 		wb.current = current
 	}
@@ -284,26 +289,74 @@ func (wb *OpenWbHw) MaxCurrent(current int64) error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *OpenWbHw) phases1p3p(phases int) error {
-	wb.log.INFO.Println("Initiating phase switch...")
+	if err := wb.Enable(false); err != nil {
+		return err
+	}
+	time.Sleep(time.Second)
 
-	return wb.perform_phase_switch(phases, 60)
+	if err := rpio.Open(); err != nil {
+		return err
+	}
+
+	// Unmap gpio memory when done
+	defer rpio.Close()
+
+	pinGpioCP := rpio.Pin(owbhwGpioCP)
+	pinGpioPhases := rpio.Pin(owbhwGpioRelay3)
+	if phases == 1 {
+		pinGpioPhases = rpio.Pin(owbhwGpioRelay1)
+	}
+
+	// Set pins to output mode
+	pinGpioCP.Output()
+	pinGpioPhases.Output()
+
+	pinGpioCP.High() // enable CP disconnect relay
+	time.Sleep(time.Second)
+	pinGpioPhases.High() // move latching relay to desired position
+	time.Sleep(time.Second)
+	pinGpioPhases.Low() // lock latching relay
+	time.Sleep(time.Second)
+	pinGpioCP.Low() // disable CP disconnect relay
+	time.Sleep(time.Second)
+
+	return nil
 }
 
 var _ api.Resurrector = (*OpenWbHw)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (wb *OpenWbHw) WakeUp() error {
-	wb.log.INFO.Println("Triggering CP...")
-	return wb.perform_cp_interruption(5)
+	if err := wb.Enable(false); err != nil {
+		return err
+	}
+
+	if err := rpio.Open(); err != nil {
+		return err
+	}
+
+	// Unmap gpio memory when done
+	defer rpio.Close()
+
+	gpioPinCP := rpio.Pin(owbhwGpioCP)
+
+	// Set pin to output mode
+	gpioPinCP.Output()
+
+	gpioPinCP.High()
+	time.Sleep(time.Second * time.Duration(3))
+	gpioPinCP.Low()
+
+	return nil
 }
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWbHw) identify() (string, error) {
-	wb.log.INFO.Println("Reading RFID...")
 	var completed bool = false
+
 	for !completed {
 		select {
-		case rfid := <-*wb.rfIdChannel:
+		case rfid := <-wb.rfIdChannel:
 			wb.log.INFO.Printf("Read RFID \"%s\" from channel", rfid)
 			wb.rfId = rfid
 		default:
@@ -311,109 +364,6 @@ func (wb *OpenWbHw) identify() (string, error) {
 			completed = true
 		}
 	}
-	wb.log.INFO.Printf("Returning RFID \"%s\"", wb.rfId)
+
 	return wb.rfId, nil
-}
-
-func (wb *OpenWbHw) perform_phase_switch(phases_to_use int, seconds int) error {
-	gpio_cp, gpio_relay := get_pins_phase_switch(phases_to_use)
-	wb.log.INFO.Printf("gpio_cp pin %d", gpio_cp)
-	wb.log.INFO.Printf("gpio_relay pin %d", gpio_relay)
-
-	wb.log.INFO.Println("Setting MaxCurrent to zero")
-	if err := wb.MaxCurrent(0); err != nil {
-		return err
-	}
-
-	if err := rpio.Open(); err != nil {
-		return err
-	}
-
-	// Unmap gpio memory when done
-	defer rpio.Close()
-
-	pin_gpio_cp := rpio.Pin(gpio_cp)
-	pin_gpio_relay := rpio.Pin(gpio_relay)
-
-	// Set pins to output mode
-	pin_gpio_cp.Output()
-	pin_gpio_relay.Output()
-
-	wb.log.INFO.Println("Sleeping for 1s")
-	time.Sleep(time.Second)
-
-	wb.log.INFO.Println("CP off")
-	pin_gpio_cp.High() // CP off
-
-	wb.log.INFO.Println("Toggle 1/3 relay high")
-	pin_gpio_relay.High() // 3 on/off
-
-	wb.log.INFO.Printf("Sleeping for %d", seconds)
-	time.Sleep(time.Second * time.Duration(seconds))
-
-	wb.log.INFO.Println("Toggle 1/3 relay low")
-	pin_gpio_relay.Low() // 3 on off
-
-	wb.log.INFO.Printf("Sleeping for %d", seconds)
-	time.Sleep(time.Second * time.Duration(seconds))
-
-	wb.log.INFO.Println("CP on")
-	pin_gpio_cp.Low() // CP on
-
-	wb.log.INFO.Println("Sleeping for 1s")
-	time.Sleep(time.Second)
-
-	wb.log.INFO.Println("Done with phase switch")
-
-	return nil
-}
-
-func (wb *OpenWbHw) perform_cp_interruption(seconds int) error {
-	gpio_cp := get_pins_cp_interruption()
-	wb.log.INFO.Printf("gpio_cp pin %d", gpio_cp)
-
-	wb.log.INFO.Println("Setting MaxCurrent to zero")
-	if err := wb.MaxCurrent(0); err != nil {
-		return err
-	}
-
-	if err := rpio.Open(); err != nil {
-		return err
-	}
-
-	// Unmap gpio memory when done
-	defer rpio.Close()
-
-	pin_gpio_cp := rpio.Pin(gpio_cp)
-
-	// Set pin to output mode
-	pin_gpio_cp.Output()
-
-	wb.log.INFO.Println("Sleeping for 1s")
-	time.Sleep(time.Second)
-
-	wb.log.INFO.Println("CP off")
-	pin_gpio_cp.High()
-	wb.log.INFO.Printf("Sleeping for %d", seconds)
-	time.Sleep(time.Second * time.Duration(seconds))
-	wb.log.INFO.Println("CP on")
-	pin_gpio_cp.Low()
-	wb.log.INFO.Println("Done with cp interrupt")
-	return nil
-}
-
-// CP Relay: Board 22, BCM/GPIO 25
-// Switch to 1 Phase: Board 29 BCM/GPIO 5
-// Switch to 3 Phase: Board 37 BCM/GPIO 26
-func get_pins_phase_switch(new_phases int) (int, int) {
-	// return gpio_cp, gpio_relay
-	if new_phases == 1 {
-		return 25, 5
-	}
-	return 25, 26
-}
-
-func get_pins_cp_interruption() int {
-	// return gpio_cp
-	return 25
 }
