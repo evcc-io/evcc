@@ -261,7 +261,7 @@ func (wb *Compleo) Currents() (float64, float64, float64, error) {
 	return wb.getPhaseValues(compleoRegCurrents, 10)
 }
 
-var _ api.Identifier = (*Delta)(nil)
+var _ api.Identifier = (*Compleo)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Compleo) Identify() (string, error) {
