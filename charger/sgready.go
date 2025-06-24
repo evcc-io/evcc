@@ -31,6 +31,7 @@ import (
 // SgReady charger implementation
 type SgReady struct {
 	*embed
+	lp    loadpoint.API
 	mode  int64
 	modeS func(int64) error
 	modeG func() (int64, error)
@@ -129,6 +130,10 @@ func (wb *SgReady) getMode() (int64, error) {
 
 // Status implements the api.Charger interface
 func (wb *SgReady) Status() (api.ChargeStatus, error) {
+	if wb.lp != nil && wb.lp.GetMode() == api.ModeOff {
+		return api.StatusA, nil
+	}
+
 	mode, err := wb.getMode()
 	if err != nil {
 		return api.StatusNone, err
@@ -188,6 +193,13 @@ func (wb *SgReady) setMaxPower(power int64) error {
 	}
 
 	return err
+}
+
+var _ loadpoint.Controller = (*SgReady)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *SgReady) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }
 
 var _ loadpoint.Controller = (*SgReady)(nil)
