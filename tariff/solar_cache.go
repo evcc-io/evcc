@@ -107,6 +107,25 @@ func (c *SolarCacheManager) Get(maxAge time.Duration) (api.Rates, bool) {
 	return cached.Rates, true
 }
 
+// GetWithTimestamp retrieves cached solar forecast data with its timestamp
+func (c *SolarCacheManager) GetWithTimestamp(maxAge time.Duration) (api.Rates, time.Time, bool) {
+	var cached SolarForecastCache
+
+	if err := settings.Json(c.getCacheKey(), &cached); err != nil {
+		if err != settings.ErrNotFound {
+			c.log.DEBUG.Printf("failed to load cache: %v", err)
+		}
+		return nil, time.Time{}, false
+	}
+
+	if !c.IsValid(&cached, maxAge) {
+		return nil, time.Time{}, false
+	}
+
+	c.log.DEBUG.Printf("cache hit: returning %d rates from %v ago", len(cached.Rates), time.Since(cached.Timestamp))
+	return cached.Rates, cached.Timestamp, true
+}
+
 // Set stores solar forecast data in cache
 func (c *SolarCacheManager) Set(rates api.Rates) error {
 	cached := SolarForecastCache{

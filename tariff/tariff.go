@@ -116,10 +116,18 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 
 	// Try to load from cache on startup for solar forecasts
 	if t.cache != nil {
-		if cached, ok := t.cache.Get(interval); ok {
+		if cached, cacheTime, ok := t.cache.GetWithTimestamp(interval); ok {
 			t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
 			mergeRatesAfter(t.data, t.applyPriceAndTime(cached), t.periodStart())
 			once.Do(func() { close(done) })
+
+			// Calculate delay until next fetch based on cache age
+			cacheAge := time.Since(cacheTime)
+			if cacheAge < interval {
+				initialDelay := interval - cacheAge
+				t.log.DEBUG.Printf("delaying initial fetch by %v (cache age: %v)", initialDelay, cacheAge)
+				time.Sleep(initialDelay)
+			}
 		}
 	}
 
@@ -150,9 +158,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		// Cache the forecast values to persist across restarts
 		// For solar forecasts: caches the computed solar production curve (Watts)
-		// Note: totalPrice adjustments below don't affect solar data (only prices)
 		if t.cache != nil {
 			if err := t.cache.Set(forecastValues); err != nil {
 				t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
