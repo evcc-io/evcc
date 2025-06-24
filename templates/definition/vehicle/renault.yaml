@@ -3,8 +3,8 @@ products:
   - brand: Renault
 requirements:
   description:
-    en: Renault Zoe / Twingo Electric requires a minimum charging current of 8A at 3p (older models even 10A).
-    de: Renault Zoe / Twingo Electric benötigt bei 3p einen minimalen Ladestrom von 8A (ältere Modelle sogar 10A).
+    en: Renault Zoe and Twingo Electric require a minimum charging current of 8A at 3p (older models even 10A).
+    de: Renault Zoe and Twingo Electric benötigen bei 3p einen minimalen Ladestrom von 8A (ältere Modelle sogar 10A).
 params:
   - preset: vehicle-base
   - name: vin
