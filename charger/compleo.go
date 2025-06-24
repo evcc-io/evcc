@@ -181,8 +181,6 @@ func (wb *Compleo) Enable(enable bool) error {
 
 // setPower writes the power limit in 100W steps
 func (wb *Compleo) setPower(power uint16) error {
-	// b := make([]byte, 1)
-	// binary.BigEndian.PutUint16(b, power)
 	_, err := wb.conn.WriteSingleRegister(compleoRegMaxPower, power/10)
 	return err
 }
