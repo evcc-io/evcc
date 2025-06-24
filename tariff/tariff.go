@@ -111,6 +111,39 @@ func (t *Tariff) periodStart() time.Time {
 	return now.With(time.Now()).BeginningOfHour()
 }
 
+// hasValidCoverage checks if rates cover at least until end of day for solar forecasts
+func (t *Tariff) hasValidCoverage(rates api.Rates) bool {
+	// Only validate solar forecasts
+	if t.typ != api.TariffTypeSolar {
+		return true
+	}
+
+	// Empty data is invalid for solar forecasts
+	if len(rates) == 0 {
+		t.log.DEBUG.Printf("cached solar forecast invalid: no data")
+		return false
+	}
+
+	// Find the latest end time in the rates
+	var latestEnd time.Time
+	for _, r := range rates {
+		if r.End.After(latestEnd) {
+			latestEnd = r.End
+		}
+	}
+
+	// Check if rates extend to at least end of today
+	endOfToday := now.With(time.Now()).EndOfDay()
+	if latestEnd.Before(endOfToday) {
+		t.log.DEBUG.Printf("cached solar forecast insufficient: covers until %v, need until %v",
+			latestEnd.Format("15:04"), endOfToday.Format("15:04"))
+		return false
+	}
+
+	t.log.DEBUG.Printf("cached solar forecast valid: covers until %v", latestEnd.Format("15:04"))
+	return true
+}
+
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
@@ -118,15 +151,21 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 	if t.cache != nil {
 		if cached, cacheTime, ok := t.cache.GetWithTimestamp(interval); ok {
 			t.log.DEBUG.Printf("loaded %d rates from cache", len(cached))
-			mergeRatesAfter(t.data, t.applyPriceAndTime(cached), t.periodStart())
-			once.Do(func() { close(done) })
 
-			// Calculate delay until next fetch based on cache age
-			cacheAge := time.Since(cacheTime)
-			if cacheAge < interval {
-				initialDelay := interval - cacheAge
-				t.log.DEBUG.Printf("delaying initial fetch by %v (cache age: %v)", initialDelay, cacheAge)
-				time.Sleep(initialDelay)
+			// Check if cached data has sufficient coverage
+			if t.hasValidCoverage(cached) {
+				mergeRatesAfter(t.data, t.applyPriceAndTime(cached), t.periodStart())
+				once.Do(func() { close(done) })
+
+				// Calculate delay until next fetch based on cache age
+				cacheAge := time.Since(cacheTime)
+				if cacheAge < interval {
+					initialDelay := interval - cacheAge
+					t.log.DEBUG.Printf("delaying initial fetch by %v (cache age: %v)", initialDelay, cacheAge)
+					time.Sleep(initialDelay)
+				}
+			} else {
+				t.log.DEBUG.Printf("cached data insufficient, fetching fresh data")
 			}
 		}
 	}
