@@ -16,6 +16,7 @@ export async function expectModalVisible(modal: Locator): Promise<void> {
 export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).not.toBeVisible();
   await expect(modal).toHaveAttribute("aria-hidden", "true");
+  await expect(modal.page().locator(".modal-backdrop")).not.toBeVisible();
 }
 
 export async function editorClear(editor: Locator, iterations = 6): Promise<void> {

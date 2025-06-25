@@ -1,46 +1,35 @@
 interval: 0.1s
 
 site:
-  title: Smart Feed-in, No Grid & PV
+  title: Smart Feed-in
   meters:
     grid: grid
 
 loadpoints:
-  - title: Loadpoint
-    charger: charger
-    meter: meter
+  - title: LP1
+    charger: charger1
+    mode: pv
+  - title: LP2
+    charger: charger2
+    mode: pv
 
 meters:
-  - name: meter
-    type: custom
-    power:
-      source: js
-      script: |
-        0
   - name: grid
-    type: custom
-    power:
-      source: js
-      script: |
-        -2000
+    type: template
+    template: demo-meter
+    power: -2000
 
 chargers:
-  - name: charger
-    type: custom
-    enable:
-      source: js
-      script:
-    enabled:
-      source: js
-      script: |
-        true
-    status:
-      source: js
-      script: |
-        "B"
-    maxcurrent:
-      source: js
-      script:
+  - name: charger1
+    type: template
+    template: demo-charger
+    status: C
+    power: 2000
+  - name: charger2
+    type: template
+    template: demo-charger
+    status: B
+    power: 0
 
 tariffs:
   currency: EUR
