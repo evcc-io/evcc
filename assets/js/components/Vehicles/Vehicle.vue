@@ -68,7 +68,7 @@
 </template>
 
 <script lang="ts">
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.ts";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import Title from "./Title.vue";
@@ -77,7 +77,7 @@ import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
-import { distanceUnit, distanceValue } from "@/units";
+import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
 import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
 
@@ -136,7 +136,7 @@ export default defineComponent({
 		vehicle: Object as PropType<Vehicle>,
 		vehicleDetectionActive: Boolean,
 		vehicleName: String,
-		vehicleRange: Number,
+		vehicleRange: { type: Number, default: 0 },
 		vehicles: Array,
 		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: Number,

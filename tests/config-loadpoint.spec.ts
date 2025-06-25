@@ -2,7 +2,6 @@ import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
@@ -64,7 +63,7 @@ async function newLoadpoint(page: Page, title: string) {
 
 test.describe("loadpoint", async () => {
   test("create, update and delete", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -99,7 +98,7 @@ test.describe("loadpoint", async () => {
     await expect(restartButton).toBeVisible();
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport");
@@ -112,7 +111,7 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
@@ -135,7 +134,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(lpModal);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("not connected");
@@ -153,7 +152,7 @@ test.describe("loadpoint", async () => {
     await expect(page.getByTestId("loadpoint")).toHaveCount(0);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByTestId("loadpoint")).toHaveCount(0);
   });
@@ -213,7 +212,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("vehicle", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -258,7 +257,7 @@ test.describe("loadpoint", async () => {
     await lpModal.getByRole("button", { name: "Save" }).click();
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicles
@@ -272,7 +271,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("keep mode", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -291,13 +290,13 @@ test.describe("loadpoint", async () => {
     await lpModal.getByLabel("Default mode").selectOption("---");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
-    await restart(CONFIG_EMPTY);
+    await restart();
 
     // change on main ui
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Off" })).toHaveClass(/active/);
     await page.getByRole("button", { name: "Solar", exact: true }).click();
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
     await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
 
@@ -309,7 +308,7 @@ test.describe("loadpoint", async () => {
     await lpModal.getByLabel("Default mode").selectOption("Fast");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
-    await restart(CONFIG_EMPTY);
+    await restart();
 
     // check loadpoint mode
     await page.goto("/");
@@ -317,7 +316,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("delete vehicle references", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -340,7 +339,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(vehicleModal);
 
     // restart
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicle
@@ -350,7 +349,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("delete charger references", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -371,7 +370,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(chargerModal);
 
     // restart without saving loadpoint
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicle
@@ -382,7 +381,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("delete meter references", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -404,7 +403,7 @@ test.describe("loadpoint", async () => {
     await expectModalHidden(meterModal);
 
     // restart without saving loadpoint
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     // check loadpoint default vehicle
@@ -418,7 +417,7 @@ test.describe("loadpoint", async () => {
   });
 
   test("user-defined charger", async ({ page }) => {
-    await start(CONFIG_EMPTY);
+    await start();
     await page.goto("/#/config");
     await enableExperimental(page);
 
@@ -432,12 +431,12 @@ test.describe("loadpoint", async () => {
     await expectModalVisible(chargerModal);
     await chargerModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
-    const editor = chargerModal.getByTestId("yaml-editor");
-    await expect(editor).toContainText("status: # charger status [A..F]");
+    const chargerEditor = chargerModal.getByTestId("yaml-editor");
+    await expect(chargerEditor).toContainText("status: # charger status [A..F]");
 
-    await editorClear(editor, 10);
+    await editorClear(chargerEditor, 20);
     await editorPaste(
-      editor,
+      chargerEditor,
       page,
       `status:
   source: const
@@ -456,18 +455,42 @@ power:
   value: 11000`
     );
 
-    const restResult = chargerModal.getByTestId("test-result");
-    await expect(restResult).toContainText("Status: unknown");
-    await restResult.getByRole("link", { name: "validate" }).click();
-    await expect(restResult).toContainText("Status: successful");
-    await expect(restResult).toContainText(["Status", "charging"].join(""));
-    await expect(restResult).toContainText(["Enabled", "yes"].join(""));
-    await expect(restResult).toContainText(["Power", "11.0 kW"].join(""));
-
-    // create
+    const chargerRestResult = chargerModal.getByTestId("test-result");
+    await expect(chargerRestResult).toContainText("Status: unknown");
+    await chargerRestResult.getByRole("link", { name: "validate" }).click();
+    await expect(chargerRestResult).toContainText("Status: successful");
+    await expect(chargerRestResult).toContainText(["Status", "charging"].join(""));
+    await expect(chargerRestResult).toContainText(["Enabled", "yes"].join(""));
+    await expect(chargerRestResult).toContainText(["Power", "11.0 kW"].join(""));
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
+
+    // add user-defined meter
+    await lpModal.getByRole("button", { name: "Add dedicated charger meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const meterEditor = meterModal.getByTestId("yaml-editor");
+    await editorClear(meterEditor, 20);
+    await editorPaste(
+      meterEditor,
+      page,
+      `power:
+  source: const
+  value: 5000`
+    );
+
+    const meterRestResult = meterModal.getByTestId("test-result");
+    await expect(meterRestResult).toContainText("Status: unknown");
+    await meterRestResult.getByRole("link", { name: "validate" }).click();
+    await expect(meterRestResult).toContainText("Status: successful");
+    await expect(meterRestResult).toContainText(["Power", "5.0 kW"].join(""));
+    await meterModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(meterModal);
+
+    // create
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -475,7 +498,7 @@ power:
     await expect(page.getByTestId("loadpoint")).toContainText("Carport");
 
     // restart evcc
-    await restart(CONFIG_EMPTY);
+    await restart();
     await page.reload();
 
     const lpEntry = page.getByTestId("loadpoint");
@@ -483,18 +506,21 @@ power:
     await expect(lpEntry).toContainText("Carport");
     await expect(lpEntry).toContainText(["Status", "charging"].join(""));
     await expect(lpEntry).toContainText(["Enabled", "yes"].join(""));
-    await expect(lpEntry).toContainText(["Power", "11.0 kW"].join(""));
+    await expect(lpEntry).toContainText(["Power", "5.0 kW"].join(""));
 
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
 
     await expect(lpModal.getByLabel("Charger").first()).toHaveValue("User-defined device [db:1]");
+    await expect(lpModal.getByLabel("Energy meter").first()).toHaveValue(
+      "User-defined device [db:2]"
+    );
     await lpModal.getByLabel("Charger").first().click();
     await expectModalVisible(chargerModal);
 
     await expect(chargerModal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
     await page.waitForLoadState("networkidle");
-    await expect(editor).toContainText("value: 'C'");
-    await expect(editor).toContainText("value: 11000");
+    await expect(chargerEditor).toContainText("value: 'C'");
+    await expect(chargerEditor).toContainText("value: 11000");
   });
 });

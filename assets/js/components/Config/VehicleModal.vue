@@ -318,6 +318,7 @@ export default defineComponent({
 			// remove icon if custom
 			if (this.values.type === ConfigType.Custom) {
 				delete data["icon"];
+				delete data["title"];
 			}
 			// trim and remove empty lines
 			if (Array.isArray(data["identifiers"])) {
