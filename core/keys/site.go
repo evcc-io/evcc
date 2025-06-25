@@ -59,5 +59,5 @@ const (
 
 	// smart charging
 	SmartCostAvailable           = "smartCostAvailable"           // smart cost available
-	SmartFeedinPriorityAvailable = "smartFeedinPriorityAvailable" // smart feed-in priority available
+	SmartFeedInPriorityAvailable = "smartFeedInPriorityAvailable" // smart feed-in priority available
 )
