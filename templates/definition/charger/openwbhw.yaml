@@ -18,8 +18,8 @@ params:
   - name: milliamps
     type: bool
     description:
-      en: Enable or disable milliampere support if device firmware supports it
-      de: Aktivieren oder Deaktivieren der Milliampere-Unterstützung, wenn die Gerätefirmware dies unterstützt
+      en: Enable or disable milliampere support
+      de: Aktivieren oder Deaktivieren der Milliampere-Unterstützung
     default: true
   - name: phases1p3p
     type: bool
