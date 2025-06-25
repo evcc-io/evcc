@@ -2,6 +2,7 @@ import fs from "fs";
 import waitOn from "wait-on";
 import axios from "axios";
 import { spawn, execSync, ChildProcess } from "child_process";
+import killPort from "kill-port";
 import os from "os";
 import path from "path";
 import { Transform } from "stream";
@@ -128,16 +129,17 @@ async function _stop(instance?: ChildProcess) {
       log("login", res.status, res.statusText);
       cookie = res.headers["set-cookie"];
     }
-  } catch {
-    log("failed to get auth status, trying to shutdown anyway", { port });
-  }
-  log("shutting down evcc", { port });
-  try {
+    log("shutting down evcc", { port });
     await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
-  } catch {
-    // work around "socket hang up" situations in github actions
-    log("shutdown failed, retrying once", { port });
-    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  } catch (error) {
+    const port = workerPort();
+    log(`shutdown failed, last resort: kill by port`, port, error);
+    try {
+      await killPort(port);
+      log(`killed process on port ${port}`);
+    } catch (killError) {
+      log(`no process found on port ${port} or kill failed:`, killError);
+    }
   }
   log(`wait until port ${port} is closed`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
