@@ -448,6 +448,9 @@
       "validateSave": "Validate & save"
     }
   },
+  "confirmWithPassword": {
+    "title": "Confirm action"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Solar",

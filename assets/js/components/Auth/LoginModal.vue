@@ -1,10 +1,11 @@
 <template>
 	<GenericModal
-		id="loginModal"
-		:title="$t('loginModal.title')"
+		:id="computedModalId"
+		:title="computedModalTitle"
 		:size="modalSize"
 		data-testid="login-modal"
 		@open="open"
+		@close="$emit('close')"
 		@closed="closed"
 	>
 		<div v-if="demoMode" class="alert alert-warning" role="alert">
@@ -66,14 +67,30 @@ import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
 import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
 import { docsPrefix } from "@/i18n";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+import type { LoginAction } from "@/types/evcc";
 
 export default defineComponent({
 	name: "LoginModal",
 	components: { GenericModal },
 	props: {
 		demoMode: Boolean,
+		action: {
+			type: Function as PropType<LoginAction>,
+			default: (password: string) => {
+				return api.post(
+					"/auth/login",
+					{ password },
+					{
+						validateStatus: (code: number) => [200, 401, 403].includes(code),
+					}
+				);
+			},
+		},
+		modalTitle: String,
+		modalId: { type: String, default: "" },
 	},
+	emits: ["close"],
 	data: () => {
 		return {
 			modalVisible: false,
@@ -94,6 +111,12 @@ export default defineComponent({
 		modalSize() {
 			return this.demoMode ? "md" : "sm";
 		},
+		computedModalId() {
+			return this.modalId || "loginModal";
+		},
+		computedModalTitle() {
+			return this.modalTitle || this.$t("loginModal.title");
+		},
 	},
 	methods: {
 		open() {
@@ -112,16 +135,15 @@ export default defineComponent({
 			this.$refs["password"]?.focus();
 		},
 		closeModal() {
-			Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement).hide();
+			Modal.getOrCreateInstance(
+				document.getElementById(this.computedModalId) as HTMLElement
+			).hide();
 		},
 		async login() {
 			this.loading = true;
 
 			try {
-				const data = { password: this.password };
-				const res = await api.post("/auth/login", data, {
-					validateStatus: (code) => [200, 401, 403].includes(code),
-				});
+				const res = await this.action(this.password);
 				this.resetHint = false;
 				this.iframeHint = false;
 				this.error = "";

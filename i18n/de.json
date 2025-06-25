@@ -448,6 +448,9 @@
       "validateSave": "Prüfen & speichern"
     }
   },
+  "confirmWithPassword": {
+    "title": "Aktion bestätigen"
+  },
   "footer": {
     "community": {
       "greenEnergy": "Sonne",

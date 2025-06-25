@@ -13,10 +13,7 @@
 			<h6>
 				{{ $t("config.system.dataManagement.backup.title") }} <small>backup-summary</small>
 			</h6>
-			<button
-				class="btn btn-outline-secondary"
-				@click="$emit('openConfirmWithPasswordModal')"
-			>
+			<button class="btn btn-outline-secondary" @click="openBackupConfirmModal">
 				{{ $t("config.system.dataManagement.backup.download") }}
 			</button>
 		</div>
@@ -34,24 +31,18 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import Modal from "bootstrap/js/dist/modal";
+import api from "@/api";
+import type { LoginAction } from "@/types/evcc";
 
 export default defineComponent({
 	name: "DataManagementModal",
 	components: { GenericModal },
-	emits: ["openConfirmWithPasswordModal", "opened"],
-	data() {
-		return {
-			subModalOpened: false,
-		};
-	},
+	emits: ["openBackupConfirmModal", "opened"],
 	methods: {
-		openConfirmWithPasswordModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("confirmWithPasswordModal") as HTMLElement
-			);
-			modal.show();
-			this.$emit("openConfirmWithPasswordModal");
+		openBackupConfirmModal() {
+			this.$emit("openBackupConfirmModal", ((_: string) => {
+				return api.get("TODO");
+			}) satisfies LoginAction);
 		},
 	},
 });

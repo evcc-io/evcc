@@ -374,10 +374,15 @@
 				<EebusModal @changed="yamlChanged" />
 				<DataManagementModal
 					:fade="dataManagementSubModalOpen ? 'left' : ''"
-					@open-confirm-with-password-modal="openConfirmWithPasswordModal"
+					@open-backup-confirm-modal="openBackupConfirmModal"
 					@opened="dataManagementSubModalOpen = false"
 				/>
-				<ConfirmWithPasswordModal @close="confirmWithPasswordModalModalClosed" />
+				<LoginModal
+					modalId="configLoginModal"
+					:modalTitle="$t('confirmWithPassword.title')"
+					:action="confirmWithPasswordAction"
+					@close="confirmWithPasswordModalClosed"
+				/>
 			</div>
 		</div>
 	</div>
@@ -426,12 +431,11 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 import DataManagementModal from "@/components/Config/DataManagementModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
-import ConfirmWithPasswordModal from "@/components/Helper/ConfirmWithPasswordModal.vue";
+import LoginModal from "@/components/Auth/LoginModal.vue";
 
 export default {
 	name: "Config",
 	components: {
-		ConfirmWithPasswordModal,
 		NewDeviceButton,
 		DataManagementModal,
 		ChargerModal,
@@ -464,6 +468,7 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 		WelcomeBanner,
+		LoginModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -490,6 +495,7 @@ export default {
 			deviceValues: {},
 			isComponentMounted: true,
 			isPageVisible: true,
+			confirmWithPasswordAction: undefined,
 		};
 	},
 	head() {
@@ -710,9 +716,12 @@ export default {
 			return Modal.getOrCreateInstance(document.getElementById("dataManagementModal"));
 		},
 		confirmWithPasswordModal() {
-			return Modal.getOrCreateInstance(document.getElementById("confirmWithPasswordModal"));
+			return Modal.getOrCreateInstance(document.getElementById("configLoginModal"));
 		},
-		openConfirmWithPasswordModal() {
+		openBackupConfirmModal(method) {
+			console.log(method);
+
+			this.confirmWithPasswordAction = method;
 			this.dataManagementSubModalOpen = true;
 			this.dataManagementModal().hide();
 			this.$nextTick(() => this.confirmWithPasswordModal().show());
@@ -860,7 +869,7 @@ export default {
 			// reopen loadpoint modal
 			this.loadpointModal().show();
 		},
-		confirmWithPasswordModalModalClosed() {
+		confirmWithPasswordModalClosed() {
 			// reopen dataManagementModal modal
 			this.dataManagementModal().show();
 		},
