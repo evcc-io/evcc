@@ -85,7 +85,6 @@ func NewOpenWbHw(ctx context.Context, hasPhases1p3p bool, hasRfid bool, configur
 		bConfig, err := wb.conn.ReadHoldingRegisters(owbhwRegConfig, 1)
 		if err != nil {
 			return nil, err
-
 		}
 
 		config := encoding.Uint16(bConfig)

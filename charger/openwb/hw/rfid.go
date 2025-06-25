@@ -81,8 +81,8 @@ func NewRFIDHandler(ctx context.Context, log *util.Logger) (chan string, func(),
 	devicePaths, err := evdev.ListDevicePaths()
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot list device paths: %w", err)
-
 	}
+
 	var keyboardPaths []string
 	for _, d := range devicePaths {
 		log.INFO.Printf("Device path: %s | Name: %s\n", d.Path, d.Name)
