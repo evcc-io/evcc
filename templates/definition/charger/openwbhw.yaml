@@ -13,19 +13,19 @@ requirements:
 params:
   - name: milliamps
     type: bool
-    description:
-      en: Enable or disable milliampere support
-      de: Aktivieren oder Deaktivieren der Milliampere-Unterstützung
+    help:
+      en: Enable or disable milliampere support, if hardware supports it
+      de: Aktivieren oder Deaktivieren der Milliampere-Unterstützung, wenn die Hardware dies unterstützt
     default: true
   - name: phases1p3p
     type: bool
-    description:
+    help:
       en: Device is equipped with phase switching option
       de: Gerät ist mit Phasenumschaltungsoption ausgestattet
     default: false
   - name: rfid
     type: bool
-    description:
+    help:
       en: RFID card reader is present
       de: RFID-Kartenleser ist vorhanden
     default: false
