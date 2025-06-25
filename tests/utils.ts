@@ -1,10 +1,14 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
 export async function enableExperimental(page: Page): Promise<void> {
+  await expect(page.getByTestId("topnavigation-button")).toBeVisible();
   await page.getByTestId("topnavigation-button").click();
   await page.getByTestId("topnavigation-settings").click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
+  const modal = page.getByTestId("global-settings-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Experimental 🧪").click();
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
   await expect(page.locator(".modal-backdrop")).not.toBeVisible();
 }
 
