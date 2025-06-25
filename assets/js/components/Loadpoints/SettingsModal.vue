@@ -12,7 +12,7 @@
 				:current-limit="smartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
-				:is-loadpoint="true"
+				is-loadpoint
 				:loadpoint-id="Number(loadpointId)"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
