@@ -388,7 +388,15 @@
       "trialToken": "Testtoken"
     },
     "system": {
-      "dataManagement": "Datenverwaltung",
+      "dataManagement": {
+        "backup": {
+          "download": "Datei herunterladen",
+          "title": "Backup"
+        },
+        "reset": "Reset",
+        "restore": "Restore",
+        "title": "Datenverwaltung"
+      },
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",

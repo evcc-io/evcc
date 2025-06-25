@@ -388,7 +388,15 @@
       "trialToken": "Trial token"
     },
     "system": {
-      "dataManagement": "Data management",
+      "dataManagement": {
+        "backup": {
+          "download": "Download file",
+          "title": "Backup"
+        },
+        "reset": "Reset",
+        "restore": "Restore",
+        "title": "Data management"
+      },
       "logs": "Logs",
       "restart": "Restart",
       "restartRequiredDescription": "Please restart to see the effect.",

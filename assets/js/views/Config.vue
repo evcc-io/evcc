@@ -317,7 +317,7 @@
 						class="btn btn-outline-secondary"
 						@click="openModal('dataManagementModal')"
 					>
-						{{ $t("config.system.dataManagement") }}
+						{{ $t("config.system.dataManagement.title") }}
 					</button>
 					<button class="btn btn-outline-danger" @click="restart">
 						{{ $t("config.system.restart") }}
@@ -372,7 +372,12 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
-				<DataManagementModal />
+				<DataManagementModal
+					:fade="dataManagementSubModalOpen ? 'left' : ''"
+					@open-confirm-with-password-modal="openConfirmWithPasswordModal"
+					@opened="dataManagementSubModalOpen = false"
+				/>
+				<ConfirmWithPasswordModal @close="confirmWithPasswordModalModalClosed" />
 			</div>
 		</div>
 	</div>
@@ -421,10 +426,12 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 import DataManagementModal from "@/components/Config/DataManagementModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import ConfirmWithPasswordModal from "@/components/Helper/ConfirmWithPasswordModal.vue";
 
 export default {
 	name: "Config",
 	components: {
+		ConfirmWithPasswordModal,
 		NewDeviceButton,
 		DataManagementModal,
 		ChargerModal,
@@ -476,6 +483,7 @@ export default {
 			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
+			dataManagementSubModalOpen: false,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
@@ -698,6 +706,17 @@ export default {
 		chargerModal() {
 			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
 		},
+		dataManagementModal() {
+			return Modal.getOrCreateInstance(document.getElementById("dataManagementModal"));
+		},
+		confirmWithPasswordModal() {
+			return Modal.getOrCreateInstance(document.getElementById("confirmWithPasswordModal"));
+		},
+		openConfirmWithPasswordModal() {
+			this.dataManagementSubModalOpen = true;
+			this.dataManagementModal().hide();
+			this.$nextTick(() => this.confirmWithPasswordModal().show());
+		},
 		editLoadpointCharger(name) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
@@ -840,6 +859,10 @@ export default {
 		chargerModalClosed() {
 			// reopen loadpoint modal
 			this.loadpointModal().show();
+		},
+		confirmWithPasswordModalModalClosed() {
+			// reopen dataManagementModal modal
+			this.dataManagementModal().show();
 		},
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;
