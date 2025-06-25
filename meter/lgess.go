@@ -82,7 +82,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 	var setBatteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
-		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7433 {
+		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7430 {
 			setBatteryMode = m.batteryMode(batterySocLimits)
 		}
 	}

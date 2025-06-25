@@ -122,6 +122,10 @@ func (wb *Heatpump) setMaxPower(power int64) error {
 
 // Status implements the api.Charger interface
 func (wb *Heatpump) Status() (api.ChargeStatus, error) {
+	if wb.lp != nil && wb.lp.GetMode() == api.ModeOff {
+		return api.StatusA, nil
+	}
+
 	power, err := wb.getMaxPower()
 	if err != nil {
 		return api.StatusNone, err
