@@ -11,10 +11,6 @@ requirements:
     en: |
       Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware
 params:
-  - name: modbus
-    choice: ["rs485"]
-    baudrate: 9600
-    comset: 8N1
   - name: milliamps
     type: bool
     description:
@@ -34,8 +30,7 @@ params:
       de: RFID-Kartenleser ist vorhanden
     default: false
 render: |
-  type: openwbnative
-  {{- include "modbus" . }}
+  type: openwbhw
   milliamps: {{ .milliamps }}
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
