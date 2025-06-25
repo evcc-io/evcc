@@ -128,7 +128,13 @@ async function _stop(instance?: ChildProcess) {
     cookie = res.headers["set-cookie"];
   }
   log("shutting down evcc", { port });
-  await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  try {
+    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  } catch {
+    // work around "socket hang up" situations in github actions
+    log("shutdown failed, retrying once", { port });
+    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  }
   log(`wait until port ${port} is closed`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log("evcc is down", { port });
