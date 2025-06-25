@@ -13,21 +13,30 @@ requirements:
 params:
   - name: milliamps
     type: bool
+    description:
+      en: Enable mA support?
+      de: Aktivieren der mA-Unterstützung?
     help:
       en: Enable or disable milliampere support, if hardware supports it
       de: Aktivieren oder Deaktivieren der Milliampere-Unterstützung, wenn die Hardware dies unterstützt
     default: true
   - name: phases1p3p
     type: bool
+    description:
+      en: Phase switching?
+      de: Phasenumschaltung?
     help:
-      en: Device is equipped with phase switching option
-      de: Gerät ist mit Phasenumschaltungsoption ausgestattet
+      en: Device is equipped with phase switching option?
+      de: Gerät ist mit Phasenumschaltungsoption ausgestattet?
     default: false
   - name: rfid
     type: bool
+    description:
+      en: RFID reader?
+      de: RFID-Kartenleser?
     help:
-      en: RFID card reader is present
-      de: RFID-Kartenleser ist vorhanden
+      en: RFID card reader is present?
+      de: RFID-Kartenleser ist vorhanden?
     default: false
 render: |
   type: openwbhw
