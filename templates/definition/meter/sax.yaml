@@ -51,7 +51,7 @@ render: |
     register:
       address: 40100 # Current[A] of L1 phase
       type: holding
-      decoding: int16
+      decode: int16
     scale: 0.01
   - source: modbus
     uri: {{ .host }}:{{ .port }}
@@ -59,7 +59,7 @@ render: |
     register:
       address: 40101 # Current[A] of L2 phase
       type: holding
-      decoding: int16
+      decode: int16
     scale: 0.01
   - source: modbus
     uri: {{ .host }}:{{ .port }}
@@ -67,7 +67,7 @@ render: |
     register:
       address: 40102 # Current[A] of L3 phase
       type: holding
-      decoding: int16
+      decode: int16
     scale: 0.01
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -81,7 +81,7 @@ render: |
       register:
         address: 47 # Power P[W] of the battery
         type: holding
-        decoding: uint16
+        decode: uint16
     - source: const
       value: -16384
   soc:
@@ -91,7 +91,7 @@ render: |
     register:
       address: 46 # SOC[%] of the battery
       type: holding
-      decoding: uint16
+      decode: uint16
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}  # re-write at timeout/2
