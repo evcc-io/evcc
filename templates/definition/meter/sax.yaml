@@ -17,7 +17,7 @@ params:
   - name: port
     default: 502
   - name: modbus
-    choice: ["tcpip"]
+    choi  ce: ["tcpip"]
     port: 502
     id: 64
   - name: maxchargepower
