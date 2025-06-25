@@ -26,11 +26,10 @@ const (
 )
 
 func init() {
-	registry.AddCtx("simpleevse", NewEvseDINFromConfig) // deprecated
 	registry.AddCtx("evsedin", NewEvseDINFromConfig)
 }
 
-// https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf
+// http://evracing.cz/evse/evse-wallbox/evse-wb-din_latest.pdf
 
 // NewEvseDINFromConfig creates an EVSE DIN charger from generic config
 func NewEvseDINFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
