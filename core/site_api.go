@@ -395,27 +395,27 @@ func (site *Site) batteryModeWatchdogExpired() bool {
 	return false
 }
 
-func (site *Site) GetSmartFeedinDisableLimit() *float64 {
+func (site *Site) GetSmartFeedInDisableLimit() *float64 {
 	site.RLock()
 	defer site.RUnlock()
-	return site.smartFeedinDisableLimit
+	return site.smartFeedInDisableLimit
 }
 
-func (site *Site) SetSmartFeedinDisableLimit(val *float64) {
+func (site *Site) SetSmartFeedInDisableLimit(val *float64) {
 	site.log.DEBUG.Println("set feed-in disable limit:", printPtr("%.1f", val))
 
 	site.Lock()
 	defer site.Unlock()
 
-	if !ptrValueEqual(site.smartFeedinDisableLimit, val) {
-		site.smartFeedinDisableLimit = val
+	if !ptrValueEqual(site.smartFeedInDisableLimit, val) {
+		site.smartFeedInDisableLimit = val
 
 		if val == nil {
-			settings.SetString(keys.SmartFeedinDisableLimit, "")
-			site.publish(keys.SmartFeedinDisableLimit, nil)
+			settings.SetString(keys.SmartFeedInDisableLimit, "")
+			site.publish(keys.SmartFeedInDisableLimit, nil)
 		} else {
-			settings.SetFloat(keys.SmartFeedinDisableLimit, *val)
-			site.publish(keys.SmartFeedinDisableLimit, *val)
+			settings.SetFloat(keys.SmartFeedInDisableLimit, *val)
+			site.publish(keys.SmartFeedInDisableLimit, *val)
 		}
 	}
 }

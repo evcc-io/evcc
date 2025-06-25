@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} vun {total}",
+    "activeHours": "{active} vun {total}",
     "activeHoursLabel": "Aktiv Stonnen",
     "applyToAll": "Iwwerall uwennen?",
     "batteryDescription": "Luet d'Hausbatterie aus dem Netz.",

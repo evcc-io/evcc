@@ -25,7 +25,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			return nil, err
 		}
 		log.INFO.Println("using sqlite database:", file)
-		if err := os.MkdirAll(filepath.Dir(file), os.ModePerm); err != nil {
+		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
 			return nil, err
 		}
 		// avoid busy errors

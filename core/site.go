@@ -112,8 +112,8 @@ type Site struct {
 	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time       // Battery mode timer for external control
 
-	smartFeedinDisableLimit  *float64 // Feed-in limit
-	smartFeedinDisableActive bool     // Feed-in limit active
+	smartFeedInDisableLimit  *float64 // Feed-in limit
+	smartFeedInDisableActive bool     // Feed-in limit active
 }
 
 // MetersConfig contains the site's meter configuration
@@ -161,9 +161,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		})
 	}
 
-	if site.smartFeedinDisableAvailable() {
+	if site.smartFeedInDisableAvailable() {
 		shutdown.Register(func() {
-			if site.SmartFeedinDisableActive() {
+			if site.SmartFeedInDisableActive() {
 				if err := site.setFeedinDisable(false); err != nil {
 					site.log.ERROR.Printf("smart feed-in disable: %v", err)
 				}
@@ -331,14 +331,14 @@ func (site *Site) restoreSettings() error {
 	}
 
 	// restore accumulated energy
-	pvEnergy := make(map[string]float64)
+	pvEnergy := make(map[string]meterEnergy)
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Accumulated = fcst
+				site.pvEnergy[name].Accumulated = fcst.Accumulated
 			} else {
 				nok = true
 				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
@@ -388,7 +388,7 @@ func (site *Site) DumpConfig() {
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok && len(v.Identifiers()) == 0 {
-				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
+				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
 			}
 		}
 	}
@@ -922,9 +922,9 @@ func (site *Site) update(lp updater) {
 	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	// smart feed-in disable
-	if site.smartFeedinDisableAvailable() {
+	if site.smartFeedInDisableAvailable() {
 		if feedinRate, err := rateAt(feedin, time.Now()); err == nil {
-			if err := site.UpdateSmartFeedinDisable(feedinRate); err != nil {
+			if err := site.UpdateSmartFeedInDisable(feedinRate); err != nil {
 				site.log.WARN.Printf("set feed-in limit: %v", err)
 			}
 		} else {
@@ -985,8 +985,8 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
-	site.publish(keys.SmartFeedinPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
-	site.publish(keys.SmartFeedinDisableAvailable, site.smartFeedinDisableAvailable())
+	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
+	site.publish(keys.SmartFeedInDisableAvailable, site.smartFeedInDisableAvailable())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {

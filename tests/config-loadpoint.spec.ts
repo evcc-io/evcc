@@ -434,7 +434,7 @@ test.describe("loadpoint", async () => {
     const chargerEditor = chargerModal.getByTestId("yaml-editor");
     await expect(chargerEditor).toContainText("status: # charger status [A..F]");
 
-    await editorClear(chargerEditor, 10);
+    await editorClear(chargerEditor, 20);
     await editorPaste(
       chargerEditor,
       page,
@@ -473,7 +473,7 @@ power:
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
     const meterEditor = meterModal.getByTestId("yaml-editor");
-    await editorClear(meterEditor, 10);
+    await editorClear(meterEditor, 20);
     await editorPaste(
       meterEditor,
       page,

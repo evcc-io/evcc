@@ -5,7 +5,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 )
 
-func (site *Site) smartFeedinDisableAvailable() bool {
+func (site *Site) smartFeedInDisableAvailable() bool {
 	if !site.isDynamicTariff(api.TariffUsageFeedIn) {
 		return false
 	}
@@ -21,25 +21,25 @@ func (site *Site) smartFeedinDisableAvailable() bool {
 	return false
 }
 
-func (site *Site) SmartFeedinDisableActive() bool {
+func (site *Site) SmartFeedInDisableActive() bool {
 	site.RLock()
 	defer site.RUnlock()
-	return site.smartFeedinDisableActive
+	return site.smartFeedInDisableActive
 }
 
-func (site *Site) UpdateSmartFeedinDisable(rate api.Rate) error {
-	limit := site.GetSmartFeedinDisableLimit()
+func (site *Site) UpdateSmartFeedInDisable(rate api.Rate) error {
+	limit := site.GetSmartFeedInDisableLimit()
 	enable := limit != nil && !rate.IsZero() && rate.Value <= *limit
 
-	if site.SmartFeedinDisableActive() == enable {
+	if site.SmartFeedInDisableActive() == enable {
 		return nil
 	}
 
 	err := site.setFeedinDisable(enable)
 	if err == nil {
 		site.Lock()
-		site.smartFeedinDisableActive = enable
-		site.publish(keys.SmartFeedinDisableActive, enable)
+		site.smartFeedInDisableActive = enable
+		site.publish(keys.SmartFeedInDisableActive, enable)
 		site.Unlock()
 	}
 

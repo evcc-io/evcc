@@ -115,7 +115,7 @@ type Loadpoint struct {
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
-	smartFeedinPriorityLimit *float64 // prevent charging if feed-in cost is above this value
+	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 
 	mode                api.ChargeMode
@@ -333,8 +333,8 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
 		lp.SetSmartCostLimit(&v)
 	}
-	if v, err := lp.settings.Float(keys.SmartFeedinPriorityLimit); err == nil {
-		lp.SetSmartFeedinPriorityLimit(&v)
+	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
+		lp.SetSmartFeedInPriorityLimit(&v)
 	}
 
 	var thresholds loadpoint.ThresholdsConfig
@@ -636,7 +636,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
-	lp.publish(keys.SmartFeedinPriorityLimit, lp.smartFeedinPriorityLimit)
+	lp.publish(keys.SmartFeedInPriorityLimit, lp.smartFeedInPriorityLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
@@ -1095,7 +1095,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 						for _, v := range lp.availableVehicles() {
 							if slices.Contains(v.Features(), api.WelcomeCharge) {
 								welcomeCharge = true
-								lp.log.DEBUG.Printf("welcome charge: %s", v.Title())
+								lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
 								break
 							}
 						}
@@ -1788,13 +1788,13 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
-	smartCostActive, smartCostNextStart := lp.updateSmartCost(lp.GetSmartCostLimit(), consumption)
+	smartCostActive, smartCostNextStart := lp.updateSmartCost(lp.GetSmartCostLimit(), consumption, 1)
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 
-	smartFeedinPriorityActive, smartFeedinPriorityNextStart := lp.updateSmartCost(lp.GetSmartFeedinPriorityLimit(), feedin)
-	lp.publish(keys.SmartFeedinPriorityActive, smartFeedinPriorityActive)
-	lp.publish(keys.SmartFeedinPriorityNextStart, smartFeedinPriorityNextStart)
+	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.updateSmartCost(lp.GetSmartFeedInPriorityLimit(), feedin, -1)
+	lp.publish(keys.SmartFeedInPriorityActive, smartFeedInPriorityActive)
+	lp.publish(keys.SmartFeedInPriorityNextStart, smartFeedInPriorityNextStart)
 
 	// long-running tasks
 	lp.processTasks()
@@ -1913,7 +1913,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		}
 
 		// attractive feedin
-		if smartFeedinPriorityActive {
+		if smartFeedInPriorityActive {
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 

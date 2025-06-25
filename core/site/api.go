@@ -80,6 +80,6 @@ type API interface {
 	//
 	// feed-in control
 	//
-	GetSmartFeedinDisableLimit() *float64
-	SetSmartFeedinDisableLimit(limit *float64)
+	GetSmartFeedInDisableLimit() *float64
+	SetSmartFeedInDisableLimit(limit *float64)
 }

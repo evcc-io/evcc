@@ -61,9 +61,11 @@ const (
 	SmartCostAvailable = "smartCostAvailable" // smart cost available
 
 	// smart feed-in
-	SmartFeedinDisableLimit     = "smartFeedinDisableLimit"     // smart feed-in disable limit
-	SmartFeedinDisableActive    = "smartFeedinDisableActive"    // smart feed-in disable active
-	SmartFeedinDisableAvailable = "smartFeedinDisableAvailable" // smart feed-in disable available
+	SmartFeedInPriorityAvailable = "smartFeedInPriorityAvailable" // smart feed-in priority available
+
+	SmartFeedInDisableLimit     = "smartFeedInDisableLimit"     // smart feed-in disable limit
+	SmartFeedInDisableActive    = "smartFeedInDisableActive"    // smart feed-in disable active
+	SmartFeedInDisableAvailable = "smartFeedInDisableAvailable" // smart feed-in disable available
 
 	SmartFeedinPriorityAvailable = "smartFeedinPriorityAvailable" // smart feed-in priority available
 )

@@ -19,8 +19,10 @@
 					:vehicles="vehicles"
 					:smartCostType="smartCostType"
 					:smartCostAvailable="smartCostAvailable"
+					:smartFeedinPriorityAvailable="smartFeedinPriorityAvailable"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
 					:currency="currency"
 					:multipleLoadpoints="loadpoints.length > 1"
 					:gridConfigured="gridConfigured"
@@ -72,8 +74,10 @@ export default defineComponent({
 		vehicles: { type: Array as PropType<Vehicle[]> },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
+		smartFeedinPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		tariffFeedIn: Number,
 		currency: String,
 		selectedIndex: { type: Number, default: 0 },
 		gridConfigured: Boolean,
