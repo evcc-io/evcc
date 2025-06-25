@@ -117,15 +117,19 @@ async function _stop(instance?: ChildProcess) {
     log("evcc is down", { port });
     return;
   }
-  // check if auth is required
-  const res = await axios.get(`${baseUrl()}/api/auth/status`);
-  log("auth status", res.status, res.statusText, res.data);
   let cookie;
-  // login required
-  if (!res.data) {
-    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-    log("login", res.status, res.statusText);
-    cookie = res.headers["set-cookie"];
+  try {
+    // check if auth is required
+    const res = await axios.get(`${baseUrl()}/api/auth/status`);
+    log("auth status", res.status, res.statusText, res.data);
+    // login required
+    if (!res.data) {
+      const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+      log("login", res.status, res.statusText);
+      cookie = res.headers["set-cookie"];
+    }
+  } catch {
+    log("failed to get auth status, trying to shutdown anyway", { port });
   }
   log("shutting down evcc", { port });
   try {
