@@ -17,6 +17,9 @@ func NewHandler(site site.API) http.Handler {
 		"evcc ☀️🚘",
 		util.Version,
 		server.WithToolCapabilities(true),
+		server.WithResourceCapabilities(true, true),
+		server.WithHooks(hooks(log)),
+		server.WithLogging(),
 	)
 
 	s.AddResource(
@@ -46,14 +49,14 @@ func NewHandler(site site.API) http.Handler {
 		solarForecastHandler(site),
 	)
 
-	s.AddResource(
-		mcp.NewResource(
-			"loadpoints://{loadpoint_id}",
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate(
+			"loadpoint://{id}",
 			"loadpoint-status",
-			mcp.WithResourceDescription("Loadpoint status information"),
-			mcp.WithMIMEType("application/json"),
+			mcp.WithTemplateDescription("Loadpoint status information, id starting at 1 for first loadpoint"),
+			mcp.WithTemplateMIMEType("application/json"),
 		),
-		loadpointStatusHandler(site),
+		loadpointStatusHandler(log, site),
 	)
 
 	ss := server.NewStreamableHTTPServer(s,

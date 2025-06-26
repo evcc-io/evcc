@@ -7,10 +7,11 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func loadpointStatusHandler(site site.API) func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func loadpointStatusHandler(log *util.Logger, site site.API) func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	return func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		lpid := extractNumericID(req.Params.URI) // "users://123" -> "123"
 
