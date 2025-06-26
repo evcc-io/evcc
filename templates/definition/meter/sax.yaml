@@ -121,7 +121,7 @@ render: |
       decode: uint16
   batterymode:
     source: watchdog
-    timeout: {{ .watchdog }}  # re-write at timeout/2
+    timeout: {{ div .watchdog 2 }}  # re-write at timeout/2
     reset: 1 # reset watchdog on normal
     set:
       source: switch
