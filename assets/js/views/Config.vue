@@ -373,9 +373,11 @@
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
 				<DataManagementModal
+					ref="dataManagementModal"
 					:fade="dataManagementSubModalOpen ? 'left' : ''"
 					@open-backup-confirm-modal="openBackupConfirmModal"
 					@opened="dataManagementSubModalOpen = false"
+					@closed="dataManagementModalClosed"
 				/>
 				<LoginModal
 					modalId="configLoginModal"
@@ -719,12 +721,15 @@ export default {
 			return Modal.getOrCreateInstance(document.getElementById("configLoginModal"));
 		},
 		openBackupConfirmModal(method) {
-			console.log(method);
-
 			this.confirmWithPasswordAction = method;
 			this.dataManagementSubModalOpen = true;
 			this.dataManagementModal().hide();
 			this.$nextTick(() => this.confirmWithPasswordModal().show());
+		},
+		dataManagementModalClosed() {
+			if (!this.dataManagementSubModalOpen) {
+				this.$refs.dataManagementModal.reset();
+			}
 		},
 		editLoadpointCharger(name) {
 			this.loadpointSubModalOpen = true;

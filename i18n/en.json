@@ -139,12 +139,15 @@
       "docsLink": "See documentation.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
+      "invalidFileSelected": "Invalid file selected",
+      "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
       "save": "Save",
+      "selectFile": "Browse...",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
@@ -393,8 +396,15 @@
           "download": "Download file",
           "title": "Backup"
         },
-        "reset": "Reset",
-        "restore": "Restore",
+        "reset": {
+          "action": "Reset & Restart",
+          "settings": "Settings",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Restore & Restart",
+          "title": "Restore"
+        },
         "title": "Data management"
       },
       "logs": "Logs",

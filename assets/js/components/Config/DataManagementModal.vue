@@ -4,6 +4,7 @@
 		:title="$t('config.system.dataManagement.title')"
 		data-testid="data-management-modal"
 		@opened="$emit('opened')"
+		@closed="$emit('closed')"
 	>
 		<p>
 			<span>{{ $t("config.system.dataManagement.description") }}</span>
@@ -18,11 +19,65 @@
 			</button>
 		</div>
 		<div>
-			<h6>{{ $t("config.system.dataManagement.restore") }} <small>backup-restore</small></h6>
-			<input class="form-control filestyle" type="file" id="formFile" data-input="false" data-buttonText="Your label here."/>
+			<h6>
+				{{ $t("config.system.dataManagement.restore.title") }} <small>backup-restore</small>
+			</h6>
+
+			<PropertyFileField
+				ref="fileInput"
+				:accepted="['.db']"
+				required
+				@file-changed="fileChanged"
+			/>
+
+			<button
+				class="btn btn-outline-secondary mt-2"
+				:disabled="file === null"
+				@click="restoreDatabase"
+			>
+				{{ $t("config.system.dataManagement.restore.action") }}
+			</button>
 		</div>
 		<div>
-			<h6>{{ $t("config.system.dataManagement.reset") }} <small>backup-reset</small></h6>
+			<h6>
+				{{ $t("config.system.dataManagement.reset.title") }} <small>backup-reset</small>
+			</h6>
+
+			<form>
+				<div class="d-flex flex-column">
+					<div>
+						<input
+							id="resetSessions"
+							v-model="selectedReset.sessions"
+							class="form-check-input"
+							type="checkbox"
+						/>
+						<label class="form-check-label ms-2" for="resetSessions">
+							{{ $t("header.sessions") }}
+						</label>
+					</div>
+
+					<div>
+						<input
+							id="resetSettings"
+							v-model="selectedReset.settings"
+							class="form-check-input"
+							type="checkbox"
+						/>
+						<label class="form-check-label ms-2" for="resetSettings">
+							{{ $t("config.system.dataManagement.reset.settings") }}
+						</label>
+					</div>
+				</div>
+
+				<button
+					class="btn btn-outline-secondary mt-3"
+					:disabled="!selectedReset.sessions && !selectedReset.settings"
+					@click="resetDatabase"
+				>
+					{{ $t("config.system.dataManagement.reset.action") }}
+				</button>
+			</form>
 		</div>
 
 		<form ref="form" class="container mx-0 px-0"></form>
@@ -34,12 +89,32 @@ import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import api, { downloadFile } from "@/api";
 import type { LoginAction } from "@/types/evcc";
+import PropertyFileField from "./PropertyFileField.vue";
 
 export default defineComponent({
 	name: "DataManagementModal",
-	components: { GenericModal },
-	emits: ["openBackupConfirmModal", "opened"],
+	components: { GenericModal, PropertyFileField },
+	emits: ["openBackupConfirmModal", "opened", "closed"],
+	data() {
+		return {
+			selectedReset: {
+				sessions: false,
+				settings: false,
+			},
+			file: null as File | null,
+		};
+	},
 	methods: {
+		reset() {
+			this.selectedReset = {
+				sessions: false,
+				settings: false,
+			};
+			this.file = null;
+			(
+				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
+			)?.reset();
+		},
 		openBackupConfirmModal() {
 			this.$emit("openBackupConfirmModal", (async (password: string) => {
 				const res = await api.post(
@@ -55,6 +130,19 @@ export default defineComponent({
 
 				return { status: res.status };
 			}) satisfies LoginAction);
+		},
+		fileChanged(file: File) {
+			this.file = file;
+		},
+		async restoreDatabase() {
+			const formData = new FormData();
+			formData.append("file", this.file!);
+			await api.post("/config/restore", formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
+		},
+		async resetDatabase() {
+			await api.post("/config/reset", this.selectedReset);
 		},
 	},
 });
