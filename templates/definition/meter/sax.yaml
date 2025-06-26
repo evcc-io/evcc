@@ -3,6 +3,7 @@ products:
   - brand: SAX Power
     description:
       generic: SAX Power Home 5.8 kWh
+  - brand: SAX Power
     description:
       generic: SAX Power Home Plus 7.7 kWh
 capabilities: ["battery-control"]
