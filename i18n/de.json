@@ -396,6 +396,7 @@
           "download": "Datei herunterladen",
           "title": "Backup"
         },
+        "confirmWithPassword": "Aktion bestätigen",
         "reset": {
           "action": "Zurücksetzen & Neustarten",
           "settings": "Einstellungen",
@@ -457,9 +458,6 @@
       "titleEdit": "Fahrzeug bearbeiten",
       "validateSave": "Prüfen & speichern"
     }
-  },
-  "confirmWithPassword": {
-    "title": "Aktion bestätigen"
   },
   "footer": {
     "community": {

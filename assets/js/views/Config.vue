@@ -381,7 +381,7 @@
 				/>
 				<LoginModal
 					modalId="configLoginModal"
-					:modalTitle="$t('confirmWithPassword.title')"
+					:modalTitle="$t('config.system.dataManagement.confirmWithPassword')"
 					:action="confirmWithPasswordAction"
 					@close="confirmWithPasswordModalClosed"
 				/>
