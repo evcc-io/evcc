@@ -22,7 +22,7 @@ params:
   - name: watchdog
     type: duration
     usages: ["battery"]
-    default: 240s 
+    default: 240s
     advanced: true
   - name: maxdischargepower
     unit: W
