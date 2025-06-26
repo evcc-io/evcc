@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Ofbriechen",
+    "demoMode": "Login gëtt am Demomodus net ënnerstëtzt.",
     "error": "Login feelgeschloen: ",
     "iframeHint": "Evcc an engem neien Tab opmaachen.",
     "iframeIssue": "D'Passwuert ass richteg, mee de Browser schéngt den Authentifikatiouns-Cookie ofgeleent ze hunn. Dëst ka geschéien wann s du evcc an engem iframe iwwer HTTP verwenns.",
