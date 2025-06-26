@@ -129,9 +129,9 @@ export default defineComponent({
 		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
-		smartFeedinPriorityActive: Boolean,
-		smartFeedinPriorityNextStart: String,
-		smartFeedinPriorityLimit: Number,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String,
+		smartFeedInPriorityLimit: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
@@ -226,7 +226,7 @@ export default defineComponent({
 		smartCostDisabled() {
 			return this.chargingPlanDisabled;
 		},
-		smartFeedinPriorityDisabled() {
+		smartFeedInPriorityDisabled() {
 			return this.chargingPlanDisabled;
 		},
 	},
