@@ -3,7 +3,7 @@
 		:id="computedModalId"
 		:title="computedModalTitle"
 		:size="modalSize"
-		:data-testid="modalId + 'login-modal'"
+		:data-testid="modalId + '-login-modal'"
 		@open="open"
 		@close="$emit('close')"
 		@closed="closed"
