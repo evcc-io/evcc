@@ -19,6 +19,7 @@
 		</div>
 		<div>
 			<h6>{{ $t("config.system.dataManagement.restore") }} <small>backup-restore</small></h6>
+			<input class="form-control filestyle" type="file" id="formFile" data-input="false" data-buttonText="Your label here."/>
 		</div>
 		<div>
 			<h6>{{ $t("config.system.dataManagement.reset") }} <small>backup-reset</small></h6>
@@ -31,7 +32,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import api from "@/api";
+import api, { downloadFile } from "@/api";
 import type { LoginAction } from "@/types/evcc";
 
 export default defineComponent({
@@ -40,8 +41,19 @@ export default defineComponent({
 	emits: ["openBackupConfirmModal", "opened"],
 	methods: {
 		openBackupConfirmModal() {
-			this.$emit("openBackupConfirmModal", ((_: string) => {
-				return api.get("TODO");
+			this.$emit("openBackupConfirmModal", (async (password: string) => {
+				const res = await api.post(
+					"/config/backup",
+					{ password },
+					{
+						responseType: "blob",
+						validateStatus: (code: number) => [200, 401, 403].includes(code),
+					}
+				);
+
+				downloadFile(res);
+
+				return { status: res.status };
 			}) satisfies LoginAction);
 		},
 	},

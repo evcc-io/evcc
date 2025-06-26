@@ -77,8 +77,8 @@ export default defineComponent({
 		demoMode: Boolean,
 		action: {
 			type: Function as PropType<LoginAction>,
-			default: (password: string) => {
-				return api.post(
+			default: async (password: string) => {
+				return await api.post(
 					"/auth/login",
 					{ password },
 					{
