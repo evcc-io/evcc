@@ -129,10 +129,6 @@ func (wb *SgReady) getMode() (int64, error) {
 
 // Status implements the api.Charger interface
 func (wb *SgReady) Status() (api.ChargeStatus, error) {
-	if wb.lp != nil && wb.lp.GetMode() == api.ModeOff {
-		return api.StatusA, nil
-	}
-
 	mode, err := wb.getMode()
 	if err != nil {
 		return api.StatusNone, err
