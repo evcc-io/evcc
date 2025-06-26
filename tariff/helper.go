@@ -93,11 +93,11 @@ func hasValidSolarCoverage(rates api.Rates, log *util.Logger) bool {
 	endOfToday := now.With(time.Now()).EndOfDay()
 	if latestEnd.Before(endOfToday) {
 		log.DEBUG.Printf("cached solar forecast insufficient: covers until %v, need until %v",
-			latestEnd.Format("15:04"), endOfToday.Format("15:04"))
+			latestEnd.Format("2006-01-02 15:04"), endOfToday.Format("2006-01-02 15:04"))
 		return false
 	}
 
-	log.DEBUG.Printf("cached solar forecast valid: covers until %v", latestEnd.Format("15:04"))
+	log.DEBUG.Printf("cached solar forecast valid: covers until %v", latestEnd.Format("2006-01-02 15:04"))
 	return true
 }
 
