@@ -32,7 +32,7 @@ import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter from "@/mixins/formatter";
 import { getSessionInfo, setSessionInfo } from "./session";
-import type { CURRENCY, SelectOption } from "@/types/evcc";
+import type { CURRENCY, SelectOption, SessionInfoKey } from "@/types/evcc";
 
 export default defineComponent({
 	name: "LoadpointSessionInfo",
@@ -59,39 +59,44 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		options() {
+		options(): Array<{
+			key: SessionInfoKey;
+			value: string;
+			valueSm?: string;
+			available?: boolean;
+		}> {
 			const result = [
 				{
-					key: "remaining",
+					key: "remaining" as const,
 					value: this.fmtDuration(this.chargeRemainingDurationInterpolated),
 					available: this.chargeRemainingDurationInterpolated > 0,
 				},
 				{
-					key: "finished",
+					key: "finished" as const,
 					value: this.fmtHourMinute(this.finishTime),
 					available: this.chargeRemainingDurationInterpolated > 0,
 				},
 				{
-					key: "duration",
+					key: "duration" as const,
 					value: this.fmtDuration(this.chargeDurationInterpolated),
 				},
 				{
-					key: "solar",
+					key: "solar" as const,
 					value: this.solarFormatted,
 				},
 				{
-					key: "avgPrice",
+					key: "avgPrice" as const,
 					value: this.fmtAvgPrice(this.sessionPricePerKWh),
 					valueSm: this.fmtAvgPriceShort(this.sessionPricePerKWh),
 					available: this.tariffGrid !== undefined,
 				},
 				{
-					key: "price",
+					key: "price" as const,
 					value: this.priceFormatted,
 					available: this.tariffGrid !== undefined,
 				},
 				{
-					key: "co2",
+					key: "co2" as const,
 					value: this.fmtCo2Medium(this.sessionCo2PerKWh),
 					valueSm: this.fmtCo2Short(this.sessionCo2PerKWh),
 					available: this.tariffCo2 !== undefined,
@@ -100,10 +105,10 @@ export default defineComponent({
 			// only show options that are available
 			return result.filter(({ available }) => available === undefined || available);
 		},
-		optionKeys() {
+		optionKeys(): SessionInfoKey[] {
 			return this.options.map((option) => option.key);
 		},
-		selectOptions(): SelectOption<string>[] {
+		selectOptions(): SelectOption<SessionInfoKey>[] {
 			return this.optionKeys.map((key) => ({
 				name: this.$t(`main.loadpoint.${key}`),
 				value: key,
@@ -151,16 +156,18 @@ export default defineComponent({
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		nextSessionInfo() {
-			const index = this.optionKeys.indexOf(this.selectedKey);
+			const index = this.selectedKey ? this.optionKeys.indexOf(this.selectedKey) : -1;
 			this.selectedKey = this.optionKeys[index + 1] || this.optionKeys[0];
 			this.presist();
 		},
-		selectOption(value: string) {
+		selectOption(value: SessionInfoKey) {
 			this.selectedKey = value;
 			this.presist();
 		},
 		presist() {
-			setSessionInfo(this.id, this.selectedKey);
+			if (this.selectedKey) {
+				setSessionInfo(this.id, this.selectedKey);
+			}
 		},
 	},
 });

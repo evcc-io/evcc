@@ -77,7 +77,7 @@ render: |
             register:
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
-              encoding: uint32
+              encoding: uint16
       - case: 2 # holding mode puts discharge to 0W
         set:
           source: const
@@ -88,6 +88,6 @@ render: |
             register:
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
-              encoding: uint32
+              encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}

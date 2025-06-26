@@ -1,6 +1,7 @@
 import { reactive, watch } from "vue";
 import api from "@/api";
 import store from "@/store";
+
 import Modal from "bootstrap/js/dist/modal";
 import { isSystemError } from "@/utils/fatal.js";
 
@@ -19,7 +20,7 @@ export async function updateAuthStatus() {
 
   try {
     const res = await api.get("/auth/status", {
-      validateStatus: (code) => [200, 501, 500].includes(code),
+      validateStatus: (code) => [200, 403, 501, 500].includes(code),
     });
     if (res.status === 501) {
       auth.configured = false;
@@ -27,6 +28,10 @@ export async function updateAuthStatus() {
     if (res.status === 200) {
       auth.configured = true;
       auth.loggedIn = res.data === true;
+    }
+    if (res.status === 403) {
+      auth.configured = true;
+      auth.loggedIn = false;
     }
     if (res.status === 500) {
       auth.loggedIn = null;

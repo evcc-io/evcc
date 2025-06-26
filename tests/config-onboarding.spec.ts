@@ -1,13 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
-
-const CONFIG = "config-empty.evcc.yaml";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG, null, "");
+  await start(undefined, undefined, "");
 });
 test.afterAll(async () => {
   await stop();
@@ -40,7 +38,11 @@ test.describe("onboarding", async () => {
 
     // config page
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
-    await enableExperimental(page);
+    await expect(page.getByTestId("welcome-banner")).toBeVisible();
+    await page
+      .getByTestId("welcome-banner")
+      .getByRole("button", { name: "Enable experimental features" })
+      .click();
 
     // create loadpoint with charger
     await expect(page.getByTestId("loadpoint-required")).toBeVisible();
@@ -58,7 +60,9 @@ test.describe("onboarding", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+    await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
     await expect(page.getByTestId("loadpoint-required")).not.toBeVisible();
+    await expect(page.getByTestId("experimental-banner")).toBeVisible();
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
@@ -85,7 +89,7 @@ test.describe("onboarding", async () => {
       .getByTestId("bottom-banner")
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
-    await restart(CONFIG);
+    await restart();
     await expect(restartButton).not.toBeVisible();
 
     // navigate to main screen

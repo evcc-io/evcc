@@ -34,7 +34,7 @@ func (lp *Loadpoint) createSession() {
 	lp.session = lp.db.New(lp.chargeMeterTotal())
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
-		lp.session.Vehicle = vehicle.Title()
+		lp.session.Vehicle = vehicle.GetTitle()
 	} else if lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.session.Vehicle = lp.GetTitle()
 	}
