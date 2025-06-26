@@ -3,7 +3,7 @@
 		:id="computedModalId"
 		:title="computedModalTitle"
 		:size="modalSize"
-		:data-testid="modalId + '-login-modal'"
+		:data-testid="computedTestId"
 		@open="open"
 		@close="$emit('close')"
 		@closed="closed"
@@ -113,6 +113,9 @@ export default defineComponent({
 		},
 		computedModalId() {
 			return this.modalId || "loginModal";
+		},
+		computedTestId() {
+			return (this.modalId ? this.modalId + "-" : "") + "login-modal";
 		},
 		computedModalTitle() {
 			return this.modalTitle || this.$t("loginModal.title");
