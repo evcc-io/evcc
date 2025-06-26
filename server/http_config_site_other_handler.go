@@ -165,5 +165,4 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		shutdown()
 		jsonResult(w, true)
 	}
-
 }
