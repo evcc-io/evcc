@@ -1,27 +1,34 @@
 template: sax
 products:
-  - brand: SAX
+  - brand: SAX Power
     description:
-      generic: SAX Power Home (Plus)
+      generic: SAX Power Home 5.8 kWh
+  - brand: SAX Power
+    description:
+      generic: SAX Power Home Plus 7.7 kWh
 capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
+      Für die Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
     en: |
       For battery control, registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
 params:
   - name: usage
     choice: ["grid", "battery"]
-  - name: modbus
-    choice: ["tcpip"]
-    port: 502
-    id: 64
-  - name: capacity
-    advanced: true
+  - name: host
+  - name: port
+    default: 502
   - name: watchdog
     type: duration
-    default: 240s
+    usages: ["battery"]
+    default: 240s 
+    advanced: true
+  - name: maxdischargepower
+    unit: W
+    default: 4600
+    advanced: true
+  - name: capacity
     advanced: true
 render: |
   type: custom
@@ -30,50 +37,103 @@ render: |
     source: calc
     add:
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      uri: {{ .host }}:{{ .port }}
+      id: 64
       # register details
       register:
-        address: 48 # Leistung des Smartmeters
+        address: 48 # Grid power (l1+l2+l3)
         type: holding
         decode: uint16
     - source: const
       value: -16384
+  currents:
+  - source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 40
+    register:
+      address: 40100 # Current[A] of L1 phase
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 40
+    register:
+      address: 40101 # Current[A] of L2 phase
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 40
+    register:
+      address: 40102 # Current[A] of L3 phase
+      type: holding
+      decode: int16
+    scale: 0.01
+  powers:
+  - source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 40
+    register:
+      address: 40103 # Power[W] of L1 phase
+      type: holding
+      decode: int16
+    scale: -10
+  - source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 40
+    register:
+      address: 40104 # Power[W] of L2 phase
+      type: holding
+      decode: int16
+    scale: -10
+  - source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 40
+    register:
+      address: 40105 # Power[W] of L3 phase
+      type: holding
+      decode: int16
+    scale: -10
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: calc
     add:
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      uri: {{ .host }}:{{ .port }}
+      id: 64
       # register details
       register:
-        address: 47 # Leistung P[W] des Speichers 
+        address: 47 # Power[W] of the battery
         type: holding
         decode: uint16
     - source: const
       value: -16384
   soc:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    # register details
+    uri: {{ .host }}:{{ .port }}
+    id: 64
     register:
-      address: 46 # SOC[%] des Speichers 
+      address: 46 # SOC[%] of the battery
       type: holding
       decode: uint16
   batterymode:
     source: watchdog
-    timeout: {{ .watchdog }}
+    timeout: {{ .watchdog }}  # re-write at timeout/2
     reset: 1 # reset watchdog on normal
     set:
       source: switch
       switch:
-      - case: 1 # normal mode with maximum discharge of 4600W
+      - case: 1 # normal mode with maximum discharge of maxdischargepower
         set:
           source: const
-          value: 4600
+          value: {{ .maxdischargepower }}
           set:
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            uri: {{ .host }}:{{ .port }}
+            id: 64
             register:
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
@@ -84,10 +144,15 @@ render: |
           value: 0
           set:
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            uri: {{ .host }}:{{ .port }}
+            id: 64
             register:
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
               encoding: uint16
+      - case: 3  # charge (not yet implemented, depends on new firmware)
+        set:
+          source: error
+          error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}
