@@ -1,10 +1,14 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
 export async function enableExperimental(page: Page): Promise<void> {
+  await expect(page.getByTestId("topnavigation-button")).toBeVisible();
   await page.getByTestId("topnavigation-button").click();
   await page.getByTestId("topnavigation-settings").click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
+  const modal = page.getByTestId("global-settings-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Experimental 🧪").click();
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
   await expect(page.locator(".modal-backdrop")).not.toBeVisible();
 }
 
@@ -18,9 +22,9 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
-export async function editorClear(editor: Locator, iterations = 6): Promise<void> {
-  await editor.locator(".view-line").nth(0).click();
+export async function editorClear(editor: Locator, iterations = 10): Promise<void> {
   for (let i = 0; i < iterations; i++) {
+    await editor.locator(".view-line").nth(0).click();
     await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 10 });
     await editor.page().keyboard.press("Backspace", { delay: 10 });
   }

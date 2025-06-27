@@ -383,7 +383,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	}
 
 	// ensure vehicle config has title
-	if instance.Title() == "" {
+	if instance.GetTitle() == "" {
 		//lint:ignore SA1019 as Title is safe on ascii
 		instance.SetTitle(strings.Title(cc.Name))
 	}

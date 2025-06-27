@@ -115,12 +115,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
-		from = lp.vehicle.Title()
+		from = lp.vehicle.GetTitle()
 	}
 	to := "unknown"
 	if v != nil {
 		lp.coordinator.Acquire(v)
-		to = v.Title()
+		to = v.GetTitle()
 	}
 
 	lp.vehicle = v
@@ -141,7 +141,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
-		lp.publish(keys.VehicleTitle, v.Title())
+		lp.publish(keys.VehicleTitle, v.GetTitle())
 
 		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
@@ -165,7 +165,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.updateSession(func(session *session.Session) {
 		var title string
 		if v != nil {
-			title = v.Title()
+			title = v.GetTitle()
 		}
 
 		lp.session.Vehicle = title

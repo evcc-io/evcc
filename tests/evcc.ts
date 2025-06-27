@@ -2,11 +2,13 @@ import fs from "fs";
 import waitOn from "wait-on";
 import axios from "axios";
 import { spawn, execSync, ChildProcess } from "child_process";
+import killPort from "kill-port";
 import os from "os";
 import path from "path";
 import { Transform } from "stream";
 
 const BINARY = "./evcc";
+const LOG_ENABLED = false;
 
 function workerPort() {
   const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
@@ -30,7 +32,9 @@ function createSteamLog() {
 }
 
 function log(...args: any[]) {
-  console.log(logPrefix(), ...args);
+  if (LOG_ENABLED) {
+    console.log(logPrefix(), ...args);
+  }
 }
 
 export function baseUrl() {
@@ -43,7 +47,7 @@ function dbPath() {
 }
 
 export async function start(
-  config: string,
+  config?: string,
   sqlDumps?: string | null,
   flags: string | string[] = "--disable-auth"
 ) {
@@ -59,7 +63,7 @@ export async function stop(instance?: ChildProcess) {
   await _clean();
 }
 
-export async function restart(config: string, flags = "--disable-auth") {
+export async function restart(config?: string, flags = "--disable-auth") {
   await _stop();
   await _start(config, flags);
 }
@@ -81,16 +85,16 @@ async function _restoreDatabase(sqlDumps: string) {
   }
 }
 
-async function _start(config: string, flags: string | string[] = []) {
-  const configFile = config.includes("/") ? config : `tests/${config}`;
+async function _start(config?: string, flags: string | string[] = []) {
+  const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
-  const instance = spawn(BINARY, ["--config", configFile, ...additionalFlags], {
+  const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
     stdio: ["pipe", "pipe", "pipe"],
   });
@@ -101,7 +105,7 @@ async function _start(config: string, flags: string | string[] = []) {
     log("evcc terminated", { code, port, config });
     steamLog.end();
   });
-  await waitOn({ resources: [baseUrl()], log: true });
+  await waitOn({ resources: [baseUrl()], log: LOG_ENABLED });
   return instance;
 }
 
@@ -110,24 +114,35 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
     log("evcc is down", { port });
     return;
   }
-  // check if auth is required
-  const res = await axios.get(`${baseUrl()}/api/auth/status`);
-  log("auth status", res.status, res.statusText, res.data);
   let cookie;
-  // login required
-  if (!res.data) {
-    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-    log("login", res.status, res.statusText);
-    cookie = res.headers["set-cookie"];
+  try {
+    // check if auth is required
+    const res = await axios.get(`${baseUrl()}/api/auth/status`);
+    log("auth status", res.status, res.statusText, res.data);
+    // login required
+    if (!res.data) {
+      const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+      log("login", res.status, res.statusText);
+      cookie = res.headers["set-cookie"];
+    }
+    log("shutting down evcc", { port });
+    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  } catch (error) {
+    const port = workerPort();
+    log(`shutdown failed, last resort: kill by port`, port, error);
+    try {
+      await killPort(port);
+      log(`killed process on port ${port}`);
+    } catch (killError) {
+      log(`no process found on port ${port} or kill failed:`, killError);
+    }
   }
-  log("shutting down evcc", { port });
-  await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: true });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log("evcc is down", { port });
 }
 

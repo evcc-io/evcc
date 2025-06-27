@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Скасувати",
+    "demoMode": "Вхід не підтримується в демо-режимі.",
     "error": "Помилка входу: ",
     "iframeHint": "Відкрийте evcc у новій вкладці.",
     "iframeIssue": "Ваш пароль правильний, але ваш браузер, здається, втратив файл cookie для автентифікації. Це може статися, якщо ви запускаєте evcc в iframe через HTTP.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} зі {total}",
+    "activeHours": "{active} зі {total}",
     "activeHoursLabel": "Активні години",
     "applyToAll": "Застосовувати всюди?",
     "batteryDescription": "Заряджає домашній акумулятор енергією з мережі.",

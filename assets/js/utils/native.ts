@@ -5,10 +5,10 @@ export function isApp() {
 export function appDetection() {
   if (isApp()) {
     const $html = document.querySelector("html");
-    $html.classList.add("app");
+    $html?.classList.add("app");
   }
 }
 
-export function sendToApp(data) {
+export function sendToApp(data: { type: string }) {
   window.ReactNativeWebView?.postMessage(JSON.stringify(data));
 }

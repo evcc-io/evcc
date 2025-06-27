@@ -23,6 +23,11 @@
     "usageTab": "Poraba baterije"
   },
   "config": {
+    "aux": {
+      "description": "Naprava, ki prilagaja svojo porabo glede na razpoložljivi presežek (kot so pametni grelniki vode). evcc pričakuje, da bo ta naprava po potrebi zmanjšala porabo energije.",
+      "titleAdd": "Dodajte samoregulirajočega odjemalca",
+      "titleEdit": "Uredi samoregulirajočega odjemalca"
+    },
     "battery": {
       "titleAdd": "Dodaj baterijo",
       "titleEdit": "Uredi baterijo"
@@ -34,6 +39,7 @@
     "charger": {
       "chargers": "polnilnice za EV",
       "generic": "Splošne integracije",
+      "heatingdevices": "Ogrevalne naprave",
       "ocppHelp": "Kopirajte ta naslov v konfiguracijo vaše polnilnice.",
       "ocppLabel": "URL strežnika OCPP",
       "switchsockets": "Preklopne vtičnice",
@@ -90,6 +96,7 @@
       "range": "Doseg",
       "singlePhase": "Enofazni",
       "soc": "Polnjenje",
+      "solarForecast": "Napoved sončne energije",
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
@@ -101,11 +108,25 @@
       "B": "B (povezan)",
       "C": "C (polnjenje)"
     },
+    "devices": {
+      "auxMeter": "Pametni porabnik",
+      "batteryStorage": "Baterijski hranilnik",
+      "solarSystem": "Solarni sistem"
+    },
+    "editor": {
+      "loading": "Nalaganje urejevalnika YAML …"
+    },
     "eebus": {
       "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus.",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "Lahko se uporablja za upravljanje obremenitve ali statistične namene.",
+      "titleAdd": "Dodaj zunanji merilnik",
+      "titleEdit": "Uredi zunanji merilnik"
+    },
     "form": {
+      "danger": "Nevarnost",
       "deprecated": "deprecated",
       "example": "Primer",
       "optional": "neobvezno"
@@ -867,7 +888,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} od {total}",
+    "activeHours": "{active} od {total}",
     "activeHoursLabel": "Aktivne ure",
     "applyToAll": "Uporabi povsod?",
     "batteryDescription": "Napolni domačo baterijo z energijo iz omrežja.",

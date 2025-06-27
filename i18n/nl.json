@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Annuleren",
+    "demoMode": "Login niet ondersteund in demo mode.",
     "error": "Login mislukt: ",
     "iframeHint": "Open evcc in een nieuw tabblad.",
     "iframeIssue": "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} van {total}",
+    "activeHours": "{active} van {total}",
     "activeHoursLabel": "Actieve uren",
     "applyToAll": "Overal toepassen?",
     "batteryDescription": "Laadt de huisbatterij op met stroom uit het net.",

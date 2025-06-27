@@ -38,7 +38,7 @@ type DaheimLadenMB struct {
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
-	dlRegCurrents        = 6   // 3xUint32 RO 0.1A
+	dlRegCurrents        = 6   // 3xUint16 plus placeholder RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
@@ -51,7 +51,7 @@ const (
 	dlRegCurrentLimit    = 91  // Uint16 WR 0.1A
 	dlRegChargeControl   = 93  // Uint16 WR ENUM
 	dlRegChargeCmd       = 95  // Uint16 WR ENUM
-	dlRegVoltages        = 108 // 3xUint32 RO 0.1V
+	dlRegVoltages        = 109 // 3xUint16 plus placeholder RO 0.1V
 
 	// PRO only
 	dlRegPhaseSwitchState   = 184
@@ -208,11 +208,19 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*DaheimLadenMB)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *DaheimLadenMB) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
 	curr := uint16(current * 10)
+
 	err := wb.setCurrent(curr)
 	if err == nil {
 		wb.curr = curr
@@ -247,14 +255,15 @@ func (wb *DaheimLadenMB) TotalEnergy() (float64, error) {
 
 // getPhaseValues returns 3 sequential register values
 func (wb *DaheimLadenMB) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	b, err := wb.conn.ReadHoldingRegisters(reg, 5)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
+		// 16-bit registers for currents/voltages spaced by 1 empty register
+		res[i] = float64(binary.BigEndian.Uint16(b[4*i:])) / 10
 	}
 
 	return res[0], res[1], res[2], nil

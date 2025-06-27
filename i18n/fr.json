@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Annuler",
+    "demoMode": "La connexion n'est pas prise en charge en mode démo.",
     "error": "Connection échouée : ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} sur {total}",
+    "activeHours": "{active} sur {total}",
     "activeHoursLabel": "Heures actives",
     "applyToAll": "Appliquer partout ?",
     "batteryDescription": "Charge la batterie domestique avec du courant du réseau.",
