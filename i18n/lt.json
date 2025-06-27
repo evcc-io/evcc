@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Atšaukti",
+    "demoMode": "Demo režime prisijungti negalima.",
     "error": "Prisijungti nepavyko: ",
     "iframeHint": "Atidaryti evcc naujame skirtuke.",
     "iframeIssue": "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} iš {total}",
+    "activeHours": "{active} iš {total}",
     "activeHoursLabel": "Aktyvumo valandos",
     "applyToAll": "Pritaikyti visur?",
     "batteryDescription": "Įkrauna kaupiklį energija iš tinklo.",

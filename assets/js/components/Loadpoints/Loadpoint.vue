@@ -105,7 +105,6 @@ import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import smartCostAvailable from "@/utils/smartCostAvailable";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
 import type {
@@ -207,9 +206,15 @@ export default defineComponent({
 		pvAction: String,
 		smartCostLimit: { type: Number, default: null },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		smartCostActive: Boolean,
 		smartCostNextStart: String,
+		smartFeedInPriorityLimit: { type: Number, default: null },
+		smartFeedInPriorityAvailable: Boolean,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String,
 		tariffGrid: Number,
+		tariffFeedIn: Number,
 		tariffCo2: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
@@ -283,9 +288,6 @@ export default defineComponent({
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
-		},
-		hasSmartCost() {
-			return smartCostAvailable(this.smartCostType);
 		},
 		batteryBoostAvailable() {
 			return this.batteryConfigured && this.$hiddenFeatures();

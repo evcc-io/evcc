@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Afbryd",
+    "demoMode": "Login er ikke mulig i demo mode.",
     "error": "Login mislykkedes: ",
     "iframeHint": "Åbn evcc i en ny fane.",
     "iframeIssue": "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} af {total}",
+    "activeHours": "{active} af {total}",
     "activeHoursLabel": "Aktive timer",
     "applyToAll": "Anvendes overalt?",
     "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",

@@ -73,7 +73,7 @@ export default function setupI18n() {
     silentTranslationWarn: true,
     locale: DEFAULT_LOCALE,
     fallbackLocale: DEFAULT_LOCALE,
-    messages: { "en-US": en },
+    messages: { en },
   });
   setI18nLanguage(i18n.global, getLocale());
   return i18n;

@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Cancelar",
+    "demoMode": "O login não é suportado no modo de demonstração.",
     "error": "Login falhou: ",
     "iframeHint": "Abrir evcc numa nova aba.",
     "iframeIssue": "A sua Palavra-passe está correta, mas o navegador parece ter perdido o cookie de autenticação. Isso pode acontecer se executar evcc num iframe via HTTP.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} de {total}",
+    "activeHours": "{active} de {total}",
     "activeHoursLabel": "Horas ativas",
     "applyToAll": "Aplicar em todo o lado?",
     "batteryDescription": "Carrega a bateria doméstica com energia da Rede.",

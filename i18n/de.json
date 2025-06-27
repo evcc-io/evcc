@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} von {total}",
+    "activeHours": "{active} von {total}",
     "activeHoursLabel": "Aktive Stunden",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
