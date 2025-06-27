@@ -163,6 +163,6 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		}
 
 		shutdown()
-		jsonResult(w, true)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
