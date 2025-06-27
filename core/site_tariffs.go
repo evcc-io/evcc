@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+	"fmt"
 	"maps"
 	"math"
 	"slices"
@@ -166,4 +168,26 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 	}
 
 	return res
+}
+
+func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
+	tariff := site.GetTariff(usage)
+	return tariff != nil && tariff.Type() != api.TariffTypePriceStatic
+}
+
+func rateAt(rates api.Rates, now time.Time) (api.Rate, error) {
+	rate, err := rates.At(now)
+	if len(rates) > 0 && err != nil {
+		msg := fmt.Sprintf("no matching rate for: %s", now.Format(time.RFC3339))
+		if len(rates) > 0 {
+			msg += fmt.Sprintf(", %d rates (%s to %s)", len(rates),
+				rates[0].Start.Local().Format(time.RFC3339),
+				rates[len(rates)-1].End.Local().Format(time.RFC3339),
+			)
+		}
+
+		err = errors.New(msg)
+	}
+
+	return rate, err
 }
