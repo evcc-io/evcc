@@ -1,37 +1,38 @@
 template: demo-solar-forecast
 products:
   - description:
-      de: Demonstrations Solarvorhersage (Glockenkurve)
-      en: Demo Solar Forecast (Bell Curve)
+      de: Demo PV Vorhersage
+      en: Demo PV Forecast
 requirements:
   description:
-    en: For demonstration purposes. Provides realistic solar production curve peaking at noon.
-    de: Zu Demonstrationszwecken. Liefert realistische Solarproduktionskurve mit Spitze zur Mittagszeit.
+    de: Zu Demonstrationszwecken. Liefert optimale Solarproduktionskurve mit Spitze zur Mittagszeit.
+    en: For demonstration purposes. Provides optimal solar production curve peaking at noon.
   evcc: ["skiptest"]
 group: solar
 params:
-  - preset: forecast-base
   - name: kwp
     type: float
-    unit: W
-    default: 4500
-    help:
-      de: Maximale Solarleistung zur Mittagszeit in Watt
-      en: Maximum solar power at noon in watts
+    unit: kWp
+    default: 4.5
+    description:
+      en: Maximum generator power
+      de: Maximale Generatorleistung
   - name: sunrise
     description:
-      de: Sonnenaufgang (Stunde)
+      de: Sonnenaufgang
       en: Sunrise hour
     type: int
+    unit: h
     default: 6
     help:
       de: Stunde des Sonnenaufgangs (0-23)
       en: Hour of sunrise (0-23)
   - name: sunset
     description:
-      de: Sonnenuntergang (Stunde)
+      de: Sonnenuntergang
       en: Sunset hour
     type: int
+    unit: h
     default: 18
     help:
       de: Stunde des Sonnenuntergangs (0-23)
@@ -50,9 +51,9 @@ render: |
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
       var rates = [];
-      var peakPower = {{ .kwp }};
-      var sunrise = {{ .sunrise }};
-      var sunset = {{ .sunset }};
+      var peakPower = parseFloat({{ .kwp }});
+      var sunrise = parseInt({{ .sunrise }});
+      var sunset = parseInt({{ .sunset }});
 
       // Calculate day parameters with inclusive hours
       // Using modulo to handle midnight-spanning days elegantly
@@ -91,7 +92,7 @@ render: |
                 ? position / 12
                 : (position - dayLength / 2) / (dayLength / 2);
               var curve = 1 - normalized * normalized * (is24HourDaylight ? 0.89 : 1);
-              solarValue = peakPower * curve;
+              solarValue = (peakPower * 1e3) * curve;
             }
           }
 
