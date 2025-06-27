@@ -187,6 +187,7 @@ export interface Forecast {
   co2?: ForecastSlot[];
   solar?: SolarDetails;
   planner?: ForecastSlot[];
+  feedin?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {
