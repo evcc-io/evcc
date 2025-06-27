@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} od {total}",
+    "activeHours": "{active} od {total}",
     "activeHoursLabel": "Aktivno radno vrijeme",
     "applyToAll": "Primijeniti svuda?",
     "batteryDescription": "Puni kućnu bateriju energijom iz mreže.",

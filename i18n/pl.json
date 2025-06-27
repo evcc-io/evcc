@@ -539,7 +539,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} z {total}",
+    "activeHours": "{active} z {total}",
     "activeHoursLabel": "Aktywne godziny",
     "applyToAll": "Aplikować wszędzie?",
     "batteryDescription": "Ładuje akumulator domu energią z sieci.",
