@@ -956,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} / {total}",
+    "activeHours": "{active} / {total}",
     "activeHoursLabel": "Aktív órák",
     "applyToAll": "Minenhol alkalmazás?",
     "batteryDescription": "Az otthoni töltéstároló töltése a hálózatról.",

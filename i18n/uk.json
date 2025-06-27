@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} зі {total}",
+    "activeHours": "{active} зі {total}",
     "activeHoursLabel": "Активні години",
     "applyToAll": "Застосовувати всюди?",
     "batteryDescription": "Заряджає домашній акумулятор енергією з мережі.",
