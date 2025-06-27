@@ -30,15 +30,15 @@
 						</span>
 					</div>
 				</template>
-				<template v-else-if="item.id === 'smartFeedinPriority'" #default>
+				<template v-else-if="item.id === 'smartFeedInPriority'" #default>
 					<div>
-						<span v-if="smartFeedinPriorityActive">{{ feedInNow }}</span>
+						<span v-if="smartFeedInPriorityActive">{{ feedInNow }}</span>
 						≥
 						<span class="text-decoration-underline">{{
-							smartFeedinPriorityLimitFmt
+							smartFeedInPriorityLimitFmt
 						}}</span>
-						<span v-if="smartFeedinPriorityNextStart">
-							({{ fmtAbsoluteDate(new Date(smartFeedinPriorityNextStart)) }})
+						<span v-if="smartFeedInPriorityNextStart">
+							({{ fmtAbsoluteDate(new Date(smartFeedInPriorityNextStart)) }})
 						</span>
 					</div>
 				</template>
@@ -113,10 +113,10 @@ export default defineComponent({
 		smartCostLimit: { type: Number, default: null },
 		smartCostNextStart: String,
 		smartCostType: String,
-		smartFeedinPriorityActive: Boolean,
-		smartFeedinPriorityDisabled: Boolean,
-		smartFeedinPriorityLimit: { type: Number, default: null },
-		smartFeedinPriorityNextStart: String,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityDisabled: Boolean,
+		smartFeedInPriorityLimit: { type: Number, default: null },
+		smartFeedInPriorityNextStart: String,
 		tariffCo2: { type: Number, default: 0 },
 		tariffGrid: { type: Number, default: 0 },
 		tariffFeedIn: { type: Number, default: 0 },
@@ -180,8 +180,8 @@ export default defineComponent({
 		feedInNow() {
 			return this.fmtPricePerKWh(this.tariffFeedIn, this.currency, true);
 		},
-		smartFeedinPriorityLimitFmt() {
-			return this.fmtPricePerKWh(this.smartFeedinPriorityLimit, this.currency, true);
+		smartFeedInPriorityLimitFmt() {
+			return this.fmtPricePerKWh(this.smartFeedInPriorityLimit, this.currency, true);
 		},
 		chargerStatus() {
 			const t = (key: string) => {
@@ -326,13 +326,13 @@ export default defineComponent({
 					clickHandler: () => this.openLoadpointSettings(),
 				},
 				{
-					id: "smartFeedinPriority",
-					visible: this.smartFeedinPriorityActive || this.smartFeedinPriorityNextStart,
-					tooltipContent: this.getSmartFeedinPriorityTooltip(),
+					id: "smartFeedInPriority",
+					visible: this.smartFeedInPriorityActive || this.smartFeedInPriorityNextStart,
+					tooltipContent: this.getSmartFeedInPriorityTooltip(),
 					iconComponent: SunPauseIcon,
-					itemClass: this.smartFeedinPriorityDisabled
+					itemClass: this.smartFeedInPriorityDisabled
 						? "opacity-25"
-						: this.smartFeedinPriorityActive
+						: this.smartFeedInPriorityActive
 							? "text-warning"
 							: "",
 					testId: "vehicle-status-smartfeedinpriority",
@@ -424,14 +424,14 @@ export default defineComponent({
 			}
 			return this.$t(`${prefix}EnergySet`);
 		},
-		getSmartFeedinPriorityTooltip() {
+		getSmartFeedInPriorityTooltip() {
 			const prefix = "main.vehicleStatus.feedinPriority";
-			if (this.smartFeedinPriorityActive) {
+			if (this.smartFeedInPriorityActive) {
 				return this.$t(`${prefix}Pausing`);
 			}
-			if (this.smartFeedinPriorityNextStart) {
+			if (this.smartFeedInPriorityNextStart) {
 				return this.$t(`${prefix}NextStart`, {
-					duration: this.fmtDurationToTime(new Date(this.smartFeedinPriorityNextStart)),
+					duration: this.fmtDurationToTime(new Date(this.smartFeedInPriorityNextStart)),
 				});
 			}
 			return "";

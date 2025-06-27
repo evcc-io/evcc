@@ -1788,11 +1788,11 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
-	smartCostActive, smartCostNextStart := lp.updateSmartCost(lp.GetSmartCostLimit(), consumption, 1)
+	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 
-	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.updateSmartCost(lp.GetSmartFeedInPriorityLimit(), feedin, -1)
+	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.checkSmartLimit(lp.GetSmartFeedInPriorityLimit(), feedin, false)
 	lp.publish(keys.SmartFeedInPriorityActive, smartFeedInPriorityActive)
 	lp.publish(keys.SmartFeedInPriorityNextStart, smartFeedInPriorityNextStart)
 
@@ -1823,6 +1823,8 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
+
+	lp.resetHeatingSession()
 
 	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {

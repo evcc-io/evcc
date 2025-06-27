@@ -6,32 +6,40 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// NOTE: scale is either 1.0 or -1.0 where the latter indicates inverting the comparison
-func (lp *Loadpoint) updateSmartCost(limit *float64, rates api.Rates, scale float64) (bool, time.Time) {
+// checkSmartLimit checks if current rate meets smart limit and returns next start time if not active.
+// checkBelow: true for rate <= limit, false for rate >= limit
+func (lp *Loadpoint) checkSmartLimit(limit *float64, rates api.Rates, checkBelow bool) (bool, time.Time) {
 	var nextStart time.Time
 
-	active := lp.smartCostActive(limit, rates, scale)
+	active := lp.smartLimitActive(limit, rates, checkBelow)
 	if !active {
-		nextStart = lp.smartCostNextStart(limit, rates, scale)
+		nextStart = lp.smartLimitNextStart(limit, rates, checkBelow)
 	}
 
 	return active, nextStart
 }
 
-func (lp *Loadpoint) smartCostActive(limit *float64, rates api.Rates, scale float64) bool {
+func (lp *Loadpoint) smartLimitActive(limit *float64, rates api.Rates, checkBelow bool) bool {
 	rate, err := rates.At(time.Now())
-	return err == nil && limit != nil && scale*rate.Value <= scale*(*limit)
+	if err != nil || limit == nil {
+		return false
+	}
+
+	if checkBelow {
+		return rate.Value <= *limit
+	}
+	return rate.Value >= *limit
 }
 
-// smartCostNextStart returns the next start time for a smart cost rate below the limit
-func (lp *Loadpoint) smartCostNextStart(limit *float64, rates api.Rates, scale float64) time.Time {
+// smartLimitNextStart returns the next start time when the smart limit condition will be met
+func (lp *Loadpoint) smartLimitNextStart(limit *float64, rates api.Rates, checkBelow bool) time.Time {
 	if limit == nil || rates == nil {
 		return time.Time{}
 	}
 
 	now := time.Now()
 	for _, slot := range rates {
-		if slot.Start.After(now) && scale*slot.Value <= scale*(*limit) {
+		if slot.Start.After(now) && (checkBelow && slot.Value <= *limit || !checkBelow && slot.Value >= *limit) {
 			return slot.Start
 		}
 	}

@@ -66,6 +66,4 @@ const (
 	SmartFeedInDisableLimit     = "smartFeedInDisableLimit"     // smart feed-in disable limit
 	SmartFeedInDisableActive    = "smartFeedInDisableActive"    // smart feed-in disable active
 	SmartFeedInDisableAvailable = "smartFeedInDisableAvailable" // smart feed-in disable available
-
-	SmartFeedinPriorityAvailable = "smartFeedinPriorityAvailable" // smart feed-in priority available
 )

@@ -976,7 +976,7 @@
     "resetWarning": "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?",
     "saved": "Saved."
   },
-  "smartFeedinPriority": {
+  "smartFeedInPriority": {
     "activeHoursLabel": "Paused hours",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",

@@ -19,12 +19,12 @@
 				:tariff="forecast?.planner"
 				class="mt-2"
 			/>
-			<SmartFeedinPriority
-				:current-limit="smartFeedinPriorityLimit"
+			<SmartFeedInPriority
+				:current-limit="smartFeedInPriorityLimit"
 				:currency="currency"
 				:loadpoint-id="Number(loadpointId)"
 				:multiple-loadpoints="multipleLoadpoints"
-				:possible="smartFeedinPriorityAvailable"
+				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
 				class="mt-2"
 			/>
@@ -132,7 +132,7 @@ import collector from "@/mixins/collector.ts";
 import formatter from "@/mixins/formatter";
 import GenericModal from "../Helper/GenericModal.vue";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
-import SmartFeedinPriority from "../Tariff/SmartFeedinPriority.vue";
+import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast } from "@/types/evcc";
@@ -158,7 +158,7 @@ export default defineComponent({
 	components: {
 		GenericModal,
 		SmartCostLimit,
-		SmartFeedinPriority,
+		SmartFeedInPriority,
 		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
 	},
 	mixins: [formatter, collector],
@@ -177,8 +177,8 @@ export default defineComponent({
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
-		smartFeedinPriorityLimit: { type: Number as PropType<number | null>, default: null },
-		smartFeedinPriorityAvailable: Boolean,
+		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },
+		smartFeedInPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,

@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Annuler",
+    "demoMode": "La connexion n'est pas prise en charge en mode démo.",
     "error": "Connection échouée : ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",

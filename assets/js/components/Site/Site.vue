@@ -51,7 +51,7 @@
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
 				:smartCostAvailable="smartCostAvailable"
-				:smartFeedinPriorityAvailable="smartFeedinPriorityAvailable"
+				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:tariffFeedIn="tariffFeedIn"
@@ -150,7 +150,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
-		smartFeedinPriorityAvailable: Boolean,
+		smartFeedInPriorityAvailable: Boolean,
 		fatal: Object,
 		forecast: Object as PropType<Forecast>,
 	},
