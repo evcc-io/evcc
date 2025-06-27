@@ -5,6 +5,9 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -57,15 +60,25 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (Authorizer, 
 }
 
 func NewOauth(ctx context.Context, cc oauth2.Config) (*OAuth, error) {
-	// TODO subject should include hash of complete oauth2 config
-	subject := "oauth." + cc.ClientID
+	log := util.NewLogger("oauth-generic")
+
+	// generate json string from oauth2 config
+	bytejson, err := json.Marshal(cc)
+
+	if err != nil {
+		log.ERROR.Printf("error converting oauth config to json: %s", err)
+	}
+
+	h := sha256.New()
+	h.Write(bytejson)
+	sha1_hash := hex.EncodeToString(h.Sum(nil))
+
+	subject := sha1_hash
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
 		return instance, nil
 	}
-
-	log := util.NewLogger("oauth-generic")
 
 	// create new instance
 	o := &OAuth{
@@ -78,6 +91,8 @@ func NewOauth(ctx context.Context, cc oauth2.Config) (*OAuth, error) {
 	// load token from db
 	var tok oauth2.Token
 	if settings.Exists(o.subject) {
+		o.log.DEBUG.Printf("loading token for %s from database", o.subject)
+
 		if err := settings.Json(o.subject, &tok); err != nil {
 			return nil, err
 		}
@@ -110,6 +125,9 @@ func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	if token.RefreshToken == "" {
 		return nil, api.ErrMissingToken
 	}
+
+	// log token before refresh
+	o.log.DEBUG.Printf("refreshing token for %s", o.subject)
 
 	// refresh token source
 	token, err := o.cc.TokenSource(o.ctx, token).Token()
