@@ -92,7 +92,7 @@ render: |
                 ? position / 12
                 : (position - dayLength / 2) / (dayLength / 2);
               var curve = 1 - normalized * normalized * (is24HourDaylight ? 0.89 : 1);
-              solarValue = (peakPower * 1e3) * curve;
+              solarValue = peakPower * 1e3 * curve;
             }
           }
 
