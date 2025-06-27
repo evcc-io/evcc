@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} av {total}",
+    "activeHours": "{active} av {total}",
     "activeHoursLabel": "Aktiva timmar",
     "applyToAll": "Tillämpa överallt?",
     "batteryDescription": "Laddar batteriet med el från nätet.",
