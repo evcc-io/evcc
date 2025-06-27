@@ -38,13 +38,12 @@ test.describe("battery settings", async () => {
 
   test("grid charging", async ({ page }) => {
     await page.goto("/");
-    await enableExperimental(page);
     await page.getByTestId("topnavigation-button").click();
     await page.getByTestId("topnavigation-battery").click();
     const modal = page.getByTestId("battery-settings-modal");
     await expectModalVisible(modal);
 
-    await modal.getByRole("link", { name: "Grid charging 🧪" }).click();
+    await modal.getByRole("link", { name: "Grid charging" }).click();
     await modal.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
     await expect(modal).toContainText("5.0 ct – 50.0 ct");
     await page.getByRole("button", { name: "Close" }).click();
