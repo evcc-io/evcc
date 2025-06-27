@@ -32,17 +32,21 @@ test.describe("vehicles", async () => {
 
     // create #1
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // create #2
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Green Car/);
@@ -87,16 +91,20 @@ test.describe("vehicles", async () => {
 
     // create #1 & #2
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByLabel("car").click();
     await vehicleModal.getByLabel("van").check();
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
 
@@ -120,9 +128,11 @@ test.describe("vehicles", async () => {
 
     // create #2
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/YAML Bike/);
@@ -139,6 +149,7 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await expect(vehicleModal.getByLabel("Title")).toBeVisible();
     await expect(vehicleModal.getByLabel("Car")).toBeVisible(); // icon
@@ -177,11 +188,13 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("RFID Car");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
     // restart evcc
@@ -194,6 +207,7 @@ test.describe("vehicles", async () => {
     await vehicleModal.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();
+    await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 
@@ -240,6 +254,7 @@ soc:
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await expect(page.getByTestId("vehicle").nth(0)).toContainText("blue Honda");
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
     await expect(modal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
@@ -265,6 +280,7 @@ soc:
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await expect(page.getByTestId("vehicle").nth(0)).toContainText("pink Honda");
 
     // delete
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
