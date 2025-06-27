@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} z {total}",
+    "activeHours": "{active} z {total}",
     "activeHoursLabel": "Aktivních hodin",
     "applyToAll": "Aplikovat všude?",
     "batteryDescription": "Nabíjí baterii FVE ze distribuční sítě.",
