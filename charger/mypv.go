@@ -153,10 +153,6 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	if wb.lp != nil && wb.lp.GetMode() == api.ModeOff {
-		return api.StatusA, nil
-	}
-
 	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -167,7 +163,7 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	d, err := wb.conn.ReadHoldingRegisters(elwaRegSetPower, 1)
+	d, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
