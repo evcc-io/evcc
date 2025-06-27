@@ -2,10 +2,7 @@ template: sax
 products:
   - brand: SAX Power
     description:
-      generic: SAX Power Home 5.8 kWh
-  - brand: SAX Power
-    description:
-      generic: SAX Power Home Plus 7.7 kWh
+      generic: SAX Power Home/Home Plus
 capabilities: ["battery-control"]
 requirements:
   description:
@@ -22,7 +19,7 @@ params:
   - name: watchdog
     type: duration
     usages: ["battery"]
-    default: 240s 
+    default: 240s
     advanced: true
   - name: maxdischargepower
     unit: W
