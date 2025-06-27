@@ -25,7 +25,7 @@
 					href="#"
 					@click.prevent="showGridTab"
 				>
-					{{ $t("batterySettings.gridChargeTab") }} 🧪
+					{{ $t("batterySettings.gridChargeTab") }}
 				</a>
 			</li>
 		</ul>
@@ -313,12 +313,7 @@ export default defineComponent({
 			return this.battery.some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
-			return (
-				this.controllable &&
-				this.isModalVisible &&
-				this.smartCostAvailable &&
-				this.$hiddenFeatures()
-			);
+			return this.controllable && this.isModalVisible && this.smartCostAvailable;
 		},
 		bufferOptions() {
 			const options = [];
