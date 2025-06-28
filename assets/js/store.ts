@@ -26,9 +26,8 @@ function setProperty(obj: object, props: string[], value: any) {
 
 const initialState: State = {
   offline: false,
-  // ensure array type
   loadpoints: [],
-  vehicles: [],
+  vehicles: {},
 };
 
 const state = reactive(initialState);

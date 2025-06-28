@@ -150,6 +150,7 @@ import {
 	type TemplateType,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/meter.yaml?raw";
+import type { SelectedMeterType } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template, deviceTitle: "", deviceIcon: "" };
 const device = createDeviceUtils("meter");
@@ -197,7 +198,7 @@ export default defineComponent({
 		id: Number,
 		name: String,
 		type: {
-			type: String as () => "grid" | "pv" | "battery" | undefined,
+			type: String as () => SelectedMeterType | undefined,
 			default: undefined,
 		},
 		typeChoices: {

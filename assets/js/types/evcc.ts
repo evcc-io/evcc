@@ -27,8 +27,9 @@ export interface Auth {
 export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
 export interface FatalError {
-  error: any;
-  class?: any;
+  error: string;
+  class: string;
+  device: string;
 }
 
 export interface State {
@@ -39,7 +40,98 @@ export interface State {
   currency?: CURRENCY;
   fatal?: FatalError;
   auth?: Auth;
-  vehicles: Vehicle[];
+  version?: string;
+  battery?: Battery[];
+  tariffGrid?: number;
+  tariffFeedIn?: number;
+  tariffCo2?: number;
+  tariffSolar?: number;
+  mqtt?: {
+    broker: string;
+    topic: string;
+  };
+  influx?: {
+    url: string;
+    database: any;
+    org: any;
+  };
+  hems?: {
+    type: any;
+  };
+  sponsor?: Sponsor;
+  eebus?: any;
+  modbusproxy?: [];
+  messaging?: any;
+  interval?: number;
+  circuits?: Record<string, Circuit>;
+  siteTitle?: string;
+  vehicles: Record<string, Vehicle>;
+}
+
+export interface Config {
+  template?: string;
+  title?: string;
+  icon?: string;
+  [key: string]: number | string | undefined;
+}
+
+export interface Circuit {
+  name: string;
+  maxPower: number;
+  power?: number;
+  maxCurrent: number;
+  current?: number;
+  config?: Config;
+}
+
+export interface Entity {
+  name: string;
+  type: string;
+  id: number;
+  config: Config;
+}
+
+export interface Meter extends Entity {
+  deviceTitle?: string;
+  deviceIcon?: string;
+}
+export type ConfigVehicle = Entity;
+export type Charger = Entity;
+
+export interface LoadpointThreshold {
+  delay: number;
+  threshold: number;
+}
+
+export interface Loadpoint {
+  id: number;
+  name: string;
+  charger: string;
+  meter: string;
+  vehicle: string;
+  title: string;
+  defaultMode: string;
+  priority: number;
+  phasesConfigured: number;
+  minCurrent: number;
+  maxCurrent: number;
+  smartCostLimit: number | null;
+  planEnergy: number;
+  planTime: string;
+  planPrecondition: number;
+  limitEnergy: number;
+  limitSoc: number;
+  thresholds: {
+    enable: LoadpointThreshold;
+    disable: LoadpointThreshold;
+  };
+  soc: {
+    poll: {
+      mode: string;
+      interval: number;
+    };
+    estimate: boolean;
+  };
 }
 
 export enum SMART_COST_TYPE {
@@ -198,6 +290,7 @@ export interface SelectOption<T> {
 }
 
 export type DeviceType = "charger" | "meter" | "vehicle";
+export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
