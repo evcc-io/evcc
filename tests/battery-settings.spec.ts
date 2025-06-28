@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
@@ -38,21 +38,23 @@ test.describe("battery settings", async () => {
 
   test("grid charging", async ({ page }) => {
     await page.goto("/");
-    await enableExperimental(page);
     await page.getByTestId("topnavigation-button").click();
     await page.getByTestId("topnavigation-battery").click();
+    const modal = page.getByTestId("battery-settings-modal");
+    await expectModalVisible(modal);
 
-    await page.getByRole("link", { name: "Grid charging 🧪" }).click();
-    await page.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
-    await expect(page.getByTestId("battery-settings-modal")).toContainText("5.0 ct – 50.0 ct");
+    await modal.getByRole("link", { name: "Grid charging" }).click();
+    await modal.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
+    await expect(modal).toContainText("5.0 ct – 50.0 ct");
     await page.getByRole("button", { name: "Close" }).click();
-    await expect(page.getByTestId("battery-settings-modal")).not.toBeVisible();
+    await expectModalHidden(modal);
     await page.getByTestId("energyflow").click();
     await page.getByRole("button", { name: "grid charging active (≤ 50.0 ct)" }).click();
-    await expect(page.getByTestId("battery-settings-modal")).toBeVisible();
-    await page.getByLabel("Price limit").selectOption({ label: "≤ -10.0 ct/kWh" });
-    await page.getByRole("button", { name: "Close" }).click();
-    await expect(page.getByTestId("battery-settings-modal")).not.toBeVisible();
+    await expectModalVisible(modal);
+    await modal.getByLabel("Price limit").selectOption({ label: "≤ -10.0 ct/kWh" });
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await expect(modal).not.toBeVisible();
     await expect(page.getByRole("button", { name: "grid charging when ≤ -10.0 ct" })).toBeVisible();
   });
 });

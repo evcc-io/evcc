@@ -7,9 +7,9 @@ capabilities: ["battery-control"]
 requirements:
   description:
     en: >
-      To use the battery control, a firmware version greater than or equal to 10.05.7433 / R2155 is required
+      To use the battery control, a firmware version greater than or equal to 10.05.7430 / R2155 is required
     de: >
-      Um die Batteriesteuerung zu nutzen, wird eine Firmwareversionen größer gleich 10.05.7433 / R2155 benötigt
+      Um die Batteriesteuerung zu nutzen, wird eine Firmwareversionen größer gleich 10.05.7430 / R2155 benötigt
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

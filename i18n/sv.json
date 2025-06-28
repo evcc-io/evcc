@@ -292,7 +292,7 @@
       "validateSave": "Validera & spara"
     },
     "modbus": {
-      "baudrate": "Baud rate",
+      "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus förbindelse",
       "connectionHintSerial": "Enheten är direkt förbunden till evcc via RS485 interface.",
@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Avbryt",
+    "demoMode": "Login fungerar inte i demo-läge.",
     "error": "Inloggning misslyckades: ",
     "iframeHint": "Öppna evcc på en ny flik.",
     "iframeIssue": "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} av {total}",
+    "activeHours": "{active} av {total}",
     "activeHoursLabel": "Aktiva timmar",
     "applyToAll": "Tillämpa överallt?",
     "batteryDescription": "Laddar batteriet med el från nätet.",

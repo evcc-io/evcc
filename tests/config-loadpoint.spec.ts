@@ -431,12 +431,12 @@ test.describe("loadpoint", async () => {
     await expectModalVisible(chargerModal);
     await chargerModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
-    const editor = chargerModal.getByTestId("yaml-editor");
-    await expect(editor).toContainText("status: # charger status [A..F]");
+    const chargerEditor = chargerModal.getByTestId("yaml-editor");
+    await expect(chargerEditor).toContainText("status: # charger status [A..F]");
 
-    await editorClear(editor, 10);
+    await editorClear(chargerEditor, 20);
     await editorPaste(
-      editor,
+      chargerEditor,
       page,
       `status:
   source: const
@@ -455,18 +455,42 @@ power:
   value: 11000`
     );
 
-    const restResult = chargerModal.getByTestId("test-result");
-    await expect(restResult).toContainText("Status: unknown");
-    await restResult.getByRole("link", { name: "validate" }).click();
-    await expect(restResult).toContainText("Status: successful");
-    await expect(restResult).toContainText(["Status", "charging"].join(""));
-    await expect(restResult).toContainText(["Enabled", "yes"].join(""));
-    await expect(restResult).toContainText(["Power", "11.0 kW"].join(""));
-
-    // create
+    const chargerRestResult = chargerModal.getByTestId("test-result");
+    await expect(chargerRestResult).toContainText("Status: unknown");
+    await chargerRestResult.getByRole("link", { name: "validate" }).click();
+    await expect(chargerRestResult).toContainText("Status: successful");
+    await expect(chargerRestResult).toContainText(["Status", "charging"].join(""));
+    await expect(chargerRestResult).toContainText(["Enabled", "yes"].join(""));
+    await expect(chargerRestResult).toContainText(["Power", "11.0 kW"].join(""));
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
+
+    // add user-defined meter
+    await lpModal.getByRole("button", { name: "Add dedicated charger meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const meterEditor = meterModal.getByTestId("yaml-editor");
+    await editorClear(meterEditor, 20);
+    await editorPaste(
+      meterEditor,
+      page,
+      `power:
+  source: const
+  value: 5000`
+    );
+
+    const meterRestResult = meterModal.getByTestId("test-result");
+    await expect(meterRestResult).toContainText("Status: unknown");
+    await meterRestResult.getByRole("link", { name: "validate" }).click();
+    await expect(meterRestResult).toContainText("Status: successful");
+    await expect(meterRestResult).toContainText(["Power", "5.0 kW"].join(""));
+    await meterModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(meterModal);
+
+    // create
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -482,18 +506,21 @@ power:
     await expect(lpEntry).toContainText("Carport");
     await expect(lpEntry).toContainText(["Status", "charging"].join(""));
     await expect(lpEntry).toContainText(["Enabled", "yes"].join(""));
-    await expect(lpEntry).toContainText(["Power", "11.0 kW"].join(""));
+    await expect(lpEntry).toContainText(["Power", "5.0 kW"].join(""));
 
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
 
     await expect(lpModal.getByLabel("Charger").first()).toHaveValue("User-defined device [db:1]");
+    await expect(lpModal.getByLabel("Energy meter").first()).toHaveValue(
+      "User-defined device [db:2]"
+    );
     await lpModal.getByLabel("Charger").first().click();
     await expectModalVisible(chargerModal);
 
     await expect(chargerModal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
     await page.waitForLoadState("networkidle");
-    await expect(editor).toContainText("value: 'C'");
-    await expect(editor).toContainText("value: 11000");
+    await expect(chargerEditor).toContainText("value: 'C'");
+    await expect(chargerEditor).toContainText("value: 11000");
   });
 });
