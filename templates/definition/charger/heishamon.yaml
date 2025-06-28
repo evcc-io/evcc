@@ -102,7 +102,7 @@ render: |
           {{- if eq .heating_zone "dhw" }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
-          payload: {{.dwh_dimm_temperature}}
+          payload: {{.dhw_dimm_temperature}}
           {{- else }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
@@ -113,7 +113,7 @@ render: |
           {{- if eq .heating_zone "dhw" }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
-          payload: {{.dwh_normal_temperature}}
+          payload: {{.dhw_normal_temperature}}
           {{- else }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
@@ -124,7 +124,7 @@ render: |
           {{- if eq .heating_zone "dhw" }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
-          payload: {{.dwh_boost_temperature}}
+          payload: {{.dhw_boost_temperature}}
           {{- else }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
