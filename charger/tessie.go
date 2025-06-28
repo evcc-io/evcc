@@ -21,10 +21,10 @@ type Tessie struct {
 }
 
 func init() {
-	registry.Add("tessie", NewTessieFromConfig)
+	registry.AddCtx("tessie", NewTessieFromConfig)
 }
 
-func NewTessieFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTessieFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Vin        string
 		Token      string
@@ -39,7 +39,7 @@ func NewTessieFromConfig(other map[string]interface{}) (api.Charger, error) {
 	log := util.NewLogger("tessie")
 
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cc.Token})
-	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
+	oauthClient := oauth2.NewClient(ctx, tokenSource)
 
 	client := request.NewHelper(log)
 	client.Client = oauthClient
