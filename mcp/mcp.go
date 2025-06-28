@@ -17,27 +17,24 @@ func NewHandler(site site.API) http.Handler {
 		"evcc ☀️🚘",
 		util.Version,
 		server.WithToolCapabilities(true),
-		server.WithResourceCapabilities(true, true),
+		server.WithResourceCapabilities(false, true),
 		server.WithHooks(hooks(log)),
 		server.WithLogging(),
 	)
 
-	s.AddResource(
-		mcp.NewResource(
-			"https://docs.evcc.io",
-			"docs",
-			mcp.WithResourceDescription("evcc documentation"),
-		),
-		nil, // TODO no handler needed
-	)
+	// tools
 
 	s.AddTool(
 		mcp.NewTool(
-			"site-loadpoints",
-			mcp.WithDescription("Number of loadpoints"),
+			"list-loadpoints",
+			mcp.WithDescription("List loadpoints"),
 			mcp.WithReadOnlyHintAnnotation(true),
+			// mcp.WithNumber("id", mcp.Min(0), mcp.Max(float64(len(site.Loadpoints())-1)), mcp.MultipleOf(1)),
+			// mcp.WithString("title", mcp.Enum(lo.Map(site.Loadpoints(), func(lp loadpoint.API, _ int) string {
+			// 	return lp.GetTitle()
+			// })...)),
 		),
-		loadpointsHandler(site),
+		siteAllLoadpointsHandler(site),
 	)
 
 	s.AddTool(
@@ -49,14 +46,50 @@ func NewHandler(site site.API) http.Handler {
 		solarForecastHandler(site),
 	)
 
+	// resource tools
+
+	s.AddTool(
+		mcp.NewTool(
+			"list-loadpoint-resources",
+			mcp.WithDescription("List loadpoints as resources"),
+			mcp.WithReadOnlyHintAnnotation(true),
+			// mcp.WithNumber("id", mcp.Min(0), mcp.Max(float64(len(site.Loadpoints())-1)), mcp.MultipleOf(1)),
+			// mcp.WithString("title", mcp.Enum(lo.Map(site.Loadpoints(), func(lp loadpoint.API, _ int) string {
+			// 	return lp.GetTitle()
+			// })...)),
+		),
+		siteAllLoadpointsAsRessourcesHandler(site),
+	)
+
+	// resources
+
+	s.AddResource(
+		mcp.NewResource(
+			"https://docs.evcc.io",
+			"docs",
+			mcp.WithResourceDescription("evcc documentation"),
+		),
+		httpHandler("https://docs.evcc.io"), // TODO no handler needed
+	)
+
+	s.AddResource(
+		mcp.NewResource(
+			"site://loadpoints",
+			"site-loadpoints",
+			mcp.WithResourceDescription("Get loadpoints"),
+			// mcp.WithMIMEType("application/json"),
+		),
+		allLoadpointsHandler(site),
+	)
+
 	s.AddResourceTemplate(
 		mcp.NewResourceTemplate(
 			"loadpoint://{id}",
 			"loadpoint-status",
-			mcp.WithTemplateDescription("Loadpoint status information, id starting at 1 for first loadpoint"),
+			mcp.WithTemplateDescription("Get loadpoint status information"),
 			mcp.WithTemplateMIMEType("application/json"),
 		),
-		loadpointStatusHandler(log, site),
+		loadpointStatusHandler(site),
 	)
 
 	ss := server.NewStreamableHTTPServer(s,

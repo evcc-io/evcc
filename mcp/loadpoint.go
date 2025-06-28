@@ -2,47 +2,62 @@ package mcp
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/util"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func loadpointStatusHandler(log *util.Logger, site site.API) func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+type Loadpoint struct {
+	Title     string `json:"title"`
+	Connected bool   `json:"connected,omitempty"`
+	Charging  bool   `json:"charging,omitempty"`
+}
+
+func loadpointDetails(lp loadpoint.API) Loadpoint {
+	status := lp.GetStatus()
+
+	return Loadpoint{
+		Title:     lp.GetTitle(),
+		Connected: status == api.StatusB || status == api.StatusC,
+		Charging:  status == api.StatusC,
+	}
+}
+
+func allLoadpointsHandler(site site.API) func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	return func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-		lpid := extractNumericID(req.Params.URI) // "users://123" -> "123"
+		var res []mcp.ResourceContents
 
-		if lpid == 0 || lpid > len(site.Loadpoints()) {
-			return nil, errors.New("invalid loadpoint ID")
+		for idx, lp := range site.Loadpoints() {
+			uri := fmt.Sprintf("loadpoint://%d", idx)
+			res = append(res, mcp.TextResourceContents{
+				URI:      uri,
+				MIMEType: "application/json",
+				Text:     lp.GetTitle(),
+			})
 		}
 
-		lp := site.Loadpoints()[lpid-1] // Loadpoint IDs are 1-based
-		status := lp.GetStatus()
+		return res, nil
+	}
+}
 
-		data := struct {
-			Title     string `json:"title"`
-			Connected bool   `json:"connected,omitempty"`
-			Charging  bool   `json:"charging,omitempty"`
-		}{
-			Title:     lp.GetTitle(),
-			Connected: status == api.StatusB || status == api.StatusC,
-			Charging:  status == api.StatusC,
+func loadpointStatusHandler(site site.API) func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	return func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+		id := extractNumericID(req.Params.URI)
+		if id < 0 || id >= len(site.Loadpoints()) {
+			return nil, errors.New("invalid loadpoint id")
 		}
 
-		jsonData, err := json.Marshal(data)
+		jr, err := NewJsonResourceContents(req.Params.URI, loadpointDetails(site.Loadpoints()[id]))
 		if err != nil {
 			return nil, err
 		}
 
 		return []mcp.ResourceContents{
-			mcp.TextResourceContents{
-				URI:      req.Params.URI,
-				MIMEType: "application/json",
-				Text:     string(jsonData),
-			},
+			jr,
 		}, nil
 	}
 }
