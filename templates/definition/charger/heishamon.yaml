@@ -15,8 +15,18 @@ params:
       de: MQTT Basistopic für Heishamon
       en: MQTT base topic for Heishamon
     default: panasonic_heat_pump
-    required: true
+    required: false
     type: string
+  - name: heating_zone
+    description:
+      de: Heizkreis, der durch evcc gesteuert werden soll
+      en: Heating zone to be controlled via evcc
+    help:
+      de: Zone1 = 1, Zone2 = 2
+      en: Zone1 = 1, Zone2 = 2
+    required: false
+    default: 1
+    type: int
   - name: dimm_temperature_offset
     description:
       de: Temperaturabsenkung für Dimm Phase
@@ -47,21 +57,21 @@ render: |
       - case: 1 # dimm
         set:
           source: mqtt
-          topic: {{.heishamon_mqtt_topic}}/commands/SetZ1HeatRequestTemperature
+          topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: {{.dimm_temperature_offset}}
       - case: 2 # normal
         set:
           source: mqtt
-          topic: {{.heishamon_mqtt_topic}}/commands/SetZ1HeatRequestTemperature
+          topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: 0
       - case: 3 # boost
         set:
           source: mqtt
-          topic: {{.heishamon_mqtt_topic}}/commands/SetZ1HeatRequestTemperature
+          topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: {{.boost_temperature_offset}}
   getmode:
     source: mqtt
-    topic: {{.heishamon_mqtt_topic}}/main/Z1_Heat_Request_Temp
+    topic: {{.heishamon_mqtt_topic}}/main/Z{{.heating_zone}}_Heat_Request_Temp
     jq: 'if . < 0 then 1 elif . > 0 then 3 else 2 end'
   temp:
     source: mqtt
