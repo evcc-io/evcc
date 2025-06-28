@@ -10,6 +10,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/encode"
 	"github.com/jinzhu/now"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -41,6 +43,22 @@ func siteAllLoadpointsHandler(site site.API) func(ctx context.Context, req mcp.C
 		var res []Loadpoint
 		for _, lp := range site.Loadpoints() {
 			res = append(res, loadpointDetails(lp))
+		}
+
+		b, _ := json.Marshal(res)
+		return mcp.NewToolResultText(string(b)), nil
+	}
+}
+
+func siteAllMetersHandler(cache *util.ParamCache) func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		res := make(map[string]any)
+
+		state := cache.State(encode.NewEncoder())
+		for _, key := range []string{"grid", "pv", "battery"} {
+			if v, ok := state[key]; ok {
+				res[key] = v
+			}
 		}
 
 		b, _ := json.Marshal(res)

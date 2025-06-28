@@ -339,7 +339,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		httpd.RegisterSiteHandlers(site, valueChan)
 
-		httpd.RegisterMcpHandler(mcp.NewHandler(site))
+		httpd.RegisterMcpHandler(mcp.NewHandler(site, cache))
 
 		go func() {
 			site.Run(stopC, conf.Interval)

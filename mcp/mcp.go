@@ -9,7 +9,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func NewHandler(site site.API) http.Handler {
+func NewHandler(site site.API, cache *util.ParamCache) http.Handler {
 	log := util.NewLogger("mcp")
 
 	// Create a new MCP server
@@ -35,6 +35,15 @@ func NewHandler(site site.API) http.Handler {
 			// })...)),
 		),
 		siteAllLoadpointsHandler(site),
+	)
+
+	s.AddTool(
+		mcp.NewTool(
+			"list-meters",
+			mcp.WithDescription("List meters"),
+			mcp.WithReadOnlyHintAnnotation(true),
+		),
+		siteAllMetersHandler(cache),
 	)
 
 	s.AddTool(
