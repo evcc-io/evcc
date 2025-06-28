@@ -1,7 +1,6 @@
 package ocpp
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -87,11 +86,6 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 
 	// setup already completed?
 	if cp != nil {
-		// duplicate registration of id empty
-		if id == "" {
-			return nil, errors.New("cannot have >1 charge point with empty station id")
-		}
-
 		return cp, nil
 	}
 
@@ -123,22 +117,6 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 		if cp := reg.cp; cp != nil {
 			cp.connect(true)
 		}
-
-		return
-	}
-
-	// check for configured anonymous charge point
-	reg, ok = cs.regs[""]
-	if ok && reg.cp != nil {
-		cp := reg.cp
-		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
-
-		// update id
-		cp.RegisterID(chargePoint.ID())
-		cs.regs[chargePoint.ID()] = reg
-		delete(cs.regs, "")
-
-		cp.connect(true)
 
 		return
 	}
