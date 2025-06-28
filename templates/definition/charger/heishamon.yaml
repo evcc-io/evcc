@@ -1,6 +1,6 @@
 template: heishamon
 products:
-  - brand: Pansonic
+  - brand: Panasonic
     description:
       generic: Heatpump (via Heishamon)
 group: heating
