@@ -526,7 +526,7 @@ test.describe("repeating", async () => {
 
     // add repeating plan for every day
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
-    const plan3 = modal.getByTestId("plan-entry").last();
+    const plan3 = modal.getByTestId("plan-entry").nth(2);
     const days3 = plan3.getByTestId("repeating-plan-weekdays");
     await days3.click();
     await days3.getByRole("checkbox", { name: "Select all" }).check();

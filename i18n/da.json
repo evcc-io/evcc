@@ -957,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} af {total}",
+    "activeHours": "{active} af {total}",
     "activeHoursLabel": "Aktive timer",
     "applyToAll": "Anvendes overalt?",
     "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",
