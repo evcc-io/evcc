@@ -22,11 +22,11 @@ params:
       de: Heizkreis, der durch evcc gesteuert werden soll
       en: Heating zone to be controlled via evcc
     help:
-      de: Zone1 = 1, Zone2 = 2
-      en: Zone1 = 1, Zone2 = 2
+      de: Zone1 = 1, Zone2 = 2, Warmwasserspeicher = dhw
+      en: Zone1 = 1, Zone2 = 2, Domestic hot water = dhw
     required: false
     default: 1
-    type: int
+    type: string
   - name: dimm_temperature_offset
     description:
       de: Temperaturabsenkung für Dimm Phase
@@ -49,6 +49,49 @@ params:
     required: true
     default: 2
     type: int
+  - name: dhw_normal_temperature
+    description:
+      de: Warmwassertemperatur
+      en: DHW temperature
+    unit: °C
+    help:
+      de: min. 40°C / max. 75°C
+      en: min. 40°C / max. 75°C
+    required: true
+    default: 60
+    type: int
+  - name: dhw_boost_temperature
+    description:
+      de: Warmwassertemperatur bei Boost
+      en: DHW temperature when boosted
+    unit: °C
+    help:
+      de: min. 40°C / max. 75°C
+      en: min. 40°C / max. 75°C
+    required: true
+    default: 65
+    type: int
+  - name: dhw_dimm_temperature
+    description:
+      de: Warmwassertemperatur bei Dimmung
+      en: DHW temperature when dimmed
+    unit: °C
+    help:
+      de: min. 40°C / max. 75°C
+      en: min. 40°C / max. 75°C
+    required: true
+    default: 40
+    type: int
+  - name: power_source
+    description:
+      de: Datenquelle für die aktuelle Leistungsaufnahme
+      en: Datasource for the actual power consumption
+    help:
+      de: s0_sum = Summe der zwei S0 Zähler, s0_1 = S0 Zähler 1, s0_2 = S0 Zähler 2, hp = Interner Zähler der Wärmepumpe
+      en: s0_sum = sum of both S0 meters, s0_1 = S0 meter 1, s0_2 = S0 meter 2, hp = internal heatpump meter
+    required: false
+    default: s0_sum
+    type: string
 render: |
   type: sgready
   setmode:
@@ -56,33 +99,83 @@ render: |
     switch:
       - case: 1 # dimm
         set:
+          {{- if eq .heating_zone "dhw" }}
+          source: mqtt
+          topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
+          payload: {{.dwh_dimm_temperature}}
+          {{- else }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: {{.dimm_temperature_offset}}
+          {{- end }}
       - case: 2 # normal
         set:
+          {{- if eq .heating_zone "dhw" }}
+          source: mqtt
+          topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
+          payload: {{.dwh_normal_temperature}}
+          {{- else }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: 0
+          {{- end }}
       - case: 3 # boost
         set:
+          {{- if eq .heating_zone "dhw" }}
+          source: mqtt
+          topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
+          payload: {{.dwh_boost_temperature}}
+          {{- else }}
           source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: {{.boost_temperature_offset}}
+          {{- end }}
   getmode:
+    {{- if eq .heating_zone "dhw" }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/main/DHW_Target_Temp
+    jq: 'if . == {{.dhw_dimm_temperature}} then 1 elif . == {{.dhw_boost_temperature}} then 3 else 2 end'
+    {{- else }}
     source: mqtt
     topic: {{.heishamon_mqtt_topic}}/main/Z{{.heating_zone}}_Heat_Request_Temp
     jq: 'if . < 0 then 1 elif . > 0 then 3 else 2 end'
+    {{- end }}
   temp:
+    {{- if eq .heating_zone "dhw" }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/main/DHW_Temp
+    {{- else }}
     source: mqtt
     topic: {{.heishamon_mqtt_topic}}/main/Main_Outlet_Temp
+    {{- end }}
   limittemp:
+    {{- if eq .heating_zone "dhw" }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/main/DHW_Target_Temp
+    {{- else }}
     source: mqtt
     topic: {{.heishamon_mqtt_topic}}/main/Main_Target_Temp
+    {{- end }}
   power:
+    {{- if eq .power_source "s0_1" }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/s0/Watt/1
+    {{- else if eq .power_source "s0_2" }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/s0/Watt/2
+    {{- else if eq .power_source "hp" }}
+      {{- if eq .heating_zone "dhw" }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/main/DHW_Power_Consumption
+      {{- else }}
+    source: mqtt
+    topic: {{.heishamon_mqtt_topic}}/main/Heat_Power_Consumption
+      {{- end }}
+    {{- else}}
     source: calc
     add:
       - source: mqtt
         topic: {{.heishamon_mqtt_topic}}/s0/Watt/1
       - source: mqtt
         topic: {{.heishamon_mqtt_topic}}/s0/Watt/2
+    {{- end }}
