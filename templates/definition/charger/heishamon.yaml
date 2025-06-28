@@ -10,7 +10,7 @@ requirements:
     de: Für Panasonic Wärmepumpen mit Heishamon Platine. Nutzt MQTT und wurde mit Heishamon Software v3.9 getestet. Bei vorhandenem PV-Überschuss wird die Vorlauftemperatur von Zone 1 um den konfigurierten Temperaturoffset angehoben.
     en: For Panasonic heatpumps with Heishamon PCB. Uses MQTT and was tested with Heishamon software v3.9. If PV surplus is available, the temperature of the heatpump in zone 1 is increased by the configured temperature offset.
 params:
-  - name: heatpump_topic
+  - name: heishamon_mqtt_topic
     description:
       de: MQTT Basistopic für Heishamon
       en: MQTT base topic for Heishamon
@@ -47,32 +47,32 @@ render: |
       - case: 1 # dimm
         set:
           source: mqtt
-          topic: {{.heatpump_topic}}/commands/SetZ1HeatRequestTemperature
+          topic: {{.heishamon_mqtt_topic}}/commands/SetZ1HeatRequestTemperature
           payload: {{.dimm_temperature_offset}}
       - case: 2 # normal
         set:
           source: mqtt
-          topic: {{.heatpump_topic}}/commands/SetZ1HeatRequestTemperature
+          topic: {{.heishamon_mqtt_topic}}/commands/SetZ1HeatRequestTemperature
           payload: 0
       - case: 3 # boost
         set:
           source: mqtt
-          topic: {{.heatpump_topic}}/commands/SetZ1HeatRequestTemperature
+          topic: {{.heishamon_mqtt_topic}}/commands/SetZ1HeatRequestTemperature
           payload: {{.boost_temperature_offset}}
   getmode:
     source: mqtt
-    topic: {{.heatpump_topic}}/main/Z1_Heat_Request_Temp
+    topic: {{.heishamon_mqtt_topic}}/main/Z1_Heat_Request_Temp
     jq: 'if . < 0 then 1 elif . > 0 then 3 else 2 end'
   temp:
     source: mqtt
-    topic: {{.heatpump_topic}}/main/Main_Outlet_Temp
+    topic: {{.heishamon_mqtt_topic}}/main/Main_Outlet_Temp
   limittemp:
     source: mqtt
-    topic: {{.heatpump_topic}}/main/Main_Target_Temp
+    topic: {{.heishamon_mqtt_topic}}/main/Main_Target_Temp
   power:
     source: calc
     add:
       - source: mqtt
-        topic: {{.heatpump_topic}}/s0/Watt/1
+        topic: {{.heishamon_mqtt_topic}}/s0/Watt/1
       - source: mqtt
-        topic: {{.heatpump_topic}}/s0/Watt/2
+        topic: {{.heishamon_mqtt_topic}}/s0/Watt/2
