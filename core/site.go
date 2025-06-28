@@ -912,24 +912,9 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-@andig please resolve this
-//<<<<<<< feat/zero-feedin
 	rate, err := rateAt(consumption, time.Now())
-	if err != nil {
-		site.log.WARN.Printf("planner: %v", err)
-//=======
-	rate, err := consumption.At(time.Now())
 	if consumption != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(consumption) > 0 {
-			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
-				consumption[0].Start.Local().Format(time.RFC3339),
-				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
-//>>>>>>> master
+		site.log.WARN.Printf("planner: %v", err)
 	}
 
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
