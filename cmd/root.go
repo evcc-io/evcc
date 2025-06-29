@@ -265,8 +265,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup MCP
 	if ok, _ := cmd.Flags().GetBool("mcp"); ok && err == nil {
 		const path = "/mcp"
+		local := conf.Network.URI()
+
 		var handler http.Handler
-		if handler, err = mcp.NewHandler(conf.Network.URI(), path); err == nil {
+		if handler, err = mcp.NewHandler(local+"/api", local, path); err == nil {
 			httpd.Router().PathPrefix(path).Handler(handler)
 		}
 	}
