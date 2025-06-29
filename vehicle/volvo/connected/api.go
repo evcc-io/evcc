@@ -59,3 +59,13 @@ func (v *API) EnergyState(vin string) (EnergyState, error) {
 
 	return res, err
 }
+
+// Range provides range status api response
+func (v *API) OdometerState(vin string) (OdometerState, error) {
+	uri := fmt.Sprintf("%s/connected-vehicle/v2/vehicles/%s/odometer", ApiURL, vin)
+
+	var res OdometerState
+	err := v.GetJSON(uri, &res)
+
+	return res, err
+}
