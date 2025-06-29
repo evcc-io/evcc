@@ -47,6 +47,7 @@ const (
 	elwaRegSetPower  = 1000
 	elwaRegTempLimit = 1002
 	elwaRegStatus    = 1003
+	elwaRegLoadState = 1059
 	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 )
 
@@ -157,9 +158,23 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	c, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	d, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
 	res := api.StatusB
-	if binary.BigEndian.Uint16(b) == wb.statusC {
+	if (binary.BigEndian.Uint16(b) == wb.statusC) && (binary.BigEndian.Uint16(d) > 10) {
 		res = api.StatusC
+	}
+
+	if binary.BigEndian.Uint16(c) == 0 {
+		res = api.StatusA
 	}
 
 	return res, nil
