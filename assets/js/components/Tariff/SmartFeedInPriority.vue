@@ -25,7 +25,7 @@ import api from "@/api";
 import { type CURRENCY } from "@/types/evcc";
 
 export default defineComponent({
-	name: "SmartFeedInPriority",
+	name: "SmartFeedinPriority",
 	components: { SmartTariffBase },
 	props: {
 		currentLimit: {
@@ -40,10 +40,10 @@ export default defineComponent({
 	},
 	computed: {
 		formId(): string {
-			return `smartFeedInPriority-${this.loadpointId}`;
+			return `smartFeedinPriority-${this.loadpointId}`;
 		},
 		labels() {
-			const t = (key: string) => this.$t(`smartFeedInPriority.${key}`);
+			const t = (key: string) => this.$t(`smartFeedinPriority.${key}`);
 			return {
 				title: t("title"),
 				description: t("description"),
