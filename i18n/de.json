@@ -139,12 +139,15 @@
       "docsLink": "Siehe Dokumentation.",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
+      "invalidFileSelected": "Ungültige Datei ausgewählt",
+      "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "save": "Speichern",
+      "selectFile": "Durchsuchen...",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
@@ -388,6 +391,23 @@
       "trialToken": "Testtoken"
     },
     "system": {
+      "dataManagement": {
+        "backup": {
+          "download": "Datei herunterladen",
+          "title": "Backup"
+        },
+        "confirmWithPassword": "Aktion bestätigen",
+        "reset": {
+          "action": "Zurücksetzen & Neustarten",
+          "settings": "Einstellungen",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Wiederherstellen & Neustarten",
+          "title": "Restore"
+        },
+        "title": "Datenverwaltung"
+      },
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",

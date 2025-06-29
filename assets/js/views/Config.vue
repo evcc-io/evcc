@@ -313,6 +313,12 @@
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
+					<button
+						class="btn btn-outline-secondary"
+						@click="openModal('dataManagementModal')"
+					>
+						{{ $t("config.system.dataManagement.title") }}
+					</button>
 					<button class="btn btn-outline-danger" @click="restart">
 						{{ $t("config.system.restart") }}
 					</button>
@@ -366,6 +372,19 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
+				<DataManagementModal
+					ref="dataManagementModal"
+					:fade="dataManagementSubModalOpen ? 'left' : ''"
+					@open-backup-confirm-modal="openBackupConfirmModal"
+					@opened="dataManagementSubModalOpen = false"
+					@closed="dataManagementModalClosed"
+				/>
+				<LoginModal
+					modalId="configLoginModal"
+					:modalTitle="$t('config.system.dataManagement.confirmWithPassword')"
+					:action="confirmWithPasswordAction"
+					@close="confirmWithPasswordModalClosed"
+				/>
 			</div>
 		</div>
 	</div>
@@ -411,13 +430,16 @@ import TariffsModal from "../components/Config/TariffsModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
+import DataManagementModal from "@/components/Config/DataManagementModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import LoginModal from "@/components/Auth/LoginModal.vue";
 
 export default {
 	name: "Config",
 	components: {
 		NewDeviceButton,
+		DataManagementModal,
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
@@ -448,6 +470,7 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 		WelcomeBanner,
+		LoginModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -467,12 +490,14 @@ export default {
 			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
+			dataManagementSubModalOpen: false,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
 			isComponentMounted: true,
 			isPageVisible: true,
+			confirmWithPasswordAction: undefined,
 		};
 	},
 	head() {
@@ -689,6 +714,23 @@ export default {
 		chargerModal() {
 			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
 		},
+		dataManagementModal() {
+			return Modal.getOrCreateInstance(document.getElementById("dataManagementModal"));
+		},
+		confirmWithPasswordModal() {
+			return Modal.getOrCreateInstance(document.getElementById("configLoginModal"));
+		},
+		openBackupConfirmModal(method) {
+			this.confirmWithPasswordAction = method;
+			this.dataManagementSubModalOpen = true;
+			this.dataManagementModal().hide();
+			this.$nextTick(() => this.confirmWithPasswordModal().show());
+		},
+		dataManagementModalClosed() {
+			if (!this.dataManagementSubModalOpen) {
+				this.$refs.dataManagementModal.reset();
+			}
+		},
 		editLoadpointCharger(name) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
@@ -831,6 +873,10 @@ export default {
 		chargerModalClosed() {
 			// reopen loadpoint modal
 			this.loadpointModal().show();
+		},
+		confirmWithPasswordModalClosed() {
+			// reopen dataManagementModal modal
+			this.dataManagementModal().show();
 		},
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;
