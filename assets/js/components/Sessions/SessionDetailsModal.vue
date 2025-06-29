@@ -219,7 +219,7 @@ import { distanceUnit, distanceValue } from "@/units";
 import api from "@/api";
 import { defineComponent, type PropType } from "vue";
 import type { Session } from "./types";
-import type { CURRENCY, LoadpointCompact, SelectOption, Vehicle } from "@/types/evcc";
+import type { CURRENCY, SelectOption, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SessionDetailsModal",
@@ -229,7 +229,7 @@ export default defineComponent({
 		session: { type: Object as PropType<Session>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<string[]>, default: () => [] },
 	},
 	emits: ["session-changed"],
 	computed: {
@@ -251,8 +251,8 @@ export default defineComponent({
 		},
 		loadpointOptions(): SelectOption<string>[] {
 			return this.loadpoints.map((loadpoint) => ({
-				value: loadpoint.title,
-				name: loadpoint.title,
+				value: loadpoint,
+				name: loadpoint,
 			}));
 		},
 	},
