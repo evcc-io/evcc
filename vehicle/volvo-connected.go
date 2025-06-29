@@ -16,6 +16,7 @@ import (
 type VolvoConnected struct {
 	*embed
 	*connected.Provider
+	*auth.OAuth
 }
 
 func init() {
@@ -56,6 +57,7 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	v := &VolvoConnected{
 		embed:    &cc.embed,
 		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
+		OAuth:    authorizer,
 	}
 
 	return v, err

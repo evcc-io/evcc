@@ -185,3 +185,8 @@ func (o *OAuth) HandleLogout(r *http.Request) {
 	defer o.mu.Unlock()
 	o.TokenSource = oauth.RefreshTokenSource(nil, o)
 }
+
+// AuthIdentifier implements api.AuthProvider.
+func (o *OAuth) AuthIdentifier() string {
+	return o.subject
+}
