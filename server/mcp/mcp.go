@@ -2,12 +2,11 @@ package mcp
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
-
-	_ "embed"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/getkin/kin-openapi/openapi3"
