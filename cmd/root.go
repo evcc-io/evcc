@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -88,6 +89,8 @@ func init() {
 
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
+
+	rootCmd.Flags().Bool("mcp", false, "Expose REST api as MCP service")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
@@ -257,6 +260,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// start HEMS server
 	if err == nil {
 		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
+	}
+
+	// setup MCP
+	if ok, _ := cmd.Flags().GetBool("mcp"); ok && err == nil {
+		const path = "/mcp"
+		var handler http.Handler
+		if handler, err = mcp.NewHandler(conf.Network.URI(), path); err == nil {
+			httpd.Router().PathPrefix(path).Handler(handler)
+		}
 	}
 
 	// setup messaging
