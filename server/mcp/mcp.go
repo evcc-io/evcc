@@ -10,9 +10,9 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/getkin/kin-openapi/openapi3"
-	mcptypes "github.com/jedisct1/openapi-mcp/pkg/mcp/mcp"
-	mcpserver "github.com/jedisct1/openapi-mcp/pkg/mcp/server"
 	"github.com/jedisct1/openapi-mcp/pkg/openapi2mcp"
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 )
 
 const (
@@ -39,23 +39,24 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 	}
 	ops := openapi2mcp.ExtractOpenAPIOperations(doc)
 
-	opts := []mcpserver.ServerOption{
-		mcpserver.WithLogging(),
-		mcpserver.WithHooks(&mcpserver.Hooks{
-			OnAfterListTools: []mcpserver.OnAfterListToolsFunc{toolFilter(log)},
-		}),
+	opts := []server.ServerOption{
+		server.WithLogging(),
+		// server.WithHooks(&server.Hooks{
+		// 	OnAfterListTools: []server.OnAfterListToolsFunc{requestToolFilter(log)},
+		// }),
+		server.WithToolFilter(toolFilter(log)),
 	}
 
-	srv := mcpserver.NewMCPServer("evcc", util.Version, opts...)
+	srv := server.NewMCPServer("evcc", util.Version, opts...)
 
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
 	})
 
-	streamableServer := mcpserver.NewStreamableHTTPServer(srv,
-		// mcpserver.WithHTTPContextFunc(streamableAuthContextFunc),
-		mcpserver.WithEndpointPath(basePath),
-		mcpserver.WithLogger(&stdLogger{log}),
+	streamableServer := server.NewStreamableHTTPServer(srv,
+		// server.WithHTTPContextFunc(streamableAuthContextFunc),
+		server.WithEndpointPath(basePath),
+		server.WithLogger(&stdLogger{log}),
 	)
 
 	return streamableServer, nil
@@ -66,7 +67,7 @@ func nameFormat(log *util.Logger) func(name string) string {
 		res := name
 		res = strings.ReplaceAll(res, "_/", "/")
 		res = strings.ReplaceAll(res, "/", "-")
-		res = strings.ReplaceAll(res, "{", "")
+		res = strings.ReplaceAll(res, "{", "with_")
 		res = strings.ReplaceAll(res, "}", "")
 		res = strings.ToLower(res)
 		log.TRACE.Println("adding tool:", res)
@@ -74,24 +75,32 @@ func nameFormat(log *util.Logger) func(name string) string {
 	}
 }
 
-func toolFilter(log *util.Logger) func(ctx context.Context, id any, message *mcptypes.ListToolsRequest, result *mcptypes.ListToolsResult) {
-	blocked := []string{"auth", "config", "system"}
+func filterTools(log *util.Logger, tools []mcp.Tool) []mcp.Tool {
+	var res []mcp.Tool
 
-	return func(ctx context.Context, id any, message *mcptypes.ListToolsRequest, result *mcptypes.ListToolsResult) {
-		var res []mcptypes.Tool
-
-	TOOLS:
-		for _, tool := range result.Tools {
-			for _, s := range blocked {
-				if strings.Contains(tool.Name, s) {
-					log.TRACE.Println("skipping tool:", tool.Name)
-					continue TOOLS
-				}
+TOOLS:
+	for _, tool := range tools {
+		for _, block := range []string{"auth", "config", "system"} {
+			if strings.Contains(tool.Name, block) {
+				log.TRACE.Println("skipping tool:", tool.Name)
+				continue TOOLS
 			}
-
-			res = append(res, tool)
 		}
 
-		result.Tools = res
+		res = append(res, tool)
+	}
+
+	return res
+}
+
+func toolFilter(log *util.Logger) server.ToolFilterFunc {
+	return func(ctx context.Context, tools []mcp.Tool) []mcp.Tool {
+		return filterTools(log, tools)
 	}
 }
+
+// func requestToolFilter(log *util.Logger) func(ctx context.Context, id any, message *mcp.ListToolsRequest, result *mcp.ListToolsResult) {
+// 	return func(ctx context.Context, id any, message *mcp.ListToolsRequest, result *mcp.ListToolsResult) {
+// 		result.Tools = filterTools(log, result.Tools)
+// 	}
+// }
