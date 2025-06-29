@@ -161,7 +161,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)

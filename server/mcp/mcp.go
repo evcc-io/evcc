@@ -2,11 +2,12 @@ package mcp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
-	"os"
 	"strings"
+
+	_ "embed"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -15,28 +16,25 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-const (
-	mcpUri = "https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml"
-)
+//go:generate go tool openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
+
+//go:embed openapi.json
+var spec []byte
 
 func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
-	uri, err := url.Parse(mcpUri)
-	if err != nil {
-		return nil, err
-	}
-
-	// set the base URL for OpenAPI spec if not already set
-	if os.Getenv("OPENAPI_BASE_URL") == "" {
-		os.Setenv("OPENAPI_BASE_URL", apiUrl)
-	}
-
 	log := util.NewLogger("mcp")
 	log.INFO.Printf("MCP listening at %s", baseUrl+basePath)
 
-	doc, err := openapi3.NewLoader().LoadFromURI(uri)
-	if err != nil {
+	var doc *openapi3.T
+	if err := json.Unmarshal(spec, &doc); err != nil {
 		return nil, fmt.Errorf("failed to load OpenAPI spec: %v", err)
 	}
+
+	doc.Servers = []*openapi3.Server{{
+		URL:         apiUrl,
+		Description: "evcc api",
+	}}
+
 	ops := openapi2mcp.ExtractOpenAPIOperations(doc)
 
 	opts := []server.ServerOption{
