@@ -473,11 +473,6 @@ func (lp *Loadpoint) evChargeStopHandler() {
 func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
 
-	// energy
-	lp.energyMetrics.Reset()
-	lp.energyMetrics.Publish("session", lp)
-	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
-
 	// duration
 	lp.connectedTime = lp.clock.Now()
 	lp.publish(keys.ConnectedDuration, time.Duration(0))
