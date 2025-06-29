@@ -36,27 +36,21 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 
 	ops := openapi2mcp.ExtractOpenAPIOperations(doc)
 
-	opts := []server.ServerOption{
+	srv := server.NewMCPServer("evcc", util.Version,
 		server.WithLogging(),
-		// server.WithHooks(&server.Hooks{
-		// 	OnAfterListTools: []server.OnAfterListToolsFunc{requestToolFilter(log)},
-		// }),
 		server.WithToolFilter(toolFilter(log)),
-	}
-
-	srv := server.NewMCPServer("evcc", util.Version, opts...)
+	)
 
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
 	})
 
-	streamableServer := server.NewStreamableHTTPServer(srv,
-		// server.WithHTTPContextFunc(streamableAuthContextFunc),
+	handler := server.NewStreamableHTTPServer(srv,
 		server.WithEndpointPath(basePath),
 		server.WithLogger(&stdLogger{log}),
 	)
 
-	return streamableServer, nil
+	return handler, nil
 }
 
 func nameFormat(log *util.Logger) func(name string) string {
@@ -95,9 +89,3 @@ func toolFilter(log *util.Logger) server.ToolFilterFunc {
 		return filterTools(log, tools)
 	}
 }
-
-// func requestToolFilter(log *util.Logger) func(ctx context.Context, id any, message *mcp.ListToolsRequest, result *mcp.ListToolsResult) {
-// 	return func(ctx context.Context, id any, message *mcp.ListToolsRequest, result *mcp.ListToolsResult) {
-// 		result.Tools = filterTools(log, result.Tools)
-// 	}
-// }
