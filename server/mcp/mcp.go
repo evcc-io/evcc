@@ -49,6 +49,16 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 		NameFormat: nameFormat(log),
 	})
 
+	srv.AddPrompt(mcp.NewPrompt("create-charge-plan",
+		mcp.WithPromptDescription("Create an optimized charge plan for a loadpoint or vehicle"),
+		mcp.WithArgument("loadpoint",
+			mcp.ArgumentDescription("The loadpoint to create the charge plan for"),
+		),
+		mcp.WithArgument("vehicle",
+			mcp.ArgumentDescription("The vehicle to create the charge plan for"),
+		),
+	), promptHandler())
+
 	handler := server.NewStreamableHTTPServer(srv,
 		server.WithEndpointPath(basePath),
 		server.WithLogger(&stdLogger{log}),
