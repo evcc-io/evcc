@@ -29,6 +29,10 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 		return nil, fmt.Errorf("failed to load OpenAPI spec: %v", err)
 	}
 
+	if err := openapi3.NewLoader().ResolveRefsIn(doc, nil); err != nil {
+		return nil, fmt.Errorf("failed resolving spec references: %v", err)
+	}
+
 	doc.Servers = []*openapi3.Server{{
 		URL:         apiUrl,
 		Description: "evcc api",
