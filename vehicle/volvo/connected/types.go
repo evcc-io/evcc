@@ -64,3 +64,14 @@ type EnergyState struct {
 type Vehicle struct {
 	VIN string
 }
+
+type OdometerState struct {
+	Data struct {
+		Odometer struct {
+			Status    string
+			Value     int64
+			Unit      string
+			Timestamp time.Time
+		}
+	}
+}
