@@ -33,7 +33,7 @@ params:
     default: "plus"
     description:
       de: E-Überschuss ("plus" oder "minus")
-      en: Excess Energy ("plus" or "minus")  
+      en: Excess Energy ("plus" or "minus")
   - name: phases
     deprecated: true
   - name: watchdog
