@@ -30,6 +30,7 @@ require (
 	github.com/enbility/eebus-go v0.7.0
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
+	github.com/evcc-io/openapi-mcp v0.3.0
 	github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
@@ -56,7 +57,6 @@ require (
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
 	github.com/jarcoal/httpmock v1.4.0
-	github.com/jedisct1/openapi-mcp v0.2.7
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/now v1.1.5
 	github.com/joeshaw/carwings v0.0.0-20250124122309-e366d592915c
@@ -247,5 +247,3 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0
-
-replace github.com/jedisct1/openapi-mcp => github.com/andig/openapi-mcp v0.2.8-0.20250629140931-5ed771ba6a65
