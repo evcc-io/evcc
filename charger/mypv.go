@@ -153,28 +153,31 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	c, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	d, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
-	if err != nil {
-		return api.StatusNone, err
+	// all loads detached
+	if binary.BigEndian.Uint16(b) == 0 {
+		return api.StatusA, nil
 	}
 
 	res := api.StatusB
-	if (binary.BigEndian.Uint16(b) == wb.statusC) && (binary.BigEndian.Uint16(d) > 10) {
-		res = api.StatusC
+
+	b, err = wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	if binary.BigEndian.Uint16(c) == 0 {
-		res = api.StatusA
+	c, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	// ignore standby power
+	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > 10 {
+		res = api.StatusC
 	}
 
 	return res, nil
