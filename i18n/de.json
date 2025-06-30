@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Abbrechen",
+    "demoMode": "Login ist in Demo-Modus nicht verfügbar.",
     "error": "Login fehlgeschlagen: ",
     "iframeHint": "Öffne evcc in einem neuen Tab.",
     "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
@@ -956,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} von {total}",
+    "activeHours": "{active} von {total}",
     "activeHoursLabel": "Aktive Stunden",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",

@@ -18,8 +18,11 @@
 					data-testid="loadpoint"
 					:vehicles="vehicles"
 					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
+					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
 					:currency="currency"
 					:multipleLoadpoints="loadpoints.length > 1"
 					:gridConfigured="gridConfigured"
@@ -61,7 +64,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { LoadpointCompact, Timeout, Vehicle } from "@/types/evcc";
+import type { LoadpointCompact, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -69,9 +72,12 @@ export default defineComponent({
 	props: {
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 		vehicles: { type: Array as PropType<Vehicle[]> },
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
+		smartFeedInPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		tariffFeedIn: Number,
 		currency: String,
 		selectedIndex: { type: Number, default: 0 },
 		gridConfigured: Boolean,

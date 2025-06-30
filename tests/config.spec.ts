@@ -20,11 +20,6 @@ test.describe("basics", async () => {
     await page.getByRole("link", { name: "Configuration" }).click();
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
-  test.skip("alert box should always be visible", async ({ page }) => {
-    await page.goto("/#/config");
-    await enableExperimental(page);
-    await expect(page.getByRole("alert")).toBeVisible();
-  });
 });
 
 test.describe("general", async () => {

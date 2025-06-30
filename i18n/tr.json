@@ -189,10 +189,11 @@
       "chargerPower11kwHelp": "6 ila 16 A akım aralığını kullanır.",
       "chargerPower22kw": "22 kW",
       "chargerPower22kwHelp": "6 ila 32 A akım aralığını kullanır.",
-      "chargerPowerCustom": "“diğeri”",
+      "chargerPowerCustom": "diğer",
       "chargerPowerCustomHelp": "Kendine özgü bir akım aralığı tanımla.",
       "chargerTypeLabel": "“Doldurma gücü”",
       "chargingTitle": "“Dolduruyor”",
+      "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitLabel": "“Devre”",
       "circuitUnassigned": "“atanmamış”",
       "defaultModeHelp": "Araç bağlandığında doldurma şekli.",
@@ -580,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "İptal",
+    "demoMode": "Demo modunda oturum açamazsınız.",
     "error": "Giriş başarısız: ",
     "iframeHint": "evcc'yi yeni bir sekmede aç.",
     "iframeIssue": "Parolan doğru, ancak tarayıcın kimlik doğrulama çerezini reddetti. Bu, evcc'yi HTTP üzerinden bir iframe içinde çalıştırırsan meydana gelebilir.",
@@ -955,7 +957,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{total} saat içinde {charging}",
+    "activeHours": "{total} saat içinde {active}",
     "activeHoursLabel": "Aktif saatler",
     "applyToAll": "Heryerde uygulansın mı?",
     "batteryDescription": "Ev enerji deposunu şebekeden doldurur.",

@@ -113,6 +113,9 @@
       "batteryStorage": "储能电池",
       "solarSystem": "太阳能系统"
     },
+    "editor": {
+      "loading": "正在加载 YAML 编辑器…"
+    },
     "eebus": {
       "description": "此配置使 evcc 能够与其他 EEBus 设备通信。",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "取消",
+      "customHelp": "使用 evcc 的插件系统创建用户定义的设备。",
+      "customOption": "用户定义的设备",
       "delete": "删除",
       "docsLink": "查看文档。",
       "experimental": "实验性",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "将 evcc 连接到其他住宅能源管理系统。",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "更改"
     },
     "influx": {
       "description": "将充电数据和其他指标写入 InfluxDB。使用 Grafana 或其他工具可视化数据。",
@@ -185,6 +193,7 @@
       "chargerPowerCustomHelp": "定义自定义电流范围。",
       "chargerTypeLabel": "充电桩类型",
       "chargingTitle": "充电",
+      "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
       "circuitLabel": "电路",
       "circuitUnassigned": "未分配",
       "defaultModeHelp": "连接车辆时的充电模式。",
@@ -269,6 +278,7 @@
     "meter": {
       "cancel": "取消",
       "delete": "删除",
+      "generic": "通用集成",
       "option": {
         "aux": "添加智能耗电设备",
         "battery": "添加电池计量表",
@@ -276,6 +286,7 @@
         "pv": "添加太阳能计量表"
       },
       "save": "保存",
+      "specific": "特定集成",
       "template": "制造商",
       "titleChoice": "您想添加什么？",
       "validateSave": "验证并保存"
@@ -417,6 +428,7 @@
       "minimumCurrent": "最小电流",
       "minimumCurrentHelp": "仅在您清楚操作后果时才设置为低于 6A。",
       "online": "具有在线API的车辆",
+      "primary": "通用集成",
       "priority": "优先级",
       "priorityHelp": "较高优先级意味着此车辆优先使用太阳能余电。",
       "save": "保存",
@@ -944,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} / {total}",
+    "activeHours": "{active} / {total}",
     "activeHoursLabel": "有效时段",
     "applyToAll": "应用于所有地方？",
     "batteryDescription": "使用电网能源为住宅电池充电。",

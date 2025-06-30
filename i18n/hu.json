@@ -113,6 +113,9 @@
       "batteryStorage": "Akkumulátoros tároló",
       "solarSystem": "Naperőmű"
     },
+    "editor": {
+      "loading": "YAML szerkesztő betöltése…"
+    },
     "eebus": {
       "description": "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel.",
       "title": "EEBus"
@@ -130,6 +133,8 @@
     },
     "general": {
       "cancel": "Mégse",
+      "customHelp": "Hozz létre egy felhasználó által definiált eszközt az evcc bővítményrendszerével.",
+      "customOption": "Felhasználó által definiált eszköz",
       "delete": "Törlés",
       "docsLink": "Dokumentáció megtekintése",
       "experimental": "Kísérleti",
@@ -154,6 +159,9 @@
     "hems": {
       "description": "Az evcc csatlakoztatása más otthoni energia menedzsment rendszerhez.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "változtatás"
     },
     "influx": {
       "description": "Lementi a töltési adatokat és egyéb metrikákat az InfluxDB-be. Használd a Grafana-t vagy egyéb eszközöket az adatok vizualizálásához.",
@@ -185,6 +193,7 @@
       "chargerPowerCustomHelp": "Definiáljon egy egyedi áramtartományt.",
       "chargerTypeLabel": "Töltő típusa",
       "chargingTitle": "Töltés",
+      "circuitHelp": "Terheléskezelési hozzárendelés a teljesítmény- és áramkorlátok túllépésének biztosítására.",
       "circuitLabel": "Áramkör",
       "circuitUnassigned": "nincs hozzárendelve",
       "defaultModeHelp": "Töltési mód, amikor csatlakoztatja a járművet.",
@@ -269,6 +278,7 @@
     "meter": {
       "cancel": "Mégse",
       "delete": "Törlés",
+      "generic": "Általános integrációk",
       "option": {
         "aux": "Önszabályozó fogyasztó hozzáadása",
         "battery": "Akkumulátoros mérő hozzáadása",
@@ -276,6 +286,7 @@
         "pv": "Napelem mérő hozzáadása"
       },
       "save": "Mentés",
+      "specific": "Specifikus integrációk",
       "template": "Gyártó",
       "titleChoice": "Mit szeretnél hozzáadni?",
       "validateSave": "Ellenőrzés & mentés"
@@ -417,6 +428,7 @@
       "minimumCurrent": "Minimum áram",
       "minimumCurrentHelp": "Csak akkor menj 6A alá, ha tudod, hogy mit csinálsz.",
       "online": "Járművek online API-val",
+      "primary": "Általános integrációk",
       "priority": "Prioritás",
       "priorityHelp": "A magasabb prioritás azt jelenti, hogy ez a jármű előnyben részesíti a napenergia-többlet elérését.",
       "save": "Mentés",
@@ -944,7 +956,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} / {total}",
+    "activeHours": "{active} / {total}",
     "activeHoursLabel": "Aktív órák",
     "applyToAll": "Minenhol alkalmazás?",
     "batteryDescription": "Az otthoni töltéstároló töltése a hálózatról.",

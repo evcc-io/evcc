@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -133,7 +133,7 @@ type Vehicle interface {
 	IconDescriber
 	FeatureDescriber
 	PhaseDescriber
-	Title() string
+	TitleDescriber
 	SetTitle(string)
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -206,6 +206,11 @@ type IconDescriber interface {
 // FeatureDescriber optionally provides a list of supported non-api features
 type FeatureDescriber interface {
 	Features() []Feature
+}
+
+// TitleDescriber optionally provides an title
+type TitleDescriber interface {
+	GetTitle() string
 }
 
 // CsvWriter converts to csv
