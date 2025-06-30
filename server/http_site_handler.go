@@ -21,8 +21,8 @@ import (
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
