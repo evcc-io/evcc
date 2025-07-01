@@ -1,103 +1,104 @@
 name: Claude Issue Triage
 
 on:
-  issues:
-    types: [opened]
+    issues:
+        types: [opened]
 
 jobs:
-  triage-issue:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - name: Setup GitHub MCP Server
-        run: |
-          mkdir -p /tmp/mcp-config
-          cat > /tmp/mcp-config/mcp-servers.json << 'EOF'
-          {
-            "github": {
-            "command": "docker",
-            "args": [
-                "run",
-                "-i",
-                "--rm",
-                "-e",
-                "GITHUB_PERSONAL_ACCESS_TOKEN",
-                "ghcr.io/github/github-mcp-server"
-              ],
-              "env": {
-                "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
-              }
-            }
-          }
-          EOF
+    triage-issue:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: read
+            issues: write
+        steps:
+            - name: Setup GitHub MCP Server
+              run: |
+                  mkdir -p /tmp/mcp-config
+                  cat > /tmp/mcp-config/mcp-servers.json << 'EOF'
+                  {
+                    "github": {
+                    "command": "docker",
+                    "args": [
+                        "run",
+                        "-i",
+                        "--rm",
+                        "-e",
+                        "GITHUB_PERSONAL_ACCESS_TOKEN",
+                        "ghcr.io/github/github-mcp-server"
+                      ],
+                      "env": {
+                        "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+                      }
+                    }
+                  }
 
-      - name: Run Claude Code
-        uses: anthropics/claude-code-base-action@beta
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          mcp_config: /tmp/mcp-config/mcp-servers.json
-          #   mcp_servers: |
-          #     {
-          #       "github": {
-          #         "command": "npx",
-          #         "args": ["-y", "@modelcontextprotocol/server-github"],
-          #         "env": {
-          #           "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
-          #         }
-          #       }
-          #     }
-          prompt: |
-            You're an issue triage assistant for GitHub issues. Your task is to analyze the issue and select appropriate labels from the provided list.
+                  EOF
 
-            IMPORTANT: Don't post any comments or messages to the issue. Your only action should be to apply labels.
+            - name: Run Claude Code
+              uses: anthropics/claude-code-base-action@beta
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  mcp_config: /tmp/mcp-config/mcp-servers.json
+                  #   mcp_servers: |
+                  #     {
+                  #       "github": {
+                  #         "command": "npx",
+                  #         "args": ["-y", "@modelcontextprotocol/server-github"],
+                  #         "env": {
+                  #           "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+                  #         }
+                  #       }
+                  #     }
+                  prompt: |
+                      You're an issue triage assistant for GitHub issues. Your task is to analyze the issue and select appropriate labels from the provided list.
 
-            Issue Information:
-            - REPO: ${{ github.repository }}
-            - ISSUE_NUMBER: ${{ github.event.issue.number }}
+                      IMPORTANT: Don't post any comments or messages to the issue. Your only action should be to apply labels.
 
-            TASK OVERVIEW:
+                      Issue Information:
+                      - REPO: ${{ github.repository }}
+                      - ISSUE_NUMBER: ${{ github.event.issue.number }}
 
-            1. First, fetch the list of labels available in this repository by running: `gh label list`. Run exactly this command with nothing else.
+                      TASK OVERVIEW:
 
-            2. Next, use the GitHub tools to get context about the issue:
-                - You have access to these tools:
-                - mcp__github__get_issue: Use this to retrieve the current issue's details including title, description, and existing labels
-                - mcp__github__get_issue_comments: Use this to read any discussion or additional context provided in the comments
-                - mcp__github__update_issue: Use this to apply labels to the issue (do not use this for commenting)
-                - mcp__github__search_issues: Use this to find similar issues that might provide context for proper categorization and to identify potential duplicate issues
-                - mcp__github__list_issues: Use this to understand patterns in how other issues are labeled
-                - Start by using mcp__github__get_issue to get the issue details
+                      1. First, fetch the list of labels available in this repository by running: `gh label list`. Run exactly this command with nothing else.
 
-            3. Analyze the issue content, considering:
-                - The issue title and description
-                - The type of issue (bug report, feature request, question, etc.)
-                - Technical areas mentioned
-                - Severity or priority indicators
-                - User impact
-                - Components affected
+                      2. Next, use the GitHub tools to get context about the issue:
+                          - You have access to these tools:
+                          - mcp__github__get_issue: Use this to retrieve the current issue's details including title, description, and existing labels
+                          - mcp__github__get_issue_comments: Use this to read any discussion or additional context provided in the comments
+                          - mcp__github__update_issue: Use this to apply labels to the issue (do not use this for commenting)
+                          - mcp__github__search_issues: Use this to find similar issues that might provide context for proper categorization and to identify potential duplicate issues
+                          - mcp__github__list_issues: Use this to understand patterns in how other issues are labeled
+                          - Start by using mcp__github__get_issue to get the issue details
 
-            4. Select appropriate labels from the available labels list provided above:
-                - Choose labels that accurately reflect the issue's nature
-                - Be specific but comprehensive
-                - If you find similar issues using mcp__github__search_issues, consider using a "duplicate" label if appropriate. Only do so if the issue is a duplicate of another OPEN issue.
+                      3. Analyze the issue content, considering:
+                          - The issue title and description
+                          - The type of issue (bug report, feature request, question, etc.)
+                          - Technical areas mentioned
+                          - Severity or priority indicators
+                          - User impact
+                          - Components affected
 
-            5. Apply the selected labels:
-                - Use mcp__github__update_issue to apply your selected labels
-                - DO NOT post any comments explaining your decision
-                - DO NOT communicate directly with users
-                - If no labels are clearly applicable, do not apply any labels
+                      4. Select appropriate labels from the available labels list provided above:
+                          - Choose labels that accurately reflect the issue's nature
+                          - Be specific but comprehensive
+                          - If you find similar issues using mcp__github__search_issues, consider using a "duplicate" label if appropriate. Only do so if the issue is a duplicate of another OPEN issue.
 
-            IMPORTANT GUIDELINES:
-            - Be thorough in your analysis
-            - Only select labels from the provided list above
-            - DO NOT post any comments to the issue
-            - Your ONLY action should be to apply labels using mcp__github__update_issue
-            - It's okay to not add any labels if none are clearly applicable
+                      5. Apply the selected labels:
+                          - Use mcp__github__update_issue to apply your selected labels
+                          - DO NOT post any comments explaining your decision
+                          - DO NOT communicate directly with users
+                          - If no labels are clearly applicable, do not apply any labels
 
-          allowed_tools: "Bash(gh label list),mcp__github__get_issue,mcp__github__get_issue_comments,mcp__github__update_issue,mcp__github__search_issues,mcp__github__list_issues"
-          timeout_minutes: "5"
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+                      IMPORTANT GUIDELINES:
+                      - Be thorough in your analysis
+                      - Only select labels from the provided list above
+                      - DO NOT post any comments to the issue
+                      - Your ONLY action should be to apply labels using mcp__github__update_issue
+                      - It's okay to not add any labels if none are clearly applicable
+
+                  allowed_tools: "Bash(gh label list),mcp__github__get_issue,mcp__github__get_issue_comments,mcp__github__update_issue,mcp__github__search_issues,mcp__github__list_issues"
+                  timeout_minutes: "5"
+                  anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
