@@ -18,7 +18,6 @@ params:
     required: true
     example: http://192.0.2.2
   - name: port
-    example: 5010
     default: 5010
 render: |
   type: custom
