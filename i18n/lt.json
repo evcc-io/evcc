@@ -779,6 +779,8 @@
       "connected": "Prijungtas.",
       "disconnectRequired": "Sesija nutraukta. Prisijunkite iš naujo.",
       "disconnected": "Neprijungtas.",
+      "feedinPriorityNextStart": "Aukštos pardavimo kainos prasideda už {duration}.",
+      "feedinPriorityPausing": "Įkrovimas saulės energija pristabdytas, tam, kad pasinaudoti aukšta energijos pardavimo kaina.",
       "finished": "Baigta.",
       "minCharge": "Minimalus įkrovimas iki {soc}.",
       "pvDisable": "Trūksta pertekliaus. Pauzė netrukus.",
@@ -973,6 +975,14 @@
     "resetAction": "Pašalinti limitą",
     "resetWarning": "Nėra sukonfigūruotos dinaminės tinklo kainos ar CO₂ šaltinio. Tačiau vis dar yra {limit} apribojimas. Išvalyti konfigūraciją?",
     "saved": "Išsaugota."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pristabdyta valandomis",
+    "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
+    "priceLabel": "Pardavimo kaina",
+    "priceLimit": "Pardavimo limitas",
+    "resetWarning": "Kintamas pardavimo tarifas nesukonfigūruotas. Tačiau, yra įvestas limitas {limit}. Išvalyti konfigūraciją?",
+    "title": "Pardavimo pirmenybė"
   },
   "startupError": {
     "configFile": "Naudojamas konfiguracijos failas:",
