@@ -447,8 +447,8 @@ github.com/mabunixda/wattpilot v1.8.4 h1:nPwTQft15JeRJDUoxv6IpsGpu45EvNGW3EFU6UH
 github.com/mabunixda/wattpilot v1.8.4/go.mod h1:oXWlvKInaVt8FFSdEoNObEP5N8+4m6cbiF11M+8DAHY=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
-github.com/mark3labs/mcp-go v0.32.0 h1:fgwmbfL2gbd67obg57OfV2Dnrhs1HtSdlY/i5fn7MU8=
-github.com/mark3labs/mcp-go v0.32.0/go.mod h1:rXqOudj/djTORU/ThxYx8fqEVj/5pvTuuebQ2RC7uk4=
+github.com/mark3labs/mcp-go v0.32.1-0.20250701183330-251da138d6b5 h1:/XxTE9rT5KNp6Z6Y+arol+57hRk2l+jTs6giVok2Rbw=
+github.com/mark3labs/mcp-go v0.32.1-0.20250701183330-251da138d6b5/go.mod h1:rXqOudj/djTORU/ThxYx8fqEVj/5pvTuuebQ2RC7uk4=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=

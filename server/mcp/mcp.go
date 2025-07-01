@@ -47,7 +47,18 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
+		TagFilter: []string{
+			"General",
+			"Home Battery",
+			"Loadpoints",
+			"Tariffs",
+			"Vehicles",
+		},
 	})
+
+	srv.AddTool(mcp.NewTool("evcc-docs",
+		mcp.WithDescription("evcc documentation"),
+	), docsTool)
 
 	srv.AddPrompt(mcp.NewPrompt("create-charge-plan",
 		mcp.WithPromptDescription("Create an optimized charge plan for a loadpoint or vehicle"),
