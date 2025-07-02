@@ -34,6 +34,7 @@ jobs:
                   }
 
                   EOF
+                  cat /tmp/mcp-config/mcp-servers.json
 
             - name: Run Claude Code
               uses: anthropics/claude-code-base-action@beta
