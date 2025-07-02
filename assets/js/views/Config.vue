@@ -920,7 +920,8 @@ export default {
 		},
 		chargerIcon(chargerName) {
 			const charger = this.chargers.find((c) => c.name === chargerName);
-			return charger?.config?.icon;
+
+			return charger?.config?.icon || this.deviceValues?.charger?.[chargerName]?.icon?.value;
 		},
 	},
 };

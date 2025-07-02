@@ -9,7 +9,21 @@
 		@opened="onOpened"
 		@close="onClose"
 	>
-		<form ref="form" class="container mx-0 px-0" @submit.prevent="isNew ? create() : update()">
+		<div v-if="!loadpointType && isNew">
+			<NewDeviceButton
+				v-for="t in typeChoices"
+				:key="t"
+				:title="$t(`config.loadpoint.option.${t}`)"
+				class="mb-4 addButton"
+				@click="selectType(t)"
+			/>
+		</div>
+		<form
+			v-else
+			ref="form"
+			class="container mx-0 px-0"
+			@submit.prevent="isNew ? create() : update()"
+		>
 			<FormRow
 				id="loadpointParamTitle"
 				:label="$t('config.loadpoint.titleLabel')"
@@ -27,7 +41,7 @@
 				v-if="charger || !isNew"
 				id="loadpointParamCharger"
 				:label="$t('config.loadpoint.chargerLabel')"
-				:error="!charger ? $t('config.loadpoint.chargerError') : null"
+				:error="!charger ? $t('config.loadpoint.chargerError') : undefined"
 			>
 				<div class="d-flex">
 					<PropertyField
@@ -334,7 +348,11 @@
 						id="loadpointMinCurrent"
 						:label="$t('config.loadpoint.minCurrentLabel')"
 						class="col-sm-6 mb-sm-0"
-						:help="values.minCurrent < 6 ? $t('config.loadpoint.minCurrentHelp') : null"
+						:help="
+							values.minCurrent < 6
+								? $t('config.loadpoint.minCurrentHelp')
+								: undefined
+						"
 					>
 						<PropertyField
 							id="loadpointMinCurrent"
@@ -354,7 +372,7 @@
 						:help="
 							values.maxCurrent < values.minCurrent
 								? $t('config.loadpoint.maxCurrentHelp')
-								: null
+								: undefined
 						"
 					>
 						<PropertyField
@@ -389,10 +407,7 @@
 							id="loadpointParamPhases"
 							v-model="values.phasesConfigured"
 							class="w-100"
-							:options="[
-								{ value: 1, name: $t('config.loadpoint.phases1p') },
-								{ value: 3, name: $t('config.loadpoint.phases3p') },
-							]"
+							:options="phasesOptions"
 							transparent
 							equal-width
 						/>
@@ -449,7 +464,7 @@
 									? $t('config.loadpoint.pollModeConnectedHelp')
 									: values.soc.poll.mode === 'always'
 										? $t('config.loadpoint.pollModeAlwaysHelp')
-										: null
+										: undefined
 						"
 					>
 						<SelectGroup
@@ -490,16 +505,18 @@
 						/>
 					</FormRow>
 
-					<div v-show="showAll" class="d-flex mb-4">
-						<input
-							id="loadpointEstimate"
-							v-model="values.soc.estimate"
-							class="form-check-input"
-							type="checkbox"
-						/>
-						<label class="form-check-label ms-2" for="loadpointEstimate">
-							{{ $t("config.loadpoint.estimateLabel") }}
-						</label>
+					<div v-show="showAll">
+						<div class="d-flex mb-4">
+							<input
+								id="loadpointEstimate"
+								v-model="values.soc.estimate"
+								class="form-check-input"
+								type="checkbox"
+							/>
+							<label class="form-check-label ms-2" for="loadpointEstimate">
+								{{ $t("config.loadpoint.estimateLabel") }}
+							</label>
+						</div>
 					</div>
 				</div>
 				<div v-else v-show="showAll">
@@ -548,7 +565,7 @@
 	</GenericModal>
 </template>
 
-<script>
+<script lang="ts">
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
@@ -558,10 +575,13 @@ import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
+import NewDeviceButton from "./NewDeviceButton.vue";
+import { handleError } from "./DeviceModal";
 
 const nsPerMin = 60 * 1e9;
 
 const defaultValues = {
+	id: undefined,
 	title: "",
 	phasesConfigured: 3,
 	minCurrent: 6,
@@ -587,28 +607,49 @@ const defaultThresholds = {
 	disable: { delay: 3 * nsPerMin, threshold: 0 },
 };
 
+type LoadpointValues = typeof defaultValues;
+
+type Charger = {
+	name: string;
+	deviceProduct: string;
+	config: { template: string };
+};
+
+type Meter = {
+	name: string;
+	deviceProduct: string;
+	config: { template: string };
+};
+
+type Circuit = {
+	name: string;
+	config: { title: string };
+};
+
+type LoadpointType = "charging" | "heating";
+
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon },
+	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon, NewDeviceButton },
 	mixins: [formatter],
 	props: {
 		id: Number,
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
-		loadpointCount: Number,
+		loadpointCount: { type: Number, default: 0 },
 		fade: String,
-		chargers: { type: Array, default: () => [] },
+		chargers: { type: Array as () => Charger[], default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
-		meters: { type: Array, default: () => [] },
-		circuits: { type: Array, default: () => [] },
+		meters: { type: Array as () => Meter[], default: () => [] },
+		circuits: { type: Array as () => Circuit[], default: () => [] },
 	},
 	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
 	data() {
 		return {
 			isModalVisible: false,
 			saving: false,
-			selectedType: null,
-			values: deepClone(defaultValues),
+			selectedType: null as LoadpointType | null,
+			values: deepClone(defaultValues) as LoadpointValues,
 			chargerPower: "11kw",
 			solarMode: "default",
 			tab: "solar",
@@ -621,7 +662,7 @@ export default {
 			if (this.isNew) {
 				return this.$t(`config.loadpoint.titleAdd`);
 			}
-			return this.$t(`config.loadpoint.titleEdit`);
+			return this.$t(`config.loadpoint.titleEdit.${this.loadpointType}`);
 		},
 		isNew() {
 			return this.id === undefined;
@@ -631,6 +672,9 @@ export default {
 		},
 		charger() {
 			return this.chargers.find((c) => c.name === this.values.charger);
+		},
+		chargerType() {
+			return this.chargerIsHeating ? "heating" : "charging";
 		},
 		chargerTitle() {
 			if (!this.charger) return "";
@@ -652,6 +696,9 @@ export default {
 		chargerIsSinglePhase() {
 			return this.chargerStatus.singlePhase?.value || false;
 		},
+		chargerIsHeating() {
+			return this.chargerStatus.heating?.value === true;
+		},
 		meterTitle() {
 			const name = this.values.meter;
 			if (!name) return "";
@@ -669,11 +716,20 @@ export default {
 			return this.isNew ? this.loadpointCount > 0 : this.loadpointCount > 1;
 		},
 		priorityOptions() {
-			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
+			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` })) as {
+				key?: number;
+				name: string;
+			}[];
 			result[0].name = "0 (default)";
 			result[0].key = undefined;
 			result[10].name = "10 (highest)";
 			return result;
+		},
+		phasesOptions() {
+			return [
+				{ value: "1", name: this.$t("config.loadpoint.phases1p") },
+				{ value: "3", name: this.$t("config.loadpoint.phases3p") },
+			];
 		},
 		showCircuit() {
 			return this.circuits.length > 0;
@@ -691,6 +747,12 @@ export default {
 				{ key: null, name: null },
 				...this.vehicleOptions,
 			];
+		},
+		typeChoices(): LoadpointType[] {
+			return ["charging", "heating"];
+		},
+		loadpointType(): LoadpointType | null {
+			return this.selectedType;
 		},
 	},
 	watch: {
@@ -728,6 +790,7 @@ export default {
 	},
 	methods: {
 		reset() {
+			this.selectedType = null;
 			this.values = deepClone(defaultValues);
 			this.updatePhases();
 		},
@@ -748,10 +811,9 @@ export default {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
-				this.$refs.modal.close();
+				(this.$refs["modal"] as any).close();
 			} catch (e) {
-				console.error(e);
-				alert("update failed");
+				handleError(e, "update failed");
 			}
 			this.saving = false;
 		},
@@ -759,7 +821,7 @@ export default {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
 				this.$emit("updated");
-				this.$refs.modal.close();
+				(this.$refs["modal"] as any).close();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -770,11 +832,9 @@ export default {
 			try {
 				await api.post("config/loadpoints", this.values);
 				this.$emit("updated");
-				this.$refs.modal.close();
+				(this.$refs["modal"] as any).close();
 			} catch (e) {
-				console.error(e);
-				const error = e.response?.data?.error;
-				alert(`failed to create loadpoint: ${error}`);
+				handleError(e, "create failed");
 			}
 			this.saving = false;
 		},
@@ -795,11 +855,11 @@ export default {
 			this.$emit("openMeterModal", this.values.meter);
 		},
 		// called externally
-		setMeter(meter) {
+		setMeter(meter: string) {
 			this.values.meter = meter;
 		},
 		// called externally
-		setCharger(charger) {
+		setCharger(charger: string) {
 			this.values.charger = charger;
 		},
 		updateChargerPower() {
@@ -834,6 +894,9 @@ export default {
 				this.values.phasesConfigured = 3; // no automatic switching, default to 3-phase
 				return;
 			}
+		},
+		selectType(type: LoadpointType) {
+			this.selectedType = type;
 		},
 	},
 };

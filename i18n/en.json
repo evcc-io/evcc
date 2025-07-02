@@ -210,6 +210,10 @@
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
       "minCurrentLabel": "Minimum current",
       "noVehicles": "No vehicles are configured.",
+      "option": {
+        "charging": "Add charging point",
+        "heating": "Add heating device"
+      },
       "phases1p": "1-phase",
       "phases3p": "3-phase",
       "phasesAutomatic": "Automatic phases",
@@ -245,8 +249,11 @@
       "thresholdEnableHelpNegative": "Start charging, when {surplus} surplus is available for {delay}.",
       "thresholdEnableHelpZero": "Start when minimum charge power surplus is available for {delay}.",
       "thresholdEnableLabel": "Enable grid power",
-      "titleAdd": "Add Charge Point",
-      "titleEdit": "Edit Charge Point",
+      "titleAdd": "Add Charger or Heater",
+      "titleEdit": {
+        "charging": "Edit Charging Point",
+        "heating": "Edit Heating Device"
+      },
       "titleExample": "Garage, Carport, etc.",
       "titleLabel": "Title",
       "vehicleAutoDetection": "auto detection",
@@ -258,7 +265,7 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addGrid": "Add grid meter",
-      "addLoadpoint": "Add charge point",
+      "addLoadpoint": "Add charger or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
@@ -370,7 +377,7 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points",
+      "loadpoints": "Charging & Heating",
       "meter": "Solar & Battery",
       "system": "System",
       "vehicles": "Vehicles"

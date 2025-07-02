@@ -280,6 +280,14 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("phases1p3p", true, nil)
 	}
 
+	if hasFeature(instance, api.Heating) {
+		makeResult("heating", true, nil)
+	}
+
+	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
+		makeResult("icon", dev.Icon(), nil)
+	}
+
 	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
 		makeResult("singlePhase", true, nil)
 	}
