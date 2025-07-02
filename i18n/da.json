@@ -779,6 +779,8 @@
       "connected": "Forbundet.",
       "disconnectRequired": "Opladning afbrudt, Prøv at forbinde igen.",
       "disconnected": "Afbrudt.",
+      "feedinPriorityNextStart": "Høj indføringspris i {duration}.",
+      "feedinPriorityPausing": "Solopladning sat på pause for at maksimere nettilførsel.",
       "finished": "Færdig.",
       "minCharge": "Minimum opladning til {soc}.",
       "pvDisable": "Ikke nok overskud. Holder snart pause.",
@@ -973,6 +975,14 @@
     "resetAction": "Fjern begrænsning",
     "resetWarning": "Dynamisk elnet pris eller CO₂-kilde er ikke konfigureret. Men der er alligevel sat en begrænsning på {limit}. Skal din konfiguration justeres?",
     "saved": "Gemt."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pauserede timer",
+    "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
+    "priceLabel": "Indfødningspris",
+    "priceLimit": "Indfødningsgrænse",
+    "resetWarning": "Der er ingen dynamisk indfødnings tarif konfigureret. Der er dog stadig en grænse på {limit}. Ryd op i din konfiguration?",
+    "title": "Indfødnings prioritet"
   },
   "startupError": {
     "configFile": "Konfigurationsfil brugt:",

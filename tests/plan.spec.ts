@@ -9,6 +9,15 @@ const mobile = devices["iPhone 12 Mini"].viewport;
 const CONFIG = "plan.evcc.yaml";
 const CONFIG_NO_TARIFF = "basics.evcc.yaml";
 
+async function fillTimeField(locator: Locator, time: string) {
+  // increase stability; avoid interference with rendering and data-binding
+  await locator.waitFor({ state: "visible" });
+  await locator.focus();
+  await locator.clear();
+  await locator.fill(time);
+  await expect(locator).toHaveValue(time);
+}
+
 test.beforeEach(async () => {
   await start(CONFIG);
 });
@@ -76,7 +85,7 @@ test.describe("basic functionality", async () => {
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
-    await page.getByTestId("static-plan-time").fill("09:30");
+    await fillTimeField(page.getByTestId("static-plan-time"), "09:30");
     await page.getByTestId("static-plan-soc").selectOption("80%");
     await page.getByTestId("static-plan-precondition-lg-toggle").click();
     await page
@@ -285,7 +294,7 @@ test.describe("preview", async () => {
 
       // initial set -> preview plan
       await page.getByTestId("static-plan-day").selectOption({ index: 1 });
-      await page.getByTestId("static-plan-time").fill("09:30");
+      await fillTimeField(page.getByTestId("static-plan-time"), "09:30");
       await page.getByTestId(c.goalId).selectOption("80");
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
 
@@ -301,7 +310,7 @@ test.describe("preview", async () => {
       await page.getByTestId("static-plan-apply").click();
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
-      await page.getByTestId("static-plan-time").fill("23:30");
+      await fillTimeField(page.getByTestId("static-plan-time"), "23:30");
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
       await expect(page.getByTestId("static-plan-apply")).toBeVisible();
 
@@ -347,12 +356,12 @@ test.describe("warnings", async () => {
     await expect(page.getByTestId("plan-entry-warnings")).not.toBeVisible();
 
     await page.getByTestId("static-plan-day").selectOption({ index: 0 });
-    await page.getByTestId("static-plan-time").fill("00:01");
+    await fillTimeField(page.getByTestId("static-plan-time"), "00:01");
 
     await expect(page.getByTestId("plan-entry-warnings")).toContainText(
       "Pick a time in the future, Marty."
     );
-    await page.getByTestId("static-plan-time").fill("00:01");
+    await fillTimeField(page.getByTestId("static-plan-time"), "00:01");
   });
 });
 
@@ -401,7 +410,7 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("plan-entry")).toHaveCount(1);
 
     await modal.getByTestId("static-plan-day").selectOption({ index: 1 }); // tomorrow
-    await modal.getByTestId("static-plan-time").fill("09:00");
+    await fillTimeField(modal.getByTestId("static-plan-time"), "09:00");
 
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan");
     await expect(modal.getByTestId("target-text")).toContainText("09:00");
@@ -410,7 +419,7 @@ test.describe("repeating", async () => {
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
     await modal.getByTestId("repeating-plan-weekdays").click();
     await modal.getByRole("checkbox", { name: "Select all" }).check();
-    await modal.getByTestId("repeating-plan-time").fill("11:11");
+    await fillTimeField(modal.getByTestId("repeating-plan-time"), "11:11");
 
     // switch between previews
     await modal
@@ -482,7 +491,7 @@ test.describe("repeating", async () => {
     await modal.getByTestId("repeating-plan-weekdays").click(); // close
 
     // activate
-    await modal.getByTestId("repeating-plan-time").fill("02:22");
+    await fillTimeField(modal.getByTestId("repeating-plan-time"), "02:22");
     await modal.getByTestId("repeating-plan-active").click();
 
     // specific weekday and time
@@ -508,7 +517,7 @@ test.describe("repeating", async () => {
     // configure static plan for tomorrow
     const plan1 = modal.getByTestId("plan-entry").nth(0);
     await plan1.getByTestId("static-plan-day").selectOption({ index: 1 });
-    await plan1.getByTestId("static-plan-time").fill("09:30");
+    await fillTimeField(plan1.getByTestId("static-plan-time"), "09:30");
     await plan1.getByTestId("static-plan-soc").selectOption("80%");
     await plan1.getByTestId("static-plan-active").click();
 
@@ -521,7 +530,7 @@ test.describe("repeating", async () => {
     await days2.getByRole("checkbox", { name: "Select all" }).click();
     await days2.getByRole("checkbox", { name: tomorrow }).check();
     await days2.click(); // close
-    await plan2.getByTestId("repeating-plan-time").fill("09:20");
+    await fillTimeField(plan2.getByTestId("repeating-plan-time"), "09:20");
     await plan2.getByTestId("repeating-plan-active").click();
 
     // add repeating plan for every day
@@ -531,7 +540,7 @@ test.describe("repeating", async () => {
     await days3.click();
     await days3.getByRole("checkbox", { name: "Select all" }).check();
     await days3.click(); // close
-    await plan3.getByTestId("repeating-plan-time").fill("09:10");
+    await fillTimeField(plan3.getByTestId("repeating-plan-time"), "09:10");
     await plan3.getByTestId("repeating-plan-active").click();
 
     // check next plans
@@ -585,7 +594,7 @@ test.describe("repeating", async () => {
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // check all
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // uncheck all
     await plan.getByRole("checkbox", { name: tomorrow }).check();
-    await plan.getByTestId("repeating-plan-time").fill("09:20");
+    await fillTimeField(plan.getByTestId("repeating-plan-time"), "09:20");
     await plan.getByTestId("repeating-plan-precondition-lg-toggle").click();
     await plan
       .getByTestId("repeating-plan-precondition-lg-select")
