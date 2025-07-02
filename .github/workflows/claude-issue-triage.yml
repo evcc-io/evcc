@@ -12,6 +12,9 @@ jobs:
       contents: read
       issues: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup GitHub MCP Server
         run: |
           mkdir -p /tmp/mcp-config
