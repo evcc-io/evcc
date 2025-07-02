@@ -91,6 +91,7 @@ func init() {
 	bind(rootCmd, "profile")
 
 	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
+	bind(rootCmd, "mcp")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
@@ -263,7 +264,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup MCP
-	if ok, _ := cmd.Flags().GetBool("mcp"); ok && err == nil {
+	if viper.GetBool("mcp") {
 		const path = "/mcp"
 		local := conf.Network.URI()
 
