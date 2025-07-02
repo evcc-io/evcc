@@ -10,6 +10,7 @@ import (
 // Provider implements the vehicle api
 type Provider struct {
 	statusG func() (EnergyState, error)
+	odoG    func() (OdometerState, error)
 }
 
 // NewProvider creates a vehicle api provider
@@ -17,6 +18,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: util.Cached(func() (EnergyState, error) {
 			return api.EnergyState(vin)
+		}, cache),
+		odoG: util.Cached(func() (OdometerState, error) {
+			return api.OdometerState(vin)
 		}, cache),
 	}
 	return impl
@@ -72,4 +76,12 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
 
 	return int64(res.TargetBatteryChargeLevel.Value), err
+}
+
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.odoG()
+	return float64(res.Data.Odometer.Value), err
 }
