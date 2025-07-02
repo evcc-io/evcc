@@ -23,27 +23,25 @@
 				{{ $t("config.system.dataManagement.restore.title") }} <small>backup-restore</small>
 			</h6>
 
-			<PropertyFileField
-				ref="fileInput"
-				:accepted="['.db']"
-				required
-				@file-changed="fileChanged"
-			/>
+			<form @submit="restoreDatabase">
+				<PropertyFileField
+					ref="fileInput"
+					:accepted="['.db']"
+					required
+					@file-changed="fileChanged"
+				/>
 
-			<button
-				class="btn btn-outline-secondary mt-2"
-				:disabled="file === null"
-				@click="restoreDatabase"
-			>
-				{{ $t("config.system.dataManagement.restore.action") }}
-			</button>
+				<button class="btn btn-outline-secondary mt-2" :disabled="file === null">
+					{{ $t("config.system.dataManagement.restore.action") }}
+				</button>
+			</form>
 		</div>
 		<div>
 			<h6>
 				{{ $t("config.system.dataManagement.reset.title") }} <small>backup-reset</small>
 			</h6>
 
-			<form>
+			<form @submit="resetDatabase">
 				<div class="d-flex flex-column">
 					<div>
 						<input
@@ -73,13 +71,11 @@
 				<button
 					class="btn btn-outline-secondary mt-3"
 					:disabled="!selectedReset.sessions && !selectedReset.settings"
-					@click="resetDatabase"
 				>
 					{{ $t("config.system.dataManagement.reset.action") }}
 				</button>
 			</form>
 		</div>
-
 	</GenericModal>
 </template>
 
