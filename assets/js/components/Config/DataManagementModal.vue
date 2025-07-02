@@ -80,7 +80,6 @@
 			</form>
 		</div>
 
-		<form ref="form" class="container mx-0 px-0"></form>
 	</GenericModal>
 </template>
 
