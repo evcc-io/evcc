@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -19,7 +20,7 @@ import (
 //go:embed openapi.json
 var spec []byte
 
-func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
+func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, error) {
 	log := util.NewLogger("mcp")
 	log.INFO.Printf("MCP listening at %s", baseUrl+basePath)
 
@@ -33,7 +34,7 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 	}
 
 	doc.Servers = []*openapi3.Server{{
-		URL:         apiUrl,
+		URL:         "http://localhost:7070/api",
 		Description: "evcc api",
 	}}
 
@@ -52,6 +53,7 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 			"Tariffs",
 			"Vehicles",
 		},
+		RequestHandler: requestHandler(host),
 	})
 
 	srv.AddTool(mcp.NewTool("evcc-docs",
@@ -86,5 +88,14 @@ func nameFormat(log *util.Logger) func(name string) string {
 		res = strings.ToLower(res)
 		log.TRACE.Println("adding tool:", res)
 		return res
+	}
+}
+
+func requestHandler(handler http.Handler) func(req *http.Request) (*http.Response, error) {
+	return func(req *http.Request) (*http.Response, error) {
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+		resp := w.Result()
+		return resp, nil
 	}
 }
