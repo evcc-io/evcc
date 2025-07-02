@@ -28,7 +28,7 @@ func init() {
 	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
-	chargerCmd.Flags().Bool(flagHeartbeat, 0, flagHeartbeatDescription)
+	chargerCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
