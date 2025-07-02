@@ -90,7 +90,7 @@ func init() {
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
 
-	rootCmd.Flags().Bool("mcp", false, "Expose REST api as MCP service")
+	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
