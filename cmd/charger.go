@@ -3,6 +3,7 @@ package cmd
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -27,6 +28,7 @@ func init() {
 	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
+	chargerCmd.Flags().Bool(flagHeartbeat, 0, flagHeartbeatDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -115,6 +117,11 @@ func runCharger(cmd *cobra.Command, args []string) {
 				log.ERROR.Println("phases: not implemented")
 			}
 		}
+	}
+
+	if ok, _ := cmd.Flags().GetBool(flagHeartbeat); flagUsed && ok {
+		log.INFO.Println("running heartbeat until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
 	}
 
 	if !flagUsed {
