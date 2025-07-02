@@ -141,6 +141,8 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 			return
 		}
 
+		settings.Persist()
+
 		if req.Sessions {
 			query := db.Instance.Exec("DELETE FROM sessions")
 			if query.Error != nil {
