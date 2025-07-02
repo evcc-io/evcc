@@ -1,7 +1,6 @@
 package mcp
 
 import (
-	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -42,7 +41,6 @@ func NewHandler(apiUrl, baseUrl, basePath string) (http.Handler, error) {
 
 	srv := server.NewMCPServer("evcc", util.Version,
 		server.WithLogging(),
-		server.WithToolFilter(toolFilter(log)),
 	)
 
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
@@ -88,29 +86,5 @@ func nameFormat(log *util.Logger) func(name string) string {
 		res = strings.ToLower(res)
 		log.TRACE.Println("adding tool:", res)
 		return res
-	}
-}
-
-func filterTools(log *util.Logger, tools []mcp.Tool) []mcp.Tool {
-	var res []mcp.Tool
-
-TOOLS:
-	for _, tool := range tools {
-		for _, block := range []string{"auth", "config", "system"} {
-			if strings.Contains(tool.Name, block) {
-				log.TRACE.Println("skipping tool:", tool.Name)
-				continue TOOLS
-			}
-		}
-
-		res = append(res, tool)
-	}
-
-	return res
-}
-
-func toolFilter(log *util.Logger) server.ToolFilterFunc {
-	return func(ctx context.Context, tools []mcp.Tool) []mcp.Tool {
-		return filterTools(log, tools)
 	}
 }
