@@ -399,6 +399,7 @@ test.describe("loadpoint", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("textbox", { name: "Meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
 

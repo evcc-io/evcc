@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
@@ -45,6 +46,11 @@ func (lp *Loadpoint) createSession() {
 			lp.session.Identifier = id
 		}
 	}
+
+	// energy
+	lp.energyMetrics.Reset()
+	lp.energyMetrics.Publish("session", lp)
+	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 }
 
 // stopSession ends a charging session segment and persists the session.
