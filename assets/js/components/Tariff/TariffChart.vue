@@ -27,7 +27,7 @@
 				</div>
 				<div class="slot-label">
 					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						fmtTimeString(slot.start)
+						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
