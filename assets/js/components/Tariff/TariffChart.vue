@@ -3,7 +3,7 @@
 		<div class="chart position-relative">
 			<div
 				v-for="(slot, index) in slots"
-				:key="`${slot.day}-${slot.start.getHours()}`"
+				:key="`${slot.day}-${fmtTimeString(slot.start)}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -27,7 +27,7 @@
 				</div>
 				<div class="slot-label">
 					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						formatHour(slot.start.getHours())
+						fmtTimeString(slot.start)
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
@@ -132,7 +132,6 @@ export default defineComponent({
 			};
 		},
 		options() {
-			const vThis = this;
 			return {
 				...commonOptions,
 				locale: this.$i18n?.locale,
@@ -171,16 +170,16 @@ export default defineComponent({
 							source: "data",
 							align: "center",
 							padding: 0,
-							callback(value: number) {
+							callback: (value: number) => {
 								const date = new Date(value);
 								const hour = date.getHours();
 								const minute = date.getMinutes();
 								if (minute !== 0) {
 									return "";
 								}
-								const hourFmt = vThis.hourShort(date);
+								const hourFmt = this.hourShort(date);
 								if (hour === 0) {
-									return [hourFmt, vThis.weekdayShort(date)];
+									return [hourFmt, this.weekdayShort(date)];
 								}
 								if (hour % 6 === 0) {
 									return hourFmt;

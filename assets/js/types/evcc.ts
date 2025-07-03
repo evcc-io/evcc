@@ -171,15 +171,15 @@ export interface Rate {
 }
 
 export interface Slot {
-	day: string;
-	value?: number;
-	start: Date;
-	end: Date;
-	charging: boolean;
-	toLate?: boolean | null;
-	warning?: boolean | null;
-	isTarget?: boolean | null;
-	selectable?: boolean | null;
+  day: string;
+  value?: number;
+  start: Date;
+  end: Date;
+  charging: boolean;
+  toLate?: boolean | null;
+  warning?: boolean | null;
+  isTarget?: boolean | null;
+  selectable?: boolean | null;
 }
 
 export interface Forecast {
