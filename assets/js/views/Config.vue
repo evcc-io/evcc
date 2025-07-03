@@ -379,12 +379,7 @@
 					@opened="dataManagementSubModalOpen = false"
 					@closed="dataManagementModalClosed"
 				/>
-				<LoginModal
-					modalId="configLoginModal"
-					:modalTitle="$t('config.system.dataManagement.confirmWithPassword')"
-					:action="confirmWithPasswordAction"
-					@close="confirmWithPasswordModalClosed"
-				/>
+				<DataManagementConfirmModal @close="confirmWithPasswordModalClosed" />
 			</div>
 		</div>
 	</div>
@@ -433,11 +428,12 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 import DataManagementModal from "@/components/Config/DataManagementModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
-import LoginModal from "@/components/Auth/LoginModal.vue";
+import DataManagementConfirmModal from "@/components/Config/DataManagementConfirmModal.vue";
 
 export default {
 	name: "Config",
 	components: {
+		DataManagementConfirmModal,
 		NewDeviceButton,
 		DataManagementModal,
 		ChargerModal,
@@ -470,7 +466,6 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 		WelcomeBanner,
-		LoginModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -497,7 +492,6 @@ export default {
 			deviceValues: {},
 			isComponentMounted: true,
 			isPageVisible: true,
-			confirmWithPasswordAction: undefined,
 		};
 	},
 	head() {
@@ -717,14 +711,13 @@ export default {
 		dataManagementModal() {
 			return Modal.getOrCreateInstance(document.getElementById("dataManagementModal"));
 		},
-		confirmWithPasswordModal() {
-			return Modal.getOrCreateInstance(document.getElementById("configLoginModal"));
+		dataManagementConfirmModal() {
+			return Modal.getOrCreateInstance(document.getElementById("dataManagementConfirmModal"));
 		},
-		openBackupConfirmModal(method) {
-			this.confirmWithPasswordAction = method;
+		openBackupConfirmModal() {
 			this.dataManagementSubModalOpen = true;
 			this.dataManagementModal().hide();
-			this.$nextTick(() => this.confirmWithPasswordModal().show());
+			this.$nextTick(() => this.dataManagementConfirmModal().show());
 		},
 		dataManagementModalClosed() {
 			if (!this.dataManagementSubModalOpen) {

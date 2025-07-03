@@ -14,7 +14,7 @@
 			<h6>
 				{{ $t("config.system.dataManagement.backup.title") }} <small>backup-summary</small>
 			</h6>
-			<button class="btn btn-outline-secondary" @click="openBackupConfirmModal">
+			<button class="btn btn-outline-secondary" @click="$emit('openBackupConfirmModal')">
 				{{ $t("config.system.dataManagement.backup.download") }}
 			</button>
 		</div>
@@ -82,8 +82,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import api, { downloadFile } from "@/api";
-import type { LoginAction } from "@/types/evcc";
+import api from "@/api";
 import PropertyFileField from "./PropertyFileField.vue";
 
 export default defineComponent({
@@ -110,22 +109,7 @@ export default defineComponent({
 				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
 			)?.reset();
 		},
-		openBackupConfirmModal() {
-			this.$emit("openBackupConfirmModal", (async (password: string) => {
-				const res = await api.post(
-					"/config/backup",
-					{ password },
-					{
-						responseType: "blob",
-						validateStatus: (code: number) => [200, 401, 403].includes(code),
-					}
-				);
 
-				downloadFile(res);
-
-				return { status: res.status };
-			}) satisfies LoginAction);
-		},
 		fileChanged(file: File) {
 			this.file = file;
 		},
