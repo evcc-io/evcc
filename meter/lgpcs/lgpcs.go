@@ -163,15 +163,13 @@ func (m *Com) GetFirmwareVersion() (int, error) {
 		m.log.TRACE.Printf("GetFirmwareVersion: failed to get system info: %v", err)
 		return 0, err
 	}
-	m.log.TRACE.Printf("GetFirmwareVersion: received PMSVersion: %s", systemInfo.Version.PMSVersion)
+	m.log.DEBUG.Printf("GetFirmwareVersion: PMSVersion: %s", systemInfo.Version.PMSVersion)
 
 	// extract the patch number behind a dot that is always followed by at least 4 digits
 	if match := regexp.MustCompile(`\.(\d{4})$`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
-		m.log.TRACE.Printf("GetFirmwareVersion: extracted firmware version: %v", match[1])
 		return strconv.Atoi(match[1])
 	}
 
-	m.log.TRACE.Printf("GetFirmwareVersion version: not found")
 	return 0, errors.New("firmware version not found")
 }
 
