@@ -161,7 +161,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+		go wb.heartbeat(ctx, b)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
@@ -192,7 +192,9 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 	return wb, err
 }
 
-func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
+func (wb *Keba) heartbeat(ctx context.Context, b []byte) {
+	timeout := time.Duration(binary.BigEndian.Uint32(b)) * time.Second / 2
+
 	for tick := time.Tick(timeout); ; {
 		select {
 		case <-tick:
@@ -200,7 +202,7 @@ func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if _, err := wb.Enabled(); err != nil {
+		if _, err := wb.conn.WriteMultipleRegisters(kebaRegFailsafeTimeout, 2, b); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -268,6 +270,16 @@ func (wb *Keba) statusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Keba) Enabled() (bool, error) {
+	// P40
+	if wb.regEnable == kebaRegMaxCurrent {
+		b, err := wb.conn.ReadHoldingRegisters(kebaRegMaxCurrent, 1)
+		if err != nil {
+			return false, err
+		}
+		return binary.BigEndian.Uint16(b) != 0, err
+	}
+
+	// P30
 	s, err := wb.getChargingState()
 	if err != nil {
 		return false, err
@@ -281,8 +293,10 @@ func (wb *Keba) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		if wb.regEnable == kebaRegMaxCurrent {
+			// P40
 			u = wb.current
 		} else {
+			// P30
 			u = 1
 		}
 	}
@@ -300,11 +314,11 @@ var _ api.ChargerEx = (*Keba)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Keba) MaxCurrentMillis(current float64) error {
-	u := uint16(current * 1000)
-	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
+	curr := uint16(current * 1000)
 
+	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, curr)
 	if err == nil {
-		wb.current = u
+		wb.current = curr
 	}
 
 	return err

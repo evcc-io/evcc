@@ -1,0 +1,14 @@
+template: compleo-solo
+products:
+  - brand: Compleo
+    description:
+      generic: Solo
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: compleo
+  {{- include "modbus" . }}

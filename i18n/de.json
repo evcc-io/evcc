@@ -197,7 +197,7 @@
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
       "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
-      "defaultModeHelpKeep": "Der letzte ausgewählte Modus wird beibehalten.",
+      "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
@@ -205,7 +205,7 @@
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
-      "maxCurrentHelp": "Muss größer als der minimale Strom sein.",
+      "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Abbrechen",
+    "demoMode": "Login ist im Demo-Modus nicht verfügbar.",
     "error": "Login fehlgeschlagen: ",
     "iframeHint": "Öffne evcc in einem neuen Tab.",
     "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
@@ -778,6 +779,8 @@
       "connected": "Verbunden.",
       "disconnectRequired": "Vorgang abgebrochen. Erneut verbinden.",
       "disconnected": "Nicht verbunden.",
+      "feedinPriorityNextStart": "Hohe Einspeisevergütungen beginnen in {duration}.",
+      "feedinPriorityPausing": "Solarladen pausiert, um die Einspeisung zu maximieren.",
       "finished": "Abgeschlossen.",
       "minCharge": "Mindestladung bis {soc}.",
       "pvDisable": "Zu wenig Überschuss. Ladung wird gleich pausiert.",
@@ -956,7 +959,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} von {total}",
+    "activeHours": "{active} von {total}",
     "activeHoursLabel": "Aktive Stunden",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
@@ -972,6 +975,14 @@
     "resetAction": "Grenze löschen",
     "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
     "saved": "Gepeichert."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pausierte Stunden",
+    "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
+    "priceLabel": "Einspeisetarif",
+    "priceLimit": "Einspeisegrenze",
+    "resetWarning": "Es ist kein dynamischer Einspeisetarif konfiguriert. Dennoch ist ein Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
+    "title": "Einspeisepriorität"
   },
   "startupError": {
     "configFile": "Verwendete Konfigurationsdatei:",

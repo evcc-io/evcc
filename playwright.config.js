@@ -8,13 +8,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 4 : 0,
   timeout: 30000, // default 30s
-  workers: process.env.CI ? 3 : 4,
-  reporter: "html",
+  reporter: [[process.env.CI ? "github" : "list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:7070",
     trace: "on-first-retry",
     video: "on-first-retry",
     screenshot: "only-on-failure",
+    permissions: ["clipboard-write"],
   },
   projects: [
     {

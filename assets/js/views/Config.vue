@@ -3,30 +3,8 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
-				<div v-if="$hiddenFeatures()" class="alert alert-danger my-4 pb-0" role="alert">
-					<p>
-						<strong>Experimental! 🧪</strong>
-						Only use these features if you are in the mood for adventure and not afraid
-						of debugging. Unexpected things and data loss may happen.
-					</p>
-					<p>
-						We are in the progress of replacing <code>evcc.yaml</code> with UI-based
-						configuration. Any changes made here will be written to the database. After
-						that, the corresponding <code>evcc.yaml</code>-values (e.g. network
-						settings) will be ignored.
-					</p>
-					<p class="mb-1"><strong>Missing features</strong></p>
-					<ul>
-						<li>migration for loadpoints</li>
-					</ul>
-					<p>
-						<strong>Migration and repair.</strong> Run <code>evcc migrate</code> to copy
-						configuration from <code>evcc.yaml</code> to the database. Existing database
-						configurations will be overwritten. Session and statistics data will not be
-						touched. Run <code>evcc migrate --reset</code> to remove all database
-						configurations.
-					</p>
-				</div>
+				<WelcomeBanner v-if="loadpointsRequired" />
+				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig @site-changed="siteChanged" />
@@ -433,6 +411,8 @@ import TariffsModal from "../components/Config/TariffsModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
+import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
+import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 
 export default {
 	name: "Config",
@@ -446,6 +426,7 @@ export default {
 		DeviceTags,
 		EebusIcon,
 		EebusModal,
+		ExperimentalBanner,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -466,6 +447,7 @@ export default {
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
+		WelcomeBanner,
 	},
 	mixins: [formatter, collector],
 	props: {

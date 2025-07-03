@@ -101,9 +101,7 @@ type Meter struct {
 // Decorate attaches additional capabilities to the base meter
 func (m *Meter) Decorate(
 	totalEnergy func() (float64, error),
-	currents func() (float64, float64, float64, error),
-	voltages func() (float64, float64, float64, error),
-	powers func() (float64, float64, float64, error),
+	currents, voltages, powers func() (float64, float64, float64, error),
 	batterySoc func() (float64, error),
 	batteryCapacity func() float64,
 	maxACPower func() float64,

@@ -11,13 +11,13 @@ requirements:
 
       Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
 
-      **Achtung**: Die aktive Batteriesteuerung sollte nur verwendet werden, wenn keine weiteren Einstellungen für die zeitabhängige Batteriesteuerung in der Wechselrichter-Konfiguration unter "Energiemanagement" - "Batteriemanagement" getätigt wurden, denn bestehende Einstellungen werden überschrieben.
+      **Achtung**: Die aktive Batteriesteuerung sollte nur verwendet werden, wenn keine weiteren Einstellungen für die zeitabhängige Batteriesteuerung in der Wechselrichter-Konfiguration unter "Energiemanagement" - "Batteriemanagement" getätigt wurden, denn bestehende Einstellungen werden überschrieben. Es ist der geeignete Konfigurationspfad auszuwählen!
     en: |
       Solar API should only be used as fallback. Integration via Modbus is preferred.
 
       Username and password are only required for active battery control.
 
-      **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten.
+      **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten. Choose corresponding configuration URI!
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -35,6 +35,16 @@ params:
     description:
       de: Passwort (für aktive Batteriesteuerung)
       en: Password (for active battery control)
+  - name: batteryconfiguri
+    advanced: true
+    choice: ["/config", "/api/config"]
+    default: /config
+    description:
+      en: Battery configuration URI
+      de: Batteriekonfigurations-URI
+    help:
+      de: Firmware Versionen ab 1.36.5-1 erfordern /api/config.
+      en: Firmware starting with 1.36.5-1 requires /api/config.
 render: |
   type: custom
   power:
@@ -66,7 +76,7 @@ render: |
     - case: 1 # normal
       set:
         source: http
-        uri: http://{{ .host }}/config/timeofuse
+        uri: http://{{ .host }}{{ .batteryconfiguri }}/timeofuse
         method: POST
         headers:
         - content-type: application/json
@@ -78,7 +88,7 @@ render: |
     - case: 2 # hold
       set:
         source: http
-        uri: http://{{ .host }}/config/timeofuse
+        uri: http://{{ .host }}{{ .batteryconfiguri }}/timeofuse
         method: POST
         headers:
         - content-type: application/json
@@ -92,7 +102,7 @@ render: |
         source: sequence
         set:
         - source: http
-          uri: http://{{ .host }}/config/timeofuse
+          uri: http://{{ .host }}{{ .batteryconfiguri }}/timeofuse
           method: POST
           headers:
           - content-type: application/json

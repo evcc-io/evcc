@@ -175,9 +175,14 @@ func (wb *AblEm4) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.current = uint16(current * 10)
+	curr := uint16(current * 10)
 
-	return wb.setCurrent(wb.current)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.current = curr
+	}
+
+	return err
 }
 
 var _ api.Meter = (*AblEm4)(nil)

@@ -581,6 +581,7 @@
   },
   "loginModal": {
     "cancel": "Cancel",
+    "demoMode": "Login is not supported in demo mode.",
     "error": "Login failed: ",
     "iframeHint": "Open evcc in a new tab.",
     "iframeIssue": "Your password is correct, but your browser seems to have dropped the authentication cookie. This can happen if you run evcc in an iframe via HTTP.",
@@ -778,6 +779,8 @@
       "connected": "Connected.",
       "disconnectRequired": "Session terminated. Please reconnect.",
       "disconnected": "Disconnected.",
+      "feedinPriorityNextStart": "High feed-in rates start in {duration}.",
+      "feedinPriorityPausing": "Solar charging paused to maximize feed-in.",
       "finished": "Finished.",
       "minCharge": "Minimum charging to {soc}.",
       "pvDisable": "Not enough surplus. Pausing soon.",
@@ -956,7 +959,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} of {total}",
+    "activeHours": "{active} of {total}",
     "activeHoursLabel": "Active hours",
     "applyToAll": "Apply everywhere?",
     "batteryDescription": "Charges the home battery with energy from the grid.",
@@ -972,6 +975,14 @@
     "resetAction": "Remove limit",
     "resetWarning": "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?",
     "saved": "Saved."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Paused hours",
+    "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
+    "priceLabel": "Feed-in rate",
+    "priceLimit": "Feed-in limit",
+    "resetWarning": "There is no dynamic feed-in tariff configured. However, there is still a limit of {limit}. Clean up your configuration?",
+    "title": "Feed-in Priority"
   },
   "startupError": {
     "configFile": "Configuration file used:",

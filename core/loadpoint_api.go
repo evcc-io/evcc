@@ -608,7 +608,8 @@ func (lp *Loadpoint) GetChargePower() float64 {
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.smartCostActive(rates) {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
+		lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 
@@ -804,6 +805,28 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+	}
+}
+
+// GetSmartFeedInPriorityLimit gets the smart feed-in limit
+func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartFeedInPriorityLimit
+}
+
+// SetSmartFeedInPriorityLimit sets the smart cost feed-in
+func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+
+	if !ptrValueEqual(lp.smartFeedInPriorityLimit, val) {
+		lp.smartFeedInPriorityLimit = val
+
+		lp.settings.SetFloatPtr(keys.SmartFeedInPriorityLimit, val)
+		lp.publish(keys.SmartFeedInPriorityLimit, val)
 	}
 }
 

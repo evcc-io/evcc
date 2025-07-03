@@ -24,7 +24,7 @@ const (
 	BatteryBoost     = "batteryBoost"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
-	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
+	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature
@@ -42,8 +42,12 @@ const (
 
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
-	SmartCostLimit     = "smartCostLimit"     // smart cost limit
-	SmartCostNextStart = "smartCostNextStart" // smart cost next start
+	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
+	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging
+
+	SmartFeedInPriorityActive    = "smartFeedInPriorityActive"    // smart feed-in priority active
+	SmartFeedInPriorityLimit     = "smartFeedInPriorityLimit"     // smart feed-in priority limit, pause self-consumption when feed-in rates are above
+	SmartFeedInPriorityNextStart = "smartFeedInPriorityNextStart" // smart feed-in priority next start, time of next pause
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
@@ -86,6 +90,7 @@ const (
 
 	// vehicle
 	VehicleName            = "vehicleName"            // vehicle name
+	VehicleTitle           = "vehicleTitle"           // vehicle title
 	VehicleIdentity        = "vehicleIdentity"        // vehicle identity
 	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
 	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer
