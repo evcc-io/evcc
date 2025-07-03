@@ -10,40 +10,54 @@
 			<span>{{ $t("config.system.dataManagement.description") }}</span>
 		</p>
 
-		<div>
+		<div class="mb-3">
 			<h6>
-				{{ $t("config.system.dataManagement.backup.title") }} <small>backup-summary</small>
+				{{ $t("config.system.dataManagement.backup.title") }}
 			</h6>
+
+			<p>
+				{{ $t("config.system.dataManagement.backup.description") }}
+			</p>
 			<button class="btn btn-outline-secondary" @click="$emit('openBackupConfirmModal')">
 				{{ $t("config.system.dataManagement.backup.download") }}
 			</button>
 		</div>
-		<div>
+		<div class="mb-3">
 			<h6>
-				{{ $t("config.system.dataManagement.restore.title") }} <small>backup-restore</small>
+				{{ $t("config.system.dataManagement.restore.title") }}
 			</h6>
+			<p>
+				{{ $t("config.system.dataManagement.restore.description") }}
+			</p>
 
 			<form @submit="restoreDatabase">
-				<PropertyFileField
-					ref="fileInput"
-					:accepted="['.db']"
-					required
-					@file-changed="fileChanged"
-				/>
+				<FormRow
+					id="restoreFile"
+					:label="$t('config.system.dataManagement.restore.labelFile')"
+				>
+					<PropertyFileField
+						id="restoreFile"
+						ref="fileInput"
+						:accepted="['.db']"
+						required
+						@file-changed="fileChanged"
+					/>
+				</FormRow>
 
-				<button class="btn btn-outline-secondary mt-2" :disabled="file === null">
+				<button class="btn btn-outline-danger mt-2" :disabled="file === null">
 					{{ $t("config.system.dataManagement.restore.action") }}
 				</button>
 			</form>
 		</div>
-		<div>
+		<div class="mb-3">
 			<h6>
-				{{ $t("config.system.dataManagement.reset.title") }} <small>backup-reset</small>
+				{{ $t("config.system.dataManagement.reset.title") }}
 			</h6>
+			<p>{{ $t("config.system.dataManagement.reset.description") }}</p>
 
 			<form @submit="resetDatabase">
-				<div class="d-flex flex-column">
-					<div>
+				<div class="d-flex flex-column mb-2">
+					<div class="d-flex mb-1">
 						<input
 							id="resetSessions"
 							v-model="selectedReset.sessions"
@@ -51,11 +65,15 @@
 							type="checkbox"
 						/>
 						<label class="form-check-label ms-2" for="resetSessions">
-							{{ $t("header.sessions") }}
+							<span>{{ $t("config.system.dataManagement.reset.sessions") }}</span>
+							<br />
+							<small>
+								{{ $t("config.system.dataManagement.reset.sessionsDescription") }}
+							</small>
 						</label>
 					</div>
 
-					<div>
+					<div class="d-flex mb-1">
 						<input
 							id="resetSettings"
 							v-model="selectedReset.settings"
@@ -63,19 +81,28 @@
 							type="checkbox"
 						/>
 						<label class="form-check-label ms-2" for="resetSettings">
-							{{ $t("config.system.dataManagement.reset.settings") }}
+							<span>{{ $t("config.system.dataManagement.reset.settings") }}</span>
+							<br />
+							<small>
+								{{ $t("config.system.dataManagement.reset.settingsDescription") }}
+							</small>
 						</label>
 					</div>
 				</div>
 
 				<button
-					class="btn btn-outline-secondary mt-3"
+					class="btn btn-outline-danger mt-3"
 					:disabled="!selectedReset.sessions && !selectedReset.settings"
 				>
 					{{ $t("config.system.dataManagement.reset.action") }}
 				</button>
 			</form>
 		</div>
+		<p>
+			<small>
+				{{ $t("config.system.dataManagement.note") }}
+			</small>
+		</p>
 	</GenericModal>
 </template>
 
@@ -84,10 +111,11 @@ import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import api from "@/api";
 import PropertyFileField from "./PropertyFileField.vue";
+import FormRow from "./FormRow.vue";
 
 export default defineComponent({
 	name: "DataManagementModal",
-	components: { GenericModal, PropertyFileField },
+	components: { GenericModal, PropertyFileField, FormRow },
 	emits: ["openBackupConfirmModal", "opened", "closed"],
 	data() {
 		return {

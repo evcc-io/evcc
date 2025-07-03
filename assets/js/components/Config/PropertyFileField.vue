@@ -1,15 +1,15 @@
 <template>
 	<div>
-		<label for="formFile" class="btn btn-outline-secondary">
-			<div class="hstack gap-2">
+		<label :for="id" class="form-control cursor-pointer">
+			<div class="hstack gap-3">
 				{{ $t("config.general.selectFile") }}
-				<div class="vr thick-vr"></div>
-				<span :class="{ 'text-primary': file }">{{ computedFileName }}</span>
+				<div class="vr"></div>
+				<span>{{ computedFileName }}</span>
 			</div>
 		</label>
 
 		<input
-			id="formFile"
+			:id="id"
 			type="file"
 			class="d-none"
 			:accept="accepted.join(', ')"
@@ -31,6 +31,7 @@ import { defineComponent, type PropType } from "vue";
 export default defineComponent({
 	name: "PropertyFileField",
 	props: {
+		id: String,
 		accepted: { type: Array as PropType<string[]>, default: () => [] },
 		required: Boolean,
 	},
@@ -66,10 +67,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.thick-vr {
-	width: 2px;
-	border-radius: 25px;
-}
-</style>
