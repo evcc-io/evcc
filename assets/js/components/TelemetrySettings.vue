@@ -55,7 +55,7 @@ export default defineComponent({
 	},
 	computed: {
 		enabled() {
-			return settings.telemetry;
+			return !!settings.telemetry;
 		},
 		docsLink() {
 			return `${docsPrefix()}/docs/faq#telemetry`;
