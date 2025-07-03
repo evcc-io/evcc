@@ -254,7 +254,7 @@ export default defineComponent({
 			return this.formatValue(value);
 		},
 		activeSlotName() {
-			if (this.activeSlot) {	
+			if (this.activeSlot) {
 				const { day, start, end } = this.activeSlot;
 				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
