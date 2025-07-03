@@ -51,13 +51,13 @@ type Zaptec struct {
 }
 
 func init() {
-	registry.Add("zaptec", NewZaptecFromConfig)
+	registry.AddCtx("zaptec", NewZaptecFromConfig)
 }
 
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
-func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewZaptecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User, Password string
 		Id             string
@@ -75,11 +75,11 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)
+	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
+func NewZaptec(ctx context.Context, user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -102,7 +102,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		return res, err
 	}, cache)
 
-	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
+	provider, err := oidc.NewProvider(ctx, zaptec.ApiURL+"/")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
@@ -115,19 +115,19 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		},
 	}
 
-	ctx := context.WithValue(
-		context.Background(),
+	oauthCtx := context.WithValue(
+		ctx,
 		oauth2.HTTPClient,
 		c.Client,
 	)
 
-	token, err := oc.PasswordCredentialsToken(ctx, user, password)
+	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
 	if err != nil {
 		return nil, err
 	}
 
 	c.Transport = &oauth2.Transport{
-		Source: oc.TokenSource(context.Background(), token),
+		Source: oc.TokenSource(ctx, token),
 		Base:   c.Transport,
 	}
 
