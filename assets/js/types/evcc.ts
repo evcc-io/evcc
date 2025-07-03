@@ -199,8 +199,6 @@ export interface SelectOption<T> {
 
 export type DeviceType = "charger" | "meter" | "vehicle";
 
-export type LoginAction = (password: string) => Promise<{ status: number }>;
-
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
