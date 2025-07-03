@@ -48,11 +48,11 @@ export function getLocalePreference() {
 
 export function removeLocalePreference(i18n: VueI18nInstance) {
   settings.locale = null;
-  setI18nLanguage(i18n, DEFAULT_BROWSER_LOCALE as typeof i18n.locale);
+  setI18nLanguage(i18n, DEFAULT_BROWSER_LOCALE as keyof typeof LOCALES);
   ensureCurrentLocaleMessages(i18n);
 }
 
-export function setLocalePreference(i18n: VueI18nInstance, locale: typeof i18n.locale) {
+export function setLocalePreference(i18n: VueI18nInstance, locale: keyof typeof LOCALES) {
   if (!(locale in LOCALES)) {
     console.error("unknown locale", locale);
     return;
@@ -73,7 +73,7 @@ export default function setupI18n() {
     silentTranslationWarn: true,
     locale: DEFAULT_LOCALE,
     fallbackLocale: DEFAULT_LOCALE,
-    messages: { "en-US": en },
+    messages: { en },
   });
   setI18nLanguage(i18n.global, getLocale());
   return i18n;

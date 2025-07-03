@@ -10,6 +10,7 @@ image = "evcc/evcc:latest"
 
 [experimental]
 auto_rollback = true
+cmd = ["evcc", "--demo"]
 
 [[services]]
 http_checks = []

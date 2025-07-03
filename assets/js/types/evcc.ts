@@ -1,6 +1,11 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
+// react-native-webview
+interface WebView {
+  postMessage: (message: string) => void;
+}
+
 declare global {
   interface Window {
     app: any;
@@ -9,6 +14,9 @@ declare global {
       commit: string;
       customCss: string;
     };
+  }
+  interface Window {
+    ReactNativeWebView?: WebView;
   }
 }
 
@@ -32,6 +40,17 @@ export interface State {
   fatal?: FatalError;
   auth?: Auth;
   vehicles: Vehicle[];
+}
+
+export enum SMART_COST_TYPE {
+  CO2 = "co2",
+  PRICE_DYNAMIC = "pricedynamic",
+  PRICE_FORECAST = "priceforecast",
+}
+
+export enum LENGTH_UNIT {
+  KM = "km",
+  MILES = "mi",
 }
 
 export interface LoadpointCompact {
@@ -94,6 +113,15 @@ export enum PHASES {
   TWO_PHASES = 2,
   THREE_PHASES = 3,
 }
+
+export type SessionInfoKey =
+  | "remaining"
+  | "finished"
+  | "duration"
+  | "solar"
+  | "avgPrice"
+  | "price"
+  | "co2";
 
 export interface Sponsor {
   name: string;
@@ -159,6 +187,7 @@ export interface Forecast {
   co2?: ForecastSlot[];
   solar?: SolarDetails;
   planner?: ForecastSlot[];
+  feedin?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {

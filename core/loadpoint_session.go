@@ -2,7 +2,9 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
 
@@ -34,7 +36,7 @@ func (lp *Loadpoint) createSession() {
 	lp.session = lp.db.New(lp.chargeMeterTotal())
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
-		lp.session.Vehicle = vehicle.Title()
+		lp.session.Vehicle = vehicle.GetTitle()
 	} else if lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.session.Vehicle = lp.GetTitle()
 	}
@@ -44,6 +46,11 @@ func (lp *Loadpoint) createSession() {
 			lp.session.Identifier = id
 		}
 	}
+
+	// energy
+	lp.energyMetrics.Reset()
+	lp.energyMetrics.Publish("session", lp)
+	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 }
 
 // stopSession ends a charging session segment and persists the session.
@@ -105,4 +112,18 @@ func (lp *Loadpoint) clearSession() {
 	}
 
 	lp.session = nil
+}
+
+func (lp *Loadpoint) resetHeatingSession() {
+	if lp.session == nil || !lp.chargerHasFeature(api.Heating) || !lp.chargerHasFeature(api.IntegratedDevice) {
+		return
+	}
+
+	if !now.With(lp.clock.Now()).BeginningOfDay().After(lp.session.Created) {
+		return
+	}
+
+	lp.stopSession()
+	lp.clearSession()
+	lp.createSession()
 }

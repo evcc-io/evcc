@@ -163,16 +163,16 @@ func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(phxEMEthRegCurrents)
+	return wb.getPhaseValues(phxEMEthRegCurrents, 0.001)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEMEth) voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(phxEMEthRegVoltages)
+	return wb.getPhaseValues(phxEMEthRegVoltages, phxEMEthSF)
 }
 
 // getPhaseValues returns 3 sequential phase values
-func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+func (wb *PhoenixEMEth) getPhaseValues(reg uint16, scale float64) (float64, float64, float64, error) {
 	const count = 3
 	b, err := wb.conn.ReadInputRegisters(reg, 2*count)
 	if err != nil {
@@ -181,7 +181,7 @@ func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, e
 
 	var res [count]float64
 	for i := range res {
-		res[i] = float64(encoding.Int32LswFirst(b[4*i:])) * phxEMEthSF
+		res[i] = float64(encoding.Int32LswFirst(b[4*i:])) * scale
 	}
 
 	return res[0], res[1], res[2], nil

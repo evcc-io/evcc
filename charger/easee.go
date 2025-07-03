@@ -70,11 +70,11 @@ type Easee struct {
 }
 
 func init() {
-	registry.Add("easee", NewEaseeFromConfig)
+	registry.AddCtx("easee", NewEaseeFromConfig)
 }
 
 // NewEaseeFromConfig creates a Easee charger from generic config
-func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEaseeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User      string
 		Password  string
@@ -93,11 +93,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
+	return NewEasee(ctx, cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
+func NewEasee(ctx context.Context, user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -166,7 +166,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		}
 	}
 
-	client, err := signalr.NewClient(context.Background(),
+	client, err := signalr.NewClient(ctx,
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithBackoff(func() backoff.BackOff {
 			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
@@ -180,7 +180,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(ctx, request.Timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -188,6 +188,8 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	// wait for first update
 	select {
 	case <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
