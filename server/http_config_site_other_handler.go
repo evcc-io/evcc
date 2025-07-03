@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db"
@@ -75,8 +76,10 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 		}
 		defer f.Close()
 
+		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
+
 		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("Content-Disposition", `attachment; filename="evcc-backup.db"`)
+		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
 		if _, err := io.Copy(w, f); err != nil {
 			http.Error(w, "Error streaming DB file: "+err.Error(), http.StatusInternalServerError)
