@@ -15,8 +15,6 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-//go:generate go tool openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
-
 //go:embed openapi.json
 var spec []byte
 
