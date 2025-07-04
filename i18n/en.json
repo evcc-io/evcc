@@ -44,8 +44,14 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Switchable sockets",
       "template": "Manufacturer",
-      "titleAdd": "Add Charger",
-      "titleEdit": "Edit Charger"
+      "titleAdd": {
+        "charging": "Add Charger",
+        "heating": "Add Heater"
+      },
+      "titleEdit": {
+        "charging": "Edit Charger",
+        "heating": "Edit Heater"
+      }
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
@@ -180,11 +186,23 @@
       "v2Support": "Back to InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Add charger",
-      "addMeter": "Add dedicated charger meter",
+      "addCharger": {
+        "charging": "Add charger",
+        "heating": "Add heater"
+      },
+      "addMeter": {
+        "charging": "Add dedicated charger meter",
+        "heating": "Add dedicated heater meter"
+      },
       "cancel": "Cancel",
-      "chargerError": "Configuring a charger is required.",
-      "chargerLabel": "Charger",
+      "chargerError": {
+        "charging": "Configuring a charger is required.",
+        "heating": "Configuring a heater is required."
+      },
+      "chargerLabel": {
+        "charging": "Charger",
+        "heating": "Heater"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,12 +210,15 @@
       "chargerPowerCustom": "other",
       "chargerPowerCustomHelp": "Define a custom current range.",
       "chargerTypeLabel": "Charger type",
-      "chargingTitle": "Charging",
+      "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
-      "defaultModeHelp": "Charging mode when connecting the vehicle.",
-      "defaultModeHelpKeep": "Keeps the last selected charging mode.",
+      "defaultModeHelp": {
+        "charging": "Charging mode when connecting the vehicle.",
+        "heating": "Is set when on system start."
+      },
+      "defaultModeHelpKeep": "Keeps the last selected mode.",
       "defaultModeLabel": "Default mode",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
@@ -218,7 +239,7 @@
       "phases3p": "3-phase",
       "phasesAutomatic": "Automatic phases",
       "phasesAutomaticHelp": "Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging.",
-      "phasesHelp": "Number of phases connected to the charger.",
+      "phasesHelp": "Number of phases connected.",
       "phasesLabel": "Phases",
       "pollIntervalDanger": "Regularly querying the vehicle may drain the vehicle battery. Some vehicle manufacturers may actively prevent charging in this case. Not recommended! Only use this if you're aware of the risks.",
       "pollIntervalHelp": "Time between vehicle API updates. Short intervals may drain the vehicle battery.",
@@ -230,31 +251,38 @@
       "pollModeConnected": "connected",
       "pollModeConnectedHelp": "Update vehicle status in regular intervals when connected.",
       "pollModeLabel": "Update behaviour",
-      "priorityHelp": "Higher priority charge points get preferred access to solar surplus.",
+      "priorityHelp": "Higher priority get preferred access to solar surplus.",
       "priorityLabel": "Priority",
       "save": "Save",
       "showAllSettings": "Show all settings",
       "solarBehaviorCustomHelp": "Define your own enable and disable thresholds and delays.",
-      "solarBehaviorDefaultHelp": "Only charge with solar surplus. Start after {enableDelay} of surplus. Stop when there is not enough surplus for {disableDelay}.",
-      "solarBehaviorLabel": "Solar behaviour",
+      "solarBehaviorDefaultHelp": "Start after {enableDelay} of sufficient surplus. Stop when there is not enough surplus for {disableDelay}.",
+      "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
-      "thresholdDisableHelpPositive": "Stop charging, when more than {power} is used from the grid for {delay}.",
-      "thresholdDisableHelpZero": "Stop when minimum charge power can't be satisfied for {delay}.",
+      "thresholdDisableHelpPositive": "Stop, when more than {power} is used from the grid for {delay}.",
+      "thresholdDisableHelpZero": "Stop when minimum required power can't be satisfied for {delay}.",
       "thresholdDisableLabel": "Disable grid power",
       "thresholdEnableDelayLabel": "Enable delay",
       "thresholdEnableHelpInvalid": "Please use a negative value.",
-      "thresholdEnableHelpNegative": "Start charging, when {surplus} surplus is available for {delay}.",
-      "thresholdEnableHelpZero": "Start when minimum charge power surplus is available for {delay}.",
+      "thresholdEnableHelpNegative": "Start, when {surplus} surplus is available for {delay}.",
+      "thresholdEnableHelpZero": "Start when minimum required power can be satisfied for {delay}.",
       "thresholdEnableLabel": "Enable grid power",
-      "titleAdd": "Add Charger or Heater",
+      "titleAdd": {
+        "charging": "Add Charging Point",
+        "heating": "Add Heating Device",
+        "unknown": "Add Charger or Heater"
+      },
       "titleEdit": {
         "charging": "Edit Charging Point",
         "heating": "Edit Heating Device"
       },
-      "titleExample": "Garage, Carport, etc.",
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Heatpump, Heater, etc."
+      },
       "titleLabel": "Title",
       "vehicleAutoDetection": "auto detection",
       "vehicleHelpAutoDetection": "Automatically selects the most plausible vehicle. Manual override is possible.",

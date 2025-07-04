@@ -348,6 +348,7 @@
 				<ChargerModal
 					:id="selectedChargerId"
 					:name="selectedChargerName"
+					:loadpointType="selectedLoadpointType"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
 					:isSponsor="isSponsor"
 					@added="chargerAdded"
@@ -467,6 +468,7 @@ export default {
 			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
+			selectedLoadpointType: undefined,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
@@ -689,7 +691,7 @@ export default {
 		chargerModal() {
 			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
 		},
-		editLoadpointCharger(name) {
+		editLoadpointCharger(name, loadpointType) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
 			if (charger && charger.id === undefined) {
@@ -699,7 +701,7 @@ export default {
 				return;
 			}
 			this.loadpointModal().hide();
-			this.$nextTick(() => this.editCharger(charger?.id));
+			this.$nextTick(() => this.editCharger(charger?.id, loadpointType));
 		},
 		editLoadpointMeter(name) {
 			this.loadpointSubModalOpen = true;
@@ -733,12 +735,9 @@ export default {
 			this.selectedMeterTypeChoices = ["aux", "ext"];
 			this.$nextTick(() => this.meterModal().show());
 		},
-		editCharger(id) {
+		editCharger(id, loadpointType) {
 			this.selectedChargerId = id;
-			this.$nextTick(() => this.chargerModal().show());
-		},
-		newCharger() {
-			this.selectedChargerId = undefined;
+			this.selectedLoadpointType = loadpointType;
 			this.$nextTick(() => this.chargerModal().show());
 		},
 		async meterChanged() {

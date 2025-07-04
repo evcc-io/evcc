@@ -284,6 +284,10 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("heating", true, nil)
 	}
 
+	if hasFeature(instance, api.IntegratedDevice) {
+		makeResult("integratedDevice", true, nil)
+	}
+
 	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
 		makeResult("icon", dev.Icon(), nil)
 	}

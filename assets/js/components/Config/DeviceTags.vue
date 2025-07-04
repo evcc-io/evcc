@@ -29,7 +29,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 
-const HIDDEN_TAGS = ["icon", "heating"];
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
 export default {
 	name: "DeviceTags",
