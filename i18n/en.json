@@ -393,7 +393,7 @@
     "system": {
       "dataManagement": {
         "backup": {
-          "confirmationText": "For security reasons, downloading a backup requires your password. The database will be downloaded afterwards.",
+          "confirmationText": "For security reasons, downloading a backup requires the password to be entered. The database will be downloaded afterwards.",
           "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
           "download": "Download backup",
           "title": "Backup"
