@@ -2,7 +2,7 @@ template: daheimladen-pro
 products:
   - brand: DaheimLaden
     description:
-      generic: Pro
+      generic: Smart/Touch Pro
 capabilities: ["1p3p", "mA"]
 params:
   - name: host
