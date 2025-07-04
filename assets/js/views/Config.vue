@@ -375,11 +375,15 @@
 				<DataManagementModal
 					ref="dataManagementModal"
 					:fade="dataManagementSubModalOpen ? 'left' : ''"
-					@open-backup-confirm-modal="openBackupConfirmModal"
-					@opened="dataManagementSubModalOpen = false"
+					@open-data-management-confirm-modal="openDataManagementConfirmModal"
+					@opened="dataManagementSubModalType = undefined"
 					@closed="dataManagementModalClosed"
 				/>
-				<DataManagementConfirmModal @close="confirmWithPasswordModalClosed" />
+				<DataManagementConfirmModal
+					:type="dataManagementSubModalType"
+					:action="dataManagementSubModalAction"
+					@close="confirmWithPasswordModalClosed"
+				/>
 			</div>
 		</div>
 	</div>
@@ -485,7 +489,8 @@ export default {
 			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
-			dataManagementSubModalOpen: false,
+			dataManagementSubModalType: undefined,
+			dataManagementSubModalAction: undefined,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
@@ -498,6 +503,9 @@ export default {
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		dataManagementSubModalOpen() {
+			return this.dataManagementSubModalType !== undefined;
+		},
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
 		},
@@ -714,8 +722,9 @@ export default {
 		dataManagementConfirmModal() {
 			return Modal.getOrCreateInstance(document.getElementById("dataManagementConfirmModal"));
 		},
-		openBackupConfirmModal() {
-			this.dataManagementSubModalOpen = true;
+		openDataManagementConfirmModal(type, action) {
+			this.dataManagementSubModalType = type;
+			this.dataManagementSubModalAction = action;
 			this.dataManagementModal().hide();
 			this.$nextTick(() => this.dataManagementConfirmModal().show());
 		},

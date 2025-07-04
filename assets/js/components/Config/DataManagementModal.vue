@@ -18,7 +18,7 @@
 			<p>
 				{{ $t("config.system.dataManagement.backup.description") }}
 			</p>
-			<button class="btn btn-outline-secondary" @click="$emit('openBackupConfirmModal')">
+			<button class="btn btn-outline-secondary" @click="downloadBackup">
 				{{ $t("config.system.dataManagement.backup.download") }}
 			</button>
 		</div>
@@ -112,11 +112,12 @@ import GenericModal from "../Helper/GenericModal.vue";
 import api from "@/api";
 import PropertyFileField from "./PropertyFileField.vue";
 import FormRow from "./FormRow.vue";
+import type { ConfirmAction } from "@/types/evcc";
 
 export default defineComponent({
 	name: "DataManagementModal",
 	components: { GenericModal, PropertyFileField, FormRow },
-	emits: ["openBackupConfirmModal", "opened", "closed"],
+	emits: ["openDataManagementConfirmModal", "opened", "closed"],
 	data() {
 		return {
 			selectedReset: {
@@ -139,14 +140,30 @@ export default defineComponent({
 		},
 
 		fileChanged(file: File) {
+			console.log("CHANGED", file);
+
 			this.file = file;
 		},
+		async downloadBackup() {
+			this.$emit("openDataManagementConfirmModal", "backup", ((password: string) => {
+				return api.post(
+					"/config/backup",
+					{ password },
+					{
+						responseType: "blob",
+						validateStatus: (code: number) => [200, 401, 403].includes(code),
+					}
+				);
+			}) satisfies ConfirmAction);
+		},
 		async restoreDatabase() {
-			const formData = new FormData();
-			formData.append("file", this.file!);
-			await api.post("/config/restore", formData, {
-				headers: { "Content-Type": "multipart/form-data" },
-			});
+			this.$emit("openDataManagementConfirmModal", "restore", ((password: string) => {
+				const formData = new FormData();
+				formData.append("password", password);
+				formData.append("file", this.file!);
+
+				return api.post("/config/restore", formData);
+			}) satisfies ConfirmAction);
 		},
 		async resetDatabase() {
 			await api.post("/config/reset", this.selectedReset);

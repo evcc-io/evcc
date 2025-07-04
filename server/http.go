@@ -289,7 +289,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
 			"backup":             {"POST", "/backup", getBackup(auth)},
-			"restore":            {"POST", "/restore", restoreDatabase(shutdown)},
+			"restore":            {"POST", "/restore", restoreDatabase(auth, shutdown)},
 			"reset":              {"POST", "/reset", resetDatabase(shutdown)},
 		}
 

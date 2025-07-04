@@ -2,7 +2,7 @@
 	<GenericModal
 		id="dataManagementConfirmModal"
 		:title="$t('config.system.dataManagement.confirmWithPassword')"
-		size="sm"
+		size="md"
 		data-testid="data-management-confirm-modal"
 		@close="$emit('close')"
 		@closed="closed"
@@ -23,16 +23,21 @@
 	</GenericModal>
 </template>
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import PasswordInput from "../Auth/PasswordInput.vue";
-import api, { downloadFile } from "@/api";
+import { downloadFile } from "@/api";
 import { isLoggedIn } from "../Auth/auth";
 import Modal from "bootstrap/js/dist/modal";
+import type { ConfirmAction } from "@/types/evcc";
 
 export default defineComponent({
 	name: "DataManagementConfirmModal",
 	components: { GenericModal, PasswordInput },
+	props: {
+		type: { type: String as PropType<"backup" | "restore"> },
+		action: { type: Function as PropType<ConfirmAction> },
+	},
 	emits: ["close"],
 	data() {
 		return {
@@ -58,25 +63,22 @@ export default defineComponent({
 			this.loading = true;
 
 			try {
-				const res = await api.post(
-					"/config/backup",
-					{ password: this.password },
-					{
-						responseType: "blob",
-						validateStatus: (code: number) => [200, 401, 403].includes(code),
-					}
-				);
+				if (this.action) {
+					const res = await this.action(this.password);
 
-				if (res.status === 200) {
-					if (isLoggedIn()) {
-						this.closeModal();
+					if (res.status === 200) {
+						if (isLoggedIn()) {
+							this.closeModal();
 
-						downloadFile(res);
-					} else {
-						this.iframeHint = true;
+							if (this.type === "backup") {
+								downloadFile(res);
+							}
+						} else {
+							this.iframeHint = true;
+						}
+					} else if (res.status === 401) {
+						this.error = this.$t("loginModal.invalid");
 					}
-				} else if (res.status === 401) {
-					this.error = this.$t("loginModal.invalid");
 				}
 			} catch (err) {
 				console.error(err);

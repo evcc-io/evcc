@@ -88,12 +88,23 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
-func restoreDatabase(shutdown func()) http.HandlerFunc {
+func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse multipart form
 		err := r.ParseMultipartForm(32 << 20) // 32MB max memory
 		if err != nil {
 			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		password := r.FormValue("password")
+		if password == "" {
+			http.Error(w, "Password is required", http.StatusBadRequest)
+			return
+		}
+
+		if !authObject.IsAdminPasswordValid(password) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 
