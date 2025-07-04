@@ -393,6 +393,7 @@
     "system": {
       "dataManagement": {
         "backup": {
+          "confirmationText": "For security reasons, downloading a backup requires your password. The database will be downloaded afterwards.",
           "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
           "download": "Download backup",
           "title": "Backup"
@@ -411,6 +412,7 @@
         },
         "restore": {
           "action": "Restore & Restart",
+          "confirmationText": "Restoring the database will overwrite existing data. It's recommended to download a backup first. Continue?",
           "description": "Restore your data from a backup file. This will overwrite all your current data.",
           "labelFile": "Backup file",
           "title": "Restore"

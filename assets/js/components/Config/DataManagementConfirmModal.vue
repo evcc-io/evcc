@@ -8,6 +8,10 @@
 		@closed="closed"
 	>
 		<form @submit.prevent="submit">
+			<p>
+				<span>{{ $t(`config.system.dataManagement.${type}.confirmationText`) }}</span>
+			</p>
+
 			<PasswordInput v-model:password="password" :error="error" :iframe-hint="iframeHint" />
 
 			<button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
