@@ -69,11 +69,6 @@ func runMeter(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if ok, _ := cmd.Flags().GetBool(flagHeartbeat); flagUsed && ok {
-		log.INFO.Println("running heartbeat until interrupted (Ctrl-C to stop)")
-		time.Sleep(time.Hour)
-	}
-
 	if !flagUsed {
 		d := dumper{len: len(meters)}
 	REPEAT:
@@ -89,6 +84,9 @@ func runMeter(cmd *cobra.Command, args []string) {
 			}
 			goto REPEAT
 		}
+	} else if ok, _ := cmd.Flags().GetBool(flagHeartbeat); ok {
+		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
 	}
 
 	// wait for shutdown

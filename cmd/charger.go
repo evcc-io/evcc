@@ -136,6 +136,9 @@ func runCharger(cmd *cobra.Command, args []string) {
 				d.DumpDiagnosis(v)
 			}
 		}
+	} else if ok, _ := cmd.Flags().GetBool(flagHeartbeat); ok {
+		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
 	}
 
 	// wait for shutdown
