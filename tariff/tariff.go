@@ -21,6 +21,7 @@ type Tariff struct {
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
 	typ    api.TariffType
+	cache  *SolarCacheManager
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -75,6 +76,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
+	// Initialize cache for solar forecast tariffs
+	if cc.Type == api.TariffTypeSolar && forecastG != nil {
+		t.cache = NewSolarCacheManager("custom", cc)
+	}
+
 	if forecastG != nil {
 		done := make(chan error)
 		go t.run(forecastG, done, cc.Interval)
@@ -84,25 +90,46 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	return t, err
 }
 
+// applyPriceAndTime transforms forecast values by applying totalPrice and ensuring local time
+// For solar forecasts: totalPrice is a no-op (charges=0, tax=0, no formula)
+// For price forecasts: applies charges, taxes, and custom formulas
+func (t *Tariff) applyPriceAndTime(rates api.Rates) api.Rates {
+	result := make(api.Rates, len(rates))
+	for i, r := range rates {
+		result[i] = api.Rate{
+			Value: t.totalPrice(r.Value, r.Start),
+			Start: r.Start.Local(),
+			End:   r.End.Local(),
+		}
+	}
+	return result
+}
+
+// periodStart returns the start of the current period for pruning old rates
+func (t *Tariff) periodStart() time.Time {
+	if t.typ == api.TariffTypeSolar {
+		return beginningOfDay()
+	}
+	return now.With(time.Now()).BeginningOfHour()
+}
+
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
+	// Try to load from cache on startup for solar forecasts
+	if t.typ == api.TariffTypeSolar {
+		loadSolarCacheWithDelay(t.cache, t.data, t.log, interval, done, &once)
+	}
+
 	for tick := time.Tick(interval); ; <-tick {
-		var data api.Rates
+		var forecastValues api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
 			if err != nil {
 				return backoffPermanentError(err)
 			}
-			if err := json.Unmarshal([]byte(s), &data); err != nil {
+			if err := json.Unmarshal([]byte(s), &forecastValues); err != nil {
 				return backoff.Permanent(err)
-			}
-			for i, r := range data {
-				data[i] = api.Rate{
-					Value: t.totalPrice(r.Value, r.Start),
-					Start: r.Start.Local(),
-					End:   r.End.Local(),
-				}
 			}
 			return nil
 		}, bo()); err != nil {
@@ -112,12 +139,18 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		// only prune rates older than current period
-		periodStart := now.With(time.Now()).BeginningOfHour()
-		if t.typ == api.TariffTypeSolar {
-			periodStart = beginningOfDay()
+		// Apply transformations once (time normalization + price adjustments)
+		processedRates := t.applyPriceAndTime(forecastValues)
+
+		// Cache the processed data for solar forecasts
+		if t.cache != nil {
+			if err := t.cache.Set(processedRates); err != nil {
+				t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
+			}
 		}
-		mergeRatesAfter(t.data, data, periodStart)
+
+		// Update stored rates
+		mergeRatesAfter(t.data, processedRates, t.periodStart())
 
 		once.Do(func() { close(done) })
 	}
