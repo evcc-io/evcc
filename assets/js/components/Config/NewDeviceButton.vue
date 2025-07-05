@@ -6,7 +6,7 @@
 			@click="$emit('click')"
 		>
 			<shopicon-regular-plus class="me-1"></shopicon-regular-plus>
-			{{ title }}
+			<span class="text-start">{{ title }}</span>
 		</button>
 	</li>
 </template>

@@ -114,6 +114,7 @@ import {
 	createDeviceUtils,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/charger.yaml?raw";
+import { LOADPOINT_TYPE } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template };
 const device = createDeviceUtils("charger");
@@ -157,6 +158,7 @@ export default defineComponent({
 	props: {
 		id: Number,
 		name: String,
+		loadpointType: { type: String as () => LOADPOINT_TYPE | null, default: null },
 		fade: String,
 		isSponsor: Boolean,
 	},
@@ -177,35 +179,38 @@ export default defineComponent({
 	computed: {
 		modalTitle() {
 			if (this.isNew) {
-				return this.$t(`config.charger.titleAdd`);
+				return this.$t(`config.charger.titleAdd.${this.loadpointType}`);
 			}
-			return this.$t(`config.charger.titleEdit`);
+			return this.$t(`config.charger.titleEdit.${this.loadpointType}`);
 		},
 		modalSize() {
 			return this.values.type === ConfigType.Custom ? "xl" : undefined;
 		},
 		templateOptions() {
-			return [
-				{
-					label: "generic",
-					options: [
-						...this.products.filter((p) => p.group === "generic"),
-						customTemplateOption(this.$t("config.general.customOption")),
-					],
-				},
-				{
-					label: "chargers",
-					options: this.products.filter((p) => !p.group),
-				},
-				{
-					label: "switchsockets",
-					options: this.products.filter((p) => p.group === "switchsockets"),
-				},
-				{
-					label: "heatingdevices",
-					options: this.products.filter((p) => p.group === "heating"),
-				},
-			];
+			const generic = {
+				label: "generic",
+				options: [
+					...this.products.filter((p) => p.group === "generic"),
+					customTemplateOption(this.$t("config.general.customOption")),
+				],
+			};
+			const chargers = {
+				label: "chargers",
+				options: this.products.filter((p) => !p.group),
+			};
+			const heatingdevices = {
+				label: "heatingdevices",
+				options: this.products.filter((p) => p.group === "heating"),
+			};
+			const switchsockets = {
+				label: "switchsockets",
+				options: this.products.filter((p) => p.group === "switchsockets"),
+			};
+
+			if (this.loadpointType === LOADPOINT_TYPE.HEATING) {
+				return [heatingdevices, switchsockets];
+			}
+			return [generic, chargers, switchsockets];
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
@@ -311,10 +316,27 @@ export default defineComponent({
 				// TODO: adjust GET response to match POST/PUT formats
 				this.values.type = charger.type;
 				this.values.deviceProduct = charger.deviceProduct;
-				applyDefaultsFromTemplate(this.template, this.values);
+				this.applyDefaults();
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
+			}
+		},
+		applyDefaults() {
+			applyDefaultsFromTemplate(this.template, this.values);
+			if (this.loadpointType === LOADPOINT_TYPE.HEATING) {
+				// enable heating and integrated device params if exist
+				const hasParam = (name: string) =>
+					this.template?.Params.some((p) => p.Name === name);
+				["heating", "integrateddevice"].forEach((param) => {
+					if (hasParam(param) && this.values[param] === undefined) {
+						this.values[param] = true;
+					}
+				});
+				// default heater icon
+				if (hasParam("icon") && this.values["icon"] === undefined) {
+					this.values["icon"] = "heater";
+				}
 			}
 		},
 		async loadProducts() {
@@ -333,7 +355,7 @@ export default defineComponent({
 			this.loadingTemplate = true;
 			try {
 				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
-				applyDefaultsFromTemplate(this.template, this.values);
+				this.applyDefaults();
 			} catch (e) {
 				console.error(e);
 			}

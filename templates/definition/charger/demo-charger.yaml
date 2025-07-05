@@ -21,6 +21,7 @@ params:
     description:
       de: Leistung
       en: Power
+    unit: W
     type: int
     default: 0
   - name: enabled
