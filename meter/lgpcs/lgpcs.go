@@ -160,7 +160,6 @@ func (m *Com) GetSystemInfo() (SystemInfoResponse, error) {
 func (m *Com) GetFirmwareVersion() (int, error) {
 	systemInfo, err := m.GetSystemInfo()
 	if err != nil {
-		m.log.TRACE.Printf("GetFirmwareVersion: failed to get system info: %v", err)
 		return 0, err
 	}
 	m.log.DEBUG.Printf("GetFirmwareVersion: PMSVersion: %s", systemInfo.Version.PMSVersion)
