@@ -28,7 +28,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	}
 
 	if err := openapi3.NewLoader().ResolveRefsIn(doc, nil); err != nil {
-		return nil, fmt.Errorf("failed resolving spec references: %v", err)
+		return nil, fmt.Errorf("failed resolving OpenAPI spec references: %v", err)
 	}
 
 	doc.Servers = []*openapi3.Server{{
