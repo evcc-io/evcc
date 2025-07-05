@@ -25,8 +25,8 @@ capabilities: ["1p3p", "mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: P40 und P40 Pro: Phasenumschaltung wird derzeit noch nicht unterstützt. P30 und Varianten: Erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series). Zur Phasenumschaltung wird zusätzlich der Keba Phasenumschalter (KeContact S10) benötigt und in den Wallboxeinstellungen muss die Umschaltsteuerung per Modbus aktiviert werden. Bei der x-Serie im WebMenü, bei der C-Serie per Modbus durch setzen des Wertes "3" im Register 5050.
-    en: P40 and P40 Pro: Phase switching is currently not supported. P30 and variants: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series). For phase switching the Keba phase switch (KeContact S10) is also required and the switching control via Modbus must be set in the wallbox settings. For the X-series in the web menu, for the C-series via Modbus by setting the value "3" in register 5050.
+    de: P40 und P40 Pro unterstützt die Phasenumschaltung derzeit noch nicht. P30 und Varianten erfordert Firmwareversion 3.10.42 (C-series) bzw. 1.11 (X-series). Zur Phasenumschaltung wird bei P30 zusätzlich der Keba Phasenumschalter (KeContact S10) benötigt und in den Wallboxeinstellungen muss die Umschaltsteuerung per Modbus aktiviert werden. Bei der P30 x-Serie im WebMenü, bei der P30 C-Serie per Modbus durch setzen des Wertes "3" im Register 5050.
+    en: P40 and P40 Pro Phase switching is currently not supported. P30 and variants requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series). For phase switching with the P30 the Keba phase switch (KeContact S10) is also required and the switching control via Modbus must be set in the wallbox settings. For the P30 X-series in the web menu, for the P30 C-series via Modbus by setting the value "3" in register 5050.
 params:
   - name: modbus
     choice: ["tcpip"]
