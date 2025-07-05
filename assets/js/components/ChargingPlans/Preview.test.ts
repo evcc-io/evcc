@@ -44,20 +44,20 @@ describe("basics", () => {
   });
 
   test("slots should be an hour apart", () => {
-    expect(result[0].startHour).eq(11);
-    expect(result[0].endHour).eq(12);
+    expect(result[0].start.getHours()).eq(11);
+    expect(result[0].end.getHours()).eq(12);
     expect(result[0].day).eq("Mi");
 
-    expect(result[1].startHour).eq(12);
-    expect(result[1].endHour).eq(13);
+    expect(result[1].start.getHours()).eq(12);
+    expect(result[1].end.getHours()).eq(13);
     expect(result[1].day).eq("Mi");
 
-    expect(result[11].startHour).eq(22);
-    expect(result[11].endHour).eq(23);
+    expect(result[11].start.getHours()).eq(22);
+    expect(result[11].end.getHours()).eq(23);
     expect(result[11].day).eq("Mi");
 
-    expect(result[24].startHour).eq(11);
-    expect(result[24].endHour).eq(12);
+    expect(result[24].start.getHours()).eq(11);
+    expect(result[24].end.getHours()).eq(12);
     expect(result[24].day).eq("Do");
   });
 

@@ -173,8 +173,8 @@ export interface Rate {
 export interface Slot {
   day: string;
   value?: number;
-  startHour: number;
-  endHour: number;
+  start: Date;
+  end: Date;
   charging: boolean;
   toLate?: boolean | null;
   warning?: boolean | null;
