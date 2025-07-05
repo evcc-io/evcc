@@ -162,7 +162,6 @@ func (m *Com) GetFirmwareVersion() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	m.log.DEBUG.Printf("GetFirmwareVersion: PMSVersion: %s", systemInfo.Version.PMSVersion)
 
 	// extract the patch number behind a dot that is always followed by at least 4 digits
 	if match := regexp.MustCompile(`\.(\d{4})$`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
