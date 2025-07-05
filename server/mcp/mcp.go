@@ -15,8 +15,6 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-//go:generate go tool openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
-
 //go:embed openapi.json
 var spec []byte
 
@@ -30,7 +28,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	}
 
 	if err := openapi3.NewLoader().ResolveRefsIn(doc, nil); err != nil {
-		return nil, fmt.Errorf("failed resolving spec references: %v", err)
+		return nil, fmt.Errorf("failed resolving OpenAPI spec references: %v", err)
 	}
 
 	doc.Servers = []*openapi3.Server{{
@@ -72,7 +70,6 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 
 	handler := server.NewStreamableHTTPServer(srv,
 		server.WithEndpointPath(basePath),
-		server.WithLogger(&stdLogger{log}),
 	)
 
 	return handler, nil

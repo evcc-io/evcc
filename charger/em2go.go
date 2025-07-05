@@ -145,11 +145,15 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	}
 
 	switch binary.BigEndian.Uint16(b) {
-	case 1:
+	case 1: //Standby
 		return api.StatusA, nil
-	case 2, 3:
+	case
+		2, //Connected
+		3, //Starting
+		6: //Charging end
 		return api.StatusB, nil
-	case 4, 6:
+	case
+		4: //Charging
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
