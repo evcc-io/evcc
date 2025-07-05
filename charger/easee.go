@@ -61,12 +61,13 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid      string
-	lp        loadpoint.API
-	cmdC      chan easee.SignalRCommandResponse
-	obsC      chan easee.Observation
-	obsTime   map[easee.ObservationID]time.Time
-	startDone func()
+	sessionStartEnergy *float64
+	rfid               string
+	lp                 loadpoint.API
+	cmdC               chan easee.SignalRCommandResponse
+	obsC               chan easee.Observation
+	obsTime            map[easee.ObservationID]time.Time
+	startDone          func()
 }
 
 func init() {
@@ -313,9 +314,17 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
-		c.sessionEnergy = value.(float64)
+		// SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
+		// Reset to 0 is done in case CHARGER_OP_MODE
+		if value.(float64) != 0 {
+			c.sessionEnergy = value.(float64)
+		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
+		if c.sessionStartEnergy == nil {
+			f := c.totalEnergy
+			c.sessionStartEnergy = &f
+		}
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -335,7 +344,18 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		c.opMode = value.(int)
+		opMode := value.(int)
+
+		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
+		// This should be done in a proper way by the api, but it's not.
+		// Remember value of LIFETIME_ENERGY as start value of the charging session
+		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			c.sessionEnergy = 0
+			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+			c.sessionStartEnergy = nil
+		}
+
+		c.opMode = opMode
 
 		// startup completed
 		c.startDone()
