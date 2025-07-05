@@ -70,7 +70,6 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 
 	handler := server.NewStreamableHTTPServer(srv,
 		server.WithEndpointPath(basePath),
-		server.WithLogger(&stdLogger{log}),
 	)
 
 	return handler, nil
