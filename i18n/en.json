@@ -139,12 +139,15 @@
       "docsLink": "See documentation.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
+      "invalidFileSelected": "Invalid file selected",
+      "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
       "save": "Save",
+      "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
@@ -388,6 +391,34 @@
       "trialToken": "Trial token"
     },
     "system": {
+      "dataManagement": {
+        "backup": {
+          "confirmationText": "For security reasons, downloading a backup requires the password to be entered. The database will be downloaded afterwards.",
+          "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
+          "download": "Download backup",
+          "title": "Backup"
+        },
+        "confirmWithPassword": "Confirm action",
+        "description": "Backup, restore and reset your data. Useful if you want to move your data to another system.",
+        "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
+        "reset": {
+          "action": "Reset & Restart",
+          "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "sessions": "Charging sessions",
+          "sessionsDescription": "Deletes your charging session history.",
+          "settings": "Configuration & settings",
+          "settingsDescription": "Deletes all configured devices, services, plans, etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Restore & Restart",
+          "confirmationText": "Restoring the database will overwrite existing data. It's recommended to download a backup first. Continue?",
+          "description": "Restore your data from a backup file. This will overwrite all your current data.",
+          "labelFile": "Backup file",
+          "title": "Restore"
+        },
+        "title": "Data management"
+      },
       "logs": "Logs",
       "restart": "Restart",
       "restartRequiredDescription": "Please restart to see the effect.",

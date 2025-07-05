@@ -1,3 +1,4 @@
+import type { AxiosResponse } from "axios";
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
@@ -198,6 +199,7 @@ export interface SelectOption<T> {
 }
 
 export type DeviceType = "charger" | "meter" | "vehicle";
+export type ConfirmAction = (password: string) => Promise<AxiosResponse>;
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
