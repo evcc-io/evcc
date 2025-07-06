@@ -86,7 +86,7 @@ export default defineComponent({
 	},
 });
 
-export function customTemplateOption(name: string) {
-	return { template: "custom", name };
+export function customTemplateOption(name: string, template = "custom") {
+	return { name, template };
 }
 </script>

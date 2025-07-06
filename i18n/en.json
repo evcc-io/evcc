@@ -51,6 +51,16 @@
       "titleEdit": {
         "charging": "Edit Charger",
         "heating": "Edit Heater"
+      },
+      "type": {
+        "custom": {
+          "charging": "User-defined charger",
+          "heating": "User-defined heater"
+        },
+        "heatpump": "User-defined heatpump",
+        "sgready": "User-defined heatpump (sg-ready, all)",
+        "sgready-boost": "User-defined heatpump (sg-ready, boost)",
+        "switchsocket": "User-defined switch socket"
       }
     },
     "circuits": {
@@ -385,6 +395,10 @@
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "Heating",
+        "standby": "Standby"
       },
       "schema": {
         "http": "HTTP (unencrypted)",

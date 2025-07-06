@@ -145,7 +145,6 @@
 				</FormRow>
 
 				<FormRow
-					v-show="showAll"
 					id="loadpointSolarMode"
 					:label="$t('config.loadpoint.solarBehaviorLabel')"
 					:help="
@@ -297,7 +296,6 @@
 				</div>
 
 				<FormRow
-					v-show="showAll"
 					v-if="showPriority"
 					id="loadpointParamPriority"
 					:label="$t('config.loadpoint.priorityLabel')"
@@ -314,7 +312,7 @@
 					/>
 				</FormRow>
 
-				<h6 v-show="showAll">
+				<h6>
 					{{ $t("config.loadpoint.electricalTitle") }}
 					<small class="text-muted">{{
 						$t("config.loadpoint.electricalSubtitle")
@@ -391,7 +389,6 @@
 
 				<template v-if="!chargerIsSinglePhase">
 					<FormRow
-						v-show="showAll"
 						v-if="chargerSupports1p3p"
 						id="loadpointParamPhases"
 						:label="$t('config.loadpoint.phasesAutomatic')"
@@ -400,7 +397,6 @@
 					</FormRow>
 					<FormRow
 						v-else
-						v-show="showAll"
 						id="loadpointParamPhases"
 						:label="$t('config.loadpoint.phasesLabel')"
 						:help="$t('config.loadpoint.phasesHelp')"
@@ -417,7 +413,6 @@
 				</template>
 
 				<FormRow
-					v-show="showAll"
 					v-if="showCircuit"
 					id="loadpointParamCircuit"
 					:label="$t('config.loadpoint.circuitLabel')"
@@ -434,7 +429,7 @@
 				</FormRow>
 
 				<div v-if="!chargerIsIntegratedDevice">
-					<h6 v-show="showAll">{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
+					<h6>{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
 
 					<div v-if="vehicleOptions.length">
 						<FormRow
@@ -457,7 +452,6 @@
 						</FormRow>
 
 						<FormRow
-							v-show="showAll"
 							id="loadpointPollMode"
 							:label="$t('config.loadpoint.pollModeLabel')"
 							:help="
@@ -492,7 +486,6 @@
 							/>
 						</FormRow>
 						<FormRow
-							v-show="showAll"
 							v-if="values.soc.poll.mode !== 'charging'"
 							id="loadpointPollInterval"
 							class="ms-3 mb-5"
@@ -511,7 +504,7 @@
 							/>
 						</FormRow>
 
-						<div v-show="showAll">
+						<div>
 							<div class="d-flex mb-4">
 								<input
 									id="loadpointEstimate"
@@ -525,21 +518,11 @@
 							</div>
 						</div>
 					</div>
-					<div v-else v-show="showAll">
+					<div v-else>
 						<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 					</div>
 				</div>
 			</div>
-
-			<button
-				v-if="!showAll && values.charger"
-				class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
-				type="button"
-				tabindex="0"
-				@click="showAllSelected = true"
-			>
-				{{ $t("config.loadpoint.showAllSettings") }}
-			</button>
 
 			<div v-if="values.charger" class="mt-5 mb-4 d-flex justify-content-between">
 				<button
@@ -583,7 +566,7 @@ import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
-import { handleError } from "./DeviceModal";
+import { type ConfigType, handleError, customChargerName } from "./DeviceModal";
 import { LOADPOINT_TYPE } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
@@ -620,6 +603,7 @@ type LoadpointValues = typeof defaultValues;
 type Charger = {
 	name: string;
 	deviceProduct: string;
+	type: ConfigType;
 	config: { template: string };
 };
 
@@ -659,7 +643,6 @@ export default {
 			chargerPower: "11kw",
 			solarMode: "default",
 			tab: "solar",
-			showAllSelected: false,
 			powerUnit: POWER_UNIT,
 		};
 	},
@@ -672,9 +655,6 @@ export default {
 		},
 		isNew() {
 			return this.id === undefined;
-		},
-		showAll() {
-			return !this.isNew || this.showAllSelected;
 		},
 		charger() {
 			return this.chargers.find((c) => c.name === this.values.charger);
@@ -690,7 +670,7 @@ export default {
 			const title =
 				this.charger.deviceProduct ||
 				this.charger.config?.template ||
-				this.$t("config.general.customOption");
+				this.$t(customChargerName(this.charger.type, this.chargerIsHeating));
 			return `${title} [${this.values.charger}]`;
 		},
 		chargerStatus() {
@@ -863,7 +843,6 @@ export default {
 			this.$emit("opened");
 		},
 		onClose() {
-			this.showAllSelected = false;
 			this.isModalVisible = false;
 		},
 		editCharger() {
