@@ -9,9 +9,6 @@ products:
 capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
-  description:
-    de: Phasenumschaltung wird von der Wallbox derzeit noch nicht unterstützt.
-    en: Phase switching is currently not supported by the wallbox.
 params:
   - name: modbus
     choice: ["tcpip"]
