@@ -779,6 +779,8 @@
       "connected": "Inkopplad.",
       "disconnectRequired": "Session avbruten. Prova att återansluta.",
       "disconnected": "Frånkopplad.",
+      "feedinPriorityNextStart": "Snabb inmatning börjar om {duration}.",
+      "feedinPriorityPausing": "Solladdning har pausats för att maximera inmatning.",
       "finished": "Färdig.",
       "minCharge": "Minimiladdning till {soc}.",
       "pvDisable": "Inte tillräckligt med överskott. Pausar strax.",
@@ -973,6 +975,14 @@
     "resetAction": "Ta bort begränsning",
     "resetWarning": "Varken dynamiskt elpris eller CO₂-avtryck är konfigurerat. Emellertid finns fortfarande en begränsning på {limit}. Din konfiguration kanske behöver kontrolleras?",
     "saved": "Sparad."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pausade timmar",
+    "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
+    "priceLabel": "Inmatningshastighet",
+    "priceLimit": "Inmatningsbegränsning",
+    "resetWarning": "Det finns ingen konfigurerad dynamisk inmatningstariff. Däremot finns det en begränsning på {limit}. Städa i konfigurationen?",
+    "title": "Inmatningsprioritet"
   },
   "startupError": {
     "configFile": "Konfigurationsfil som används:",
