@@ -982,7 +982,7 @@
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",
     "resetWarning": "Es ist kein dynamischer Einspeisetarif konfiguriert. Dennoch ist ein Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
-    "title": "Einspeisepriorität"
+    "title": "Einspeisung priorisieren"
   },
   "startupError": {
     "configFile": "Verwendete Konfigurationsdatei:",
