@@ -60,8 +60,9 @@ test.describe("circuit", async () => {
 
     // add loadpoint and charger
     const lpModal = page.getByTestId("loadpoint-modal");
-    await page.getByRole("button", { name: "Add charge point" }).click();
+    await page.getByRole("button", { name: "Add charger or heater" }).click();
     await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Add charging point" }).click();
     await lpModal.getByLabel("Title").fill("Carport");
 
     // add charger

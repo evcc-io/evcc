@@ -5,6 +5,7 @@ import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.afterEach(async () => {
   await stop();
@@ -56,8 +57,9 @@ async function addVehicle(page: Page, title: string) {
 
 async function newLoadpoint(page: Page, title: string) {
   const lpModal = page.getByTestId("loadpoint-modal");
-  await page.getByRole("button", { name: "Add charge point" }).click();
+  await page.getByRole("button", { name: "Add charger or heater" }).click();
   await expectModalVisible(lpModal);
+  await lpModal.getByRole("button", { name: "Add charging point" }).click();
   await lpModal.getByLabel("Title").fill(title);
 }
 
@@ -368,6 +370,8 @@ test.describe("loadpoint", async () => {
     await expectModalVisible(chargerModal);
     await chargerModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+    await expect(lpModal.getByRole("heading", { name: "Edit Charger or Heater" })).toBeVisible();
 
     // restart without saving loadpoint
     await restart();
@@ -376,6 +380,7 @@ test.describe("loadpoint", async () => {
     // check loadpoint default vehicle
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Add charging point" }).click();
     await expect(lpModal.getByRole("textbox", { name: "Title" })).toHaveValue("Garage");
     await expect(lpModal).toContainText("Configuring a charger is required.");
   });
@@ -430,10 +435,12 @@ test.describe("loadpoint", async () => {
     // add user-defined charger
     const chargerModal = page.getByTestId("charger-modal");
     await expectModalVisible(chargerModal);
-    await chargerModal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await chargerModal.getByLabel("Manufacturer").selectOption("User-defined charger");
     await page.waitForLoadState("networkidle");
     const chargerEditor = chargerModal.getByTestId("yaml-editor");
-    await expect(chargerEditor).toContainText("status: # charger status [A..F]");
+    await expect(chargerEditor).toContainText(
+      "status: # charger status (A: not connected, B: connected, C: charging)"
+    );
 
     await editorClear(chargerEditor, 20);
     await editorPaste(
@@ -512,14 +519,14 @@ power:
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
 
-    await expect(lpModal.getByLabel("Charger").first()).toHaveValue("User-defined device [db:1]");
+    await expect(lpModal.getByLabel("Charger").first()).toHaveValue("User-defined charger [db:1]");
     await expect(lpModal.getByLabel("Energy meter").first()).toHaveValue(
       "User-defined device [db:2]"
     );
     await lpModal.getByLabel("Charger").first().click();
     await expectModalVisible(chargerModal);
 
-    await expect(chargerModal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
+    await expect(chargerModal.getByLabel("Manufacturer")).toHaveValue("User-defined charger");
     await page.waitForLoadState("networkidle");
     await expect(chargerEditor).toContainText("value: 'C'");
     await expect(chargerEditor).toContainText("value: 11000");

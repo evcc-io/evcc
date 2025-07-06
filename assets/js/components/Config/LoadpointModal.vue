@@ -9,12 +9,12 @@
 		@opened="onOpened"
 		@close="onClose"
 	>
-		<div v-if="!loadpointType && isNew">
+		<div v-if="!loadpointType" class="d-flex flex-column gap-4">
 			<NewDeviceButton
 				v-for="t in typeChoices"
 				:key="t"
 				:title="$t(`config.loadpoint.option.${t}`)"
-				class="mb-4 addButton"
+				class="addButton"
 				@click="selectType(t)"
 			/>
 		</div>
@@ -651,7 +651,7 @@ export default {
 			if (this.isNew) {
 				return this.$t(`config.loadpoint.titleAdd.${this.loadpointType || "unknown"}`);
 			}
-			return this.$t(`config.loadpoint.titleEdit.${this.loadpointType}`);
+			return this.$t(`config.loadpoint.titleEdit.${this.loadpointType || "unknown"}`);
 		},
 		isNew() {
 			return this.id === undefined;

@@ -287,7 +287,8 @@
       },
       "titleEdit": {
         "charging": "Edit Charging Point",
-        "heating": "Edit Heating Device"
+        "heating": "Edit Heating Device",
+        "unknown": "Edit Charger or Heater"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -309,7 +310,7 @@
       "addVehicle": "Add vehicle",
       "configured": "configured",
       "edit": "edit",
-      "loadpointRequired": "At least one charge point has to be configured.",
+      "loadpointRequired": "At least one charging point has to be configured.",
       "name": "Name",
       "title": "Configuration",
       "unconfigured": "not configured",
@@ -469,7 +470,7 @@
       "delete": "Delete",
       "generic": "Other integrations",
       "identifiers": "RFID identifiers",
-      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charge point on the overview page.",
+      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charging point on the overview page.",
       "maximumCurrent": "Maximum current",
       "maximumCurrentHelp": "Must be greater than minimum current.",
       "maximumPhases": "Maximum phases",
