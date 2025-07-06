@@ -1,0 +1,23 @@
+template: keba-modbus-p40
+products:
+  - brand: KEBA
+    description:
+      generic: KeContact P40
+  - brand: KEBA
+    description:
+      generic: KeContact P40 Pro
+capabilities: ["mA", "rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+  - name: welcomecharge
+    advanced: true
+render: |
+  type: keba-modbus
+  {{- include "modbus" . }}
+  {{- if eq .welcomecharge "true" }}
+  features: ["welcomecharge"]
+  {{- end }}
