@@ -138,10 +138,7 @@ export default defineComponent({
 				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
 			)?.reset();
 		},
-
 		fileChanged(file: File) {
-			console.log("CHANGED", file);
-
 			this.file = file;
 		},
 		async downloadBackup() {
@@ -167,6 +164,7 @@ export default defineComponent({
 		},
 		async resetDatabase() {
 			await api.post("/system/reset", this.selectedReset);
+			document.location.href = "/";
 		},
 	},
 });
