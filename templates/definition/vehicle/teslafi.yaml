@@ -40,7 +40,7 @@ render: |
     source: combined
     plugged:
       {{- include "teslafi_source" . | indent 4 }}
-      jq: (.charger_voltage | tonumber) > 0
+      jq: (.charger_phases != null and (.charger_phases | tonumber) >= 1)
     charging:
       {{- include "teslafi_source" . | indent 4 }}
       jq: .charging_state == "Charging"
