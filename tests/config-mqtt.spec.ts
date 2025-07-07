@@ -3,15 +3,13 @@ import { start, stop, restart, baseUrl } from "./evcc";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 import { isMqttReachable } from "./mqtt";
 
-const CONFIG = "config-grid-only.evcc.yaml";
-
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
 test.beforeEach(async ({ page }) => {
-  await start(CONFIG);
+  await start();
   await page.goto("/#/config");
-  await enableExperimental(page);
+  await enableExperimental(page, false);
 });
 
 test.afterEach(async () => {
@@ -57,7 +55,7 @@ test.describe("mqtt", async () => {
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
 
-    await restart(CONFIG);
+    await restart();
 
     // config error
     await expect(page.getByTestId("mqtt")).toHaveClass(/round-box--error/);
@@ -80,7 +78,7 @@ test.describe("mqtt", async () => {
     await expect(page.getByTestId("mqtt")).toContainText(
       ["Broker", VALID_BROKER, "Topic", VALID_TOPIC].join("")
     );
-    await restart(CONFIG);
+    await restart();
 
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
     await expect(page.getByTestId("mqtt")).not.toHaveClass(/round-box--error/);
