@@ -18,7 +18,7 @@ render: |
   {{- include "vehicle-common" . }}
   {{- define "teslafi_source" }}
   source: http
-  uri: https://www.teslafi.com/feed.php?command=lastGood{{- if .vin }}&vin={{ .vin }}{{- end }}
+  uri: https://www.teslafi.com/feed.php?command=lastGood{{ if .vin }}&vin={{ .vin }}{{ end }}
   headers:
     Authorization: Bearer {{ .apikey }}
   cache: 10s
