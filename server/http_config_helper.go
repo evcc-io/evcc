@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	typeCustom       = "custom"       // typeCustom is the custom configuration type
 	typeTemplate     = "template"     // typeTemplate is the updatable configuration type
+	typeCustom       = "custom"       // typeCustom is the custom configuration type
 	typeHeatpump     = "heatpump"     // typeHeatpump is the heatpump configuration type
 	typeSwitchSocket = "switchsocket" // typeSwitchSocket is the switch socket configuration type
 	typeSgReady      = "sgready"      // typeSgReady is the SG-Ready configuration type
@@ -36,6 +36,13 @@ type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
+}
+
+func (c *configReq) isCustomType() bool {
+	return strings.EqualFold(c.Type, typeCustom) ||
+		strings.EqualFold(c.Type, typeHeatpump) ||
+		strings.EqualFold(c.Type, typeSwitchSocket) ||
+		strings.EqualFold(c.Type, typeSgReady)
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -353,10 +360,7 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return res, nil
 	}
 
-	if !(strings.EqualFold(res.Type, typeCustom) ||
-		strings.EqualFold(res.Type, typeHeatpump) ||
-		strings.EqualFold(res.Type, typeSwitchSocket) ||
-		strings.EqualFold(res.Type, typeSgReady)) {
+	if !res.isCustomType() {
 		return configReq{}, errors.New("invalid config: yaml only allowed for custom, heatpump, switchsocket, and sgready types")
 	}
 
