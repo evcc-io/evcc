@@ -44,8 +44,12 @@
       "ocppLabel": "URL vum OCPP-Server",
       "switchsockets": "Schaltbar Steckdousen",
       "template": "Hiersteller",
-      "titleAdd": "Wallbox derbäi fügen",
-      "titleEdit": "Wallbox beaarbechten"
+      "titleAdd": {
+        "charging": "Wallbox derbäi fügen"
+      },
+      "titleEdit": {
+        "charging": "Wallbox beaarbechten"
+      }
     },
     "circuits": {
       "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
@@ -180,11 +184,17 @@
       "v2Support": "Zréck op InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Wallbox derbäi fügen",
+      "addCharger": {
+        "charging": "Wallbox derbäi fügen"
+      },
       "addMeter": "Zousätzlechen Zieler derbäi fügen",
       "cancel": "Ofbriechen",
-      "chargerError": "Wallbox muss konfiguréiert sinn.",
-      "chargerLabel": "Wallbox",
+      "chargerError": {
+        "charging": "Wallbox muss konfiguréiert sinn."
+      },
+      "chargerLabel": {
+        "charging": "Wallbox"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwennt Stroum vu 6 bis 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Laaschtmanagement-Zouweisung, fir sécher ze goen, dass d'Leeschtung a Stroumlimitten net iwwerschratt ginn.",
       "circuitLabel": "Stroumkrees",
       "circuitUnassigned": "net zougewisen",
-      "defaultModeHelp": "Luedmodus beim Uschléisse vum Gefier.",
+      "defaultModeHelp": {
+        "charging": "Luedmodus beim Uschléisse vum Gefier."
+      },
       "defaultModeHelpKeep": "De leschte Modus deen ausgewielt gouf gëtt bäibehal.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Läschen",

@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP 服务器 URL",
       "switchsockets": "可切换插座",
       "template": "制造商",
-      "titleAdd": "添加充电桩",
-      "titleEdit": "编辑充电桩"
+      "titleAdd": {
+        "charging": "添加充电桩"
+      },
+      "titleEdit": {
+        "charging": "编辑充电桩"
+      }
     },
     "circuits": {
       "description": "确保连接到同一电路的所有充电点的总和不超过配置的功率和电流限制。电路可以嵌套以构建层级结构。",
@@ -180,11 +184,17 @@
       "v2Support": "返回 InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "添加充电桩",
+      "addCharger": {
+        "charging": "添加充电桩"
+      },
       "addMeter": "添加专用充电桩计量表",
       "cancel": "取消",
-      "chargerError": "必须配置充电桩。",
-      "chargerLabel": "充电桩",
+      "chargerError": {
+        "charging": "必须配置充电桩。"
+      },
+      "chargerLabel": {
+        "charging": "充电桩"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "将使用 6 至 16 A 的电流范围。",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
       "circuitLabel": "电路",
       "circuitUnassigned": "未分配",
-      "defaultModeHelp": "连接车辆时的充电模式。",
+      "defaultModeHelp": {
+        "charging": "连接车辆时的充电模式。"
+      },
       "defaultModeHelpKeep": "保留上次选择的充电模式。",
       "defaultModeLabel": "默认模式",
       "delete": "删除",

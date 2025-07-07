@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP sunucusu URL'si",
       "switchsockets": "“Açılıp kapanabilen prizler”",
       "template": "Üretici",
-      "titleAdd": "Doldurma Cihazı Ekle",
-      "titleEdit": "Doldurma Cihazını Düzenle"
+      "titleAdd": {
+        "charging": "Doldurma Cihazı Ekle"
+      },
+      "titleEdit": {
+        "charging": "Doldurma Cihazını Düzenle"
+      }
     },
     "circuits": {
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
@@ -180,11 +184,17 @@
       "v2Support": "InfluxDB 2.x'e geri dön"
     },
     "loadpoint": {
-      "addCharger": "“Doldurma cihazı ekle”",
+      "addCharger": {
+        "charging": "“Doldurma cihazı ekle”"
+      },
       "addMeter": "“Ek doldurma sayacı ekle”",
       "cancel": "“İptal”",
-      "chargerError": "Bir şarj cihazının yapılandırılması gereklidir.",
-      "chargerLabel": "“Doldurma cihazı”",
+      "chargerError": {
+        "charging": "Bir şarj cihazının yapılandırılması gereklidir."
+      },
+      "chargerLabel": {
+        "charging": "“Doldurma cihazı”"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "6 ila 16 A akım aralığını kullanır.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitLabel": "“Devre”",
       "circuitUnassigned": "“atanmamış”",
-      "defaultModeHelp": "Araç bağlandığında doldurma şekli.",
+      "defaultModeHelp": {
+        "charging": "Araç bağlandığında doldurma şekli."
+      },
       "defaultModeHelpKeep": "Son seçilen doldurma şeklini korur.",
       "defaultModeLabel": "“Varsayılan şekil”",
       "delete": "“Sil”",

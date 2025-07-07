@@ -44,8 +44,12 @@
       "ocppLabel": "URL strežnika OCPP",
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
-      "titleAdd": "Dodaj polnilnik",
-      "titleEdit": "Uredi polnilec"
+      "titleAdd": {
+        "charging": "Dodaj polnilnik"
+      },
+      "titleEdit": {
+        "charging": "Uredi polnilec"
+      }
     },
     "circuits": {
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
@@ -174,10 +178,14 @@
       "v2Support": "Nazaj na InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Dodaj polnilnik",
+      "addCharger": {
+        "charging": "Dodaj polnilnik"
+      },
       "addMeter": "Dodaj namenski merilnik za polnilnico",
       "cancel": "Prekliči",
-      "chargerLabel": "Polnilnica",
+      "chargerLabel": {
+        "charging": "Polnilnica"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
       "chargerPower22kw": "22 kW",
@@ -188,7 +196,9 @@
       "chargingTitle": "Polnjenje",
       "circuitLabel": "Krog",
       "circuitUnassigned": "nedodeljeno",
-      "defaultModeHelp": "Način polnjenja pri priklopu vozila.",
+      "defaultModeHelp": {
+        "charging": "Način polnjenja pri priklopu vozila."
+      },
       "defaultModeHelpKeep": "Ohrani zadnji izbrani način polnjenja.",
       "defaultModeLabel": "Privzeti način",
       "delete": "Izbriši",

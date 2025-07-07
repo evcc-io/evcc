@@ -111,7 +111,7 @@
 						tabindex="0"
 						@click="editMeter"
 					>
-						{{ $t(`config.loadpoint.addMeter.${loadpointType}`) }}
+						{{ $t(`config.loadpoint.addMeter`) }}
 					</button>
 				</p>
 			</div>

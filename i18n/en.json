@@ -200,10 +200,7 @@
         "charging": "Add charger",
         "heating": "Add heater"
       },
-      "addMeter": {
-        "charging": "Add dedicated charger meter",
-        "heating": "Add dedicated heater meter"
-      },
+      "addMeter": "Add dedicated energy meter",
       "cancel": "Cancel",
       "chargerError": {
         "charging": "Configuring a charger is required.",

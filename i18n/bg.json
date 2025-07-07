@@ -44,8 +44,12 @@
       "ocppLabel": "Адрес на OCPP сървъра",
       "switchsockets": "Контакти с прекъсвач",
       "template": "Производител",
-      "titleAdd": "Добави зарядно",
-      "titleEdit": "Промени зарядно"
+      "titleAdd": {
+        "charging": "Добави зарядно"
+      },
+      "titleEdit": {
+        "charging": "Промени зарядно"
+      }
     },
     "circuits": {
       "description": "Гарантира, че сумата от всички точки на натоварване, свързани към една верига, не надвишава конфигурираните граници на мощност и ток. Веригите могат да бъдат вложени, за да се изгради йерархия.",
@@ -172,11 +176,17 @@
       "v2Support": "Назад към InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Добави зарядно",
+      "addCharger": {
+        "charging": "Добави зарядно"
+      },
       "addMeter": "Добави електромер за зарядното",
       "cancel": "Откажи",
-      "chargerError": "Необходимо е да конфигурирате зарядното.",
-      "chargerLabel": "Зарядно",
+      "chargerError": {
+        "charging": "Необходимо е да конфигурирате зарядното."
+      },
+      "chargerLabel": {
+        "charging": "Зарядно"
+      },
       "chargerPower11kw": "11 кВт",
       "chargerPower11kwHelp": "Ще бъде използван ток в диапазона от 6 до 16 А.",
       "chargerPower22kw": "22 кВт",
@@ -187,7 +197,9 @@
       "chargingTitle": "Зарежда",
       "circuitLabel": "Верига",
       "circuitUnassigned": "неразпределен",
-      "defaultModeHelp": "Режим на зареждане при свързване с автомобила.",
+      "defaultModeHelp": {
+        "charging": "Режим на зареждане при свързване с автомобила."
+      },
       "defaultModeHelpKeep": "Запазва последно избрания режим на зареждане.",
       "defaultModeLabel": "Режим по подразбиране",
       "delete": "Изтрий",
