@@ -17,7 +17,7 @@ test.afterAll(async () => {
 test.describe("pv meter", async () => {
   test("create, edit and remove pv meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
@@ -77,7 +77,7 @@ test.describe("pv meter", async () => {
     await startSimulator();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     // create meter
     await page.getByRole("button", { name: "Add solar or battery" }).click();
