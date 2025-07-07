@@ -57,9 +57,9 @@
           "charging": "User-defined charger",
           "heating": "User-defined heater"
         },
-        "heatpump": "User-defined heatpump",
-        "sgready": "User-defined heatpump (sg-ready, all)",
-        "sgready-boost": "User-defined heatpump (sg-ready, boost)",
+        "heatpump": "User-defined heat pump",
+        "sgready": "User-defined heat pump (sg-ready, all)",
+        "sgready-boost": "User-defined heat pump (sg-ready, boost)",
         "switchsocket": "User-defined switch socket"
       }
     },

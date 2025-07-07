@@ -574,14 +574,17 @@ test.describe("heating loadpoint", async () => {
     // restart edit
     await restart();
     await page.reload();
-    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    const lpEntry = page.getByTestId("loadpoint");
+    await expect(lpEntry.getByRole("img", { name: "heatpump" })).toBeVisible();
+    await expect(lpEntry).toContainText("Wärmepumpe");
+    await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await expect(lpModal.getByRole("heading", { name: "Edit Heating Device" })).toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
     // delete
-    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(lpModal);
@@ -592,5 +595,76 @@ test.describe("heating loadpoint", async () => {
 
     // check loadpoint
     await expect(page.getByTestId("loadpoint")).not.toBeVisible();
+  });
+
+  // add user-defined heat pump
+  test("user-defined heat pump", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    // add loadpoint
+    await newLoadpoint(page, "Wärmepumpe", LoadpointType.Heating);
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Add heater" }).click();
+
+    // add user-defined heat pump
+    const modal = page.getByTestId("charger-modal");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heater");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready, all)");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready, boost)");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined switch socket");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
+
+    const editor = modal.getByTestId("yaml-editor");
+    await editorClear(editor, 20);
+    await editorPaste(
+      editor,
+      page,
+      `setmaxpower:
+  source: js
+  script: console.log(setmaxpower); 
+getmaxpower:
+  source: const
+  value: 2000
+power:
+  source: const
+  value: 1000
+energy:
+  source: const
+  value: 0.7
+limittemp:
+  source: const
+  value: 50
+temp:
+  source: const
+  value: 25
+`
+    );
+
+    const restResult = modal.getByTestId("test-result");
+    await expect(restResult).toContainText("Status: unknown");
+    await restResult.getByRole("link", { name: "validate" }).click();
+    await expect(restResult).toContainText("Status: successful");
+    await expect(restResult).toContainText(["Power", "1.0 kW"].join(""));
+    await expect(restResult).toContainText(["Energy", "0.7 kWh"].join(""));
+    await expect(restResult).toContainText(["Temperature", "25.0°C"].join(""));
+    await expect(restResult).toContainText(["Heater limit", "50.0°C"].join(""));
+
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+    await expectModalVisible(lpModal);
+
+    // create
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
+    const lpEntry = page.getByTestId("loadpoint").first();
+    await expect(lpEntry.getByRole("img", { name: "heatpump" })).toBeVisible();
+    await expect(lpEntry).toContainText("Wärmepumpe");
+    await expect(lpEntry).toContainText(["Power", "1.0 kW"].join(""));
   });
 });

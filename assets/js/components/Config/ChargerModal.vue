@@ -388,7 +388,7 @@ export default defineComponent({
 		},
 		async loadTemplate() {
 			this.template = null;
-			if (!this.templateName) return;
+			if (!this.templateName || this.isYamlInput(this.templateName as ConfigType)) return;
 			this.loadingTemplate = true;
 			try {
 				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
