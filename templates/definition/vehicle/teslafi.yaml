@@ -10,9 +10,6 @@ requirements:
 params:
   - preset: vehicle-common
   - name: apikey
-    description:
-      de: TeslaFi API-Schlüssel
-      en: TeslaFi API Key
     required: true
   - name: vin
     advanced: true
