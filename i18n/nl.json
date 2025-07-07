@@ -779,6 +779,8 @@
       "connected": "Verbonden.",
       "disconnectRequired": "Sessie beëindigd. Maak opnieuw verbinding.",
       "disconnected": "Niet verbonden.",
+      "feedinPriorityNextStart": "Hoge energieprijs start over {duration}.",
+      "feedinPriorityPausing": "Zonne opladen gepauzeerd om grid import te maximaliseren.",
       "finished": "Geëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt gepauzeerd.",
@@ -973,6 +975,13 @@
     "resetAction": "Limiet verwijderen",
     "resetWarning": "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opruimen?",
     "saved": "Opgeslagen."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Gepauzeerde uren",
+    "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
+    "priceLabel": "Teruglevertarief",
+    "priceLimit": "Terugleverprijs limiet",
+    "title": "Terugleveren prioritiseren"
   },
   "startupError": {
     "configFile": "Gebruikt configuratiebestand:",
