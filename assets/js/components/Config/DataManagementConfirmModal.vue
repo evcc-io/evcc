@@ -71,12 +71,11 @@ export default defineComponent({
 					const res = await this.action(this.password);
 
 					if (res.status === 200) {
-						if (isLoggedIn()) {
-							this.closeModal();
-
+						if (this.type === "restore" || isLoggedIn()) {
 							if (this.type === "backup") {
 								downloadFile(res);
 							}
+							this.closeModal();
 						} else {
 							this.iframeHint = true;
 						}
