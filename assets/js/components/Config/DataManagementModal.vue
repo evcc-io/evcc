@@ -164,7 +164,10 @@ export default defineComponent({
 		},
 		async resetDatabase() {
 			await api.post("/system/reset", this.selectedReset);
-			document.location.href = "/";
+
+			if (this.selectedReset.settings) {
+				document.location.href = "/";
+			}
 		},
 	},
 });
