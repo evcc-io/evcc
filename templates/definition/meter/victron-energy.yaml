@@ -87,6 +87,31 @@ render: |
         type: input
         decode: int16
       scale: 0.1
+  powers:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .meterid }}
+      register:
+        address: 2600 # L1 grid power
+        type: input
+        decode: int16
+      scale: 1
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .meterid }}
+      register:
+        address: 2601 # L2 grid power
+        type: input
+        decode: int16
+      scale: 1
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .meterid }}
+      register:
+        address: 2602 # L3 grid power
+        type: input
+        decode: int16
+      scale: 1
   {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
