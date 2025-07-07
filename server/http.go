@@ -347,7 +347,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		routes := map[string]route{
 			"log":        {"GET", "/log", logHandler},
 			"logareas":   {"GET", "/log/areas", logAreasHandler},
-			"clearcache": {"DELETE", "/cache", resetHandler},
+			"clearcache": {"DELETE", "/cache", clearCacheHandler},
 			"backup":     {"POST", "/backup", getBackup(auth)},
 			"restore":    {"POST", "/restore", restoreDatabase(auth, shutdown)},
 			"reset":      {"POST", "/reset", resetDatabase(shutdown)},

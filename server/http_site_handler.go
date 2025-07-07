@@ -322,7 +322,7 @@ func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, logstash.Areas())
 }
 
-func resetHandler(w http.ResponseWriter, r *http.Request) {
+func clearCacheHandler(w http.ResponseWriter, r *http.Request) {
 	util.ResetCached()
 	jsonResult(w, "OK")
 }
