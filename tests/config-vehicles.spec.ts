@@ -83,7 +83,7 @@ test.describe("vehicles", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
+    await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
