@@ -147,7 +147,7 @@ export default defineComponent({
 		async downloadBackup() {
 			this.$emit("openDataManagementConfirmModal", "backup", ((password: string) => {
 				return api.post(
-					"/config/backup",
+					"/system/backup",
 					{ password },
 					{
 						responseType: "blob",
@@ -162,11 +162,11 @@ export default defineComponent({
 				formData.append("password", password);
 				formData.append("file", this.file!);
 
-				return api.post("/config/restore", formData);
+				return api.post("/system/restore", formData);
 			}) satisfies ConfirmAction);
 		},
 		async resetDatabase() {
-			await api.post("/config/reset", this.selectedReset);
+			await api.post("/system/reset", this.selectedReset);
 		},
 	},
 });

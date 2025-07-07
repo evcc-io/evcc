@@ -288,9 +288,6 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
-			"backup":             {"POST", "/backup", getBackup(auth)},
-			"restore":            {"POST", "/restore", restoreDatabase(auth, shutdown)},
-			"reset":              {"POST", "/reset", resetDatabase(shutdown)},
 		}
 
 		// yaml handlers
@@ -348,9 +345,12 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// system api
 		routes := map[string]route{
-			"log":      {"GET", "/log", logHandler},
-			"logareas": {"GET", "/log/areas", logAreasHandler},
-			"reset":    {"POST", "/reset", resetHandler},
+			"log":        {"GET", "/log", logHandler},
+			"logareas":   {"GET", "/log/areas", logAreasHandler},
+			"clearcache": {"DELETE", "/cache", resetHandler},
+			"backup":     {"POST", "/backup", getBackup(auth)},
+			"restore":    {"POST", "/restore", restoreDatabase(auth, shutdown)},
+			"reset":      {"POST", "/reset", resetDatabase(shutdown)},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)
