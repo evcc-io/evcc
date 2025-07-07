@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Kapcsolható dugaljak",
       "template": "Gyártó",
-      "titleAdd": "Töltő Hozzáadása",
-      "titleEdit": "Töltő Szerkesztése"
+      "titleAdd": {
+        "charging": "Töltő Hozzáadása"
+      },
+      "titleEdit": {
+        "charging": "Töltő Szerkesztése"
+      }
     },
     "circuits": {
       "description": "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez.",
@@ -180,11 +184,17 @@
       "v2Support": "Vissza az InfluxDB 2.x verzióhoz"
     },
     "loadpoint": {
-      "addCharger": "Töltő hozzáadása",
+      "addCharger": {
+        "charging": "Töltő hozzáadása"
+      },
       "addMeter": "Dedikált töltő fogyasztásmérő hozzáadása",
       "cancel": "Mégse",
-      "chargerError": "Töltő konfigurálása szükséges.",
-      "chargerLabel": "Töltő",
+      "chargerError": {
+        "charging": "Töltő konfigurálása szükséges."
+      },
+      "chargerLabel": {
+        "charging": "Töltő"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "6 és 16 A közötti áramtartomány lesz használatban.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Terheléskezelési hozzárendelés a teljesítmény- és áramkorlátok túllépésének biztosítására.",
       "circuitLabel": "Áramkör",
       "circuitUnassigned": "nincs hozzárendelve",
-      "defaultModeHelp": "Töltési mód, amikor csatlakoztatja a járművet.",
+      "defaultModeHelp": {
+        "charging": "Töltési mód, amikor csatlakoztatja a járművet."
+      },
       "defaultModeHelpKeep": "A legutoljára kiválasztott töltési mód lesz aktív.",
       "defaultModeLabel": "Alapértelmezett mód",
       "delete": "Törlés",

@@ -32,7 +32,7 @@ test.describe("grid meter", async () => {
     await page.getByRole("button", { name: "Apply changes" }).click();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("grid")).toHaveCount(0);
     await expect(page.getByTestId("add-grid")).toBeVisible();

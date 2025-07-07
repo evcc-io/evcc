@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Schaltbare Steckdosen",
       "template": "Hersteller",
-      "titleAdd": "Wallbox hinzufügen",
-      "titleEdit": "Wallbox bearbeiten"
+      "titleAdd": {
+        "charging": "Wallbox hinzufügen",
+        "heating": "Heizung hinzufügen"
+      },
+      "titleEdit": {
+        "charging": "Wallbox bearbeiten",
+        "heating": "Heizung bearbeiten"
+      },
+      "type": {
+        "custom": {
+          "charging": "Benutzerdefinierte Wallbox",
+          "heating": "Benutzerdefinierte Heizung"
+        },
+        "heatpump": "Benutzerdefinierte Wärmepumpe",
+        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready, komplett)",
+        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready, boost)",
+        "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
+      }
     },
     "circuits": {
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
@@ -180,11 +196,20 @@
       "v2Support": "Zurück zu InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Wallbox hinzufügen",
-      "addMeter": "Zusätzlichen Zähler hinzufügen",
+      "addCharger": {
+        "charging": "Wallbox hinzufügen",
+        "heating": "Heizung hinzufügen"
+      },
+      "addMeter": "Zusätzlichen Energiezähler hinzufügen",
       "cancel": "Abbrechen",
-      "chargerError": "Wallbox muss konfiguriert sein.",
-      "chargerLabel": "Wallbox",
+      "chargerError": {
+        "charging": "Wallbox muss konfiguriert sein.",
+        "heating": "Heizung muss konfiguriert sein."
+      },
+      "chargerLabel": {
+        "charging": "Wallbox",
+        "heating": "Heizung"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,11 +217,14 @@
       "chargerPowerCustom": "andere",
       "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
       "chargerTypeLabel": "Ladetyp",
-      "chargingTitle": "Laden",
+      "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
-      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
+      "defaultModeHelp": {
+        "charging": "Lademodus beim Anschließen des Fahrzeugs.",
+        "heating": "Wird beim Systemstart gesetzt."
+      },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
@@ -210,6 +238,10 @@
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
+      "option": {
+        "charging": "Ladepunkt hinzufügen",
+        "heating": "Heizungsgerät hinzufügen"
+      },
       "phases1p": "1-phasig",
       "phases3p": "3-phasig",
       "phasesAutomatic": "Automatische Phasen",
@@ -232,8 +264,8 @@
       "showAllSettings": "Alle Einstellungen anzeigen",
       "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
       "solarBehaviorDefaultHelp": "Nur mit PV-Überschuss laden. Start nach {enableDelay} Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
-      "solarBehaviorLabel": "PV-Verhalten",
-      "solarModeCustom": "eigenes",
+      "solarBehaviorLabel": "PV-Überschuss",
+      "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
@@ -245,9 +277,20 @@
       "thresholdEnableHelpNegative": "Laden starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
       "thresholdEnableHelpZero": "Starten, wenn minimale Ladeleistung für {delay} als Überschuss verfügbar ist.",
       "thresholdEnableLabel": "Netzleistung einschalten",
-      "titleAdd": "Ladepunkt hinzufügen",
-      "titleEdit": "Ladepunkt bearbeiten",
-      "titleExample": "Garage, Carport, etc.",
+      "titleAdd": {
+        "charging": "Ladepunkt hinzufügen",
+        "heating": "Heizung hinzufügen",
+        "unknown": "Wallbox oder Heizung hinzufügen"
+      },
+      "titleEdit": {
+        "charging": "Ladepunkt bearbeiten",
+        "heating": "Heizung bearbeiten",
+        "unknown": "Wallbox oder Heizung bearbeiten"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Wärmepumpe, Heizung, etc."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische Erkennung",
       "vehicleHelpAutoDetection": "Wählt automatisch das plausibelste Fahrzeug aus. Manuelle Übersteuerung möglich.",
@@ -258,7 +301,7 @@
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
-      "addLoadpoint": "Ladepunkt hinzufügen",
+      "addLoadpoint": "Wallbox oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
       "addTariffs": "Tarife hinzufügen",
       "addVehicle": "Fahrzeug hinzufügen",
@@ -351,6 +394,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Heizen",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (unverschlüsselt)",
         "https": "HTTPS (verschlüsselt)"
@@ -370,7 +417,7 @@
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
-      "loadpoints": "Ladepunkte",
+      "loadpoints": "Laden & Heizen",
       "meter": "PV & Batterie",
       "system": "System",
       "vehicles": "Fahrzeuge"
