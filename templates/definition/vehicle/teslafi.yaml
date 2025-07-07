@@ -15,20 +15,13 @@ params:
       en: TeslaFi API Key
     required: true
   - name: vin
-    description:
-      de: Fahrzeug-VIN
-      en: Vehicle VIN
-    help:
-      de: Nur erforderlich, wenn Sie mehrere Fahrzeuge haben
-      en: Only required if you have multiple vehicles
-    required: false
     advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
   {{- define "teslafi_source" }}
   source: http
-  uri: https://www.teslafi.com/feed.php?command=lastGood&vin={{ .vin }}
+  uri: https://www.teslafi.com/feed.php?command=lastGood{{- if .vin }}&vin={{ .vin }}{{- end }}
   headers:
     Authorization: Bearer {{ .apikey }}
   cache: 10s
