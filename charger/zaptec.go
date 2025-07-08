@@ -335,13 +335,13 @@ func (c *Zaptec) phases1p3p(phases int) error {
 		return err
 	}
 
-	newCurrent := oldCurrent - 1
+	newCurrent := oldCurrent - 0.1
 	if oldCurrent <= 6 {
-		newCurrent = oldCurrent + 1
+		newCurrent = oldCurrent + 0.1
 	}
 
 	c.log.DEBUG.Printf("updating current to trigger phase switch: %.1fA -> %.1fA\n", oldCurrent, newCurrent)
-	c.MaxCurrent(int64(newCurrent))
+	err = c.MaxCurrentMillis(newCurrent)
 	if err != nil {
 		return err
 	}
@@ -369,7 +369,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 
 func (c *Zaptec) switchPhases(phases int) error {
 	if c.version != zaptec.ZaptecGo2 {
-		c.log.DEBUG.Printf("switching to %d p\n", phases)
+		c.log.DEBUG.Printf("switching to %dp\n", phases)
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
