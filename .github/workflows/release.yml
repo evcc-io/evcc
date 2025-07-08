@@ -5,10 +5,6 @@ on:
     tags:
       - "*"
 
-env:
-  RUNNER_LABEL: depot-ubuntu-24.04-arm
-  GO_VERSION: "1.24.0"
-
 jobs:
   call-build-workflow:
     if: startsWith(github.ref, 'refs/tags')
@@ -18,7 +14,7 @@ jobs:
     name: Publish Docker :release
     needs:
       - call-build-workflow
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +51,7 @@ jobs:
     name: Github & APT
     needs:
       - call-build-workflow
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +61,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: "1.24.0"
         id: go
 
       - name: Patch ASN1
@@ -117,7 +113,7 @@ jobs:
     name: Demo
     needs:
       - docker
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
@@ -129,7 +125,7 @@ jobs:
     name: Hassio Addon
     needs:
       - docker
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - name: Checkout

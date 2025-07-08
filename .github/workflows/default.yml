@@ -7,22 +7,17 @@ on:
   pull_request:
   workflow_call:
 
-env:
-  RUNNER_LABEL: depot-ubuntu-24.04-arm
-  RUNNER_LABEL_LARGE: depot-ubuntu-24.04-arm-16
-  GO_VERSION: "1.24.0"
-
 jobs:
   clean:
     name: Clean
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: "1.24.0"
         id: go
 
       - uses: actions/cache@v4
@@ -49,14 +44,14 @@ jobs:
 
   build:
     name: Build
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: "1.24.0"
           cache: false
         id: go
 
@@ -82,14 +77,14 @@ jobs:
 
   test:
     name: Test
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: "1.24.0"
           cache: false
         id: go
 
@@ -108,14 +103,14 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: "1.24.0"
           cache: false # avoid cache thrashing
         id: go
 
@@ -139,7 +134,7 @@ jobs:
 
   ui:
     name: UI
-    runs-on: ${{ env.RUNNER_LABEL }}
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -174,14 +169,14 @@ jobs:
 
   integration:
     name: Integration
-    runs-on: ${{ env.RUNNER_LABEL_LARGE }}
+    runs-on: depot-ubuntu-24.04-arm-16
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: "1.24.0"
           cache: false
         id: go
 
