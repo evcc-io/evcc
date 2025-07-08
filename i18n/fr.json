@@ -44,8 +44,12 @@
       "ocppLabel": "URL du serveur OCPP",
       "switchsockets": "Prises commutables",
       "template": "Fabricant",
-      "titleAdd": "Ajouter un chargeur",
-      "titleEdit": "Modifier chargeur"
+      "titleAdd": {
+        "charging": "Ajouter un chargeur"
+      },
+      "titleEdit": {
+        "charging": "Modifier chargeur"
+      }
     },
     "circuits": {
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
@@ -180,11 +184,17 @@
       "v2Support": "Revenir à InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Ajouter un chargeur",
+      "addCharger": {
+        "charging": "Ajouter un chargeur"
+      },
       "addMeter": "Ajouter un compteur dédié pour le chargeur",
       "cancel": "Annuler",
-      "chargerError": "Il est nécessaire de configurer un chargeur.",
-      "chargerLabel": "Chargeur",
+      "chargerError": {
+        "charging": "Il est nécessaire de configurer un chargeur."
+      },
+      "chargerLabel": {
+        "charging": "Chargeur"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Va utiliser des courants de 6 à 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Assignation de la gestion de charge afin d’assurer que les limites de puissance et de courant ne sont pas dépassées.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "non assigné",
-      "defaultModeHelp": "Mode de charge lors de la connexion du véhicule.",
+      "defaultModeHelp": {
+        "charging": "Mode de charge lors de la connexion du véhicule."
+      },
       "defaultModeHelpKeep": "Conserver le dernier mode de charge sélectionné.",
       "defaultModeLabel": "Mode par défaut",
       "delete": "Supprimer",

@@ -115,6 +115,11 @@ export enum PHASES {
   THREE_PHASES = 3,
 }
 
+export enum LOADPOINT_TYPE {
+  CHARGING = "charging",
+  HEATING = "heating",
+}
+
 export type SessionInfoKey =
   | "remaining"
   | "finished"

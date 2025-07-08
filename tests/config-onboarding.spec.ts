@@ -48,6 +48,8 @@ test.describe("onboarding", async () => {
     await expect(page.getByTestId("loadpoint-required")).toBeVisible();
     await page.getByTestId("add-loadpoint").click();
     const lpModal = page.getByTestId("loadpoint-modal");
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Add charging point" }).click();
     await lpModal.getByLabel("Title").fill("Solar Carport");
     await lpModal.getByRole("button", { name: "Add charger" }).click();
 

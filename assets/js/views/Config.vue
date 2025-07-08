@@ -18,7 +18,7 @@
 					>
 						{{ $t("config.main.loadpointRequired") }}
 					</p>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
 							:key="loadpoint.name"
@@ -47,10 +47,10 @@
 							:attention="loadpointsRequired"
 							@click="newLoadpoint"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="vehicle in vehicles"
 							:key="vehicle.name"
@@ -73,10 +73,10 @@
 							:title="$t('config.main.addVehicle')"
 							@click="newVehicle"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-if="gridMeter"
 							:title="$t('config.grid.title')"
@@ -120,9 +120,9 @@
 							data-testid="add-tariffs"
 							@click="openModal('tariffsModal')"
 						/>
-					</ul>
+					</div>
 					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
@@ -169,10 +169,10 @@
 							:title="$t('config.main.addPvBattery')"
 							@click="addSolarBatteryMeter"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
@@ -198,11 +198,11 @@
 							:title="$t('config.main.addAdditional')"
 							@click="newAdditionalMeter"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -303,7 +303,7 @@
 								<DeviceTags :tags="hemsTags" />
 							</template>
 						</DeviceCard>
-					</ul>
+					</div>
 				</div>
 
 				<hr class="my-5" />
@@ -354,6 +354,7 @@
 				<ChargerModal
 					:id="selectedChargerId"
 					:name="selectedChargerName"
+					:loadpointType="selectedLoadpointType"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
 					:isSponsor="isSponsor"
 					@added="chargerAdded"
@@ -491,6 +492,7 @@ export default {
 			selectedLoadpointId: undefined,
 			dataManagementSubModalType: undefined,
 			dataManagementSubModalAction: undefined,
+			selectedLoadpointType: undefined,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
@@ -733,7 +735,7 @@ export default {
 				this.$refs.dataManagementModal.reset();
 			}
 		},
-		editLoadpointCharger(name) {
+		editLoadpointCharger(name, loadpointType) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
 			if (charger && charger.id === undefined) {
@@ -743,7 +745,7 @@ export default {
 				return;
 			}
 			this.loadpointModal().hide();
-			this.$nextTick(() => this.editCharger(charger?.id));
+			this.$nextTick(() => this.editCharger(charger?.id, loadpointType));
 		},
 		editLoadpointMeter(name) {
 			this.loadpointSubModalOpen = true;
@@ -777,12 +779,9 @@ export default {
 			this.selectedMeterTypeChoices = ["aux", "ext"];
 			this.$nextTick(() => this.meterModal().show());
 		},
-		editCharger(id) {
+		editCharger(id, loadpointType) {
 			this.selectedChargerId = id;
-			this.$nextTick(() => this.chargerModal().show());
-		},
-		newCharger() {
-			this.selectedChargerId = undefined;
+			this.selectedLoadpointType = loadpointType;
 			this.$nextTick(() => this.chargerModal().show());
 		},
 		async meterChanged() {
@@ -850,7 +849,7 @@ export default {
 		meterRemoved(type) {
 			if (type === "charge") {
 				// update loadpoint
-				this.$refs.loadpointModal?.setMeter(undefined);
+				this.$refs.loadpointModal?.setMeter("");
 			} else {
 				// update site grid, pv, battery, aux, ext
 				this.loadSite();
@@ -863,7 +862,7 @@ export default {
 			this.$refs.loadpointModal?.setCharger(name);
 		},
 		chargerRemoved() {
-			this.$refs.loadpointModal?.setCharger(undefined);
+			this.$refs.loadpointModal?.setCharger("");
 			this.chargerChanged();
 		},
 		meterModalClosed() {
@@ -968,7 +967,8 @@ export default {
 		},
 		chargerIcon(chargerName) {
 			const charger = this.chargers.find((c) => c.name === chargerName);
-			return charger?.config?.icon;
+
+			return charger?.config?.icon || this.deviceValues?.charger?.[chargerName]?.icon?.value;
 		},
 	},
 };

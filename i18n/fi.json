@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-palvelimen URL",
       "switchsockets": "Kytkettävät pistorasiat",
       "template": "Valmistaja",
-      "titleAdd": "Lisää laturi",
-      "titleEdit": "Muokkaa laturia"
+      "titleAdd": {
+        "charging": "Lisää laturi"
+      },
+      "titleEdit": {
+        "charging": "Muokkaa laturia"
+      }
     },
     "circuits": {
       "description": "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
@@ -180,11 +184,17 @@
       "v2Support": "Takaisin InfluxDB 2.x:ään"
     },
     "loadpoint": {
-      "addCharger": "Lisää laturi",
+      "addCharger": {
+        "charging": "Lisää laturi"
+      },
       "addMeter": "Lisää erillinen latausmittari",
       "cancel": "Peruuta",
-      "chargerError": "Vaaditaan käyttöönottoasetusten määrittely laturille.",
-      "chargerLabel": "Laturi",
+      "chargerError": {
+        "charging": "Vaaditaan käyttöönottoasetusten määrittely laturille."
+      },
+      "chargerLabel": {
+        "charging": "Laturi"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Käyttää 6-16 A:n virta-aluetta.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Kuormanhallinnan määritys varmistaa, että teho ja virtarajoitteita ei ylitetä.",
       "circuitLabel": "Piiri",
       "circuitUnassigned": "määräämätön",
-      "defaultModeHelp": "Lataustila ajoneuvoa kytkettäessä.",
+      "defaultModeHelp": {
+        "charging": "Lataustila ajoneuvoa kytkettäessä."
+      },
       "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataustilan.",
       "defaultModeLabel": "Oletustila",
       "delete": "Poista",
