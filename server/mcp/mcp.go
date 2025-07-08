@@ -83,6 +83,15 @@ func nameFormat(log *util.Logger) func(name string) string {
 		res = strings.ReplaceAll(res, "{", "with_")
 		res = strings.ReplaceAll(res, "}", "")
 		res = strings.ToLower(res)
+
+		// Claude Code has a 64 character limit for tool names
+		if len(res) > 64 {
+			res = strings.ReplaceAll(res, "with_", "w_")
+			if len(res) > 64 {
+				res = res[:64]
+			}
+		}
+
 		log.TRACE.Println("adding tool:", res)
 		return res
 	}
