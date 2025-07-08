@@ -72,12 +72,12 @@ func (o *Observation) Float64() (float64, error) {
 }
 
 type Update struct {
-	MaxChargeCurrent     *int `json:"maxChargeCurrent,omitempty"`
-	MaxChargePhases      *int `json:"maxChargePhases,omitempty"`
-	MinChargeCurrent     *int `json:"minChargeCurrent,omitempty"`
-	OfflineChargeCurrent *int `json:"offlineChargeCurrent,omitempty"`
-	OfflineChargePhase   *int `json:"offlineChargePhase,omitempty"`
-	MeterValueInterval   *int `json:"meterValueInterval,omitempty"`
+	MaxChargeCurrent     *float64 `json:"maxChargeCurrent,omitempty"`
+	MaxChargePhases      *int     `json:"maxChargePhases,omitempty"`
+	MinChargeCurrent     *int     `json:"minChargeCurrent,omitempty"`
+	OfflineChargeCurrent *int     `json:"offlineChargeCurrent,omitempty"`
+	OfflineChargePhase   *int     `json:"offlineChargePhase,omitempty"`
+	MeterValueInterval   *int     `json:"meterValueInterval,omitempty"`
 }
 
 type SessionPriority struct {
