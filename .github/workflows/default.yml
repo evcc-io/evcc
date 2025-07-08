@@ -10,7 +10,7 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: depot-ubuntu-24.04-arm-4
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: depot-ubuntu-24.04-arm-4
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: depot-ubuntu-24.04-arm-4
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: depot-ubuntu-24.04-arm-4
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
 
   ui:
     name: UI
-    runs-on: depot-ubuntu-24.04-arm-4
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
