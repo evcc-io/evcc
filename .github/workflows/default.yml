@@ -7,18 +7,22 @@ on:
   pull_request:
   workflow_call:
 
+env:
+  RUNNER_LABEL: depot-ubuntu-24.04-arm
+  RUNNER_LABEL_LARGE: depot-ubuntu-24.04-arm-16
+  GO_VERSION: "1.24.0"
+
 jobs:
   clean:
     name: Clean
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ env.RUNNER_LABEL }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
-          cache: false
+          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - uses: actions/cache@v4
@@ -45,14 +49,14 @@ jobs:
 
   build:
     name: Build
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ env.RUNNER_LABEL }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
@@ -78,14 +82,14 @@ jobs:
 
   test:
     name: Test
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ env.RUNNER_LABEL }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
@@ -104,14 +108,14 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ env.RUNNER_LABEL }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version: ${{ env.GO_VERSION }}
           cache: false # avoid cache thrashing
         id: go
 
@@ -135,7 +139,7 @@ jobs:
 
   ui:
     name: UI
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ env.RUNNER_LABEL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -170,14 +174,14 @@ jobs:
 
   integration:
     name: Integration
-    runs-on: depot-ubuntu-24.04-arm-16
+    runs-on: ${{ env.RUNNER_LABEL_LARGE }}
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version: ${{ env.GO_VERSION }}
           cache: false
         id: go
 
