@@ -438,23 +438,6 @@
       "trialToken": "Testtoken"
     },
     "system": {
-      "dataManagement": {
-        "backup": {
-          "download": "Datei herunterladen",
-          "title": "Backup"
-        },
-        "confirmWithPassword": "Aktion bestätigen",
-        "reset": {
-          "action": "Zurücksetzen & Neustarten",
-          "settings": "Einstellungen",
-          "title": "Reset"
-        },
-        "restore": {
-          "action": "Wiederherstellen & Neustarten",
-          "title": "Restore"
-        },
-        "title": "Datenverwaltung"
-      },
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",

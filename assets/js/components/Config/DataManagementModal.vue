@@ -19,7 +19,7 @@
 					{{ $t("config.system.dataManagement.backup.description") }}
 				</p>
 				<button class="btn btn-outline-secondary" @click="confirmType = 'backup'">
-					{{ $t("config.system.dataManagement.backup.download") }}
+					{{ $t("config.system.dataManagement.backup.action") }}
 				</button>
 			</div>
 			<div class="mb-3">
@@ -110,7 +110,7 @@
 		</GenericModal>
 		<GenericModal
 			id="dataManagementConfirmModal"
-			:title="$t('config.system.dataManagement.confirmWithPassword')"
+			:title="$t(`config.system.dataManagement.${confirmType}.title`)"
 			size="md"
 			data-testid="data-management-confirm-modal"
 			@close="confirmType = ''"
@@ -135,7 +135,7 @@
 						role="status"
 						aria-hidden="true"
 					></span>
-					{{ $t("loginModal.login") }}
+					{{ $t(`config.system.dataManagement.${confirmType}.confirmationButton`) }}
 				</button>
 			</form>
 		</GenericModal>
