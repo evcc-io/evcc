@@ -9,7 +9,7 @@ on:
 
 jobs:
   stale:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
     steps:
       - uses: actions/stale@v9
         id: stale
