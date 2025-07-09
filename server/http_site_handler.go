@@ -460,7 +460,7 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if !authObject.IsAdminPasswordValid(loginReq.Password) {
+		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(loginReq.Password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
