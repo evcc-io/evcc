@@ -128,24 +128,34 @@
 					:iframe-hint="iframeHint"
 				/>
 
-				<button
-					type="submit"
-					:class="[
-						'btn',
-						confirmType === 'backup' ? 'btn-primary' : 'btn-danger',
-						'w-100',
-						'mb-3',
-					]"
-					:disabled="loading"
-				>
-					<span
-						v-if="loading"
-						class="spinner-border spinner-border-sm"
-						role="status"
-						aria-hidden="true"
-					></span>
-					{{ $t(`config.system.dataManagement.${confirmType}.confirmationButton`) }}
-				</button>
+				<div class="d-flex justify-content-between">
+					<button
+						:disabled="loading"
+						type="button"
+						class="btn btn-outline-secondary w-25"
+						@click="confirmType = ''"
+					>
+						<span>{{ $t(`config.system.dataManagement.cancel`) }}</span>
+					</button>
+
+					<button
+						type="submit"
+						:class="[
+							'btn',
+							confirmType === 'backup' ? 'btn-primary' : 'btn-danger',
+							'w-50',
+						]"
+						:disabled="loading"
+					>
+						<span
+							v-if="loading"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{ $t(`config.system.dataManagement.${confirmType}.confirmationButton`) }}
+					</button>
+				</div>
 			</form>
 		</GenericModal>
 	</div>
