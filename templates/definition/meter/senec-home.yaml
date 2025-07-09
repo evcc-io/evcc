@@ -6,7 +6,7 @@ products:
 requirements:
   description:
     de: Batteriesteuerung umfasst nur das Netzladen, nicht die Entlade-Sperre.
-    en: Battery control only includes grid charging, not the discharge lock. 
+    en: Battery control only includes grid charging, not the discharge lock.
 capabilities: ["battery-control"]
 params:
   - name: usage
