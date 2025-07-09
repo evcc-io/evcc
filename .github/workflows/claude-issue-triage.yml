@@ -6,7 +6,7 @@ on:
 
 jobs:
   triage-issue:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
     timeout-minutes: 10
     permissions:
       contents: read
@@ -15,31 +15,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup GitHub MCP Server
-        run: |
-          mkdir -p /tmp/mcp-config
-          cat > /tmp/mcp-config/mcp-servers.json << 'EOF'
-          {
-            "mcpServers": {
-              "github": {
-                "command": "npx",
-                "args": ["-y", "@modelcontextprotocol/server-github"],
-                "env": {
-                "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
-                }
-              }
-            }
-          }
-
-          EOF
-          cat /tmp/mcp-config/mcp-servers.json
-
       - name: Run Claude Code
         uses: anthropics/claude-code-base-action@beta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          mcp_config: /tmp/mcp-config/mcp-servers.json
+          mcp_config: |
+            {
+              "mcpServers": {
+                "github": {
+                  "command": "npx",
+                  "args": ["-y", "@modelcontextprotocol/server-github"],
+                  "env": {
+                  "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+                  }
+                }
+              }
+            }
           prompt: |
             You're an issue triage assistant for GitHub issues. Your task is to analyze the issue and select appropriate labels from the provided list.
 
@@ -57,7 +49,7 @@ jobs:
                 - You have access to these tools:
                 - mcp__github__get_issue: Use this to retrieve the current issue's details including title, description, and existing labels
                 - mcp__github__get_issue_comments: Use this to read any discussion or additional context provided in the comments
-                - mcp__github__update_issue: Use this to apply labels to the issue (do not use this for commenting)
+                - mcp__github__update_issue: Use this to apply labels to the issue or set issue type (do not use this for commenting)
                 - mcp__github__search_issues: Use this to find similar issues that might provide context for proper categorization and to identify potential duplicate issues
                 - mcp__github__list_issues: Use this to understand patterns in how other issues are labeled
                 - Start by using mcp__github__get_issue to get the issue details
@@ -75,7 +67,11 @@ jobs:
                 - Be specific but comprehensive
                 - If you find similar issues using mcp__github__search_issues, consider using a "duplicate" label if appropriate. Only do so if the issue is a duplicate of another OPEN issue.
 
-            5. Apply the selected labels:
+            5. Use issue type instead of labels if the issue is a feature request or bug report:
+                - If the issue is a feature request, set the issue type to "feature request". Do not apply the "enhancement" label.
+                - If the issue is a bug report, set the issue type to "bug". Do not apply the "bug" label.
+
+            6. Apply the selected labels:
                 - Use mcp__github__update_issue to apply your selected labels
                 - DO NOT post any comments explaining your decision
                 - DO NOT communicate directly with users

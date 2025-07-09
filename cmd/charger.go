@@ -3,6 +3,7 @@ package cmd
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -27,6 +28,7 @@ func init() {
 	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
+	chargerCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -117,6 +119,11 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	if ok, _ := cmd.Flags().GetBool(flagHeartbeat); flagUsed && ok {
+		log.INFO.Println("running heartbeat until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
+	}
+
 	if !flagUsed {
 		d := dumper{len: len(chargers)}
 		flag := cmd.Flag(flagDiagnose).Changed
@@ -129,6 +136,9 @@ func runCharger(cmd *cobra.Command, args []string) {
 				d.DumpDiagnosis(v)
 			}
 		}
+	} else if ok, _ := cmd.Flags().GetBool(flagHeartbeat); ok {
+		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
 	}
 
 	// wait for shutdown
