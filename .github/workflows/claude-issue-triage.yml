@@ -6,7 +6,7 @@ on:
 
 jobs:
   triage-issue:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
     timeout-minutes: 10
     permissions:
       contents: read
