@@ -177,6 +177,8 @@ import Modal from "bootstrap/js/dist/modal";
 import PasswordInput from "../Auth/PasswordInput.vue";
 import { showRestarting } from "@/restart";
 
+const validateStatus = (code: number) => [200, 204, 401, 403].includes(code);
+
 export default defineComponent({
 	name: "DataManagementModal",
 	components: { GenericModal, PropertyFileField, FormRow, PasswordInput },
@@ -247,7 +249,7 @@ export default defineComponent({
 			try {
 				const res = await action;
 
-				if (res.status === 200) {
+				if (res.status === 200 || res.status === 204) {
 					if (!isLoggedIn()) {
 						this.iframeHint = true;
 					} else {
@@ -272,10 +274,7 @@ export default defineComponent({
 				api.post(
 					"/system/backup",
 					{ password: this.password },
-					{
-						responseType: "blob",
-						validateStatus: (code: number) => [200, 401, 403].includes(code),
-					}
+					{ responseType: "blob", validateStatus }
 				)
 			);
 			if (res) {
@@ -287,11 +286,7 @@ export default defineComponent({
 			formData.append("password", this.password);
 			formData.append("file", this.file!);
 
-			const res = await this.call(
-				api.post("/system/restore", formData, {
-					validateStatus: (code: number) => [200, 401, 403].includes(code),
-				})
-			);
+			const res = await this.call(api.post("/system/restore", formData, { validateStatus }));
 
 			if (res) {
 				this.$router.push("/");
@@ -303,9 +298,7 @@ export default defineComponent({
 				api.post(
 					"/system/reset",
 					{ password: this.password, ...this.selectedReset },
-					{
-						validateStatus: (code: number) => [200, 401, 403].includes(code),
-					}
+					{ validateStatus }
 				)
 			);
 
