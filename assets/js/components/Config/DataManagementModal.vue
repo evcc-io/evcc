@@ -4,7 +4,7 @@
 			id="dataManagementModal"
 			:title="$t('config.system.dataManagement.title')"
 			data-testid="data-management-modal"
-			@closed="closed"
+			@closed="dataManagementModalClosed"
 		>
 			<p>
 				<span>{{ $t("config.system.dataManagement.description") }}</span>
@@ -116,7 +116,7 @@
 			:title="$t(`config.system.dataManagement.${confirmType}.title`)"
 			size="md"
 			data-testid="data-management-confirm-modal"
-			@close="dataManagementModal().show()"
+			@close="confirmModalClose"
 			@closed="confirmType = ''"
 		>
 			<form @submit.prevent="submit">
@@ -194,6 +194,7 @@ export default defineComponent({
 			loading: false,
 			iframeHint: false,
 			error: "",
+			hideDataManagementModal: false,
 		};
 	},
 	methods: {
@@ -237,7 +238,10 @@ export default defineComponent({
 		},
 		closeDataManagementConfirmModal() {
 			this.dataManagementConfirmModal().hide();
-			this.dataManagementModal().show();
+
+			if (!this.hideDataManagementModal) {
+				this.dataManagementModal().show();
+			}
 		},
 		fileChanged(file: File) {
 			this.file = file;
@@ -253,6 +257,10 @@ export default defineComponent({
 					if (!isLoggedIn()) {
 						this.iframeHint = true;
 					} else {
+						if (this.confirmType !== "backup") {
+							this.hideDataManagementModal = true;
+						}
+
 						r = res;
 						this.closeDataManagementConfirmModal();
 					}
@@ -303,10 +311,7 @@ export default defineComponent({
 			);
 
 			if (res) {
-				if (this.selectedReset.settings) {
-					this.$router.push("/");
-				}
-
+				this.$router.push("/");
 				showRestarting();
 			}
 		},
@@ -319,7 +324,12 @@ export default defineComponent({
 				await this.resetDatabase();
 			}
 		},
-		closed() {
+		confirmModalClose() {
+			if (!this.hideDataManagementModal) {
+				this.dataManagementModal().show();
+			}
+		},
+		dataManagementModalClosed() {
 			if (this.confirmType === "") {
 				this.reset();
 			}
