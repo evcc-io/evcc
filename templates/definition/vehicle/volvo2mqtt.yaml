@@ -20,7 +20,15 @@ render: |
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_battery_charge_level/state
     timeout: {{ .timeout }}
+  status:
+    source: mqtt
+    topic: homeassistant/sensor/{{ .vin }}_charging_connection_status/state
+    timeout: {{ .timeout }}
   range:
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_electric_range/state
+    timeout: {{ .timeout }}
+  odometer:
+    source: mqtt
+    topic: homeassistant/sensor/{{ .vin }}_odometer/state
     timeout: {{ .timeout }}
