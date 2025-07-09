@@ -152,6 +152,7 @@ import { isLoggedIn } from "../Auth/auth";
 import type { AxiosResponse } from "axios";
 import Modal from "bootstrap/js/dist/modal";
 import PasswordInput from "../Auth/PasswordInput.vue";
+import { showRestarting } from "@/restart";
 
 export default defineComponent({
 	name: "DataManagementModal",
@@ -269,11 +270,15 @@ export default defineComponent({
 			formData.append("password", this.password);
 			formData.append("file", this.file!);
 
-			await this.call(
+			const res = await this.call(
 				api.post("/system/restore", formData, {
 					validateStatus: (code: number) => [200, 401, 403].includes(code),
 				})
 			);
+
+			if (res) {
+				showRestarting();
+			}
 		},
 		async resetDatabase() {
 			const res = await this.call(
@@ -286,8 +291,11 @@ export default defineComponent({
 				)
 			);
 
-			if (res && this.selectedReset.settings) {
-				document.location.href = "/";
+			if (res) {
+				showRestarting();
+				if (this.selectedReset.settings) {
+					this.$router.push("/");
+				}
 			}
 		},
 		async submit() {

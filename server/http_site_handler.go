@@ -363,7 +363,7 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if !authObject.IsAdminPasswordValid(req.Password) {
+		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(req.Password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
@@ -412,7 +412,7 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if !authObject.IsAdminPasswordValid(password) {
+		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
