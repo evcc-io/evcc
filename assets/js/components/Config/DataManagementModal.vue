@@ -254,7 +254,7 @@ export default defineComponent({
 						this.iframeHint = true;
 					} else {
 						r = res;
-						this.confirmType = "";
+						this.closeDataManagementConfirmModal();
 					}
 				} else if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
