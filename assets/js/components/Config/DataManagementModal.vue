@@ -18,7 +18,10 @@
 				<p>
 					{{ $t("config.system.dataManagement.backup.description") }}
 				</p>
-				<button class="btn btn-outline-secondary" @click="confirmType = 'backup'">
+				<button
+					class="btn btn-outline-secondary"
+					@click="openDataManagementConfirmModal('backup')"
+				>
 					{{ $t("config.system.dataManagement.backup.action") }}
 				</button>
 			</div>
@@ -30,7 +33,7 @@
 					{{ $t("config.system.dataManagement.restore.description") }}
 				</p>
 
-				<form @submit="confirmType = 'restore'">
+				<form @submit="openDataManagementConfirmModal('restore')">
 					<FormRow
 						id="restoreFile"
 						:label="$t('config.system.dataManagement.restore.labelFile')"
@@ -55,7 +58,7 @@
 				</h6>
 				<p>{{ $t("config.system.dataManagement.reset.description") }}</p>
 
-				<form @submit="confirmType = 'reset'">
+				<form @submit="openDataManagementConfirmModal('reset')">
 					<div class="d-flex flex-column mb-2">
 						<div class="d-flex mb-1">
 							<input
@@ -113,7 +116,8 @@
 			:title="$t(`config.system.dataManagement.${confirmType}.title`)"
 			size="md"
 			data-testid="data-management-confirm-modal"
-			@close="confirmType = ''"
+			@close="dataManagementModal().show()"
+			@closed="confirmType = ''"
 		>
 			<form @submit.prevent="submit">
 				<p>
@@ -133,7 +137,7 @@
 						:disabled="loading"
 						type="button"
 						class="btn btn-outline-secondary w-25"
-						@click="confirmType = ''"
+						@click="closeDataManagementConfirmModal"
 					>
 						<span>{{ $t(`config.system.dataManagement.cancel`) }}</span>
 					</button>
@@ -190,20 +194,6 @@ export default defineComponent({
 			error: "",
 		};
 	},
-	watch: {
-		confirmType: {
-			handler(newType: string) {
-				if (newType) {
-					this.dataManagementConfirmModal().show();
-					this.dataManagementModal().hide();
-				} else {
-					this.dataManagementConfirmModal().hide();
-					this.dataManagementModal().show();
-					this.resetDataManagementConfirmModal();
-				}
-			},
-		},
-	},
 	methods: {
 		resetDataManagementConfirmModal() {
 			this.password = "";
@@ -236,6 +226,16 @@ export default defineComponent({
 			return Modal.getOrCreateInstance(
 				document.getElementById("dataManagementConfirmModal") as HTMLElement
 			);
+		},
+		openDataManagementConfirmModal(type: typeof this.confirmType) {
+			this.resetDataManagementConfirmModal();
+			this.dataManagementConfirmModal().show();
+			this.dataManagementModal().hide();
+			this.confirmType = type;
+		},
+		closeDataManagementConfirmModal() {
+			this.dataManagementConfirmModal().hide();
+			this.dataManagementModal().show();
 		},
 		fileChanged(file: File) {
 			this.file = file;
