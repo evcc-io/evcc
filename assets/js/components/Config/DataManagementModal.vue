@@ -222,8 +222,6 @@ export default defineComponent({
 			)?.reset();
 		},
 		reset() {
-			console.log("RESETRESET");
-
 			this.resetDataManagementConfirmModal();
 			this.resetDataManagementModal();
 			this.dataManagementConfirmModal().hide();
