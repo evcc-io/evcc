@@ -60,33 +60,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-.config-entry {
-	display: flex;
-	flex-wrap: nowrap;
-	justify-content: space-between;
-	align-items: center;
-	gap: 0.5rem;
-}
-.config-label {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	flex-shrink: 1;
-	flex-grow: 0;
-}
-.config-text {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	flex-shrink: 1;
-	flex-grow: 1;
-	text-align: right;
-}
-.config-button {
-	margin-right: -1rem;
-	flex-shrink: 0;
-	color: var(--evcc-text-default);
-}
-</style>
