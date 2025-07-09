@@ -113,6 +113,7 @@ import api from "@/api";
 import PropertyFileField from "./PropertyFileField.vue";
 import FormRow from "./FormRow.vue";
 import type { ConfirmAction } from "@/types/evcc";
+import { showRestarting } from "@/restart";
 
 export default defineComponent({
 	name: "DataManagementModal",
@@ -159,14 +160,21 @@ export default defineComponent({
 				formData.append("password", password);
 				formData.append("file", this.file!);
 
+				// show restarting state after success
 				return api.post("/system/restore", formData);
 			}) satisfies ConfirmAction);
 		},
 		async resetDatabase() {
-			await api.post("/system/reset", this.selectedReset);
+			try {
+				await api.post("/system/reset", this.selectedReset);
+				showRestarting();
 
-			if (this.selectedReset.settings) {
-				document.location.href = "/";
+				if (this.selectedReset.settings) {
+					this.$router.push("/");
+				}
+			} catch (error) {
+				console.error("reset failed", error);
+				alert("reset failed");
 			}
 		},
 	},
