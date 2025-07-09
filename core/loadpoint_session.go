@@ -68,12 +68,17 @@ func (lp *Loadpoint) stopSession() {
 	}
 
 	s.Finished = lp.clock.Now()
+
+	// record meter stop
 	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
 		s.MeterStop = &meterStop
-	}
 
-	if chargedEnergy := lp.GetChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
-		lp.energyMetrics.Update(chargedEnergy)
+		if s.MeterStart != nil {
+			// use meter stop to override charged energy
+			if chargedEnergy := *s.MeterStop - *s.MeterStart; chargedEnergy > s.ChargedEnergy {
+				lp.energyMetrics.Update(chargedEnergy)
+			}
+		}
 	}
 
 	s.SolarPercentage = lo.ToPtr(lp.energyMetrics.SolarPercentage())
