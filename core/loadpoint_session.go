@@ -75,7 +75,7 @@ func (lp *Loadpoint) stopSession() {
 
 		if s.MeterStart != nil {
 			// use meter stop to override charged energy, but prevent negative values
-			if chargedEnergy := *s.MeterStop - *s.MeterStart; chargedEnergy >= 0 && chargedEnergy > s.ChargedEnergy {
+			if chargedEnergy := *s.MeterStop - *s.MeterStart; chargedEnergy > max(0, s.ChargedEnergy) {
 				lp.energyMetrics.Update(chargedEnergy)
 			}
 		}
