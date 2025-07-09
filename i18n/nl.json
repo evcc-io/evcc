@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
-      "titleAdd": "Voeg Lader toe",
-      "titleEdit": "Editeer Lader"
+      "titleAdd": {
+        "charging": "Voeg Lader toe"
+      },
+      "titleEdit": {
+        "charging": "Editeer Lader"
+      }
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
@@ -180,11 +184,17 @@
       "v2Support": "Terug naar InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Laadpunt toevoegen",
+      "addCharger": {
+        "charging": "Laadpunt toevoegen"
+      },
       "addMeter": "Toevoegen van een toegewijde laadmeter",
       "cancel": "Annuleren",
-      "chargerError": "Het configureren van een oplader is vereist.",
-      "chargerLabel": "Oplader",
+      "chargerError": {
+        "charging": "Het configureren van een oplader is vereist."
+      },
+      "chargerLabel": {
+        "charging": "Oplader"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Zal een stroom van 6 tot 16 A gebruiken.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Toewijzing van Load management om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "niet toegewezen",
-      "defaultModeHelp": "Laadmodus bij het aansluiten van een voertuig.",
+      "defaultModeHelp": {
+        "charging": "Laadmodus bij het aansluiten van een voertuig."
+      },
       "defaultModeHelpKeep": "Behoud de laatst-geselecteerde laadmodus.",
       "defaultModeLabel": "Standaard mode",
       "delete": "Wissen",

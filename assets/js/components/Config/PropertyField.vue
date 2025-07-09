@@ -33,7 +33,6 @@
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>

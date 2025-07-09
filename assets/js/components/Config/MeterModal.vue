@@ -9,12 +9,12 @@
 		@open="open"
 		@close="close"
 	>
-		<div v-if="!meterType">
+		<div v-if="!meterType" class="d-flex flex-column gap-4">
 			<NewDeviceButton
 				v-for="t in typeChoices"
 				:key="t"
 				:title="$t(`config.meter.option.${t}`)"
-				class="mb-4 addButton"
+				class="addButton"
 				@click="selectType(t)"
 			/>
 		</div>

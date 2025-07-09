@@ -44,8 +44,12 @@
       "ocppLabel": "URL Server OCPP",
       "switchsockets": "Prese commutabili",
       "template": "Produttore",
-      "titleAdd": "Aggiungi caricabatterie",
-      "titleEdit": "Modifica caricabatterie"
+      "titleAdd": {
+        "charging": "Aggiungi caricabatterie"
+      },
+      "titleEdit": {
+        "charging": "Modifica caricabatterie"
+      }
     },
     "circuits": {
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
@@ -172,11 +176,17 @@
       "v2Support": "Torna a InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Aggiungi caricabatterie",
+      "addCharger": {
+        "charging": "Aggiungi caricabatterie"
+      },
       "addMeter": "Aggiungi un contatore dedicato per il caricabatterie",
       "cancel": "Annulla",
-      "chargerError": "È necessario configurare un caricatore.",
-      "chargerLabel": "Caricabatterie",
+      "chargerError": {
+        "charging": "È necessario configurare un caricatore."
+      },
+      "chargerLabel": {
+        "charging": "Caricabatterie"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16A",
       "chargerPower22kw": "22 kW",
@@ -187,7 +197,9 @@
       "chargingTitle": "In carica",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "non assegnato",
-      "defaultModeHelp": "Modalità di ricarica quando si collega il veicolo.",
+      "defaultModeHelp": {
+        "charging": "Modalità di ricarica quando si collega il veicolo."
+      },
       "defaultModeHelpKeep": "Mantiene l'ultima modalità di ricarica selezionata.",
       "defaultModeLabel": "Modalità predefinita",
       "delete": "Cancella",
