@@ -24,7 +24,6 @@ import (
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
-	"github.com/glebarez/sqlite"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
 	"golang.org/x/text/language"
@@ -370,15 +369,7 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 
 		settings.Persist()
 
-		dial, ok := db.Instance.Dialector.(*sqlite.Dialector)
-		if !ok {
-			http.Error(w, "DB is not sqlite", http.StatusInternalServerError)
-			return
-		}
-
-		path := strings.SplitN(dial.DSN, "?", 2)[0]
-
-		f, err := os.Open(path)
+		f, err := os.Open(db.FilePath)
 		if err != nil {
 			http.Error(w, "Could not open DB file: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -424,18 +415,16 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		// Get DB path
-		dial, ok := db.Instance.Dialector.(*sqlite.Dialector)
-		if !ok {
-			http.Error(w, "DB is not sqlite", http.StatusInternalServerError)
-			return
-		}
-		path := strings.SplitN(dial.DSN, "?", 2)[0]
-
 		settings.Persist()
 
+		// close db connection to avoid corruption
+		if err := db.Close(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
 		// Overwrite DB file
-		f, err := os.Create(path)
+		f, err := os.Create(db.FilePath)
 		if err != nil {
 			http.Error(w, "Could not open DB file for writing: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -454,24 +443,19 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 
 func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var loginReq loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(loginReq.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
-		}
-
 		var req struct {
-			Sessions bool `json:"sessions"`
-			Settings bool `json:"settings"`
+			Password string `json:"password"`
+			Sessions bool   `json:"sessions"`
+			Settings bool   `json:"settings"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(req.Password) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 
@@ -496,6 +480,12 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 				jsonError(w, http.StatusInternalServerError, query.Error)
 				return
 			}
+		}
+
+		// close db connection to avoid on-shutdown writes
+		if err := db.Close(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 
 		shutdown()
