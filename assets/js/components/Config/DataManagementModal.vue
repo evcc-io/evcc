@@ -128,7 +128,16 @@
 					:iframe-hint="iframeHint"
 				/>
 
-				<button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
+				<button
+					type="submit"
+					:class="[
+						'btn',
+						confirmType === 'backup' ? 'btn-primary' : 'btn-danger',
+						'w-100',
+						'mb-3',
+					]"
+					:disabled="loading"
+				>
 					<span
 						v-if="loading"
 						class="spinner-border spinner-border-sm"
