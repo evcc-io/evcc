@@ -296,6 +296,7 @@ export default defineComponent({
 			);
 
 			if (res) {
+				this.$router.push("/");
 				showRestarting();
 			}
 		},
@@ -311,10 +312,11 @@ export default defineComponent({
 			);
 
 			if (res) {
-				showRestarting();
 				if (this.selectedReset.settings) {
 					this.$router.push("/");
 				}
+
+				showRestarting();
 			}
 		},
 		async submit() {
