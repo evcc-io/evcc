@@ -30,7 +30,7 @@ render: |
     source: combined
     plugged:
       {{- include "teslafi_source" . | indent 4 }}
-      jq: (.charger_phases != null and (.charger_phases | tonumber) >= 1)
+      jq: (.charging_state | ascii_downcase) as $state | $state == "charging" or $state == "complete" or $state == "nopower" or $state == "starting" or $state == "stopped"
     charging:
       {{- include "teslafi_source" . | indent 4 }}
       jq: .charging_state == "Charging"
