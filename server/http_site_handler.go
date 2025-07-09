@@ -452,8 +452,19 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	}
 }
 
-func resetDatabase(shutdown func()) http.HandlerFunc {
+func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var loginReq loginRequest
+		if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !authObject.IsAdminPasswordValid(loginReq.Password) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
+			return
+		}
+
 		var req struct {
 			Sessions bool `json:"sessions"`
 			Settings bool `json:"settings"`

@@ -450,6 +450,7 @@
         "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
         "reset": {
           "action": "Reset & Restart",
+          "confirmationText": "For security reasons, resetting the database requires the password to be entered.",
           "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",

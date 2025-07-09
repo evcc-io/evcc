@@ -373,18 +373,7 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
-				<DataManagementModal
-					ref="dataManagementModal"
-					:fade="dataManagementSubModalOpen ? 'left' : ''"
-					@open-data-management-confirm-modal="openDataManagementConfirmModal"
-					@opened="dataManagementSubModalType = undefined"
-					@closed="dataManagementModalClosed"
-				/>
-				<DataManagementConfirmModal
-					:type="dataManagementSubModalType"
-					:action="dataManagementSubModalAction"
-					@close="confirmWithPasswordModalClosed"
-				/>
+				<DataManagementModal />
 			</div>
 		</div>
 	</div>
@@ -433,12 +422,10 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 import DataManagementModal from "@/components/Config/DataManagementModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
-import DataManagementConfirmModal from "@/components/Config/DataManagementConfirmModal.vue";
 
 export default {
 	name: "Config",
 	components: {
-		DataManagementConfirmModal,
 		NewDeviceButton,
 		DataManagementModal,
 		ChargerModal,
@@ -490,8 +477,6 @@ export default {
 			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
-			dataManagementSubModalType: undefined,
-			dataManagementSubModalAction: undefined,
 			selectedLoadpointType: undefined,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
@@ -505,9 +490,6 @@ export default {
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
-		dataManagementSubModalOpen() {
-			return this.dataManagementSubModalType !== undefined;
-		},
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
 		},
@@ -718,23 +700,6 @@ export default {
 		chargerModal() {
 			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
 		},
-		dataManagementModal() {
-			return Modal.getOrCreateInstance(document.getElementById("dataManagementModal"));
-		},
-		dataManagementConfirmModal() {
-			return Modal.getOrCreateInstance(document.getElementById("dataManagementConfirmModal"));
-		},
-		openDataManagementConfirmModal(type, action) {
-			this.dataManagementSubModalType = type;
-			this.dataManagementSubModalAction = action;
-			this.dataManagementModal().hide();
-			this.$nextTick(() => this.dataManagementConfirmModal().show());
-		},
-		dataManagementModalClosed() {
-			if (!this.dataManagementSubModalOpen) {
-				this.$refs.dataManagementModal.reset();
-			}
-		},
 		editLoadpointCharger(name, loadpointType) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
@@ -874,10 +839,6 @@ export default {
 		chargerModalClosed() {
 			// reopen loadpoint modal
 			this.loadpointModal().show();
-		},
-		confirmWithPasswordModalClosed() {
-			// reopen dataManagementModal modal
-			this.dataManagementModal().show();
 		},
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;
