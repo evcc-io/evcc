@@ -34,6 +34,16 @@ params:
       de: Nummer des LG ESS HOME Wechselrichters.
   - name: capacity
     advanced: true
+  - name: maxacpower
+    advanced: true
+    help:
+      en: 8000 for ESS Home 8, 10000 for ESS Home 10
+      de: 8000 für ESS Home 8, 10000 für ESS Home 10
+  - name: maxchargepower
+    help:
+      en: 5000 for one battery, 7000 for two batteries
+      de: 5000 für eine Batterie, 7000 für zwei Batterien
+    advanced: true
   # battery control
   - name: minsoc
     type: int
