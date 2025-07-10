@@ -464,7 +464,7 @@
         "restore": {
           "action": "Restore...",
           "confirmationButton": "Restore & Restart",
-          "confirmationText": "Restoring the database will overwrite existing data. It's recommended to download a backup first. Continue?",
+          "confirmationText": "Restoring the database will overwrite existing data. It is recommended to download a backup first. Continue?",
           "description": "Restore your data from a backup file. This will overwrite all your current data.",
           "labelFile": "Backup file",
           "title": "Restore"
