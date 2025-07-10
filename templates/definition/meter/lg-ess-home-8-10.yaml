@@ -41,8 +41,8 @@ params:
       de: 8000 für ESS Home 8, 10000 für ESS Home 10
   - name: maxchargepower
     help:
-      en: 5000 for one battery, 7000 for two batteries
-      de: 5000 für eine Batterie, 7000 für zwei Batterien
+      en: 4000 or 5000 for one battery, 7000 for two batteries
+      de: 4000 oder 5000 für eine Batterie, 7000 für zwei Batterien
     advanced: true
   # battery control
   - name: minsoc
