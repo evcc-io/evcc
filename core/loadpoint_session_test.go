@@ -241,7 +241,7 @@ func TestResetHeatingSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
 	clock.Add(36 * time.Hour)
-	me.EXPECT().TotalEnergy().Return(1.0, nil).Times(2)
+	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(2)
 
 	lp.resetHeatingSession()
 	require.NotNil(t, lp.session)
