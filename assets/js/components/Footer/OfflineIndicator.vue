@@ -1,5 +1,5 @@
 <template>
-	<div data-testid="offline-indicator">
+	<div data-testid="offline-indicator" :aria-hidden="!visible">
 		<div v-if="offline" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"

@@ -80,6 +80,7 @@ test.describe("limitSoc", async () => {
     await page.getByRole("combobox", { name: "Default limit" }).selectOption("80%");
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
+    await page.waitForLoadState("networkidle");
 
     await restart(simulatorConfig());
     await page.reload();

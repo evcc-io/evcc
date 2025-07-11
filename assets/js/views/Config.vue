@@ -313,6 +313,12 @@
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
+					<button
+						class="btn btn-outline-secondary"
+						@click="openModal('dataManagementModal')"
+					>
+						{{ $t("config.system.dataManagement.title") }}
+					</button>
 					<button class="btn btn-outline-danger" @click="restart">
 						{{ $t("config.system.restart") }}
 					</button>
@@ -367,6 +373,7 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
+				<DataManagementModal />
 			</div>
 		</div>
 	</div>
@@ -412,6 +419,7 @@ import TariffsModal from "../components/Config/TariffsModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
+import DataManagementModal from "@/components/Config/DataManagementModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 
@@ -419,6 +427,7 @@ export default {
 	name: "Config",
 	components: {
 		NewDeviceButton,
+		DataManagementModal,
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
