@@ -44,8 +44,8 @@ export default defineComponent({
 	},
 	computed: {
 		topNavigation() {
-			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation, store.state) };
+			const authProviders = store.state.auth ? store.state.auth.authProviders : {};
+			return { authProviders, ...this.collectProps(Navigation, store.state) };
 		},
 	},
 });
