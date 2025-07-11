@@ -5,6 +5,7 @@ import waitOn from "wait-on";
 import axios from "axios";
 import { spawn } from "child_process";
 import { Transform } from "stream";
+import type { Page } from "@playwright/test";
 
 const LOG_ENABLED = false;
 
@@ -80,3 +81,12 @@ export async function stopSimulator() {
   log(`wait until port ${port} is closed`);
   await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true, log: LOG_ENABLED });
 }
+
+export const simulatorApply = async (page: Page) => {
+  await Promise.all([
+    page.waitForResponse(
+      (response) => response.url().includes("/api/state") && response.request().method() === "POST"
+    ),
+    page.getByRole("button", { name: "Apply changes" }).click(),
+  ]);
+};

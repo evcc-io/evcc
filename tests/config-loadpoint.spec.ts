@@ -279,6 +279,8 @@ test.describe("charging loadpoint", async () => {
     await addDemoCharger(page);
     await lpModal.getByLabel("Default vehicle").selectOption(VEHICLE_2);
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
 
     // restart
     await restart();
@@ -320,6 +322,9 @@ test.describe("charging loadpoint", async () => {
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Off" })).toHaveClass(/active/);
     await page.getByRole("button", { name: "Solar", exact: true }).click();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+
     await restart();
     await page.reload();
     await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
