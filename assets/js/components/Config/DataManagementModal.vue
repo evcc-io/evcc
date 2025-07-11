@@ -173,7 +173,7 @@ import { isLoggedIn } from "../Auth/auth";
 import type { AxiosResponse } from "axios";
 import Modal from "bootstrap/js/dist/modal";
 import PasswordInput from "../Auth/PasswordInput.vue";
-import { showRestarting } from "@/restart";
+import restart, { showRestarting } from "@/restart";
 
 const validateStatus = (code: number) => [200, 204, 401, 403].includes(code);
 
@@ -193,7 +193,22 @@ export default defineComponent({
 			iframeHint: false,
 			error: "",
 			hideDataManagementModal: false,
+			navigateHomeAfterRestart: false,
 		};
+	},
+	computed: {
+		restarting() {
+			return restart.restarting;
+		},
+	},
+	watch: {
+		restarting(newVal) {
+			// wait for restarte before navigate (ensure lazy chunks are available)
+			if (!newVal && this.navigateHomeAfterRestart) {
+				this.$router.push({ path: "/" });
+				this.navigateHomeAfterRestart = false;
+			}
+		},
 	},
 	methods: {
 		resetDataManagementConfirmModal() {
@@ -208,6 +223,7 @@ export default defineComponent({
 				settings: false,
 			};
 			this.file = null;
+			this.navigateHomeAfterRestart = false;
 			(
 				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
 			)?.reset();
@@ -295,7 +311,7 @@ export default defineComponent({
 			const res = await this.call(api.post("/system/restore", formData, { validateStatus }));
 
 			if (res) {
-				this.$router.push("/");
+				this.navigateHomeAfterRestart = true;
 				showRestarting();
 			}
 		},
@@ -309,7 +325,7 @@ export default defineComponent({
 			);
 
 			if (res) {
-				this.$router.push("/");
+				this.navigateHomeAfterRestart = true;
 				showRestarting();
 			}
 		},
