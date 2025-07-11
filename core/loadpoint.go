@@ -1322,9 +1322,14 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 }
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
+func (lp *Loadpoint) boostPower(batteryUse bool, batteryDischargePower float64) float64 {
 	boost := lp.GetBatteryBoost()
 	if boost == boostDisabled {
+		// return current battery discharge power as available power
+		if batteryUse {
+			return batteryDischargePower
+		}
+
 		return 0
 	}
 
@@ -1352,20 +1357,22 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		}
 	}
 
-	res := batteryBoostPower + delta + lp.site.GetResidualPower()
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
+	res := batteryDischargePower + delta + lp.site.GetResidualPower()
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryDischargePower, delta)
 
 	return res
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
+func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryDischargePower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
 
+	batteryUse := batteryStart || batteryBuffered && lp.charging()
+
 	// push demand to drain battery
-	sitePower -= lp.boostPower(batteryBoostPower)
+	sitePower -= lp.boostPower(batteryUse, batteryDischargePower)
 
 	// switch phases up/down
 	var scaledTo int
@@ -1388,12 +1395,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	// in MinPV mode or under special conditions return at least minCurrent
-	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
-		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
+	if mode == api.ModeMinPV && targetCurrent < minCurrent {
+		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, batteryUse)
 		return minCurrent
 	}
 
-	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
+	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp, battery: %t)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases, batteryUse)
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
