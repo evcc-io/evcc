@@ -5,7 +5,6 @@ import {
   expectModalVisible,
   openTopNavigation,
   expectTopNavigationClosed,
-  expectTopNavigationOpened,
 } from "./utils";
 test.use({ baseURL: baseUrl() });
 
