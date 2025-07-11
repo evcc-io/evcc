@@ -539,9 +539,6 @@ func (site *Site) updatePvMeters() {
 
 	for i, dev := range site.pvMeters {
 		meter := dev.Instance()
-		if _, ok := meter.(api.Meter); !ok {
-			panic("not a meter: pv")
-		}
 
 		power := mm[i].Power
 		if power < -500 {
@@ -582,10 +579,6 @@ func (site *Site) updatePvMeters() {
 	// update solar yield
 	for i, dev := range site.pvMeters {
 		// use stored devices, not ui-updated instances!
-		if _, ok := dev.(config.Device[api.Meter]); !ok {
-			panic(fmt.Sprintf("not a device: pv %d", i+1))
-		}
-
 		name := dev.Config().Name
 
 		if mm[i].Energy > 0 {
@@ -614,9 +607,6 @@ func (site *Site) updateBatteryMeters() {
 
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
-		if _, ok := meter.(api.Meter); !ok {
-			panic("not a meter: battery")
-		}
 
 		// battery soc and capacity
 		var batSoc, capacity float64

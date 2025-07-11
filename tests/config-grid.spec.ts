@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorUrl,
+  simulatorHost,
+  simulatorApply,
+} from "./simulator";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
@@ -29,7 +35,7 @@ test.describe("grid meter", async () => {
     // setup test data for mock openems api
     await page.goto(simulatorUrl());
     await page.getByLabel("Grid Power").fill("5000");
-    await page.getByRole("button", { name: "Apply changes" }).click();
+    await simulatorApply(page);
 
     await page.goto("/#/config");
     await enableExperimental(page, false);
