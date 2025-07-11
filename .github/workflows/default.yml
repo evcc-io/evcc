@@ -222,6 +222,7 @@ jobs:
 
       - name: Run tests
         run: npx playwright test
+        timeout-minutes: 20
         env:
           TZ: Europe/Berlin
 
