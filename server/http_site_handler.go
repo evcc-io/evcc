@@ -369,6 +369,12 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 
 		settings.Persist()
 
+		// force database flush to avoid corruption
+		if err := forceDatabaseFlush(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
 		f, err := os.Open(db.FilePath)
 		if err != nil {
 			http.Error(w, "Could not open DB file: "+err.Error(), http.StatusInternalServerError)
@@ -386,6 +392,31 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+// createLocalDatabaseBackup creates a local backup in case of catastrophic error in reset or restore
+func createLocalDatabaseBackup() error {
+	backupPath := db.FilePath + ".bak"
+
+	src, err := os.Open(db.FilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open database file: %w", err)
+	}
+	defer src.Close()
+
+	dst, err := os.Create(backupPath)
+	if err != nil {
+		return fmt.Errorf("failed to create backup file: %w", err)
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		// clean up partial backup on error
+		os.Remove(backupPath)
+		return fmt.Errorf("failed to copy database: %w", err)
+	}
+
+	return nil
 }
 
 func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
@@ -423,7 +454,13 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		// Overwrite DB file
+		// create local backup before overwriting
+		if err := createLocalDatabaseBackup(); err != nil {
+			http.Error(w, "Failed to create local backup: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// overwrite DB file
 		f, err := os.Create(db.FilePath)
 		if err != nil {
 			http.Error(w, "Could not open DB file for writing: "+err.Error(), http.StatusInternalServerError)
@@ -460,6 +497,11 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 		}
 
 		settings.Persist()
+
+		if err := createLocalDatabaseBackup(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
 
 		if req.Sessions {
 			query := db.Instance.Exec("DELETE FROM sessions")
