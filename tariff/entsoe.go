@@ -170,7 +170,7 @@ func (t *Entsoe) Rates() (api.Rates, error) {
 	err := t.data.GetFunc(func(val api.Rates) {
 		res = slices.Clone(val)
 	})
-	return res, err
+	return api.ConvertTo15mSlots(res, t.Type()), err
 }
 
 // Type implements the api.Tariff interface
