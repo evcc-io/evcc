@@ -13,7 +13,7 @@
 				class="form-control"
 				autocomplete="current-password"
 				type="password"
-				required
+				:required="required"
 				@input="updatePassword"
 			/>
 		</div>
@@ -39,6 +39,7 @@ export default defineComponent({
 		error: { type: String, default: "" },
 		password: { type: String, default: "" },
 		iframeHint: { type: Boolean, default: false },
+		required: { type: Boolean, default: true },
 	},
 	emits: ["update:password"],
 	computed: {

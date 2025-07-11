@@ -130,6 +130,7 @@
 					v-model:password="password"
 					:error="error"
 					:iframe-hint="iframeHint"
+					:required="false"
 				/>
 
 				<div class="d-flex justify-content-between">
