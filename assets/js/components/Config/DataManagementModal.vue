@@ -33,7 +33,7 @@
 					{{ $t("config.system.dataManagement.restore.description") }}
 				</p>
 
-				<form @submit="openDataManagementConfirmModal('restore')">
+				<form @submit.prevent="openDataManagementConfirmModal('restore')">
 					<FormRow
 						id="restoreFile"
 						:label="$t('config.system.dataManagement.restore.labelFile')"
@@ -58,7 +58,7 @@
 				</h6>
 				<p>{{ $t("config.system.dataManagement.reset.description") }}</p>
 
-				<form @submit="openDataManagementConfirmModal('reset')">
+				<form @submit.prevent="openDataManagementConfirmModal('reset')">
 					<div class="d-flex flex-column mb-2">
 						<div class="d-flex mb-1">
 							<input
@@ -136,7 +136,7 @@
 					<button
 						:disabled="loading"
 						type="button"
-						class="btn btn-outline-secondary w-25"
+						class="btn btn-outline-secondary"
 						@click="closeDataManagementConfirmModal"
 					>
 						<span>{{ $t(`config.system.dataManagement.cancel`) }}</span>
@@ -144,11 +144,8 @@
 
 					<button
 						type="submit"
-						:class="[
-							'btn',
-							confirmType === 'backup' ? 'btn-primary' : 'btn-danger',
-							'w-50',
-						]"
+						class="btn"
+						:class="confirmType === 'backup' ? 'btn-primary' : 'btn-danger'"
 						:disabled="loading"
 					>
 						<span

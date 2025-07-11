@@ -369,12 +369,6 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 
 		settings.Persist()
 
-		// force database flush to avoid corruption
-		if err := forceDatabaseFlush(); err != nil {
-			jsonError(w, http.StatusInternalServerError, err)
-			return
-		}
-
 		f, err := os.Open(db.FilePath)
 		if err != nil {
 			http.Error(w, "Could not open DB file: "+err.Error(), http.StatusInternalServerError)
