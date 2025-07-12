@@ -9,9 +9,9 @@ requirements:
   evcc: ["skiptest"]
   description:
     de: |
-      Einmalige Warmwasserbereitung auf eine konfigurierbare Solltemperatur. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
+      Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
     en: |
-      One-time hot water preparation to a configurable target temperature. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
+      One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 params:
   - name: user
     required: true
@@ -140,13 +140,13 @@ params:
     default: 0
   - name: target_temperature
     description:
-      de: Zieltemperatur für Einmal-Warmwasser-Zubereitung
-      en: Target temperature for one-time charge
+      de: Veraltet - Zieltemperatur wird nicht mehr benutzt
+      en: Outdated - target temperature not used any longer
     unit: °C
     help:
-      de: max. 60°C
-      en: max. 60°C
-    required: true
+      de: Parameter existiert nur aus historischen Gründen. Zieltemperatur kann in der ViCare App eingestellt werden (wird nicht von allen Anlagen unterstützt) 
+      en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
+    required: false
     default: 45
     type: int
 render: |
@@ -186,32 +186,18 @@ render: |
             { }
       - case: 3 # boost
         set:
-          source: sequence
-          set:
-          - source: http
-            uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
-            method: POST
-            headers:  
-              - content-type: application/json
-            auth:
-              source: viessmann
-              user: {{ .user }}
-              password: {{ .password }}
-              clientid: {{ .clientid }}
-            body: >
-              {"temperature": {{.target_temperature}}}
-          - source: http
-            uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
-            method: POST 
-            headers:  
-              - content-type: application/json
-            auth:
-              source: viessmann
-              user: {{ .user }}
-              password: {{ .password }}
-              clientid: {{ .clientid }}
-            body: >
-              { }
+          source: http
+          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          method: POST 
+          headers:  
+            - content-type: application/json
+          auth:
+            source: viessmann
+            user: {{ .user }}
+            password: {{ .password }}
+            clientid: {{ .clientid }}
+          body: >
+            { }
       - case: 1 # dimm
         set:
           source: error
