@@ -63,8 +63,9 @@ func (t *Template) Validate() error {
 		}
 
 		maxLength := 50
-		if len(p.Description.String("en")) > maxLength || len(p.Description.String("de")) > maxLength {
-			return fmt.Errorf("description for param %s is too long in template %s. use help field for details: %s", p.Name, t.Template, p.Description.String("en"))
+		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
+		if actualLength > maxLength {
+			return fmt.Errorf("description for param %s is too long in template %s. allowed: %d. actual length: %d. use help field for details instead.", p.Name, t.Template, maxLength, actualLength)
 		}
 
 		switch p.Name {
