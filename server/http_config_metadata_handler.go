@@ -39,7 +39,7 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 		return
 	}
 
@@ -56,7 +56,7 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 		res = append(res, t)
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 // productsHandler returns the list of products by class
@@ -101,5 +101,5 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }

@@ -629,37 +629,37 @@ export default {
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
-			if (response.data?.result) {
+			if (response.data) {
 				restart.restartNeeded = true;
 			}
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
-			this.vehicles = response.data?.result || [];
+			this.vehicles = response.data || [];
 		},
 		async loadChargers() {
 			const response = await api.get("/config/devices/charger");
-			this.chargers = response.data?.result || [];
+			this.chargers = response.data || [];
 		},
 		async loadMeters() {
 			const response = await api.get("/config/devices/meter");
-			this.meters = response.data?.result || [];
+			this.meters = response.data || [];
 		},
 		async loadCircuits() {
 			const response = await api.get("/config/devices/circuit");
-			this.circuits = response.data?.result || [];
+			this.circuits = response.data || [];
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {
 				validateStatus: (status) => status < 500,
 			});
 			if (response.status === 200) {
-				this.site = response.data?.result;
+				this.site = response.data;
 			}
 		},
 		async loadLoadpoints() {
 			const response = await api.get("/config/loadpoints");
-			this.loadpoints = response.data?.result || [];
+			this.loadpoints = response.data || [];
 		},
 		getMetersByNames(names) {
 			if (!names || !this.meters) {
@@ -848,7 +848,7 @@ export default {
 			try {
 				const response = await api.get(`/config/devices/${type}/${name}/status`);
 				if (!this.deviceValues[type]) this.deviceValues[type] = {};
-				this.deviceValues[type][name] = response.data.result;
+				this.deviceValues[type][name] = response.data;
 			} catch (error) {
 				console.error("Error fetching device values for", type, name, error);
 				return null;

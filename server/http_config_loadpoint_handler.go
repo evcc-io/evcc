@@ -93,7 +93,7 @@ func loadpointsConfigHandler() http.HandlerFunc {
 			return loadpointConfig(dev)
 		})
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -118,7 +118,7 @@ func loadpointConfigHandler() http.HandlerFunc {
 
 		res := loadpointConfig(dev)
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -284,6 +284,6 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			ID: id,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
