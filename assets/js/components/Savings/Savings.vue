@@ -327,7 +327,7 @@ export default defineComponent({
 		async updateReferenceGrid() {
 			try {
 				const res = await api.get(`tariff/grid`, allowClientError);
-				const { rates } = res.data.result as { rates: Rate[] };
+				const { rates } = res.data as { rates: Rate[] };
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
 						return acc + slot.value;
