@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, simulatorUrl, simulatorConfig } from "./simulator";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorUrl,
+  simulatorConfig,
+  simulatorApply,
+} from "./simulator";
 
 test.use({ baseURL: baseUrl() });
 
@@ -18,7 +24,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel("Grid Power").fill("500");
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
   await page.getByTestId("loadpoint0").getByText("B (connected)").click();
-  await page.getByRole("button", { name: "Apply changes" }).click();
+  await simulatorApply(page);
 });
 
 test.afterEach(async () => {
@@ -41,7 +47,7 @@ test.describe("limitSoc", async () => {
   test("can be set even if vehicle isn't connected yet", async ({ page }) => {
     await page.goto(simulatorUrl());
     await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();
-    await page.getByRole("button", { name: "Apply changes" }).click();
+    await simulatorApply(page);
 
     await page.goto("/");
     await expect(page.getByTestId("vehicle-title")).toContainText("blauer e-Golf");
@@ -52,7 +58,7 @@ test.describe("limitSoc", async () => {
 
     await page.goto(simulatorUrl());
     await page.getByTestId("loadpoint0").getByText("B (connected)").click();
-    await page.getByRole("button", { name: "Apply changes" }).click();
+    await simulatorApply(page);
 
     await page.goto("/");
     await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
@@ -67,7 +73,7 @@ test.describe("limitSoc", async () => {
     // disconnect
     await page.goto(simulatorUrl());
     await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();
-    await page.getByRole("button", { name: "Apply changes" }).click();
+    await simulatorApply(page);
 
     await page.goto("/");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
@@ -76,7 +82,7 @@ test.describe("limitSoc", async () => {
     // connect
     await page.goto(simulatorUrl());
     await page.getByTestId("loadpoint0").getByText("B (connected)").click();
-    await page.getByRole("button", { name: "Apply changes" }).click();
+    await simulatorApply(page);
 
     await page.goto("/");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Connected.");
