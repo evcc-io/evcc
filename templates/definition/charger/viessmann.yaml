@@ -139,9 +139,10 @@ params:
       en: typically `0`
     default: 0
   - name: target_temperature
+    deprecated: true
     description:
-      de: Veraltet - Zieltemperatur wird nicht mehr benutzt
-      en: Outdated - target temperature not used any longer
+      de: Zieltemperatur für Einmal-Warmwasser-Zubereitung
+      en: Target temperature for one-time charge
     unit: °C
     help:
       de: Parameter existiert nur aus historischen Gründen. Zieltemperatur kann in der ViCare App eingestellt werden (wird nicht von allen Anlagen unterstützt) 
