@@ -36,10 +36,9 @@ func StartProxy(port int, config modbus.Settings, readOnly ReadOnlyMode) error {
 	h.log.DEBUG.Printf("modbus proxy for %s listening at :%d", config.String(), port)
 
 	srv, err := mbserver.New(h, mbserver.Logger(&logger{log: h.log}))
-
-	if err == nil {
-		err = srv.Start(l)
+	if err != nil {
+		return err
 	}
 
-	return err
+	return srv.Start(l)
 }
