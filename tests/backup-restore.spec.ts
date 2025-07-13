@@ -108,8 +108,10 @@ test.describe("reset", async () => {
     await expect(page.getByTestId("generalconfig-title")).not.toContainText(title);
     await stop();
   });
+});
 
-  test("backup and restore", async ({ page }) => {
+test.describe("backup and restore", async () => {
+  test("download backup and restore from file", async ({ page }) => {
     const initialTitle = "My Home Base";
     const changedTitle = "Changed Title";
 

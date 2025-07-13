@@ -138,7 +138,7 @@
 						:disabled="loading"
 						type="button"
 						class="btn btn-outline-secondary"
-						@click="closeBackupRestoreConfirmModal"
+						data-bs-dismiss="modal"
 					>
 						<span>{{ $t(`config.system.backupRestore.cancel`) }}</span>
 					</button>
@@ -224,6 +224,7 @@ export default defineComponent({
 			};
 			this.file = null;
 			this.navigateHomeAfterRestart = false;
+			this.hideBackupRestoreModal = false;
 			(
 				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
 			)?.reset();
@@ -250,12 +251,14 @@ export default defineComponent({
 			this.backupRestoreModal().hide();
 			this.confirmType = type;
 		},
-		closeBackupRestoreConfirmModal() {
+		closeModal() {
+			this.backupRestoreModal().hide();
+		},
+		showModal() {
+			this.backupRestoreModal().show();
+		},
+		closeConfirmModal() {
 			this.backupRestoreConfirmModal().hide();
-
-			if (!this.hideBackupRestoreModal) {
-				this.backupRestoreModal().show();
-			}
 		},
 		fileChanged(file: File) {
 			this.file = file;
@@ -271,12 +274,7 @@ export default defineComponent({
 					if (!isLoggedIn()) {
 						this.iframeHint = true;
 					} else {
-						if (this.confirmType !== "backup") {
-							this.hideBackupRestoreModal = true;
-						}
-
 						r = res;
-						this.closeBackupRestoreConfirmModal();
 					}
 				} else if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
@@ -300,6 +298,7 @@ export default defineComponent({
 				)
 			);
 			if (res) {
+				this.closeConfirmModal();
 				downloadFile(res);
 			}
 		},
@@ -311,7 +310,9 @@ export default defineComponent({
 			const res = await this.call(api.post("/system/restore", formData, { validateStatus }));
 
 			if (res) {
+				this.hideBackupRestoreModal = true;
 				this.navigateHomeAfterRestart = true;
+				this.closeConfirmModal();
 				showRestarting();
 			}
 		},
@@ -325,7 +326,9 @@ export default defineComponent({
 			);
 
 			if (res) {
+				this.hideBackupRestoreModal = true;
 				this.navigateHomeAfterRestart = true;
+				this.closeConfirmModal();
 				showRestarting();
 			}
 		},
@@ -340,7 +343,7 @@ export default defineComponent({
 		},
 		confirmModalClose() {
 			if (!this.hideBackupRestoreModal) {
-				this.backupRestoreModal().show();
+				this.showModal();
 			}
 		},
 		backupRestoreModalClosed() {
