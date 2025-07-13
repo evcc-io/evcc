@@ -438,7 +438,7 @@
       "trialToken": "Trial token"
     },
     "system": {
-      "dataManagement": {
+      "backupRestore": {
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
@@ -469,7 +469,7 @@
           "labelFile": "Backup file",
           "title": "Restore"
         },
-        "title": "Data management"
+        "title": "Backup & Restore"
       },
       "logs": "Logs",
       "restart": "Restart",

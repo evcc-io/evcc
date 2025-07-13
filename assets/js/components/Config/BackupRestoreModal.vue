@@ -1,42 +1,42 @@
 <template>
 	<div>
 		<GenericModal
-			id="dataManagementModal"
-			:title="$t('config.system.dataManagement.title')"
-			data-testid="data-management-modal"
-			@closed="dataManagementModalClosed"
+			id="backupRestoreModal"
+			:title="$t('config.system.backupRestore.title')"
+			data-testid="backup-restore-modal"
+			@closed="backupRestoreModalClosed"
 		>
 			<p>
-				<span>{{ $t("config.system.dataManagement.description") }}</span>
+				<span>{{ $t("config.system.backupRestore.description") }}</span>
 			</p>
 
 			<div class="mb-3">
 				<h6>
-					{{ $t("config.system.dataManagement.backup.title") }}
+					{{ $t("config.system.backupRestore.backup.title") }}
 				</h6>
 
 				<p>
-					{{ $t("config.system.dataManagement.backup.description") }}
+					{{ $t("config.system.backupRestore.backup.description") }}
 				</p>
 				<button
 					class="btn btn-outline-secondary"
-					@click="openDataManagementConfirmModal('backup')"
+					@click="openBackupRestoreConfirmModal('backup')"
 				>
-					{{ $t("config.system.dataManagement.backup.action") }}
+					{{ $t("config.system.backupRestore.backup.action") }}
 				</button>
 			</div>
 			<div class="mb-3">
 				<h6>
-					{{ $t("config.system.dataManagement.restore.title") }}
+					{{ $t("config.system.backupRestore.restore.title") }}
 				</h6>
 				<p>
-					{{ $t("config.system.dataManagement.restore.description") }}
+					{{ $t("config.system.backupRestore.restore.description") }}
 				</p>
 
-				<form @submit.prevent="openDataManagementConfirmModal('restore')">
+				<form @submit.prevent="openBackupRestoreConfirmModal('restore')">
 					<FormRow
 						id="restoreFile"
-						:label="$t('config.system.dataManagement.restore.labelFile')"
+						:label="$t('config.system.backupRestore.restore.labelFile')"
 					>
 						<PropertyFileField
 							id="restoreFile"
@@ -48,17 +48,17 @@
 					</FormRow>
 
 					<button class="btn btn-outline-danger mt-2" :disabled="file === null">
-						{{ $t("config.system.dataManagement.restore.action") }}
+						{{ $t("config.system.backupRestore.restore.action") }}
 					</button>
 				</form>
 			</div>
 			<div class="mb-3">
 				<h6>
-					{{ $t("config.system.dataManagement.reset.title") }}
+					{{ $t("config.system.backupRestore.reset.title") }}
 				</h6>
-				<p>{{ $t("config.system.dataManagement.reset.description") }}</p>
+				<p>{{ $t("config.system.backupRestore.reset.description") }}</p>
 
-				<form @submit.prevent="openDataManagementConfirmModal('reset')">
+				<form @submit.prevent="openBackupRestoreConfirmModal('reset')">
 					<div class="d-flex flex-column mb-2">
 						<div class="d-flex mb-1">
 							<input
@@ -68,11 +68,11 @@
 								type="checkbox"
 							/>
 							<label class="form-check-label ms-2" for="resetSessions">
-								<span>{{ $t("config.system.dataManagement.reset.sessions") }}</span>
+								<span>{{ $t("config.system.backupRestore.reset.sessions") }}</span>
 								<br />
 								<small>
 									{{
-										$t("config.system.dataManagement.reset.sessionsDescription")
+										$t("config.system.backupRestore.reset.sessionsDescription")
 									}}
 								</small>
 							</label>
@@ -86,11 +86,11 @@
 								type="checkbox"
 							/>
 							<label class="form-check-label ms-2" for="resetSettings">
-								<span>{{ $t("config.system.dataManagement.reset.settings") }}</span>
+								<span>{{ $t("config.system.backupRestore.reset.settings") }}</span>
 								<br />
 								<small>
 									{{
-										$t("config.system.dataManagement.reset.settingsDescription")
+										$t("config.system.backupRestore.reset.settingsDescription")
 									}}
 								</small>
 							</label>
@@ -101,28 +101,28 @@
 						class="btn btn-outline-danger mt-3"
 						:disabled="!selectedReset.sessions && !selectedReset.settings"
 					>
-						{{ $t("config.system.dataManagement.reset.action") }}
+						{{ $t("config.system.backupRestore.reset.action") }}
 					</button>
 				</form>
 			</div>
 			<p>
 				<small>
-					{{ $t("config.system.dataManagement.note") }}
+					{{ $t("config.system.backupRestore.note") }}
 				</small>
 			</p>
 		</GenericModal>
 		<GenericModal
-			id="dataManagementConfirmModal"
-			:title="$t(`config.system.dataManagement.${confirmType}.title`)"
+			id="backupRestoreConfirmModal"
+			:title="$t(`config.system.backupRestore.${confirmType}.title`)"
 			size="md"
-			data-testid="data-management-confirm-modal"
+			data-testid="backup-restore-confirm-modal"
 			@close="confirmModalClose"
 			@closed="confirmType = ''"
 		>
 			<form @submit.prevent="submit">
 				<p>
 					<span>{{
-						$t(`config.system.dataManagement.${confirmType}.confirmationText`)
+						$t(`config.system.backupRestore.${confirmType}.confirmationText`)
 					}}</span>
 				</p>
 
@@ -138,9 +138,9 @@
 						:disabled="loading"
 						type="button"
 						class="btn btn-outline-secondary"
-						@click="closeDataManagementConfirmModal"
+						@click="closeBackupRestoreConfirmModal"
 					>
-						<span>{{ $t(`config.system.dataManagement.cancel`) }}</span>
+						<span>{{ $t(`config.system.backupRestore.cancel`) }}</span>
 					</button>
 
 					<button
@@ -155,7 +155,7 @@
 							role="status"
 							aria-hidden="true"
 						></span>
-						{{ $t(`config.system.dataManagement.${confirmType}.confirmationButton`) }}
+						{{ $t(`config.system.backupRestore.${confirmType}.confirmationButton`) }}
 					</button>
 				</div>
 			</form>
@@ -178,7 +178,7 @@ import restart, { showRestarting } from "@/restart";
 const validateStatus = (code: number) => [200, 204, 401, 403].includes(code);
 
 export default defineComponent({
-	name: "DataManagementModal",
+	name: "BackupRestoreModal",
 	components: { GenericModal, PropertyFileField, FormRow, PasswordInput },
 	data() {
 		return {
@@ -192,7 +192,7 @@ export default defineComponent({
 			loading: false,
 			iframeHint: false,
 			error: "",
-			hideDataManagementModal: false,
+			hideBackupRestoreModal: false,
 			navigateHomeAfterRestart: false,
 		};
 	},
@@ -211,13 +211,13 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		resetDataManagementConfirmModal() {
+		resetBackupRestoreConfirmModal() {
 			this.password = "";
 			this.loading = false;
 			this.iframeHint = false;
 			this.error = "";
 		},
-		resetDataManagementModal() {
+		resetBackupRestoreModal() {
 			this.selectedReset = {
 				sessions: false,
 				settings: false,
@@ -229,32 +229,32 @@ export default defineComponent({
 			)?.reset();
 		},
 		reset() {
-			this.resetDataManagementConfirmModal();
-			this.resetDataManagementModal();
-			this.dataManagementConfirmModal().hide();
-			this.dataManagementModal().hide();
+			this.resetBackupRestoreConfirmModal();
+			this.resetBackupRestoreModal();
+			this.backupRestoreConfirmModal().hide();
+			this.backupRestoreModal().hide();
 		},
-		dataManagementModal() {
+		backupRestoreModal() {
 			return Modal.getOrCreateInstance(
-				document.getElementById("dataManagementModal") as HTMLElement
+				document.getElementById("backupRestoreModal") as HTMLElement
 			);
 		},
-		dataManagementConfirmModal() {
+		backupRestoreConfirmModal() {
 			return Modal.getOrCreateInstance(
-				document.getElementById("dataManagementConfirmModal") as HTMLElement
+				document.getElementById("backupRestoreConfirmModal") as HTMLElement
 			);
 		},
-		openDataManagementConfirmModal(type: typeof this.confirmType) {
-			this.resetDataManagementConfirmModal();
-			this.dataManagementConfirmModal().show();
-			this.dataManagementModal().hide();
+		openBackupRestoreConfirmModal(type: typeof this.confirmType) {
+			this.resetBackupRestoreConfirmModal();
+			this.backupRestoreConfirmModal().show();
+			this.backupRestoreModal().hide();
 			this.confirmType = type;
 		},
-		closeDataManagementConfirmModal() {
-			this.dataManagementConfirmModal().hide();
+		closeBackupRestoreConfirmModal() {
+			this.backupRestoreConfirmModal().hide();
 
-			if (!this.hideDataManagementModal) {
-				this.dataManagementModal().show();
+			if (!this.hideBackupRestoreModal) {
+				this.backupRestoreModal().show();
 			}
 		},
 		fileChanged(file: File) {
@@ -272,11 +272,11 @@ export default defineComponent({
 						this.iframeHint = true;
 					} else {
 						if (this.confirmType !== "backup") {
-							this.hideDataManagementModal = true;
+							this.hideBackupRestoreModal = true;
 						}
 
 						r = res;
-						this.closeDataManagementConfirmModal();
+						this.closeBackupRestoreConfirmModal();
 					}
 				} else if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
@@ -339,11 +339,11 @@ export default defineComponent({
 			}
 		},
 		confirmModalClose() {
-			if (!this.hideDataManagementModal) {
-				this.dataManagementModal().show();
+			if (!this.hideBackupRestoreModal) {
+				this.backupRestoreModal().show();
 			}
 		},
-		dataManagementModalClosed() {
+		backupRestoreModalClosed() {
 			if (this.confirmType === "") {
 				this.reset();
 			}

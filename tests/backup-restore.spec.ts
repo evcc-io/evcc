@@ -21,19 +21,19 @@ test.describe("reset", async () => {
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
-    // open data management modal
+    // open backup & restore modal
     await openTopNavigation(page);
     await page.getByRole("link", { name: "Configuration" }).click();
     await enableExperimental(page);
-    await page.getByRole("button", { name: "Data management" }).click();
-    const modal = page.getByTestId("data-management-modal");
+    await page.getByRole("button", { name: "Backup & Restore" }).click();
+    const modal = page.getByTestId("backup-restore-modal");
     await expectModalVisible(modal);
 
     // reset
     await expect(modal.getByRole("button", { name: "Reset..." })).toBeDisabled();
     await modal.getByRole("checkbox", { name: "Charging sessions" }).check();
     await modal.getByRole("button", { name: "Reset..." }).click();
-    const confirmModal = page.getByTestId("data-management-confirm-modal");
+    const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
     await confirmModal.getByRole("button", { name: "Reset" }).click();
     await expectModalHidden(confirmModal);
@@ -80,13 +80,13 @@ test.describe("reset", async () => {
     await expect(page.getByTestId("generalconfig-title")).toContainText(title);
 
     // reset settings only
-    await page.getByRole("button", { name: "Data management" }).click();
-    const modal = page.getByTestId("data-management-modal");
+    await page.getByRole("button", { name: "Backup & Restore" }).click();
+    const modal = page.getByTestId("backup-restore-modal");
     await expectModalVisible(modal);
     await expect(modal.getByRole("button", { name: "Reset..." })).toBeDisabled();
     await modal.getByRole("checkbox", { name: "Settings" }).check();
     await modal.getByRole("button", { name: "Reset..." }).click();
-    const confirmModal = page.getByTestId("data-management-confirm-modal");
+    const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
     await confirmModal.getByRole("button", { name: "Reset" }).click();
     await expectModalHidden(confirmModal);
