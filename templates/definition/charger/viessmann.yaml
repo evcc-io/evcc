@@ -16,8 +16,8 @@ params:
   - name: user
     required: true
     help:
-      de: Registrieren auf [app.developer.viessmann.com](https://app.developer.viessmann.com)
-      en: Register at [app.developer.viessmann.com](https://app.developer.viessmann.com)
+      de: Registrieren auf [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Register at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
   - name: password
     required: true
     help:
@@ -29,8 +29,8 @@ params:
       de: Client ID
       en: Client ID
     help:
-      de: Konfigurieren in [app.developer.viessmann.com](https://app.developer.viessmann.com)
-      en: Configure at [app.developer.viessmann.com](https://app.developer.viessmann.com)
+      de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
   - name: gateway_serial
     required: true
     description:
@@ -67,7 +67,7 @@ params:
           --user $VIESSMANN_USER:$VIESSMANN_PASS \
           --output /dev/null \
           --dump-header -    \
-          "https://iam.viessmann.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
           | grep "^location: "            \
           | sed 's/.*\?code=\(.*\).*/\1/' \
           | tr -d '[:space:]')
@@ -75,7 +75,7 @@ params:
         TOKEN_RESPONSE=$(curl -XPOST --silent \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
-          https://iam.viessmann.com/idp/v3/token)
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
 
         VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
         ```
@@ -84,7 +84,7 @@ params:
 
         ```
         curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
-          https://api.viessmann.com/iot/v1/equipment/installations?includeGateways=true \
+          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
       en: |
@@ -109,7 +109,7 @@ params:
           --user $VIESSMANN_USER:$VIESSMANN_PASS \
           --output /dev/null \
           --dump-header -    \
-          "https://iam.viessmann.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
           | grep "^location: "            \
           | sed 's/.*\?code=\(.*\).*/\1/' \
           | tr -d '[:space:]')
@@ -117,7 +117,7 @@ params:
         TOKEN_RESPONSE=$(curl -XPOST --silent \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
-          https://iam.viessmann.com/idp/v3/token)
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
 
         VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
         ```
@@ -126,7 +126,7 @@ params:
 
         ```
         curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
-          https://api.viessmann.com/iot/v1/equipment/installations?includeGateways=true \
+          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
   - name: device_id
@@ -154,7 +154,7 @@ render: |
   type: sgready
   getmode:
     source: http
-    uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
     cache: 2s # to prevent making two identical requests straight after each other for "getmode"
     auth:
       source: viessmann
@@ -174,7 +174,7 @@ render: |
       - case: 2 # normal
         set:
           source: http
-          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
+          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
           method: POST 
           headers:  
             - content-type: application/json
@@ -188,7 +188,7 @@ render: |
       - case: 3 # boost
         set:
           source: http
-          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
           method: POST 
           headers:  
             - content-type: application/json
