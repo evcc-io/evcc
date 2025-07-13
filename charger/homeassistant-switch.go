@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -89,8 +90,10 @@ func (c *HomeAssistantSwitch) Enable(enable bool) error {
 	}
 
 	data := map[string]any{"entity_id": c.switchEntity}
+	// the domain must not be necessary a 'switch' - it can be also an `input_boolean`
+	domain := strings.Split(c.switchEntity, ".")[0]
 
-	uri := fmt.Sprintf("%s/api/services/switch/%s", c.baseURL, service)
+	uri := fmt.Sprintf("%s/api/services/%s/%s", c.baseURL, domain, service)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	return c.Helper.DoJSON(req, nil)
