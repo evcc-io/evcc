@@ -422,13 +422,7 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		password := r.FormValue("password")
-		if password == "" {
-			http.Error(w, "Password is required", http.StatusBadRequest)
-			return
-		}
-
-		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(password) {
+		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(r.FormValue("password")) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
