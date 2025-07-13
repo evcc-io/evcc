@@ -133,7 +133,7 @@
 					:required="false"
 				/>
 
-				<div class="d-flex justify-content-between">
+				<div class="d-flex justify-content-between gap-2 flex-wrap">
 					<button
 						:disabled="loading"
 						type="button"
@@ -145,7 +145,7 @@
 
 					<button
 						type="submit"
-						class="btn"
+						class="btn text-truncate"
 						:class="confirmType === 'backup' ? 'btn-primary' : 'btn-danger'"
 						:disabled="loading"
 					>

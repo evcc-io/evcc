@@ -442,7 +442,7 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "For security reasons, downloading a backup requires the password to be entered. The database will be downloaded afterwards.",
+          "confirmationText": "Please enter your password to download the database file.",
           "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
           "title": "Backup"
         },
@@ -453,7 +453,7 @@
         "reset": {
           "action": "Reset...",
           "confirmationButton": "Reset & Restart",
-          "confirmationText": "Resetting the database will permanently delete all existing data. It is recommended to download a backup first. Continue?",
+          "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
           "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",
@@ -464,7 +464,7 @@
         "restore": {
           "action": "Restore...",
           "confirmationButton": "Restore & Restart",
-          "confirmationText": "Restoring the database will overwrite existing data. It is recommended to download a backup first. Continue?",
+          "confirmationText": "This will overwrite your complete database. Ensure you've downloaded a backup first.",
           "description": "Restore your data from a backup file. This will overwrite all your current data.",
           "labelFile": "Backup file",
           "title": "Restore"

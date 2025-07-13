@@ -309,12 +309,12 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 mb-5">
+				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
 					<button
-						class="btn btn-outline-secondary"
+						class="btn btn-outline-secondary text-truncate"
 						@click="openModal('backupRestoreModal')"
 					>
 						{{ $t("config.system.backupRestore.title") }}

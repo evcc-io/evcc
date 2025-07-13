@@ -4,7 +4,7 @@
 			<div class="hstack gap-3">
 				{{ $t("config.general.selectFile") }}
 				<div class="vr"></div>
-				<span>{{ computedFileName }}</span>
+				<span class="text-truncate">{{ computedFileName }}</span>
 			</div>
 		</label>
 
