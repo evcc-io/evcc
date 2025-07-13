@@ -1,0 +1,86 @@
+template: demo-heatpump
+group: heatinggeneric
+products:
+  - description:
+      de: Demowärmepumpe
+      en: Demo heat pump
+requirements:
+  description:
+    en: For demonstration purposes. Heat pump with a fixed set of values.
+    de: Zu Demonstrationszwecken. Wärmepumpe mit festen Werten.
+params:
+  - name: operationMode
+    description:
+      de: Betriebszustand
+      en: Operation status
+    type: choice
+    choice: ["standby", "heating"]
+    default: "heating"
+    required: true
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    type: int
+    unit: W
+    default: 0
+  - name: enabled
+    description:
+      de: Bereit zum Heizen
+      en: Ready to heat
+    type: bool
+    default: true
+  - name: soc
+    description:
+      de: Temperatur
+      en: Temperature
+    type: int
+    unit: °C
+    default: 50
+    advanced: true
+  - name: limitSoc
+    description:
+      de: Temperaturgrenze
+      en: Temperature limit
+    type: int
+    unit: °C
+    default: 80
+    advanced: true
+  - name: maxcurrent
+    description:
+      de: Maximale Stromstärke
+      en: Maximum amperage
+    unit: A
+    help:
+    example: 16
+    type: int
+    advanced: true
+
+render: |
+  type: custom
+  enable:
+    source: js
+    script:
+  enabled:
+    source: const
+    value: {{ .enabled }}
+  status:
+    source: const
+    value: {{ if eq .operationMode "heating" }}C{{ else }}B{{ end }}
+  maxcurrent:
+    source: js
+    script: |
+      {{ .maxcurrent }}
+  power:
+    source: const
+    value: {{ .power }}
+  soc:
+    source: const
+    value: {{ .soc }}
+  limitSoc:
+    source: const
+    value: {{ .limitSoc }}
+  features:
+    - heating
+    - integrateddevice
+  icon: heatpump

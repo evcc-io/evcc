@@ -2,7 +2,6 @@ package connected
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
@@ -52,16 +51,21 @@ func (v *API) Vehicles() ([]string, error) {
 }
 
 // Range provides range status api response
-func (v *API) RechargeStatus(vin string) (RechargeStatus, error) {
-	uri := fmt.Sprintf("%s/energy/v1/vehicles/%s/recharge-status", ApiURL, vin)
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/vnd.volvocars.api.energy.vehicledata.v1+json",
-	})
+func (v *API) EnergyState(vin string) (EnergyState, error) {
+	uri := fmt.Sprintf("%s/energy/v2/vehicles/%s/state", ApiURL, vin)
 
-	var res RechargeStatus
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
+	var res EnergyState
+	err := v.GetJSON(uri, &res)
+
+	return res, err
+}
+
+// Range provides range status api response
+func (v *API) OdometerState(vin string) (OdometerState, error) {
+	uri := fmt.Sprintf("%s/connected-vehicle/v2/vehicles/%s/odometer", ApiURL, vin)
+
+	var res OdometerState
+	err := v.GetJSON(uri, &res)
 
 	return res, err
 }

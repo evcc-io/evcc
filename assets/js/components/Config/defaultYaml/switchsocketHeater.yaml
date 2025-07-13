@@ -1,0 +1,25 @@
+## required attributes [type: switchsocket]
+
+enabled: # is switch enabled?
+  source: const
+  value: true
+enable: # enable/disable switch
+  source: js
+  script: console.log(enable)
+power: # charge power reading in W
+  source: const
+  value: 11000
+standbypower: 20 # in W, below values will be treaded as inactive
+
+features:
+  - heating # treat as a heating device
+  - integrateddevice # no charging sessions, no connected vehicles
+
+## optional attributes (read-only)
+
+#energy: # meter reading in kWh
+#  source: const
+#  value: 42.5
+#soc: # temperature (°C) of the connected device
+#  source: const
+#  value: 75

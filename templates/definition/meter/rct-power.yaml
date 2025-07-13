@@ -33,6 +33,7 @@ params:
       de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
       en: Query external power of all devices connected to S0
     advanced: true
+    usages: ["pv"]
 render: |
   type: rct
   uri: {{ .host }}

@@ -129,7 +129,7 @@ func (wb *Etrel) Status() (api.ChargeStatus, error) {
 	// 10 Unavailable
 
 	switch u := binary.BigEndian.Uint16(b); u {
-	case 1, 2:
+	case 0, 1, 2:
 		return api.StatusA, nil
 	case 3, 5, 6, 7, 9:
 		return api.StatusB, nil
@@ -181,11 +181,11 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	f := float32(current)
+	curr := float32(current)
 
-	err := wb.setCurrent(f)
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.current = f
+		wb.current = curr
 	}
 
 	return err

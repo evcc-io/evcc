@@ -3,6 +3,10 @@ products:
   - brand: SENEC
     description:
       generic: .Home
+requirements:
+  description:
+    de: Batteriesteuerung umfasst nur das Netzladen, nicht die Entlade-Sperre.
+    en: Battery control only includes grid charging, not the discharge lock.
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -10,6 +14,8 @@ params:
     allinone: true
   - name: host
   - name: schema
+    description:
+      generic: Schema
     type: choice
     choice: ["https", "http"]
     default: https

@@ -28,6 +28,9 @@ params:
       en: same as Easee app or the web portal (https://easee.cloud)
   - name: charger
     required: true
+    description:
+      de: Charger Seriennummer
+      en: Charger serial number
     example: EH______
   - name: timeout
     default: 20s
@@ -36,6 +39,9 @@ params:
       en: Timeout specifically for Easee API interactions. Can reduce warnings and errors in case of lagging Easee API.
   - name: authorize
     type: bool
+    description:
+      de: Authentifizierung aktiviert
+      en: Authentication enabled
     help:
       de: Steuert ob evcc die Authentifizierung am Charger vornimmt. Vorteil ist ein kontrollierter Ladestart. Nicht kompatibel mit RFID Identifikation von Fahrzeugen.
       en: Controls wether evcc shall perform authentication against charger. Benefit is a contolled start of charging. Not compatible with RFID identification of vehicles.

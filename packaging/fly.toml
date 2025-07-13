@@ -1,7 +1,6 @@
 app = "evcc-demo"
 kill_signal = "SIGINT"
 kill_timeout = 5
-processes = []
 
 [env]
 
@@ -10,6 +9,7 @@ image = "evcc/evcc:latest"
 
 [experimental]
 auto_rollback = true
+cmd = ["evcc", "--demo", "--mcp"]
 
 [[services]]
 http_checks = []

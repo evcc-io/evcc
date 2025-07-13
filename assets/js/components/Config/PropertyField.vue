@@ -33,7 +33,6 @@
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>
@@ -63,7 +62,7 @@
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
 				{{ name }}
 			</option>
-			<hr v-else :key="idx" />
+			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea

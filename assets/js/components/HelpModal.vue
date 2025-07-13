@@ -243,14 +243,15 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import { docsPrefix } from "../i18n";
 import { performRestart } from "../restart";
 import { isLoggedIn, openLoginModal } from "./Auth/auth";
 import api from "../api";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "HelpModal",
 
 	props: {},
@@ -284,11 +285,15 @@ export default {
 			this.discussUrl = `https://github.com/evcc-io/evcc/discussions/new?category=erste-hilfe&body=${encodeURIComponent(this.discussContent)}&data=${encodeURIComponent(base64GeneratedData)}`;
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openConfirmRestartModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("confirmRestartModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("confirmRestartModal") as HTMLElement
+			);
 			if (!isLoggedIn()) {
 				openLoginModal(null, modal);
 			} else {
@@ -357,5 +362,5 @@ export default {
 				});
 		},
 	},
-};
+});
 </script>

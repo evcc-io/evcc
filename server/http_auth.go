@@ -21,8 +21,13 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
+func updatePasswordHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
+			return
+		}
+
 		var req updatePasswordRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -30,13 +35,13 @@ func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 		}
 
 		// update password
-		if auth.IsAdminPasswordConfigured() {
-			if !auth.IsAdminPasswordValid(req.Current) {
+		if authObject.IsAdminPasswordConfigured() {
+			if !authObject.IsAdminPasswordValid(req.Current) {
 				http.Error(w, "Invalid password", http.StatusBadRequest)
 				return
 			}
 
-			if err := auth.SetAdminPassword(req.New); err != nil {
+			if err := authObject.SetAdminPassword(req.New); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -46,7 +51,7 @@ func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 		}
 
 		// create new password
-		if err := auth.SetAdminPassword(req.New); err != nil {
+		if err := authObject.SetAdminPassword(req.New); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -71,20 +76,25 @@ func jwtFromRequest(r *http.Request) string {
 }
 
 // authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
-func authStatusHandler(auth auth.Auth) http.HandlerFunc {
+func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if auth.Disabled() {
+		if authObject.GetAuthMode() == auth.Disabled {
 			w.Write([]byte("true"))
 			return
 		}
 
-		if !auth.IsAdminPasswordConfigured() {
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
+			return
+		}
+
+		if !authObject.IsAdminPasswordConfigured() {
 			http.Error(w, "Not implemented", http.StatusNotImplemented)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
+		ok, err := authObject.ValidateJwtToken(jwtFromRequest(r))
 		if err != nil || !ok {
 			w.Write([]byte("false"))
 			return
@@ -93,21 +103,26 @@ func authStatusHandler(auth auth.Auth) http.HandlerFunc {
 	}
 }
 
-func loginHandler(auth auth.Auth) http.HandlerFunc {
+func loginHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
+			return
+		}
+
 		var req loginRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !auth.IsAdminPasswordValid(req.Password) {
+		if !authObject.IsAdminPasswordValid(req.Password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 
 		lifetime := time.Hour * 24 * 90 // 90 day valid
-		tokenString, err := auth.GenerateJwtToken(lifetime)
+		tokenString, err := authObject.GenerateJwtToken(lifetime)
 		if err != nil {
 			http.Error(w, "Failed to generate JWT token.", http.StatusInternalServerError)
 			return
@@ -132,16 +147,21 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ensureAuthHandler(auth auth.Auth) mux.MiddlewareFunc {
+func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if auth.Disabled() {
+			if authObject.GetAuthMode() == auth.Disabled {
 				next.ServeHTTP(w, r)
 				return
 			}
 
+			if authObject.GetAuthMode() == auth.Locked {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
 			// check jwt token
-			ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
+			ok, err := authObject.ValidateJwtToken(jwtFromRequest(r))
 			if !ok || err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return

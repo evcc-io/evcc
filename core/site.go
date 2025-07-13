@@ -42,7 +42,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // measurement is used as slice element for publishing structured data
@@ -76,9 +76,6 @@ type Site struct {
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
-	// TODO deprecated
-	CircuitRef_                        string  `mapstructure:"circuit"`                           // Circuit reference
-	MaxGridSupplyWhileBatteryCharging_ float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
 	circuit       api.Circuit                // Circuit
@@ -236,10 +233,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.auxMeters = append(site.auxMeters, dev)
 	}
 
-	if site.MaxGridSupplyWhileBatteryCharging_ != 0 {
-		site.log.WARN.Println("`MaxGridSupplyWhileBatteryCharging` is deprecated- use `maxACPower` in pv configuration instead")
-	}
-
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
@@ -325,14 +318,14 @@ func (site *Site) restoreSettings() error {
 	}
 
 	// restore accumulated energy
-	pvEnergy := make(map[string]float64)
+	pvEnergy := make(map[string]meterEnergy)
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Accumulated = fcst
+				site.pvEnergy[name].Accumulated = fcst.Accumulated
 			} else {
 				nok = true
 				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
@@ -382,7 +375,7 @@ func (site *Site) DumpConfig() {
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok && len(v.Identifiers()) == 0 {
-				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
+				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
 			}
 		}
 	}
@@ -546,9 +539,6 @@ func (site *Site) updatePvMeters() {
 
 	for i, dev := range site.pvMeters {
 		meter := dev.Instance()
-		if _, ok := meter.(api.Meter); !ok {
-			panic("not a meter: pv")
-		}
 
 		power := mm[i].Power
 		if power < -500 {
@@ -589,10 +579,6 @@ func (site *Site) updatePvMeters() {
 	// update solar yield
 	for i, dev := range site.pvMeters {
 		// use stored devices, not ui-updated instances!
-		if _, ok := dev.(config.Device[api.Meter]); !ok {
-			panic(fmt.Sprintf("not a device: pv %d", i+1))
-		}
-
 		name := dev.Config().Name
 
 		if mm[i].Energy > 0 {
@@ -621,9 +607,6 @@ func (site *Site) updateBatteryMeters() {
 
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
-		if _, ok := meter.(api.Meter); !ok {
-			panic("not a meter: battery")
-		}
 
 		// battery soc and capacity
 		var batSoc, capacity float64
@@ -878,13 +861,18 @@ func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
 	// smart cost and battery mode handling
-	rates, err := site.plannerRates()
+	consumption, err := site.tariffRates(api.TariffUsagePlanner)
 	if err != nil {
 		site.log.WARN.Println("planner:", err)
 	}
 
+	feedin, err := site.tariffRates(api.TariffUsageFeedIn)
+	if err != nil {
+		site.log.WARN.Println("feed-in:", err)
+	}
+
 	// update loadpoints
-	totalChargePower := site.updateLoadpoints(rates)
+	totalChargePower := site.updateLoadpoints(consumption)
 
 	// update all circuits' power and currents
 	if site.circuit != nil {
@@ -901,13 +889,13 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	rate, err := rates.At(time.Now())
-	if rates != nil && err != nil {
+	rate, err := consumption.At(time.Now())
+	if consumption != nil && err != nil {
 		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(rates) > 0 {
-			msg += fmt.Sprintf(", %d rates (%s to %s)", len(rates),
-				rates[0].Start.Local().Format(time.RFC3339),
-				rates[len(rates)-1].End.Local().Format(time.RFC3339),
+		if len(consumption) > 0 {
+			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
+				consumption[0].Start.Local().Format(time.RFC3339),
+				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
 			)
 		}
 
@@ -930,8 +918,9 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
+		// TODO
 		lp.Update(
-			sitePower, max(0, site.batteryPower), rates, batteryBuffered, batteryStart,
+			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 		)
 
@@ -969,6 +958,8 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
+	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {

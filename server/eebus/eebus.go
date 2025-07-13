@@ -79,10 +79,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	log := util.NewLogger("eebus")
 
-	protectedID, err := machine.ProtectedID("evcc-eebus")
-	if err != nil {
-		return nil, err
-	}
+	protectedID := machine.ProtectedID("evcc-eebus")
 	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 
 	if len(cc.ShipID) != 0 {
@@ -202,7 +199,7 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	defer c.mux.Unlock()
 
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
-		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx)
+		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx+1)
 	}
 }
 
