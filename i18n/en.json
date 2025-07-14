@@ -452,7 +452,7 @@
         "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
         "reset": {
           "action": "Reset...",
-          "confirmationButton": "Reset & Restart",
+          "confirmationButton": "Reset & restart",
           "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
           "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
           "sessions": "Charging sessions",
@@ -463,7 +463,7 @@
         },
         "restore": {
           "action": "Restore...",
-          "confirmationButton": "Restore & Restart",
+          "confirmationButton": "Restore & restart",
           "confirmationText": "This will overwrite your complete database. Ensure you've downloaded a backup first.",
           "description": "Restore your data from a backup file. This will overwrite all your current data.",
           "labelFile": "Backup file",

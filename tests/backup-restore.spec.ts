@@ -33,7 +33,7 @@ test.describe("reset", async () => {
     await modal.getByRole("button", { name: "Reset..." }).click();
     const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
-    await confirmModal.getByRole("button", { name: "Reset" }).click();
+    await confirmModal.getByRole("button", { name: "Reset & restart" }).click();
     await expectModalHidden(confirmModal);
     await expectModalHidden(modal);
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "false");
@@ -87,7 +87,7 @@ test.describe("reset", async () => {
     await modal.getByRole("button", { name: "Reset..." }).click();
     const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
-    await confirmModal.getByRole("button", { name: "Reset" }).click();
+    await confirmModal.getByRole("button", { name: "Reset & restart" }).click();
     await expectModalHidden(confirmModal);
     await expectModalHidden(modal);
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "false");
@@ -194,7 +194,7 @@ test.describe("backup and restore", async () => {
     // confirm restore
     const restoreConfirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(restoreConfirmModal);
-    await restoreConfirmModal.getByRole("button", { name: "Restore & Restart" }).click();
+    await restoreConfirmModal.getByRole("button", { name: "Restore & restart" }).click();
     await expectModalHidden(restoreConfirmModal);
 
     // restart after restore
