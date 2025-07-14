@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalHidden, expectModalVisible } from "./utils";
+import {
+  expectModalHidden,
+  expectModalVisible,
+  openTopNavigation,
+  expectTopNavigationClosed,
+} from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const BASIC = "basics.evcc.yaml";
@@ -38,8 +43,9 @@ test("login", async ({ page }) => {
   await page.goto("/");
 
   // go to config
-  await page.getByTestId("topnavigation-button").click();
+  await openTopNavigation(page);
   await page.getByRole("link", { name: "Configuration" }).click();
+  await expectTopNavigationClosed(page);
 
   // login modal
   const login = page.getByTestId("login-modal");
@@ -65,8 +71,9 @@ test("http iframe hint", async ({ page }) => {
   await page.goto("/");
 
   // go to config
-  await page.getByTestId("topnavigation-button").click();
+  await openTopNavigation(page);
   await page.getByRole("link", { name: "Configuration" }).click();
+  await expectTopNavigationClosed(page);
 
   // login modal
   const login = page.getByTestId("login-modal");
@@ -116,13 +123,15 @@ test("update password", async ({ page }) => {
   ).not.toBeVisible();
 
   // logout
-  await page.getByTestId("topnavigation-button").click();
+  await openTopNavigation(page);
   await page.getByRole("button", { name: "Logout" }).click();
+  await expectTopNavigationClosed(page);
 
   // login modal
-  await page.getByTestId("topnavigation-button").click();
+  await openTopNavigation(page);
   await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
   await page.getByRole("link", { name: "Configuration" }).click();
+  await expectTopNavigationClosed(page);
   const loginNew = page.getByTestId("login-modal");
   await expectModalVisible(loginNew);
   await loginNew.getByLabel("Password").fill(newPassword);
@@ -153,8 +162,9 @@ test("disable auth", async ({ page }) => {
   await expectModalHidden(modal);
 
   // configuration page without login
-  await page.getByTestId("topnavigation-button").click();
+  await openTopNavigation(page);
   await page.getByRole("link", { name: "Configuration" }).click();
+  await expectTopNavigationClosed(page);
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
   await stop();

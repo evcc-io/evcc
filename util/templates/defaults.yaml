@@ -174,8 +174,8 @@ params:
       de: Minimale Stromstärke
       en: Minimum amperage
     help:
-      de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
-      en: The minimum amperage per connected phase with which the car should be charged
+      de: Definiert die minimale Stromstärke pro angeschlossener Phase die genutzt werden kann
+      en: The minimum amperage per connected phase that can be used
     example: 6
     type: int
   - name: maxcurrent
@@ -184,8 +184,8 @@ params:
       de: Maximale Stromstärke
       en: Maximum amperage
     help:
-      de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
-      en: The maximum amperage per connected phase with which the car shuold be charged
+      de: Definiert die maximale Stromstärke pro angeschlossener Phase die genutzt werden kann
+      en: The maximum amperage per connected phase that can be used
     example: 16
     type: int
   - name: identifiers
@@ -755,6 +755,9 @@ devicegroups:
   heating:
     de: Wärmeerzeuger
     en: Heating devices
+  heatinggeneric:
+    de: Generische Unterstützung
+    en: Generic support
   switchsockets:
     de: Schaltbare Steckdosen
     en: Switchable sockets
