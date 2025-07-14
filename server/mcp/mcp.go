@@ -58,6 +58,25 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 		mcp.WithDescription("evcc documentation"),
 	), docsTool)
 
+	srv.AddTool(mcp.Tool{
+		Name:        "ask_llm",
+		Description: "Ask the LLM a question using sampling",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"question": map[string]any{
+					"type":        "string",
+					"description": "The question to ask the LLM",
+				},
+				"system_prompt": map[string]any{
+					"type":        "string",
+					"description": "Optional system prompt",
+				},
+			},
+			Required: []string{"question"},
+		},
+	}, samplingTool(srv))
+
 	srv.AddPrompt(mcp.NewPrompt("create-charge-plan",
 		mcp.WithPromptDescription("Create an optimized charge plan for a loadpoint or vehicle"),
 		mcp.WithArgument("loadpoint",
@@ -87,6 +106,9 @@ func nameFormat(log *util.Logger) func(name string) string {
 		// Claude Code has a 64 character limit for tool names
 		if len(res) > 64 {
 			res = strings.ReplaceAll(res, "with_", "w_")
+			if len(res) > 64 {
+				res = strings.ReplaceAll(res, "-w_", "_")
+			}
 			if len(res) > 64 {
 				res = res[:64]
 			}
