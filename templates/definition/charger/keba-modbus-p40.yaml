@@ -9,6 +9,9 @@ products:
 capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
+  description:
+    de: Modbus muss über die KEBA eMobility App aktiviert werden. Die Optionen "Enable" und "Enable RFID" müssen in den "Modbus"-Einstellungen aktiviert sein. Um RFID-Karten zu verwenden, muss unter "Gerät" die Option "Autorisierung" aktiviert sein.
+    en: Modbus needs to be enabled using the KEBA eMobility App. The "Enable" and "Enable RFID" options must be activated in the "Modbus" settings. To use RFID cards, the "Authorization" option must be activated under "Device".
 params:
   - name: modbus
     choice: ["tcpip"]
