@@ -9,8 +9,8 @@ import (
 
 // ChargeTimer measures charging time between start and stop events
 type ChargeTimer struct {
-	sync.Mutex
-	clck clock.Clock
+	mu    sync.Mutex
+	clock clock.Clock
 
 	charging bool
 	start    time.Time
@@ -21,16 +21,16 @@ type ChargeTimer struct {
 // start and stop events
 func NewChargeTimer() *ChargeTimer {
 	return &ChargeTimer{
-		clck: clock.New(),
+		clock: clock.New(),
 	}
 }
 
 // StartCharge signals charge timer start
 func (m *ChargeTimer) StartCharge(continued bool) {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
-	m.start = m.clck.Now()
+	m.start = m.clock.Now()
 
 	if continued {
 		m.charging = true
@@ -41,30 +41,30 @@ func (m *ChargeTimer) StartCharge(continued bool) {
 
 // StopCharge signals charge timer stop
 func (m *ChargeTimer) StopCharge() {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	m.charging = false
-	m.duration += m.clck.Since(m.start)
+	m.duration += m.clock.Since(m.start)
 }
 
 var _ ChargeResetter = (*ChargeTimer)(nil)
 
 // ChargeResetter resets the charging session
 func (m *ChargeTimer) ResetCharge() {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	m.duration = 0
 }
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (m *ChargeTimer) ChargeDuration() (time.Duration, error) {
-	m.Lock()
-	defer m.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	if m.charging {
-		return m.duration + m.clck.Since(m.start), nil
+		return m.duration + m.clock.Since(m.start), nil
 	}
 	return m.duration, nil
 }

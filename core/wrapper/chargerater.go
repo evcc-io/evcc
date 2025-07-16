@@ -14,9 +14,9 @@ import (
 // by implementing api.ChargeRater. It uses the charge meter's TotalEnergy or
 // keeps track of consumed energy by regularly updating consumed power.
 type ChargeRater struct {
-	sync.Mutex
+	mu            sync.Mutex
 	log           *util.Logger
-	clck          clock.Clock
+	clock         clock.Clock
 	meter         api.Meter
 	charging      bool
 	start         time.Time
@@ -33,7 +33,7 @@ type ChargeResetter interface {
 func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 	return &ChargeRater{
 		log:   log,
-		clck:  clock.New(),
+		clock: clock.New(),
 		meter: meter,
 	}
 }
@@ -41,11 +41,11 @@ func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 // StartCharge records meter start energy. If meter does not supply TotalEnergy,
 // start time is recorded and  charged energy set to zero.
 func (cr *ChargeRater) StartCharge(continued bool) {
-	cr.Lock()
-	defer cr.Unlock()
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
 
 	// time is needed if MeterEnergy is not supported
-	cr.start = cr.clck.Now()
+	cr.start = cr.clock.Now()
 
 	// get end energy amount
 	if m, ok := cr.meter.(api.MeterEnergy); ok {
@@ -67,8 +67,8 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 // StopCharge records meter stop energy. If meter does not supply TotalEnergy,
 // stop time is recorded and accumulating energy though SetChargePower stopped.
 func (cr *ChargeRater) StopCharge() {
-	cr.Lock()
-	defer cr.Unlock()
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
 
 	cr.charging = false
 
@@ -87,8 +87,8 @@ var _ ChargeResetter = (*ChargeRater)(nil)
 
 // ChargeResetter resets the charging session
 func (cr *ChargeRater) ResetCharge() {
-	cr.Lock()
-	defer cr.Unlock()
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
 
 	// get end energy amount
 	if m, ok := cr.meter.(api.MeterEnergy); ok {
@@ -103,13 +103,13 @@ func (cr *ChargeRater) ResetCharge() {
 	}
 
 	cr.chargedEnergy = 0
-	cr.start = cr.clck.Now()
+	cr.start = cr.clock.Now()
 }
 
 // SetChargePower increments consumed energy by amount in kWh since last update
 func (cr *ChargeRater) SetChargePower(power float64) {
-	cr.Lock()
-	defer cr.Unlock()
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
 
 	if !cr.charging {
 		return
@@ -118,17 +118,17 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	// update energy amount if not provided by meter
 	if _, ok := cr.meter.(api.MeterEnergy); !ok {
 		// convert power to energy in kWh
-		cr.chargedEnergy += power / 1e3 * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
+		cr.chargedEnergy += power / 1e3 * float64(cr.clock.Since(cr.start)) / float64(time.Hour)
 		// move timestamp
-		cr.start = cr.clck.Now()
+		cr.start = cr.clock.Now()
 	}
 }
 
 // ChargedEnergy implements the ChargeRater interface.
 // It returns energy consumption since charge start in kWh.
 func (cr *ChargeRater) ChargedEnergy() (float64, error) {
-	cr.Lock()
-	defer cr.Unlock()
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
 
 	// return previously charged energy
 	if !cr.charging {
