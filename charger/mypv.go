@@ -53,6 +53,7 @@ const (
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
+var elwaEnableLimit uint16 = 10
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
@@ -183,7 +184,7 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 	}
 
 	// ignore standby power
-	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > 10 {
+	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > elwaEnableLimit {
 		res = api.StatusC
 	}
 
@@ -192,12 +193,13 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegSetPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
 	if err != nil {
-		return false, err
+		wb.enabled = false
+		return wb.enabled, err
 	}
 
-	if binary.BigEndian.Uint16(b) == 0 {
+	if binary.BigEndian.Uint16(b) <= elwaEnableLimit {
 		wb.enabled = false
 	}
 
