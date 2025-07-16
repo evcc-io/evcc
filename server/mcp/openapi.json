@@ -115,7 +115,7 @@
         }
       },
       "power": {
-        "description": "Power in Watts",
+        "description": "Power in W",
         "in": "path",
         "name": "power",
         "required": true,
@@ -133,7 +133,7 @@
         }
       },
       "threshold": {
-        "description": "Power in Watts",
+        "description": "Power in W",
         "in": "path",
         "name": "threshold",
         "required": true,
@@ -535,7 +535,7 @@
         "type": "object"
       },
       "Power": {
-        "description": "Power in Watts",
+        "description": "Power in W",
         "example": 2500,
         "minimum": 0,
         "type": "number"
@@ -1363,8 +1363,8 @@
                 "value": 80
               },
               "socNotAvailable": {
-                "summary": "If SoC is not available =\u003e specify power in Watt",
-                "value": 2500
+                "summary": "If SoC is not available =\u003e specify energy in kWh",
+                "value": 25.5
               }
             },
             "in": "path",
@@ -1376,7 +1376,7 @@
                   "$ref": "#/components/schemas/Soc"
                 },
                 {
-                  "$ref": "#/components/schemas/Power"
+                  "$ref": "#/components/schemas/Energy"
                 }
               ]
             }
