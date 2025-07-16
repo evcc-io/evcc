@@ -85,15 +85,15 @@ func nameValid(name string) error {
 }
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
-	err := viper.ReadInConfig()
+	var err error
+	cfgFile := viper.ConfigFileUsed()
 
-	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
-		return err
-	}
-
-	log.INFO.Println("using config file:", cfgFile)
-
-	if err == nil {
+	if cfgFile == "" {
+		log.INFO.Println("no config file found, database-only mode")
+	} else if err = viper.ReadInConfig(); err != nil {
+		err = fmt.Errorf("failed reading config file: %w", err)
+	} else {
+		log.INFO.Println("using config file:", cfgFile)
 		if err = viper.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
