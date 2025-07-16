@@ -51,6 +51,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	vpr "github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
@@ -85,18 +86,20 @@ func nameValid(name string) error {
 }
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
-	var err error
-	cfgFile := viper.ConfigFileUsed()
-
-	if cfgFile == "" {
-		log.INFO.Println("no config file specified, database-only mode")
-	} else if err = viper.ReadInConfig(); err != nil {
-		err = fmt.Errorf("failed reading config file: %w", err)
-	} else {
-		log.INFO.Println("using config file:", cfgFile)
-		if err = viper.UnmarshalExact(conf); err != nil {
-			err = fmt.Errorf("failed parsing config file: %w", err)
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(vpr.ConfigFileNotFoundError); !ok {
+			return fmt.Errorf("failed reading config file: %w", err)
 		}
+	}
+
+	if cfgFile := viper.ConfigFileUsed(); cfgFile != "" {
+		log.INFO.Println("using config file:", cfgFile)
+	} else {
+		log.INFO.Println("no config file found, database-only mode")
+	}
+
+	if err := viper.UnmarshalExact(conf); err != nil {
+		return fmt.Errorf("failed parsing config file: %w", err)
 	}
 
 	// user did not specify a database path
@@ -126,11 +129,9 @@ If you know what you're doing, you can skip the database check with the --ignore
 	}
 
 	// parse log levels after reading config
-	if err == nil {
-		parseLogLevels()
-	}
+	parseLogLevels()
 
-	return err
+	return nil
 }
 
 func isWritable(filePath string) bool {
