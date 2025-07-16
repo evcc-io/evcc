@@ -87,7 +87,7 @@ func nameValid(name string) error {
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(vpr.ConfigFileNotFoundError); !ok {
+		if !errors.As(err, &vpr.ConfigFileNotFoundError{}) {
 			return fmt.Errorf("failed reading config file: %w", err)
 		}
 	}
