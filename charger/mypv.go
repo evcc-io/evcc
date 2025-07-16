@@ -38,6 +38,7 @@ type MyPv struct {
 	lp      loadpoint.API
 	power   uint32
 	scale   float64
+	name    string
 	statusC uint16
 	enabled bool
 	regTemp uint16
@@ -107,6 +108,7 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource in
 	wb := &MyPv{
 		log:     log,
 		conn:    conn,
+		name:    name,
 		statusC: statusC,
 		scale:   scale,
 		regTemp: elwaTemp[tempSource-1],
@@ -153,14 +155,19 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
-	if err != nil {
-		return api.StatusNone, err
-	}
+	var b []byte
+	var err error
 
-	// all loads detached
-	if binary.BigEndian.Uint16(b) == 0 {
-		return api.StatusA, nil
+	if wb.name == "ac-thor" {
+		b, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		// all loads detached
+		if binary.BigEndian.Uint16(b) == 0 {
+			return api.StatusA, nil
+		}
 	}
 
 	res := api.StatusB
