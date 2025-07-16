@@ -126,6 +126,9 @@ func (lp *Loadpoint) resetHeatingSession() {
 	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
 		cr.ResetCharge()
 	}
+	if ct, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
+		ct.ResetCharge()
+	}
 
 	lp.createSession()
 }
