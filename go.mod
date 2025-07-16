@@ -39,10 +39,10 @@ require (
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/go-telegram/bot v1.16.0
-	github.com/go-viper/mapstructure/v2 v2.3.0
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
@@ -50,7 +50,7 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/gregdel/pushover v1.3.1
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/grid-x/modbus v0.0.0-20250516072809-4b99c910e8e7
+	github.com/grid-x/modbus v0.0.0-20250714121349-f7cc8b80d85c
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hasura/go-graphql-client v0.14.4
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
@@ -69,7 +69,7 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.4
-	github.com/mark3labs/mcp-go v0.33.0
+	github.com/mark3labs/mcp-go v0.34.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
@@ -98,14 +98,14 @@ require (
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.5.2
-	golang.org/x/crypto v0.39.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20250630195050-b3790b8d9143
-	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
-	golang.org/x/net v0.41.0
+	golang.org/x/crypto v0.40.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20250711192710-b903b535d3ef
+	golang.org/x/exp v0.0.0-20250711185948-6ae5c78190dc
+	golang.org/x/net v0.42.0
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/sync v0.15.0
-	golang.org/x/text v0.26.0
-	golang.org/x/tools v0.34.0
+	golang.org/x/sync v0.16.0
+	golang.org/x/text v0.27.0
+	golang.org/x/tools v0.35.0
 	google.golang.org/grpc v1.73.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
@@ -221,9 +221,9 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/mod v0.26.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/term v0.33.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
