@@ -89,7 +89,7 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	cfgFile := viper.ConfigFileUsed()
 
 	if cfgFile == "" {
-		log.INFO.Println("no config file found, database-only mode")
+		log.INFO.Println("no config file specified, database-only mode")
 	} else if err = viper.ReadInConfig(); err != nil {
 		err = fmt.Errorf("failed reading config file: %w", err)
 	} else {
