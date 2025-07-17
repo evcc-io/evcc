@@ -211,7 +211,7 @@ paths:
   /loadpoints/{id}/disable/delay/{delay}:
     post:
       summary: Disable threshold-delay
-      description: "Specifies the delay before charging stops in solar mode."
+      description: "Delay before charging stops in solar mode."
       externalDocs:
         url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints
       tags:
@@ -239,7 +239,7 @@ paths:
   /loadpoints/{id}/enable/delay/{delay}:
     post:
       summary: Enable threshold-delay
-      description: "Specifies the delay before charging starts in solar mode."
+      description: "Delay before charging starts in solar mode."
       externalDocs:
         url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay
       tags:
