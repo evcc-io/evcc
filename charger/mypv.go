@@ -203,12 +203,12 @@ func (wb *MyPv) Enabled() (bool, error) {
 
 	switch binary.BigEndian.Uint16(b) {
 	case
-		0, // standby
 		1, // heating PV excess
 		2: // boost backup
 		wb.enabled = true
 		return wb.enabled, nil
 	case
+		0, // standby
 		3, // set temperature reached
 		4, // no control signal
 		5: // red cross flashes
