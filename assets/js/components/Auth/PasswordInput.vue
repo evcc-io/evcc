@@ -13,6 +13,7 @@
 				class="form-control"
 				autocomplete="current-password"
 				type="password"
+				required
 				@input="updatePassword"
 			/>
 		</div>
