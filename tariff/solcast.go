@@ -22,7 +22,6 @@ type Solcast struct {
 	site   string
 	fromTo FromTo
 	data   *util.Monitor[api.Rates]
-	cache  *SolarCacheManager
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -61,7 +60,6 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Helper: request.NewHelper(log),
 		fromTo: cc.FromTo,
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
-		cache:  NewSolarCacheManager("solcast", cc),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
@@ -75,9 +73,6 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
-
-	// Try to load from cache on startup
-	loadSolarCacheWithDelay(t.cache, t.data, t.log, interval, done, &once)
 
 	for ; true; <-time.Tick(interval) {
 		// ensure we don't run when not needed, but execute once at startup
@@ -102,7 +97,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		once.Do(func() { close(done) })
 
-		processedRates := make(api.Rates, 0, len(res.Forecasts))
+		data := make(api.Rates, 0, len(res.Forecasts))
 
 	NEXT:
 		for _, r := range res.Forecasts {
@@ -113,23 +108,17 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 				Value: r.PvEstimate * 1e3,
 			}
 			if r.Period.Duration() != time.Hour {
-				for i, r := range processedRates {
+				for i, r := range data {
 					if r.Start.Equal(rr.Start) {
-						processedRates[i].Value = (r.Value + rr.Value) / 2
+						data[i].Value = (r.Value + rr.Value) / 2
 						continue NEXT
 					}
 				}
 			}
-			processedRates = append(processedRates, rr)
+			data = append(data, rr)
 		}
 
-		// Cache the processed data
-		if err := t.cache.Set(processedRates); err != nil {
-			t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
-		}
-
-		// Update stored rates
-		mergeRatesAfter(t.data, processedRates, beginningOfDay())
+		mergeRatesAfter(t.data, data, beginningOfDay())
 		once.Do(func() { close(done) })
 	}
 }

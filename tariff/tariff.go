@@ -21,7 +21,6 @@ type Tariff struct {
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
 	typ    api.TariffType
-	cache  *SolarCacheManager
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -76,11 +75,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
-	// Initialize cache for solar forecast tariffs
-	if cc.Type == api.TariffTypeSolar && forecastG != nil {
-		t.cache = NewSolarCacheManager("custom", cc)
-	}
-
 	if forecastG != nil {
 		done := make(chan error)
 		go t.run(forecastG, done, cc.Interval)
@@ -116,11 +110,6 @@ func (t *Tariff) periodStart() time.Time {
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
-	// Try to load from cache on startup for solar forecasts
-	if t.typ == api.TariffTypeSolar {
-		loadSolarCacheWithDelay(t.cache, t.data, t.log, interval, done, &once)
-	}
-
 	for tick := time.Tick(interval); ; <-tick {
 		var forecastValues api.Rates
 		if err := backoff.Retry(func() error {
@@ -141,13 +130,6 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 
 		// Apply transformations once (time normalization + price adjustments)
 		processedRates := t.applyPriceAndTime(forecastValues)
-
-		// Cache the processed data for solar forecasts
-		if t.cache != nil {
-			if err := t.cache.Set(processedRates); err != nil {
-				t.log.DEBUG.Printf("failed to cache forecast data: %v", err)
-			}
-		}
 
 		// Update stored rates
 		mergeRatesAfter(t.data, processedRates, t.periodStart())

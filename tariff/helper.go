@@ -3,7 +3,6 @@ package tariff
 import (
 	"errors"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -74,10 +73,9 @@ func beginningOfDay() time.Time {
 }
 
 // hasValidSolarCoverage checks if solar forecast rates cover at least until end of day
-func hasValidSolarCoverage(rates api.Rates, log *util.Logger) bool {
+func hasValidSolarCoverage(rates api.Rates, currentTime time.Time) bool {
 	// Empty data is invalid for solar forecasts
 	if len(rates) == 0 {
-		log.DEBUG.Printf("cached solar forecast invalid: no data")
 		return false
 	}
 
@@ -90,56 +88,7 @@ func hasValidSolarCoverage(rates api.Rates, log *util.Logger) bool {
 	}
 
 	// Check if rates extend to at least end of today
-	endOfToday := now.With(time.Now()).EndOfDay()
-	if latestEnd.Before(endOfToday) {
-		log.DEBUG.Printf("cached solar forecast insufficient: covers until %v, need until %v",
-			latestEnd.Format("2006-01-02 15:04"), endOfToday.Format("2006-01-02 15:04"))
-		return false
-	}
-
-	log.DEBUG.Printf("cached solar forecast valid: covers until %v", latestEnd.Format("2006-01-02 15:04"))
-	return true
+	endOfToday := now.With(currentTime).EndOfDay()
+	return latestEnd.After(endOfToday) || latestEnd.Equal(endOfToday)
 }
 
-// loadSolarCacheWithDelay handles cache loading, validation, merging and delay for solar forecasts
-// Cache contains already-processed data (post-transformation)
-// Returns true if cache was used and delay applied, false if fresh fetch is needed
-func loadSolarCacheWithDelay(
-	cache *SolarCacheManager,
-	data *util.Monitor[api.Rates],
-	log *util.Logger,
-	interval time.Duration,
-	done chan error,
-	once *sync.Once,
-) bool {
-	if cache == nil {
-		return false
-	}
-
-	// Try to load from cache
-	cached, cacheTime, ok := cache.GetWithTimestamp(interval)
-	if !ok {
-		return false
-	}
-
-	log.DEBUG.Printf("loaded %d rates from cache", len(cached))
-
-	// Validate cached data has sufficient coverage
-	if !hasValidSolarCoverage(cached, log) {
-		return false
-	}
-
-	// Cache is valid, use it (data is already processed)
-	mergeRatesAfter(data, cached, beginningOfDay())
-	once.Do(func() { close(done) })
-
-	// Calculate delay until next fetch based on cache age
-	cacheAge := time.Since(cacheTime)
-	if cacheAge < interval {
-		initialDelay := interval - cacheAge
-		log.DEBUG.Printf("delaying initial fetch by %v (cache age: %v)", initialDelay, cacheAge)
-		time.Sleep(initialDelay)
-	}
-
-	return true
-}
