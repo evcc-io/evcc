@@ -84,7 +84,7 @@ func TestSolarCacheManager_IdenticalConfigs(t *testing.T) {
 
 	assert.Equal(t, cache1.getCacheKey(), cache2.getCacheKey(),
 		"Identical configurations should share cache key")
-	assert.Equal(t, cache1.configHash, cache2.configHash,
+	assert.Equal(t, cache1.ConfigHash, cache2.ConfigHash,
 		"Identical configurations should have same config hash")
 }
 
@@ -116,7 +116,7 @@ func TestSolarCacheManager_VersionValidation(t *testing.T) {
 
 	config := map[string]interface{}{"site": "test"}
 	cache := NewSolarCacheManager("test", config)
-	cache.configHash = "testHash" // Match the config hash
+	cache.ConfigHash = "testHash" // Match the config hash
 
 	// Should not validate due to version mismatch
 	isValid := cache.IsValid(oldCache, 1*time.Hour)
@@ -134,7 +134,7 @@ func TestSolarCacheManager_AgeValidation(t *testing.T) {
 
 	config := map[string]interface{}{"site": "test"}
 	cache := NewSolarCacheManager("test", config)
-	cache.configHash = "testHash"
+	cache.ConfigHash = "testHash"
 
 	// Should not validate due to age
 	isValid := cache.IsValid(oldCache, 1*time.Hour)
@@ -157,7 +157,7 @@ func TestSolarCacheManager_ValidCache(t *testing.T) {
 
 	config := map[string]interface{}{"site": "test"}
 	cache := NewSolarCacheManager("test", config)
-	cache.configHash = "testHash"
+	cache.ConfigHash = "testHash"
 
 	// Should validate
 	isValid := cache.IsValid(validCache, 1*time.Hour)
@@ -174,7 +174,7 @@ func TestSolarCacheManager_EdgeCases(t *testing.T) {
 
 	// Test zero rates
 	emptyCache := &SolarForecastCache{
-		ConfigHash: cache.configHash,
+		ConfigHash: cache.ConfigHash,
 		Version:    util.Version,
 		Timestamp:  time.Now(),
 		Rates:      api.Rates{}, // Empty rates
@@ -199,7 +199,7 @@ func TestSolarCacheManager_ConfigHashGeneration(t *testing.T) {
 	cache1 := NewSolarCacheManager("test", complexConfig)
 	cache2 := NewSolarCacheManager("test", complexConfig)
 
-	assert.Equal(t, cache1.configHash, cache2.configHash,
+	assert.Equal(t, cache1.ConfigHash, cache2.ConfigHash,
 		"Complex configs should generate same hash")
 	assert.Equal(t, cache1.getCacheKey(), cache2.getCacheKey(),
 		"Same configs should have same cache key")

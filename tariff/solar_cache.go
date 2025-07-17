@@ -24,29 +24,32 @@ type SolarForecastCache struct {
 // SolarCacheManager manages persistent caching for solar forecast APIs
 type SolarCacheManager struct {
 	log        *util.Logger
-	configHash string
+	ConfigHash string // Export for use by proxy logger
 	version    string
 	keyPrefix  string
 }
 
 // NewSolarCacheManager creates a new solar forecast cache manager
 func NewSolarCacheManager(provider string, config interface{}) *SolarCacheManager {
-	log := util.NewLogger("solar-cache")
-
 	// Generate config hash for cache validation and instance identification
 	configBytes, err := json.Marshal(config)
 	if err != nil {
-		log.DEBUG.Printf("failed to marshal config for hash: %v", err)
+		// Use basic logger for this error since we don't have the hash yet
+		util.NewLogger("solar-cache").DEBUG.Printf("failed to marshal config for hash: %v", err)
 		configBytes = []byte{}
 	}
 	configHash := fmt.Sprintf("%x", md5.Sum(configBytes))
+
+	// Create logger with provider and config hash suffix
+	loggerName := fmt.Sprintf("solar-cache-%s-%s", provider, configHash[:8])
+	log := util.NewLogger(loggerName)
 
 	// Use config hash in key to ensure unique cache per provider instance
 	keyPrefix := fmt.Sprintf("solar_forecast_cache_%s_%s", provider, configHash[:8])
 
 	return &SolarCacheManager{
 		log:        log,
-		configHash: configHash,
+		ConfigHash: configHash,
 		version:    util.Version,
 		keyPrefix:  keyPrefix,
 	}
@@ -64,9 +67,9 @@ func (c *SolarCacheManager) IsValid(cached *SolarForecastCache, maxAge time.Dura
 	}
 
 	// Check config hash
-	if cached.ConfigHash != c.configHash {
+	if cached.ConfigHash != c.ConfigHash {
 		c.log.DEBUG.Printf("cache invalid: config hash mismatch (cached: %s, current: %s)",
-			cached.ConfigHash[:8], c.configHash[:8])
+			cached.ConfigHash[:8], c.ConfigHash[:8])
 		return false
 	}
 
@@ -148,7 +151,7 @@ func (c *SolarCacheManager) GetTariffType(maxAge time.Duration) (api.TariffType,
 // Set stores solar forecast data in cache
 func (c *SolarCacheManager) Set(rates api.Rates, tariffType api.TariffType) error {
 	cached := SolarForecastCache{
-		ConfigHash: c.configHash,
+		ConfigHash: c.ConfigHash,
 		Version:    c.version,
 		Timestamp:  time.Now(),
 		Rates:      rates,

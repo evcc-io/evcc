@@ -292,7 +292,7 @@ func TestPruneOldCaches_RealWorld_Integration(t *testing.T) {
 
 		// Manually create cache entry with specific timestamp
 		cacheEntry := SolarForecastCache{
-			ConfigHash: cache.configHash,
+			ConfigHash: cache.ConfigHash,
 			Version:    util.Version,
 			Timestamp:  time.Now().Add(-tc.age),
 			Rates:      testRates,
