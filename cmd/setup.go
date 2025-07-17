@@ -804,18 +804,9 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 	// Route all tariff creation through the proxy
 	// This allows the proxy to control when solar tariffs are instantiated
-	instance := tariff.NewTariffProxy(conf.Type, props)
-
-	// Check if the proxy has a creation error that needs to be handled
-	if proxy, ok := instance.(*tariff.CachingTariffProxy); ok {
-		if err := proxy.GetCreationError(); err != nil {
-			if ce := new(util.ConfigError); errors.As(err, &ce) {
-				return nil, err
-			}
-			// wrap non-config tariff errors to prevent fatals
-			log.ERROR.Printf("creating tariff %s failed: %v", name, err)
-			instance = tariff.NewWrapper(conf.Type, conf.Other, err)
-		}
+	instance, err := tariff.NewTariffProxy(conf.Type, props)
+	if err != nil {
+		return nil, err
 	}
 
 	return instance, nil

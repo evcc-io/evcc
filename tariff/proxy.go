@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"sync"
@@ -22,19 +23,17 @@ type CachingTariffProxy struct {
 	interval     time.Duration
 	log          *util.Logger
 	createOnce   sync.Once
-	createErr    error
 	scheduleOnce sync.Once
 	lastHash     atomic.Uint64
 }
 
 // NewTariffProxy creates a proxy that controls tariff instantiation and caching
-func NewTariffProxy(provider string, config interface{}) api.Tariff {
+func NewTariffProxy(provider string, config interface{}) (api.Tariff, error) {
 	// Convert config to map[string]interface{} - required for all tariff operations
 	configMap, ok := config.(map[string]interface{})
 	if !ok {
-		// Config must be a map - return error wrapper if conversion fails
-		err := fmt.Errorf("invalid config type: expected map[string]interface{}, got %T", config)
-		return NewWrapper(provider, nil, err)
+		// Config must be a map - return error for setup to handle
+		return nil, fmt.Errorf("invalid config type: expected map[string]interface{}, got %T", config)
 	}
 
 	proxy := &CachingTariffProxy{
@@ -45,43 +44,59 @@ func NewTariffProxy(provider string, config interface{}) api.Tariff {
 		log:      util.NewLogger("tariff-cache"),
 	}
 
-	proxy.init()
-	return proxy
+	if err := proxy.init(); err != nil {
+		return nil, err
+	}
+
+	return proxy, nil
 }
 
 // init initializes the proxy, creating tariff immediately if no valid cache exists
-func (p *CachingTariffProxy) init() {
+func (p *CachingTariffProxy) init() error {
 	// If we already have a tariff, nothing to do
 	if p.Tariff != nil {
-		return
+		return nil
 	}
 
 	// Check if we have valid cached data for potential solar tariffs
 	if cached, ok := p.cache.Get(24 * time.Hour); ok {
 		if hasValidSolarCoverage(cached, time.Now()) {
 			p.log.DEBUG.Printf("found valid cache with %d rates, delaying tariff creation", len(cached))
-			return
+			return nil
 		}
 	}
 
 	// No valid cache - create tariff immediately to determine type
 	p.log.DEBUG.Printf("no valid cache found, creating tariff immediately")
 	if err := p.ensureTariff(); err != nil {
-		p.log.ERROR.Printf("failed to create tariff during init: %v", err)
-		p.createErr = err
+		return err
 	}
+
+	return nil
 }
 
 // ensureTariff creates the underlying tariff if not already created
 func (p *CachingTariffProxy) ensureTariff() error {
+	var createErr error
 	p.createOnce.Do(func() {
 		// Only create if we don't already have a tariff
 		if p.Tariff == nil {
 			ctx := util.WithLogger(context.Background(), p.log)
-			p.Tariff, p.createErr = NewFromConfig(ctx, p.provider, p.config)
+			tariff, err := NewFromConfig(ctx, p.provider, p.config)
+			if err != nil {
+				if ce := new(util.ConfigError); errors.As(err, &ce) {
+					createErr = err
+					return
+				}
+				// wrap non-config tariff errors to prevent fatals
+				p.log.ERROR.Printf("creating tariff failed: %v", err)
+				p.Tariff = NewWrapper(p.provider, p.config, err)
+			} else {
+				p.Tariff = tariff
+			}
 		}
 	})
-	return p.createErr
+	return createErr
 }
 
 // Rates returns cached data until underlying tariff is created, then delegates to tariff
@@ -91,7 +106,7 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 		rates, err := p.Tariff.Rates()
 		if err == nil && p.Tariff.Type() == api.TariffTypeSolar {
 			// Only cache solar tariff data
-			if p.shouldCache(rates) {
+			if p.hasDataChanged(rates) {
 				if saveErr := p.cache.Set(rates, p.Tariff.Type()); saveErr != nil {
 					p.log.DEBUG.Printf("failed to cache rates: %v", saveErr)
 				} else {
@@ -102,11 +117,6 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 			}
 		}
 		return rates, err
-	}
-
-	// If we have a stored creation error, return it
-	if p.createErr != nil {
-		return nil, p.createErr
 	}
 
 	// Tariff not created yet - try cache first (only for potential solar tariffs)
@@ -128,11 +138,6 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 
 	// Now delegate to the newly created tariff
 	return p.Rates()
-}
-
-// GetCreationError returns any error that occurred during tariff creation
-func (p *CachingTariffProxy) GetCreationError() error {
-	return p.createErr
 }
 
 // Type returns the tariff type
@@ -220,8 +225,8 @@ func (p *CachingTariffProxy) hashRates(rates api.Rates) uint64 {
 	return h.Sum64()
 }
 
-// shouldCache determines if rates should be cached based on content changes
-func (p *CachingTariffProxy) shouldCache(rates api.Rates) bool {
+// hasDataChanged determines if rates should be cached based on content changes
+func (p *CachingTariffProxy) hasDataChanged(rates api.Rates) bool {
 	if len(rates) == 0 {
 		return false // Don't cache empty rates
 	}
