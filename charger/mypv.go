@@ -49,13 +49,8 @@ const (
 	elwaRegTempLimit      = 1002
 	elwaRegStatus         = 1003
 	elwaRegLoadState      = 1059
-	elwaRegPower          = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegPower          = 1082
 	elwaRegOperationState = 1077
-	elwaMeterPower        = 1069
-	elwaPower1            = 1074
-	elwaPower2            = 1075
-	elwaPower3            = 1076
-	elwaPowerTotal        = 1082
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
@@ -199,56 +194,28 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegSetPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 
-	if binary.BigEndian.Uint16(b) <= elwaStandbyPower {
+	switch binary.BigEndian.Uint16(b) {
+	case
+		0, // standby
+		1, // heating PV excess
+		2: // boost backup
+		wb.enabled = true
+		return wb.enabled, nil
+	case
+		3, // set temperature reached
+		4, // no control signal
+		5: // red cross flashes
 		wb.enabled = false
+		return wb.enabled, nil
+	default:
+		wb.enabled = false
+		return wb.enabled, fmt.Errorf("unknown operation state: %s", binary.BigEndian.Uint16(b))
 	}
-
-	// for DEBUG purposes
-	wb.log.TRACE.Println(wb.name, "elwaRegSetPower", b)
-
-	b, err = wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
-	if err != nil {
-		return wb.enabled, err
-	}
-	wb.log.TRACE.Println(wb.name, "elwaRegOperationState", b)
-
-	b, err = wb.conn.ReadHoldingRegisters(elwaMeterPower, 1)
-	if err != nil {
-		return wb.enabled, err
-	}
-	wb.log.TRACE.Println(wb.name, "elwaMeterPower", b)
-
-	b, err = wb.conn.ReadHoldingRegisters(elwaPower1, 1)
-	if err != nil {
-		return wb.enabled, err
-	}
-	wb.log.TRACE.Println(wb.name, "elwaPower1", b)
-
-	b, err = wb.conn.ReadHoldingRegisters(elwaPower2, 1)
-	if err != nil {
-		return wb.enabled, err
-	}
-	wb.log.TRACE.Println(wb.name, "elwaPower2", b)
-
-	b, err = wb.conn.ReadHoldingRegisters(elwaPower3, 1)
-	if err != nil {
-		return wb.enabled, err
-	}
-	wb.log.TRACE.Println(wb.name, "elwaPower3", b)
-
-	b, err = wb.conn.ReadHoldingRegisters(elwaPowerTotal, 1)
-	if err != nil {
-		return wb.enabled, err
-	}
-	wb.log.TRACE.Println(wb.name, "elwaPowerTotal", b)
-	// end DEBUG
-
-	return wb.enabled, nil
 }
 
 func (wb *MyPv) setPower(power uint16) error {
