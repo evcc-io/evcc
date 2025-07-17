@@ -92,7 +92,7 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 		if err == nil && p.Tariff.Type() == api.TariffTypeSolar {
 			// Only cache solar tariff data
 			if p.shouldCache(rates) {
-				if saveErr := p.cache.Set(rates); saveErr != nil {
+				if saveErr := p.cache.Set(rates, p.Tariff.Type()); saveErr != nil {
 					p.log.DEBUG.Printf("failed to cache rates: %v", saveErr)
 				} else {
 					p.log.DEBUG.Printf("cached %d rates (data changed)", len(rates))
@@ -130,12 +130,6 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 	return p.Rates()
 }
 
-// solarProviders contains known solar tariff providers
-var solarProviders = map[string]bool{
-	"solcast": true,
-	// Add other solar providers here as they're added
-}
-
 // GetCreationError returns any error that occurred during tariff creation
 func (p *CachingTariffProxy) GetCreationError() error {
 	return p.createErr
@@ -148,19 +142,19 @@ func (p *CachingTariffProxy) Type() api.TariffType {
 		return p.Tariff.Type()
 	}
 
-	// Otherwise, infer from provider name
-	// This is only used during the delay period
-	if solarProviders[p.provider] {
-		return api.TariffTypeSolar
+	// Try to get type from cache
+	if tariffType, ok := p.cache.GetTariffType(24 * time.Hour); ok {
+		return tariffType
 	}
 
-	// For custom tariffs, check the config
-	if tariffType, ok := p.config["tariff"].(string); ok && tariffType == "solar" {
-		return api.TariffTypeSolar
+	// If no cached type and no tariff, we need to create it to find out
+	// This should rarely happen as we usually have either cache or tariff
+	if err := p.ensureTariff(); err == nil && p.Tariff != nil {
+		return p.Tariff.Type()
 	}
 
-	// Default to solar for safety (since we only wrap solar tariffs)
-	return api.TariffTypeSolar
+	// Fallback - should not reach here in normal operation
+	return api.TariffTypePriceDynamic
 }
 
 // scheduleDelayedCreation schedules the tariff creation based on cache age

@@ -112,6 +112,7 @@ func TestPruneOldCaches_Cleanup_Integration(t *testing.T) {
 					{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1000},
 					{Start: time.Now().Add(time.Hour), End: time.Now().Add(2 * time.Hour), Value: 1500},
 				},
+				TariffType: api.TariffTypeSolar,
 			}
 			cacheBytes, err := json.Marshal(cache)
 			require.NoError(t, err, "Failed to marshal cache for %s", entry.description)
@@ -227,6 +228,7 @@ func TestPruneOldCaches_EdgeCases_Integration(t *testing.T) {
 			Version:    util.Version,
 			Timestamp:  time.Now().Add(-1 * time.Second), // Very recent
 			Rates:      api.Rates{{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 500}},
+			TariffType: api.TariffTypeSolar,
 		}
 		cacheBytes, _ := json.Marshal(cache)
 		settings.SetString("solar_forecast_cache_recent", string(cacheBytes))
@@ -246,6 +248,7 @@ func TestPruneOldCaches_EdgeCases_Integration(t *testing.T) {
 			Version:    util.Version,
 			Timestamp:  time.Now().Add(-100 * time.Hour), // Very old
 			Rates:      api.Rates{{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 500}},
+			TariffType: api.TariffTypeSolar,
 		}
 		cacheBytes, _ := json.Marshal(cache)
 		settings.SetString("solar_forecast_cache_old", string(cacheBytes))
@@ -293,6 +296,7 @@ func TestPruneOldCaches_RealWorld_Integration(t *testing.T) {
 			Version:    util.Version,
 			Timestamp:  time.Now().Add(-tc.age),
 			Rates:      testRates,
+			TariffType: api.TariffTypeSolar,
 		}
 		cacheBytes, err := json.Marshal(cacheEntry)
 		require.NoError(t, err)
