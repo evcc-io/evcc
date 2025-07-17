@@ -131,7 +131,6 @@
 					v-model:password="password"
 					:error="error"
 					:iframe-hint="iframeHint"
-					:label="$t('config.system.backupRestore.password')"
 				/>
 
 				<div class="d-flex justify-content-between gap-2 flex-wrap">

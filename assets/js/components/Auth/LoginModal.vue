@@ -11,12 +11,7 @@
 			{{ $t("loginModal.demoMode") }}
 		</div>
 		<form v-else-if="modalVisible" @submit.prevent="login">
-			<PasswordInput
-				v-model:password="password"
-				:error="error"
-				:iframe-hint="iframeHint"
-				:label="$t('loginModal.password')"
-			/>
+			<PasswordInput v-model:password="password" :error="error" :iframe-hint="iframeHint" />
 
 			<button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
 				<span

@@ -3,7 +3,7 @@
 		<div class="mb-4">
 			<label for="loginPassword" class="col-form-label">
 				<div class="w-100">
-					<span class="label">{{ labelText }}</span>
+					<span class="label">{{ $t("loginModal.password") }}</span>
 				</div>
 			</label>
 			<input
@@ -38,15 +38,11 @@ export default defineComponent({
 		error: { type: String, default: "" },
 		password: { type: String, default: "" },
 		iframeHint: { type: Boolean, default: false },
-		label: { type: String },
 	},
 	emits: ["update:password"],
 	computed: {
 		evccUrl() {
 			return window.location.href;
-		},
-		labelText() {
-			return this.label || this.$t("loginModal.password");
 		},
 	},
 	methods: {

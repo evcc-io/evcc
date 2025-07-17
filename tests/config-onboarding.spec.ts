@@ -32,7 +32,7 @@ test.describe("onboarding", async () => {
     // login
     const login = page.getByTestId("login-modal");
     await expectModalVisible(login);
-    await login.getByLabel("Password").fill(PASSWORD);
+    await login.getByLabel("Administrator Password").fill(PASSWORD);
     await login.getByRole("button", { name: "Login" }).click();
     await expectModalHidden(login);
 
