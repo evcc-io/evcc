@@ -45,17 +45,17 @@ type MyPv struct {
 }
 
 const (
-	elwaRegSetPower  = 1000
-	elwaRegTempLimit = 1002
-	elwaRegStatus    = 1003
-	elwaRegLoadState = 1059
-	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegSetPower       = 1000
+	elwaRegTempLimit      = 1002
+	elwaRegStatus         = 1003
+	elwaRegLoadState      = 1059
+	elwaRegPower          = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 	elwaRegOperationState = 1077
-	elwaMeterPower	 = 1069
-	elwaPower1		 = 1074
-	elwaPower2		 = 1075
-	elwaPower3		 = 1076
-	elwaPowerTotal	 = 1082
+	elwaMeterPower        = 1069
+	elwaPower1            = 1074
+	elwaPower2            = 1075
+	elwaPower3            = 1076
+	elwaPowerTotal        = 1082
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
@@ -203,51 +203,51 @@ func (wb *MyPv) Enabled() (bool, error) {
 	if err != nil {
 		return wb.enabled, err
 	}
-	
-	if binary.BigEndian.Uint16(b) <= elwaEnableLimit {
+
+	if binary.BigEndian.Uint16(b) <= elwaStandbyPower {
 		wb.enabled = false
 	}
 
 	// for DEBUG purposes
 	wb.log.TRACE.Println(wb.name, "elwaRegSetPower", b)
-	
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
+
+	b, err = wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 	wb.log.TRACE.Println(wb.name, "elwaRegOperationState", b)
 
-	b, err := wb.conn.ReadHoldingRegisters(elwaMeterPower, 1)
+	b, err = wb.conn.ReadHoldingRegisters(elwaMeterPower, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 	wb.log.TRACE.Println(wb.name, "elwaMeterPower", b)
 
-	b, err := wb.conn.ReadHoldingRegisters(elwaPower1, 1)
+	b, err = wb.conn.ReadHoldingRegisters(elwaPower1, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 	wb.log.TRACE.Println(wb.name, "elwaPower1", b)
 
-	b, err := wb.conn.ReadHoldingRegisters(elwaPower2, 1)
+	b, err = wb.conn.ReadHoldingRegisters(elwaPower2, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 	wb.log.TRACE.Println(wb.name, "elwaPower2", b)
 
-	b, err := wb.conn.ReadHoldingRegisters(elwaPower3, 1)
+	b, err = wb.conn.ReadHoldingRegisters(elwaPower3, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 	wb.log.TRACE.Println(wb.name, "elwaPower3", b)
 
-	b, err := wb.conn.ReadHoldingRegisters(elwaPowerTotal, 1)
+	b, err = wb.conn.ReadHoldingRegisters(elwaPowerTotal, 1)
 	if err != nil {
 		return wb.enabled, err
 	}
 	wb.log.TRACE.Println(wb.name, "elwaPowerTotal", b)
 	// end DEBUG
-	
+
 	return wb.enabled, nil
 }
 
