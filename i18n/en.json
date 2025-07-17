@@ -449,7 +449,7 @@
         "cancel": "Cancel",
         "description": "Backup, restore and reset your data. Useful if you want to move your data to another system.",
         "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
-        "password": "evcc Password",
+        "password": "Administrator Password",
         "reset": {
           "action": "Reset...",
           "confirmationButton": "Reset & restart",

@@ -33,7 +33,7 @@ test.describe("reset", async () => {
     await modal.getByRole("button", { name: "Reset..." }).click();
     const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
-    await expect(confirmModal.getByLabel("evcc Password")).not.toBeVisible(); // disable auth mode
+    await expect(confirmModal.getByLabel("Administrator Password")).not.toBeVisible(); // disable auth mode
     await confirmModal.getByRole("button", { name: "Reset & restart" }).click();
     await expectModalHidden(confirmModal);
     await expectModalHidden(modal);
@@ -88,7 +88,7 @@ test.describe("reset", async () => {
     await modal.getByRole("button", { name: "Reset..." }).click();
     const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
-    await expect(confirmModal.getByLabel("evcc Password")).not.toBeVisible(); // disable auth mode
+    await expect(confirmModal.getByLabel("Administrator Password")).not.toBeVisible(); // disable auth mode
     await confirmModal.getByRole("button", { name: "Reset & restart" }).click();
     await expectModalHidden(confirmModal);
     await expectModalHidden(modal);
@@ -234,7 +234,7 @@ test.describe("backup and restore", async () => {
     await backupModal.getByRole("button", { name: "Download backup..." }).click();
     const backupConfirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(backupConfirmModal);
-    const passwordField = backupConfirmModal.getByLabel("evcc Password");
+    const passwordField = backupConfirmModal.getByLabel("Administrator Password");
     await expect(passwordField).toBeVisible();
     await passwordField.fill("wrongpassword");
     await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
@@ -247,7 +247,7 @@ test.describe("backup and restore", async () => {
 
     // verify backup was downloaded successfully
     const download = await downloadPromise;
-    await expect(download.suggestedFilename()).toContain("evcc-backup");
+    await expect(download.suggestedFilename()).toContain("Administrator-backup");
     await stop();
   });
 });
