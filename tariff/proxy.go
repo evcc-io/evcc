@@ -20,7 +20,6 @@ type CachingTariffProxy struct {
 	cache        *SolarCacheManager
 	provider     string
 	config       map[string]interface{}
-	interval     time.Duration
 	log          *util.Logger
 	createOnce   sync.Once
 	scheduleOnce sync.Once
@@ -52,7 +51,6 @@ func NewTariffProxy(provider string, config interface{}) (api.Tariff, error) {
 		cache:    cache,
 		provider: provider,
 		config:   configMap,
-		interval: extractInterval(configMap),
 		log:      util.NewLogger(loggerName),
 	}
 
@@ -121,7 +119,8 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 		if err == nil && p.Tariff.Type() == api.TariffTypeSolar {
 			// Only cache solar tariff data
 			if p.hasDataChanged(rates) {
-				if saveErr := p.cache.Set(rates, p.Tariff.Type()); saveErr != nil {
+				interval := p.getInterval()
+				if saveErr := p.cache.Set(rates, p.Tariff.Type(), interval); saveErr != nil {
 					p.log.DEBUG.Printf("failed to cache rates: %v", saveErr)
 				} else {
 					p.log.DEBUG.Printf("cached %d rates (data changed)", len(rates))
@@ -189,12 +188,11 @@ func (p *CachingTariffProxy) scheduleDelayedCreation() {
 	})
 }
 
-// extractInterval extracts the interval from config, with defaults per provider
-func extractInterval(config map[string]interface{}) time.Duration {
-	if intervalStr, ok := config["interval"].(string); ok {
-		if duration, err := time.ParseDuration(intervalStr); err == nil {
-			return duration
-		}
+// getInterval returns the interval from cache or a reasonable default
+func (p *CachingTariffProxy) getInterval() time.Duration {
+	// Try to get interval from cache first
+	if interval, ok := p.cache.GetInterval(24 * time.Hour); ok {
+		return interval
 	}
 
 	return time.Hour
@@ -205,10 +203,11 @@ func (p *CachingTariffProxy) calculateCreationDelay() time.Duration {
 	// Get cache with timestamp to calculate age
 	if _, timestamp, ok := p.cache.GetWithTimestamp(24 * time.Hour); ok {
 		cacheAge := time.Since(timestamp)
+		interval := p.getInterval()
 
 		// If cache age is less than the interval, delay until interval is reached
-		if cacheAge < p.interval {
-			return p.interval - cacheAge
+		if cacheAge < interval {
+			return interval - cacheAge
 		}
 	}
 

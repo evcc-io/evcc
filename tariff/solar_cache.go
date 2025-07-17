@@ -19,6 +19,7 @@ type SolarForecastCache struct {
 	Timestamp  time.Time      `json:"timestamp"`
 	Rates      api.Rates      `json:"rates"`
 	TariffType api.TariffType `json:"tariffType"`
+	Interval   time.Duration  `json:"interval"`
 }
 
 // SolarCacheManager manages persistent caching for solar forecast APIs
@@ -148,14 +149,33 @@ func (c *SolarCacheManager) GetTariffType(maxAge time.Duration) (api.TariffType,
 	return cached.TariffType, true
 }
 
+// GetInterval returns the cached interval if valid cache exists
+func (c *SolarCacheManager) GetInterval(maxAge time.Duration) (time.Duration, bool) {
+	var cached SolarForecastCache
+
+	if err := settings.Json(c.getCacheKey(), &cached); err != nil {
+		if err != settings.ErrNotFound {
+			c.log.DEBUG.Printf("failed to load cache: %v", err)
+		}
+		return 0, false
+	}
+
+	if !c.IsValid(&cached, maxAge) {
+		return 0, false
+	}
+
+	return cached.Interval, true
+}
+
 // Set stores solar forecast data in cache
-func (c *SolarCacheManager) Set(rates api.Rates, tariffType api.TariffType) error {
+func (c *SolarCacheManager) Set(rates api.Rates, tariffType api.TariffType, interval time.Duration) error {
 	cached := SolarForecastCache{
 		ConfigHash: c.ConfigHash,
 		Version:    c.version,
 		Timestamp:  time.Now(),
 		Rates:      rates,
 		TariffType: tariffType,
+		Interval:   interval,
 	}
 
 	if err := settings.SetJson(c.getCacheKey(), cached); err != nil {
