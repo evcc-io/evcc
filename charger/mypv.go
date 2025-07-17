@@ -196,7 +196,7 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 func (wb *MyPv) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
 	if err != nil {
-		return wb.enabled, err
+		return false, err
 	}
 
 	switch binary.BigEndian.Uint16(b) {
