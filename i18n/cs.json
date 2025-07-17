@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Přepínatelné zásuvky",
       "template": "Výrobce",
-      "titleAdd": "Přidat nabíječku",
-      "titleEdit": "Upravit nabíječku"
+      "titleAdd": {
+        "charging": "Přidat nabíječku"
+      },
+      "titleEdit": {
+        "charging": "Upravit nabíječku"
+      }
     },
     "circuits": {
       "description": "Zajišťuje, že součet všech nabíjecích bodů připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
@@ -180,11 +184,17 @@
       "v2Support": "Zpět na InfluxDB verze 2.x"
     },
     "loadpoint": {
-      "addCharger": "Přidat nabíječku",
+      "addCharger": {
+        "charging": "Přidat nabíječku"
+      },
       "addMeter": "Přidat samostatný měřič nabíječky",
       "cancel": "Zrušit",
-      "chargerError": "Konfigurace nabíječky je povinná.",
-      "chargerLabel": "Nabíječka",
+      "chargerError": {
+        "charging": "Konfigurace nabíječky je povinná."
+      },
+      "chargerLabel": {
+        "charging": "Nabíječka"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Použije se nastavení proudu od 6 do 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Řízení zátěže zajišťující nepřekročení limitů proudu a výkonu.",
       "circuitLabel": "Elektrický okruh",
       "circuitUnassigned": "nepřiřazeno",
-      "defaultModeHelp": "Režim nabíjení po připojení vozidla.",
+      "defaultModeHelp": {
+        "charging": "Režim nabíjení po připojení vozidla."
+      },
       "defaultModeHelpKeep": "Zachová naposledy zvolený režim nabíjení.",
       "defaultModeLabel": "Výchozí režim",
       "delete": "Smazat",
@@ -957,7 +969,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} z {total}",
+    "activeHours": "{active} z {total}",
     "activeHoursLabel": "Aktivních hodin",
     "applyToAll": "Aplikovat všude?",
     "batteryDescription": "Nabíjí baterii FVE ze distribuční sítě.",

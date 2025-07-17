@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
-      "titleAdd": "Lägg till laddare",
-      "titleEdit": "Ändra laddare"
+      "titleAdd": {
+        "charging": "Lägg till laddare"
+      },
+      "titleEdit": {
+        "charging": "Ändra laddare"
+      }
     },
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
@@ -180,11 +184,17 @@
       "v2Support": "Tillbaka till InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Lägg till laddare",
+      "addCharger": {
+        "charging": "Lägg till laddare"
+      },
       "addMeter": "Lägg till dedikerad laddmätare",
       "cancel": "Avbryt",
-      "chargerError": "Konfigurering av laddare krävs.",
-      "chargerLabel": "Laddare",
+      "chargerError": {
+        "charging": "Konfigurering av laddare krävs."
+      },
+      "chargerLabel": {
+        "charging": "Laddare"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
-      "defaultModeHelp": "Laddningsläge vid anslutning till fordon.",
+      "defaultModeHelp": {
+        "charging": "Laddningsläge vid anslutning till fordon."
+      },
       "defaultModeHelpKeep": "Använder senast valda laddningsläge.",
       "defaultModeLabel": "Standardinställning",
       "delete": "Radera",
@@ -245,8 +257,12 @@
       "thresholdEnableHelpNegative": "Börjar ladda när {surplus} överskott finns i {delay}.",
       "thresholdEnableHelpZero": "Starta när minimum överskott av laddningseffekt finns i {delay}.",
       "thresholdEnableLabel": "Anslut elnätet",
-      "titleAdd": "Lägg till laddare",
-      "titleEdit": "Redigera laddare",
+      "titleAdd": {
+        "charging": "Lägg till laddare"
+      },
+      "titleEdit": {
+        "charging": "Redigera laddare"
+      },
       "titleExample": "Garage, Carport, et cetera.",
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatisk detektering",
@@ -779,6 +795,8 @@
       "connected": "Inkopplad.",
       "disconnectRequired": "Session avbruten. Prova att återansluta.",
       "disconnected": "Frånkopplad.",
+      "feedinPriorityNextStart": "Snabb inmatning börjar om {duration}.",
+      "feedinPriorityPausing": "Solladdning har pausats för att maximera inmatning.",
       "finished": "Färdig.",
       "minCharge": "Minimiladdning till {soc}.",
       "pvDisable": "Inte tillräckligt med överskott. Pausar strax.",
@@ -957,7 +975,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} av {total}",
+    "activeHours": "{active} av {total}",
     "activeHoursLabel": "Aktiva timmar",
     "applyToAll": "Tillämpa överallt?",
     "batteryDescription": "Laddar batteriet med el från nätet.",
@@ -973,6 +991,14 @@
     "resetAction": "Ta bort begränsning",
     "resetWarning": "Varken dynamiskt elpris eller CO₂-avtryck är konfigurerat. Emellertid finns fortfarande en begränsning på {limit}. Din konfiguration kanske behöver kontrolleras?",
     "saved": "Sparad."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pausade timmar",
+    "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
+    "priceLabel": "Inmatningshastighet",
+    "priceLimit": "Inmatningsbegränsning",
+    "resetWarning": "Det finns ingen konfigurerad dynamisk inmatningstariff. Däremot finns det en begränsning på {limit}. Städa i konfigurationen?",
+    "title": "Inmatningsprioritet"
   },
   "startupError": {
     "configFile": "Konfigurationsfil som används:",

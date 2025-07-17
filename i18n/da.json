@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",
-      "titleAdd": "Tilføj oplader",
-      "titleEdit": "Ændre oplader"
+      "titleAdd": {
+        "charging": "Tilføj oplader"
+      },
+      "titleEdit": {
+        "charging": "Ændre oplader"
+      }
     },
     "circuits": {
       "description": "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
@@ -180,11 +184,17 @@
       "v2Support": "Tilbage til InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Tilføj oplader",
+      "addCharger": {
+        "charging": "Tilføj oplader"
+      },
       "addMeter": "Tilføj dedikeret opladningsmåler",
       "cancel": "Afbryd",
-      "chargerError": "Konfiguration af en oplader er påkrævet.",
-      "chargerLabel": "Oplader",
+      "chargerError": {
+        "charging": "Konfiguration af en oplader er påkrævet."
+      },
+      "chargerLabel": {
+        "charging": "Oplader"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Benytter en strømstyrke mellem 6 og 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
-      "defaultModeHelp": "Opladningstilstand når køretøjet forbindes.",
+      "defaultModeHelp": {
+        "charging": "Opladningstilstand når køretøjet forbindes."
+      },
       "defaultModeHelpKeep": "Gemmer den senest valgte opladningstilstand.",
       "defaultModeLabel": "Standardtilstand",
       "delete": "Slet",
@@ -779,6 +791,8 @@
       "connected": "Forbundet.",
       "disconnectRequired": "Opladning afbrudt, Prøv at forbinde igen.",
       "disconnected": "Afbrudt.",
+      "feedinPriorityNextStart": "Høj indføringspris i {duration}.",
+      "feedinPriorityPausing": "Solopladning sat på pause for at maksimere nettilførsel.",
       "finished": "Færdig.",
       "minCharge": "Minimum opladning til {soc}.",
       "pvDisable": "Ikke nok overskud. Holder snart pause.",
@@ -957,7 +971,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} af {total}",
+    "activeHours": "{active} af {total}",
     "activeHoursLabel": "Aktive timer",
     "applyToAll": "Anvendes overalt?",
     "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",
@@ -973,6 +987,14 @@
     "resetAction": "Fjern begrænsning",
     "resetWarning": "Dynamisk elnet pris eller CO₂-kilde er ikke konfigureret. Men der er alligevel sat en begrænsning på {limit}. Skal din konfiguration justeres?",
     "saved": "Gemt."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pauserede timer",
+    "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
+    "priceLabel": "Indfødningspris",
+    "priceLimit": "Indfødningsgrænse",
+    "resetWarning": "Der er ingen dynamisk indfødnings tarif konfigureret. Der er dog stadig en grænse på {limit}. Ryd op i din konfiguration?",
+    "title": "Indfødnings prioritet"
   },
   "startupError": {
     "configFile": "Konfigurationsfil brugt:",

@@ -299,6 +299,7 @@ test.describe("preview", async () => {
       // apply -> active plan
       await expect(page.getByTestId("static-plan-apply")).toBeVisible();
       await page.getByTestId("static-plan-apply").click();
+      await expect(page.getByTestId("static-plan-apply")).not.toBeVisible();
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Active plan");
 
       await page.getByTestId("static-plan-time").fill("23:30");
@@ -413,6 +414,7 @@ test.describe("repeating", async () => {
     await modal.getByTestId("repeating-plan-time").fill("11:11");
 
     // switch between previews
+    await page.waitForLoadState("networkidle");
     await modal
       .getByTestId("plan-preview-title")
       .getByRole("combobox")
@@ -526,7 +528,7 @@ test.describe("repeating", async () => {
 
     // add repeating plan for every day
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
-    const plan3 = modal.getByTestId("plan-entry").last();
+    const plan3 = modal.getByTestId("plan-entry").nth(2);
     const days3 = plan3.getByTestId("repeating-plan-weekdays");
     await days3.click();
     await days3.getByRole("checkbox", { name: "Select all" }).check();
@@ -554,14 +556,17 @@ test.describe("repeating", async () => {
 
     // apply
     await plan2.getByTestId("repeating-plan-apply").click();
+    await expect(plan2.getByTestId("repeating-plan-apply")).not.toBeVisible();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
     await expect(modal.getByTestId("target-text")).toContainText("9:30");
 
     // set lower targets than vehicle soc (50%)
     await plan1.getByTestId("static-plan-soc").selectOption("40%");
     await plan1.getByTestId("static-plan-apply").click();
+    await expect(plan1.getByTestId("static-plan-apply")).not.toBeVisible();
     await plan2.getByTestId("repeating-plan-soc").selectOption("40%");
     await plan2.getByTestId("repeating-plan-apply").click();
+    await expect(plan2.getByTestId("repeating-plan-apply")).not.toBeVisible();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Goal already reached");
   });
 

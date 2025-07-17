@@ -114,6 +114,11 @@ export enum PHASES {
   THREE_PHASES = 3,
 }
 
+export enum LOADPOINT_TYPE {
+  CHARGING = "charging",
+  HEATING = "heating",
+}
+
 export type SessionInfoKey =
   | "remaining"
   | "finished"
@@ -187,6 +192,7 @@ export interface Forecast {
   co2?: ForecastSlot[];
   solar?: SolarDetails;
   planner?: ForecastSlot[];
+  feedin?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {

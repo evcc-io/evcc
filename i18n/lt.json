@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Serverio URL",
       "switchsockets": "Išmanios rozetės",
       "template": "Gamintojas",
-      "titleAdd": "Pridėti įkroviklį",
-      "titleEdit": "Redaguoti įkroviklį"
+      "titleAdd": {
+        "charging": "Pridėti įkroviklį"
+      },
+      "titleEdit": {
+        "charging": "Redaguoti įkroviklį"
+      }
     },
     "circuits": {
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
@@ -180,11 +184,17 @@
       "v2Support": "Atgal į InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Pridėti įkroviklį",
+      "addCharger": {
+        "charging": "Pridėti įkroviklį"
+      },
       "addMeter": "Pridėti įkroviklio skaitiklį",
       "cancel": "Atšaukti",
-      "chargerError": "Reikia sukonfigūruoti įkroviklį.",
-      "chargerLabel": "Įkroviklis",
+      "chargerError": {
+        "charging": "Reikia sukonfigūruoti įkroviklį."
+      },
+      "chargerLabel": {
+        "charging": "Įkroviklis"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Naudos įkrovimo srovę nuo 6 iki 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitLabel": "Grandinė",
       "circuitUnassigned": "nepriskirtas",
-      "defaultModeHelp": "Įkrovimo režimas prijungus automobilį.",
+      "defaultModeHelp": {
+        "charging": "Įkrovimo režimas prijungus automobilį."
+      },
       "defaultModeHelpKeep": "Išsaugo paskutinį pasirinktą įkrovimo režimą.",
       "defaultModeLabel": "Numatytasis režimas",
       "delete": "Ištrinti",
@@ -779,6 +791,8 @@
       "connected": "Prijungtas.",
       "disconnectRequired": "Sesija nutraukta. Prisijunkite iš naujo.",
       "disconnected": "Neprijungtas.",
+      "feedinPriorityNextStart": "Aukštos pardavimo kainos prasideda už {duration}.",
+      "feedinPriorityPausing": "Įkrovimas saulės energija pristabdytas, tam, kad pasinaudoti aukšta energijos pardavimo kaina.",
       "finished": "Baigta.",
       "minCharge": "Minimalus įkrovimas iki {soc}.",
       "pvDisable": "Trūksta pertekliaus. Pauzė netrukus.",
@@ -957,7 +971,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} iš {total}",
+    "activeHours": "{active} iš {total}",
     "activeHoursLabel": "Aktyvumo valandos",
     "applyToAll": "Pritaikyti visur?",
     "batteryDescription": "Įkrauna kaupiklį energija iš tinklo.",
@@ -973,6 +987,14 @@
     "resetAction": "Pašalinti limitą",
     "resetWarning": "Nėra sukonfigūruotos dinaminės tinklo kainos ar CO₂ šaltinio. Tačiau vis dar yra {limit} apribojimas. Išvalyti konfigūraciją?",
     "saved": "Išsaugota."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pristabdyta valandomis",
+    "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
+    "priceLabel": "Pardavimo kaina",
+    "priceLimit": "Pardavimo limitas",
+    "resetWarning": "Kintamas pardavimo tarifas nesukonfigūruotas. Tačiau, yra įvestas limitas {limit}. Išvalyti konfigūraciją?",
+    "title": "Pardavimo pirmenybė"
   },
   "startupError": {
     "configFile": "Naudojamas konfiguracijos failas:",

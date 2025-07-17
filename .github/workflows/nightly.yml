@@ -7,7 +7,7 @@ on:
 
 jobs:
   check_date:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
     name: Check latest commit
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
@@ -35,7 +35,7 @@ jobs:
     name: Publish Docker :nightly
     needs:
       - call-build-workflow
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
     name: Hassio Addon :nightly
     needs:
       - docker
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - name: Checkout
@@ -117,7 +117,7 @@ jobs:
     name: Publish APT nightly
     needs:
       - call-build-workflow
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -125,6 +125,8 @@ jobs:
           fetch-depth: 0
 
       - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.0"
         id: go
 
       - name: Patch ASN1

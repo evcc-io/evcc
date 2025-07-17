@@ -10,14 +10,15 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: ubuntu-24.04
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          cache: false
+          go-version: "1.24.0"
+          cache: false # avoid cache thrashing
         id: go
 
       - uses: actions/cache@v4
@@ -44,13 +45,14 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
+          go-version: "1.24.0"
           cache: false
         id: go
 
@@ -76,13 +78,14 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
+          go-version: "1.24.0"
           cache: false
         id: go
 
@@ -101,13 +104,14 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
+          go-version: "1.24.0"
           cache: false # avoid cache thrashing
         id: go
 
@@ -131,7 +135,7 @@ jobs:
 
   ui:
     name: UI
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -166,13 +170,14 @@ jobs:
 
   integration:
     name: Integration
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm-16
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
+          go-version: "1.24.0"
           cache: false
         id: go
 
@@ -199,7 +204,7 @@ jobs:
 
       - name: Get Playwright version
         id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package.json').dependencies['@playwright/test'])")" >> $GITHUB_ENV
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -208,12 +213,17 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
-      - name: Install Playwright
+      - name: Install Playwright (browsers + deps)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
+      - name: Install Playwright (deps only)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
       - name: Run tests
         run: npx playwright test
+        timeout-minutes: 20
         env:
           TZ: Europe/Berlin
 

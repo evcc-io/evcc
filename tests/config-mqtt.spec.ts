@@ -3,15 +3,13 @@ import { start, stop, restart, baseUrl } from "./evcc";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 import { isMqttReachable } from "./mqtt";
 
-const CONFIG = "config-grid-only.evcc.yaml";
-
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
 test.beforeEach(async ({ page }) => {
-  await start(CONFIG);
+  await start();
   await page.goto("/#/config");
-  await enableExperimental(page);
+  await enableExperimental(page, false);
 });
 
 test.afterEach(async () => {
@@ -26,18 +24,17 @@ const VALID_USERNAME = "rw";
 const VALID_PASSWORD = "readwrite";
 
 test.describe("mqtt", async () => {
-  let mqttReachable = true;
-  test.beforeAll(async () => {
-    mqttReachable = await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD);
-  });
-  test.skip(!mqttReachable, `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`);
-
   test("mqtt not configured", async ({ page }) => {
     await expect(page.getByTestId("mqtt")).toBeVisible();
     await expect(page.getByTestId("mqtt")).toContainText(["Configured", "no"].join(""));
   });
 
   test("mqtt via ui", async ({ page }) => {
+    test.skip(
+      !(await isMqttReachable(VALID_BROKER, VALID_USERNAME, VALID_PASSWORD)),
+      `MQTT broker ${VALID_BROKER} is not reachable, skipping tests`
+    );
+
     await page.getByTestId("mqtt").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("mqtt-modal");
     await expectModalVisible(modal);
@@ -58,7 +55,7 @@ test.describe("mqtt", async () => {
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
 
-    await restart(CONFIG);
+    await restart();
 
     // config error
     await expect(page.getByTestId("mqtt")).toHaveClass(/round-box--error/);
@@ -81,7 +78,7 @@ test.describe("mqtt", async () => {
     await expect(page.getByTestId("mqtt")).toContainText(
       ["Broker", VALID_BROKER, "Topic", VALID_TOPIC].join("")
     );
-    await restart(CONFIG);
+    await restart();
 
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
     await expect(page.getByTestId("mqtt")).not.toHaveClass(/round-box--error/);

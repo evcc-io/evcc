@@ -44,8 +44,12 @@
       "ocppLabel": "URL OCPP poslužitelja",
       "switchsockets": "Promijenjive utičnice",
       "template": "Proizvođač",
-      "titleAdd": "Dodati punjač",
-      "titleEdit": "Urediti punjač"
+      "titleAdd": {
+        "charging": "Dodati punjač"
+      },
+      "titleEdit": {
+        "charging": "Urediti punjač"
+      }
     },
     "circuits": {
       "description": "Osigurava da suma svih točaka punjenja povezanih na mrežu ne prelazi postavljene granice snage i struje. Krugovi mogu biti složeni hijerarhijski.",
@@ -180,11 +184,17 @@
       "v2Support": "Natrag na InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Dodati punjač",
+      "addCharger": {
+        "charging": "Dodati punjač"
+      },
       "addMeter": "Dodati zasebni strujomjer",
       "cancel": "Odustati",
-      "chargerError": "Nužno je postaviti punjač.",
-      "chargerLabel": "Punjač",
+      "chargerError": {
+        "charging": "Nužno je postaviti punjač."
+      },
+      "chargerLabel": {
+        "charging": "Punjač"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Koristiti će raspon struje od 6 i 16A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Postavljanje upravljanja energijom kako bi se osiguralo da se ne prijeđu trenutna ograničenja.",
       "circuitLabel": "Strujni krug",
       "circuitUnassigned": "nepostavljen",
-      "defaultModeHelp": "Način punjenja kada se vozilo poveže.",
+      "defaultModeHelp": {
+        "charging": "Način punjenja kada se vozilo poveže."
+      },
       "defaultModeHelpKeep": "Zadržava posljednje korišteni način punjenja.",
       "defaultModeLabel": "Uobičajeni način",
       "delete": "Obrisati",
@@ -957,7 +969,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} od {total}",
+    "activeHours": "{active} od {total}",
     "activeHoursLabel": "Aktivno radno vrijeme",
     "applyToAll": "Primijeniti svuda?",
     "batteryDescription": "Puni kućnu bateriju energijom iz mreže.",

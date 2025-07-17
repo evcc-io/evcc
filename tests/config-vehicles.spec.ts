@@ -8,7 +8,6 @@ import {
   expectModalVisible,
 } from "./utils";
 
-const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
@@ -22,27 +21,31 @@ const GENERIC_VEHICLE = "Generic vehicle (without API)";
 
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // create #1
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // create #2
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Green Car/);
@@ -77,7 +80,7 @@ test.describe("vehicles", async () => {
   });
 
   test("config should survive restart", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -87,21 +90,25 @@ test.describe("vehicles", async () => {
 
     // create #1 & #2
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Yellow Van");
     await vehicleModal.getByLabel("car").click();
     await vehicleModal.getByLabel("van").check();
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
@@ -113,16 +120,18 @@ test.describe("vehicles", async () => {
     await start(CONFIG_WITH_VEHICLE);
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // create #2
     await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("Green Car");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/YAML Bike/);
@@ -130,7 +139,7 @@ test.describe("vehicles", async () => {
   });
 
   test("advanced fields", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -139,6 +148,7 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await expect(vehicleModal.getByLabel("Title")).toBeVisible();
     await expect(vehicleModal.getByLabel("Car")).toBeVisible(); // icon
@@ -168,7 +178,7 @@ test.describe("vehicles", async () => {
   });
 
   test("save and restore rfid identifiers", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -177,15 +187,17 @@ test.describe("vehicles", async () => {
     const vehicleModal = page.getByTestId("vehicle-modal");
 
     // generic
+    await expectModalVisible(vehicleModal);
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("RFID Car");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
@@ -194,14 +206,15 @@ test.describe("vehicles", async () => {
     await vehicleModal.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();
+    await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 
   test("user-defined vehicle", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await page.getByTestId("add-vehicle").click();
     const modal = page.getByTestId("vehicle-modal");
@@ -236,7 +249,7 @@ soc:
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
@@ -277,7 +290,7 @@ soc:
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);

@@ -21,7 +21,7 @@
 			/>
 
 			<YamlEntry
-				v-if="values.type === 'custom'"
+				v-if="showYamlInput"
 				v-model="values.yaml"
 				type="charger"
 				:error-line="test.errorLine"
@@ -112,8 +112,16 @@ import {
 	type ModbusCapability,
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
+	customChargerName,
 } from "./DeviceModal";
-import defaultYaml from "./defaultYaml/charger.yaml?raw";
+import customChargerYaml from "./defaultYaml/customCharger.yaml?raw";
+import customHeaterYaml from "./defaultYaml/customHeater.yaml?raw";
+import heatpumpYaml from "./defaultYaml/heatpump.yaml?raw";
+import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
+import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
+import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
+import sgreadyBoostYaml from "./defaultYaml/sgreadyBoost.yaml?raw";
+import { LOADPOINT_TYPE } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template };
 const device = createDeviceUtils("charger");
@@ -157,6 +165,7 @@ export default defineComponent({
 	props: {
 		id: Number,
 		name: String,
+		loadpointType: { type: String as () => LOADPOINT_TYPE | null, default: null },
 		fade: String,
 		isSponsor: Boolean,
 	},
@@ -177,35 +186,58 @@ export default defineComponent({
 	computed: {
 		modalTitle() {
 			if (this.isNew) {
-				return this.$t(`config.charger.titleAdd`);
+				return this.$t(`config.charger.titleAdd.${this.loadpointType}`);
 			}
-			return this.$t(`config.charger.titleEdit`);
+			return this.$t(`config.charger.titleEdit.${this.loadpointType}`);
 		},
 		modalSize() {
-			return this.values.type === ConfigType.Custom ? "xl" : undefined;
+			return this.showYamlInput ? "xl" : undefined;
 		},
 		templateOptions() {
-			return [
-				{
+			const result = [];
+
+			if (this.isHeating) {
+				result.push({
+					label: "generic",
+					options: [
+						...this.products.filter((p) => p.group === "heatinggeneric"),
+						...[
+							ConfigType.Custom,
+							ConfigType.SgReadyBoost,
+							ConfigType.SgReady,
+							ConfigType.Heatpump,
+							ConfigType.SwitchSocket,
+						].map((type) =>
+							customTemplateOption(this.$t(customChargerName(type, true)), type)
+						),
+					],
+				});
+				result.push({
+					label: "heatingdevices",
+					options: this.products.filter((p) => p.group === "heating"),
+				});
+			} else {
+				result.push({
 					label: "generic",
 					options: [
 						...this.products.filter((p) => p.group === "generic"),
-						customTemplateOption(this.$t("config.general.customOption")),
+						...[ConfigType.Custom, ConfigType.SwitchSocket].map((type) =>
+							customTemplateOption(this.$t(customChargerName(type, false)), type)
+						),
 					],
-				},
-				{
+				});
+				result.push({
 					label: "chargers",
 					options: this.products.filter((p) => !p.group),
-				},
-				{
-					label: "switchsockets",
-					options: this.products.filter((p) => p.group === "switchsockets"),
-				},
-				{
-					label: "heatingdevices",
-					options: this.products.filter((p) => p.group === "heating"),
-				},
-			];
+				});
+			}
+
+			result.push({
+				label: "switchsockets",
+				options: this.products.filter((p) => p.group === "switchsockets"),
+			});
+
+			return result;
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
@@ -233,7 +265,7 @@ export default defineComponent({
 				this.templateParams.some((p) => p.Name === "connector") &&
 				this.templateParams.some((p) => p.Name === "stationid");
 			if (isOcpp) {
-				return `ws://${window.location.hostname}:8887`;
+				return `ws://${window.location.hostname}:8887/${this.values["stationid"] || ""}`;
 			}
 			return null;
 		},
@@ -250,7 +282,11 @@ export default defineComponent({
 			return this.template?.Requirements?.Description;
 		},
 		productName() {
-			return this.values.deviceProduct || this.templateName || "";
+			return (
+				this.values.deviceProduct ||
+				this.templateName ||
+				this.$t(customChargerName(this.values.type, this.isHeating))
+			);
 		},
 		sponsorTokenRequired() {
 			const requirements = this.template?.Requirements as Requirements | undefined;
@@ -269,11 +305,17 @@ export default defineComponent({
 		isNew() {
 			return this.id === undefined;
 		},
+		isHeating() {
+			return this.loadpointType === LOADPOINT_TYPE.HEATING;
+		},
 		isDeletable() {
 			return !this.isNew;
 		},
 		showActions() {
-			return this.templateName || this.values.type === ConfigType.Custom;
+			return this.templateName || this.showYamlInput;
+		},
+		showYamlInput() {
+			return this.isYamlInput(this.values.type);
 		},
 	},
 	watch: {
@@ -311,10 +353,27 @@ export default defineComponent({
 				// TODO: adjust GET response to match POST/PUT formats
 				this.values.type = charger.type;
 				this.values.deviceProduct = charger.deviceProduct;
-				applyDefaultsFromTemplate(this.template, this.values);
+				this.applyDefaults();
 				this.templateName = this.values.template;
 			} catch (e) {
 				console.error(e);
+			}
+		},
+		applyDefaults() {
+			applyDefaultsFromTemplate(this.template, this.values);
+			if (this.isHeating) {
+				// enable heating and integrated device params if exist
+				const hasParam = (name: string) =>
+					this.template?.Params.some((p) => p.Name === name);
+				["heating", "integrateddevice"].forEach((param) => {
+					if (hasParam(param) && this.values[param] === undefined) {
+						this.values[param] = true;
+					}
+				});
+				// default heater icon
+				if (hasParam("icon") && this.values["icon"] === undefined) {
+					this.values["icon"] = "heater";
+				}
 			}
 		},
 		async loadProducts() {
@@ -329,11 +388,11 @@ export default defineComponent({
 		},
 		async loadTemplate() {
 			this.template = null;
-			if (!this.templateName || this.templateName === ConfigType.Custom) return;
+			if (!this.templateName || this.isYamlInput(this.templateName as ConfigType)) return;
 			this.loadingTemplate = true;
 			try {
 				this.template = await device.loadTemplate(this.templateName, this.$i18n?.locale);
-				applyDefaultsFromTemplate(this.template, this.values);
+				this.applyDefaults();
 			} catch (e) {
 				console.error(e);
 			}
@@ -407,12 +466,37 @@ export default defineComponent({
 			this.isModalVisible = false;
 		},
 		templateChanged(e: Event) {
-			const value = (e.target as HTMLSelectElement).value;
+			const value = (e.target as HTMLSelectElement).value as ConfigType;
 			this.reset();
-			if (value === ConfigType.Custom) {
-				this.values.type = ConfigType.Custom;
-				this.values.yaml = defaultYaml;
+			if (this.isYamlInput(value)) {
+				this.values.type = value;
+				this.values.yaml = this.defaultYaml(value);
 			}
+		},
+		defaultYaml(type: ConfigType) {
+			switch (type) {
+				case ConfigType.Custom:
+					return this.isHeating ? customHeaterYaml : customChargerYaml;
+				case ConfigType.Heatpump:
+					return heatpumpYaml;
+				case ConfigType.SwitchSocket:
+					return this.isHeating ? switchsocketHeaterYaml : switchsocketChargerYaml;
+				case ConfigType.SgReady:
+					return sgreadyYaml;
+				case ConfigType.SgReadyBoost:
+					return sgreadyBoostYaml;
+				default: // template
+					return "";
+			}
+		},
+		isYamlInput(type: ConfigType) {
+			return [
+				ConfigType.Custom,
+				ConfigType.Heatpump,
+				ConfigType.SwitchSocket,
+				ConfigType.SgReady,
+				ConfigType.SgReadyBoost,
+			].includes(type);
 		},
 	},
 });
