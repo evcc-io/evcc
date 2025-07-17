@@ -33,6 +33,7 @@ test.describe("reset", async () => {
     await modal.getByRole("button", { name: "Reset..." }).click();
     const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
+    await expect(confirmModal.getByLabel("evcc Password")).not.toBeVisible(); // disable auth mode
     await confirmModal.getByRole("button", { name: "Reset & restart" }).click();
     await expectModalHidden(confirmModal);
     await expectModalHidden(modal);
@@ -87,6 +88,7 @@ test.describe("reset", async () => {
     await modal.getByRole("button", { name: "Reset..." }).click();
     const confirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(confirmModal);
+    await expect(confirmModal.getByLabel("evcc Password")).not.toBeVisible(); // disable auth mode
     await confirmModal.getByRole("button", { name: "Reset & restart" }).click();
     await expectModalHidden(confirmModal);
     await expectModalHidden(modal);
@@ -232,10 +234,11 @@ test.describe("backup and restore", async () => {
     await backupModal.getByRole("button", { name: "Download backup..." }).click();
     const backupConfirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(backupConfirmModal);
-    const passwordField = backupConfirmModal.getByLabel("Password");
+    const passwordField = backupConfirmModal.getByLabel("evcc Password");
+    await expect(passwordField).toBeVisible();
     await passwordField.fill("wrongpassword");
     await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
-    await expect(backupConfirmModal.getByText("Login failed: Password is invalid.")).toBeVisible();
+    await expect(backupConfirmModal.getByText("Password is invalid.")).toBeVisible();
     await passwordField.clear();
     await passwordField.fill("secret");
     const downloadPromise = page.waitForEvent("download");

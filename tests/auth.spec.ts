@@ -55,7 +55,7 @@ test("login", async ({ page }) => {
   // enter wrong password
   await login.getByLabel("Password").fill("wrong");
   await login.getByRole("button", { name: "Login" }).click();
-  await expect(login.getByText("Login failed: Password is invalid.")).toBeVisible();
+  await expect(login.getByText("Password is invalid.")).toBeVisible();
 
   // enter correct password
   await login.getByLabel("Password").fill("secret");

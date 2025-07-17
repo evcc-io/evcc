@@ -3,7 +3,7 @@
 		<div class="mb-4">
 			<label for="loginPassword" class="col-form-label">
 				<div class="w-100">
-					<span class="label">{{ $t("loginModal.password") }}</span>
+					<span class="label">{{ labelText }}</span>
 				</div>
 			</label>
 			<input
@@ -13,12 +13,11 @@
 				class="form-control"
 				autocomplete="current-password"
 				type="password"
-				:required="required"
 				@input="updatePassword"
 			/>
 		</div>
 
-		<p v-if="error" class="text-danger my-4">{{ $t("loginModal.error") }}{{ error }}</p>
+		<p v-if="error" class="text-danger my-4">{{ error }}</p>
 		<a
 			v-if="iframeHint"
 			class="text-muted my-4 d-block text-center"
@@ -39,12 +38,15 @@ export default defineComponent({
 		error: { type: String, default: "" },
 		password: { type: String, default: "" },
 		iframeHint: { type: Boolean, default: false },
-		required: { type: Boolean, default: true },
+		label: { type: String },
 	},
 	emits: ["update:password"],
 	computed: {
 		evccUrl() {
 			return window.location.href;
+		},
+		labelText() {
+			return this.label || this.$t("loginModal.password");
 		},
 	},
 	methods: {

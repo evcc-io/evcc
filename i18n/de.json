@@ -447,7 +447,6 @@
           "title": "Sichern"
         },
         "cancel": "Abbrechen",
-        "confirmWithPassword": "Aktion bestätigen",
         "description": "Sichern, wiederherstellen und zurücksetzen deiner Daten. Nützlich, wenn du deine Daten auf ein anderes System übertragen möchtest.",
         "note": "Hinweis: Alle oben genannten Aktionen betreffen nur deine Datenbankdaten. Die evcc.yaml-Konfigurationsdatei bleibt unverändert.",
         "reset": {
@@ -665,7 +664,6 @@
   "loginModal": {
     "cancel": "Abbrechen",
     "demoMode": "Login ist im Demo-Modus nicht verfügbar.",
-    "error": "Login fehlgeschlagen: ",
     "iframeHint": "Öffne evcc in einem neuen Tab.",
     "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
     "invalid": "Passwort ist ungültig.",

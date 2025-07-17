@@ -127,10 +127,11 @@
 				</p>
 
 				<PasswordInput
+					v-if="!authDisabled"
 					v-model:password="password"
 					:error="error"
 					:iframe-hint="iframeHint"
-					:required="false"
+					:label="$t('config.system.backupRestore.password')"
 				/>
 
 				<div class="d-flex justify-content-between gap-2 flex-wrap">
@@ -180,6 +181,9 @@ const validateStatus = (code: number) => [200, 204, 401, 403].includes(code);
 export default defineComponent({
 	name: "BackupRestoreModal",
 	components: { GenericModal, PropertyFileField, FormRow, PasswordInput },
+	props: {
+		authDisabled: Boolean,
+	},
 	data() {
 		return {
 			selectedReset: {

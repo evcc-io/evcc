@@ -373,7 +373,7 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
-				<BackupRestoreModal />
+				<BackupRestoreModal v-bind="backupRestoreProps" />
 			</div>
 		</div>
 	</div>
@@ -597,6 +597,11 @@ export default {
 		},
 		messagingTags() {
 			return { configured: { value: store.state?.messaging || false } };
+		},
+		backupRestoreProps() {
+			return {
+				authDisabled: store.state?.authDisabled || false,
+			};
 		},
 	},
 	watch: {
