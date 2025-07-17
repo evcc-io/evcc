@@ -247,7 +247,7 @@ test.describe("backup and restore", async () => {
 
     // verify backup was downloaded successfully
     const download = await downloadPromise;
-    await expect(download.suggestedFilename()).toContain("Administrator-backup");
+    await expect(download.suggestedFilename()).toContain("evcc-backup");
     await stop();
   });
 });
