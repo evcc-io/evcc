@@ -214,7 +214,7 @@ func (wb *MyPv) Enabled() (bool, error) {
 		return wb.enabled, nil
 	default:
 		wb.enabled = false
-		return wb.enabled, fmt.Errorf("unknown operation state: %s", binary.BigEndian.Uint16(b))
+		return wb.enabled, fmt.Errorf("unknown operation state: %u", binary.BigEndian.Uint16(b))
 	}
 }
 
