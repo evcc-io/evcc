@@ -147,14 +147,13 @@ func (p *CachingTariffProxy) Type() api.TariffType {
 		return tariffType
 	}
 
-	// If no cached type and no tariff, we need to create it to find out
-	// This should rarely happen as we usually have either cache or tariff
+	// If no cached type and no tariff, we must create it to find out
 	if err := p.ensureTariff(); err == nil && p.Tariff != nil {
 		return p.Tariff.Type()
 	}
 
-	// Fallback - should not reach here in normal operation
-	return api.TariffTypePriceDynamic
+	// This should never happen in normal operation
+	panic("tariff proxy: cannot determine tariff type")
 }
 
 // scheduleDelayedCreation schedules the tariff creation based on cache age
