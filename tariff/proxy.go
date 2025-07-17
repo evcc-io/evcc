@@ -36,9 +36,17 @@ func NewTariffProxy(provider string, config interface{}) (api.Tariff, error) {
 		return nil, fmt.Errorf("invalid config type: expected map[string]interface{}, got %T", config)
 	}
 
-	cache := NewSolarCacheManager(provider, configMap)
-	// Create logger with provider and config hash suffix
-	loggerName := fmt.Sprintf("tariff-proxy-%s-%s", provider, cache.ConfigHash[:8])
+	// Determine the actual provider name for logging
+	actualProvider := provider
+	if provider == "template" {
+		if template, ok := configMap["template"].(string); ok {
+			actualProvider = template
+		}
+	}
+
+	cache := NewSolarCacheManager(actualProvider, configMap)
+	// Create logger with actual provider and config hash suffix
+	loggerName := fmt.Sprintf("tariff-proxy-%s-%s", actualProvider, cache.ConfigHash[:8])
 
 	proxy := &CachingTariffProxy{
 		cache:    cache,
