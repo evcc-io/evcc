@@ -449,6 +449,7 @@
         "cancel": "Abbrechen",
         "description": "Sichern, wiederherstellen und zurücksetzen deiner Daten. Nützlich, wenn du deine Daten auf ein anderes System übertragen möchtest.",
         "note": "Hinweis: Alle oben genannten Aktionen betreffen nur deine Datenbankdaten. Die evcc.yaml-Konfigurationsdatei bleibt unverändert.",
+        "password": "evcc Passwort",
         "reset": {
           "action": "Zurücksetzen...",
           "confirmationButton": "Zurücksetzen & Neustart",
