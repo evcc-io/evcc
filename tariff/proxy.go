@@ -62,6 +62,8 @@ func (p *CachingTariffProxy) init() error {
 	if cached, ok := p.cache.Get(24 * time.Hour); ok {
 		if hasValidSolarCoverage(cached, time.Now()) {
 			p.log.DEBUG.Printf("found valid cache with %d rates, delaying tariff creation", len(cached))
+			// Schedule delayed tariff creation
+			p.scheduleDelayedCreation()
 			return nil
 		}
 	}
@@ -122,11 +124,7 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 	// Tariff not created yet - try cache first (only for potential solar tariffs)
 	if cached, ok := p.cache.Get(24 * time.Hour); ok {
 		if hasValidSolarCoverage(cached, time.Now()) {
-			p.log.DEBUG.Printf("serving %d rates from cache", len(cached))
-
-			// Schedule delayed tariff creation
-			p.scheduleDelayedCreation()
-
+			p.log.TRACE.Printf("serving %d rates from cache", len(cached))
 			return cached, nil
 		}
 	}

@@ -84,7 +84,7 @@ func (c *SolarCacheManager) IsValid(cached *SolarForecastCache, maxAge time.Dura
 		return false
 	}
 
-	c.log.DEBUG.Printf("cache valid: age %v, %d rates",
+	c.log.TRACE.Printf("cache valid: age %v, %d rates",
 		time.Since(cached.Timestamp), len(cached.Rates))
 	return true
 }
@@ -104,7 +104,7 @@ func (c *SolarCacheManager) Get(maxAge time.Duration) (api.Rates, bool) {
 		return nil, false
 	}
 
-	c.log.DEBUG.Printf("cache hit: returning %d rates", len(cached.Rates))
+	c.log.TRACE.Printf("cache hit: returning %d rates", len(cached.Rates))
 	return cached.Rates, true
 }
 
