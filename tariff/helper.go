@@ -91,4 +91,3 @@ func hasValidSolarCoverage(rates api.Rates, currentTime time.Time) bool {
 	endOfToday := now.With(currentTime).EndOfDay()
 	return latestEnd.After(endOfToday) || latestEnd.Equal(endOfToday)
 }
-

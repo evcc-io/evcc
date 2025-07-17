@@ -2,7 +2,7 @@ package tariff
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"hash/fnv"
 	"sync"
 	"sync/atomic"
@@ -27,34 +27,27 @@ type CachingTariffProxy struct {
 	lastHash     atomic.Uint64
 }
 
-// NewCachingTariffProxy creates a new caching proxy for solar tariffs
-func NewCachingTariffProxy(tariff api.Tariff, provider string, config interface{}) api.Tariff {
-	// For non-solar tariffs, return the original tariff unchanged
-	if tariff != nil && tariff.Type() != api.TariffTypeSolar {
-		return tariff
-	}
-
-	// For solar tariffs, we'll delay creation
-	// First, convert config to map[string]interface{} if needed
+// NewTariffProxy creates a proxy that controls tariff instantiation and caching
+func NewTariffProxy(provider string, config interface{}) api.Tariff {
+	// Convert config to map[string]interface{} - required for all tariff operations
 	configMap, ok := config.(map[string]interface{})
 	if !ok {
-		// If we can't convert, fall back to immediate creation
-		return tariff
+		// Config must be a map - return error wrapper if conversion fails
+		err := fmt.Errorf("invalid config type: expected map[string]interface{}, got %T", config)
+		return NewWrapper(provider, nil, err)
 	}
 
 	proxy := &CachingTariffProxy{
-		Tariff:   tariff, // Might be nil if we're called differently later
 		cache:    NewSolarCacheManager(provider, configMap),
 		provider: provider,
 		config:   configMap,
 		interval: extractInterval(configMap),
 		log:      util.NewLogger("tariff-cache"),
 	}
-	
+
 	proxy.init()
 	return proxy
 }
-
 
 // init initializes the proxy, creating tariff immediately if no valid cache exists
 func (p *CachingTariffProxy) init() {
@@ -62,15 +55,15 @@ func (p *CachingTariffProxy) init() {
 	if p.Tariff != nil {
 		return
 	}
-	
-	// Check if we have valid cached data for solar tariffs
+
+	// Check if we have valid cached data for potential solar tariffs
 	if cached, ok := p.cache.Get(24 * time.Hour); ok {
 		if hasValidSolarCoverage(cached, time.Now()) {
 			p.log.DEBUG.Printf("found valid cache with %d rates, delaying tariff creation", len(cached))
 			return
 		}
 	}
-	
+
 	// No valid cache - create tariff immediately to determine type
 	p.log.DEBUG.Printf("no valid cache found, creating tariff immediately")
 	if err := p.ensureTariff(); err != nil {
@@ -111,6 +104,11 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 		return rates, err
 	}
 
+	// If we have a stored creation error, return it
+	if p.createErr != nil {
+		return nil, p.createErr
+	}
+
 	// Tariff not created yet - try cache first (only for potential solar tariffs)
 	if cached, ok := p.cache.Get(24 * time.Hour); ok {
 		if hasValidSolarCoverage(cached, time.Now()) {
@@ -136,6 +134,11 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 var solarProviders = map[string]bool{
 	"solcast": true,
 	// Add other solar providers here as they're added
+}
+
+// GetCreationError returns any error that occurred during tariff creation
+func (p *CachingTariffProxy) GetCreationError() error {
+	return p.createErr
 }
 
 // Type returns the tariff type
@@ -185,7 +188,7 @@ func extractInterval(config map[string]interface{}) time.Duration {
 			return duration
 		}
 	}
-	
+
 	return time.Hour
 }
 
@@ -204,7 +207,6 @@ func (p *CachingTariffProxy) calculateCreationDelay() time.Duration {
 	// No delay needed
 	return 0
 }
-
 
 // hashRates calculates FNV-64a hash of the rates data using unsafe for performance
 func (p *CachingTariffProxy) hashRates(rates api.Rates) uint64 {

@@ -797,25 +797,25 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
-
 	props, err := customDevice(conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
-	if err != nil {
-		if ce := new(util.ConfigError); errors.As(err, &ce) {
-			return nil, err
-		}
+	// Route all tariff creation through the proxy
+	// This allows the proxy to control when solar tariffs are instantiated
+	instance := tariff.NewTariffProxy(conf.Type, props)
 
-		// wrap non-config tariff errors to prevent fatals
-		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
-		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
-	} else {
-		// wrap solar tariffs with caching proxy
-		instance = tariff.NewCachingTariffProxy(instance, conf.Type, conf.Other)
+	// Check if the proxy has a creation error that needs to be handled
+	if proxy, ok := instance.(*tariff.CachingTariffProxy); ok {
+		if err := proxy.GetCreationError(); err != nil {
+			if ce := new(util.ConfigError); errors.As(err, &ce) {
+				return nil, err
+			}
+			// wrap non-config tariff errors to prevent fatals
+			log.ERROR.Printf("creating tariff %s failed: %v", name, err)
+			instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+		}
 	}
 
 	return instance, nil
