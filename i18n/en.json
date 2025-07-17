@@ -155,12 +155,15 @@
       "docsLink": "See documentation.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
+      "invalidFileSelected": "Invalid file selected",
+      "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
       "save": "Save",
+      "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
@@ -435,6 +438,38 @@
       "trialToken": "Trial token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download backup...",
+          "confirmationButton": "Download backup",
+          "confirmationText": "Please enter your password to download the database file.",
+          "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
+          "title": "Backup"
+        },
+        "cancel": "Cancel",
+        "description": "Backup, restore and reset your data. Useful if you want to move your data to another system.",
+        "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
+        "reset": {
+          "action": "Reset...",
+          "confirmationButton": "Reset & restart",
+          "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
+          "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "sessions": "Charging sessions",
+          "sessionsDescription": "Deletes your charging session history.",
+          "settings": "Configuration & settings",
+          "settingsDescription": "Deletes all configured devices, services, plans, etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Restore...",
+          "confirmationButton": "Restore & restart",
+          "confirmationText": "This will overwrite your complete database. Ensure you've downloaded a backup first.",
+          "description": "Restore your data from a backup file. This will overwrite all your current data.",
+          "labelFile": "Backup file",
+          "title": "Restore"
+        },
+        "title": "Backup & Restore"
+      },
       "logs": "Logs",
       "restart": "Restart",
       "restartRequiredDescription": "Please restart to see the effect.",
@@ -629,12 +664,11 @@
   "loginModal": {
     "cancel": "Cancel",
     "demoMode": "Login is not supported in demo mode.",
-    "error": "Login failed: ",
     "iframeHint": "Open evcc in a new tab.",
     "iframeIssue": "Your password is correct, but your browser seems to have dropped the authentication cookie. This can happen if you run evcc in an iframe via HTTP.",
     "invalid": "Password is invalid.",
     "login": "Login",
-    "password": "Password",
+    "password": "Administrator Password",
     "reset": "Reset password?",
     "title": "Authentication"
   },

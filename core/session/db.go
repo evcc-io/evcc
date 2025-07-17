@@ -1,6 +1,7 @@
 package session
 
 import (
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
 )
@@ -10,6 +11,18 @@ type DB struct {
 	log  *util.Logger
 	db   *gorm.DB
 	name string
+}
+
+var (
+	sessions Sessions
+)
+
+func Init() error {
+	err := db.Instance.AutoMigrate(new(Session))
+	if err == nil {
+		err = db.Instance.Find(&sessions).Error
+	}
+	return err
 }
 
 // NewStore creates a session store

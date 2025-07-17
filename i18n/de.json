@@ -155,12 +155,15 @@
       "docsLink": "Siehe Dokumentation.",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
+      "invalidFileSelected": "Ungültige Datei ausgewählt",
+      "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "save": "Speichern",
+      "selectFile": "Durchsuchen...",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
@@ -435,6 +438,38 @@
       "trialToken": "Testtoken"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Sicherung herunterladen...",
+          "confirmationButton": "Sicherung herunterladen",
+          "confirmationText": "Bitte gib dein Passwort ein, um die Datenbankdatei herunterzuladen.",
+          "description": "Sichere deine Daten in eine Datei. Diese Datei kann verwendet werden, um deine Daten im Falle eines Systemausfalls wiederherzustellen.",
+          "title": "Sichern"
+        },
+        "cancel": "Abbrechen",
+        "description": "Sichern, wiederherstellen und zurücksetzen deiner Daten. Nützlich, wenn du deine Daten auf ein anderes System übertragen möchtest.",
+        "note": "Hinweis: Alle oben genannten Aktionen betreffen nur deine Datenbankdaten. Die evcc.yaml-Konfigurationsdatei bleibt unverändert.",
+        "reset": {
+          "action": "Zurücksetzen...",
+          "confirmationButton": "Zurücksetzen & Neustart",
+          "confirmationText": "Dies löscht deine ausgewählten Daten dauerhaft. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
+          "description": "Hast du Probleme mit der Konfiguration und möchtest von vorne beginnen? Lösche alle Daten und beginne neu.",
+          "sessions": "Ladevorgänge",
+          "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
+          "settings": "Konfiguration & Einstellungen",
+          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, usw.",
+          "title": "Zurücksetzen"
+        },
+        "restore": {
+          "action": "Wiederherstellen...",
+          "confirmationButton": "Wiederherstellen & Neustart",
+          "confirmationText": "Dies überschreibt deine komplette Datenbank. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
+          "description": "Stelle deine Daten aus einer Sicherungsdatei wieder her. Dies überschreibt alle deine aktuellen Daten.",
+          "labelFile": "Sicherungsdatei",
+          "title": "Wiederherstellen"
+        },
+        "title": "Sichern & Wiederherstellen"
+      },
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",
@@ -629,12 +664,11 @@
   "loginModal": {
     "cancel": "Abbrechen",
     "demoMode": "Login ist im Demo-Modus nicht verfügbar.",
-    "error": "Login fehlgeschlagen: ",
     "iframeHint": "Öffne evcc in einem neuen Tab.",
     "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
     "invalid": "Passwort ist ungültig.",
     "login": "Anmelden",
-    "password": "Passwort",
+    "password": "Administrator Passwort",
     "reset": "Passwort zurücksetzen?",
     "title": "Authentifizierung"
   },

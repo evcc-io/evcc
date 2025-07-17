@@ -345,9 +345,12 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// system api
 		routes := map[string]route{
-			"log":      {"GET", "/log", logHandler},
-			"logareas": {"GET", "/log/areas", logAreasHandler},
-			"reset":    {"POST", "/reset", resetHandler},
+			"log":        {"GET", "/log", logHandler},
+			"logareas":   {"GET", "/log/areas", logAreasHandler},
+			"clearcache": {"DELETE", "/cache", clearCacheHandler},
+			"backup":     {"POST", "/backup", getBackup(auth)},
+			"restore":    {"POST", "/restore", restoreDatabase(auth, shutdown)},
+			"reset":      {"POST", "/reset", resetDatabase(auth, shutdown)},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)
