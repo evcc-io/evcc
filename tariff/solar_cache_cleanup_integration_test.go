@@ -113,7 +113,6 @@ func TestPruneOldCaches_Cleanup_Integration(t *testing.T) {
 					{Start: time.Now().Add(time.Hour), End: time.Now().Add(2 * time.Hour), Value: 1500},
 				},
 				TariffType: api.TariffTypeSolar,
-				Interval:   3 * time.Hour,
 			}
 			cacheBytes, err := json.Marshal(cache)
 			require.NoError(t, err, "Failed to marshal cache for %s", entry.description)

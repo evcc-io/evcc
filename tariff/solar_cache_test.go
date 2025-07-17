@@ -217,7 +217,7 @@ func TestSolarCacheManager_RateDataIntegrity(t *testing.T) {
 	cache := NewSolarCacheManager("test", config)
 
 	// Store rates in cache
-	err := cache.Set(originalRates, api.TariffTypeSolar, 3*time.Hour)
+	err := cache.Set(originalRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store rates in cache")
 
 	// Retrieve rates from cache
@@ -249,7 +249,7 @@ func TestSolarCacheManager_FloatingPointPrecision(t *testing.T) {
 	cache := NewSolarCacheManager("test", config)
 
 	// Store rates
-	err := cache.Set(precisionTestRates, api.TariffTypeSolar, 3*time.Hour)
+	err := cache.Set(precisionTestRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store precision test rates")
 
 	// Retrieve rates
@@ -279,7 +279,7 @@ func TestSolarCacheManager_TimestampPrecision(t *testing.T) {
 	cache := NewSolarCacheManager("test", config)
 
 	// Store rates
-	err := cache.Set(timestampTestRates, api.TariffTypeSolar, 3*time.Hour)
+	err := cache.Set(timestampTestRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store timestamp test rates")
 
 	// Retrieve rates
@@ -317,7 +317,7 @@ func TestSolarCacheManager_LargeDatasetHandling(t *testing.T) {
 	cache := NewSolarCacheManager("test", config)
 
 	// Store large dataset
-	err := cache.Set(largeDataset, api.TariffTypeSolar, 3*time.Hour)
+	err := cache.Set(largeDataset, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store large dataset")
 
 	// Retrieve large dataset
@@ -340,7 +340,7 @@ func TestSolarCacheManager_EdgeCasesDataIntegrity(t *testing.T) {
 
 	// Test 1: Empty rates slice
 	emptyRates := api.Rates{}
-	err := cache.Set(emptyRates, api.TariffTypeSolar, 3*time.Hour)
+	err := cache.Set(emptyRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store empty rates")
 
 	retrievedEmpty, found := cache.Get(1 * time.Hour)
@@ -352,7 +352,7 @@ func TestSolarCacheManager_EdgeCasesDataIntegrity(t *testing.T) {
 	singleZeroRate := api.Rates{
 		{Start: time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC), End: time.Date(2024, 1, 1, 11, 0, 0, 0, time.UTC), Value: 0.0},
 	}
-	err = cache.Set(singleZeroRate, api.TariffTypeSolar, 3*time.Hour)
+	err = cache.Set(singleZeroRate, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store single zero rate")
 
 	retrievedSingle, found := cache.Get(1 * time.Hour)
@@ -367,7 +367,7 @@ func TestSolarCacheManager_EdgeCasesDataIntegrity(t *testing.T) {
 		{Start: time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC), End: time.Date(2024, 1, 1, 13, 0, 0, 0, time.UTC), Value: 1e-10},
 		{Start: time.Date(2024, 1, 1, 13, 0, 0, 0, time.UTC), End: time.Date(2024, 1, 1, 14, 0, 0, 0, time.UTC), Value: 1e10},
 	}
-	err = cache.Set(extremeRates, api.TariffTypeSolar, 3*time.Hour)
+	err = cache.Set(extremeRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store extreme value rates")
 
 	retrievedExtreme, found := cache.Get(1 * time.Hour)
@@ -402,7 +402,7 @@ func TestSolarCacheManager_DatabaseRoundtrip(t *testing.T) {
 	cache := NewSolarCacheManager("test", config)
 
 	// Store rates in cache (should persist to database)
-	err := cache.Set(originalRates, api.TariffTypeSolar, 3*time.Hour)
+	err := cache.Set(originalRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store rates in database")
 
 	// Verify data was stored - create new cache manager instance
@@ -445,7 +445,7 @@ func TestSolarCacheManager_DatabaseRoundtrip(t *testing.T) {
 	}
 
 	cache4 := NewSolarCacheManager("expiration_test", config)
-	err = cache4.Set(testRates, api.TariffTypeSolar, 3*time.Hour)
+	err = cache4.Set(testRates, api.TariffTypeSolar)
 	assert.NoError(t, err, "Should be able to store test rates")
 
 	// Sleep briefly to ensure cache timestamp is older than maxAge

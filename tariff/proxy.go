@@ -119,8 +119,7 @@ func (p *CachingTariffProxy) Rates() (api.Rates, error) {
 		if err == nil && p.Tariff.Type() == api.TariffTypeSolar {
 			// Only cache solar tariff data
 			if p.hasDataChanged(rates) {
-				interval := p.getInterval()
-				if saveErr := p.cache.Set(rates, p.Tariff.Type(), interval); saveErr != nil {
+				if saveErr := p.cache.Set(rates, p.Tariff.Type()); saveErr != nil {
 					p.log.DEBUG.Printf("failed to cache rates: %v", saveErr)
 				} else {
 					p.log.DEBUG.Printf("cached %d rates (data changed)", len(rates))
@@ -188,30 +187,18 @@ func (p *CachingTariffProxy) scheduleDelayedCreation() {
 	})
 }
 
-// getInterval returns the interval from cache or a reasonable default
-func (p *CachingTariffProxy) getInterval() time.Duration {
-	// Try to get interval from cache first
-	if interval, ok := p.cache.GetInterval(24 * time.Hour); ok {
-		return interval
-	}
-
-	return time.Hour
-}
-
-// calculateCreationDelay calculates delay based on cache age and interval
+// calculateCreationDelay calculates delay based on cache age and a 1-hour interval
+// extracting the default interval from all tariffs is non-trivial, use a default instead.
 func (p *CachingTariffProxy) calculateCreationDelay() time.Duration {
-	// Get cache with timestamp to calculate age
 	if _, timestamp, ok := p.cache.GetWithTimestamp(24 * time.Hour); ok {
 		cacheAge := time.Since(timestamp)
-		interval := p.getInterval()
+		interval := time.Hour
 
-		// If cache age is less than the interval, delay until interval is reached
 		if cacheAge < interval {
 			return interval - cacheAge
 		}
 	}
 
-	// No delay needed
 	return 0
 }
 
