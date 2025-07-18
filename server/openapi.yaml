@@ -1103,12 +1103,12 @@ components:
       example: passWord1234!
     Phases:
       description: "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)"
-      type: integer
-      example: 3
+      type: string
+      example: "3"
       enum:
-        - 0
-        - 1
-        - 3
+        - "0"
+        - "1"
+        - "3"
     PlanRates:
       type: object
       properties:
