@@ -84,25 +84,41 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	return t, err
 }
 
+// applyPriceAndTime transforms forecast values by applying totalPrice and ensuring local time
+// For solar forecasts: totalPrice is a no-op (charges=0, tax=0, no formula)
+// For price forecasts: applies charges, taxes, and custom formulas
+func (t *Tariff) applyPriceAndTime(rates api.Rates) api.Rates {
+	result := make(api.Rates, len(rates))
+	for i, r := range rates {
+		result[i] = api.Rate{
+			Value: t.totalPrice(r.Value, r.Start),
+			Start: r.Start.Local(),
+			End:   r.End.Local(),
+		}
+	}
+	return result
+}
+
+// periodStart returns the start of the current period for pruning old rates
+func (t *Tariff) periodStart() time.Time {
+	if t.typ == api.TariffTypeSolar {
+		return beginningOfDay()
+	}
+	return now.With(time.Now()).BeginningOfHour()
+}
+
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
 	var once sync.Once
 
 	for tick := time.Tick(interval); ; <-tick {
-		var data api.Rates
+		var forecastValues api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()
 			if err != nil {
 				return backoffPermanentError(err)
 			}
-			if err := json.Unmarshal([]byte(s), &data); err != nil {
+			if err := json.Unmarshal([]byte(s), &forecastValues); err != nil {
 				return backoff.Permanent(err)
-			}
-			for i, r := range data {
-				data[i] = api.Rate{
-					Value: t.totalPrice(r.Value, r.Start),
-					Start: r.Start.Local(),
-					End:   r.End.Local(),
-				}
 			}
 			return nil
 		}, bo()); err != nil {
@@ -112,12 +128,11 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			continue
 		}
 
-		// only prune rates older than current period
-		periodStart := now.With(time.Now()).BeginningOfHour()
-		if t.typ == api.TariffTypeSolar {
-			periodStart = beginningOfDay()
-		}
-		mergeRatesAfter(t.data, data, periodStart)
+		// Apply transformations once (time normalization + price adjustments)
+		processedRates := t.applyPriceAndTime(forecastValues)
+
+		// Update stored rates
+		mergeRatesAfter(t.data, processedRates, t.periodStart())
 
 		once.Do(func() { close(done) })
 	}

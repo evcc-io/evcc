@@ -583,6 +583,11 @@ func configureDatabase(conf globalconfig.DB) error {
 		return err
 	}
 
+	// Prune old solar forecast cache entries (older than 1 day)
+	if err := tariff.PruneOldCaches(24 * time.Hour); err != nil {
+		log.DEBUG.Printf("solar cache pruning failed: %v", err)
+	}
+
 	persistSettings := func() {
 		if err := settings.Persist(); err != nil {
 			log.ERROR.Println("cannot save settings:", err)
@@ -798,22 +803,16 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
-
 	props, err := customDevice(conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
+	// Route all tariff creation through the proxy
+	// This allows the proxy to control when solar tariffs are instantiated
+	instance, err := tariff.NewTariffProxy(conf.Type, props)
 	if err != nil {
-		if ce := new(util.ConfigError); errors.As(err, &ce) {
-			return nil, err
-		}
-
-		// wrap non-config tariff errors to prevent fatals
-		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
-		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+		return nil, err
 	}
 
 	return instance, nil

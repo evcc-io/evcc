@@ -71,3 +71,23 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 func beginningOfDay() time.Time {
 	return now.With(time.Now()).BeginningOfDay()
 }
+
+// hasValidSolarCoverage checks if solar forecast rates cover at least until end of day
+func hasValidSolarCoverage(rates api.Rates, currentTime time.Time) bool {
+	// Empty data is invalid for solar forecasts
+	if len(rates) == 0 {
+		return false
+	}
+
+	// Find the latest end time in the rates
+	var latestEnd time.Time
+	for _, r := range rates {
+		if r.End.After(latestEnd) {
+			latestEnd = r.End
+		}
+	}
+
+	// Check if rates extend to at least end of today
+	endOfToday := now.With(currentTime).EndOfDay()
+	return latestEnd.After(endOfToday) || latestEnd.Equal(endOfToday)
+}
