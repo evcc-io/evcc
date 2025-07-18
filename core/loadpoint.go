@@ -251,8 +251,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
-		lp.phasesConfigured = 3
-		lp.phases = 3
+		phases := lp.getChargerPhysicalPhases()
+		if phases == 0 {
+			phases = 3 // default to 3p if no charger phases are known
+		}
+
+		lp.phasesConfigured = phases
+		lp.phases = phases
 	}
 
 	return lp, nil
