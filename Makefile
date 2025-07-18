@@ -80,7 +80,8 @@ release::
 	goreleaser --clean
 
 openapi::
-	cd server/mcp && go run github.com/evcc-io/evcc/server/mcp/openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
+	go test github.com/evcc-io/evcc/server --run TestOpenAPI
+	go generate ./server/mcp/...
 
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)

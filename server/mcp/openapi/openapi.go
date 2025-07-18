@@ -3,19 +3,14 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"net/url"
 	"os"
 
+	"github.com/evcc-io/evcc/server"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
 func main() {
-	uri, err := url.Parse(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	doc, err := openapi3.NewLoader().LoadFromURI(uri)
+	doc, err := openapi3.NewLoader().LoadFromData(server.OpenAPI)
 	if err != nil {
 		log.Fatal("failed to load OpenAPI spec:", err)
 	}

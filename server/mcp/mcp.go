@@ -18,6 +18,8 @@ import (
 //go:embed openapi.json
 var spec []byte
 
+//go:generate go run github.com/evcc-io/evcc/server/mcp/openapi ../openapi.yaml
+
 func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, error) {
 	log := util.NewLogger("mcp")
 	log.INFO.Printf("MCP listening at %s", baseUrl+basePath)
@@ -45,11 +47,11 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
 		TagFilter: []string{
-			"General",
-			"Home Battery",
-			"Loadpoints",
-			"Tariffs",
-			"Vehicles",
+			"general",
+			"battery",
+			"loadpoints",
+			"tariffs",
+			"vehicles",
 		},
 		RequestHandler: requestHandler(host),
 	})
@@ -81,11 +83,12 @@ func nameFormat(log *util.Logger) func(name string) string {
 		parts := strings.Split(name, "_")
 		res := strings.Join(parts[:len(parts)-1], "-") + "-" + parts[len(parts)-1]
 
-		res = strings.TrimPrefix(res, "/")
 		res = strings.ReplaceAll(res, "/", "-")
 		res = strings.ReplaceAll(res, "{", "_")
 		res = strings.ReplaceAll(res, "}", "")
 		res = strings.ReplaceAll(res, "-_", "_")
+
+		res = strings.TrimLeft(res, "/-_")
 		res = strings.ToLower(res)
 
 		// Claude Code has a 64 character limit for tool names
