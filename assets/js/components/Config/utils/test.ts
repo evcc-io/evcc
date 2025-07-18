@@ -33,7 +33,7 @@ export const performTest = async (
   state.errorLine = null;
   try {
     const res = await api();
-    for (const [key, value] of Object.entries(res.data.result)) {
+    for (const [key, value] of Object.entries(res.data)) {
       const { error } = value as { error?: string };
       if (error) {
         state.isError = true;
@@ -42,7 +42,7 @@ export const performTest = async (
       }
     }
     state.isSuccess = true;
-    state.result = res.data.result;
+    state.result = res.data;
     return true;
   } catch (e: any) {
     state.isError = true;

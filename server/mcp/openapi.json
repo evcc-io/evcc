@@ -182,15 +182,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge\n",
-                  "maximum": 3,
-                  "minimum": 0,
-                  "type": "integer"
-                }
-              },
-              "type": "object"
+              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge\n",
+              "maximum": 3,
+              "minimum": 0,
+              "type": "integer"
             }
           }
         },
@@ -203,12 +198,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "boolean"
-                }
-              },
-              "type": "object"
+              "type": "boolean"
             }
           }
         },
@@ -228,12 +218,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "integer"
-                }
-              },
-              "type": "object"
+              "type": "integer"
             }
           }
         },
@@ -243,12 +228,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "integer"
-                }
-              },
-              "type": "object"
+              "type": "integer"
             }
           }
         },
@@ -258,13 +238,8 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "description": "Value is always null",
-                  "nullable": true,
-                  "type": "object"
-                }
-              },
+              "description": "Value is always null",
+              "nullable": true,
               "type": "object"
             }
           }
@@ -275,12 +250,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "number"
-                }
-              },
-              "type": "object"
+              "type": "number"
             }
           }
         },
@@ -290,12 +260,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "$ref": "#/components/schemas/PlanRates"
-                }
-              },
-              "type": "object"
+              "$ref": "#/components/schemas/PlanRates"
             }
           }
         },
@@ -306,13 +271,8 @@
           "application/json": {
             "schema": {
               "properties": {
-                "result": {
-                  "properties": {
-                    "soc": {
-                      "$ref": "#/components/schemas/Soc"
-                    }
-                  },
-                  "type": "object"
+                "soc": {
+                  "$ref": "#/components/schemas/Soc"
                 }
               },
               "type": "object"
@@ -1172,12 +1132,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/Mode"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/Mode"
                 }
               }
             },
@@ -1228,27 +1183,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "allOf": [
-                        {
-                          "properties": {
-                            "planId": {
-                              "$ref": "#/components/schemas/Id"
-                            },
-                            "precondition": {
-                              "$ref": "#/components/schemas/Precondition"
-                            }
-                          },
-                          "type": "object"
+                  "allOf": [
+                    {
+                      "properties": {
+                        "planId": {
+                          "$ref": "#/components/schemas/Id"
                         },
-                        {
-                          "$ref": "#/components/schemas/PlanRates"
+                        "precondition": {
+                          "$ref": "#/components/schemas/Precondition"
                         }
-                      ]
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PlanRates"
                     }
-                  },
-                  "type": "object"
+                  ]
                 }
               }
             },
@@ -1299,12 +1249,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/StaticEnergyPlan"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/StaticEnergyPlan"
                 }
               }
             },
@@ -1532,13 +1477,8 @@
               "application/json": {
                 "schema": {
                   "properties": {
-                    "result": {
-                      "properties": {
-                        "vehicle": {
-                          "$ref": "#/components/schemas/VehicleTitle"
-                        }
-                      },
-                      "type": "object"
+                    "vehicle": {
+                      "$ref": "#/components/schemas/VehicleTitle"
                     }
                   },
                   "type": "object"
@@ -1691,12 +1631,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/ChargingSessions"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/ChargingSessions"
                 }
               },
               "text/csv": {
@@ -1813,12 +1748,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/State"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/State"
                 }
               }
             },
@@ -1867,15 +1797,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array"
-                    }
+                  "items": {
+                    "type": "string"
                   },
-                  "type": "object"
+                  "type": "array"
                 }
               },
               "text/plain": {
@@ -1911,12 +1836,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/LogAreas"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/LogAreas"
                 }
               }
             },
@@ -1986,13 +1906,8 @@
               "application/json": {
                 "schema": {
                   "properties": {
-                    "result": {
-                      "properties": {
-                        "rates": {
-                          "$ref": "#/components/schemas/Rates"
-                        }
-                      },
-                      "type": "object"
+                    "rates": {
+                      "$ref": "#/components/schemas/Rates"
                     }
                   },
                   "type": "object"
@@ -2078,12 +1993,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/RepeatingPlans"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/RepeatingPlans"
                 }
               }
             },
@@ -2141,12 +2051,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/StaticSocPlan"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/StaticSocPlan"
                 }
               }
             },

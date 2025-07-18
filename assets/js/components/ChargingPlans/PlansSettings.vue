@@ -232,7 +232,7 @@ export default defineComponent({
 		async updateActivePlan(): Promise<void> {
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
-				this.plan = res?.data.result ?? ({} as PlanWrapper);
+				this.plan = res?.data ?? ({} as PlanWrapper);
 				this.nextPlanId = this.plan.planId;
 			} catch (e) {
 				console.error(e);
@@ -271,7 +271,7 @@ export default defineComponent({
 					params,
 				})) as PlanResponse;
 				if (res.status === 404) {
-					return { data: { result: {} as PlanWrapper } } as PlanResponse;
+					return { data: {} } as PlanResponse;
 				}
 				return res;
 			} catch (e) {
@@ -322,7 +322,7 @@ export default defineComponent({
 						precondition,
 					});
 				}
-				this.plan = planRes?.data.result ?? ({} as PlanWrapper);
+				this.plan = planRes?.data ?? ({} as PlanWrapper);
 			} catch (e) {
 				console.error(e);
 			}

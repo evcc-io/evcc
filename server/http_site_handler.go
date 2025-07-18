@@ -81,14 +81,10 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
-func jsonWrite(w http.ResponseWriter, content interface{}) {
-	if err := json.NewEncoder(w).Encode(content); err != nil {
+func jsonWrite(w http.ResponseWriter, data interface{}) {
+	if err := json.NewEncoder(w).Encode(data); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
 	}
-}
-
-func jsonResult(w http.ResponseWriter, res interface{}) {
-	jsonWrite(w, map[string]interface{}{"result": res})
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
@@ -129,7 +125,7 @@ func handler[T any](conv func(string) (T, error), set func(T) error, get func() 
 			return
 		}
 
-		jsonResult(w, get())
+		jsonWrite(w, get())
 	}
 }
 
@@ -175,7 +171,7 @@ func durationHandler(set func(time.Duration) error, get func() time.Duration) ht
 // getHandler returns api results
 func getHandler[T any](get func() T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		jsonResult(w, get())
+		jsonWrite(w, get())
 	}
 }
 
@@ -199,7 +195,7 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 			setLimit(lp, val)
 		}
 
-		jsonResult(w, val)
+		jsonWrite(w, val)
 	}
 }
 
@@ -221,7 +217,7 @@ func updateBatteryMode(site site.API) http.HandlerFunc {
 
 		site.SetBatteryModeExternal(val)
 
-		jsonResult(w, site.GetBatteryModeExternal())
+		jsonWrite(w, site.GetBatteryModeExternal())
 	}
 }
 
@@ -258,7 +254,7 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 			return
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -306,7 +302,7 @@ func tariffHandler(site site.API) http.HandlerFunc {
 			Rates: rates,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -318,12 +314,12 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 }
 
 func logAreasHandler(w http.ResponseWriter, r *http.Request) {
-	jsonResult(w, logstash.Areas())
+	jsonWrite(w, logstash.Areas())
 }
 
 func clearCacheHandler(w http.ResponseWriter, r *http.Request) {
 	util.ResetCached()
-	jsonResult(w, "OK")
+	jsonWrite(w, "OK")
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {
@@ -351,7 +347,7 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, log)
+	jsonWrite(w, log)
 }
 
 // adminPasswordValid validates the admin password and returns true if valid
