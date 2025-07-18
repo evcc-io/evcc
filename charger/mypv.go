@@ -217,7 +217,6 @@ func (wb *MyPv) Enabled() (bool, error) {
 
 	// fallback to cached value as last resort
 	return wb.enabled, fmt.Errorf("unknown operation state: %d", s)
-
 }
 
 func (wb *MyPv) setPower(power uint16) error {
