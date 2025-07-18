@@ -79,7 +79,14 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 
 	p.createInstance()
 
-	return p.tariff.Rates()
+	res, err := p.tariff.Rates()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO cache the result
+
+	return res, nil
 }
 
 // Type returns the tariff type
