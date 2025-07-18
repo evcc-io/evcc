@@ -1041,15 +1041,14 @@ components:
       type: integer
       example: 60
     HourMinuteTime:
-      description: Time in `HOURS:MINUTES` format
+      description: Time in `HH:MM` format
       type: string
       pattern: "[0-1][0-9]:[0-5][0-9]"
       format: HH:MM
       example: 12:30
     IANATimeZone:
-      description: "Timezone in IANA format - See Wikipedia"
+      description: Timezone in IANA format
       externalDocs:
-        description: See Wikipedia
         url: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
       type: string
       example: Europe/Berlin
