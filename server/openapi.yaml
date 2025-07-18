@@ -1321,7 +1321,7 @@ components:
         $ref: "#/components/schemas/VehicleName"
     current:
       name: current
-      description: Electric current in amps
+      description: Electric current in A
       in: path
       required: true
       schema:
