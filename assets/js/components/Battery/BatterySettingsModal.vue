@@ -247,7 +247,7 @@
 			:current-limit="batteryGridChargeLimit"
 			:smart-cost-type="smartCostType"
 			:currency="currency"
-			:tariff="forecast?.grid"
+			:tariff="gridChargeTariff"
 			:possible="gridChargePossible"
 		/>
 	</GenericModal>
@@ -314,6 +314,12 @@ export default defineComponent({
 		},
 		gridChargePossible() {
 			return this.controllable && this.isModalVisible && this.smartCostAvailable;
+		},
+		gridChargeTariff() {
+			if (this.smartCostType === SMART_COST_TYPE.CO2) {
+				return this.forecast?.co2;
+			}
+			return this.forecast?.grid;
 		},
 		bufferOptions() {
 			const options = [];
