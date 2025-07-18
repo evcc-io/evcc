@@ -49,7 +49,7 @@ const (
 	elwaRegTempLimit      = 1002
 	elwaRegStatus         = 1003
 	elwaRegLoadState      = 1059
-	elwaRegPower          = 1082
+	elwaRegPower          = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 	elwaRegOperationState = 1077
 )
 
@@ -201,23 +201,25 @@ func (wb *MyPv) Enabled() (bool, error) {
 		return false, err
 	}
 
-	switch binary.BigEndian.Uint16(b) {
+	var s = binary.BigEndian.Uint16(b)
+	switch s {
 	case
 		1, // heating PV excess
 		2: // boost backup
-		wb.enabled = true
-		return wb.enabled, nil
+		wb.log.DEBUG.Println("charger enabled:", "operation state", s)
+		return true, nil
 	case
 		0, // standby
 		3, // set temperature reached
 		4, // no control signal
 		5: // red cross flashes
-		wb.enabled = false
-		return wb.enabled, nil
-	default:
-		wb.enabled = false
-		return wb.enabled, fmt.Errorf("unknown operation state: %d", binary.BigEndian.Uint16(b))
+		wb.log.DEBUG.Println("charger disabled:", "operation state", s)
+		return false, nil
 	}
+
+	// fallback to cached value as last resort
+	return wb.enabled, fmt.Errorf("unknown operation state: %d", s)
+
 }
 
 func (wb *MyPv) setPower(power uint16) error {
