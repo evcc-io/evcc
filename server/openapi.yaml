@@ -94,8 +94,8 @@ paths:
               schema:
                 type: string
                 enum:
-                  - true
-                  - false
+                  - "true"
+                  - "false"
   /batterydischargecontrol/{enable}:
     post:
       summary: Control battery-discharge
@@ -1093,14 +1093,13 @@ components:
       description: "Charging mode."
       type: string
       enum:
-        - off
-        - now
-        - minpv
-        - pv
+        - "off"
+        - "now"
+        - "minpv"
+        - "pv"
     Password:
       description: Admin password
       type: string
-      example: passWord1234!
     Phases:
       description: "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)"
       type: string
@@ -1369,10 +1368,10 @@ components:
       schema:
         type: string
         enum:
-          - true
-          - false
-          - 1
-          - 0
+          - "true"
+          - "false"
+          - "1"
+          - "0"
   responses:
     NanoSecondsResult:
       description: Success - Number result - Unit is **nanoseconds**
