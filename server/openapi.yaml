@@ -706,7 +706,7 @@ paths:
   /smartcostlimit:
     delete:
       summary: Remove smart charging cost limit for all loadpoints.
-      description: "Conveniance method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint."
+      description: "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint."
       tags:
         - loadpoints
       responses:
