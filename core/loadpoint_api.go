@@ -265,6 +265,10 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
+	if physical := lp.getChargerPhysicalPhases(); physical != 0 && phases > physical {
+		return fmt.Errorf("cannot configure more phases than physically connected: %d > %d", phases, physical)
+	}
+
 	// set new default
 	lp.log.DEBUG.Println("set phases:", phases)
 
