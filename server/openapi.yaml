@@ -432,39 +432,32 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/PlanRatesResult"
-  /loadpoints/{id}/plan/static/preview/{type}/{goal}/{timestamp}:
+  /loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}:
     get:
-      summary: Preview of a charging plan
-      description: "Simulate charging plan and return the result. Does not alter the actual charging plan."
+      summary: Simulate soc-based charging plan
+      description: "Simulate charging plan based on SoC goal. Does not alter the actual charging plan."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/plans
       tags:
         - loadpoints
       parameters:
         - $ref: "#/components/parameters/id"
-        - name: goal
-          in: path
-          description: Energy or SoC to reach.
-          required: true
-          examples:
-            socAvailable:
-              value: 80
-              summary: If SoC is available => specify SoC in %
-            socNotAvailable:
-              value: 25.5
-              summary: If SoC is not available => specify energy in kWh
-          schema:
-            anyOf:
-              - $ref: "#/components/schemas/Soc"
-              - $ref: "#/components/schemas/Energy"
-        - name: type
-          in: path
-          required: true
-          schema:
-            type: string
-            enum:
-              - soc
-              - energy
+        - $ref: "#/components/parameters/soc"
+        - $ref: "#/components/parameters/timestamp"
+      responses:
+        200:
+          $ref: "#/components/responses/PlanRatesResult"
+  /loadpoints/{id}/plan/static/preview/energy/{energy}/{timestamp}:
+    get:
+      summary: Simulate energy-based charging plan
+      description: "Simulate charging plan based on energy goal. Does not alter the actual charging plan."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/plans
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/energy"
         - $ref: "#/components/parameters/timestamp"
       responses:
         200:
@@ -1053,7 +1046,7 @@ components:
       type: string
       example: Europe/Berlin
     Id:
-      description: Index starting at 1.
+      description: Loadpoint index starting at 1.
       type: integer
       example: 1
       minimum: 1
@@ -1237,7 +1230,7 @@ components:
   parameters:
     id:
       name: id
-      description: The index. Starts with 1.
+      description: Loadpoint index starting at 1
       in: path
       required: true
       schema:
