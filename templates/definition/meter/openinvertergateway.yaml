@@ -1,0 +1,62 @@
+template: openinvertergateway
+products:
+  - brand: Growatt
+    description:
+      generic: ShineWiFi-S, ShineWiFi-X and custom-built sticks
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: maxacpower
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/status
+  {{- end }}
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .ACPowerToUserTotal
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .ACPowerToGridTotal
+      scale: -1
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .EnergyToUserTotal
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .InputPower
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .PVEnergyTotal
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: calc
+    add:
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .DischargePower
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .ChargePower
+      scale: -1
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .DischargeEnergyTotal
+  soc:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .SOC
+  {{- end }}
