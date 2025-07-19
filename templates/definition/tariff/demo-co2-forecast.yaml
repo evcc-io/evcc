@@ -15,15 +15,18 @@ params:
     unit: g/kWh
     default: 350
     description:
-      en: Average CO₂ emissions (g/kWh)
-      de: Durchschnittliche CO₂-Emissionen (g/kWh)
+      en: Average CO₂ emissions
+      de: Durchschnittliche CO₂-Emissionen
     help:
   - name: variation
     type: float
     default: 0.4
     description:
-      en: Daily variation factor (0.4 = ±40%)
-      de: Täglicher Variationsfaktor (0.4 = ±40%)
+      en: Variation factor
+      de: Variationsfaktor
+    help:
+      en: Variation factor to simulate daily fluctuations (0.4 = 40%)
+      de: Variationsfaktor zur Simulation täglicher Schwankungen (0.4 = 40%)
   - name: interval
     default: 1h
     advanced: true
