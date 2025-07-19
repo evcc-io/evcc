@@ -13,5 +13,5 @@ func (t *proxyError) Rates() (api.Rates, error) {
 }
 
 func (t *proxyError) Type() api.TariffType {
-	return 0
+	return 0 // unknown
 }

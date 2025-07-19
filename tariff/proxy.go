@@ -2,17 +2,17 @@ package tariff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 )
 
 // CachingProxy wraps a tariff with caching
 type CachingProxy struct {
-	log *util.Logger
-	mu  sync.Mutex
+	// log *util.Logger
+	mu sync.Mutex
 
 	ctx    context.Context
 	typ    string
@@ -23,21 +23,20 @@ type CachingProxy struct {
 
 var _ api.Tariff = (*CachingProxy)(nil)
 
-// NewCachingProxy creates a proxy that controls tariff instantiation and caching
-func NewCachingProxy(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
-	actualTyp := typ
-	if typ == "template" {
-		if template, ok := other["template"].(string); ok {
-			actualTyp = template
-		}
-	}
+// NewCachedFromConfig creates a proxy that controls tariff instantiation and caching
+func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
+	// actualTyp := typ
+	// if typ == "template" {
+	// 	if template, ok := other["template"].(string); ok {
+	// 		actualTyp = template
+	// 	}
+	// }
 
 	// cache, hash := NewSolarCacheManager(actualTyp, other)
-
-	log := util.NewLogger(fmt.Sprintf("%s-%s", actualTyp, "hash"))
+	// log := util.NewLogger(fmt.Sprintf("%s-%s", actualTyp, "hash"))
 
 	proxy := &CachingProxy{
-		log:    log,
+		// log:    log,
 		ctx:    ctx,
 		typ:    typ,
 		config: other,
@@ -69,24 +68,22 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.tariff != nil {
-		return p.tariff.Rates()
-	}
+	if p.tariff == nil {
+		if res, err := p.getCache(); err == nil {
+			return res.rates, nil
+		}
 
-	if true { // TODO get from cache
-		return api.Rates{}, nil
+		p.createInstance()
 	}
-
-	p.createInstance()
 
 	res, err := p.tariff.Rates()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO cache the result
+	err = p.putCache(res)
 
-	return res, nil
+	return res, err
 }
 
 // Type returns the tariff type
@@ -94,15 +91,26 @@ func (p *CachingProxy) Type() api.TariffType {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.tariff != nil {
-		return p.tariff.Type()
-	}
+	if p.tariff == nil {
+		if res, err := p.getCache(); err == nil {
+			return res.typ
+		}
 
-	if true { // TODO get from cache
-		return 0
+		p.createInstance()
 	}
-
-	p.createInstance()
 
 	return p.tariff.Type()
+}
+
+func (p *CachingProxy) getCache() (*cached, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (p *CachingProxy) putCache(rates api.Rates) error {
+	_ = cached{
+		typ:   p.Type(),
+		rates: rates,
+	}
+
+	return errors.New("not implemented")
 }
