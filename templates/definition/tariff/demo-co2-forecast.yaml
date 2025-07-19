@@ -1,0 +1,90 @@
+template: demo-co2-forecast
+products:
+  - description:
+      de: Demo CO₂ Vorhersage
+      en: Demo CO₂ Forecast
+requirements:
+  description:
+    de: Zu Demonstrationszwecken. Liefert CO₂-Intensitätsdaten basierend auf typischen mitteleuropäischen Sommerwerten.
+    en: For demonstration purposes. Provides CO₂ intensity data based on typical central european summer values.
+  evcc: ["skiptest"]
+group: co2
+params:
+  - name: base
+    type: float
+    unit: g/kWh
+    default: 350
+    description:
+      en: Average CO₂ emissions
+      de: Durchschnittliche CO₂-Emissionen
+    help:
+  - name: variation
+    type: float
+    default: 0.4
+    description:
+      en: Variation factor
+      de: Variationsfaktor
+    help:
+      en: Variation factor to simulate daily fluctuations (0.4 = 40%)
+      de: Variationsfaktor zur Simulation täglicher Schwankungen (0.4 = 40%)
+  - name: interval
+    default: 1h
+    advanced: true
+
+render: |
+  type: custom
+  tariff: co2
+  forecast:
+    source: js
+    script: |
+      // Generate CO₂ forecast for next 72 hours
+      // Based on summer grid patterns with high solar penetration
+      var now = new Date();
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      var rates = [];
+      var baseIntensity = parseFloat({{ .base }});
+      var variation = parseFloat({{ .variation }});
+
+      // Generate hourly rates for 3 days
+      for (var day = 0; day < 3; day++) {
+        for (var hour = 0; hour < 24; hour++) {
+          var time = new Date(start.getTime() + (day * 24 + hour) * 3600000);
+
+          // Base pattern: high in morning/evening, low at midday (inverse of solar)
+          var hourFactor = 1.0;
+
+          if (hour >= 0 && hour < 5) {
+            // Night: moderate CO₂ (base load, some coal/gas)
+            hourFactor = 1.0 + variation * 0.2;
+          } else if (hour >= 5 && hour < 9) {
+            // Morning peak: highest CO₂ (ramp up, low solar)
+            hourFactor = 1.0 + variation * 0.8;
+          } else if (hour >= 9 && hour < 11) {
+            // Late morning: decreasing CO₂ (increasing solar)
+            hourFactor = 1.0 + variation * 0.3;
+          } else if (hour >= 11 && hour < 15) {
+            // Midday: lowest CO₂ (peak solar)
+            hourFactor = 1.0 - variation * 0.7;
+          } else if (hour >= 15 && hour < 17) {
+            // Afternoon: increasing CO₂ (decreasing solar)
+            hourFactor = 1.0 - variation * 0.2;
+          } else if (hour >= 17 && hour < 21) {
+            // Evening peak: high CO₂ (high demand, low solar)
+            hourFactor = 1.0 + variation * 0.6;
+          } else {
+            // Late evening: moderate CO₂ (decreasing demand)
+            hourFactor = 1.0 + variation * 0.3;
+          }
+
+          var co2Value = baseIntensity * hourFactor;
+
+          rates.push({
+            start: time.toISOString(),
+            end: new Date(time.getTime() + 3600000).toISOString(),
+            value: Math.round(Math.max(0, co2Value))
+          });
+        }
+      }
+
+      JSON.stringify(rates);
+  interval: {{ .interval }}
