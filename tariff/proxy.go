@@ -14,26 +14,32 @@ import (
 
 // CachingProxy wraps a tariff with caching
 type CachingProxy struct {
-	log *util.Logger
-	mu  sync.Mutex
+	mu sync.Mutex
 
 	key    string
 	ctx    context.Context
 	typ    string
 	config map[string]any
 
-	tariff api.Tariff // Will be nil initially
+	tariff api.Tariff
 }
 
 var _ api.Tariff = (*CachingProxy)(nil)
 
 // NewCachedFromConfig creates a proxy that controls tariff instantiation and caching
 func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
+	tariffType := typ
+	if typ == "template" {
+		if template, ok := other["template"].(string); ok {
+			tariffType = template
+		}
+	}
+
 	p := &CachingProxy{
 		ctx:    ctx,
 		typ:    typ,
 		config: other,
-		key:    cacheKey(typ, other),
+		key:    tariffType + "-" + cacheKey(typ, other),
 	}
 
 	// not cached yet, create instance
@@ -45,16 +51,8 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 
 		p.tariff = tariff
 	} else {
-		actualTyp := typ
-		if typ == "template" {
-			if template, ok := other["template"].(string); ok {
-				actualTyp = template
-			}
-		}
-
 		log := util.NewLogger("tariff")
-		log.DEBUG.Printf("using %s cache %s (start: %s, end: %s)",
-			actualTyp, p.key,
+		log.DEBUG.Printf("using cache: %s (start: %s, end: %s)", p.key,
 			data.Rates[0].Start.Local(), data.Rates[len(data.Rates)-1].End.Local(),
 		)
 	}
@@ -126,8 +124,8 @@ func (p *CachingProxy) cacheGet() (*cached, error) {
 		return nil, err
 	}
 
-	// consider cache valid if it contains rates for today
-	until := now.With(time.Now()).EndOfDay().Add(time.Nanosecond) // add ns for half-closed interval
+	// consider cache valid if it contains rates for 24 hours
+	until := time.Now().Add(24 * time.Hour)
 
 	if !ratesValid(res.Rates, until) {
 		return nil, errors.New("not enough rates")

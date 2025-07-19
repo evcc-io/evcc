@@ -19,7 +19,7 @@ func cacheKey(typ string, other map[string]any) string {
 
 func cachePut(key string, typ api.TariffType, rates api.Rates) error {
 	return settings.SetJson(key, &cached{
-		Type:  api.TariffType(typ),
+		Type:  typ,
 		Rates: rates,
 	})
 }
