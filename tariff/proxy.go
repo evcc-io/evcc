@@ -2,18 +2,20 @@ package tariff
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 )
 
 // CachingProxy wraps a tariff with caching
 type CachingProxy struct {
-	// log *util.Logger
-	mu sync.Mutex
+	log *util.Logger
+	mu  sync.Mutex
 
 	key    string
 	ctx    context.Context
@@ -27,18 +29,7 @@ var _ api.Tariff = (*CachingProxy)(nil)
 
 // NewCachedFromConfig creates a proxy that controls tariff instantiation and caching
 func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
-	// actualTyp := typ
-	// if typ == "template" {
-	// 	if template, ok := other["template"].(string); ok {
-	// 		actualTyp = template
-	// 	}
-	// }
-
-	// cache, hash := NewSolarCacheManager(actualTyp, other)
-	// log := util.NewLogger(fmt.Sprintf("%s-%s", actualTyp, "hash"))
-
 	p := &CachingProxy{
-		// log:    log,
 		ctx:    ctx,
 		typ:    typ,
 		config: other,
@@ -46,13 +37,26 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	}
 
 	// not cached yet, create instance
-	if _, err := p.cacheGet(); err != nil {
+	if data, err := p.cacheGet(); err != nil {
 		tariff, err := NewFromConfig(ctx, typ, other)
 		if err != nil {
 			return nil, err
 		}
 
 		p.tariff = tariff
+	} else {
+		actualTyp := typ
+		if typ == "template" {
+			if template, ok := other["template"].(string); ok {
+				actualTyp = template
+			}
+		}
+
+		log := util.NewLogger("tariff")
+		log.DEBUG.Printf("using %s cache %s (start: %s, end: %s)",
+			actualTyp, p.key,
+			data.Rates[0].Start.Local(), data.Rates[len(data.Rates)-1].End.Local(),
+		)
 	}
 
 	return p, nil
@@ -86,7 +90,7 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 	}
 
 	if p.dynamicTariff() {
-		err = p.cachePut(res)
+		err = p.cachePut(p.tariff.Type(), res)
 	}
 
 	return res, err
@@ -126,16 +130,19 @@ func (p *CachingProxy) cacheGet() (*cached, error) {
 	until := now.With(time.Now()).EndOfDay().Add(time.Nanosecond) // add ns for half-closed interval
 
 	if !ratesValid(res.Rates, until) {
-		return res, nil
+		return nil, errors.New("not enough rates")
 	}
 
 	res.Rates = currentRates(res.Rates)
+	if len(res.Rates) == 0 {
+		return nil, errors.New("no current rates")
+	}
 
 	return res, nil
 }
 
-func (p *CachingProxy) cachePut(rates api.Rates) error {
-	return cachePut(p.key, p.Type(), rates)
+func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
+	return cachePut(p.key, typ, rates)
 }
 
 func ratesValid(rr api.Rates, until time.Time) bool {
