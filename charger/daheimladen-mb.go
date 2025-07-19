@@ -176,7 +176,8 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 4: // Charging (C)
 		enabled, err := wb.Enabled()
-		if !enabled {
+        currentPower, err := wb.CurrentPower()
+	    if !enabled && currentPower == 0 {
 			return api.StatusB, err
 		}
 		return api.StatusC, nil
