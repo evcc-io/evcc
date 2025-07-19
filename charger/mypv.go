@@ -209,16 +209,13 @@ func (wb *MyPv) Enabled() (bool, error) {
 		wb.log.DEBUG.Println("charger enabled:", "operation state", s)
 		return true, nil
 	case
-		0, // standby
-		3, // set temperature reached
-		4, // no control signal
-		5: // red cross flashes
+		0: // standby
 		wb.log.DEBUG.Println("charger disabled:", "operation state", s)
 		return false, nil
 	}
 
 	// fallback to cached value as last resort
-	return wb.enabled, fmt.Errorf("unknown operation state: %d", s)
+	return wb.enabled, fmt.Errorf("not evaluated operation state: %d", s)
 }
 
 func (wb *MyPv) setPower(power uint16) error {
