@@ -2,11 +2,12 @@ package tariff
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"slices"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/jinzhu/now"
 )
 
 // CachingProxy wraps a tariff with caching
@@ -14,6 +15,7 @@ type CachingProxy struct {
 	// log *util.Logger
 	mu sync.Mutex
 
+	key    string
 	ctx    context.Context
 	typ    string
 	config map[string]any
@@ -35,23 +37,25 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	// cache, hash := NewSolarCacheManager(actualTyp, other)
 	// log := util.NewLogger(fmt.Sprintf("%s-%s", actualTyp, "hash"))
 
-	proxy := &CachingProxy{
+	p := &CachingProxy{
 		// log:    log,
 		ctx:    ctx,
 		typ:    typ,
 		config: other,
+		key:    cacheKey(typ, other),
 	}
 
-	if false { // TODO no data
+	// not cached yet, create instance
+	if _, err := p.cacheGet(); err != nil {
 		tariff, err := NewFromConfig(ctx, typ, other)
 		if err != nil {
 			return nil, err
 		}
 
-		proxy.tariff = tariff
+		p.tariff = tariff
 	}
 
-	return proxy, nil
+	return p, nil
 }
 
 func (p *CachingProxy) createInstance() {
@@ -69,8 +73,8 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.getCache(); err == nil {
-			return res.rates, nil
+		if res, err := p.cacheGet(); err == nil {
+			return res.Rates, nil
 		}
 
 		p.createInstance()
@@ -81,7 +85,9 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 		return nil, err
 	}
 
-	err = p.putCache(res)
+	if p.dynamicTariff() {
+		err = p.cachePut(res)
+	}
 
 	return res, err
 }
@@ -92,8 +98,8 @@ func (p *CachingProxy) Type() api.TariffType {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.getCache(); err == nil {
-			return res.typ
+		if res, err := p.cacheGet(); err == nil {
+			return res.Type
 		}
 
 		p.createInstance()
@@ -102,15 +108,55 @@ func (p *CachingProxy) Type() api.TariffType {
 	return p.tariff.Type()
 }
 
-func (p *CachingProxy) getCache() (*cached, error) {
-	return nil, fmt.Errorf("not implemented")
+func (p *CachingProxy) dynamicTariff() bool {
+	return slices.Contains([]api.TariffType{
+		api.TariffTypePriceForecast,
+		api.TariffTypeCo2,
+		api.TariffTypeSolar,
+	}, p.tariff.Type())
 }
 
-func (p *CachingProxy) putCache(rates api.Rates) error {
-	_ = cached{
-		typ:   p.Type(),
-		rates: rates,
+func (p *CachingProxy) cacheGet() (*cached, error) {
+	res, err := cacheGet(p.key)
+	if err != nil {
+		return nil, err
 	}
 
-	return errors.New("not implemented")
+	// consider cache valid if it contains rates for today
+	until := now.With(time.Now()).EndOfDay().Add(time.Nanosecond) // add ns for half-closed interval
+
+	if !ratesValid(res.Rates, until) {
+		return res, nil
+	}
+
+	res.Rates = currentRates(res.Rates)
+
+	return res, nil
+}
+
+func (p *CachingProxy) cachePut(rates api.Rates) error {
+	return cachePut(p.key, p.Type(), rates)
+}
+
+func ratesValid(rr api.Rates, until time.Time) bool {
+	if len(rr) == 0 {
+		return false
+	}
+
+	rr.Sort()
+
+	return !rr[len(rr)-1].End.Before(until)
+}
+
+func currentRates(rr api.Rates) api.Rates {
+	res := make(api.Rates, 0, len(rr))
+	now := now.With(time.Now()).BeginningOfHour()
+
+	for _, r := range rr {
+		if !r.End.Before(now) {
+			res = append(res, r)
+		}
+	}
+
+	return res
 }
