@@ -215,7 +215,8 @@ func (wb *MyPv) Enabled() (bool, error) {
 	}
 
 	// fallback to cached value as last resort
-	return wb.enabled, fmt.Errorf("not evaluated operation state: %d", s)
+	wb.log.DEBUG.Println(fmt.Sprintf("fallback [enabled=%t]:", wb.enabled), "operation state", s)
+	return wb.enabled, nil
 }
 
 func (wb *MyPv) setPower(power uint16) error {
