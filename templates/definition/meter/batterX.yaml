@@ -49,7 +49,7 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
     jq: .["1121"].["1"]
-    scale: -1 # reverse direction: Positive = Charging; Negative = Discharching
+    scale: -1 # reverse direction: Positive = Charging; Negative = Discharging
   soc:
     source: http
     uri: http://{{ .host }}:{{ .port }}/api.php?get=currentstate
