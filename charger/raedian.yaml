@@ -1,0 +1,34 @@
+template: raedian
+products:
+  - brand: RAEDIAN
+    description:
+      generic: NEO AC Wallbox
+  - brand: RAEDIAN
+    description:
+      generic: NEX AC Wallbox
+capabilities: ["mA", "rfid", "1p3p", "currents", "voltages", "energy"] # Assuming all these are supported
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Unterstützung für RAEDIAN NEO und NEX AC Wallbox EV-Ladegeräte.
+      Die Wallbox muss über Modbus TCP erreichbar sein. Die Standard-Slave-ID ist 1.
+      Die Phasenumschaltung ist nur für die NEX AC Wallbox verfügbar und der Status "Set Charging Phase (in roadmap)" (Register 0x8102) sollte überprüft werden, um die volle Funktionalität sicherzustellen.
+      Gültiger Ladestrombereich für Mode 3 EV-Laden ist 6 Ampere bis 32 Ampere.
+    en: |
+      Support for RAEDIAN NEO and NEX AC Wallbox EV chargers.
+      The wallbox must be reachable via Modbus TCP. The default Slave ID is 1.
+      Phase switching is only available for the NEX AC Wallbox and the "Set Charging Phase (in roadmap)" (Register 0x8102) status should be checked for full functionality.
+      Valid charging current range for Mode 3 EV Charging is from 6 Ampere to 32 Ampere.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1 # Default Modbus Slave ID for Raedian
+  - name: welcomecharge
+    advanced: true
+render: |
+  type: raedian
+  {{- include "modbus" . }}
+  {{- if eq .welcomecharge "true" }}
+  features: ["welcomecharge"]
+  {{- end }}
