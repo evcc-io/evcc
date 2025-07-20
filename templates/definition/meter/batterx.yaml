@@ -13,7 +13,7 @@ params:
     default: 80
   - name: capacity
     advanced: true
-  - name: externalpv 
+  - name: externalpv
     description:
       de: |
         Benötigt bei ein weiterer Solarwechselrichter.
