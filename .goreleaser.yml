@@ -1,16 +1,22 @@
+version: 2
+
 dist: release
 release:
   github:
     owner: evcc-io
     name: evcc
+  mode: replace
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
+      - -X github.com/evcc-io/evcc/util.Version={{ .Version }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -26,17 +32,23 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+    overrides:
+      - goos: windows
+        goarch: amd64
+        flags:
+          - -trimpath
+          - -tags=release,timetzdata
 
 env:
   - CGO_ENABLED=0
 
 archives:
-  - builds:
+  - ids:
       - evcc
-    format: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - evcc.dist.yaml
     name_template: >-
@@ -49,7 +61,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
@@ -59,6 +71,8 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^build"
+      - "^Translations"
 
 nfpms:
   - id: default
@@ -67,12 +81,15 @@ nfpms:
 
     homepage: https://evcc.io
     description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
+    maintainer: info@evcc.io
     license: MIT
     vendor: evcc.io
 
     formats:
       - deb
+
+    dependencies:
+      - adduser
 
     contents:
       - src: ./packaging/init/evcc.service
@@ -85,13 +102,13 @@ nfpms:
       postremove: ./packaging/scripts/postremove.sh
 
 brews:
-  - tap:
+  - repository:
       owner: evcc-io
       name: homebrew-tap
     commit_author:
       name: andig
-      email: cpuidle@gmx.de
-    folder: Formula
+      email: info@evcc.io
+    directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"
     license: "MIT"

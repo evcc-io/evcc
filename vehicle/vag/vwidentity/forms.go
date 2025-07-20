@@ -3,7 +3,6 @@ package vwidentity
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -72,21 +71,26 @@ type CredentialParams struct {
 }
 
 func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return CredentialParams{}, err
+	}
+
+	return parseCredentials(string(b))
+}
+
+func parseCredentials(body string) (CredentialParams, error) {
+	// find js block
+	match := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?)[;<]`).FindAllStringSubmatch(body, -1)
+
+	// clean quotes
+	quotes1 := strings.ReplaceAll(match[0][1], `'`, `"`)
+	quotes2 := regexp.MustCompile(`\s(\w+)(?s)*:`).ReplaceAllString(quotes1, ` "$1":`)
+
+	// strip , }
+	tmpl := regexp.MustCompile(`(?s),\s+}`).ReplaceAllString(quotes2, "}")
+
 	var res CredentialParams
-
-	buf := new(strings.Builder)
-	if _, err := io.Copy(buf, r); err != nil {
-		return res, err
-	}
-
-	re := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?)[;<]`)
-	match := re.FindAllStringSubmatch(buf.String(), -1)
-
-	tmpl := strings.ReplaceAll(match[0][1], `'`, `"`)
-	for _, v := range []string{"templateModel", "currentLocale", "csrf_parameterName", "csrf_token", "userSession", "userId", "countryOfResidence", "baseUrl", "consentBaseUrl"} {
-		tmpl = strings.Replace(tmpl, v, fmt.Sprintf(`"%s"`, v), 1)
-	}
-
 	err := json.Unmarshal([]byte(tmpl), &res)
 
 	return res, err

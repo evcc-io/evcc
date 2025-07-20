@@ -1,0 +1,74 @@
+template: flobz
+products:
+  - description:
+      generic: PSA Car Controller
+group: generic
+requirements:
+  description:
+    generic: Remote Control of PSA car https://github.com/flobz/psa_car_controller
+params:
+  - name: url
+    example: http://192.0.2.2
+    required: true
+  - name: vin
+    required: true
+  - preset: vehicle-common
+  - name: host
+    deprecated: true
+  - name: port
+    deprecated: true
+  - name: wakeup_alt
+    description:
+      en: Alternative wakeup code
+      de: Alternativer Wakeup-Code
+    help:
+      de: Kann zu erhöhter Entladung der 12V-Batterie führen.
+      en: Can lead to increased discharge of the 12V battery.
+    default: false
+    advanced: true
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  soc:
+    {{- include "source" . | indent 2 }}
+    jq: .energy[0].level
+  status:
+    source: combined
+    plugged:
+      {{- include "source" . | indent 4 }}
+      jq: .energy[0].charging.plugged
+    charging:
+      {{- include "source" . | indent 4 }}
+      jq: .energy[0].charging.status == "InProgress"
+  range:
+    {{- include "source" . | indent 2 }}
+    jq: .energy[0].autonomy
+  odometer:
+    {{- include "source" . | indent 2 }}
+    jq: .timed_odometer.mileage
+  climater:
+    {{- include "source" . | indent 2 }}
+    jq: .preconditionning.air_conditioning.status != "Disabled"
+  wakeup:
+    source: http
+    {{- if .host }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
+    {{- else }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
+    {{- end }}
+    {{- else }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
+    {{- else }}
+    uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
+    {{- end }}
+    {{- end }} 
+  {{- define "source" }}
+  source: http
+  {{- if .host }}
+  uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- else }}
+  uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
+  {{- end }}
+  {{- end }}

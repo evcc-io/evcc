@@ -1,0 +1,15 @@
+template: smartevse
+products:
+  - brand: Edgetech
+    description:
+      generic: Smart EVSE
+capabilities: ["1p3p"]
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
+    id: 1
+render: |
+  type: smartevse
+  {{- include "modbus" . }}

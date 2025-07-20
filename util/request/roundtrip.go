@@ -60,13 +60,6 @@ func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 	return tripper
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // copy of http.drainBody
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == nil || b == http.NoBody {

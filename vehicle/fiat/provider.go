@@ -1,11 +1,14 @@
 package fiat
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const refreshTimeout = 2 * time.Minute
@@ -20,10 +23,10 @@ type Provider struct {
 
 func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (StatusResponse, error) {
+		statusG: util.Cached(func() (StatusResponse, error) {
 			return api.Status(vin)
 		}, cache),
-		locationG: provider.Cached(func() (LocationResponse, error) {
+		locationG: util.Cached(func() (LocationResponse, error) {
 			return api.Location(vin)
 		}, cache),
 		action: func(action, cmd string) (ActionResponse, error) {
@@ -34,7 +37,7 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 
 	// use pin for refreshing
 	if pin != "" {
-		impl.statusG = provider.Cached(func() (StatusResponse, error) {
+		impl.statusG = util.Cached(func() (StatusResponse, error) {
 			return impl.status(
 				func() (StatusResponse, error) { return api.Status(vin) },
 			)
@@ -48,6 +51,10 @@ func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	} else {
+		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
+			err = nil
+		}
 	}
 	return err
 }

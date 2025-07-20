@@ -194,24 +194,17 @@
         "deprecated": {
           "type": "boolean"
         },
-        "valuetype": {
+        "type": {
           "type": "string",
           "enum": [
             "string",
             "bool",
-            "number",
             "float",
             "int",
-            "stringlist",
+            "list",
             "chargemodes",
             "duration"
           ]
-        },
-        "validvalues": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         },
         "choice": {
           "type": "array",
@@ -288,14 +281,14 @@
         "default": {
           "minLength": 1
         },
-        "valuetype": {
+        "type": {
           "type": "string",
           "enum": [
             "string",
             "bool",
-            "number",
+            "int",
             "float",
-            "stringlist",
+            "list",
             "chargemodes",
             "duration"
           ]

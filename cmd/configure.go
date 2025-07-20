@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	_ "embed"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/cmd/configure"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // configureCmd represents the configure command

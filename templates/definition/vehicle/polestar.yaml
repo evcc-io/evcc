@@ -1,0 +1,12 @@
+template: polestar
+products:
+  - brand: Polestar
+requirements:
+  evcc: ["skiptest"]
+params:
+  - preset: vehicle-base
+  - name: vin
+    example: LPSVS...
+render: |
+  type: polestar
+  {{ include "vehicle-base" . }}

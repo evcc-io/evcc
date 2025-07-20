@@ -1,0 +1,32 @@
+template: solarman
+covers: ["deye"]
+products:
+  - brand: IGEN Tech
+    description:
+      generic: Solarman Logger
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: user
+    default: admin
+  - name: password
+    default: admin
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/status.html
+    auth: # basic authorization
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: webdata_now_p\s*=\s*\"(\d+)\"
+  energy:
+    source: http
+    uri: http://{{ .host }}/status.html
+    auth: # basic authorization
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: webdata_total_e\s*=\s*\"(\d+[.]\d+)\"

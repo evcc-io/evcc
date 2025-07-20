@@ -58,9 +58,9 @@ func (v *Identity) Login(user, password string) error {
 
 func (v *Identity) sessionCookie(user, password string) (string, error) {
 	data := url.Values{
-		"loginID":  []string{user},
-		"password": []string{password},
-		"apiKey":   []string{v.gigya.APIKey},
+		"loginID":  {user},
+		"password": {password},
+		"apiKey":   {v.gigya.APIKey},
 	}
 
 	var res gigyaResponse
@@ -76,8 +76,8 @@ func (v *Identity) sessionCookie(user, password string) (string, error) {
 
 func (v *Identity) personID(sessionCookie string) (string, error) {
 	data := url.Values{
-		"apiKey":      []string{v.gigya.APIKey},
-		"login_token": []string{sessionCookie},
+		"apiKey":      {v.gigya.APIKey},
+		"login_token": {sessionCookie},
 	}
 
 	var res gigyaResponse
@@ -89,10 +89,10 @@ func (v *Identity) personID(sessionCookie string) (string, error) {
 
 func (v *Identity) jwtToken(sessionCookie string) (string, error) {
 	data := url.Values{
-		"apiKey":      []string{v.gigya.APIKey},
-		"login_token": []string{sessionCookie},
-		"fields":      []string{"data.personId,data.gigyaDataCenter"},
-		"expiration":  []string{"900"},
+		"apiKey":      {v.gigya.APIKey},
+		"login_token": {sessionCookie},
+		"fields":      {"data.personId,data.gigyaDataCenter"},
+		"expiration":  {"900"},
 	}
 
 	var res gigyaResponse

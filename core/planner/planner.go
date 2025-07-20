@@ -1,13 +1,12 @@
 package planner
 
 import (
+	"slices"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/jinzhu/copier"
-	"golang.org/x/exp/slices"
 )
 
 // Planner plans a series of charging slots for a given (variable) tariff
@@ -18,12 +17,18 @@ type Planner struct {
 }
 
 // New creates a price planner
-func New(log *util.Logger, tariff api.Tariff) *Planner {
-	return &Planner{
+func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner {
+	p := &Planner{
 		log:    log,
 		clock:  clock.New(),
 		tariff: tariff,
 	}
+
+	for _, o := range opt {
+		o(p)
+	}
+
+	return p
 }
 
 // plan creates a lowest-cost plan or required duration.
@@ -39,12 +44,8 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			continue
 		}
 
-		var slot api.Rate
-		if err := copier.Copy(&slot, source); err != nil {
-			panic(err)
-		}
-
 		// adjust slot start and end
+		slot := source
 		if slot.Start.Before(t.clock.Now()) {
 			slot.Start = t.clock.Now()
 		}
@@ -81,21 +82,70 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 	return plan
 }
 
-func (t *Planner) Unit() string {
-	if t.tariff == nil {
-		return ""
+// Plan creates a continuous emergency charging plan
+func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
+	rates.Sort()
+
+	res := make(api.Rates, 0, len(rates)+2)
+	for _, r := range rates {
+		// slot before continuous plan
+		if !r.End.After(start) {
+			continue
+		}
+
+		// slot after continuous plan
+		if !r.Start.Before(end) {
+			continue
+		}
+
+		// adjust first slot
+		if r.Start.Before(start) && r.End.After(start) {
+			r.Start = start
+		}
+
+		// adjust last slot
+		if r.Start.Before(end) && r.End.After(end) {
+			r.End = end
+		}
+
+		res = append(res, r)
 	}
-	return t.tariff.Unit()
+
+	if len(res) == 0 {
+		res = append(res, api.Rate{
+			Start: start,
+			End:   end,
+		})
+	} else {
+		// prepend missing slot
+		if res[0].Start.After(start) {
+			res = slices.Insert(res, 0, api.Rate{
+				Start: start,
+				End:   res[0].Start,
+			})
+		}
+		// append missing slot
+		if last := res[len(res)-1]; last.End.Before(end) {
+			res = append(res, api.Rate{
+				Start: last.End,
+				End:   end,
+			})
+		}
+	}
+
+	return res
 }
 
-// Plan creates a lowest-cost charging plan, considering edge conditions
-func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (api.Rates, error) {
+func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time) api.Rates {
 	if t == nil || requiredDuration <= 0 {
-		return nil, nil
+		return nil
 	}
 
-	// calculate start time
 	latestStart := targetTime.Add(-requiredDuration)
+	if latestStart.Before(t.clock.Now()) {
+		latestStart = t.clock.Now()
+		targetTime = latestStart.Add(requiredDuration)
+	}
 
 	// simplePlan only considers time, but not cost
 	simplePlan := api.Rates{
@@ -107,19 +157,19 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (ap
 
 	// target charging without tariff or late start
 	if t.tariff == nil {
-		return simplePlan, nil
+		return simplePlan
 	}
 
 	rates, err := t.tariff.Rates()
 
 	// treat like normal target charging if we don't have rates
 	if len(rates) == 0 || err != nil {
-		return simplePlan, err
+		return simplePlan
 	}
 
 	// consume remaining time
-	if t.clock.Now().After(latestStart) || t.clock.Now().Equal(latestStart) {
-		requiredDuration = t.clock.Until(targetTime)
+	if t.clock.Until(targetTime) <= requiredDuration {
+		return t.continuousPlan(rates, latestStart, targetTime)
 	}
 
 	// rates are by default sorted by date, oldest to newest
@@ -128,12 +178,15 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (ap
 	// sort rates by price and time
 	slices.SortStableFunc(rates, sortByCost)
 
+	// for late start ensure that the last slot is the cheapest
+	rates, adjusted := splitPreconditionSlots(rates, precondition, targetTime)
+
 	// reduce planning horizon to available rates
 	if targetTime.After(last) {
 		// there is enough time for charging after end of current rates
 		durationAfterRates := targetTime.Sub(last)
 		if durationAfterRates >= requiredDuration {
-			return nil, nil
+			return nil
 		}
 
 		// need to use some of the available slots
@@ -144,5 +197,62 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (ap
 		requiredDuration -= durationAfterRates
 	}
 
-	return t.plan(rates, requiredDuration, targetTime), nil
+	// sort rates by price and time
+	slices.SortStableFunc(rates, sortByCost)
+
+	plan := t.plan(rates, requiredDuration, targetTime)
+
+	// correct plan slots to show original, non-adjusted prices
+	for i, r := range plan {
+		if rr, err := adjusted.At(r.Start); err == nil {
+			plan[i].Value = rr.Value
+		}
+	}
+
+	// sort plan by time
+	plan.Sort()
+
+	return plan
+}
+
+func splitPreconditionSlots(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+	var res, adjusted api.Rates
+
+	for _, r := range slices.Clone(rates) {
+		preCondStart := targetTime.Add(-precondition)
+
+		if !r.End.After(preCondStart) {
+			res = append(res, r)
+			continue
+		}
+
+		// split slot
+		if !r.Start.After(preCondStart) {
+			// keep the first part of the slot
+			res = append(res, api.Rate{
+				Start: r.Start,
+				End:   preCondStart,
+				Value: r.Value,
+			})
+
+			// adjust the second part of the slot
+			r = api.Rate{
+				Start: preCondStart,
+				End:   r.End,
+				Value: r.Value,
+			}
+		}
+
+		// set the value to 0 to include slot in the plan
+		res = append(res, api.Rate{
+			Start: r.Start,
+			End:   r.End,
+			Value: 0,
+		})
+
+		// keep a copy of the adjusted slot
+		adjusted = append(adjusted, r)
+	}
+
+	return res, adjusted
 }

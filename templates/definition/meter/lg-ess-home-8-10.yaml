@@ -3,25 +3,57 @@ products:
   - brand: LG
     description:
       generic: ESS Home 8/10
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: >
+      To use the battery control, a firmware version greater than or equal to 10.05.7430 / R2155 is required
+    de: >
+      Um die Batteriesteuerung zu nutzen, wird eine Firmwareversionen größer gleich 10.05.7430 / R2155 benötigt
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: registration
-    required: true
-    example: "DE200..."
+  - name: password
     help:
-      en: Registration number of the LG ESS HOME inverter.
-      de: Registriernummer des LG ESS HOME Wechselrichters.
+      en: >
+        User password, see https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
+        Alteratively, use registration id for admin login.
+      de: >
+        Benutzerpasswort, siehe https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
+        Alternativ kann die Registriernummer für Administratorlogin verwendet werden.
+  - name: registration
+    advanced: true
+    example: "DE200..."
+    description:
+      en: Registration ID
+      de: Registriernummer
+    help:
+      en: ID of the LG ESS HOME inverter.
+      de: Nummer des LG ESS HOME Wechselrichters.
   - name: capacity
     advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    advanced: true
+  - name: maxsoc
+    type: int
+    advanced: true
 render: |
-  type: lgess
+  type: lgess8
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}
-  password: {{ .registration }}
-  {{- if ne .capacity "" }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  {{- if .registration }}
+  registration: {{ .registration }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
   {{- end }}

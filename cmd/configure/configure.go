@@ -6,7 +6,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -18,18 +17,17 @@ type device struct {
 }
 
 type loadpoint struct {
-	Title             string // TODO Perspektivisch können wir was aus core wiederverwenden, für später
-	Charger           string
-	ChargeMeter       string
-	Vehicle           string
-	Mode              string
-	MinCurrent        int
-	MaxCurrent        int
-	Phases            int
-	ResetOnDisconnect string
+	Title       string // TODO Perspektivisch können wir was aus core wiederverwenden, für später
+	Charger     string
+	ChargeMeter string
+	Vehicle     string
+	Mode        string
+	MinCurrent  int
+	MaxCurrent  int
+	Phases      int
 }
 
-type config struct {
+type globalConfig struct {
 	Meters     []device
 	Chargers   []device
 	Vehicles   []device
@@ -49,7 +47,7 @@ type config struct {
 }
 
 type Configure struct {
-	config config
+	config globalConfig
 }
 
 // AddDevice adds a device reference of a specific category to the configuration
@@ -118,14 +116,10 @@ var configTmpl string
 
 // RenderConfiguration creates a yaml configuration
 func (c *Configure) RenderConfiguration() ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(configTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(configTmpl)
 	if err != nil {
 		panic(err)
 	}
-
-	// Assign random plant id. Don't use actual machine-id as file might
-	// be copied around to a different machine.
-	c.config.Plant = machine.RandomID()
 
 	out := new(bytes.Buffer)
 	err = tmpl.Execute(out, c.config)

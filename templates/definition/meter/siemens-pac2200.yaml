@@ -9,9 +9,9 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
-  type: modbus
-  model: pac2200
+  type: mbmd
   {{- include "modbus" . }}
+  model: pac2200
   power: Power
   energy: Import
   currents:

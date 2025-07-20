@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 var (
-	FormContent = "application/x-www-form-urlencoded"
-	JSONContent = "application/json"
+	FormContent  = "application/x-www-form-urlencoded"
+	JSONContent  = "application/json"
+	PlainContent = "text/plain"
+	XMLContent   = "application/xml"
 
 	// URLEncoding specifies application/x-www-form-urlencoded
 	URLEncoding = map[string]string{"Content-Type": FormContent}
@@ -23,6 +27,17 @@ var (
 	AcceptJSON = map[string]string{
 		"Accept": JSONContent,
 	}
+
+	// XMLEncoding specifies application/xml
+	XMLEncoding = map[string]string{
+		"Content-Type": XMLContent,
+		"Accept":       XMLContent,
+	}
+
+	// AcceptXML accepting application/xml
+	AcceptXML = map[string]string{
+		"Accept": XMLContent,
+	}
 )
 
 // StatusError indicates unsuccessful http response
@@ -30,27 +45,26 @@ type StatusError struct {
 	resp *http.Response
 }
 
-// NewStatusError create new StatusError for given response
-func NewStatusError(resp *http.Response) StatusError {
-	return StatusError{resp: resp}
+func NewStatusError(resp *http.Response) *StatusError {
+	return &StatusError{resp: resp}
 }
 
-func (e StatusError) Error() string {
+func (e *StatusError) Error() string {
 	return fmt.Sprintf("unexpected status: %d (%s)", e.resp.StatusCode, http.StatusText(e.resp.StatusCode))
 }
 
 // Response returns the response with the unexpected error
-func (e StatusError) Response() *http.Response {
+func (e *StatusError) Response() *http.Response {
 	return e.resp
 }
 
 // StatusCode returns the response's status code
-func (e StatusError) StatusCode() int {
+func (e *StatusError) StatusCode() int {
 	return e.resp.StatusCode
 }
 
 // HasStatus returns true if the response's status code matches any of the given codes
-func (e StatusError) HasStatus(codes ...int) bool {
+func (e *StatusError) HasStatus(codes ...int) bool {
 	for _, code := range codes {
 		if e.resp.StatusCode == code {
 			return true
@@ -62,7 +76,7 @@ func (e StatusError) HasStatus(codes ...int) bool {
 // ResponseError turns an HTTP status code into an error
 func ResponseError(resp *http.Response) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return StatusError{resp: resp}
+		return &StatusError{resp: resp}
 	}
 	return nil
 }
@@ -77,7 +91,7 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return b, StatusError{resp: resp}
+		return b, backoff.Permanent(&StatusError{resp: resp})
 	}
 
 	return b, nil

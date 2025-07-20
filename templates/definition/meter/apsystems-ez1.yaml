@@ -1,0 +1,21 @@
+template: apsystems-ez1
+products:
+  - brand: APsystems
+    description:
+      generic: EZ1
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:8050/getOutputData
+    jq: .data.p1+.data.p2
+  energy:
+    source: http
+    uri: http://{{ .host }}:8050/getOutputData
+    jq: .data.te1+.data.te2
+  {{- end }}

@@ -3,6 +3,7 @@ package porsche
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -27,7 +28,7 @@ func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAP
 			Base:   v.Client.Transport,
 		},
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"apikey": EmobilityOAuth2Config.ClientID,
+			"apikey": ClientID,
 		}),
 	}
 
@@ -36,8 +37,12 @@ func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAP
 
 func (v *EmobilityAPI) Capabilities(vin string) (CapabilitiesResponse, error) {
 	var res CapabilitiesResponse
-	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
-	err := v.GetJSON(uri, &res)
+	uri := fmt.Sprintf("%s/service-vehicle/vcs/capabilities/%s", ApiURI, vin)
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"x-vrs-url-country":  "de",
+		"x-vrs-url-language": "de_DE",
+	})
+	err := v.DoJSON(req, &res)
 	return res, err
 }
 
@@ -45,7 +50,7 @@ func (v *EmobilityAPI) Capabilities(vin string) (CapabilitiesResponse, error) {
 func (v *EmobilityAPI) Status(vin, model string) (EmobilityResponse, error) {
 	var res EmobilityResponse
 
-	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", model, vin)
+	uri := fmt.Sprintf("%s/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", ApiURI, model, vin)
 	err := v.GetJSON(uri, &res)
 	if err != nil && res.PcckErrorMessage != "" {
 		err = errors.New(res.PcckErrorMessage)

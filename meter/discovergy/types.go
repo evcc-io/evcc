@@ -1,6 +1,6 @@
 package discovergy
 
-const API = "https://api.discovergy.com/public/v1"
+const API = "https://api.inexogy.com/public/v1"
 
 type Meter struct {
 	MeterID          string `json:"meterId"`

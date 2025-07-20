@@ -2,6 +2,13 @@ template: openems
 products:
   - brand: OpenEMS
   - brand: FENECON
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich.
+    en: |
+      A commercial license is required for FEMS FENECON systems for active battery control.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -11,6 +18,22 @@ params:
     mask: true
     default: user
     advanced: true
+  - name: battery
+    example: ess0
+    description:
+      de: Steuerbare Batterie Komponente
+      en: Controllable battery component
+    usages: ["battery"]
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    help:
+      de: abgestimmt auf das API-Timeout
+      en: adjusted to the API timeout
+    usages: ["battery"]
+    advanced: true
+  - name: maxacpower
   - name: capacity
     advanced: true
 render: |
@@ -30,7 +53,10 @@ render: |
       type: basic
       user: x
       password: {{ .password }}
-    jq: .value
+    jq: (.value // 0)
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
   {{- if eq .usage "battery" }}
   soc:
     source: http
@@ -39,8 +65,43 @@ render: |
       type: basic
       user: x
       password: {{ .password }}
-    jq: .value
-  {{- if ne .capacity "" }}
-  capacity: {{ .capacity }} # kWh
+    jq: (.value // 0)
+  {{- if .battery }}
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    reset: 1
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: http
+          uri: http://{{ .host }}/rest/channel/{{ .battery }}/SetActivePowerLessOrEquals
+          auth:
+            type: basic
+            user: x
+            password: {{ .password }}
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"value":0}'
+      - case: 2 # hold
+        set:
+          source: http
+          uri: http://{{ .host }}/rest/channel/{{ .battery }}/SetActivePowerLessOrEquals
+          auth:
+            type: basic
+            user: x
+            password: {{ .password }}
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"value":0}'
+      - case: 3 # charge (not implemented)
+        set:
+          source: error
+          error: ErrNotAvailable
   {{- end }}
+  capacity: {{ .capacity }} # kWh
   {{- end }}

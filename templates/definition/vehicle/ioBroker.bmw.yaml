@@ -1,0 +1,87 @@
+template: ioBroker.bmw
+products:
+  - description:
+      generic: ioBroker.bmw
+group: generic
+requirements:
+  description:
+    en: ioBroker BMW Adapter. Requires ioBroker.bmw and ioBroker.simple-api
+    de: ioBroker BMW Adapter. Benötigt ioBroker.bmw und ioBroker.simple-api
+params:
+  - preset: vehicle-common
+  - name: vin
+    required: true
+    example: WBA8E9G50GM091234
+    help:
+      en: BMW VehicleIdentificationNumber
+      de: BMW Fahrzeugidentifikationsnummer
+  - name: uri
+    required: true
+    description:
+      generic: ioBroker URL
+    help:
+      en: including ioBroker.simple-api Port
+      de: einschliesslich ioBroker.simple-api Port
+  - name: id
+    default: 0
+    type: int
+    description:
+      de: Instanz-ID
+      en: Instance ID
+    advanced: true
+  - preset: vehicle-features
+render: |
+  type: custom
+  {{ include "vehicle-common" . }}
+  soc:
+    source: valid
+    valid:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
+      cache: 10s
+    value:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingLevelPercent
+  limitsoc:
+    source: valid
+    valid:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
+      cache: 10s
+    value:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingTarget
+  status:
+    source: valid
+    valid:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
+      cache: 10s
+    value:
+      source: combined
+      plugged:
+        source: http
+        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.isChargerConnected
+      charging:
+        source: http
+        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingStatus
+        jq: '. == "CHARGING"'
+  range:
+    source: valid
+    valid:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
+      cache: 10s
+    value:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.range
+  odometer:
+    source: valid
+    valid:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
+      cache: 10s
+    value:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.currentMileage
+  {{ include "vehicle-features" . }}

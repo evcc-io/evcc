@@ -26,7 +26,7 @@ render: |
       address: 34 # 0x0022 sum of forward energy; unsigned, value=data/800, unit: kWh
       type: holding
       decode: uint32
-    scale: 0.08
+    scale: 0.00125
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -21,7 +20,7 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 		expiry: expiry,
 	}
 
-	v.statusG = provider.Cached(func() (StatusResponse, error) {
+	v.statusG = util.Cached(func() (StatusResponse, error) {
 		return v.status(
 			func() (StatusResponse, error) { return api.Status(vin) },
 			func() (StatusResponse, error) { return api.Refresh(vin) },
@@ -93,7 +92,7 @@ func (v *Provider) Range() (int64, error) {
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
-// Odometer implements the Provider.VehicleOdometer interface
+// Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	return res.Status.Data.Odo.Value, err

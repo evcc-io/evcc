@@ -1,0 +1,35 @@
+template: deye-string
+products:
+  - brand: Deye
+    description:
+      generic: String inverter
+  - brand: Sunsynk
+    description:
+      generic: String inverter
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 86 # "Output active power"
+      type: holding
+      decode: uint32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 63 # "Total_Active_PowerWh"
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}

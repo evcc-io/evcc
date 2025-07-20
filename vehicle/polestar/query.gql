@@ -1,0 +1,56 @@
+query getCars {
+	getConsumerCarsV2 {
+		vin
+		internalVehicleIdentifier
+		modelYear
+		content {
+			model {
+				code
+				name
+				__typename
+			}
+			images {
+				studio {
+					url
+					angles
+					__typename
+				}
+				__typename
+			}
+			__typename
+		}
+		hasPerformancePackage
+		registrationNo
+		deliveryDate
+		currentPlannedDeliveryDate
+		__typename
+	}
+}
+
+query CarTelematicsV2($vins: [String!]!) {
+	carTelematicsV2(vins: $vins) {
+		health {
+			vin
+			brakeFluidLevelWarning
+			daysToService
+			distanceToServiceKm
+			engineCoolantLevelWarning
+			oilLevelWarning
+			serviceWarning
+			timestamp { seconds nanos }
+		}
+		battery {
+			vin
+			batteryChargeLevelPercentage
+			chargingStatus
+			estimatedChargingTimeToFullMinutes
+			estimatedDistanceToEmptyKm
+			timestamp { seconds nanos }
+		}
+		odometer {
+			vin
+			odometerMeters
+			timestamp { seconds nanos }
+		}
+	}
+}

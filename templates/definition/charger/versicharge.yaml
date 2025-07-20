@@ -6,8 +6,8 @@ products:
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Erfordert Firmware >= 2.121.5
-    en: Requires firmware >= 2.121.5
+    de: Erfordert Firmware >= 2.135
+    en: Requires firmware >= 2.135
 params:
   - name: modbus
     choice: ["tcpip"]

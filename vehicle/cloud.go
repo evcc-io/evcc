@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/proto/pb"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/request"
@@ -48,8 +47,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	host := util.Getenv("GRPC_URI", cloud.Host)
-	conn, err := cloud.Connection(host)
+	conn, err := cloud.Connection()
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +60,9 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		client: pb.NewVehicleClient(conn),
 	}
 
-	if err == nil {
-		err = v.prepareVehicle()
-	}
+	err = v.prepareVehicle()
 
-	v.chargeStateG = provider.Cached(v.chargeState, cc.Cache)
+	v.chargeStateG = util.Cached(v.chargeState, cc.Cache)
 
 	return v, err
 }
@@ -101,7 +97,6 @@ func (v *Cloud) chargeState() (float64, error) {
 	defer cancel()
 
 	res, err := v.client.SoC(ctx, req)
-
 	if err != nil && strings.Contains(err.Error(), api.ErrMustRetry.Error()) {
 		return 0, api.ErrMustRetry
 	}

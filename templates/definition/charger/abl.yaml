@@ -2,7 +2,10 @@ template: abl
 products:
   - brand: ABL
     description:
-      generic: eMH
+      generic: eMH1
+  - brand: ABL
+    description:
+      generic: eMH2
   - brand: SENEC
     description:
       generic: Wallbox pro
@@ -14,6 +17,8 @@ params:
     choice: ["rs485"]
     baudrate: 38400
     comset: 8E1
+  - name: timeout
 render: |
   type: abl
   {{- include "modbus" . }}
+  timeout: {{ .timeout }}

@@ -1,14 +1,15 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -19,14 +20,14 @@ const (
 	dadapowerRegChargingAllowed     = 1000
 	dadapowerRegChargeCurrentLimit  = 1001
 	dadapowerRegActivePhases        = 1002
+	dadapowerRegCurrents            = 1006
 	dadapowerRegActiveEnergy        = 1009
+	dadapowerRegChargingPortState   = 1015
 	dadapowerRegPlugState           = 1016
 	dadapowerRegEnergyImportSession = 1017
 	dadapowerRegEnergyImportTotal   = 1025
 	dadapowerRegIdentification      = 1040 // 20
 )
-
-var dadapowerRegCurrents = []uint16{1006, 1007, 1008}
 
 // Dadapower charger implementation
 type Dadapower struct {
@@ -36,25 +37,29 @@ type Dadapower struct {
 }
 
 func init() {
-	registry.Add("dadapower", NewDadapowerFromConfig)
+	registry.AddCtx("dadapower", NewDadapowerFromConfig)
 }
 
 // NewDadapowerFromConfig creates a Dadapower charger from generic config
-func NewDadapowerFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewDadapowerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDadapower(cc.URI, cc.ID)
+	return NewDadapower(ctx, cc.URI, cc.ID)
 }
 
 // NewDadapower creates a Dadapower charger
-func NewDadapower(uri string, id uint8) (*Dadapower, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("dadapower")
@@ -75,13 +80,19 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 		wb.regOffset = (uint16(id) - 1) * 1000
 	}
 
-	go wb.heartbeat()
+	go wb.heartbeat(ctx)
 
 	return wb, nil
 }
 
-func (wb *Dadapower) heartbeat() {
-	for range time.Tick(time.Minute) {
+func (wb *Dadapower) heartbeat(ctx context.Context) {
+	for tick := time.Tick(time.Minute); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		if _, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeTimeout, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
@@ -91,25 +102,34 @@ func (wb *Dadapower) heartbeat() {
 // Status implements the api.Charger interface
 func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(dadapowerRegPlugState+wb.regOffset, 1)
-
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch binary.BigEndian.Uint16(b) {
+	switch status := binary.BigEndian.Uint16(b); status {
 	case 0x0A: // ready
 		return api.StatusA, nil
 	case 0x0B: // EV is present
 		return api.StatusB, nil
 	case 0x0C: // charging
 		return api.StatusC, nil
-	case 0x0D: // charging with ventilation
-		return api.StatusD, nil
-	case 0x0E: // failure (e.g. diode check, RCD failure)
-		return api.StatusE, nil
 	default:
-		return api.StatusNone, errors.New("invalid response")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
 	}
+}
+
+var _ api.StatusReasoner = (*Dadapower)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Dadapower) StatusReason() (api.Reason, error) {
+	res := api.ReasonUnknown
+
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegChargingPortState+wb.regOffset, 1)
+	if err == nil && binary.BigEndian.Uint16(b) == 3 {
+		res = api.ReasonWaitingForAuthorization
+	}
+
+	return res, err
 }
 
 // Enabled implements the api.Charger interface
@@ -192,25 +212,47 @@ var _ api.PhaseCurrents = (*Dadapower)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Dadapower) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range dadapowerRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent+wb.regOffset, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, float64(binary.BigEndian.Uint16(b))/100)
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegCurrents+wb.regOffset, 3)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseSwitcher = (*Dadapower)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Dadapower) Phases1p3p(phases int) error {
-	_, err := wb.conn.WriteSingleRegister(dadapowerRegActivePhases+wb.regOffset, uint16(phases))
-	return err
+	enabled, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	if enabled {
+		if err := wb.Enable(false); err != nil {
+			return err
+		}
+		time.Sleep(5 * time.Second)
+	}
+
+	if _, err := wb.conn.WriteSingleRegister(dadapowerRegActivePhases+wb.regOffset, uint16(phases)); err != nil {
+		return err
+	}
+
+	if enabled {
+		time.Sleep(2 * time.Second)
+		if err := wb.Enable(true); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 var _ api.Identifier = (*Dadapower)(nil)

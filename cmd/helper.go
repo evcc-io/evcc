@@ -3,21 +3,24 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"os"
-	"path/filepath"
 	"regexp"
-	"strconv"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
 	levels := viper.GetStringMapString("levels")
+	if levels == nil {
+		levels = make(map[string]string)
+	}
 
 	var level string
 	for _, kv := range strings.Split(viper.GetString("log"), ",") {
@@ -48,44 +51,33 @@ func unwrap(err error) (res []string) {
 	return
 }
 
+var redactSecrets = []string{
+	"mac",                   // infrastructure
+	"sponsortoken", "plant", // global settings
+	"apikey", "user", "password", "pin", // users
+	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
+	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
+	"app", "chats", "recipients", // push messaging
+	"vin",               // vehicles
+	"lat", "lon", "zip", // solar forecast
+}
+
 // redact redacts a configuration string
 func redact(src string) string {
-	secrets := []string{
-		"mac",                   // infrastructure
-		"sponsortoken", "plant", // global settings
-		"user", "password", "pin", // users
-		"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
-		"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
-		"app", "chats", "recipients", // push messaging
-		"vin"} // vehicles
 	return regexp.
-		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(secrets, "|"))).
+		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(redactSecrets, "|"))).
 		ReplaceAllString(src, "$1: *****")
 }
 
-func publishErrorInfo(valueChan chan<- util.Param, cfgFile string, err error) {
-	if cfgFile != "" {
-		file, pathErr := filepath.Abs(cfgFile)
-		if pathErr != nil {
-			file = cfgFile
-		}
-		valueChan <- util.Param{Key: "file", Val: file}
-
-		if src, fileErr := os.ReadFile(cfgFile); fileErr != nil {
-			log.ERROR.Println("could not open config file:", fileErr)
-		} else {
-			valueChan <- util.Param{Key: "config", Val: redact(string(src))}
-
-			// find line number
-			if match := regexp.MustCompile(`yaml: line (\d+):`).FindStringSubmatch(err.Error()); len(match) == 2 {
-				if line, err := strconv.Atoi(match[1]); err == nil {
-					valueChan <- util.Param{Key: "line", Val: line}
-				}
-			}
+func redactMap(src map[string]any) map[string]any {
+	res := maps.Clone(src)
+	for k := range res {
+		if slices.Contains(redactSecrets, k) {
+			res[k] = "*****"
 		}
 	}
 
-	valueChan <- util.Param{Key: "fatal", Val: unwrap(err)}
+	return res
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating
@@ -102,23 +94,36 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
-func wrapErrors(err error) error {
-	if err != nil {
-		var opErr *net.OpError
-		var pathErr *os.PathError
+func wrapFatalError(err error) error {
+	if err == nil {
+		return nil
+	}
 
-		switch {
-		case errors.As(err, &opErr):
-			if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
-				err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
-			}
+	var opErr *net.OpError
+	var pathErr *os.PathError
 
-		case errors.As(err, &pathErr):
-			if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
-				err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
-			}
+	switch {
+	case errors.As(err, &opErr):
+		if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+			err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
+		}
+
+	case errors.As(err, &pathErr):
+		if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+			err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
 		}
 	}
 
-	return err
+	return &FatalError{err}
+}
+
+func customDevice(other map[string]any) (map[string]any, error) {
+	customYaml, ok := other["yaml"].(string)
+	if !ok {
+		return other, nil
+	}
+
+	var res map[string]any
+	err := yaml.Unmarshal([]byte(customYaml), &res)
+	return res, err
 }

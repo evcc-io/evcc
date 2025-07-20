@@ -1,17 +1,18 @@
 package templates
 
 import (
-	"os"
+	"maps"
+	"slices"
 	"testing"
 
-	"github.com/jinzhu/copier"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
 func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
-	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, values)
+	t.Helper()
+
+	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -25,61 +26,68 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 		return
 	}
 
-	// actually run the instance if not on CI
-	if os.Getenv("CI") == "" {
-		cb(values)
+	// don't execute if skip test is set
+	if slices.Contains(tmpl.Requirements.EVCC, RequirementSkipTest) {
+		return
 	}
+
+	cb(values)
 }
 
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
-	for _, tmpl := range ByClass(class) {
+	t.Parallel()
+
+	for _, tmpl := range ByClass(class, WithDeprecated()) {
 		tmpl := tmpl
 
-		t.Run(tmpl.Template, func(t *testing.T) {
-			// set default values for all params
-			values := tmpl.Defaults(TemplateRenderModeUnitTest)
+		// set default values for all params
+		values := tmpl.Defaults(RenderModeUnitTest)
 
-			// set the template value which is needed for rendering
-			values["template"] = tmpl.Template
-
-			// set modbus default test values
-			if values[ParamModbus] != nil {
-				modbusChoices := tmpl.ModbusChoices()
-				// we only test one modbus setup
-				if slices.Contains(modbusChoices, ModbusChoiceTCPIP) {
-					values[ModbusKeyTCPIP] = true
-				} else {
-					values[ModbusKeyRS485TCPIP] = true
-				}
-				tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
+		// set modbus default test values
+		if values[ParamModbus] != nil {
+			modbusChoices := tmpl.ModbusChoices()
+			// we only test one modbus setup
+			if slices.Contains(modbusChoices, ModbusChoiceTCPIP) {
+				values[ModbusKeyTCPIP] = true
+			} else if slices.Contains(modbusChoices, ModbusChoiceUDP) {
+				values[ModbusKeyUDP] = true
+			} else {
+				values[ModbusKeyRS485TCPIP] = true
 			}
+			tmpl.ModbusValues(RenderModeUnitTest, values)
+		}
 
-			usages := tmpl.Usages()
-			if len(usages) == 0 {
+		// set the template value which is needed for rendering
+		values["template"] = tmpl.Template
+		// https://github.com/evcc-io/evcc/pull/10272 - override example IP (192.0.2.2)
+		values["host"] = "localhost"
+
+		usages := tmpl.Usages()
+		if len(usages) == 0 {
+			t.Run(tmpl.Template, func(t *testing.T) {
+				t.Parallel()
+
 				test(t, tmpl, values, func(values map[string]interface{}) {
 					instantiate(t, values)
 				})
+			})
 
-				return
-			}
+			continue
+		}
 
-			for _, u := range usages {
-				// create a copy of the map for parallel execution
-				usageValues := make(map[string]interface{}, len(values)+1)
-				if err := copier.Copy(&usageValues, values); err != nil {
-					panic(err)
-				}
-				usageValues[ParamUsage] = u
+		for _, u := range usages {
+			// create a copy of the map for parallel execution
+			usageValues := maps.Clone(values)
+			usageValues[ParamUsage] = u
 
-				// subtest for each usage
-				t.Run(u, func(t *testing.T) {
-					t.Parallel()
+			// subtest for each usage
+			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
+				t.Parallel()
 
-					test(t, tmpl, usageValues, func(values map[string]interface{}) {
-						instantiate(t, values)
-					})
+				test(t, tmpl, usageValues, func(values map[string]interface{}) {
+					instantiate(t, values)
 				})
-			}
-		})
+			})
+		}
 	}
 }

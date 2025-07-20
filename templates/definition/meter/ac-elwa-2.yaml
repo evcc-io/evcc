@@ -1,0 +1,20 @@
+template: ac-elwa-2
+products:
+  - brand: my-PV
+    description:
+      generic: AC ELWA 2
+params:
+  - name: usage
+    choice: ["aux"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/data.jsn
+    jq: .power_elwa2
+  soc:
+    source: http
+    uri: http://{{ .host }}/data.jsn
+    jq: .temp1
+    scale: 0.1

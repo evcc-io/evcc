@@ -8,14 +8,14 @@ import (
 
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server/assets"
-	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
+	_ "golang.org/x/crypto/x509roots/fallback" // fallback certificates
 )
 
 var (
 	//go:embed dist
 	web embed.FS
 
-	//go:embed i18n/*.toml
+	//go:embed i18n/*.json
 	i18n embed.FS
 )
 

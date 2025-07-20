@@ -1,5 +1,7 @@
 package cupra
 
+const FuelTypeElectric = "electric"
+
 type Vehicle struct {
 	VIN              string
 	EnrollmentStatus string
@@ -10,11 +12,8 @@ type Vehicle struct {
 type Engine struct {
 	Type     string
 	FuelType string
-	Range    struct {
-		Value float64
-		Unit  string
-	}
-	Level float64
+	RangeKm  float64
+	LevelPct float64
 }
 
 type Status struct {
@@ -26,8 +25,10 @@ type Status struct {
 			Status         string
 			TargetPct      int
 			ChargeMode     string
+			ChargeSettings string
 			Active         bool
 			RemainingTime  int64
+			CurrentPct     float64
 			ProgressBarPct float64
 		}
 		Climatisation struct {
@@ -37,4 +38,15 @@ type Status struct {
 			ProgressBarPct float64
 		}
 	}
+	Measurements struct {
+		MileageKm float64
+	}
+}
+
+type Mileage struct {
+	MileageKm float64
+}
+
+type Position struct {
+	Lat, Lon float64
 }

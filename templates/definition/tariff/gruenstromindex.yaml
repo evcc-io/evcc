@@ -1,0 +1,21 @@
+template: grünstromindex
+products:
+  - brand: Grünstromindex
+requirements:
+  description:
+    de: "Regionale Emissionsdaten von https://gruenstromindex.de"
+    en: "Regional emission data from https://gruenstromindex.de"
+  evcc: ["skiptest"]
+group: co2
+countries: ["DE"]
+params:
+  - name: zip
+    required: true
+  - name: token
+    help:
+      de: "Token für den Zugriff auf die API von https://console.corrently.io/"
+      en: "Token for accessing the API from https://console.corrently.io"
+render: |
+  type: grünstromindex
+  zip: {{ .zip }}
+  token: {{ .token }}

@@ -3,14 +3,17 @@ package core
 import (
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/db"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
-	"github.com/evcc-io/evcc/provider"
-	"golang.org/x/exp/slices"
+	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/util"
 )
 
 const (
@@ -18,19 +21,27 @@ const (
 	vehicleDetectDuration = 10 * time.Minute
 )
 
+// availableVehicles is the slice of vehicles from the coordinator that are available
+func (lp *Loadpoint) availableVehicles() []api.Vehicle {
+	if lp.coordinator == nil {
+		return nil
+	}
+	return lp.coordinator.GetVehicles(true)
+}
+
 // coordinatedVehicles is the slice of vehicles from the coordinator
 func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 	if lp.coordinator == nil {
 		return nil
 	}
-	return lp.coordinator.GetVehicles()
+	return lp.coordinator.GetVehicles(false)
 }
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
 func (lp *Loadpoint) setVehicleIdentifier(id string) {
 	if lp.vehicleIdentifier != id {
 		lp.vehicleIdentifier = id
-		lp.publish("vehicleIdentity", id)
+		lp.publish(keys.VehicleIdentity, id)
 	}
 }
 
@@ -98,39 +109,28 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
-func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
-	lp.Lock()
-
-	if lp.vehicle == vehicle {
-		lp.Unlock()
-		return
-	}
+func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
+	lp.vmu.Lock()
 
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
-		from = lp.vehicle.Title()
+		from = lp.vehicle.GetTitle()
 	}
 	to := "unknown"
-	if vehicle != nil {
-		lp.coordinator.Acquire(vehicle)
-		to = vehicle.Title()
+	if v != nil {
+		lp.coordinator.Acquire(v)
+		to = v.GetTitle()
 	}
-	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
-	lp.vehicle = vehicle
+	lp.vehicle = v
+	lp.vmu.Unlock()
 
-	// reset minSoc and targetSoc before change
-	lp.setMinSoc(0)
-	lp.setTargetSoc(100)
+	if from != to {
+		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+	}
 
-	// reset target energy
-	lp.setTargetEnergy(0)
-
-	// unblock api
-	lp.Unlock()
-
-	if vehicle != nil {
+	if v != nil {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
@@ -138,35 +138,34 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
 			estimate = true
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
+		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
-		lp.publish(vehiclePresent, true)
-		lp.publish(vehicleTitle, lp.vehicle.Title())
-		lp.publish(vehicleIcon, lp.vehicle.Icon())
-		lp.publish(vehicleCapacity, lp.vehicle.Capacity())
+		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		lp.publish(keys.VehicleTitle, v.GetTitle())
 
-		lp.applyAction(vehicle.OnIdentified())
+		if mode, ok := v.OnIdentified().GetMode(); ok {
+			lp.SetMode(mode)
+		}
+
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
-
-		lp.publish(vehiclePresent, false)
-		lp.publish(vehicleTitle, "")
-		lp.publish(vehicleIcon, "")
-		lp.publish(vehicleCapacity, int64(0))
-		lp.publish(vehicleOdometer, 0.0)
+		lp.unpublishVehicleIdentity()
 	}
 
 	// re-publish vehicle settings
-	lp.publish(phasesActive, lp.activePhases())
+	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.unpublishVehicle()
 
-	lp.updateSession(func(session *db.Session) {
+	// publish effective values
+	lp.PublishEffectiveValues()
+
+	lp.updateSession(func(session *session.Session) {
 		var title string
-		if lp.vehicle != nil {
-			title = lp.vehicle.Title()
+		if v != nil {
+			title = v.GetTitle()
 		}
 
 		lp.session.Vehicle = title
@@ -174,48 +173,54 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
-	// charger
-	if c, ok := lp.charger.(api.Resurrector); ok {
-		if err := c.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up charger: %v", err)
-		}
-		return
-	}
+	// wake up charger or vehicle. First wakeupAttemptsLeft will be odd.
+	charger, chargerCanWakeUp := lp.charger.(api.Resurrector)
+	vehicle, vehicleCanWakeUp := lp.GetVehicle().(api.Resurrector)
 
-	// vehicle
-	if vs, ok := lp.vehicle.(api.Resurrector); ok {
-		if err := vs.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
+		if chargerCanWakeUp {
+			lp.wakeUpResurrector(charger, "charger")
+		} else if vehicleCanWakeUp {
+			lp.wakeUpResurrector(vehicle, "vehicle")
+		}
+	} else {
+		if chargerCanWakeUp && vehicleCanWakeUp {
+			lp.wakeUpResurrector(vehicle, "vehicle")
 		}
 	}
+}
+
+func (lp *Loadpoint) wakeUpResurrector(resurrector api.Resurrector, name string) {
+	lp.log.DEBUG.Printf("wake-up %s, attempts left: %d", name, lp.wakeUpTimer.wakeupAttemptsLeft)
+	if err := resurrector.WakeUp(); err != nil {
+		lp.log.ERROR.Printf("wake-up %s: %v", name, err)
+	}
+}
+
+// unpublishVehicleIdentity resets published vehicle identification
+func (lp *Loadpoint) unpublishVehicleIdentity() {
+	lp.publish(keys.VehicleName, "")
+	lp.publish(keys.VehicleTitle, "")
 }
 
 // unpublishVehicle resets published vehicle data
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
-	lp.publish(vehicleSoc, 0.0)
-	lp.publish(vehicleRange, int64(0))
-	lp.publish(vehicleTargetSoc, 0.0)
+	lp.publish(keys.VehicleClimaterActive, nil)
+	lp.publish(keys.VehicleSoc, 0.0)
+	lp.publish(keys.VehicleRange, int64(0))
+	lp.publish(keys.VehicleLimitSoc, 0.0)
+	lp.publish(keys.VehicleOdometer, 0.0)
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
-
-	lp.publishVehicleFeature(api.Offline)
 }
 
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
-	v, ok := lp.vehicle.(api.FeatureDescriber)
-	if ok {
-		ok = slices.Contains(v.Features(), f)
-	}
-	return ok
-}
-
-// publishVehicleFeature availability of vehicle features
-func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
-	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
+	v, ok := lp.GetVehicle().(api.FeatureDescriber)
+	return ok && slices.Contains(v.Features(), f)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
@@ -237,7 +242,7 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 	select {
 	case <-lp.vehicleDetectTicker.C:
 		lp.log.DEBUG.Println("vehicle api refresh")
-		provider.ResetCached()
+		util.ResetCached()
 	default:
 	}
 
@@ -263,11 +268,11 @@ func (lp *Loadpoint) vehicleDefaultOrDetect() {
 func (lp *Loadpoint) startVehicleDetection() {
 	// flush all vehicles before detection starts
 	lp.log.DEBUG.Println("vehicle api refresh")
-	provider.ResetCached()
+	util.ResetCached()
 
 	lp.vehicleDetect = lp.clock.Now()
 	lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
-	lp.publish(vehicleDetectionActive, true)
+	lp.publish(keys.VehicleDetectionActive, true)
 }
 
 // stopVehicleDetection expires the connection timer and ticker
@@ -276,7 +281,7 @@ func (lp *Loadpoint) stopVehicleDetection() {
 	if lp.vehicleDetectTicker != nil {
 		lp.vehicleDetectTicker.Stop()
 	}
-	lp.publish(vehicleDetectionActive, false)
+	lp.publish(keys.VehicleDetectionActive, false)
 }
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
@@ -292,23 +297,23 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 	}
 
 	// remove previous vehicle if status was not confirmed
-	if _, ok := lp.vehicle.(api.ChargeState); ok {
+	if _, ok := lp.GetVehicle().(api.ChargeState); ok {
 		lp.setActiveVehicle(nil)
 	}
 }
 
 // vehicleOdometer updates odometer
 func (lp *Loadpoint) vehicleOdometer() {
-	if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
+	if vs, ok := lp.GetVehicle().(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-			lp.publish(vehicleOdometer, odo)
+			lp.publish(keys.VehicleOdometer, odo)
 
 			// update session once odometer is read
-			lp.updateSession(func(session *db.Session) {
-				session.Odometer = odo
+			lp.updateSession(func(session *session.Session) {
+				session.Odometer = &odo
 			})
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !loadpoint.AcceptableError(err) {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
 		}
 	}
@@ -317,9 +322,9 @@ func (lp *Loadpoint) vehicleOdometer() {
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 	switch {
-	case lp.Soc.Poll.Mode == pollCharging && lp.charging():
+	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
 		return true
-	case (lp.Soc.Poll.Mode == pollConnected || lp.Soc.Poll.Mode == pollAlways) && lp.connected():
+	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
 		return true
 	default:
 		return false
@@ -340,8 +345,8 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
-	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
-		lp.connected() && lp.Soc.Poll.Mode == pollConnected
+	honourUpdateInterval := lp.Soc.Poll.Mode == loadpoint.PollAlways ||
+		lp.connected() && lp.Soc.Poll.Mode == loadpoint.PollConnected
 
 	if honourUpdateInterval {
 		if remaining > 0 {
@@ -356,14 +361,14 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
-	if cl, ok := lp.vehicle.(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
+	if cl, ok := lp.GetVehicle().(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
 			if active {
 				lp.log.DEBUG.Println("climater active")
 			}
 
-			lp.publish("climaterActive", active)
+			lp.publish(keys.VehicleClimaterActive, active)
 			return active
 		}
 

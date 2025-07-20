@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/ford"
+	"github.com/evcc-io/evcc/vehicle/ford/autonomic"
 )
 
 // https://github.com/d4v3y0rk/ffpass-module
@@ -28,10 +29,10 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
-		Expiry              time.Duration
+		Domain              string
 		Cache               time.Duration
 	}{
-		Expiry: expiry,
+		Domain: "com",
 		Cache:  interval,
 	}
 
@@ -48,7 +49,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("ford").Redact(cc.User, cc.Password, cc.VIN)
-	identity := ford.NewIdentity(log, cc.User, cc.Password)
+	identity := ford.NewIdentity(log, cc.User, cc.Password, cc.Domain)
 
 	err := identity.Login()
 	if err != nil {
@@ -58,9 +59,14 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	api := ford.NewAPI(log, identity)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	if err != nil {
+		return nil, err
+	}
 
+	autoIdentity, err := autonomic.NewIdentity(log, identity)
 	if err == nil {
-		v.Provider = ford.NewProvider(api, cc.VIN, cc.Expiry, cc.Cache)
+		api := autonomic.NewAPI(log, autoIdentity)
+		v.Provider = ford.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

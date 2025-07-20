@@ -1,0 +1,19 @@
+template: elering
+deprecated: true
+products:
+  - brand: Nordpool
+    description:
+      generic: "Elering"
+group: price
+countries: ["EE", "LT", "LV", "FI"]
+params:
+  - name: region
+    example: ee
+    type: choice
+    choice: ["ee", "lt", "lv", "fi"]
+    required: true
+  - preset: tariff-base
+render: |
+  type: elering
+  region: {{ .region }}
+  {{ include "tariff-base" . }}

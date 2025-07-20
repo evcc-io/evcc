@@ -1,0 +1,14 @@
+template: smartenergy
+products:
+  - brand: SmartEnergy
+    description:
+      generic: smartCONTROL
+group: price
+countries: ["AT"]
+requirements:
+  evcc: ["skiptest"]
+params:
+  - preset: tariff-base
+render: |
+  type: smartenergy
+  {{ include "tariff-base" . }}

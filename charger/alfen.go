@@ -18,8 +18,8 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
-	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -53,13 +53,13 @@ const (
 )
 
 func init() {
-	registry.Add("alfen", NewAlfenFromConfig)
+	registry.AddCtx("alfen", NewAlfenFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b "*Alfen" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
-func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewAlfenFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -68,12 +68,12 @@ func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAlfen(cc.URI, cc.ID)
+	return NewAlfen(ctx, cc.URI, cc.ID)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,23 +90,33 @@ func NewAlfen(uri string, slaveID uint8) (api.Charger, error) {
 		conn: conn,
 	}
 
-	go wb.heartbeat()
+	go wb.heartbeat(ctx)
 
 	_, v2, v3, err := wb.Voltages()
 
-	var phases1p3p func(int) error
+	var (
+		phasesS func(int) error
+		phasesG func() (int, error)
+	)
 	if v2 != 0 && v3 != 0 {
 		wb.log.DEBUG.Println("detected 3p alfen")
-		phases1p3p = wb.phases1p3p
+		phasesS = wb.phases1p3p
+		phasesG = wb.getPhases
 	} else {
 		wb.log.DEBUG.Println("detected 1p alfen")
 	}
 
-	return decorateAlfen(wb, phases1p3p), err
+	return decorateAlfen(wb, phasesS, phasesG), err
 }
 
-func (wb *Alfen) heartbeat() {
-	for range time.Tick(25 * time.Second) {
+func (wb *Alfen) heartbeat(ctx context.Context) {
+	for tick := time.Tick(25 * time.Second); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
 		wb.mu.Lock()
 		var curr float64
 		if wb.enabled {
@@ -127,18 +137,7 @@ func (wb *Alfen) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch r := rune(b[0]); r {
-	case 'A', 'B', 'D', 'E', 'F':
-		return api.ChargeStatus(r), nil
-	case 'C':
-		// C1 is "connected"
-		if rune(b[1]) == '1' {
-			return api.StatusB, nil
-		}
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
-	}
+	return api.ChargeStatusStringWithMapping(string(b), api.StatusEasA)
 }
 
 // Enabled implements the api.Charger interface
@@ -245,7 +244,7 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		f := rs485.RTUIeee754ToFloat64(b[4*i:])
 		if math.IsNaN(f) {
 			f = 0
@@ -261,4 +260,13 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 func (wb *Alfen) phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Alfen) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(alfenRegPhases, 1)
+	if err != nil {
+		return 0, err
+	}
+	return int(binary.BigEndian.Uint16(b)), nil
 }

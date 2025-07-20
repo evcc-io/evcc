@@ -1,0 +1,10 @@
+template: pantabox
+products:
+  - brand: INRO
+    description:
+      generic: Pantabox
+params:
+  - name: host
+render: |
+  type: pantabox
+  uri: http://{{ .host }}

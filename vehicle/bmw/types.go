@@ -1,34 +1,26 @@
 package bmw
 
-type VehiclesResponse struct {
-	Vehicles []Vehicle
-}
-
 type Vehicle struct {
-	VIN   string
-	Model string
+	VIN            string
+	Model          string
+	AppVehicleType string
 }
-
-type VehiclesStatusResponse []VehicleStatus
 
 type VehicleStatus struct {
-	VIN, Model, Brand string
-	Year              int
-	Properties        struct {
-		ChargingState *struct {
-			ChargePercentage   int
-			State              string // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING, COMPLETED
-			IsChargerConnected bool
+	StatusCode int
+	Message    string
+	State      struct {
+		CurrentMileage        int64
+		Range                 int64
+		ElectricChargingState struct {
+			ChargingLevelPercent int64
+			Range                int64
+			IsChargerConnected   bool
+			ChargingStatus       string
+			ChargingTarget       int64
 		}
-		ElectricRange *struct {
-			Distance struct {
-				Value int
-			}
-		}
-	}
-	Status struct {
-		CurrentMileage *struct {
-			Mileage int
+		ClimateControlState struct {
+			Activity string
 		}
 	}
 }

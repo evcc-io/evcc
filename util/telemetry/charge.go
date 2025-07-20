@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
@@ -16,8 +17,7 @@ import (
 )
 
 const (
-	api            = "https://api.evcc.io"
-	enabledSetting = "telemetry"
+	api = "https://api.evcc.io"
 )
 
 var (
@@ -29,8 +29,8 @@ var (
 )
 
 func Enabled() bool {
-	enabled, _ := settings.Bool(enabledSetting)
-	return enabled && sponsor.IsAuthorized() && instanceID != ""
+	enabled, _ := settings.Bool(keys.Telemetry)
+	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
 }
 
 func Enable(enable bool) error {
@@ -39,40 +39,45 @@ func Enable(enable bool) error {
 			return errors.New("telemetry requires sponsorship")
 		}
 		if instanceID == "" {
-			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
+			return fmt.Errorf("instance id not set")
 		}
 	}
 
-	settings.SetBool(enabledSetting, enable)
+	settings.SetBool(keys.Telemetry, enable)
 
 	return nil
 }
 
 func Create(machineID string) {
-	if machineID == "" {
-		machineID, _ = machine.ProtectedID("evcc-api")
-	}
-
 	instanceID = machineID
+
+	if machineID == "" {
+		instanceID = machine.ProtectedID("evcc-api")
+	}
 }
 
-// UpdateChargeProgress accumulates the charge delta and uploads at given interval.
-// This interval must be smaller that the apis expiry interval for treating power values as current.
-func UpdateChargeProgress(log *util.Logger, power, deltaCharged, greenShare float64) {
+// UpdateChargeProgress uploads power and energy data every 30 seconds
+func UpdateChargeProgress(log *util.Logger, power, greenShare float64) {
 	mu.Lock()
 	defer mu.Unlock()
-
-	// cache
-	accChargeEnergy += deltaCharged
-	accGreenEnergy += deltaCharged * greenShare
 
 	if time.Since(updated) < 30*time.Second {
 		return
 	}
 
 	if err := upload(log, power, power*greenShare); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
+}
+
+// UpdateEnergy accumulates the energy delta for later upload
+func UpdateEnergy(chargeEnergy, greenEnergy float64) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	// cache
+	accChargeEnergy += chargeEnergy
+	accGreenEnergy += greenEnergy
 }
 
 // Persist uploads the accumulated data if necessary
@@ -85,14 +90,14 @@ func Persist(log *util.Logger) {
 	}
 
 	if err := upload(log, 0, 0); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 
 // upload executes the actual upload.
 // Lock must be held when calling upload.
 func upload(log *util.Logger, chargePower, greenPower float64) error {
-	log.DEBUG.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", accGreenEnergy*1e3, accChargeEnergy*1e3, chargePower)
+	log.TRACE.Printf("telemetry: charge: Δ%.0f/%.0fWh @ %.0fW", accGreenEnergy*1e3, accChargeEnergy*1e3, chargePower)
 
 	data := InstanceChargeProgress{
 		InstanceID: instanceID,

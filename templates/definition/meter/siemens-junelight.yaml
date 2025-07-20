@@ -1,0 +1,58 @@
+template: siemens-junelight
+products:
+  - brand: Siemens
+    description:
+      generic: Junelight Smart Battery
+requirements:
+  description:
+    de: |
+      Die Batterie muss mit dem Installer Zugang auf Loxone gestellt werden.
+    en: |
+      The battery has to be set to Loxone with the installer account.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: capacity
+    advanced: true
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 14
+      type: holding
+      decode: int32 
+    timeout: 5s
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 16
+      type: holding
+      decode: int32 
+    timeout: 5s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6 # "Battery output power"
+      type: holding
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8 # "battery soc"
+      type: holding
+      decode: int32
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

@@ -2,7 +2,15 @@ template: huawei-dongle
 products:
   - brand: Huawei
     description:
-      generic: SUN2000 with SDongle
+      generic: SUN2000 (SDongle)
+requirements:
+  description:
+    de: |
+      Erfordert "Modbus/TCP". Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+    en: |
+      Needs "Modbus/TCP". Activation using "maintenance access" within the communication settings of the inverter.
+      See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 params:
   - name: usage
     choice: ["pv"]
@@ -15,7 +23,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
@@ -25,7 +32,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 32106 # Accumulated energy yield

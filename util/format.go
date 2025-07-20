@@ -3,20 +3,18 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	"maps"
 	"regexp"
+	"slices"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/samber/lo"
 )
 
-var re = regexp.MustCompile(`\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
-
-// Truish returns true if value is truish (true/1/on)
-func Truish(s string) bool {
-	return s == "1" || strings.ToLower(s) == "true" || strings.ToLower(s) == "on"
-}
+var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
 
 // FormatValue will apply specific formatting in addition to standard sprintf
 func FormatValue(format string, val interface{}) string {
@@ -52,9 +50,10 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprig.FuncMap()).
+		Funcs(sprig.TxtFuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
+			"addDate":   addDate,
 		}).Parse(s)
 	if err != nil {
 		return s, err
@@ -73,27 +72,29 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		match, key, format := m[0], m[1], m[3]
 
 		// find key and replacement value
-		val, ok := kv[key]
-		if !ok {
+		var val *any
+		for k, v := range kv {
+			if strings.EqualFold(k, key) {
+				val = &v
+				break
+			}
+		}
+
+		if val == nil {
 			wanted = append(wanted, key)
 			format = "%s"
-			val = "?"
+			val = lo.ToPtr(any("?"))
 		}
 
 		// update all literal matches
-		new := FormatValue(format, val)
+		new := FormatValue(format, *val)
 		s = strings.ReplaceAll(s, match, new)
 	}
 
 	// return missing keys
 	if len(wanted) > 0 {
-		got := make([]string, 0)
-		for k := range kv {
-			got = append(got, k)
-		}
-
-		err = fmt.Errorf("wanted: %v, got: %v", wanted, got)
+		return "", fmt.Errorf("wanted: %v, got: %v", slices.Sorted(slices.Values(wanted)), slices.Sorted(maps.Keys(kv)))
 	}
 
-	return s, err
+	return s, nil
 }

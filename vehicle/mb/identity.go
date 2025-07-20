@@ -2,10 +2,7 @@ package mb
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -13,7 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -37,47 +34,30 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config) *Identity {
 	}
 }
 
-// github.com/uhthomas/tesla
-func state() string {
-	var b [9]byte
-	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
-		panic(err)
-	}
-	return base64.RawURLEncoding.EncodeToString(b[:])
-}
-
 func (v *Identity) Login(user, password string) error {
 	if v.Client.Jar == nil {
-		var err error
-		v.Client.Jar, err = cookiejar.New(&cookiejar.Options{
+		v.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
 			PublicSuffixList: publicsuffix.List,
 		})
-		if err != nil {
-			return err
-		}
 	}
 
-	cv, err := cv.CreateCodeVerifier()
+	var param request.InterceptResult
+	v.Client.CheckRedirect, param = request.InterceptRedirect("resume", false)
+
+	cv := oauth2.GenerateVerifier()
+
+	state := lo.RandomString(16, lo.AlphanumericCharset)
+	uri := v.oc.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
+	if _, err := v.Get(uri); err != nil {
+		return err
+	}
+
+	resume, err := param()
 	if err != nil {
 		return err
 	}
 
-	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-	)
-
-	var resume string
-	if err == nil {
-		var param request.InterceptResult
-		v.Client.CheckRedirect, param = request.InterceptRedirect("resume", false)
-
-		if _, err = v.Get(uri); err == nil {
-			resume, err = param()
-		}
-
-		v.Client.CheckRedirect = nil
-	}
+	v.Client.CheckRedirect = nil
 
 	data := struct {
 		Username   string `json:"username"`
@@ -92,14 +72,11 @@ func (v *Identity) Login(user, password string) error {
 		Errors        []struct{ Key string }
 	}
 
-	var req *http.Request
+	uri = fmt.Sprintf("%s/ciam/auth/login/user", OAuthURI)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		uri = fmt.Sprintf("%s/ciam/auth/login/user", OAuthURI)
-		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-		if err == nil {
-			if err = v.DoJSON(req, &res); err != nil && len(res.Errors) > 0 {
-				err = fmt.Errorf("%s: %w", string(res.Errors[0].Key), err)
-			}
+		if err = v.DoJSON(req, &res); err != nil && len(res.Errors) > 0 {
+			err = fmt.Errorf("%s: %w", res.Errors[0].Key, err)
 		}
 	}
 
@@ -111,7 +88,7 @@ func (v *Identity) Login(user, password string) error {
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			if err = v.DoJSON(req, &res); err != nil && len(res.Errors) > 0 {
-				err = fmt.Errorf("%s: %w", string(res.Errors[0].Key), err)
+				err = fmt.Errorf("%s: %w", res.Errors[0].Key, err)
 			}
 		}
 	}
@@ -144,9 +121,7 @@ func (v *Identity) Login(user, password string) error {
 			request.Timeout)
 		defer cancel()
 
-		token, err = v.oc.Exchange(ctx, code,
-			oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
-		)
+		token, err = v.oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 	}
 
 	if err == nil {

@@ -1,9 +1,0 @@
-product:
-  brand: echarge
-  description: cPH2, cPμ2
-requirements: ["sponsorship"]
-render:
-  - default: |
-      type: template
-      template: hardybarth-salia
-      host: 192.0.2.2 # IP-Adresse oder Hostname

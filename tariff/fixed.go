@@ -3,16 +3,16 @@ package tariff
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/fixed"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang-module/carbon/v2"
+	"github.com/jinzhu/now"
 )
 
 type Fixed struct {
-	unit    string
 	clock   clock.Clock
 	zones   fixed.Zones
 	dynamic bool
@@ -26,11 +26,10 @@ func init() {
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Currency string
-		Price    float64
-		Zones    []struct {
-			Price       float64
-			Days, Hours string
+		Price float64
+		Zones []struct {
+			Price               float64
+			Days, Hours, Months string
 		}
 	}
 
@@ -38,18 +37,18 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
-	if cc.Currency == "" {
-		cc.Currency = "EUR"
-	}
-
 	t := &Fixed{
-		unit:    cc.Currency,
 		clock:   clock.New(),
-		dynamic: len(cc.Zones) > 1,
+		dynamic: len(cc.Zones) >= 1,
 	}
 
 	for _, z := range cc.Zones {
 		days, err := fixed.ParseDays(z.Days)
+		if err != nil {
+			return nil, err
+		}
+
+		months, err := fixed.ParseMonths(z.Months)
 		if err != nil {
 			return nil, err
 		}
@@ -61,17 +60,19 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 		if len(hours) == 0 {
 			t.zones = append(t.zones, fixed.Zone{
-				Price: z.Price,
-				Days:  days,
+				Price:  z.Price,
+				Days:   days,
+				Months: months,
 			})
 			continue
 		}
 
 		for _, h := range hours {
 			t.zones = append(t.zones, fixed.Zone{
-				Price: z.Price,
-				Days:  days,
-				Hours: h,
+				Price:  z.Price,
+				Days:   days,
+				Months: months,
+				Hours:  h,
 			})
 		}
 	}
@@ -86,29 +87,25 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, nil
 }
 
-// Unit implements the api.Tariff interface
-func (t *Fixed) Unit() string {
-	return t.unit
-}
-
 // Rates implements the api.Tariff interface
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := carbon.FromStdTime(t.clock.Now().Local()).StartOfDay()
-	for i := 0; i < 7; i++ {
-		dow := fixed.Day((start.DayOfWeek() + i) % 7)
+	start := now.With(t.clock.Now().Local()).BeginningOfDay()
+	for i := range 7 {
+		dayStart := start.AddDate(0, 0, i)
+		dow := fixed.Day((int(start.Weekday()) + i) % 7)
+		month := fixed.Month(dayStart.Month() - 1)
 
-		zones := t.zones.ForDay(dow)
+		zones := t.zones.ForDayAndMonth(dow, month)
 		if len(zones) == 0 {
 			return nil, fmt.Errorf("no zones for weekday %d", dow)
 		}
 
-		dayStart := start.AddDays(i)
 		markers := zones.TimeTableMarkers()
 
 		for i, m := range markers {
-			ts := dayStart.AddMinutes(m.Minutes())
+			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
 
 			var zone *fixed.Zone
 			for j := len(zones) - 1; j >= 0; j-- {
@@ -123,15 +120,15 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			}
 
 			// end rate at end of day or next marker
-			end := dayStart.AddDay()
+			end := dayStart.AddDate(0, 0, 1)
 			if i+1 < len(markers) {
-				end = dayStart.AddMinutes(markers[i+1].Minutes())
+				end = dayStart.Add(time.Minute * time.Duration(markers[i+1].Minutes()))
 			}
 
 			rate := api.Rate{
-				Price: zone.Price,
-				Start: ts.ToStdTime(),
-				End:   end.ToStdTime(),
+				Start: ts,
+				End:   end,
+				Value: zone.Price,
 			}
 
 			res = append(res, rate)
@@ -141,7 +138,10 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// IsDynamic implements the api.Tariff interface
-func (t *Fixed) IsDynamic() bool {
-	return t.dynamic
+// Type implements the api.Tariff interface
+func (t *Fixed) Type() api.TariffType {
+	if t.dynamic {
+		return api.TariffTypePriceForecast
+	}
+	return api.TariffTypePriceStatic
 }

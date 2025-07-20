@@ -1,0 +1,87 @@
+template: daikin-homehub
+products:
+  - brand: Daikin
+    description:
+      generic: HomeHub (SG Ready)
+group: heating
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer"]
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      0: 2 # Daikin mode "Free" > evcc mode "normal"
+      1: 1 # Daikin mode "Forced off" > evcc mode "dim"
+      2: 3 # Daikin mode "Recommended on" > evcc mode "boost"
+      3: 3 # Daikin mode "Forced on" > evcc mode "boost"
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 55
+        type: holding # read the holding register to get current smart grid mode
+        encoding: int16
+  setmode:
+    source: switch
+    switch:
+    - case: 2 # normal
+      set:
+        source: const
+        value: 0
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 55
+            type: writeholding
+            encoding: int16
+    - case: 3 # boost
+      set:
+        source: const
+        value: 2
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 55
+            type: writeholding
+            encoding: int16
+    - case: 1 # dimm
+      set:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 55
+          type: writeholding
+          encoding: int16
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater" -}} 42 {{ else }} 49 {{- end }}
+      type: input
+      encoding: int16
+    scale: 0.01
+  {{- end }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 50
+      type: input
+      encoding: int16
+    scale: 10
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 56 # PV surplus
+      type: writeholding
+      decode: int16
+    scale: 0.1

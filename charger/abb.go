@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -52,11 +53,11 @@ const (
 )
 
 func init() {
-	registry.Add("abb", NewABBFromConfig)
+	registry.AddCtx("abb", NewABBFromConfig)
 }
 
 // NewABBFromConfig creates a ABB charger from generic config
-func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewABBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -65,12 +66,12 @@ func NewABBFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewABB(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewABB(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewABB creates ABB charger
-func NewABB(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,9 @@ func NewABB(uri, device, comset string, baudrate int, proto modbus.Protocol, sla
 	// keep-alive
 	go func() {
 		for range time.Tick(30 * time.Second) {
-			_, _ = wb.status()
+			if _, err := wb.status(); err != nil {
+				log.ERROR.Println("heartbeat:", err)
+			}
 		}
 	}()
 
@@ -180,9 +183,14 @@ func (wb *ABB) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint32(current * 1e3)
+	curr := uint32(current * 1e3)
 
-	return wb.setCurrent(wb.curr)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.curr = curr
+	}
+
+	return err
 }
 
 var _ api.Meter = (*ABB)(nil)
@@ -209,38 +217,33 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*ABB)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *ABB) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
+// getPhaseValues returns 3 sequential register values
+func (wb *ABB) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 1e3
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseCurrents = (*ABB)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *ABB) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(abbRegCurrents, 1e3)
 }
 
 var _ api.PhaseVoltages = (*ABB)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *ABB) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegVoltages, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var volt [3]float64
-	for l := 0; l < 3; l++ {
-		volt[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 10
-	}
-
-	return volt[0], volt[1], volt[2], nil
+	return wb.getPhaseValues(abbRegVoltages, 10)
 }
 
 // var _ api.PhaseSwitcher = (*ABB)(nil)

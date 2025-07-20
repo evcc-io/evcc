@@ -1,35 +1,108 @@
 <template>
-	<div class="app overflow-hidden">
-		<metainfo>
-			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
-		</metainfo>
+	<div class="app">
 		<router-view :notifications="notifications" :offline="offline"></router-view>
+
+		<GlobalSettingsModal v-bind="globalSettingsProps" />
+		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
+		<ForecastModal v-bind="forecastModalProps" />
+		<HelpModal />
+		<PasswordModal />
+		<LoginModal v-bind="loginModalProps" />
+		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
 </template>
 
 <script>
 import store from "../store";
+import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
+import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
+import ForecastModal from "../components/Forecast/ForecastModal.vue";
+import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
+import PasswordModal from "../components/Auth/PasswordModal.vue";
+import LoginModal from "../components/Auth/LoginModal.vue";
+import HelpModal from "../components/HelpModal.vue";
+import collector from "../mixins/collector";
+
+// assume offline if not data received for 5 minutes
+let lastDataReceived = new Date();
+const maxDataAge = 60 * 1000 * 5;
+setInterval(() => {
+	if (new Date() - lastDataReceived > maxDataAge) {
+		console.log("no data received, assume we are offline");
+		window.app.setOffline();
+	}
+}, 1000);
 
 export default {
 	name: "App",
+	components: {
+		GlobalSettingsModal,
+		HelpModal,
+		BatterySettingsModal,
+		ForecastModal,
+		PasswordModal,
+		LoginModal,
+		OfflineIndicator,
+	},
+	mixins: [collector],
 	props: {
 		notifications: Array,
 		offline: Boolean,
 	},
 	data: () => {
-		return { reconnectTimeout: null, ws: null };
+		return { reconnectTimeout: null, ws: null, authNotConfigured: false };
 	},
-	mounted: function () {
+	head() {
+		return { title: "...", titleTemplate: "%s | evcc" };
+	},
+	computed: {
+		version() {
+			return store.state.version;
+		},
+		batteryModalAvailabe() {
+			return store.state.battery?.length;
+		},
+		globalSettingsProps() {
+			return this.collectProps(GlobalSettingsModal, store.state);
+		},
+		batterySettingsProps() {
+			return this.collectProps(BatterySettingsModal, store.state);
+		},
+		offlineIndicatorProps() {
+			return this.collectProps(OfflineIndicator, store.state);
+		},
+		forecastModalProps() {
+			return this.collectProps(ForecastModal, store.state);
+		},
+		loginModalProps() {
+			return this.collectProps(LoginModal, store.state);
+		},
+	},
+	watch: {
+		version(now, prev) {
+			if (!!prev && !!now) {
+				console.log("new version detected. reloading browser", { now, prev });
+				this.reload();
+			}
+		},
+		offline(offline) {
+			store.offline(offline);
+			if (offline) {
+				this.reconnect();
+			}
+		},
+	},
+	mounted() {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
-	unmounted: function () {
+	unmounted() {
 		this.disconnect();
 		window.clearTimeout(this.reconnectTimeout);
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
 	methods: {
-		pageVisibilityChanged: function () {
+		pageVisibilityChanged() {
 			if (document.hidden) {
 				window.clearTimeout(this.reconnectTimeout);
 				this.disconnect();
@@ -37,15 +110,14 @@ export default {
 				this.connect();
 			}
 		},
-		reconnect: function () {
+		reconnect() {
 			window.clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = window.setTimeout(() => {
 				this.disconnect();
 				this.connect();
 			}, 2500);
 		},
-		disconnect: function () {
-			console.log("websocket disconnecting");
+		disconnect() {
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -55,11 +127,11 @@ export default {
 				this.ws = null;
 			}
 		},
-		connect: function () {
+		connect() {
 			console.log("websocket connect");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
-				window.app.error({
+				window.app.raise({
 					message: "Web sockets not supported. Please upgrade your browser.",
 				});
 				return;
@@ -82,7 +154,7 @@ export default {
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
-				console.error({ message: "Websocket error. Trying to reconnect." });
+				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws.close();
 			};
 			this.ws.onopen = () => {
@@ -90,16 +162,19 @@ export default {
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
-				console.log("websocket disconnected");
 				window.app.setOffline();
 				this.reconnect();
 			};
 			this.ws.onmessage = (evt) => {
 				try {
-					var msg = JSON.parse(evt.data);
+					const msg = JSON.parse(evt.data);
+					if (msg.startup) {
+						store.reset();
+					}
 					store.update(msg);
+					lastDataReceived = new Date();
 				} catch (error) {
-					window.app.error({
+					window.app.raise({
 						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
 					});
 				}
@@ -109,13 +184,11 @@ export default {
 			window.location.reload();
 		},
 	},
-	metaInfo() {
-		return { title: store.state.siteTitle || "" };
-	},
 };
 </script>
 <style scoped>
 .app {
 	min-height: 100vh;
+	min-height: 100dvh;
 }
 </style>

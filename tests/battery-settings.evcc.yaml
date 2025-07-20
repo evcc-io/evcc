@@ -1,0 +1,71 @@
+interval: 0.1s
+
+site:
+  title: Battery Settings
+  meters:
+    grid: grid
+    pv: pv
+    battery: battery
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: const
+      value: 1000
+  - name: pv
+    type: custom
+    power:
+      source: const
+      value: 2000
+  - name: battery
+    type: custom
+    power:
+      source: const
+      value: -1000
+    soc:
+      source: const
+      value: 50
+    capacity: 20
+    batterymode:
+      source: js
+      vm: shared
+      script: |
+        1
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    mode: now
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        true
+    status:
+      source: js
+      script: |
+        "C"
+    maxcurrent:
+      source: js
+      script: |
+        16
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.2 # EUR/kWh
+    zones:
+      - hours: 5-7
+        price: 0.45
+      - hours: 11-14
+        price: 0.05
+      - hours: 17-21
+        price: 0.5

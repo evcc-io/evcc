@@ -5,99 +5,100 @@ package lgpcs
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/spf13/cast"
 )
-
-// URIs
-const (
-	LoginURI = "/v1/login"
-	MeterURI = "/v1/user/essinfo/home"
-)
-
-type MeterResponse struct {
-	Statistics EssData
-	Direction  struct {
-		IsGridSelling        int `json:"is_grid_selling_,string"`
-		IsBatteryDischarging int `json:"is_battery_discharging_,string"`
-	}
-}
-
-type EssData struct {
-	GridPower               float64 `json:"grid_power,string"`
-	PvTotalPower            float64 `json:"pcs_pv_total_power,string"`
-	BatConvPower            float64 `json:"batconv_power,string"`
-	BatUserSoc              float64 `json:"bat_user_soc,string"`
-	CurrentGridFeedInEnergy float64 `json:"current_grid_feed_in_energy,string"`
-	CurrentPvGenerationSum  float64 `json:"current_pv_generation_sum,string"`
-}
 
 type Com struct {
 	*request.Helper
-	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
-	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
-	authKey  string // auth_key returned during login and renewed with new login after expiration
-	dataG    func() (EssData, error)
+	uri          string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
+	password     string // user password, usually MAC address of the LG ESS in lowercase without colons
+	registration string // registration number of the LG ESS Inverter - e.g. "DE2001..."
+	authKey      string // auth_key returned during login and renewed with new login after expiration
+	essType      Model  // currently the LG Ess Home 8/10 and Home 15 are supported
+	dataG        func() (EssData, error)
+	log          *util.Logger
 }
 
 var (
-	once     sync.Once
-	instance *Com
+	instances map[string]*Com = map[string]*Com{}
+	mu        sync.Mutex      = sync.Mutex{}
 )
 
-// GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
-func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
+// GetInstance retrives a singleton per uri from a map to handle the access via the authkey to the PCS of the LG ESS HOME system
+func GetInstance(uri, registration, password string, cache time.Duration, essType Model) (*Com, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
-	var err error
-	once.Do(func() {
-		log := util.NewLogger("lgess")
-		instance = &Com{
-			Helper:   request.NewHelper(log),
-			uri:      uri,
-			password: password,
-		}
-
-		// ignore the self signed certificate
-		instance.Client.Transport = request.NewTripper(log, transport.Insecure())
-
-		// caches the data access for the "cache" time duration
-		// sends a new request to the pcs if the cache is expired and Data() requested
-		instance.dataG = provider.Cached(instance.refreshData, cache)
-
-		// do first login if no authKey exists and uri and password exist
-		if instance.authKey == "" && instance.uri != "" && instance.password != "" {
-			err = instance.Login()
-		}
-	})
-
-	// check if different uris are provided
-	if uri != "" && instance.uri != uri {
-		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
+	instance, found := instances[uri]
+	if found {
+		return instance, nil
 	}
 
-	// check if different passwords are provided
-	if password != "" && instance.password != password {
-		return nil, errors.New("password mismatch")
+	log := util.NewLogger(fmt.Sprintf("lgess-%s", strings.TrimPrefix("https://", uri)))
+	instance = &Com{uri: uri,
+		Helper:       request.NewHelper(log),
+		registration: registration,
+		password:     password,
+		essType:      essType,
+		log:          log,
+	}
+	// put instance into the cache map
+	instances[uri] = instance
+
+	// ignore the self signed certificate
+	instance.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	// caches the data access for the "cache" time duration
+	// sends a new request to the pcs if the cache is expired and Data() requested
+	instance.dataG = util.Cached(instance.essInfo, cache)
+
+	// do first login if no authKey exists and uri and password exist
+	if instance.authKey == "" && instance.uri != "" && (instance.password != "" || instance.registration != "") {
+		if err := instance.Login(); err != nil {
+			return nil, err
+		}
+		return instance, nil
 	}
 
-	return instance, err
+	return nil, errors.New("missing credentials")
 }
 
 // Login calls login and stores the returned authorization key
 func (m *Com) Login() error {
+	// check if at least one of password and registration is provided
+	if m.password == "" && m.registration == "" {
+		return errors.New("neither registration nor password provided - at least one needed")
+	}
+
 	data := map[string]interface{}{
 		"password": m.password,
 	}
+	uri := fmt.Sprintf("%s/v1/user/setting/login", m.uri)
 
-	req, err := request.New(http.MethodPut, m.uri+LoginURI, request.MarshalJSON(data), request.JSONEncoding)
+	if m.password == "" { // use installer login
+		m.log.DEBUG.Println("installer login")
+		uri = fmt.Sprintf("%s/v1/login", m.uri)
+		data["password"] = m.registration
+	}
+
+	if m.authKey != "" {
+		m.log.DEBUG.Println("re-login")
+	}
+
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -123,53 +124,96 @@ func (m *Com) Login() error {
 	return nil
 }
 
-// Data gives the data read from the pcs.
+// Data gives the cached data read from the pcs.
 func (m *Com) Data() (EssData, error) {
 	return m.dataG()
 }
 
-// refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
-func (m *Com) refreshData() (EssData, error) {
-	data := map[string]interface{}{
+// essInfo reads essinfo/home
+func (m *Com) essInfo() (EssData, error) {
+	f := func(payload any) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/user/essinfo/home", m.uri)
+		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
+	}
+
+	if m.essType == LgEss8 {
+		var res MeterResponse8
+		err := m.request(f, nil, &res)
+		return res, err
+	}
+
+	var res MeterResponse15
+	err := m.request(f, nil, &res)
+	return res, err
+}
+
+func (m *Com) GetSystemInfo() (SystemInfoResponse, error) {
+	f := func(payload any) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/user/setting/systeminfo", m.uri)
+		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
+	}
+	var res SystemInfoResponse
+	err := m.request(f, nil, &res)
+	return res, err
+}
+
+func (m *Com) GetFirmwareVersion() (int, error) {
+	systemInfo, err := m.GetSystemInfo()
+	if err != nil {
+		return 0, err
+	}
+
+	// extract the patch number behind a dot that is always followed by at least 4 digits
+	if match := regexp.MustCompile(`\.(\d{4})$`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
+		return strconv.Atoi(match[1])
+	}
+
+	return 0, errors.New("firmware version not found")
+}
+
+// BatteryMode sets the battery mode
+func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
+	var res struct{}
+	return m.request(func(payload any) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/user/setting/batt", m.uri)
+		return request.New(http.MethodPut, uri, request.MarshalJSON(payload), request.JSONEncoding)
+	}, map[string]string{
+		"backupmode": mode,
+		"backup_soc": strconv.Itoa(soc),
+		"autocharge": strconv.Itoa(cast.ToInt(autocharge)),
+	}, &res)
+}
+
+func (m *Com) request(f func(any) (*http.Request, error), payload map[string]string, res any) error {
+	data := map[string]string{
 		"auth_key": m.authKey,
 	}
+	maps.Copy(data, payload)
 
-	req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := f(data)
 	if err != nil {
-		return EssData{}, err
+		return err
 	}
 
-	var resp MeterResponse
-
-	if err = m.DoJSON(req, &resp); err != nil {
-		// re-login if request returns 405-error
-		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
-			err = m.Login()
-
-			if err == nil {
-				data["auth_key"] = m.authKey
-				req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
-			}
-
-			if err == nil {
-				err = m.DoJSON(req, &resp)
-			}
-		}
+	err = m.DoJSON(req, &res)
+	if err == nil {
+		return nil
 	}
 
+	// re-login if request returns 405-error
+	if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() != http.StatusMethodNotAllowed {
+		return err
+	}
+
+	if err := m.Login(); err != nil {
+		return err
+	}
+
+	data["auth_key"] = m.authKey
+	req, err = f(data)
 	if err != nil {
-		return EssData{}, err
+		return err
 	}
 
-	res := resp.Statistics
-	if resp.Direction.IsGridSelling > 0 {
-		res.GridPower = -res.GridPower
-	}
-
-	// discharge battery: batPower is positive, charge battery: batPower is negative
-	if resp.Direction.IsBatteryDischarging == 0 {
-		res.BatConvPower = -res.BatConvPower
-	}
-
-	return res, nil
+	return m.DoJSON(req, &res)
 }

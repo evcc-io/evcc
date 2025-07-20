@@ -1,11 +1,11 @@
 package pipe
 
 import (
+	"slices"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/slices"
 )
 
 // Piper is the interface that data flow plugins must implement
@@ -59,44 +59,6 @@ func (l *Deduplicator) pipe(in <-chan util.Param, out chan<- util.Param) {
 
 // Pipe creates a new filtered output channel for given input channel
 func (l *Deduplicator) Pipe(in <-chan util.Param) <-chan util.Param {
-	out := make(chan util.Param)
-	go l.pipe(in, out)
-	return out
-}
-
-// Limiter allows filtering of channel data by given criteria
-type Limiter struct {
-	clock    clock.Clock
-	interval time.Duration
-	cache    map[string]cacheItem
-}
-
-// NewLimiter creates limiter
-func NewLimiter(interval time.Duration) Piper {
-	l := &Limiter{
-		clock:    clock.New(),
-		interval: interval,
-		cache:    make(map[string]cacheItem),
-	}
-
-	return l
-}
-
-func (l *Limiter) pipe(in <-chan util.Param, out chan<- util.Param) {
-	for p := range in {
-		key := p.UniqueID()
-		item, cached := l.cache[key]
-
-		// forward if not cached or expired
-		if !cached || l.clock.Since(item.updated) >= l.interval {
-			l.cache[key] = cacheItem{updated: l.clock.Now(), val: p.Val}
-			out <- p
-		}
-	}
-}
-
-// Pipe creates a new filtered output channel for given input channel
-func (l *Limiter) Pipe(in <-chan util.Param) <-chan util.Param {
 	out := make(chan util.Param)
 	go l.pipe(in, out)
 	return out

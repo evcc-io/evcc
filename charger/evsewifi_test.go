@@ -21,11 +21,15 @@ func TestEvseWifi(t *testing.T) {
 			"power":    true,
 			"energy":   true,
 			"currents": true,
+			"voltages": true,
 		},
 	})
-
 	if err != nil {
 		t.Error(err)
+	}
+
+	if _, ok := wb.(api.Meter); !ok {
+		t.Error("missing api.Meter")
 	}
 
 	if _, ok := wb.(api.MeterEnergy); !ok {
@@ -36,8 +40,8 @@ func TestEvseWifi(t *testing.T) {
 		t.Error("missing api.PhaseCurrents")
 	}
 
-	if _, ok := wb.(api.ChargeTimer); !ok {
-		t.Error("missing ChargeTimer api")
+	if _, ok := wb.(api.PhaseVoltages); !ok {
+		t.Error("missing api.PhaseVoltages")
 	}
 }
 
@@ -50,7 +54,6 @@ func TestEvseWifiEx(t *testing.T) {
 	wb, err := NewEVSEWifiFromConfig(map[string]interface{}{
 		"uri": ts.URL,
 	})
-
 	if err != nil {
 		t.Error(err)
 	}

@@ -3,11 +3,22 @@ products:
   - brand: SENEC
     description:
       generic: .Home
+requirements:
+  description:
+    de: Batteriesteuerung umfasst nur das Netzladen, nicht die Entlade-Sperre.
+    en: Battery control only includes grid charging, not the discharge lock.
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: schema
+    description:
+      generic: Schema
+    type: choice
+    choice: ["https", "http"]
+    default: https
   - name: capacity
     advanced: true
 render: |
@@ -16,7 +27,8 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
     method: POST
     headers:
     - content-type: application/json
@@ -32,9 +44,12 @@ render: |
     body: '{"ENERGY":{"GUI_BAT_DATA_POWER":""}}'
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
+  {{- end }}
+  {{- if eq .usage "battery" }}
   soc:
     source: http
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
     method: POST
     headers:
     - content-type: application/json
@@ -42,7 +57,30 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | sub("fl_"; "")
     unpack: hex
     decode: float32
-  {{- if ne .capacity "" }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: {{ .schema }}://{{ .host }}/lala.cgi
+        insecure: true
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{"ENERGY":{"SAFE_CHARGE_PROHIBIT":"u8_01"}}'  # self consumption
+    - case: 2 # hold (not implemented)
+      set:
+        source: error
+        error: ErrNotAvailable
+    - case: 3 # charge
+      set:
+        source: http
+        uri: {{ .schema }}://{{ .host }}/lala.cgi
+        insecure: true
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force to charge
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

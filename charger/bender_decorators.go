@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargeRater func() (float64, error), meterEnergy func() (float64, error), identifier func() (string, error)) api.Charger {
+func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), meterEnergy func() (float64, error), battery func() (float64, error), identifier func() (string, error), chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil:
 		return base
 
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -22,18 +22,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -48,18 +37,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -74,22 +52,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -108,154 +71,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Meter
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Meter
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Meter
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.MeterEnergy
-		}{
-			BenderCC: base,
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -270,22 +86,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -304,22 +105,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -338,26 +124,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Meter
@@ -380,138 +147,84 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
-			api.MeterEnergy
+			api.Battery
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Meter
-			api.MeterEnergy
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Meter: &decorateBenderCCMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
-			api.MeterEnergy
+			api.Battery
+			api.Meter
 			api.PhaseCurrents
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
 			},
 			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -521,18 +234,36 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
 			api.Meter
 			api.MeterEnergy
 			api.PhaseCurrents
-			api.PhaseVoltages
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Meter: &decorateBenderCCMeterImpl{
 				meter: meter,
@@ -543,12 +274,59 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
 			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -559,7 +337,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -574,22 +352,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -608,22 +371,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -642,26 +390,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -684,190 +413,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.Meter
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.Meter
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateBenderCCMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.MeterEnergy
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -886,26 +432,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -928,26 +455,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -970,30 +478,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater == nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.Identifier
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -1020,36 +505,31 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Identifier
-			api.MeterEnergy
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Identifier: &decorateBenderCCIdentifierImpl{
 				identifier: identifier,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Identifier: &decorateBenderCCIdentifierImpl{
 				identifier: identifier,
@@ -1057,46 +537,42 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			Meter: &decorateBenderCCMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Identifier
-			api.MeterEnergy
+			api.Meter
 			api.PhaseCurrents
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Identifier: &decorateBenderCCIdentifierImpl{
 				identifier: identifier,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
+			api.PhaseVoltages
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Identifier: &decorateBenderCCIdentifierImpl{
 				identifier: identifier,
@@ -1104,82 +580,29 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			Meter: &decorateBenderCCMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
 			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
 			api.Identifier
 			api.Meter
-			api.MeterEnergy
+			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Identifier: &decorateBenderCCIdentifierImpl{
 				identifier: identifier,
 			},
 			Meter: &decorateBenderCCMeterImpl{
 				meter: meter,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargeRater != nil && identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*BenderCC
-			api.ChargeRater
-			api.Identifier
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			Identifier: &decorateBenderCCIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
@@ -1189,19 +612,41 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case chargeRater != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
 		return &struct {
 			*BenderCC
-			api.ChargeRater
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
 			api.PhaseCurrents
-			api.PhaseVoltages
 		}{
 			BenderCC: base,
-			ChargeRater: &decorateBenderCCChargeRaterImpl{
-				chargeRater: chargeRater,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
 			},
 			Identifier: &decorateBenderCCIdentifierImpl{
 				identifier: identifier,
@@ -1214,6 +659,4937 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseSwitcher == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseSwitcher == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter == nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages == nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseGetter != nil && phaseSwitcher != nil && phaseVoltages != nil:
+		return &struct {
+			*BenderCC
+			api.Battery
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseGetter
+			api.PhaseSwitcher
+			api.PhaseVoltages
+		}{
+			BenderCC: base,
+			Battery: &decorateBenderCCBatteryImpl{
+				battery: battery,
+			},
+			ChargerEx: &decorateBenderCCChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decorateBenderCCIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateBenderCCMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateBenderCCMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateBenderCCPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseGetter: &decorateBenderCCPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateBenderCCPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 			PhaseVoltages: &decorateBenderCCPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
@@ -1224,12 +5600,20 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 	return nil
 }
 
-type decorateBenderCCChargeRaterImpl struct {
-	chargeRater func() (float64, error)
+type decorateBenderCCBatteryImpl struct {
+	battery func() (float64, error)
 }
 
-func (impl *decorateBenderCCChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
+func (impl *decorateBenderCCBatteryImpl) Soc() (float64, error) {
+	return impl.battery()
+}
+
+type decorateBenderCCChargerExImpl struct {
+	chargerEx func(float64) error
+}
+
+func (impl *decorateBenderCCChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decorateBenderCCIdentifierImpl struct {
@@ -1262,6 +5646,22 @@ type decorateBenderCCPhaseCurrentsImpl struct {
 
 func (impl *decorateBenderCCPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
+}
+
+type decorateBenderCCPhaseGetterImpl struct {
+	phaseGetter func() (int, error)
+}
+
+func (impl *decorateBenderCCPhaseGetterImpl) GetPhases() (int, error) {
+	return impl.phaseGetter()
+}
+
+type decorateBenderCCPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
+}
+
+func (impl *decorateBenderCCPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }
 
 type decorateBenderCCPhaseVoltagesImpl struct {

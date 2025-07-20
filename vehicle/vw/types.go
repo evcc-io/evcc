@@ -133,12 +133,12 @@ func (t *TimedTemperature) UnmarshalJSON(data []byte) error {
 
 	err := json.Unmarshal(data, &temp)
 	if err == nil {
-		(*t).Timestamp = temp.Timestamp
+		t.Timestamp = temp.Timestamp
 
 		if val, err := strconv.Atoi(string(temp.Content)); err == nil {
-			(*t).Content = temp2Float(val)
+			t.Content = temp2Float(val)
 		} else {
-			(*t).Content = math.NaN()
+			t.Content = math.NaN()
 		}
 	}
 

@@ -36,7 +36,7 @@ type Status struct {
 	Energy   []Energy
 	Odometer struct {
 		Mileage float64
-	} `json:"timed.odometer"`
+	}
 	LastPosition struct {
 		Type     string
 		Geometry struct {
@@ -55,7 +55,7 @@ type Status struct {
 type Energy struct {
 	UpdatedAt time.Time
 	Type      string // Fuel/Electric
-	Level     int
+	Level     float64
 	Autonomy  int
 	Charging  struct {
 		Plugged         bool

@@ -1,0 +1,43 @@
+template: solcast
+products:
+  - brand: Solcast
+requirements:
+  description:
+    en: Requires a [solcast.com](https://solcast.com/free-rooftop-solar-forecasting) account. The free "Home User" tier is often sufficient for private use. This plan has an API limit of 10 requests per day.
+    de: Benötigt einen [solcast.com](https://solcast.com/free-rooftop-solar-forecasting)-Account. Der kostenlose "Home User" Tarif ist für private Anwendungen oft ausreichend. Dieser Plan hat ein API-Limit von 10 Anfragen pro Tag.
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: site
+    description:
+      en: Ressource ID of your site
+      de: Ressource ID deiner Anlage
+    required: true
+  - name: token
+    description:
+      generic: API Token
+    required: true
+  - name: from
+    description:
+      en: Start time
+      de: Startzeit
+    help:
+      en: Start time of data retrieval, specified in full hours, e.g. "6"
+      de: Startzeit der Datenabrufe, Angabe in vollen Stunden, z.B "6"
+    advanced: true
+  - name: to
+    description:
+      en: End time
+      de: Endzeit
+    help:
+      en: End time of data retrieval, specified in full hours, e.g. "20"
+      de: Endzeit der Datenabrufe, Angabe in vollen Stunden, z.B "20"
+    advanced: true
+  - name: interval
+    default: 3h
+    advanced: true
+render: |
+  type: solcast
+  site: {{ .site }}
+  token: {{ .token }}
+  interval: {{ .interval }}

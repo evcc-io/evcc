@@ -4,7 +4,7 @@ const ApiURL = "https://api.zaptec.com"
 
 type ObservationID int
 
-//go:generate enumer -type ObservationID
+//go:generate go tool enumer -type ObservationID
 
 // Commands
 const (
@@ -29,6 +29,7 @@ const (
 const (
 	Unknown                                     ObservationID = 0
 	OfflineMode                                 ObservationID = 1
+	Capabilities                                ObservationID = 100
 	AuthenticationRequired                      ObservationID = 120
 	PaymentActive                               ObservationID = 130
 	PaymentCurrency                             ObservationID = 131
@@ -139,4 +140,9 @@ const (
 	IsOcppConnected                             ObservationID = -3
 	IsOnline                                    ObservationID = -2
 	Pulse                                       ObservationID = -1
+)
+
+const (
+	ZaptecGo1_Pro = 0
+	ZaptecGo2     = 1
 )

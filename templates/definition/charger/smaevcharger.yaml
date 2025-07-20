@@ -3,6 +3,9 @@ products:
   - brand: SMA
     description:
       generic: EV Charger
+  - brand: SMA
+    description:
+      generic: eCharger
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
@@ -11,12 +14,10 @@ requirements:
     en: The charger must be switched to "Fast" charging mode and the user must have "Administrator" rights.
 params:
   - name: host
-    required: true
   - name: user
     required: true
   - name: password
     required: true
-    mask: true
 render: |
   type: smaevcharger
   uri: http://{{ .host }}

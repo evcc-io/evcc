@@ -1,6 +1,0 @@
-title: EvseState
-type: string
-x-tags:
-  - Claims
-  - Status
-description: Either enable charging (`active`) or block charging (`disabled`)

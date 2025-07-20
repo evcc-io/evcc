@@ -9,16 +9,18 @@ endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
-LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
-BUILD_ARGS := -ldflags='$(LD_FLAGS)'
+LD_FLAGS := -X github.com/evcc-io/evcc/util.Version=$(VERSION) -X github.com/evcc-io/evcc/util.Commit=$(COMMIT) -s -w
+BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := evcc/evcc
+DOCKER_TAG := testing
 PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
-IMAGE_FILE := evcc_$(TAG_NAME).image
-IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/gokrazy/mkfs github.com/gokrazy/wifi github.com/evcc-io/evcc
+GOK_DIR := packaging/gokrazy
+GOK := gok -i evcc --parent_dir $(GOK_DIR)
+IMAGE_FILE := evcc_$(TAG_NAME).img
 
 # deb
 PACKAGES = ./release
@@ -35,7 +37,7 @@ clean::
 	rm -rf dist/
 
 install::
-	go install $$(go list -f '{{join .Imports " "}}' tools.go)
+	go install tool
 
 install-ui::
 	npm ci
@@ -58,12 +60,9 @@ lint-ui::
 test-ui::
 	npm test
 
-toml:
-	go run packaging/toml.go
-
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS),test ./...
+	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')
@@ -74,19 +73,18 @@ build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
-snapshot:
-	goreleaser --snapshot --skip-publish --clean
+snapshot::
+	goreleaser --snapshot --skip publish --clean
 
 release::
 	goreleaser --clean
 
+openapi::
+	cd server/mcp && go run github.com/evcc-io/evcc/server/mcp/openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
+
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
-
-publish-testing::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .
 
 publish-nightly::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
@@ -94,7 +92,7 @@ publish-nightly::
 
 publish-release::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --build-arg RELEASE=1 --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --build-arg RELEASE=1 --push .
 
 apt-nightly::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
@@ -106,25 +104,27 @@ apt-release::
 		cloudsmith push deb evcc/stable/any-distro/any-version $(file); \
 	)
 
-# gokrazy image
-gokrazy::
-	go install github.com/gokrazy/tools/cmd/gokr-packer@main
-	mkdir -p flags/github.com/gokrazy/breakglass
-	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
-	mkdir -p env/github.com/evcc-io/evcc
-	echo "EVCC_NETWORK_PORT=80" > env/github.com/evcc-io/evcc/env.txt
-	echo "EVCC_DATABASE_DSN=/perm/evcc.db" >> env/github.com/evcc-io/evcc/env.txt
-	mkdir -p buildflags/github.com/evcc-io/evcc
-	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
-	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
-	gokr-packer -hostname evcc -http_port 8080 -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
+# gokrazy
+gok::
+	which gok || go install github.com/gokrazy/tools/cmd/gok@main
+	# https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
+	sed 's!"GoBuildFlags": null!"GoBuildFlags": ["$(BUILD_TAGS) -trimpath -ldflags='"'"'$(LD_FLAGS)'"'"'"]!g' $(GOK_DIR)/config.tmpl.json > $(GOK_DIR)/evcc/config.json
+	${GOK} add .
+	# ${GOK} add tailscale.com/cmd/tailscaled
+	# ${GOK} add tailscale.com/cmd/tailscale
+
+# build image
+gok-image:: gok
+	${GOK} overwrite --full=$(IMAGE_FILE) --target_storage_bytes=1258299392
 	# gzip -f $(IMAGE_FILE)
 
-gokrazy-run::
-	MACHINE=arm64 IMAGE_FILE=$(IMAGE_FILE) ./packaging/gokrazy/run.sh
+# run qemu
+gok-vm:: gok
+	${GOK} vm run --netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8022-:22,hostfwd=tcp::8888-:8080
 
-gokrazy-update::
-	gokr-packer -update yes $(IMAGE_OPTIONS)
+# update instance
+gok-update::
+	${GOK} update yes
 
 soc::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
@@ -134,11 +134,16 @@ soc::
 patch-asn1-sudo::
 	# echo $(GOROOT)
 	cat $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
-	sudo patch -N -t -d $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(CURRDIR)/patch/asn1.diff
+	sudo patch -N -t -d $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(CURRDIR)/packaging/patch/asn1.diff
 	cat $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
 
 patch-asn1::
 	# echo $(GOROOT)
 	cat $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
-	patch -N -t -d $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(CURRDIR)/patch/asn1.diff
+	patch -N -t -d $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte -i $(CURRDIR)/packaging/patch/asn1.diff
 	cat $(GOROOT)/src/vendor/golang.org/x/crypto/cryptobyte/asn1.go | grep -C 1 "out = true"
+
+upgrade::
+	$(shell go list -u -f '{{if (and (not (or .Main .Indirect)) .Update)}}{{.Path}}{{end}}' -m all | xargs go get)
+	go get modernc.org/sqlite@latest
+	go mod tidy

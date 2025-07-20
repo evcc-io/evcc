@@ -38,35 +38,54 @@ type GoE struct {
 }
 
 func init() {
-	registry.Add("go-e", NewGoEFromConfig)
+	registry.Add("go-e", func(other map[string]interface{}) (api.Charger, error) {
+		return newGoEFromConfig(true, other)
+	})
+	registry.Add("go-e-v3", func(other map[string]interface{}) (api.Charger, error) {
+		return newGoEFromConfig(false, other)
+	})
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+//go:generate go tool decorate -f decorateGoE -b *GoE -r api.Charger -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
-// NewGoEFromConfig creates a go-e charger from generic config
-func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+// newGoEFromConfig creates a go-e charger from generic config
+func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error) {
+	cc := struct {
 		Token string
 		URI   string
 		Cache time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.URI != "" && cc.Token != "" {
-		return nil, errors.New("should only have one of uri/token")
-	}
-	if cc.URI == "" && cc.Token == "" {
-		return nil, errors.New("must have one of uri/token")
+	if (cc.URI != "") == (cc.Token != "") {
+		return nil, errors.New("must have either uri or token")
 	}
 
-	return NewGoE(cc.URI, cc.Token, cc.Cache)
+	c, err := NewGoE(cc.URI, cc.Token, cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	var chargedEnergy func() (float64, error)
+	if v2 {
+		chargedEnergy = c.chargedEnergy
+	}
+
+	var phases1p3p func(int) error
+	if c.api.IsV2() {
+		phases1p3p = c.phases1p3p
+	}
+
+	return decorateGoE(c, chargedEnergy, phases1p3p), nil
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
+func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{}
 
 	log := util.NewLogger("go-e").Redact(token)
@@ -79,10 +98,6 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
-	}
-
-	if c.api.IsV2() {
-		return decorateGoE(c, c.phases1p3p), nil
 	}
 
 	return c, nil
@@ -126,7 +141,7 @@ func (c *GoE) Enable(enable bool) error {
 
 	param := map[bool]string{false: "alw", true: "frc"}[c.api.IsV2()]
 	if c.api.IsV2() {
-		b ^= 1
+		b += 1
 	}
 
 	return c.api.Update(fmt.Sprintf("%s=%d", param, b))
@@ -150,17 +165,8 @@ func (c *GoE) CurrentPower() (float64, error) {
 	return resp.CurrentPower(), err
 }
 
-var _ api.ChargeRater = (*GoE)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *GoE) ChargedEnergy() (float64, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return 0, err
-	}
-
-	return resp.ChargedEnergy(), err
-}
+// removed: https://github.com/evcc-io/evcc/issues/13726
+// var _ api.ChargeRater = (*GoE)(nil)
 
 var _ api.PhaseCurrents = (*GoE)(nil)
 
@@ -211,6 +217,17 @@ func (c *GoE) TotalEnergy() (float64, error) {
 	}
 
 	return resp.TotalEnergy(), err
+}
+
+// chargedEnergy implements the api.ChargeRater interface - v2 only
+// https://github.com/evcc-io/evcc/issues/13726
+func (c *GoE) chargedEnergy() (float64, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, err
+	}
+
+	return resp.ChargedEnergy(), err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface - v2 only

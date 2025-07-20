@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -43,8 +44,8 @@ const (
 	etrelRegSWVersion     = 1015
 
 	// Always zero, see https://github.com/evcc-io/evcc/issues/5346
-	//etrelRegSessionEnergy = 30
-	//etrelRegChargeTime    = 32
+	// etrelRegSessionEnergy = 30
+	// etrelRegChargeTime    = 32
 
 	// holding, write-only!
 	etrelRegMaxCurrent = 8
@@ -59,11 +60,11 @@ type Etrel struct {
 }
 
 func init() {
-	registry.Add("etrel", NewEtrelFromConfig)
+	registry.AddCtx("etrel", NewEtrelFromConfig)
 }
 
 // NewEtrelFromConfig creates a Etrel charger from generic config
-func NewEtrelFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEtrelFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Connector          int
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -78,12 +79,12 @@ func NewEtrelFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEtrel(cc.Connector, cc.URI, cc.ID)
+	return NewEtrel(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewEtrel creates a Etrel charger
-func NewEtrel(connector int, uri string, id uint8) (*Etrel, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewEtrel(ctx context.Context, uri string, id uint8, connector int) (*Etrel, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +129,7 @@ func (wb *Etrel) Status() (api.ChargeStatus, error) {
 	// 10 Unavailable
 
 	switch u := binary.BigEndian.Uint16(b); u {
-	case 1, 2:
+	case 0, 1, 2:
 		return api.StatusA, nil
 	case 3, 5, 6, 7, 9:
 		return api.StatusB, nil
@@ -180,15 +181,18 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	f := float32(current)
+	curr := float32(current)
 
-	err := wb.setCurrent(f)
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.current = f
+		wb.current = curr
 	}
 
 	return err
 }
+
+// removed due to https://github.com/evcc-io/evcc/issues/14507
+// var _ api.CurrentGetter = (*Etrel)(nil)
 
 var _ api.Meter = (*Etrel)(nil)
 
@@ -211,18 +215,18 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var currents [3]float64
-	for i := 0; i < 3; i++ {
-		currents[i] = float64(encoding.Float32(b[4*i:]))
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(encoding.Float32(b[4*i:]))
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // var _ api.ChargeTimer = (*Etrel)(nil)
 //
-// // ChargingTime implements the api.ChargeTimer interface
-// func (wb *Etrel) ChargingTime() (time.Duration, error) {
+// // ChargeDuration implements the api.ChargeTimer interface
+// func (wb *Etrel) ChargeDuration() (time.Duration, error) {
 // 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
 // 	if err != nil {
 // 		return 0, err

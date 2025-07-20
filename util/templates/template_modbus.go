@@ -3,6 +3,7 @@ package templates
 import (
 	_ "embed"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 }
 
 // ModbusValues adds the values required for modbus.tpl to the value map
-func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
 		return
@@ -75,15 +76,15 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 			switch p.Name {
 			case ModbusParamNameId:
 				if modbusParam.ID != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.ID)
+					defaultValue = strconv.Itoa(modbusParam.ID)
 				}
 			case ModbusParamNamePort:
 				if modbusParam.Port != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.Port)
+					defaultValue = strconv.Itoa(modbusParam.Port)
 				}
 			case ModbusParamNameBaudrate:
 				if modbusParam.Baudrate != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.Baudrate)
+					defaultValue = strconv.Itoa(modbusParam.Baudrate)
 				}
 			case ModbusParamNameComset:
 				if modbusParam.Comset != "" {
@@ -95,7 +96,7 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 				// for modbus params the default value is carried
 				// using the parameter default, not the value
 				// TODO figure out why that's necessary
-				if renderMode == TemplateRenderModeInstance {
+				if renderMode == RenderModeInstance {
 					t.SetParamDefault(p.Name, defaultValue)
 				} else {
 					values[p.Name] = defaultValue
@@ -103,7 +104,7 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 			}
 		}
 
-		if renderMode == TemplateRenderModeDocs {
+		if renderMode == RenderModeDocs {
 			values[iface] = true
 		}
 	}

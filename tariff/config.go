@@ -1,41 +1,32 @@
 package tariff
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	reg "github.com/evcc-io/evcc/util/registry"
 )
 
-type tariffRegistry map[string]func(map[string]interface{}) (api.Tariff, error)
+var registry = reg.New[api.Tariff]("tariff")
 
-func (r tariffRegistry) Add(name string, factory func(map[string]interface{}) (api.Tariff, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate tariff type: %s", name))
-	}
-	r[name] = factory
+// Types returns the list of types
+func Types() []string {
+	return registry.Types()
 }
-
-func (r tariffRegistry) Get(name string) (func(map[string]interface{}) (api.Tariff, error), error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("tariff type not registered: %s", name)
-	}
-	return factory, nil
-}
-
-var registry tariffRegistry = make(map[string]func(map[string]interface{}) (api.Tariff, error))
 
 // NewFromConfig creates tariff from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (v api.Tariff, err error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Tariff, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
-	if err == nil {
-		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create tariff '%s': %w", typ, err)
-		}
-	} else {
-		err = fmt.Errorf("invalid tariff type: %s", typ)
+	if err != nil {
+		return nil, err
 	}
 
-	return
+	v, err := factory(ctx, other)
+	if err != nil {
+		err = fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
+	}
+
+	return v, err
 }

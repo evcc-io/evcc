@@ -1,0 +1,54 @@
+interval: 0.1s
+
+site:
+  title: Vehicle Error
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: js
+      script: |
+        1000
+  - name: charger_meter
+    type: custom
+    power:
+      source: js
+      script: |
+        500
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    meter: charger_meter
+    vehicle: broken_tesla
+    mode: now
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        true
+    status:
+      source: js
+      script: |
+        "C"
+    maxcurrent:
+      source: js
+      script: |
+        16
+
+vehicles:
+  - name: broken_tesla
+    type: template
+    template: tesla # not optimal, since real communication with tesla server is happening
+    title: Broken Tesla
+    accessToken: A
+    refreshToken: B

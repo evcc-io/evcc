@@ -29,7 +29,5 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .SData.SoC
-  {{- if ne .capacity "" }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

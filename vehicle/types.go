@@ -1,6 +1,12 @@
 package vehicle
 
-import "errors"
+import (
+	"errors"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"golang.org/x/oauth2"
+)
 
 // ClientCredentials contains OAuth2 client id and secret
 type ClientCredentials struct {
@@ -10,11 +16,11 @@ type ClientCredentials struct {
 // Error validates the credentials and returns an error if they are incomplete
 func (c *ClientCredentials) Error() error {
 	if c.ID == "" {
-		return errors.New("missing credentials id")
+		return errors.New("missing client id")
 	}
 
 	if c.Secret == "" {
-		return errors.New("missing credentials secret")
+		return errors.New("missing client secret")
 	}
 
 	return nil
@@ -25,11 +31,15 @@ type Tokens struct {
 	Access, Refresh string
 }
 
-// Error validates the token and returns an error if they are incomplete
-func (t *Tokens) Error() error {
-	if t.Access == "" || t.Refresh == "" {
-		return errors.New("missing access and/or refresh token, use `evcc token` to create")
+// Token builds token from credentials and returns an error if they are incomplete
+func (t *Tokens) Token() (*oauth2.Token, error) {
+	if t.Access == "" && t.Refresh == "" {
+		return nil, api.ErrMissingToken
 	}
 
-	return nil
+	return &oauth2.Token{
+		AccessToken:  t.Access,
+		RefreshToken: t.Refresh,
+		Expiry:       time.Now(),
+	}, nil
 }

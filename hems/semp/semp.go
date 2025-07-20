@@ -34,7 +34,7 @@ const (
 	maxAge           = 1800
 )
 
-var serverName = "EVCC SEMP Server " + server.Version
+var serverName = "EVCC SEMP Server " + util.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
@@ -139,12 +139,10 @@ func (s *SEMP) Run() {
 		ads = append(ads, ad)
 	}
 
-	ticker := time.NewTicker(maxAge * time.Second / 2)
-
 ANNOUNCE:
-	for {
+	for tick := time.Tick(maxAge * time.Second / 2); ; {
 		select {
-		case <-ticker.C:
+		case <-tick:
 			for _, ad := range ads {
 				if err := ad.Alive(); err != nil {
 					s.log.ERROR.Println(err)
@@ -344,10 +342,7 @@ func (s *SEMP) serialNumber(id int) string {
 func UniqueDeviceID() ([]byte, error) {
 	bytes := 6
 
-	mid, err := machine.ProtectedID("evcc-semp")
-	if err != nil {
-		return nil, err
-	}
+	mid := machine.ProtectedID("evcc-semp")
 
 	b, err := hex.DecodeString(mid)
 	if err != nil {
@@ -377,7 +372,7 @@ func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 	res := DeviceInfo{
 		Identification: Identification{
 			DeviceID:     s.deviceID(id),
-			DeviceName:   lp.Title(),
+			DeviceName:   lp.GetTitle(),
 			DeviceType:   sempCharger,
 			DeviceSerial: s.serialNumber(id),
 			DeviceVendor: "github.com/evcc-io/evcc",
@@ -388,8 +383,8 @@ func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 			OptionalEnergy:       true,
 		},
 		Characteristics: Characteristics{
-			MinPowerConsumption: int(lp.GetMinPower()),
-			MaxPowerConsumption: int(lp.GetMaxPower()),
+			MinPowerConsumption: int(lp.EffectiveMinPower()),
+			MaxPowerConsumption: int(lp.EffectiveMaxPower()),
 		},
 	}
 
@@ -465,8 +460,8 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 		minEnergy = 0
 	}
 
-	maxPowerConsumption := int(lp.GetMaxPower())
-	minPowerConsumption := int(lp.GetMinPower())
+	maxPowerConsumption := int(lp.EffectiveMaxPower())
+	minPowerConsumption := int(lp.EffectiveMinPower())
 	if mode == api.ModeNow {
 		minPowerConsumption = maxPowerConsumption
 	}

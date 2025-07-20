@@ -1,0 +1,21 @@
+template: abl-em4
+products:
+  - brand: ABL
+    description:
+      generic: eM4 Single (SBCx)
+  - brand: ABL
+    description:
+      generic: eM4 Twin (SBCx)
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+  - name: connector
+    default: 1
+render: |
+  type: abl-em4
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

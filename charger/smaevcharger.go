@@ -26,7 +26,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/smaevcharger"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -37,12 +36,12 @@ import (
 // smaevchager charger implementation
 type Smaevcharger struct {
 	*request.Helper
-	log              *util.Logger
-	uri              string // 192.168.XXX.XXX
-	cache            time.Duration
-	oldstate         float64
-	measurementCache provider.Cacheable[[]smaevcharger.Measurements]
-	parameterCache   provider.Cacheable[[]smaevcharger.Parameters]
+	log          *util.Logger
+	uri          string // 192.168.XXX.XXX
+	cache        time.Duration
+	oldstate     float64
+	measurementG util.Cacheable[[]smaevcharger.Measurements]
+	parameterG   util.Cacheable[[]smaevcharger.Parameters]
 }
 
 func init() {
@@ -95,8 +94,8 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 	}
 
 	// setup cached values
-	wb.measurementCache = provider.ResettableCached(wb._measurementData, wb.cache)
-	wb.parameterCache = provider.ResettableCached(wb._parameterData, wb.cache)
+	wb.measurementG = util.ResettableCached(wb._measurementData, wb.cache)
+	wb.parameterG = util.ResettableCached(wb._parameterData, wb.cache)
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {
@@ -233,11 +232,26 @@ func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
 	return wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))
 }
 
+var _ api.MeterEnergy = (*Smaevcharger)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Smaevcharger) TotalEnergy() (float64, error) {
+	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
+	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
+	}
+	return res / 1e3, err
+}
+
 var _ api.Meter = (*Smaevcharger)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Smaevcharger) CurrentPower() (float64, error) {
-	return wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
+	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
+	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWIn.ChaSta")
+	}
+	return res, err
 }
 
 var _ api.ChargeRater = (*Smaevcharger)(nil)
@@ -245,6 +259,9 @@ var _ api.ChargeRater = (*Smaevcharger)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
 	res, err := wb.getMeasurement("Measurement.ChaSess.WhIn")
+	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
+	}
 	return res / 1e3, err
 }
 
@@ -252,24 +269,24 @@ var _ api.PhaseCurrents = (*Smaevcharger)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
-	var curr []float64
+	var res [3]float64
 
-	for _, phase := range []string{"A", "B", "C"} {
+	for i, phase := range []string{"A", "B", "C"} {
 		val, err := wb.getMeasurement("Measurement.GridMs.A.phs" + phase)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		curr = append(curr, -val)
+		res[i] = -val
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // reset cache
 func (wb *Smaevcharger) reset() {
-	wb.measurementCache.Reset()
-	wb.parameterCache.Reset()
+	wb.measurementG.Reset()
+	wb.parameterG.Reset()
 }
 
 func (wb *Smaevcharger) _measurementData() ([]smaevcharger.Measurements, error) {
@@ -299,7 +316,7 @@ func (wb *Smaevcharger) _parameterData() ([]smaevcharger.Parameters, error) {
 }
 
 func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
-	res, err := wb.measurementCache.Get()
+	res, err := wb.measurementG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -310,11 +327,11 @@ func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("unknown measurement: %s", id)
+	return 0, &smaevcharger.ErrUnknownMeasurement{Measurement: id}
 }
 
 func (wb *Smaevcharger) getParameter(id string) (string, error) {
-	res, err := wb.parameterCache.Get()
+	res, err := wb.parameterG.Get()
 	if err != nil {
 		return "", err
 	}

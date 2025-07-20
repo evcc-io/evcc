@@ -1,0 +1,11 @@
+template: nissan-ariya
+products:
+  - brand: Nissan
+    description:
+      generic: Ariya
+params:
+  - preset: vehicle-base
+render: |
+  type: nissan
+  version: v2
+  {{ include "vehicle-base" . }}

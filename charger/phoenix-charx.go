@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -42,13 +43,13 @@ type PhoenixCharx struct {
 }
 
 func init() {
-	registry.Add("phoenix-charx", NewPhoenixCharxFromConfig)
+	registry.AddCtx("phoenix-charx", NewPhoenixCharxFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
-func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16
@@ -63,7 +64,7 @@ func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	wb, err := NewPhoenixCharx(cc.URI, cc.ID, cc.Connector)
+	wb, err := NewPhoenixCharx(ctx, cc.URI, cc.ID, cc.Connector)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +82,8 @@ func NewPhoenixCharxFromConfig(other map[string]interface{}) (api.Charger, error
 }
 
 // NewPhoenixCharx creates a Phoenix charger
-func NewPhoenixCharx(uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +140,7 @@ func (wb *PhoenixCharx) Status() (api.ChargeStatus, error) {
 	// TODO check IEC 61851-1 C1 state
 	state := string(b[0])
 
-	return api.ChargeStatus(state), nil
+	return api.ChargeStatusString(state)
 }
 
 // Enabled implements the api.Charger interface
@@ -180,8 +181,8 @@ func (wb *PhoenixCharx) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*PhoenixCharx)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *PhoenixCharx) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegChargeTime), 2)
 	if err != nil {
 		return 0, err
@@ -212,26 +213,27 @@ func (wb *PhoenixCharx) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegCurrents), 3*2)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(encoding.Int32(b)) / 1e3,
-		float64(encoding.Int32(b[4:])) / 1e3,
-		float64(encoding.Int32(b[8:])) / 1e3, nil
+	return wb.getPhaseValues(charxRegCurrents)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixCharx) voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegVoltages), 3*2)
+	return wb.getPhaseValues(charxRegVoltages)
+}
+
+// getPhaseValues returns 3 sequential phase values
+func (wb *PhoenixCharx) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(reg), 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	return float64(encoding.Int32(b)) / 1e3,
-		float64(encoding.Int32(b[4:])) / 1e3,
-		float64(encoding.Int32(b[8:])) / 1e3, nil
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Identifier = (*PhoenixCharx)(nil)

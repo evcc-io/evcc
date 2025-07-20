@@ -8,36 +8,28 @@ requirements:
     de: Unterstützung für alle Fahrzeuge via ODB2 Adapter im Fahrzeug. Mehr Infos bei [Open Vehicle Monitoring System](http://api.openvehicles.com/).
     en: Support for all vehicles via ODB2 adapter in the vehicle. More info at [Open Vehicle Monitoring System](http://api.openvehicles.com/).
 params:
-  - name: title
+  - preset: vehicle-common
   - name: user
     required: true
   - name: password
     required: true
-    mask: true
   - name: vehicleid
+    description:
+      generic: Vehicle ID
     required: true
-  - name: capacity
-    default: 12
-  - name: phases
+  - name: server
+    default: dexters-web.de
+    description:
+      generic: Server URL
     advanced: true
-  - name: icon
-    default: car
-    advanced: true
-  - preset: vehicle-identify
+    required: true
+  - name: cache
+    default: 15m
 render: |
   type: ovms
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if ne .icon "" }}
-  icon: {{ .icon }}
-  {{- end }}
+  {{- include "vehicle-common" . }}
   user: {{ .user }}
   password: {{ .password }}
-  vehicleid: {{ .vehicleid }} # vehicle id
-  capacity: {{ .capacity }}
-  {{- if ne .phases "" }}
-  phases: {{ .phases }}
-  {{- end }}
-  server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
-  {{ include "vehicle-identify" . }}
+  vehicleid: {{ .vehicleid }}
+  server: {{ .server }}
+  cache: {{ .cache }}

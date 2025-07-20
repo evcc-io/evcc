@@ -1,0 +1,14 @@
+template: groupe-e
+products:
+  - brand: Groupe E
+    description:
+      generic: Vario Plus
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["CH"]
+params:
+  - preset: tariff-base
+render: |
+  type: groupe-e
+  {{ include "tariff-base" . }}

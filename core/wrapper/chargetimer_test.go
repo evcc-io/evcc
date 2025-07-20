@@ -17,7 +17,7 @@ func TestTimer(t *testing.T) {
 	ct.StopCharge()
 	clck.Add(time.Hour)
 
-	if d, err := ct.ChargingTime(); d != 1*time.Hour || err != nil {
+	if d, err := ct.ChargeDuration(); d != 1*time.Hour || err != nil {
 		t.Error(d, err)
 	}
 
@@ -26,7 +26,7 @@ func TestTimer(t *testing.T) {
 	clck.Add(2 * time.Hour)
 	ct.StopCharge()
 
-	if d, err := ct.ChargingTime(); d != 3*time.Hour || err != nil {
+	if d, err := ct.ChargeDuration(); d != 3*time.Hour || err != nil {
 		t.Error(d, err)
 	}
 }

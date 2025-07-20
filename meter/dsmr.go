@@ -14,7 +14,7 @@ import (
 
 	"github.com/basvdlei/gotsmart/crc16"
 	"github.com/basvdlei/gotsmart/dsmr"
-	"github.com/cenkalti/backoff"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -71,7 +71,7 @@ func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -139,9 +139,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
 func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	log := util.NewLogger("dsmr")
-	backoff := backoff.NewExponentialBackOff()
-	backoff.InitialInterval = time.Second
-	backoff.MaxInterval = 5 * time.Minute
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(5 * time.Minute))
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
@@ -161,17 +159,16 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				sleep := backoff.NextBackOff().Truncate(time.Second)
-				log.DEBUG.Printf("next attempt after: %v", sleep)
-				time.Sleep(sleep)
+				time.Sleep(bo.NextBackOff().Truncate(time.Second))
 				continue
 			}
 
 			reader.Reset(conn)
 		}
 
-		backoff.Reset()
 		if b, err := reader.Peek(1); err == nil {
+			bo.Reset()
+
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
 				_, _ = reader.ReadByte()
@@ -179,6 +176,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			}
 		} else {
 			handle("peek", err)
+			time.Sleep(bo.NextBackOff().Truncate(time.Second))
 			continue
 		}
 
@@ -194,19 +192,19 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			continue
 		}
 
-		log.TRACE.Printf("read: %s\n", frame)
+		log.TRACE.Printf("read: %s", frame)
 
 		// Check CRC
 		mcrc := strings.ToUpper(strings.TrimSpace(string(bcrc)))
 		crc := fmt.Sprintf("%04X", crc16.Checksum(frame))
 		if mcrc != crc {
-			log.ERROR.Printf("crc mismatch: %q != %q\n", mcrc, crc)
+			log.ERROR.Printf("crc mismatch: %q != %q", mcrc, crc)
 			continue
 		}
 
 		dsmrFrame, err := dsmr.ParseFrame(string(frame))
 		if err != nil {
-			log.ERROR.Printf("could not parse frame: %v\n", err)
+			log.ERROR.Printf("could not parse frame: %v", err)
 			continue
 		}
 
@@ -249,16 +247,43 @@ func (m *Dsmr) get(id string) (float64, error) {
 	return strconv.ParseFloat(res.Value, 64)
 }
 
+func (m *Dsmr) sumPhases(obis [3]string) (float64, error) {
+	var sum float64
+	for _, o := range obis {
+		f, err := m.get(o)
+		if err != nil {
+			return 0, err
+		}
+		sum += f
+	}
+	return sum, nil
+}
+
 // CurrentPower implements the api.Meter interface
 func (m *Dsmr) CurrentPower() (float64, error) {
-	bezug, err := m.get("1-0:1.7.0")
-
-	var lief float64
-	if err == nil {
-		lief, err = m.get("1-0:2.7.0")
+	bezug, err1 := m.get("1-0:1.7.0")
+	if errors.Is(err1, api.ErrNotAvailable) {
+		if f, err := m.sumPhases([3]string{"1-0:21.7.0", "1-0:41.7.0", "1-0:61.7.0"}); err == nil {
+			bezug = f
+			err1 = nil
+		}
 	}
 
-	return (bezug - lief) * 1e3, err
+	lief, err2 := m.get("1-0:2.7.0")
+	if errors.Is(err2, api.ErrNotAvailable) {
+		if f, err := m.sumPhases([3]string{"1-0:22.7.0", "1-0:42.7.0", "1-0:62.7.0"}); err == nil {
+			lief = f
+			err2 = nil
+		}
+	}
+
+	// allow one value to be missing
+	if err1 == nil && errors.Is(err2, api.ErrNotAvailable) || err2 == nil && errors.Is(err1, api.ErrNotAvailable) {
+		err1 = nil
+		err2 = nil
+	}
+
+	return (bezug - lief) * 1e3, errors.Join(err1, err2)
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -270,7 +295,7 @@ func (m *Dsmr) totalEnergy() (float64, error) {
 func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		var err error
 		if res[i], err = m.get(currentObis[i]); err != nil {
 			return 0, 0, 0, err

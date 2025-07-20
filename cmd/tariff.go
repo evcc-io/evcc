@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/api"
 	"github.com/spf13/cobra"
 )
 
@@ -13,33 +13,48 @@ import (
 var tariffCmd = &cobra.Command{
 	Use:   "tariff [name]",
 	Short: "Query configured tariff",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runTariff,
 }
 
 func init() {
 	rootCmd.AddCommand(tariffCmd)
-	tariffCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
 }
 
 func runTariff(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); err != nil {
 		fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(cmd, conf); err != nil {
+	if err := configureEnvironment(cmd, &conf); err != nil {
 		fatal(err)
 	}
 
-	name := cmd.Flags().Lookup(flagName).Value.String()
+	tariffs, err := configureTariffs(&conf.Tariffs)
+	if err != nil {
+		fatal(err)
+	}
 
-	for key, cc := range map[string]typedConfig{
-		"grid":    conf.Tariffs.Grid,
-		"feedin":  conf.Tariffs.FeedIn,
-		"planner": conf.Tariffs.Planner,
+	var name string
+	if len(args) == 1 {
+		name = args[0]
+	}
+
+	for u, tf := range map[api.TariffUsage]api.Tariff{
+		api.TariffUsageGrid:    tariffs.Grid,
+		api.TariffUsageFeedIn:  tariffs.FeedIn,
+		api.TariffUsageCo2:     tariffs.Co2,
+		api.TariffUsagePlanner: tariffs.Planner,
+		api.TariffUsageSolar:   tariffs.Solar,
 	} {
-		if cc.Type == "" || (name != "" && key != name) {
+		key := u.String()
+		if name != "" && key != name {
+			continue
+		}
+
+		if tf == nil {
 			continue
 		}
 
@@ -47,22 +62,29 @@ func runTariff(cmd *cobra.Command, args []string) {
 			fmt.Println(key + ":")
 		}
 
-		tf, err := tariff.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			fatal(err)
-		}
-
 		rates, err := tf.Rates()
 		if err != nil {
 			fatal(err)
 		}
 
+		unit := "Price/Cost"
+		switch tf.Type() {
+		case api.TariffTypeCo2:
+			unit += "Footprint (gCO2/kWh)"
+		case api.TariffTypeSolar:
+			unit = "Yield (W)"
+		default:
+			if c := conf.Tariffs.Currency; c != "" {
+				unit += fmt.Sprintf(" (%s/kWh)", c)
+			}
+		}
+
 		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(tw, "From\tTo\tPrice/Cost")
+		fmt.Fprintln(tw, "From\tTo\t"+unit)
 		const format = "2006-01-02 15:04:05"
 
 		for _, r := range rates {
-			fmt.Fprintf(tw, "%s\t%s\t%.3f\n", r.Start.Local().Format(format), r.End.Local().Format(format), r.Price)
+			fmt.Fprintf(tw, "%s\t%s\t%.3f\n", r.Start.Local().Format(format), r.End.Local().Format(format), r.Value)
 		}
 		tw.Flush()
 

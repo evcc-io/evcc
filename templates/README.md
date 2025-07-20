@@ -2,7 +2,7 @@
 
 ## Folders
 
-- defintion: hold all device templates definitons in yaml files
+- definition: hold all device templates definitions in yaml files
   - charger: all charger templates
   - meter: all meter templates
   - vehicle: all vehicle templates
@@ -92,14 +92,6 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements. The content can be multiline and Markdown
 
-### `uri`
-
-`uri` is a link providing more help on the requirements
-
-## `loglevel`
-
-`loglevel` defindes the name that can be used in the `levels` configuration for adjusting the log level of individual devices/components/...
-
 ## `params`
 
 `params` describes the set of parameters the user needs to provide a value for.
@@ -172,17 +164,17 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `example` provides an example value, so the user can get an idea of what is expected and what to look out for
 
-### `valuetype`
+### `type`
 
-`valuetype` allows to define the value type to let the CLI verify the user provided content
+`type` allows to define the value type to let the CLI verify the user provided content
 
 **Possible values**:
 
 - `string`: for string values (default)
 - `bool`: for `true` and `false` values. If `help` is provided, than that help text is presented as the question
-- `number`: for int values
+- `int`: for int values
 - `float`: for float values
-- `stringlist`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
+- `list`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
 - `chargemodes`: for a selection of charge modes (including `None` which results in the param not being set)
 
 ### `advanced`

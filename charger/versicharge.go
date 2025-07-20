@@ -19,6 +19,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 
@@ -38,9 +39,8 @@ const (
 	versiRegMeterType      = 30   //  1 RO UINT16
 	versiRegErrorCode      = 1600 //  1 RO INT16
 	versiRegTemp           = 1602 //  1 RO INT16
-	versiRegChargeStatus   = 1601 //  1 RO INT16
-	versiRegPause          = 1629 //  1 RW UNIT16
-	versiRegMaxCurrent     = 1633 //  1 RW UNIT16
+	versiRegChargeStatus   = 1599 //  1 RO INT16 (EVSE Status)
+	versiRegMaxCurrent     = 1633 //  1 RW UNIT16 -> Seit FW2.128 Pause an -> MaxCurrent = 0
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
 	versiRegPowers         = 1662 //  3 RO UINT16
@@ -51,15 +51,16 @@ const (
 // It uses Modbus TCP to communicate with the wallbox at id 2 (default).
 
 type Versicharge struct {
-	conn *modbus.Connection
+	conn    *modbus.Connection
+	current uint16
 }
 
 func init() {
-	registry.Add("versicharge", NewVersichargeFromConfig)
+	registry.AddCtx("versicharge", NewVersichargeFromConfig)
 }
 
 // NewVersichargeFromConfig creates a Versicharge charger from generic config
-func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewVersichargeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 2,
 	}
@@ -68,12 +69,12 @@ func NewVersichargeFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewVersicharge(cc.URI, cc.ID)
+	return NewVersicharge(ctx, cc.URI, cc.ID)
 }
 
 // NewVersicharge creates a Versicharge charger
-func NewVersicharge(uri string, id uint8) (*Versicharge, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+func NewVersicharge(ctx context.Context, uri string, id uint8) (*Versicharge, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
@@ -99,38 +100,27 @@ func (wb *Versicharge) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	s := binary.BigEndian.Uint16(b)
-
-	switch s {
-	case 1: // Available
-		return api.StatusA, nil
-	case 2, 5: // Preparing, Suspended EV, Suspended EVSE
-		return api.StatusB, nil
-	case 3, 4: // Charging
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
-	}
+	return api.ChargeStatusString(string(b))
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Versicharge) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(versiRegPause, 1)
+	b, err := wb.conn.ReadHoldingRegisters(versiRegMaxCurrent, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 2, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Versicharge) Enable(enable bool) error {
-	var u uint16 = 1
+	var u uint16
 	if enable {
-		u = 2
+		u = wb.current
 	}
 
-	_, err := wb.conn.WriteSingleRegister(versiRegPause, u)
+	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, u)
 
 	return err
 }
@@ -142,6 +132,9 @@ func (wb *Versicharge) MaxCurrent(current int64) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
+	if err == nil {
+		wb.current = uint16(current)
+	}
 
 	return err
 }
@@ -156,8 +149,10 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	}
 
 	var sum float64
-	for i := 0; i < 3; i++ {
-		sum += float64(binary.BigEndian.Uint16(b[2*i:]))
+	for i := range 3 {
+		if u := binary.BigEndian.Uint16(b[2*i:]); u != 0xFFFF {
+			sum += float64(u)
+		}
 	}
 
 	return sum, nil
@@ -172,7 +167,7 @@ func (wb *Versicharge) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e4, err
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -183,7 +178,7 @@ func (wb *Versicharge) getPhaseValues(reg uint16) (float64, float64, float64, er
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint16(b[2*i:]))
 	}
 

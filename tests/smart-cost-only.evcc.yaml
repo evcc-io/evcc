@@ -1,0 +1,44 @@
+interval: 0.1s
+
+site:
+  title: Smart Cost, No Grid & PV
+
+loadpoints:
+  - title: Loadpoint
+    charger: charger
+    meter: meter
+
+meters:
+  - name: meter
+    type: custom
+    power:
+      source: js
+      script: |
+        11000
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        true
+    status:
+      source: js
+      script: |
+        "C"
+    maxcurrent:
+      source: js
+      script:
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.4 # EUR/kWh
+    zones:
+      - hours: 1-6
+        price: 0.2

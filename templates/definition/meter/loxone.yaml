@@ -1,0 +1,56 @@
+template: loxone
+products:
+  - brand: Loxone
+    description:
+      generic: Miniserver
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: host
+  - name: user
+  - name: password
+  - name: meterblock
+    required: true
+    description:
+      de: Zählerbaustein
+      en: Meter block
+    help:
+      de: Bezeichnung aus Loxone Config
+      en: Name from Loxone Config
+  - name: socblock
+    required: false
+    description:
+      de: Bausteinbezeichnung für Ladezustand
+      en: Function block name for state of charge
+    help:
+      de: Bezeichnung aus Loxone Config, nur für Batterie
+      en: Name from Loxone Config, only for battery
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/jdev/sps/io/{{ .meterblock }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: .LL.value
+    scale: 1000
+  energy:
+    source: http
+    uri: http://{{ .host }}/jdev/sps/io/{{ .meterblock }}/all
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: first(.LL[] | select(type == "object" and (.name == "Mr" or .name == "Mrc")) .value)
+  {{- if and (eq .usage "battery") .socblock }}
+  soc:
+    source: http
+    uri: http://{{ .host }}/jdev/sps/io/{{ .socblock }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: .LL.value
+  {{- end }}

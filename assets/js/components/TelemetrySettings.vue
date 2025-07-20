@@ -3,21 +3,23 @@
 	<div class="form-check form-switch my-3">
 		<input
 			id="telemetryEnabled"
-			v-model="enabled"
+			:checked="enabled"
 			class="form-check-input"
 			type="checkbox"
 			role="switch"
-			:disabled="!sponsor"
+			:disabled="!sponsorActive"
 			@change="change"
 		/>
 		<div class="form-check-label">
 			<label for="telemetryEnabled">
 				{{ $t("footer.telemetry.optIn") }}
-				<i18n-t v-if="sponsor" tag="span" keypath="footer.telemetry.optInMoreDetails">
-					<a
-						href="https://docs.evcc.io/docs/guides/setup/#telemetry--community-daten"
-						target="_blank"
-					>
+				<i18n-t
+					v-if="sponsorActive"
+					tag="span"
+					keypath="footer.telemetry.optInMoreDetails"
+					scope="global"
+				>
+					<a :href="docsLink" target="_blank">
 						{{ $t("footer.telemetry.optInMoreDetailsLink") }}
 					</a>
 				</i18n-t>
@@ -28,11 +30,14 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import api from "../api";
-import settings from "../settings";
+import { docsPrefix } from "../i18n";
+import settings from "@/settings.ts";
+import type { AxiosError } from "axios";
 
-function parseMarkdown(markdownText) {
+function parseMarkdown(markdownText: string) {
 	const htmlText = markdownText
 		.replace(/\*\*(.*)\*\*/gim, "<b>$1</b>")
 		.replace(/\*(.*)\*/gim, "<i>$1</i>")
@@ -40,31 +45,37 @@ function parseMarkdown(markdownText) {
 	return htmlText.trim();
 }
 
-export default {
+export default defineComponent({
 	name: "TelemetrySettings",
-	props: { sponsor: String },
+	props: { sponsorActive: Boolean },
 	data() {
 		return {
-			error: null,
+			error: null as string | null,
 		};
 	},
 	computed: {
 		enabled() {
-			return settings.telemetry;
+			return !!settings.telemetry;
+		},
+		docsLink() {
+			return `${docsPrefix()}/docs/faq#telemetry`;
 		},
 	},
 	async mounted() {
 		await this.update();
 	},
 	methods: {
-		async change(e) {
+		async change(e: Event) {
 			try {
 				this.error = null;
-				const response = await api.post(`settings/telemetry/${e.target.checked}`);
+				const response = await api.post(
+					`settings/telemetry/${(e.target as HTMLInputElement).checked}`
+				);
 				settings.telemetry = response.data.result;
 			} catch (err) {
-				if (err.response) {
-					this.error = parseMarkdown("**Error:** " + err.response.data.error);
+				const e = err as AxiosError<{ error: string }>;
+				if (e.response) {
+					this.error = parseMarkdown("**Error:** " + e.response.data.error);
 					settings.telemetry = false;
 				}
 			}
@@ -74,14 +85,18 @@ export default {
 				return;
 			}
 			try {
-				const response = await api.get("settings/telemetry");
-				settings.telemetry = response.data.result;
+				const response = await api.get("settings/telemetry", {
+					validateStatus: () => true,
+				});
+				if (response.status === 200) {
+					settings.telemetry = response.data.result;
+				}
 			} catch (err) {
 				console.error(err);
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .form-check {

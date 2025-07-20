@@ -1,9 +1,9 @@
 package charger
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -38,13 +38,13 @@ type Wallbe struct {
 }
 
 func init() {
-	registry.Add("wallbe", NewWallbeFromConfig)
+	registry.AddCtx("wallbe", NewWallbeFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
+//go:generate go tool decorate -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
-func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewWallbeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI    string
 		Legacy bool
@@ -59,7 +59,7 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewWallbe(cc.URI)
+	wb, err := NewWallbe(ctx, cc.URI)
 	if err != nil {
 		return nil, err
 	}
@@ -68,17 +68,20 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		wb.factor = 1
 	}
 
-	var currentPower func() (float64, error)
+	// decorate meter
+	var (
+		power, energy func() (float64, error)
+		currents      func() (float64, float64, float64, error)
+	)
+
 	if cc.Meter.Power {
-		currentPower = wb.currentPower
+		power = wb.currentPower
 	}
 
-	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
+		energy = wb.totalEnergy
 	}
 
-	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
 		currents = wb.currents
 	}
@@ -88,12 +91,12 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decorateWallbe(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
+	return decorateWallbe(wb, power, energy, currents, maxCurrentMillis), nil
 }
 
 // NewWallbe creates a Wallbe charger
-func NewWallbe(uri string) (*Wallbe, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, wbSlaveID)
+func NewWallbe(ctx context.Context, uri string) (*Wallbe, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, wbSlaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +119,7 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(string(b[1])), nil
+	return api.ChargeStatusString(string(b[1]))
 }
 
 // Enabled implements the api.Charger interface
@@ -165,20 +168,6 @@ func (wb *Wallbe) maxCurrentMillis(current float64) error {
 	return err
 }
 
-var _ api.ChargeTimer = (*Wallbe)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Wallbe) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	// 2 words, least significant word first
-	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
-	return time.Duration(secs) * time.Second, nil
-}
-
 // currentPower implements the api.Meter interface
 func (wb *Wallbe) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
@@ -210,17 +199,17 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *Wallbe) currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range wbRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+	var res [3]float64
+	for i, reg := range wbRegCurrents {
+		b, err := wb.conn.ReadInputRegisters(reg, 2)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, rs485.RTUInt32ToFloat64Swapped(b))
+		res[i] = rs485.RTUInt32ToFloat64Swapped(b)
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Diagnosis = (*Wallbe)(nil)

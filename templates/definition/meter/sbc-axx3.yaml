@@ -1,15 +1,18 @@
 template: sbc-axx3
 products:
-  - brand: Saia-Burgess Controls
+  - brand: Saia-Burgess Controls (SBC)
     description:
-      generic: ALE3, AWD3
+      generic: ALE3
+  - brand: Saia-Burgess Controls (SBC)
+    description:
+      generic: AWD3
 params:
   - name: usage
     choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   model: sbc
   power: Power

@@ -77,18 +77,32 @@ type StatusResponse struct {
 }
 
 type Attributes struct {
-	ChargeStatus          float32   `json:"chargeStatus"`
-	RangeHvacOff          int       `json:"rangeHvacOff"`
-	BatteryLevel          int       `json:"batteryLevel"`
-	BatteryCapacity       int       `json:"batteryCapacity"`
-	BatteryTemperature    int       `json:"batteryTemperature"`
-	PlugStatus            int       `json:"plugStatus"`
-	LastUpdateTime        Timestamp `json:"lastUpdateTime"`
-	ChargePower           int       `json:"chargePower"`
-	RemainingTime         *int      `json:"chargingRemainingTime"`
-	RemainingToFullFast   int       `json:"timeRequiredToFullFast"`
-	RemainingToFullNormal int       `json:"timeRequiredToFullNormal"`
-	RemainingToFullSlow   int       `json:"timeRequiredToFullSlow"`
+	ChargeStatus          float32    `json:"chargeStatus"`
+	RangeHvacOff          *int       `json:"rangeHvacOff"`
+	BatteryLevel          int        `json:"batteryLevel"`
+	BatteryCapacity       int        `json:"batteryCapacity"`
+	BatteryTemperature    int        `json:"batteryTemperature"`
+	PlugStatus            int        `json:"plugStatus"`
+	LastUpdateTime        *Timestamp `json:"lastUpdateTime"`
+	ChargePower           int        `json:"chargePower"`
+	RemainingTime         *int       `json:"chargingRemainingTime"`
+	RemainingToFullFast   int        `json:"timeRequiredToFullFast"`
+	RemainingToFullNormal int        `json:"timeRequiredToFullNormal"`
+	RemainingToFullSlow   int        `json:"timeRequiredToFullSlow"`
+	// v2
+	Timestamp       *time.Time `json:"timestamp"`
+	BatteryAutonomy *int       `json:"batteryAutonomy"`
+}
+
+func (a *Attributes) Updated() time.Time {
+	if a.LastUpdateTime != nil {
+		// v1
+		return a.LastUpdateTime.Time
+	} else if a.Timestamp != nil {
+		// v2
+		return *a.Timestamp
+	}
+	return time.Time{}
 }
 
 type ActionResponse struct {
@@ -111,7 +125,7 @@ func (ct *Timestamp) UnmarshalJSON(data []byte) error {
 
 	t, err := time.Parse(timeFormat, s)
 	if err == nil {
-		(*ct).Time = t
+		ct.Time = t
 	}
 
 	return err

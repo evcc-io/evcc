@@ -5,19 +5,19 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/hems/semp"
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"golang.org/x/text/language"
 )
 
@@ -46,7 +46,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
 
-	c.log.INFO.Printf("evcc %s", server.FormattedVersion())
+	c.log.INFO.Printf("evcc %s", util.FormattedVersion())
 
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
@@ -69,6 +69,14 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	c.localizer = i18n.NewLocalizer(bundle, c.lang)
 
 	c.setDefaultTexts()
+
+	// Assign random plant id. Don't use actual machine-id as file might
+	// be copied around to a different machine.
+	c.configuration.config.Plant = machine.RandomID()
+
+	if err = machine.CustomID(c.configuration.config.Plant); err != nil {
+		panic(err)
+	}
 
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro"))
@@ -98,7 +106,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 			}
 		}
 
-		log.FATAL.Fatalln("invalid category:", category, "have:", maps.Keys(DeviceCategories))
+		log.FATAL.Fatalln("invalid category:", category, "have:", slices.Collect(maps.Keys(DeviceCategories)))
 	}
 
 	fmt.Println()
@@ -192,7 +200,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	filename := DefaultConfigFilename
 
 	for {
-		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0o666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}
@@ -200,10 +208,8 @@ func (c *CmdConfigure) flowNewConfigFile() {
 		// in case of permission error, we can't write to the file anyway
 		if os.IsPermission(err) {
 			fmt.Println(c.localizedString("File_Permissions", localizeMap{"FileName": filename}))
-		} else {
-			if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
-				break
-			}
+		} else if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
+			break
 		}
 
 		filename = c.askValue(question{
@@ -293,7 +299,6 @@ func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println(c.localizedString("Loadpoint_Setup"))
 
 	for {
-
 		loadpointTitle := c.askValue(question{
 			label:        c.localizedString("Loadpoint_Title"),
 			defaultValue: c.localizedString("Loadpoint_DefaultTitle"),
@@ -352,7 +357,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			fmt.Println()
 			minAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMinAmperage"),
-				valueType:      templates.TypeNumber,
+				valueType:      templates.TypeInt,
 				minNumberValue: int64(minValue),
 				maxNumberValue: 32,
 				required:       true,
@@ -360,7 +365,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.MinCurrent, _ = strconv.Atoi(minAmperage)
 			maxAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage"),
-				valueType:      templates.TypeNumber,
+				valueType:      templates.TypeInt,
 				minNumberValue: 6,
 				maxNumberValue: 32,
 				required:       true,
@@ -402,7 +407,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			case 3:
 				amperage := c.askValue(question{
 					label:          c.localizedString("Loadpoint_WallboxMaxAmperage"),
-					valueType:      templates.TypeNumber,
+					valueType:      templates.TypeInt,
 					minNumberValue: int64(minValue),
 					maxNumberValue: 32,
 					required:       true,
@@ -420,12 +425,6 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 		fmt.Println()
 		loadpoint.Mode = c.askValue(question{valueType: templates.TypeChargeModes, excludeNone: true})
-
-		fmt.Println()
-		loadpoint.ResetOnDisconnect = c.askValue(question{
-			label:     c.localizedString("Loadpoint_ResetOnDisconnect"),
-			valueType: templates.TypeBool,
-		})
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()

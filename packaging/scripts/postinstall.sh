@@ -13,16 +13,15 @@ askUserKeepFile() {
 		echo "Shall '$1' be deleted? [Y/n]: "
 		read answer
 		case "$answer" in
-			n*|N*)
+			n* | N*)
 				echo "Ok. We will keep that file. Keep in mind that you may need to alter it if any changes are done upstream. Your answer is saved for the future."
 				return 1
 				;;
-			y*|Y*|"")
+			y* | Y* | "")
 				echo "The file will be deleted."
 				return 0
 				;;
-			*)
-				;;
+			*) ;;
 		esac
 	done
 }
@@ -53,7 +52,7 @@ if [ "$1" = "configure" ]; then
 		askUserKeepFile "$USR_LOCAL_BIN" || KEEP_USR_LOCAL_BIN=$?
 	fi
 	# Save the user decision
-	cat > "$USER_CHOICE_CONFIG" <<EOF
+	cat > "$USER_CHOICE_CONFIG" << EOF
 #!/bin/sh
 KEEP_ETC_SERVICE=$KEEP_ETC_SERVICE
 KEEP_USR_LOCAL_BIN=$KEEP_USR_LOCAL_BIN
@@ -71,31 +70,31 @@ EOF
 	fi
 fi
 
-if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ]; then
 	# This will only remove masks created by d-s-h on package removal.
-	deb-systemd-helper unmask evcc.service >/dev/null || true
+	deb-systemd-helper unmask evcc.service > /dev/null || true
 
 	# was-enabled defaults to true, so new installations run enable.
 	if deb-systemd-helper --quiet was-enabled evcc.service; then
 		# Enables the unit on first installation, creates new
 		# symlinks on upgrades if the unit file has changed.
-		deb-systemd-helper enable evcc.service >/dev/null || true
+		deb-systemd-helper enable evcc.service > /dev/null || true
 	else
 		# Update the statefile to add new symlinks (if any), which need to be
 		# cleaned up on purge. Also remove old symlinks.
-		deb-systemd-helper update-state evcc.service >/dev/null || true
+		deb-systemd-helper update-state evcc.service > /dev/null || true
 	fi
 
 	# Restart only if it was already started
 	if [ -d /run/systemd/system ]; then
-		systemctl --system daemon-reload >/dev/null || true
+		systemctl --system daemon-reload > /dev/null || true
 		if [ -f $RESTART_FLAG_FILE ]; then
-			deb-systemd-invoke start evcc.service >/dev/null || true
+			deb-systemd-invoke start evcc.service > /dev/null || true
 			rm $RESTART_FLAG_FILE
 		elif [ -n "$2" ]; then
-			deb-systemd-invoke try-restart evcc.service >/dev/null || true
+			deb-systemd-invoke try-restart evcc.service > /dev/null || true
 		else
-			deb-systemd-invoke start evcc.service >/dev/null || true
+			deb-systemd-invoke start evcc.service > /dev/null || true
 		fi
 	fi
 fi

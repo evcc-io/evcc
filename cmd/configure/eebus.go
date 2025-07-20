@@ -3,14 +3,24 @@ package configure
 import (
 	"fmt"
 
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 )
 
 // configureEEBus setup EEBus
-func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
-	var err error
-	if eebus.Instance, err = eebus.NewServer(conf); err == nil {
+func (c *CmdConfigure) configureEEBus(other map[string]interface{}) error {
+	conf := eebus.Config{
+		URI: ":4712",
+	}
+
+	if err := util.DecodeOther(other, &conf); err != nil {
+		return err
+	}
+
+	srv, err := eebus.NewServer(conf)
+	if err == nil {
+		eebus.Instance = srv
 		go eebus.Instance.Run()
 		shutdown.Register(eebus.Instance.Shutdown)
 	}

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Provider is an api.Vehicle implementation for VW ID cars
@@ -18,7 +18,7 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (Status, error) {
+		statusG: util.Cached(func() (Status, error) {
 			return api.Status(vin)
 		}, cache),
 		action: func(action, value string) error {
@@ -146,28 +146,27 @@ func (v *Provider) Climater() (bool, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
-	if err == nil && res.Charging == nil {
-		err = errors.New("missing charging status")
+	if err != nil || res.Charging == nil || res.Charging.ChargingSettings.Value.TargetSOCPct == nil {
+		return 0, api.ErrNotAvailable
 	}
 
-	if err == nil {
-		return float64(res.Charging.ChargingSettings.Value.TargetSOCPct), nil
-	}
-
-	return 0, err
+	return int64(*res.Charging.ChargingSettings.Value.TargetSOCPct), nil
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.action(ActionCharge, ActionChargeStart)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
+	return v.action(ActionCharge, action[enable])
 }
 
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.action(ActionCharge, ActionChargeStop)
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.ChargeEnable(true)
 }

@@ -1,0 +1,28 @@
+template: ac-thor
+products:
+  - brand: my-PV
+    description:
+      generic: AC•THOR
+  - brand: my-PV
+    description:
+      generic: AC•THOR 9s
+group: heating
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    choice: ["1", "2", "3"]
+    default: "1"
+  - name: scale
+    type: float
+    default: 1
+    description:
+      en: "Scale factor for power limit"
+      de: "Skalierungsfaktor der Leistungsvorgabe"
+render: |
+  type: ac-thor
+  {{- include "modbus" . }}
+  tempsource: {{ .tempsource }}
+  scale: {{ .scale }}

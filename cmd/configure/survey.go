@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -12,8 +13,7 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
-	stripmd "github.com/writeas/go-strip-markdown"
-	"golang.org/x/exp/slices"
+	stripmd "github.com/writeas/go-strip-markdown/v2"
 )
 
 // surveyAskOne asks the user for input
@@ -22,7 +22,6 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 		icons.Question.Text = ""
 	}))
 	err := survey.AskOne(p, response, opts...)
-
 	if err != nil {
 		if err == terminal.InterruptErr {
 			fmt.Println(c.localizedString("Cancel"))
@@ -105,7 +104,7 @@ type question struct {
 	label, help                    string
 	defaultValue, exampleValue     string
 	invalidValues                  []string
-	validValues                    []string
+	choice                         []string
 	valueType                      templates.ParamType
 	minNumberValue, maxNumberValue int64
 	mask, required                 bool
@@ -130,12 +129,17 @@ func (c *CmdConfigure) askParam(p templates.Param) string {
 		required = *p.Required
 	}
 
+	label := p.Description.String(c.lang)
+	if p.Unit != "" {
+		label = fmt.Sprintf("%s (%s)", label, p.Unit)
+	}
+
 	return c.askValue(question{
-		label:       p.Description.String(c.lang),
-		valueType:   p.Type,
-		validValues: p.Choice, // TODO proper choice handling
-		mask:        mask,
-		required:    required,
+		label:     label,
+		valueType: p.Type,
+		choice:    p.Choice,
+		mask:      mask,
+		required:  required,
 	})
 }
 
@@ -156,8 +160,8 @@ func (c *CmdConfigure) askValue(q question) string {
 
 	if q.valueType == templates.TypeChoice {
 		label := strings.TrimSpace(strings.Join([]string{q.label, c.localizedString("Value_Choice")}, " "))
-		idx, _ := c.askChoice(label, q.validValues)
-		return q.validValues[idx]
+		idx, _ := c.askChoice(label, q.choice)
+		return q.choice[idx]
 	}
 
 	if q.valueType == templates.TypeChargeModes {
@@ -182,7 +186,7 @@ func (c *CmdConfigure) askValue(q question) string {
 			return errors.New(c.localizedString("ValueError_Used"))
 		}
 
-		if q.validValues != nil && !slices.Contains(q.validValues, value) {
+		if q.choice != nil && !slices.Contains(q.choice, value) {
 			return errors.New(c.localizedString("ValueError_Invalid"))
 		}
 
@@ -201,7 +205,7 @@ func (c *CmdConfigure) askValue(q question) string {
 			}
 		}
 
-		if q.valueType == templates.TypeNumber {
+		if q.valueType == templates.TypeInt {
 			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Number"))

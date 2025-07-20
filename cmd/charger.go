@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,66 +14,40 @@ import (
 var chargerCmd = &cobra.Command{
 	Use:   "charger [name]",
 	Short: "Query configured chargers",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runCharger,
 }
 
-const noCurrent = -1
-
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
-	chargerCmd.Flags().IntP(flagCurrent, "i", noCurrent, flagCurrentDescription)
+	chargerCmd.Flags().Float64P(flagCurrent, "i", 0, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
-	//lint:ignore SA1019 as Title is safe on ascii
-	chargerCmd.Flags().Bool(flagDiagnose, false, strings.Title(flagDiagnose))
+	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
+	chargerCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(cmd, conf); err != nil {
+	if err := configureEnvironment(cmd, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	// select single charger
-	if err := selectByName(cmd, &conf.Chargers); err != nil {
+	if err := configureChargers(conf.Chargers, args...); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	if err := cp.configureChargers(conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	chargers := cp.chargers
-	if len(args) == 1 {
-		name := args[0]
-		charger, err := cp.Charger(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-		chargers = map[string]api.Charger{name: charger}
-	}
-
-	current := int64(noCurrent)
-	if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
-		var err error
-		current, err = strconv.ParseInt(flag.Value.String(), 10, 64)
-		if err != nil {
-			log.ERROR.Fatalln(err)
-		}
 	}
 
 	var phases int
-	if flag := cmd.Flags().Lookup(flagPhases); flag.Changed {
+	if flag := cmd.Flag(flagPhases); flag.Changed {
 		var err error
 		phases, err = strconv.Atoi(flag.Value.String())
 		if err != nil {
@@ -80,17 +55,30 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	chargers := config.Chargers().Devices()
+
 	var flagUsed bool
-	for _, v := range chargers {
-		if current != noCurrent {
+	for _, v := range config.Instances(chargers) {
+		if flag := cmd.Flag(flagCurrent); flag.Changed {
 			flagUsed = true
 
-			if err := v.MaxCurrent(current); err != nil {
-				log.ERROR.Println("set current:", err)
+			current, err := strconv.ParseFloat(flag.Value.String(), 64)
+			if err != nil {
+				log.ERROR.Fatalln(err)
+			}
+
+			if vv, ok := v.(api.ChargerEx); ok {
+				if err := vv.MaxCurrentMillis(current); err != nil {
+					log.ERROR.Println("set current:", err)
+				}
+			} else {
+				if err := v.MaxCurrent(int64(current)); err != nil {
+					log.ERROR.Println("set current:", err)
+				}
 			}
 		}
 
-		if cmd.Flags().Lookup(flagEnable).Changed {
+		if cmd.Flag(flagEnable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(true); err != nil {
@@ -98,7 +86,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flags().Lookup(flagDisable).Changed {
+		if cmd.Flag(flagDisable).Changed {
 			flagUsed = true
 
 			if err := v.Enable(false); err != nil {
@@ -106,7 +94,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flags().Lookup(flagWakeup).Changed {
+		if cmd.Flag(flagWakeup).Changed {
 			flagUsed = true
 
 			if vv, ok := v.(api.Resurrector); ok {
@@ -131,16 +119,26 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	if ok, _ := cmd.Flags().GetBool(flagHeartbeat); flagUsed && ok {
+		log.INFO.Println("running heartbeat until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
+	}
+
 	if !flagUsed {
 		d := dumper{len: len(chargers)}
-		flag := cmd.Flags().Lookup(flagDiagnose).Changed
+		flag := cmd.Flag(flagDiagnose).Changed
 
-		for name, v := range chargers {
-			d.DumpWithHeader(name, v)
+		for _, dev := range chargers {
+			v := dev.Instance()
+
+			d.DumpWithHeader(dev.Config().Name, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}
 		}
+	} else if ok, _ := cmd.Flags().GetBool(flagHeartbeat); ok {
+		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
 	}
 
 	// wait for shutdown

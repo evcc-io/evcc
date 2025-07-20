@@ -3,7 +3,6 @@
 package server
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -12,13 +11,8 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 )
 
-// socketPath is the unix domain socket path
-const socketPath = "/tmp/evcc-%d"
-
-// SocketPath returns the unix domain socket path for a given port
-func SocketPath(port int) string {
-	return fmt.Sprintf(socketPath, port)
-}
+// SocketPath is the unix domain socket path
+const SocketPath = "/tmp/evcc"
 
 // removeIfExists deletes file if it exists or fails
 func removeIfExists(file string) {
@@ -30,12 +24,10 @@ func removeIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site.API, port int) {
-	socket := SocketPath(port)
+func HealthListener(site site.API) {
+	removeIfExists(SocketPath)
 
-	removeIfExists(socket)
-
-	l, err := net.Listen("unix", socket)
+	l, err := net.Listen("unix", SocketPath)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -48,6 +40,6 @@ func HealthListener(site site.API, port int) {
 
 	shutdown.Register(func() {
 		_ = l.Close()
-		removeIfExists(socket) // cleanup
+		removeIfExists(SocketPath) // cleanup
 	})
 }

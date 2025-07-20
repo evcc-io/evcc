@@ -8,7 +8,6 @@ params:
   - name: usage
     choice: ["pv"]
   - name: host
-    default: 192.0.2.2
 render: |
   type: tplink
   uri: {{ .host }}

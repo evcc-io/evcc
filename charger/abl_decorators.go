@@ -8,7 +8,7 @@ import (
 
 func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && phaseCurrents == nil:
+	case meter == nil:
 		return base
 
 	case meter != nil && phaseCurrents == nil:
@@ -19,17 +19,6 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents f
 			ABLeMH: base,
 			Meter: &decorateABLeMHMeterImpl{
 				meter: meter,
-			},
-		}
-
-	case meter == nil && phaseCurrents != nil:
-		return &struct {
-			*ABLeMH
-			api.PhaseCurrents
-		}{
-			ABLeMH: base,
-			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
 			},
 		}
 

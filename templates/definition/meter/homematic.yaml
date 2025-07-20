@@ -23,24 +23,36 @@ params:
     mask: true
   - name: meterchannel
     default: 6
-    type: number
+    type: int
     required: true
-    advanced: true
     description:
-      en: Meter channel number (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
-      de: Kanalnummer des Power-Meters (HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5)
+      en: Meter channel number
+      de: Kanalnummer des Power- oder Netz-Meters
     help:
-      en: Homematic meter channel number like shown in the CCU web user interface.
-      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
+      en: Homematic meter channel number like shown after the device id separated with a colon in the CCU web user interface.
+      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend mit Doppelpunkt getrennt nach der Geräte Id angezeigt.
+    example: HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM-ES-TX-WM=1
+  - name: cache
+    advanced: true
+    default: 1s
+    description:
+      en: XML-RPC API cache duration
+      de: XML-RPC API Cache Zeitraum
+    help:
+      en: In case of duty cycle problems try a cache setting of 30s.
+      de: Bei Problemen mit dem Duty Cycle setze den Cache auf bspw 30s.
 render: |
   type: homematic
   usage: {{ .usage }}
-  uri: {{ .host }}:{{- if (eq .usage "grid")}}2001{{ else }}2010{{end}}
+  uri: {{ .host }}:{{- if (eq .usage "grid") }}2001{{- else }}2010{{- end }}
   device: {{ .device }}
-  meterchannel: {{ if (eq .usage "grid")}}1{{ else }}{{ .meterchannel }}{{end}}
-  {{ if ne .user "" }}
+  meterchannel: {{ if (eq .usage "grid") }}1{{ else }}{{ .meterchannel }}{{ end }}
+  {{- if .user }}
   user: {{ .user }}
-  {{ end }}
-  {{ if ne .password "" }}
+  {{- end }}
+  {{- if .password }}
   password: {{ .password }}
-  {{ end }}
+  {{- end }}
+  {{- if .cache }}
+  cache: {{ .cache }}
+  {{- end }}

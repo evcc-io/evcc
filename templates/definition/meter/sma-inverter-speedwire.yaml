@@ -1,0 +1,27 @@
+template: sma-inverter-speedwire
+covers: ["sma-inverter"]
+products:
+  - brand: SMA
+    description:
+      de: Wechselrichter (Speedwire)
+      en: Inverter (Speedwire)
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: host
+  - name: password
+    mask: true
+    help:
+      en: Password for user group Standard
+      de: Passwort für Benutzergruppe Benutzer
+  - name: capacity
+    advanced: true
+render: |
+  type: sma
+  uri: {{ .host }} # IP address or hostname
+  {{- if .password }}
+  password: {{ .password }} # optional
+  {{- end }}
+  capacity: {{ .capacity }} # kWh

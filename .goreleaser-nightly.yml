@@ -1,14 +1,19 @@
+version: 2
+
 dist: release
 release:
   disable: true
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
+      - -X github.com/evcc-io/evcc/util.Version={{ .Tag }} -X github.com/evcc-io/evcc/util.Commit={{ .ShortCommit }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
     goarch:
@@ -22,21 +27,27 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+    overrides:
+      - goos: windows
+        goarch: amd64
+        flags:
+          - -trimpath
+          - -tags=release,timetzdata
+
+env:
+  - CGO_ENABLED=0
 
 archives:
-  - builds:
+  - ids:
       - evcc
-    format: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - evcc.dist.yaml
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
-
-env:
-  - CGO_ENABLED=0
 
 universal_binaries:
   - replace: true
@@ -45,7 +56,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
+  version_template: '{{ .Version }}{{ if eq (len (split .Version ".")) 2 }}.0{{ end }}+{{ .Timestamp }}'
 
 changelog:
   sort: asc
@@ -55,6 +66,8 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^build"
+      - "^Translations"
 
 nfpms:
   - id: default
@@ -63,12 +76,15 @@ nfpms:
 
     homepage: https://evcc.io
     description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
+    maintainer: info@evcc.io
     license: MIT
     vendor: evcc.io
 
     formats:
       - deb
+
+    dependencies:
+      - adduser
 
     contents:
       - src: ./packaging/init/evcc.service

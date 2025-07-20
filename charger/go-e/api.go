@@ -66,7 +66,7 @@ func (c *LocalAPI) upgradeV2() {
 	err := c.response("api/status?filter=alw", &res)
 
 	if err == nil {
-		c.uri = c.uri + "/api"
+		c.uri += "/api"
 	} else {
 		c.v2 = false
 	}

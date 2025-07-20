@@ -1,0 +1,10 @@
+template: homewizard
+products:
+  - brand: HomeWizard
+group: switchsockets
+params:
+  - name: host
+  - preset: switchsocket
+render: |
+  type: homewizard
+  uri: http://{{ .host }}

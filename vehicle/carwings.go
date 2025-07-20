@@ -8,10 +8,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-
 	"github.com/joeshaw/carwings"
 )
 
@@ -91,8 +89,8 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	v.statusG = provider.Cached(v.status, cc.Cache)
-	v.climateG = provider.Cached(v.session.ClimateControlStatus, cc.Cache)
+	v.statusG = util.Cached(v.status, cc.Cache)
+	v.climateG = util.Cached(v.session.ClimateControlStatus, cc.Cache)
 
 	return v, nil
 }
@@ -111,7 +109,7 @@ func (v *CarWings) status() (carwings.BatteryStatus, error) {
 	// api result is stale
 	if v.refreshKey != "" {
 		if err := v.refreshResult(); err != nil {
-			return *new(carwings.BatteryStatus), err
+			return carwings.BatteryStatus{}, err
 		}
 	}
 
@@ -120,7 +118,7 @@ func (v *CarWings) status() (carwings.BatteryStatus, error) {
 	if err == nil {
 		if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
 			if err = v.refreshRequest(); err != nil {
-				return *new(carwings.BatteryStatus), err
+				return carwings.BatteryStatus{}, err
 			}
 
 			err = api.ErrMustRetry

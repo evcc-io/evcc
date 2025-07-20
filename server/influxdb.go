@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -16,17 +17,6 @@ import (
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
-// InfluxConfig is the influx db configuration
-type InfluxConfig struct {
-	URL      string
-	Database string
-	Token    string
-	Org      string
-	User     string
-	Password string
-	Interval time.Duration
-}
-
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
@@ -38,7 +28,7 @@ type Influx struct {
 }
 
 // NewInfluxClient creates new publisher for influx
-func NewInfluxClient(url, token, org, user, password, database string) *Influx {
+func NewInfluxClient(url, token, org, user, password, database string, insecure bool) *Influx {
 	log := util.NewLogger("influx")
 
 	// InfluxDB v1 compatibility
@@ -46,7 +36,11 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
-	options := influxdb2.DefaultOptions().SetPrecision(time.Second)
+	options := influxdb2.DefaultOptions()
+
+	options.SetTLSConfig(&tls.Config{InsecureSkipVerify: insecure})
+	options.SetPrecision(time.Second)
+
 	client := influxdb2.NewClientWithOptions(url, token, options)
 
 	// handle error logging in writer
@@ -73,63 +67,84 @@ func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]an
 }
 
 // writeComplexPoint asynchronously writes a point to influx
-func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags map[string]string) {
+func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags map[string]string) {
 	fields := make(map[string]any)
 
-	switch val := param.Val.(type) {
+	// loop struct
+	writeStruct := func(sv any) {
+		typ := reflect.TypeOf(sv)
+		val := reflect.ValueOf(sv)
+
+		for i := range typ.NumField() {
+			if f := typ.Field(i); f.IsExported() {
+				if val.Field(i).IsZero() && omitEmpty(f) {
+					continue
+				}
+
+				key := key + strings.ToUpper(f.Name[:1]) + f.Name[1:]
+				val := val.Field(i).Interface()
+
+				m.writeComplexPoint(writer, key, val, tags)
+			}
+		}
+	}
+
+	switch valueType := val.(type) {
+	case string:
+		return
+
 	case int, int64, float64:
-		fields["value"] = param.Val
+		fields["value"] = val
 
 	case []float64:
-		if len(val) != 3 {
+		if len(valueType) != 3 {
 			return
 		}
 
 		// add array as phase values
-		for i, v := range val {
+		for i, v := range valueType {
 			fields[fmt.Sprintf("l%d", i+1)] = v
 		}
 
 	case [3]float64:
 		// add array as phase values
-		for i, v := range val {
+		for i, v := range valueType {
 			fields[fmt.Sprintf("l%d", i+1)] = v
 		}
 
 	default:
 		// allow writing nil values
-		if param.Val == nil {
+		if val == nil {
 			fields["value"] = nil
 			break
 		}
 
+		switch typ := reflect.TypeOf(val); {
+		// pointer
+		case typ.Kind() == reflect.Ptr:
+			if val := reflect.ValueOf(val); !val.IsNil() {
+				m.writeComplexPoint(writer, key, reflect.Indirect(val).Interface(), tags)
+			}
+
+		// struct
+		case typ.Kind() == reflect.Struct:
+			writeStruct(val)
+
 		// slice of structs
-		if typ := reflect.TypeOf(param.Val); typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct {
-			val := reflect.ValueOf(param.Val)
+		case typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct:
+			val := reflect.ValueOf(val)
 
 			// loop slice
-			for i := 0; i < val.Len(); i++ {
-				val := val.Index(i)
-				typ := val.Type()
-
-				// loop struct
-				for j := 0; j < typ.NumField(); j++ {
-					n := typ.Field(j).Name
-					v := val.Field(j).Interface()
-
-					key := param.Key + strings.ToUpper(n[:1]) + n[1:]
-					fields["value"] = v
-					tags["id"] = strconv.Itoa(i + 1)
-
-					m.writePoint(writer, key, fields, tags)
-				}
+			for i := range val.Len() {
+				tags["id"] = strconv.Itoa(i + 1)
+				writeStruct(val.Index(i).Interface())
 			}
 		}
 
 		return
 	}
 
-	m.writePoint(writer, param.Key, fields, tags)
+	m.writePoint(writer, key, fields, tags)
 }
 
 // Run Influx publisher
@@ -150,13 +165,13 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 		if param.Loadpoint != nil {
 			lp := site.Loadpoints()[*param.Loadpoint]
 
-			tags["loadpoint"] = lp.Title()
+			tags["loadpoint"] = lp.GetTitle()
 			if v := lp.GetVehicle(); v != nil {
-				tags["vehicle"] = v.Title()
+				tags["vehicle"] = v.GetTitle()
 			}
 		}
 
-		m.writeComplexPoint(writer, param, tags)
+		m.writeComplexPoint(writer, param.Key, param.Val, tags)
 	}
 
 	m.client.Close()

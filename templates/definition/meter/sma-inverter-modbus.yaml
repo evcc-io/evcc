@@ -1,0 +1,32 @@
+template: sma-inverter-modbus
+products:
+  - brand: SMA
+    description:
+      generic: Wechselrichter (Modbus)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+    help:
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30775 # SMA Modbus Profile: GridMs.TotW
+      type: input
+      decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30513 # SMA Modbus Profile: Metering.TotWhOut
+      type: holding
+      decode: uint64nan
+    scale: 0.001

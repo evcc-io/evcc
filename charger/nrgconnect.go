@@ -9,7 +9,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/nrg/connect"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -23,8 +22,8 @@ type NRGKickConnect struct {
 	mac           string
 	password      string
 	enabled       bool
-	settingsG     provider.Cacheable[connect.Settings]
-	measurementsG provider.Cacheable[connect.Measurements]
+	settingsG     util.Cacheable[connect.Settings]
+	measurementsG util.Cacheable[connect.Measurements]
 }
 
 func init() {
@@ -56,7 +55,7 @@ func NewNRGKickConnect(uri, mac, password string, cache time.Duration) (*NRGKick
 		password: password,
 	}
 
-	nrg.settingsG = provider.ResettableCached(func() (connect.Settings, error) {
+	nrg.settingsG = util.ResettableCached(func() (connect.Settings, error) {
 		var res connect.Settings
 
 		err := nrg.GetJSON(nrg.apiURL(connect.SettingsPath), &res)
@@ -67,7 +66,7 @@ func NewNRGKickConnect(uri, mac, password string, cache time.Duration) (*NRGKick
 		return res, err
 	}, cache)
 
-	nrg.measurementsG = provider.ResettableCached(func() (connect.Measurements, error) {
+	nrg.measurementsG = util.ResettableCached(func() (connect.Measurements, error) {
 		var res connect.Measurements
 
 		err := nrg.GetJSON(nrg.apiURL(connect.MeasurementsPath), &res)
@@ -87,27 +86,27 @@ func (nrg *NRGKickConnect) apiURL(api string) string {
 
 func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
 
-	if err == nil {
-		var res struct {
-			Message string
-		}
+	var res struct {
+		Message string
+	}
 
-		if err = nrg.DoJSON(req, &res); err != nil {
-			if err == io.EOF {
-				err = nil
-			} else if res.Message != "" {
-				return errors.New(res.Message)
-			}
-		}
-
-		if err == nil {
-			nrg.settingsG.Reset()
-			nrg.measurementsG.Reset()
+	if err := nrg.DoJSON(req, &res); err != nil {
+		switch {
+		case res.Message != "":
+			return errors.New(res.Message)
+		case err != io.EOF:
+			return err
 		}
 	}
 
-	return err
+	nrg.settingsG.Reset()
+	nrg.measurementsG.Reset()
+
+	return nil
 }
 
 // Status implements the api.Charger interface

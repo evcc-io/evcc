@@ -4,13 +4,13 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/niu"
@@ -62,24 +62,23 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		serial:   strings.ToUpper(cc.Serial),
 	}
 
-	v.apiG = provider.Cached(v.batteryAPI, cc.Cache)
+	v.apiG = util.Cached(v.batteryAPI, cc.Cache)
 
 	return v, nil
 }
 
 // login implements the Niu oauth2 api
 func (v *Niu) login() error {
-	md5hash, err := md5Hash(v.password)
-	if err != nil {
-		return err
-	}
+	hash := md5.New()
+	hash.Write([]byte(v.password))
+	md5hash := hex.EncodeToString(hash.Sum(nil))
 
 	data := url.Values{
-		"account":    []string{v.user},
-		"password":   []string{md5hash},
-		"grant_type": []string{"password"},
-		"scope":      []string{"base"},
-		"app_id":     []string{"niu_8xt1afu6"},
+		"account":    {v.user},
+		"password":   {md5hash},
+		"grant_type": {"password"},
+		"scope":      {"base"},
+		"app_id":     {"niu_8xt1afu6"},
 	}
 
 	uri := niu.AuthURI + "/v3/api/oauth2/token"
@@ -97,33 +96,41 @@ func (v *Niu) login() error {
 	return err
 }
 
-// md5Hash creates a MD5 hash based on a string
-func md5Hash(text string) (string, error) {
-	hasher := md5.New()
-	_, err := hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil)), err
-}
-
-// request implements the Niu web request
-func (v *Niu) request(uri string) (*http.Request, error) {
+func (v *Niu) tokenRefresh() error {
 	if v.token.AccessToken == "" || time.Until(v.token.Expiry) < time.Minute {
 		if err := v.login(); err != nil {
-			return nil, err
+			return err
 		}
 	}
+	return nil
+}
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"token": v.token.AccessToken,
+func (v *Niu) newRequest(method, uri string, body io.Reader) (*http.Request, error) {
+	if err := v.tokenRefresh(); err != nil {
+		return nil, err
+	}
+	req, err := request.New(method, uri, body, map[string]string{
+		"Accept-Language": "en-US",
+		"Content-Type":    "application/x-www-form-urlencoded",
+		"token":           v.token.AccessToken,
 	})
-
 	return req, err
+}
+
+func (v *Niu) get(uri string) (*http.Request, error) {
+	return v.newRequest(http.MethodGet, uri, nil)
+}
+
+func (v *Niu) post(uri string) (*http.Request, error) {
+	data := url.Values{"sn": {v.serial}}
+	return v.newRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
 }
 
 // batteryAPI provides battery api response
 func (v *Niu) batteryAPI() (niu.Response, error) {
 	var res niu.Response
 
-	req, err := v.request(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
+	req, err := v.get(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -162,4 +169,18 @@ var _ api.VehicleRange = (*Niu)(nil)
 func (v *Niu) Range() (int64, error) {
 	res, err := v.apiG()
 	return res.Data.EstimatedMileage, err
+}
+
+var _ api.VehicleOdometer = (*Niu)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Niu) Odometer() (float64, error) {
+	var res niu.Response
+
+	req, err := v.post(niu.ApiURI + "/motoinfo/overallTally")
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res.Data.TotalMileage, err
 }

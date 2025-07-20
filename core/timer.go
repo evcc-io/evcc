@@ -9,11 +9,14 @@ import (
 
 const wakeupTimeout = 30 * time.Second
 
+const wakeupAttempts = 6 // wakeupAttempts is the count of wakeup attempts
+
 // Timer measures active time between start and stop events
 type Timer struct {
 	sync.Mutex
-	clck    clock.Clock
-	started time.Time
+	clck               clock.Clock
+	started            time.Time
+	wakeupAttemptsLeft int
 }
 
 // NewTimer creates timer that can expire
@@ -27,6 +30,8 @@ func NewTimer() *Timer {
 func (m *Timer) Start() {
 	m.Lock()
 	defer m.Unlock()
+
+	m.wakeupAttemptsLeft = wakeupAttempts
 
 	if !m.started.IsZero() {
 		return
@@ -50,7 +55,12 @@ func (m *Timer) Expired() bool {
 
 	res := !m.started.IsZero() && (m.clck.Since(m.started) >= wakeupTimeout)
 	if res {
-		m.started = time.Time{}
+		m.wakeupAttemptsLeft--
+		if m.wakeupAttemptsLeft == 0 {
+			m.started = time.Time{}
+		} else {
+			m.started = m.clck.Now()
+		}
 	}
 
 	return res

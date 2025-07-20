@@ -4,12 +4,12 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/slices"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -45,6 +45,12 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	for _, c := range t.Countries {
+		if !c.IsValid() {
+			return fmt.Errorf("invalid country code '%s' in template %s", c, t.Template)
+		}
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)
@@ -52,10 +58,20 @@ func (t *Template) Validate() error {
 	}
 
 	for _, p := range t.Params {
+		if p.Description.String("en") == "" || p.Description.String("de") == "" {
+			return fmt.Errorf("description for param %s cant be empty in template %s", p.Name, t.Template)
+		}
+
+		maxLength := 50
+		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
+		if actualLength > maxLength {
+			return fmt.Errorf("description for param %s is too long in template %s. allowed: %d. actual length: %d. use help field for details instead.", p.Name, t.Template, maxLength, actualLength)
+		}
+
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
-				if !slices.Contains(ValidUsageChoices, c) {
+				if !slices.Contains(UsageStrings(), c) {
 					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
 				}
 			}
@@ -155,7 +171,7 @@ func (t *Template) GroupTitle(lang string) string {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(renderMode string) map[string]interface{} {
+func (t *Template) Defaults(renderMode int) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
@@ -207,7 +223,7 @@ var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(proxyTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}
@@ -215,23 +231,22 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	t.ModbusParams("", values)
 
 	for index, p := range t.Params {
-		for k, v := range values {
-			if p.Name != k {
-				continue
-			}
+		v, ok := values[p.Name]
+		if !ok {
+			continue
+		}
 
-			switch p.Type {
-			case TypeStringList:
-				for _, e := range v.([]string) {
-					t.Params[index].Values = append(p.Values, yamlQuote(e))
-				}
-			default:
-				switch v := v.(type) {
-				case string:
-					t.Params[index].Value = yamlQuote(v)
-				case int:
-					t.Params[index].Value = fmt.Sprintf("%d", v)
-				}
+		switch p.Type {
+		case TypeList:
+			for _, e := range v.([]string) {
+				t.Params[index].Values = append(p.Values, p.yamlQuote(e))
+			}
+		default:
+			switch v := v.(type) {
+			case string:
+				t.Params[index].Value = p.yamlQuote(v)
+			case int:
+				t.Params[index].Value = strconv.Itoa(v)
 			}
 		}
 	}
@@ -241,7 +256,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	for _, param := range t.Params {
 		if !param.IsRequired() {
 			switch param.Type {
-			case TypeStringList:
+			case TypeList:
 				if len(param.Values) == 0 {
 					continue
 				}
@@ -267,9 +282,9 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode string, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
+func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
-	if err := util.DecodeOther(other, &values); err != nil {
+	if err := mergeMaps(other, values); err != nil {
 		return nil, values, err
 	}
 
@@ -292,7 +307,8 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	for key, val := range values {
 		out := strings.ToLower(key)
 
-		if i, p := t.ParamByName(key); i == -1 {
+		i, p := t.ParamByName(key)
+		if i == -1 {
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
@@ -302,11 +318,13 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			out = p.Name
 		}
 
+		// TODO move yamlQuote to explicit quoting in templates, see https://github.com/evcc-io/evcc/issues/10742
+
 		switch typed := val.(type) {
 		case []interface{}:
 			var list []string
 			for _, v := range typed {
-				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
+				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
 			}
 			if res[out] == nil || len(res[out].([]interface{})) == 0 {
 				res[out] = list
@@ -315,7 +333,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		case []string:
 			var list []string
 			for _, v := range typed {
-				list = append(list, yamlQuote(v))
+				list = append(list, p.yamlQuote(v))
 			}
 			if res[out] == nil || len(res[out].([]string)) == 0 {
 				res[out] = list
@@ -326,7 +344,7 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
-					s = yamlQuote(fmt.Sprintf("%v", val))
+					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
 				res[out] = s
 			}

@@ -1,0 +1,6 @@
+site:
+  title: Hello World
+
+database:
+  type: sqliteInvalid
+  dsn: /path/to/db

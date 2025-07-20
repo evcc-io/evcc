@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +30,6 @@ import (
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/ecb1"
 	"github.com/evcc-io/evcc/meter/obis"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -84,7 +84,7 @@ func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (a
 	}
 
 	// cache meter readings
-	wb.meterG = provider.Cached(func() (ecb1.Meter, error) {
+	wb.meterG = util.Cached(func() (ecb1.Meter, error) {
 		var res struct {
 			Meter struct {
 				ecb1.Meter
@@ -188,7 +188,7 @@ func (wb *HardyBarth) post(uri string, data url.Values) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *HardyBarth) MaxCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/chargecontrols/%d/mode/manual/ampere", wb.uri, wb.chargecontrol)
-	data := url.Values{"manualmodeamp": {fmt.Sprintf("%d", current)}}
+	data := url.Values{"manualmodeamp": {strconv.FormatInt(current, 10)}}
 	return wb.post(uri, data)
 }
 

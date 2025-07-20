@@ -1,32 +1,33 @@
 <template>
-	<div>
-		<OfflineIndicator v-if="offline" />
-
-		<StartupError v-if="startupErrors" v-bind="state" :offline="offline" />
-		<Site v-else :notifications="notifications" v-bind="state"></Site>
-	</div>
+	<Site
+		v-if="state.startup"
+		:notifications="notifications"
+		v-bind="state"
+		:selected-loadpoint-index="selectedLoadpointIndex"
+	/>
 </template>
 
 <script>
-import Site from "../components/Site.vue";
-import StartupError from "../components/StartupError.vue";
-import OfflineIndicator from "../components/OfflineIndicator.vue";
+import Site from "../components/Site/Site.vue";
 import store from "../store";
 
 export default {
 	name: "Main",
-	components: { Site, StartupError, OfflineIndicator },
+	components: { Site },
 	props: {
 		notifications: Array,
-		offline: Boolean,
+		selectedLoadpointIndex: Number,
 	},
-	data: function () {
+	data() {
 		return store;
 	},
-	computed: {
-		startupErrors: function () {
-			return this.state.fatal?.length > 0;
-		},
+	head() {
+		const title = store.state.siteTitle;
+		if (title) {
+			return { title };
+		}
+		// no custom title
+		return { title: "evcc", titleTemplate: null };
 	},
 };
 </script>

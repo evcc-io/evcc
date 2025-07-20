@@ -1,0 +1,31 @@
+template: saj-r5
+products:
+  - brand: SAJ
+    description:
+      generic: R5 Series Solar Inverter
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 275 # 0x0113 Active power of inverter total output
+      type: holding
+      decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 305 # 0x0131 Total Energy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  {{- end }}

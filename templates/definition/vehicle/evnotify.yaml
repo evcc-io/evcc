@@ -4,30 +4,27 @@ products:
       generic: evNotify
 group: generic
 params:
-  - name: title
   - name: akey
     required: true
+    description:
+      generic: API Key
   - name: token
     required: true
-  - name: capacity
-    type: float
-  - name: phases
-    advanced: true
-  - name: icon
-    default: car
-    advanced: true
-  - preset: vehicle-identify
+  - preset: vehicle-common
 render: |
   type: custom
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  capacity: {{ .capacity }}
-  {{- if ne .phases "" }}
-  phases: {{ .phases }}
-  {{- end }}
+  {{ include "vehicle-common" . }}
   soc:
     source: http
-    uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY
-    method: GET
+    uri: https://app.evnotify.de/soc?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
     jq: .soc_display
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: https://app.evnotify.de/extended?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
+      jq: .normal_charge_port
+    charging:
+      source: http
+      uri: https://app.evnotify.de/extended?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
+      jq: .charging

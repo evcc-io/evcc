@@ -1,0 +1,20 @@
+template: mg
+products:
+  - brand: MG
+params:
+  - preset: vehicle-base
+  - name: vin
+    required: true
+  - name: region
+    description:
+      de: Region
+      en: Region
+    type: choice
+    choice: ["EU", "AU"]
+    default: EU
+    required: true
+    advanced: true
+render: |
+  type: mg
+  {{ include "vehicle-base" . }}
+  region: {{ .region }}
