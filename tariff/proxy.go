@@ -155,10 +155,6 @@ func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 	return cachePut(p.key, typ, rates)
 }
 
-func for1hour() time.Time {
-	return time.Now().Add(time.Hour)
-}
-
 func for24hrs() time.Time {
 	return time.Now().Add(24 * time.Hour)
 }
