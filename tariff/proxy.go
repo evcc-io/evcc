@@ -42,15 +42,30 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		key:    tariffType + "-" + cacheKey(typ, other),
 	}
 
-	// not cached yet, create instance
-	if data, err := p.cacheGet(); err != nil {
+	// check if we have cached data until end of tomorrow
+	data, err := p.cacheGet(untilEndOfTomorrow())
+	if err != nil {
+		// attempt to create a new instance
 		tariff, err := NewFromConfig(ctx, typ, other)
 		if err != nil {
-			return nil, err
+			// check if we have at least data for the next 24 hours
+			atLeast2hrs, err2 := p.cacheGet(for24hrs())
+			if err2 != nil {
+				// if not available, return error
+				return nil, err
+			}
+
+			// use cached data for the next 24 hours
+			data = atLeast2hrs
 		}
 
-		p.tariff = tariff
-	} else {
+		// if instance creation was successful, cache it, otherwise use cached 24hrs of data
+		if err == nil {
+			p.tariff = tariff
+		}
+	}
+
+	if data != nil {
 		log := util.NewLogger("tariff")
 		log.DEBUG.Printf("using cache: %s (start: %s, end: %s)", p.key,
 			data.Rates[0].Start.Local(), data.Rates[len(data.Rates)-1].End.Local(),
@@ -75,7 +90,7 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.cacheGet(); err == nil {
+		if res, err := p.cacheGet(for24hrs()); err == nil {
 			return res.Rates, nil
 		}
 
@@ -100,7 +115,7 @@ func (p *CachingProxy) Type() api.TariffType {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.cacheGet(); err == nil {
+		if res, err := p.cacheGet(for24hrs()); err == nil {
 			return res.Type
 		}
 
@@ -118,14 +133,11 @@ func (p *CachingProxy) dynamicTariff() bool {
 	}, p.tariff.Type())
 }
 
-func (p *CachingProxy) cacheGet() (*cached, error) {
+func (p *CachingProxy) cacheGet(until time.Time) (*cached, error) {
 	res, err := cacheGet(p.key)
 	if err != nil {
 		return nil, err
 	}
-
-	// consider cache valid if it contains rates for 24 hours
-	until := time.Now().Add(24 * time.Hour)
 
 	if !ratesValid(res.Rates, until) {
 		return nil, errors.New("not enough rates")
@@ -141,6 +153,18 @@ func (p *CachingProxy) cacheGet() (*cached, error) {
 
 func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 	return cachePut(p.key, typ, rates)
+}
+
+func for1hour() time.Time {
+	return time.Now().Add(time.Hour)
+}
+
+func for24hrs() time.Time {
+	return time.Now().Add(24 * time.Hour)
+}
+
+func untilEndOfTomorrow() time.Time {
+	return now.With(time.Now()).EndOfDay().Add(time.Nanosecond).AddDate(0, 0, 1)
 }
 
 func ratesValid(rr api.Rates, until time.Time) bool {
