@@ -778,6 +778,13 @@ func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
 	lp.stopVehicleDetection()
 }
 
+func (lp *Loadpoint) GetSoc() float64 {
+	lp.vmu.RLock()
+	defer lp.vmu.RUnlock()
+
+	return lp.socEstimator.EstimatedSoc()
+}
+
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes
 func (lp *Loadpoint) StartVehicleDetection() {
 	// reset vehicle

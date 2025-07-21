@@ -210,4 +210,6 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
+	// GetSoc returns the current vehicle soc
+	GetSoc() float64
 }
