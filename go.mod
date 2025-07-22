@@ -68,7 +68,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
-	github.com/mabunixda/wattpilot v1.8.4
+	github.com/mabunixda/wattpilot v1.8.5
 	github.com/mark3labs/mcp-go v0.34.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
@@ -170,7 +170,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9 // indirect
@@ -231,7 +231,6 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.38.0 // indirect
-	nhooyr.io/websocket v1.8.17 // indirect
 )
 
 tool (
