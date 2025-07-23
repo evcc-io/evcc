@@ -535,13 +535,12 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 }
 
 // updatePvMeters updates pv meters. All measurements are optional.
-func (site *Site) updatePvMeters(measurements *[]measurement) {
+func (site *Site) updatePvMeters() {
 	if len(site.pvMeters) == 0 {
 		return
 	}
 
 	mm := site.collectMeters("pv", site.pvMeters)
-	measurements = &mm
 
 	for i, dev := range site.pvMeters {
 		meter := dev.Instance()
@@ -604,13 +603,12 @@ func (site *Site) updatePvMeters(measurements *[]measurement) {
 }
 
 // updateBatteryMeters updates battery meters
-func (site *Site) updateBatteryMeters(measurements *[]measurement) {
+func (site *Site) updateBatteryMeters() []measurement {
 	if len(site.batteryMeters) == 0 {
-		return
+		return nil
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
-	measurements = &mm
 
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
@@ -675,6 +673,8 @@ func (site *Site) updateBatteryMeters(measurements *[]measurement) {
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)
+
+	return mm
 }
 
 // updateAuxMeters updates aux meters
@@ -761,18 +761,16 @@ func (site *Site) updateGridMeter() error {
 func (site *Site) updateMeters() error {
 	var eg errgroup.Group
 
-	var pvBat struct {
-		pv, battery []measurement
-	}
+	var battery []measurement
 
-	eg.Go(func() error { site.updatePvMeters(&pvBat.pv); return nil })
-	eg.Go(func() error { site.updateBatteryMeters(&pvBat.battery); return nil })
+	eg.Go(func() error { site.updatePvMeters(); return nil })
+	eg.Go(func() error { battery = site.updateBatteryMeters(); return nil })
 	eg.Go(func() error { site.updateAuxMeters(); return nil })
 	eg.Go(func() error { site.updateExtMeters(); return nil })
 
 	eg.Go(site.updateGridMeter)
 
-	if err := site.optimizerUpdate(pvBat.battery); err != nil {
+	if err := site.optimizerUpdate(battery); err != nil {
 		return err
 	}
 
