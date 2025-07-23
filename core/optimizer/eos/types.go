@@ -1,4 +1,4 @@
-package optimizer
+package eos
 
 type Request struct {
 	Ems                   Ems        `json:"ems"`

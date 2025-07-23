@@ -772,7 +772,9 @@ func (site *Site) updateMeters() error {
 
 	eg.Go(site.updateGridMeter)
 
-	site.optimizerUpdate(pvBat.pv, pvBat.battery)
+	if err := site.optimizerUpdate(pvBat.battery); err != nil {
+		return err
+	}
 
 	return eg.Wait()
 }
