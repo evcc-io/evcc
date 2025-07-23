@@ -778,9 +778,14 @@ func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
 	lp.stopVehicleDetection()
 }
 
+// GetSoc returns the estimated vehicle soc in %
 func (lp *Loadpoint) GetSoc() float64 {
 	lp.vmu.RLock()
 	defer lp.vmu.RUnlock()
+
+	if lp.socEstimator == nil {
+		return 0
+	}
 
 	return lp.socEstimator.EstimatedSoc()
 }

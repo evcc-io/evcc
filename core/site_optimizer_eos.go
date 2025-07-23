@@ -47,7 +47,7 @@ func (site *Site) eosRequest(battery []measurement) eos.Request {
 				DeviceID:             "ev",
 				CapacityWh:           int(v.Capacity() * 1e3),
 				MaxChargePowerW:      int(lp.EffectiveMaxPower()),
-				InitialSocPercentage: int(lp.GetSoc() * 100),
+				InitialSocPercentage: int(lp.GetSoc()),
 			}
 		}
 	}

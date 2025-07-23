@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
@@ -25,9 +26,9 @@ var (
 	updated time.Time
 )
 
-func init() {
-	os.Setenv("EVOPT_URI", "http://localhost:7050")
-}
+// func init() {
+// 	os.Setenv("EVOPT_URI", "http://localhost:7050")
+// }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
 	defer func() {
@@ -65,12 +66,13 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	for _, lp := range site.Loadpoints() {
 		if v := lp.GetVehicle(); v != nil {
 			req.Batteries = append(req.Batteries, evopt.BatteryConfig{
+				CMin:     float32(lp.EffectiveMinPower()),
 				CMax:     float32(lp.EffectiveMaxPower()),
 				DMax:     0,
-				PA:       pa,
-				SMin:     float32(0),
+				SMin:     0,
 				SMax:     float32(v.Capacity() * 1e3),              // Wh
 				SInitial: float32(v.Capacity() * lp.GetSoc() * 10), // Wh
+				PA:       pa,
 			})
 		}
 	}
@@ -82,12 +84,13 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		req.Batteries = append(req.Batteries, evopt.BatteryConfig{
+			CMin:     0,
 			CMax:     batteryPower,
 			DMax:     batteryPower,
-			PA:       pa,
-			SMin:     float32(0),
+			SMin:     0,
 			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
+			PA:       pa,
 		})
 	}
 
@@ -103,7 +106,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
-	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req)
+	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
+		if token := sponsor.Token; token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -121,11 +129,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	site.publish("evopt", struct {
-		Req  evopt.OptimizationInput  `json:"req"`
-		Resp evopt.OptimizationResult `json:"resp"`
+		Req evopt.OptimizationInput  `json:"req"`
+		Res evopt.OptimizationResult `json:"res"`
 	}{
-		Req:  req,
-		Resp: *resp.JSON200,
+		Req: req,
+		Res: *resp.JSON200,
 	})
 
 	return nil
