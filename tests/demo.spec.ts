@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalHidden } from "./utils";
+import { expectModalHidden, openTopNavigation, expectTopNavigationClosed } from "./utils";
 import { ChildProcess } from "child_process";
 
 test.use({ baseURL: baseUrl() });
@@ -35,8 +35,9 @@ test.describe("demo mode", async () => {
   });
 
   test("auth is locked", async ({ page }) => {
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("link", { name: "Configuration" }).click();
+    await expectTopNavigationClosed(page);
     const loginModal = page.getByTestId("login-modal");
     await expect(loginModal).toBeVisible();
     await expect(loginModal).toContainText("Login is not supported in demo mode.");

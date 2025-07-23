@@ -9,15 +9,15 @@ requirements:
   evcc: ["skiptest"]
   description:
     de: |
-      Einmalige Warmwasserbereitung auf eine konfigurierbare Solltemperatur. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
+      Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
     en: |
-      One-time hot water preparation to a configurable target temperature. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
+      One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 params:
   - name: user
     required: true
     help:
-      de: Registrieren auf [app.developer.viessmann.com](https://app.developer.viessmann.com)
-      en: Register at [app.developer.viessmann.com](https://app.developer.viessmann.com)
+      de: Registrieren auf [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Register at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
   - name: password
     required: true
     help:
@@ -29,8 +29,8 @@ params:
       de: Client ID
       en: Client ID
     help:
-      de: Konfigurieren in [app.developer.viessmann.com](https://app.developer.viessmann.com)
-      en: Configure at [app.developer.viessmann.com](https://app.developer.viessmann.com)
+      de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
   - name: gateway_serial
     required: true
     description:
@@ -67,7 +67,7 @@ params:
           --user $VIESSMANN_USER:$VIESSMANN_PASS \
           --output /dev/null \
           --dump-header -    \
-          "https://iam.viessmann.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
           | grep "^location: "            \
           | sed 's/.*\?code=\(.*\).*/\1/' \
           | tr -d '[:space:]')
@@ -75,7 +75,7 @@ params:
         TOKEN_RESPONSE=$(curl -XPOST --silent \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
-          https://iam.viessmann.com/idp/v3/token)
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
 
         VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
         ```
@@ -84,7 +84,7 @@ params:
 
         ```
         curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
-          https://api.viessmann.com/iot/v1/equipment/installations?includeGateways=true \
+          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
       en: |
@@ -109,7 +109,7 @@ params:
           --user $VIESSMANN_USER:$VIESSMANN_PASS \
           --output /dev/null \
           --dump-header -    \
-          "https://iam.viessmann.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
           | grep "^location: "            \
           | sed 's/.*\?code=\(.*\).*/\1/' \
           | tr -d '[:space:]')
@@ -117,7 +117,7 @@ params:
         TOKEN_RESPONSE=$(curl -XPOST --silent \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
-          https://iam.viessmann.com/idp/v3/token)
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
 
         VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
         ```
@@ -126,7 +126,7 @@ params:
 
         ```
         curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
-          https://api.viessmann.com/iot/v1/equipment/installations?includeGateways=true \
+          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
   - name: device_id
@@ -139,21 +139,22 @@ params:
       en: typically `0`
     default: 0
   - name: target_temperature
+    deprecated: true
     description:
       de: Zieltemperatur für Einmal-Warmwasser-Zubereitung
       en: Target temperature for one-time charge
     unit: °C
     help:
-      de: max. 60°C
-      en: max. 60°C
-    required: true
+      de: Parameter existiert nur aus historischen Gründen. Zieltemperatur kann in der ViCare App eingestellt werden (wird nicht von allen Anlagen unterstützt)
+      en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
+    required: false
     default: 45
     type: int
 render: |
   type: sgready
   getmode:
     source: http
-    uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
     cache: 2s # to prevent making two identical requests straight after each other for "getmode"
     auth:
       source: viessmann
@@ -173,7 +174,7 @@ render: |
       - case: 2 # normal
         set:
           source: http
-          uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
+          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
           method: POST 
           headers:  
             - content-type: application/json
@@ -186,32 +187,18 @@ render: |
             { }
       - case: 3 # boost
         set:
-          source: sequence
-          set:
-          - source: http
-            uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.temperature.temp2/commands/setTargetTemperature
-            method: POST
-            headers:  
-              - content-type: application/json
-            auth:
-              source: viessmann
-              user: {{ .user }}
-              password: {{ .password }}
-              clientid: {{ .clientid }}
-            body: >
-              {"temperature": {{.target_temperature}}}
-          - source: http
-            uri: https://api.viessmann.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
-            method: POST 
-            headers:  
-              - content-type: application/json
-            auth:
-              source: viessmann
-              user: {{ .user }}
-              password: {{ .password }}
-              clientid: {{ .clientid }}
-            body: >
-              { }
+          source: http
+          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          method: POST 
+          headers:  
+            - content-type: application/json
+          auth:
+            source: viessmann
+            user: {{ .user }}
+            password: {{ .password }}
+            clientid: {{ .clientid }}
+          body: >
+            { }
       - case: 1 # dimm
         set:
           source: error

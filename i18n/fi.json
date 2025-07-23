@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-palvelimen URL",
       "switchsockets": "Kytkettävät pistorasiat",
       "template": "Valmistaja",
-      "titleAdd": "Lisää laturi",
-      "titleEdit": "Muokkaa laturia"
+      "titleAdd": {
+        "charging": "Lisää laturi",
+        "heating": "Lisää lämmitin"
+      },
+      "titleEdit": {
+        "charging": "Muokkaa laturia",
+        "heating": "Muokkaa lämmitintä"
+      },
+      "type": {
+        "custom": {
+          "charging": "Itse määritelty laturi",
+          "heating": "Itse määritelty lämmitin"
+        },
+        "heatpump": "Itse määritelty lämpöpumppu",
+        "sgready": "Itse määritelty lämpöpumppu (älyverkkovalmius, kaikki)",
+        "sgready-boost": "Itse määritelty lämpöpumppu (älyverkkovalmius, tehostus)",
+        "switchsocket": "Itse määritelty relepistorasia"
+      }
     },
     "circuits": {
       "description": "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
@@ -180,11 +196,20 @@
       "v2Support": "Takaisin InfluxDB 2.x:ään"
     },
     "loadpoint": {
-      "addCharger": "Lisää laturi",
-      "addMeter": "Lisää erillinen latausmittari",
+      "addCharger": {
+        "charging": "Lisää laturi",
+        "heating": "Lisää lämmitin"
+      },
+      "addMeter": "Lisää erillinen kulutusmittari",
       "cancel": "Peruuta",
-      "chargerError": "Vaaditaan käyttöönottoasetusten määrittely laturille.",
-      "chargerLabel": "Laturi",
+      "chargerError": {
+        "charging": "Vaaditaan käyttöönottoasetusten määrittely laturille.",
+        "heating": "Vaaditaan lämmittimen asetuksien määrittely."
+      },
+      "chargerLabel": {
+        "charging": "Laturi",
+        "heating": "Lämmitin"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Käyttää 6-16 A:n virta-aluetta.",
       "chargerPower22kw": "22 kW",
@@ -192,15 +217,18 @@
       "chargerPowerCustom": "muu",
       "chargerPowerCustomHelp": "Mukauta käytettävä virta-alue.",
       "chargerTypeLabel": "Laturin tyyppi",
-      "chargingTitle": "Lataa",
+      "chargingTitle": "Toiminta",
       "circuitHelp": "Kuormanhallinnan määritys varmistaa, että teho ja virtarajoitteita ei ylitetä.",
       "circuitLabel": "Piiri",
       "circuitUnassigned": "määräämätön",
-      "defaultModeHelp": "Lataustila ajoneuvoa kytkettäessä.",
-      "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataustilan.",
+      "defaultModeHelp": {
+        "charging": "Lataustila ajoneuvoa kytkettäessä.",
+        "heating": "Asetetaan päälle järjestelmän käynnistyessä."
+      },
+      "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataus/käyttötilan.",
       "defaultModeLabel": "Oletustila",
       "delete": "Poista",
-      "electricalSubtitle": "Jos olet epävarma, kysy sähkömieheltäsi.",
+      "electricalSubtitle": "Jos olet epävarma, kysy sähköasentajaltasi.",
       "electricalTitle": "Sähköinen",
       "energyMeterHelp": "Lisämittari, jos laturissa ei ole integroitua energiamittaria.",
       "energyMeterLabel": "Energiamittari",
@@ -210,11 +238,15 @@
       "minCurrentHelp": "Valitse alle 6 A vain, jos tiedät mitä olet tekemässä.",
       "minCurrentLabel": "Minimivirta",
       "noVehicles": "Ajoneuvoja ei ole määritetty.",
+      "option": {
+        "charging": "Lisää latauspiste",
+        "heating": "Lisää lämmityslaite"
+      },
       "phases1p": "1-vaihe",
       "phases3p": "3-vaihe",
       "phasesAutomatic": "Automaattinen",
       "phasesAutomaticHelp": "Laturisi tukee automaattista vaihtoa 1- ja 3-vaiheisen latauksen välillä. Päänäytössä voit säätää vaihekäyttäytymistä latauksen aikana.",
-      "phasesHelp": "Laturiin kytkettyjen vaiheiden lukumäärä.",
+      "phasesHelp": "Kytkettyjen vaiheiden lukumäärä.",
       "phasesLabel": "Vaiheet",
       "pollIntervalDanger": "Ajoneuvon akku voi tyhjentyä tiheiden säännöllisten tietopyyntöjen seurauksena. Joidenkin autovalmistajien ajoneuvot voivat estää tällöin ajoneuvon lataamisen. Ei suositella! Käytä ainoastaan tiedostaen riskit.",
       "pollIntervalHelp": "Ajoneuvon API-päivitysten välinen aika. Lyhyet välit voivat tyhjentää ajoneuvon akun.",
@@ -226,28 +258,39 @@
       "pollModeConnected": "yhdistetty",
       "pollModeConnectedHelp": "Päivitä ajoneuvon tila säännöllisin väliajoin, kun yhteys on muodostettu.",
       "pollModeLabel": "Päivitys käyttäytyminen",
-      "priorityHelp": "Korkeamman prioriteetin latauspisteet saavat ensisijaisen pääsyn aurinkoenergian ylijäämään.",
+      "priorityHelp": "Korkeamman prioriteetin laitteet saavat ensisijaisen pääsyn aurinkoenergian ylijäämään.",
       "priorityLabel": "Prioriteetti",
       "save": "Tallenna",
       "showAllSettings": "Näytä kaikki asetukset",
       "solarBehaviorCustomHelp": "Määritä omat päälle- ja poiskytkentä sekä viiveet.",
-      "solarBehaviorDefaultHelp": "Lataa vain aurinkoenergian ylijäämällä. Aloita ylijäämän {enableDelay} jälkeen. Lopeta, kun ylijäämää ei ole tarpeeksi {disableDelay}:lle.",
-      "solarBehaviorLabel": "PV käyttäytyminen",
+      "solarBehaviorDefaultHelp": "Aloita aurinkoylijäämän {enableDelay} jälkeen. Lopeta, kun ylijäämää ei ole tarpeeksi {disableDelay}:lle.",
+      "solarBehaviorLabel": "Aurinkoenergia",
       "solarModeCustom": "muokattu",
       "solarModeMaximum": "maksimi PV",
       "thresholdDisableDelayLabel": "Poista viive käytöstä",
       "thresholdDisableHelpInvalid": "Käytä positiivista arvoa.",
-      "thresholdDisableHelpPositive": "Lopeta lataaminen, kun verkosta käytetään enemmän kuin {power}, {delay} ajaksi.",
-      "thresholdDisableHelpZero": "Pysäytä, kun vähimmäislataustehoa ei voida täyttää {delay} ajaksi.",
+      "thresholdDisableHelpPositive": "Lopeta, kun verkosta käytetään enemmän kuin {power}, {delay} ajaksi.",
+      "thresholdDisableHelpZero": "Pysäytä, kun vähimmäistehoa ei voida täyttää {delay} ajaksi.",
       "thresholdDisableLabel": "Poista verkkoenergia käytöstä",
       "thresholdEnableDelayLabel": "Ota viive käyttöön",
       "thresholdEnableHelpInvalid": "Käytä negatiivista arvoa.",
-      "thresholdEnableHelpNegative": "Aloita lataaminen, kun {surplus} ylijäämää on käytettävissä {delay}.",
-      "thresholdEnableHelpZero": "Aloita, kun vähimmäislatausteho on käytettävissä {delay}.",
+      "thresholdEnableHelpNegative": "Aloita, kun {surplus} ylijäämää on käytettävissä {delay}.",
+      "thresholdEnableHelpZero": "Aloita, kun vähimmäistehoa on käytettävissä {delay}.",
       "thresholdEnableLabel": "Ota verkkoenergia käyttöön",
-      "titleAdd": "Lisää latauspiste",
-      "titleEdit": "Muokkaa latauspistettä",
-      "titleExample": "Autotalli, autokatos jne.",
+      "titleAdd": {
+        "charging": "Lisää latauspiste",
+        "heating": "Lisää lämmityslaite",
+        "unknown": "Lisää latauslaite tai lämmitin"
+      },
+      "titleEdit": {
+        "charging": "Muokkaa latauspistettä",
+        "heating": "Muokkaa latauslaitetta",
+        "unknown": "Muokkaa latauslaitetta tai lämmitintä"
+      },
+      "titleExample": {
+        "charging": "Autotalli, autokatos, yms.",
+        "heating": "Lämpöpumppu, lämmitin, yms."
+      },
       "titleLabel": "Otsikko",
       "vehicleAutoDetection": "automaattinen tunnistus",
       "vehicleHelpAutoDetection": "Valitsee automaattisesti todennäköisimmän ajoneuvon. Manuaalinen ohitus on mahdollista.",
@@ -258,7 +301,7 @@
     "main": {
       "addAdditional": "Lisää lisämittari",
       "addGrid": "Lisää verkkomittari",
-      "addLoadpoint": "Lisää latauspiste",
+      "addLoadpoint": "Lisää latauslaite tai lämmitin",
       "addPvBattery": "Lisää aurinkovoimala tai akusto",
       "addTariffs": "Lisää tariffit",
       "addVehicle": "Lisää ajoneuvo",
@@ -351,6 +394,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Lämmitys",
+        "standby": "Valmiustila"
+      },
       "schema": {
         "http": "HTTP (salaamaton)",
         "https": "HTTPS (salattu)"
@@ -370,7 +417,7 @@
       "general": "Yleinen",
       "grid": "Sähköverkko",
       "integrations": "Integraatiot",
-      "loadpoints": "Latauspisteet",
+      "loadpoints": "Lataus- ja lämmityspisteet",
       "meter": "Aurinko & Akku",
       "system": "Järjestelmä",
       "vehicles": "Ajoneuvot"
@@ -779,6 +826,8 @@
       "connected": "Yhdistetty.",
       "disconnectRequired": "Istunto lopetettu. Yhdistä uudelleen.",
       "disconnected": "Irroitettu.",
+      "feedinPriorityNextStart": "Korkea tuotannon verkkoon myyntihinta alkaa {duration}.",
+      "feedinPriorityPausing": "Aurinkoenergialataus tauolla, jotta sähkön myynti verkkoon voidaan maksimoida.",
       "finished": "Valmis.",
       "minCharge": "Ladataan minimissään {soc}.",
       "pvDisable": "Ei tarpeeksi ylijäämää. Lataus keskeytetään pian.",
@@ -973,6 +1022,14 @@
     "resetAction": "Poista rajoitus",
     "resetWarning": "Dynaamista sähköverkonhintaa tai sähkötuotannon CO₂-päästöjä ei ole määritetty, vaikka rajoitus {limit} on asetettu. Siistitäänkö asetuksiasi?",
     "saved": "Tallennettu."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Tauotettu tuntia",
+    "description": "Lataus tauotetaan korkean sähkön hinnan aikana, jotta voidaan priorisoida sähkön myyntiä verkkoon.",
+    "priceLabel": "Verkkoon myyntihinta",
+    "priceLimit": "Verkkoon syöttö rajoite",
+    "resetWarning": "Dynaamista verkkoon myyntihintaa ei ole määritetty. Kuitenkin on määritetty raja {limit}. Siivotaanko määrityksiäsi?",
+    "title": "Verkkoon myynnin priorisointi"
   },
   "startupError": {
     "configFile": "Käytetty määritystiedostoa:",
