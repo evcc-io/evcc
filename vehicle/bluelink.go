@@ -84,4 +84,3 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}) (api.Vehi
 
 	return v, nil
 }
-
