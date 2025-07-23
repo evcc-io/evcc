@@ -770,11 +770,11 @@ func (site *Site) updateMeters() error {
 
 	eg.Go(site.updateGridMeter)
 
-	if err := site.optimizerUpdate(battery); err != nil {
+	if err := eg.Wait(); err != nil {
 		return err
 	}
 
-	return eg.Wait()
+	return site.optimizerUpdate(battery)
 }
 
 func (site *Site) updateHouseholdConsumption(totalChargePower float64) {
