@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply
+// Copyright (c) 2024-2025 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -19,7 +19,6 @@ package charger
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -105,7 +104,7 @@ func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+		res[i] = float64(encoding.Uint16(b[2*i:])) / 100
 	}
 
 	return res[0], res[1], res[2], nil
@@ -143,7 +142,7 @@ func (wb *Solax) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != solaxModeStop, nil
+	return encoding.Uint16(b) != solaxModeStop, nil
 }
 
 // Enable implements the api.Charger interface
@@ -184,7 +183,7 @@ func (wb *Solax) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)), err
+	return float64(encoding.Uint16(b)), err
 }
 
 var _ api.MeterEnergy = (*Solax)(nil)
@@ -196,7 +195,7 @@ func (wb *Solax) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 10, err
+	return float64(encoding.Uint32LswFirst(b)) / 10, err
 }
 
 var _ api.PhaseCurrents = (*Solax)(nil)
