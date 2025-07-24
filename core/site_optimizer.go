@@ -39,6 +39,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return nil
 	}
 
+	log := util.NewLogger("evopt")
+
 	grid := currentSlots(site.GetTariff(api.TariffUsageGrid))
 	feedIn := currentSlots(site.GetTariff(api.TariffUsageFeedIn))
 	solar := currentSlots(site.GetTariff(api.TariffUsageSolar))
@@ -47,6 +49,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	if minLen < 8 {
 		return fmt.Errorf("not enough slots for optimization: %d", minLen)
 	}
+
+	log.DEBUG.Printf("optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d",
+		minLen,
+		grid[minLen-1].End.Local(),
+		len(grid), len(feedIn), len(solar),
+	)
 
 	gt := lo.RepeatBy(minLen, func(_ int) float32 {
 		return baseLoad
@@ -100,7 +108,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	apiClient, err := evopt.NewClientWithResponses(uri, evopt.WithHTTPClient(
-		request.NewClient(util.NewLogger("evopt")),
+		request.NewClient(log),
 	))
 	if err != nil {
 		return err
