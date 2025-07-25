@@ -8,8 +8,8 @@ import (
 )
 
 type meter struct {
-	Meter     int       `json:"meter" gorm:"column:meter;unique_index"`
-	Timestamp time.Time `json:"ts" gorm:"column:ts;unique_index"`
+	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
+	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
 	Value     float64   `json:"val" gorm:"column:val"`
 }
 
