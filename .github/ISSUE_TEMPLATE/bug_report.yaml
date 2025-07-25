@@ -38,11 +38,9 @@ body:
       label: Configuration details
       render: yaml
       description: >
-        Show evcc configuration file <code>evcc.yaml</code>
+        Show evcc configuration file <code>evcc.yaml</code> and/or output of <code>evcc config</code>.
 
         Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
-
-        To quickly dump a redacted configuration without secrets, you can use the `evcc dump --cfg` command.
 
   - type: textarea
     validations:
