@@ -13,6 +13,8 @@ type meter struct {
 	Value     float64   `json:"val" gorm:"column:val"`
 }
 
+var ErrIncomplete = errors.New("meter profile incomplete")
+
 func Init() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
@@ -27,12 +29,10 @@ func Persist(ts time.Time, value float64) error {
 }
 
 // Profile returns a 15min average meter profile in Wh
-func Profile() ([96]float64, error) {
-	var res [96]float64
-
+func Profile() (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
@@ -41,30 +41,33 @@ func Profile() ([96]float64, error) {
 		GROUP BY strftime("HH:MM", ts)
 		ORDER BY ts`, 1)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	var i int
+	res := make([]float64, 0, 96)
 
 	for rows.Next() {
-		var ts time.Time
-		if err := rows.Scan(&ts, &res[i]); err != nil {
-			return res, err
+		var (
+			ts  time.Time
+			val float64
+		)
+		if err := rows.Scan(&ts, &val); err != nil {
+			return nil, err
 		}
 
 		hour := ts.Hour()
 		minute := ts.Minute() / 15
-		if i != hour*4+minute {
-			return res, errors.New("meter profile incomplete")
+		if len(res) != hour*4+minute {
+			return nil, ErrIncomplete
 		}
 
-		i++
+		res = append(res, val)
 	}
 
-	if i != 96 {
-		return res, errors.New("meter profile incomplete")
+	if len(res) != 96 {
+		return nil, ErrIncomplete
 	}
 
-	return res, nil
+	return (*[96]float64)(res), nil
 }
