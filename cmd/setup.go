@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
@@ -576,6 +577,10 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := session.Init(); err != nil {
+		return err
+	}
+
+	if err := metrics.Init(); err != nil {
 		return err
 	}
 
