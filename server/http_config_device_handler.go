@@ -145,6 +145,13 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		}
 	}
 
+	// Zusätzliche Felder aus YAML (Other)
+	for k, v := range conf.Other {
+		if _, exists := dc[k]; !exists {
+			dc[k] = v
+		}
+	}
+
 	return dc, nil
 }
 
