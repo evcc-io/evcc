@@ -13,12 +13,12 @@
 				class="form-control"
 				autocomplete="current-password"
 				type="password"
-				:required="required"
+				required
 				@input="updatePassword"
 			/>
 		</div>
 
-		<p v-if="error" class="text-danger my-4">{{ $t("loginModal.error") }}{{ error }}</p>
+		<p v-if="error" class="text-danger my-4">{{ error }}</p>
 		<a
 			v-if="iframeHint"
 			class="text-muted my-4 d-block text-center"
@@ -39,7 +39,6 @@ export default defineComponent({
 		error: { type: String, default: "" },
 		password: { type: String, default: "" },
 		iframeHint: { type: Boolean, default: false },
-		required: { type: Boolean, default: true },
 	},
 	emits: ["update:password"],
 	computed: {

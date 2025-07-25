@@ -52,6 +52,15 @@
           "type": "string"
         }
       },
+      "energy": {
+        "description": "Energy in kWh",
+        "in": "path",
+        "name": "energy",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Energy"
+        }
+      },
       "hourMinuteTime": {
         "description": "Time in `HOURS:MINUTES` format",
         "in": "path",
@@ -106,7 +115,7 @@
         }
       },
       "power": {
-        "description": "Power in Watts",
+        "description": "Power in W",
         "in": "path",
         "name": "power",
         "required": true,
@@ -124,7 +133,7 @@
         }
       },
       "threshold": {
-        "description": "Power in Watts",
+        "description": "Power in W",
         "in": "path",
         "name": "threshold",
         "required": true,
@@ -423,6 +432,12 @@
         "example": 60,
         "type": "integer"
       },
+      "Energy": {
+        "description": "Energy in kWh",
+        "example": 25.5,
+        "minimum": 0,
+        "type": "number"
+      },
       "HourMinuteTime": {
         "description": "Time in `HOURS:MINUTES` format",
         "example": "12:30",
@@ -520,7 +535,7 @@
         "type": "object"
       },
       "Power": {
-        "description": "Power in Watts",
+        "description": "Power in W",
         "example": 2500,
         "minimum": 0,
         "type": "number"
@@ -605,7 +620,7 @@
         "description": "[See documentation](https://docs.evcc.io/en/docs/features/plans#energy-amount-plan)",
         "properties": {
           "energy": {
-            "$ref": "#/components/schemas/Power"
+            "$ref": "#/components/schemas/Energy"
           },
           "precondition": {
             "$ref": "#/components/schemas/Precondition"
@@ -1053,7 +1068,7 @@
         ]
       }
     },
-    "/loadpoints/{id}/limitenergy/{power}": {
+    "/loadpoints/{id}/limitenergy/{energy}": {
       "post": {
         "description": "Updates the energy limit of the loadpoint. Only available for guest vehicles and vehicles with unknown SoC. Limit is removed on vehicle disconnect. [Read more.](https://docs.evcc.io/en/docs/features/limit)\n",
         "parameters": [
@@ -1061,7 +1076,7 @@
             "$ref": "#/components/parameters/id"
           },
           {
-            "$ref": "#/components/parameters/power"
+            "$ref": "#/components/parameters/energy"
           }
         ],
         "responses": {
@@ -1265,7 +1280,7 @@
         ]
       }
     },
-    "/loadpoints/{id}/plan/energy/{power}/{timestamp}": {
+    "/loadpoints/{id}/plan/energy/{energy}/{timestamp}": {
       "post": {
         "description": "Creates a charging plan with fixed time and energy target. Only available when a vehicle with unknown SoC is connected. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
         "parameters": [
@@ -1273,7 +1288,7 @@
             "$ref": "#/components/parameters/id"
           },
           {
-            "$ref": "#/components/parameters/power"
+            "$ref": "#/components/parameters/energy"
           },
           {
             "$ref": "#/components/parameters/timestamp"
@@ -1348,8 +1363,8 @@
                 "value": 80
               },
               "socNotAvailable": {
-                "summary": "If SoC is not available =\u003e specify power in Watt",
-                "value": 2500
+                "summary": "If SoC is not available =\u003e specify energy in kWh",
+                "value": 25.5
               }
             },
             "in": "path",
@@ -1361,10 +1376,9 @@
                   "$ref": "#/components/schemas/Soc"
                 },
                 {
-                  "$ref": "#/components/schemas/Power"
+                  "$ref": "#/components/schemas/Energy"
                 }
-              ],
-              "type": "number"
+              ]
             }
           },
           {

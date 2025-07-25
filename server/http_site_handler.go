@@ -354,6 +354,11 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, log)
 }
 
+// adminPasswordValid validates the admin password and returns true if valid
+func adminPasswordValid(authObject auth.Auth, password string) bool {
+	return authObject.GetAuthMode() == auth.Disabled || authObject.IsAdminPasswordValid(password)
+}
+
 func getBackup(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
@@ -362,7 +367,7 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(req.Password) {
+		if !adminPasswordValid(authObject, req.Password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
@@ -422,7 +427,7 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(r.FormValue("password")) {
+		if !adminPasswordValid(authObject, r.FormValue("password")) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
@@ -479,7 +484,7 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if authObject.GetAuthMode() == auth.Enabled && !authObject.IsAdminPasswordValid(req.Password) {
+		if !adminPasswordValid(authObject, req.Password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
