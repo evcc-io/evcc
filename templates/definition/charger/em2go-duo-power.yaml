@@ -1,0 +1,23 @@
+template: em2go-duo-power
+products:
+  - brand: EM2GO
+    description:
+      generic: AC WALLBOX DUO POWER 2X 22KW
+capabilities: ["mA"]
+requirements:
+  description:
+    de: "Aktuelle Firmware mit Modbus-Unterstützung notwendig. Mögliche Verbindungsprobleme - Device ID muss bei jeder Verbindung inkrementiert werden."
+    en: "Recent firmware with Modbus support required. Possible connection issues - Device ID needs to be incremented for each connection attempt."
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+  - name: connector
+    description:
+      de: "Anschluss (1 oder 2 für Duo Power)"
+      en: "Connector (1 or 2 for Duo Power)"
+    default: 1
+render: |
+  type: em2go-duo-power
+  {{- include "modbus" . }}
+  connector: {{ .connector }}
