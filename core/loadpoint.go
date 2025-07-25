@@ -1349,7 +1349,11 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		delta = lp.EffectiveMaxPower()
 
 		// expire timers
-		lp.phaseTimer = elapsed
+		if !lp.phaseTimer.IsZero() {
+			// only elapse when the phase timer is active. This prevent setting it
+			// to elapsed in case the load point does not support phase switching
+			lp.phaseTimer = elapsed
+		}
 		lp.pvTimer = elapsed
 
 		if lp.charging() {
