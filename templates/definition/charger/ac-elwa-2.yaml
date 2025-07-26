@@ -16,7 +16,8 @@ params:
       en: "Scale factor for power limit"
       de: "Skalierungsfaktor der Leistungsvorgabe"
   - name: tempsource
-    default: "http"
+    choice: ["temp1", "temp2"]
+    default: "temp1"
     description:
       en: "Temperature source"
       de: "Temperaturquelle"
