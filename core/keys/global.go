@@ -20,4 +20,5 @@ const (
 	Telemetry          = "telemetry"
 	DemoMode           = "demoMode"
 	AuthDisabled       = "authDisabled"
+	ProviderAuth       = "providerAuth"
 )

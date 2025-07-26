@@ -427,7 +427,7 @@ export default {
 			return new Date(this.sessions[0]?.created || Date.now());
 		},
 		topNavigation() {
-			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
+			const vehicleLogins = store.state.providerAuth ? store.state.providerAuth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
 		},
 		sessionsWithDefaults() {
