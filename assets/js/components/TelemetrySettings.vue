@@ -71,7 +71,7 @@ export default defineComponent({
 				const response = await api.post(
 					`settings/telemetry/${(e.target as HTMLInputElement).checked}`
 				);
-				settings.telemetry = response.data.result;
+				settings.telemetry = response.data;
 			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				if (e.response) {
@@ -89,7 +89,7 @@ export default defineComponent({
 					validateStatus: () => true,
 				});
 				if (response.status === 200) {
-					settings.telemetry = response.data.result;
+					settings.telemetry = response.data;
 				}
 			} catch (err) {
 				console.error(err);
