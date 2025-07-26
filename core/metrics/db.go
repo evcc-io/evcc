@@ -38,7 +38,7 @@ func Profile() (*[96]float64, error) {
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
 		FROM meters
 		WHERE meter = ?
-		GROUP BY strftime("HH:MM", ts)
+		GROUP BY strftime("%H:%M", ts)
 		ORDER BY ts`, 1)
 	if err != nil {
 		return nil, err
