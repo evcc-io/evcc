@@ -603,9 +603,9 @@ func (site *Site) updatePvMeters() {
 }
 
 // updateBatteryMeters updates battery meters
-func (site *Site) updateBatteryMeters() {
+func (site *Site) updateBatteryMeters() []measurement {
 	if len(site.batteryMeters) == 0 {
-		return
+		return nil
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
@@ -673,6 +673,8 @@ func (site *Site) updateBatteryMeters() {
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)
+
+	return mm
 }
 
 // updateAuxMeters updates aux meters
@@ -759,14 +761,20 @@ func (site *Site) updateGridMeter() error {
 func (site *Site) updateMeters() error {
 	var eg errgroup.Group
 
+	var battery []measurement
+
 	eg.Go(func() error { site.updatePvMeters(); return nil })
-	eg.Go(func() error { site.updateBatteryMeters(); return nil })
+	eg.Go(func() error { battery = site.updateBatteryMeters(); return nil })
 	eg.Go(func() error { site.updateAuxMeters(); return nil })
 	eg.Go(func() error { site.updateExtMeters(); return nil })
 
 	eg.Go(site.updateGridMeter)
 
-	return eg.Wait()
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	return site.optimizerUpdate(battery)
 }
 
 func (site *Site) updateHouseholdConsumption(totalChargePower float64) {
