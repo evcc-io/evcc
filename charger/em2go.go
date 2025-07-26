@@ -71,26 +71,13 @@ const (
 func init() {
 	registry.AddCtx("em2go", NewEm2GoFromConfig)
 	registry.AddCtx("em2go-home", NewEm2GoFromConfig)
-	registry.AddCtx("em2go-duo-power", NewEm2GoDuoPowerFromConfig)
+	registry.AddCtx("em2go-duo", NewEm2GoFromConfig)
 }
 
 //go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
-
-	return NewEm2Go(ctx, cc.URI, cc.ID)
-}
-
-// NewEm2GoDuoPowerFromConfig creates a Em2Go Duo Power charger from generic config
-func NewEm2GoDuoPowerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int
@@ -103,11 +90,11 @@ func NewEm2GoDuoPowerFromConfig(ctx context.Context, other map[string]interface{
 		return nil, err
 	}
 
-	return NewEm2GoDuoPower(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewEm2Go(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewEm2Go creates Em2Go charger
-func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
+func NewEm2Go(ctx context.Context, uri string, slaveID uint8, connector int) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
@@ -122,41 +109,10 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		log:        log,
-		conn:       conn,
-		current:    60,
-		workaround: false,
-		base:       0, // single connector, no offset
-	}
-
-	return wb.initialize()
-}
-
-// NewEm2GoDuoPower creates Em2Go Duo Power charger
-func NewEm2GoDuoPower(ctx context.Context, uri string, slaveID uint8, connector int) (api.Charger, error) {
-	if connector < 1 || connector > 2 {
-		return nil, fmt.Errorf("invalid connector: %d", connector)
-	}
-
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add delay of 60 milliseconds between requests
-	conn.Delay(60 * time.Millisecond)
-
-	log := util.NewLogger("em2go-duo-power")
-	conn.Logger(log.TRACE)
-
-	wb := &Em2Go{
-		log:        log,
-		conn:       conn,
-		current:    60,
-		workaround: false,
-		base:       uint16((connector - 1) * em2GoDuoPowerOffset),
+		log:     log,
+		conn:    conn,
+		current: 60,
+		base:    uint16((connector - 1) * em2GoDuoPowerOffset),
 	}
 
 	return wb.initialize()
