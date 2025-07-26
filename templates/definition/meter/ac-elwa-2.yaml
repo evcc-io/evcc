@@ -14,7 +14,7 @@ render: |
     uri: http://{{ .host }}/data.jsn
     jq: .power_elwa2
   soc:
-    source: http
+    source: {{ .tempsource }}
     uri: http://{{ .host }}/data.jsn
     jq: .temp1
     scale: 0.1
