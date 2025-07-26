@@ -792,7 +792,7 @@ func (site *Site) updateHouseholdConsumption(totalChargePower float64) {
 		return
 	}
 
-	slotDuration := time.Minute
+	slotDuration := 15 * time.Minute
 	slotStart := now.Truncate(slotDuration)
 
 	if slotStart.After(site.householdSlotStart) {

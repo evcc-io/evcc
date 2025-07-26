@@ -15,7 +15,13 @@ params:
     description:
       en: "Scale factor for power limit"
       de: "Skalierungsfaktor der Leistungsvorgabe"
+  - name: tempsource
+    default: "http"
+    description:
+      en: "Temperature source"
+      de: "Temperaturquelle"
 render: |
   type: ac-elwa-2
   {{- include "modbus" . }}
   scale: {{ .scale }}
+  tempsource: {{ .tempsource }}

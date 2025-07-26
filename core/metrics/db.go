@@ -21,7 +21,7 @@ func Init() error {
 
 // Persist stores 15min consumption in Wh
 func Persist(ts time.Time, value float64) error {
-	return db.Instance.Save(meter{
+	return db.Instance.Create(meter{
 		Meter:     1,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
