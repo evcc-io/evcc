@@ -16,5 +16,5 @@ render: |
   soc:
     source: {{ .tempsource }}
     uri: http://{{ .host }}/data.jsn
-    jq: .temp1
+    jq: .{{ .tempsource }}
     scale: 0.1
