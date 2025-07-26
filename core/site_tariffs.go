@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
 
@@ -171,4 +172,8 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
 	tariff := site.GetTariff(usage)
 	return tariff != nil && tariff.Type() != api.TariffTypePriceStatic
+}
+
+func beginningOfDay(t time.Time) time.Time {
+	return now.With(t).BeginningOfDay()
 }
