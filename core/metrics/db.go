@@ -8,7 +8,8 @@ import (
 )
 
 type meter struct {
-	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
+	Meter int `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
+	// Timestamp time.Time `json:"ts" gorm:"column:ts;type:time;uniqueIndex:meter_ts"`
 	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
 	Value     float64   `json:"val" gorm:"column:val"`
 }
@@ -29,7 +30,7 @@ func Persist(ts time.Time, value float64) error {
 }
 
 // Profile returns a 15min average meter profile in Wh
-func Profile() (*[96]float64, error) {
+func Profile(from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
@@ -37,37 +38,48 @@ func Profile() (*[96]float64, error) {
 
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
 		FROM meters
-		WHERE meter = ?
-		GROUP BY strftime("HH:MM", ts)
-		ORDER BY ts`, 1)
+		WHERE meter = ? AND ts >= ?
+		GROUP BY strftime("%H:%M", ts)
+		ORDER BY ts ASC`, 1, from,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	res := make([]float64, 0, 96)
+	fromSlot := slotNum(from)
+
+	front := make([]float64, 0, 96)
+	back := make([]float64, 0, 96)
 
 	for rows.Next() {
 		var (
-			ts  time.Time
+			ts  SqlTime
 			val float64
 		)
 		if err := rows.Scan(&ts, &val); err != nil {
 			return nil, err
 		}
 
-		hour := ts.Hour()
-		minute := ts.Minute() / 15
-		if len(res) != hour*4+minute {
-			return nil, ErrIncomplete
+		slot := slotNum(time.Time(ts))
+		if slot < fromSlot && len(front) == 0 {
+			back = append(back, val)
+			continue
 		}
 
-		res = append(res, val)
+		front = append(front, val)
 	}
+
+	res := append(front, back...)
 
 	if len(res) != 96 {
 		return nil, ErrIncomplete
 	}
 
 	return (*[96]float64)(res), nil
+}
+
+func slotNum(ts time.Time) int {
+	ts = ts.Local()
+	return ts.Hour()*4 + ts.Minute()/15
 }

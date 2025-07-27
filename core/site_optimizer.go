@@ -10,6 +10,7 @@ import (
 
 	evopt "github.com/andig/evopt/client"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -21,7 +22,6 @@ var (
 	eta          = float32(0.9)       // efficiency of the battery charging/discharging
 	batteryPower = float32(6000)      // power of the battery in W
 	pa           = float32(0.3 / 1e3) // Value per Wh at end of time horizon
-	baseLoad     = float32(300)       // base load in W
 
 	updated time.Time
 )
@@ -56,9 +56,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		len(grid), len(feedIn), len(solar),
 	)
 
-	gt := lo.RepeatBy(minLen, func(_ int) float32 {
-		return baseLoad
-	})
+	gt := site.householdProfile(minLen)
 
 	req := evopt.OptimizationInput{
 		EtaC: &eta,
@@ -145,6 +143,28 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	})
 
 	return nil
+}
+
+func (site *Site) householdProfile(minLen int) []float32 {
+	fallback := lo.RepeatBy(minLen, func(_ int) float32 {
+		return 0
+	})
+
+	now := time.Now().Truncate(time.Hour)
+
+	household, err := metrics.Profile(now.AddDate(0, 0, -30))
+	if err != nil {
+		site.log.ERROR.Printf("household metrics profile: %v", err)
+		return fallback
+	}
+
+	// make sure we can wrap around
+	slots := append(household[:], household[:]...)
+	_ = slots
+
+	var res []float32
+
+	return res
 }
 
 func currentSlots(tariff api.Tariff) []api.Rate {
