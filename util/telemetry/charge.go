@@ -35,7 +35,7 @@ type TelemetryProvider interface {
 }
 
 func Enabled() bool {
-	enabled := false
+	var enabled bool
 	if siteAPI != nil {
 		enabled = siteAPI.TelemetryEnabled()
 	} else {
