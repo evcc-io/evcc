@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
@@ -579,6 +580,10 @@ func configureDatabase(conf globalconfig.DB) error {
 		return err
 	}
 
+	if err := metrics.Init(); err != nil {
+		return err
+	}
+
 	if err := settings.Init(); err != nil {
 		return err
 	}
@@ -805,7 +810,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewCachedFromConfig(ctx, conf.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
