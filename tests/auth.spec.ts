@@ -14,10 +14,16 @@ test("set initial password", async ({ page }) => {
   await start(BASIC, null, "");
   await page.goto("/");
 
-  const modal = page.getByTestId("password-modal");
+  const modal = page.getByTestId("password-setup-modal");
 
   await expectModalVisible(modal);
   await expect(modal.getByRole("heading", { name: "Set Administrator Password" })).toBeVisible();
+
+  // should not be closable via ESC or outside click
+  await page.keyboard.press("Escape");
+  await expectModalVisible(modal);
+  await page.click("body");
+  await expectModalVisible(modal);
 
   // empty password
   await modal.getByRole("button", { name: "Create Password" }).click();
@@ -111,7 +117,7 @@ test("update password", async ({ page }) => {
 
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
-  const modal = page.getByTestId("password-modal");
+  const modal = page.getByTestId("password-update-modal");
   await expectModalVisible(modal);
   await expect(modal.getByRole("heading", { name: "Update Administrator Password" })).toBeVisible();
   await modal.getByLabel("Current password").fill(oldPassword);
@@ -158,7 +164,7 @@ test("disable auth", async ({ page }) => {
   await page.goto("/");
 
   // no password modal
-  const modal = page.getByTestId("password-modal");
+  const modal = page.getByTestId("password-setup-modal");
   await expectModalHidden(modal);
 
   // configuration page without login
