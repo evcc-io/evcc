@@ -777,16 +777,10 @@ func (site *Site) updateMeters() error {
 	return site.optimizerUpdate(battery)
 }
 
-func (site *Site) updateHouseholdConsumption(totalChargePower float64) {
-	householdPower := site.gridPower + site.pvPower + site.batteryPower - totalChargePower
-	if householdPower <= 0 {
-		return
-	}
-
-	site.householdEnergy.AddPower(householdPower)
+func (site *Site) updateHomeConsumption(homePower float64) {
+	site.householdEnergy.AddPower(homePower)
 
 	now := site.householdEnergy.clock.Now()
-
 	if site.householdSlotStart.IsZero() {
 		site.householdSlotStart = now
 		return
@@ -958,6 +952,10 @@ func (site *Site) update(lp updater) {
 		homePower = max(homePower, 0)
 		site.publish(keys.HomePower, homePower)
 
+		if homePower > 0 {
+			site.updateHomeConsumption(homePower)
+		}
+
 		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 		// fix for: https://github.com/evcc-io/evcc/issues/11032
 		nonChargePower := homePower + max(0, -site.batteryPower)
@@ -980,8 +978,6 @@ func (site *Site) update(lp updater) {
 	} else {
 		site.log.ERROR.Println(err)
 	}
-
-	site.updateHouseholdConsumption(totalChargePower)
 
 	site.stats.Update(site)
 }
