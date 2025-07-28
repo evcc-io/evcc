@@ -51,7 +51,7 @@ chargers:
     status:
       source: js
       script: |
-        "C"
+        "B"
     maxcurrent:
       source: js
       script: |
@@ -60,12 +60,7 @@ chargers:
 tariffs:
   currency: EUR
   co2:
-    type: fixed
-    price: 100 # g/kWh
-    zones:
-      - hours: 5-7
-        price: 20
-      - hours: 11-14
-        price: 40
-      - hours: 17-21
-        price: 150
+    type: template
+    template: demo-co2-forecast
+    base: 80.7
+    variation: 1.07
