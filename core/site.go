@@ -325,7 +325,7 @@ func (site *Site) restoreSettings() error {
 		site.SetBatteryGridChargeLimit(&v)
 	}
 	if v, err := settings.Bool(keys.Telemetry); err == nil {
-		site.telemetryEnabled = v
+		site.SetTelemetryEnabled(v)
 		site.publish(keys.Telemetry, v)
 	}
 
