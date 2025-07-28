@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("demo mode", async () => {
   test("no admin password prompt", async ({ page }) => {
-    await expectModalHidden(page.getByTestId("password-modal"));
+    await expectModalHidden(page.getByTestId("password-setup-modal"));
   });
 
   test("site title", async ({ page }) => {
