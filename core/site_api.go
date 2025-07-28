@@ -337,6 +337,29 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 	}
 }
 
+// TelemetryEnabled returns the telemetry enabled state
+func (site *Site) TelemetryEnabled() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.telemetryEnabled
+}
+
+// SetTelemetryEnabled sets the telemetry enabled state
+func (site *Site) SetTelemetryEnabled(val bool) error {
+	site.log.DEBUG.Println("set telemetry enabled:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.telemetryEnabled != val {
+		site.telemetryEnabled = val
+		settings.SetBool(keys.Telemetry, val)
+		site.publish(keys.Telemetry, val)
+	}
+
+	return nil
+}
+
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.RLock()

@@ -204,6 +204,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	var site *core.Site
 	if err == nil {
 		site, err = configureSiteAndLoadpoints(&conf)
+		if site != nil {
+			telemetry.SetSiteAPI(site)
+		}
 	}
 
 	// setup influx

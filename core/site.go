@@ -93,6 +93,9 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
+	// telemetry settings
+	telemetryEnabled bool // telemetry enabled state
+
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
@@ -320,6 +323,10 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		site.SetBatteryGridChargeLimit(&v)
+	}
+	if v, err := settings.Bool(keys.Telemetry); err == nil {
+		site.telemetryEnabled = v
+		site.publish(keys.Telemetry, v)
 	}
 
 	// restore accumulated energy

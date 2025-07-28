@@ -76,4 +76,13 @@ type API interface {
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
 	SetBatteryModeExternal(api.BatteryMode)
+
+	//
+	// telemetry
+	//
+
+	// TelemetryEnabled returns the telemetry enabled state
+	TelemetryEnabled() bool
+	// SetTelemetryEnabled sets the telemetry enabled state
+	SetTelemetryEnabled(bool) error
 }

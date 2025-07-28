@@ -22,14 +22,26 @@ const (
 
 var (
 	instanceID string
+	siteAPI    TelemetryProvider
 
 	mu                              sync.Mutex
 	updated                         time.Time
 	accChargeEnergy, accGreenEnergy float64
 )
 
+// TelemetryProvider interface for accessing telemetry state
+type TelemetryProvider interface {
+	TelemetryEnabled() bool
+}
+
 func Enabled() bool {
-	enabled, _ := settings.Bool(keys.Telemetry)
+	enabled := false
+	if siteAPI != nil {
+		enabled = siteAPI.TelemetryEnabled()
+	} else {
+		// fallback to direct database access for backwards compatibility
+		enabled, _ = settings.Bool(keys.Telemetry)
+	}
 	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
 }
 
@@ -54,6 +66,10 @@ func Create(machineID string) {
 	if machineID == "" {
 		instanceID = machine.ProtectedID("evcc-api")
 	}
+}
+
+func SetSiteAPI(site TelemetryProvider) {
+	siteAPI = site
 }
 
 // UpdateChargeProgress uploads power and energy data every 30 seconds
