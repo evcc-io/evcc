@@ -1,0 +1,41 @@
+template: homeassistant
+products:
+  - description:
+      generic: Home Assistant Vehicle
+params:
+  - name: host
+    required: true
+    example: "http://homeassistant.local:8123"
+  - name: token
+    required: true
+    mask: true
+  - name: sensors
+    type: object
+    properties:
+      soc:
+        required: true
+        example: sensor.my_car_soc
+      range:
+        example: sensor.my_car_range
+      status:
+        example: sensor.my_car_charging
+  - name: services
+    type: object
+    properties:
+      start_charging:
+        example: script.my_car_start
+      stop_charging:
+        example: script.my_car_stop
+  - preset: vehicle-base
+render: |
+  type: homeassistant
+  host: {{ .host }}
+  token: {{ .token }}
+  sensors:
+    soc: {{ .sensors.soc }}
+    {{- if .sensors.range }}range: {{ .sensors.range }}{{ end }}
+    {{- if .sensors.status }}status: {{ .sensors.status }}{{ end }}
+  services:
+    {{- if .services.start_charging }}start_charging: {{ .services.start_charging }}{{ end }}
+    {{- if .services.stop_charging }}stop_charging: {{ .services.stop_charging }}{{ end }}
+  {{- include "vehicle-base" . }}
