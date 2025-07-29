@@ -12,24 +12,24 @@ import (
 
 // Modbus Register Addresses
 const (
-	raedianRegSerial                = 0x8000 // 4 regs, Read Only
-	raedianRegFirmwareVersion       = 0x8004 // 2 regs, Read Only
-	raedianRegMaxRatedCurrent       = 0x8006 // 2 regs, Read Only
-	raedianRegErrorCode             = 0x8008 // 2 regs, Read Only
-	raedianRegSocketLockState       = 0x800A // 2 regs, Read Only
-	raedianRegChargingState         = 0x800C // 2 regs, Read Only
-	raedianRegCurrentChargingLimit  = 0x800E // 2 regs, Read Only
-	raedianRegChargingCurrentL1     = 0x8010 // 2 regs, Read Only
-	raedianRegChargingCurrentL2     = 0x8012 // 2 regs, Read Only
-	raedianRegChargingCurrentL3     = 0x8014 // 2 regs, Read Only
-	raedianRegVoltageL1             = 0x8016 // 2 regs, Read Only
-	raedianRegVoltageL2             = 0x8018 // 2 regs, Read Only
-	raedianRegVoltageL3             = 0x801A // 2 regs, Read Only
-	raedianRegActivePower           = 0x801C // 2 regs, Read Only
-	raedianRegEnergyDelivered       = 0x801E // 2 regs, Read Only
-	raedianRegSetChargingCurrent    = 0x8100 // 2 regs, Write Only
-	raedianRegSetChargingPhase      = 0x8102 // 1 reg, Write Only (in roadmap)
-	raedianRegStartStopSession      = 0x8105 // 1 reg, Write Only
+	raedianRegSerial                = 0x8000
+	raedianRegFirmwareVersion       = 0x8004
+	raedianRegMaxRatedCurrent       = 0x8006
+	raedianRegErrorCode             = 0x8008
+	raedianRegSocketLockState       = 0x800A
+	raedianRegChargingState         = 0x800C
+	raedianRegCurrentChargingLimit  = 0x800E
+	raedianRegChargingCurrentL1     = 0x8010
+	raedianRegChargingCurrentL2     = 0x8012
+	raedianRegChargingCurrentL3     = 0x8014
+	raedianRegVoltageL1             = 0x8016
+	raedianRegVoltageL2             = 0x8018
+	raedianRegVoltageL3             = 0x801A
+	raedianRegActivePower           = 0x801C
+	raedianRegEnergyDelivered       = 0x801E
+	raedianRegSetChargingCurrent    = 0x8100
+	raedianRegSetChargingPhase      = 0x8102
+	raedianRegStartStopSession      = 0x8105
 )
 
 // Charger is an api.Charger implementation
@@ -78,13 +78,12 @@ func (c *Charger) Status() (api.ChargeStatus, error) {
 
 	switch status {
 	case 0x0000:
-		return api.StatusA, nil // Idle
+		return api.StatusA, nil
 	case 0x0001, 0x0002:
-		return api.StatusB, nil // EV plugged in, waiting or ready
+		return api.StatusB, nil
 	case 0x0003, 0x0004:
-		return api.StatusC, nil // Charging
+		return api.StatusC, nil
 	default:
-		// We'll treat any other status as "none" or unknown.
 		return api.StatusNone, fmt.Errorf("unknown status: %d", status)
 	}
 }
@@ -96,7 +95,6 @@ func (c *Charger) Enabled() (bool, error) {
 		return false, fmt.Errorf("could not read current limit: %w", err)
 	}
 	currentLimit := binary.BigEndian.Uint16(b)
-	[span_0](start_span)// A limit of 0-5999 mA will pause charging[span_0](end_span)
 	return currentLimit >= 6000, nil
 }
 
@@ -104,9 +102,9 @@ func (c *Charger) Enabled() (bool, error) {
 func (c *Charger) Enable(enable bool) error {
 	var value uint16
 	if !enable {
-		[span_1](start_span)value = 0x01 // Stop charging[span_1](end_span)
+		value = 0x01
 	} else {
-		[span_2](start_span)value = 0x00 // Start charging[span_2](end_span)
+		value = 0x00
 	}
 	_, err := c.conn.WriteSingleRegister(raedianRegStartStopSession, value)
 	if err != nil {
@@ -118,9 +116,9 @@ func (c *Charger) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Charger) MaxCurrent(current int64) error {
 	if current < 6 {
-		[span_3](start_span)current = 0 // Setting the current to < 6A pauses charging[span_3](end_span)
+		current = 0
 	}
-	[span_4](start_span)value := uint16(current * 1000) // The value should be in mA[span_4](end_span)
+	value := uint16(current * 1000)
 	_, err := c.conn.WriteSingleRegister(raedianRegSetChargingCurrent, value)
 	if err != nil {
 		return fmt.Errorf("could not set current: %w", err)
@@ -149,7 +147,6 @@ func (c *Charger) TotalEnergy() (float64, error) {
 		return 0, fmt.Errorf("could not read energy register: %w", err)
 	}
 	val := binary.BigEndian.Uint16(b)
-	// The value is in Wh, we convert to kWh
 	return float64(val) / 1000, nil
 }
 
@@ -175,7 +172,7 @@ func (c *Charger) Voltages() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("could not read voltage registers: %w", err)
 	}
-	l1 := float64(binary.BigEndian.Uint16(b[0:2])) / 10 // The value is in 0.1V
+	l1 := float64(binary.BigEndian.Uint16(b[0:2])) / 10
 	l2 := float64(binary.BigEndian.Uint16(b[2:4])) / 10
 	l3 := float64(binary.BigEndian.Uint16(b[4:6])) / 10
 	return l1, l2, l3, nil
@@ -186,7 +183,6 @@ var _ api.PhaseSwitcher = (*Charger)(nil)
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Charger) Phases1p3p(phases int) error {
 	c.log.WARN.Println("Phase switching is not yet supported for Raedian Wallbox, as per the documentation it is a feature 'in roadmap'.")
-	[span_5](start_span)// The register 0x8102 is marked "in roadmap"[span_5](end_span)
 	return fmt.Errorf("phase switching not supported")
 }
 
