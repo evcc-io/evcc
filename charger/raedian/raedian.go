@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/charger/registry"
 )
 
 // Modbus Register Addresses
@@ -77,7 +78,7 @@ func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, p
 func (c *Charger) Status() (api.ChargeStatus, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegChargingState, 1)
 	if err != nil {
-		return api.StatusA, fmt.Errorf("could not read status register: %w", err)
+		return api.StatusNone, fmt.Errorf("could not read status register: %w", err)
 	}
 	status := binary.BigEndian.Uint16(b)
 
@@ -88,10 +89,9 @@ func (c *Charger) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil // EV plugged in, waiting or ready
 	case 0x0003, 0x0004:
 		return api.StatusC, nil // Charging
-	case 0x0005:
-		return api.StatusD, nil // Other
 	default:
-		return api.StatusE, fmt.Errorf("unknown status: %d", status)
+		// We'll treat any other status as "none" or unknown.
+		return api.StatusNone, fmt.Errorf("unknown status: %d", status)
 	}
 }
 
@@ -187,32 +187,6 @@ func (c *Charger) Voltages() (float64, float64, float64, error) {
 	return l1, l2, l3, nil
 }
 
-var _ api.Lock = (*Charger)(nil)
-
-// Lock implements the api.Lock interface
-func (c *Charger) Lock() (api.LockState, error) {
-	b, err := c.conn.ReadHoldingRegisters(raedianRegSocketLockState, 1)
-	if err != nil {
-		return api.LockUnknown, fmt.Errorf("could not read socket lock state: %w", err)
-	}
-	val := binary.BigEndian.Uint16(b)
-
-	switch val {
-	case 0x0000:
-		return api.LockUnlocked, nil // No cable plugged
-	case 0x0001:
-		return api.LockUnlocked, nil // Cable connected, unlocked
-	case 0x0011:
-		return api.LockLocked, nil // Cable connected, locked
-	case 0x0101:
-		return api.LockLocked, nil // Cable connected to EV, locked
-	case 0x0111:
-		return api.LockUnlocked, nil // Cable connected to EV, unlocked
-	default:
-		return api.LockUnknown, fmt.Errorf("unknown lock state: %d", val)
-	}
-}
-
 var _ api.PhaseSwitcher = (*Charger)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
@@ -226,23 +200,36 @@ var _ api.Diagnosis = (*Charger)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *Charger) Diagnose() {
-	// Read and print diagnostic information
 	c.log.INFO.Println("--- Raedian Wallbox Diagnosis ---")
-
+	
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegSerial, 2); err == nil {
 		fmt.Printf("\tSerial: %d\n", binary.BigEndian.Uint32(b))
+	} else {
+		fmt.Printf("\tSerial: ERROR - %v\n", err)
 	}
 
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegFirmwareVersion, 1); err == nil {
 		fmt.Printf("\tFirmware Version: %d\n", binary.BigEndian.Uint16(b))
+	} else {
+		fmt.Printf("\tFirmware Version: ERROR - %v\n", err)
 	}
 
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegMaxRatedCurrent, 1); err == nil {
 		fmt.Printf("\tMax Rated Current: %.3f A\n", float64(binary.BigEndian.Uint16(b))/1000)
+	} else {
+		fmt.Printf("\tMax Rated Current: ERROR - %v\n", err)
 	}
 
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegErrorCode, 1); err == nil {
 		fmt.Printf("\tError Code: %d\n", binary.BigEndian.Uint16(b))
+	} else {
+		fmt.Printf("\tError Code: ERROR - %v\n", err)
+	}
+	
+	if b, err := c.conn.ReadHoldingRegisters(raedianRegSocketLockState, 1); err == nil {
+		fmt.Printf("\tSocket Lock State: %d\n", binary.BigEndian.Uint16(b))
+	} else {
+		fmt.Printf("\tSocket Lock State: ERROR - %v\n", err)
 	}
 
 	c.log.INFO.Println("--------------------------------")
