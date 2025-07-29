@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -12,24 +12,24 @@ import (
 
 // Modbus Register Addresses
 const (
-	raedianRegSerial                = 0x8000
-	raedianRegFirmwareVersion       = 0x8004
-	raedianRegMaxRatedCurrent       = 0x8006
-	raedianRegErrorCode             = 0x8008
-	raedianRegSocketLockState       = 0x800A
-	raedianRegChargingState         = 0x800C
-	raedianRegCurrentChargingLimit  = 0x800E
-	raedianRegChargingCurrentL1     = 0x8010
-	raedianRegChargingCurrentL2     = 0x8012
-	raedianRegChargingCurrentL3     = 0x8014
-	raedianRegVoltageL1             = 0x8016
-	raedianRegVoltageL2             = 0x8018
-	raedianRegVoltageL3             = 0x801A
-	raedianRegActivePower           = 0x801C
-	raedianRegEnergyDelivered       = 0x801E
-	raedianRegSetChargingCurrent    = 0x8100
-	raedianRegSetChargingPhase      = 0x8102
-	raedianRegStartStopSession      = 0x8105
+	raedianRegSerial               = 0x8000
+	raedianRegFirmwareVersion      = 0x8004
+	raedianRegMaxRatedCurrent      = 0x8006
+	raedianRegErrorCode            = 0x8008
+	raedianRegSocketLockState      = 0x800A
+	raedianRegChargingState        = 0x800C
+	raedianRegCurrentChargingLimit = 0x800E
+	raedianRegChargingCurrentL1    = 0x8010
+	raedianRegChargingCurrentL2    = 0x8012
+	raedianRegChargingCurrentL3    = 0x8014
+	raedianRegVoltageL1            = 0x8016
+	raedianRegVoltageL2            = 0x8018
+	raedianRegVoltageL3            = 0x801A
+	raedianRegActivePower          = 0x801C
+	raedianRegEnergyDelivered      = 0x801E
+	raedianRegSetChargingCurrent   = 0x8100
+	raedianRegSetChargingPhase     = 0x8102
+	raedianRegStartStopSession     = 0x8105
 )
 
 // Charger is an api.Charger implementation
