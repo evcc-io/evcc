@@ -96,7 +96,7 @@ func (c *Charger) Enabled() (bool, error) {
 		return false, fmt.Errorf("could not read current limit: %w", err)
 	}
 	currentLimit := binary.BigEndian.Uint16(b)
-	// A limit of 0-5999 mA will pause charging
+	[span_0](start_span)// A limit of 0-5999 mA will pause charging[span_0](end_span)
 	return currentLimit >= 6000, nil
 }
 
@@ -104,9 +104,9 @@ func (c *Charger) Enabled() (bool, error) {
 func (c *Charger) Enable(enable bool) error {
 	var value uint16
 	if !enable {
-		value = 0x01 // Stop charging
+		[span_1](start_span)value = 0x01 // Stop charging[span_1](end_span)
 	} else {
-		value = 0x00 // Start charging
+		[span_2](start_span)value = 0x00 // Start charging[span_2](end_span)
 	}
 	_, err := c.conn.WriteSingleRegister(raedianRegStartStopSession, value)
 	if err != nil {
@@ -118,9 +118,9 @@ func (c *Charger) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Charger) MaxCurrent(current int64) error {
 	if current < 6 {
-		current = 0 // Setting the current to < 6A pauses charging
+		[span_3](start_span)current = 0 // Setting the current to < 6A pauses charging[span_3](end_span)
 	}
-	value := uint16(current * 1000) // The value should be in mA
+	[span_4](start_span)value := uint16(current * 1000) // The value should be in mA[span_4](end_span)
 	_, err := c.conn.WriteSingleRegister(raedianRegSetChargingCurrent, value)
 	if err != nil {
 		return fmt.Errorf("could not set current: %w", err)
@@ -186,6 +186,7 @@ var _ api.PhaseSwitcher = (*Charger)(nil)
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Charger) Phases1p3p(phases int) error {
 	c.log.WARN.Println("Phase switching is not yet supported for Raedian Wallbox, as per the documentation it is a feature 'in roadmap'.")
+	[span_5](start_span)// The register 0x8102 is marked "in roadmap"[span_5](end_span)
 	return fmt.Errorf("phase switching not supported")
 }
 
@@ -227,4 +228,3 @@ func (c *Charger) Diagnose() {
 
 	c.log.INFO.Println("--------------------------------")
 }
-
