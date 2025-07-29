@@ -1,0 +1,103 @@
+# evcc custom charger template for the Raedian NEX AC Wallbox
+# This template is based on the Modbus Protocol documentation v0.3.
+
+# Define a charger template named "raedian-nex"
+meters:
+  - name: raedian_charger
+    type: custom
+    # The `power` setting reads the active power from the wallbox.
+    # The register is 0x801C (decimal 32796) and is a 16-bit unsigned integer.
+    # The resolution is 1W, so no scaling is needed.
+    power:
+      source: modbus
+      uri: # This will be filled in the main config
+      id: 1
+      register:
+        address: 32796
+        type: holding
+        decode: uint16
+    # The `energy` setting reads the total energy delivered in the current session.
+    # The register is 0x801E (decimal 32798) and is a 16-bit unsigned integer.
+    # The resolution is 1Wh, so no scaling is needed.
+    energy:
+      source: modbus
+      uri: # This will be filled in the main config
+      id: 1
+      register:
+        address: 32798
+        type: holding
+        decode: uint16
+    # The `currents` setting reads the current for each phase (L1, L2, L3).
+    # The registers are 0x8010, 0x8012, 0x8014 (decimal 32784, 32786, 32788).
+    # The values are in mA, so we need to divide by 1000 to get Amps.
+    currents:
+      source: modbus
+      uri: # This will be filled in the main config
+      id: 1
+      registers:
+        - address: 32784
+          type: holding
+          decode: uint16
+          scale: 0.001
+        - address: 32786
+          type: holding
+          decode: uint16
+          scale: 0.001
+        - address: 32788
+          type: holding
+          decode: uint16
+          scale: 0.001
+    
+chargers:
+  - name: raedian_wallbox
+    type: custom
+    # This specifies that the meter for this charger is the one we defined above.
+    meter: raedian_charger
+    
+    # The `enable` setting can be used to start/stop the charging session.
+    # The register is 0x8105 (decimal 33029).
+    # Writing 0x00 starts the session, and 0x01 stops it.
+    enable:
+      source: modbus
+      uri: # This will be filled in the main config
+      id: 1
+      register:
+        address: 33029
+        type: holding
+        value: 0 # 0 for start, 1 for stop
+    
+    # The `setCurrent` setting writes the charging current limit.
+    # The register is 0x8100 (decimal 33024).
+    # The value must be in mA, so we need to multiply by 1000.
+    # The Raedian wallbox ignores the decimal part of the value, so we'll round to the nearest whole number.
+    # We must set a minimum current of 6A (6000mA) to resume charging.
+    # We can set the current to 0A (0mA) to pause charging.
+    setCurrent:
+      source: modbus
+      uri: # This will be filled in the main config
+      id: 1
+      register:
+        address: 33024
+        type: holding
+        encode: uint16
+        scale: 1000
+    
+    # Define a set of status registers to show the charger's state.
+    status:
+      source: modbus
+      uri: # This will be filled in the main config
+      id: 1
+      register:
+        address: 32780 # Register 0x800C for Charging state
+        type: holding
+        decode: uint16
+    
+    # This section maps the status register values to human-readable strings.
+    # These values come from the "6.6 800CH- Charging state" section of the document.
+    statusmap:
+      0: A: Idle
+      1: B1: EV Plugged in, waiting for auth
+      2: B2: EV Plugged in, ready for charging
+      3: C1: EV Ready for charge, S2 closed
+      4: C2: Charging, energy delivering
+      5: Other
