@@ -215,7 +215,7 @@ func (c *Charger) Diagnose() {
 	} else {
 		fmt.Printf("\tError Code: ERROR - %v\n", err)
 	}
-	
+
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegSocketLockState, 1); err == nil {
 		fmt.Printf("\tSocket Lock State: %d\n", binary.BigEndian.Uint16(b))
 	} else {
