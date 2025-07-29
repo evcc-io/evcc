@@ -97,8 +97,6 @@ params:
     example: "script.bmw_stop_charge"
     type: string
 
-
-
 render: |
   type: homeassistant
   host: {{ .host }}
