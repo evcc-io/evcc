@@ -2,7 +2,7 @@
 // homeassistant.go – Vehicle-Adapter für evcc
 //
 // Einbindung von Fahrzeugdaten aus Home Assistant inklusive
-// Ladefreigabe (Start/Stop) via Script-Services.
+// Ladefreigabe (Start/Stop), Ziel-SOC, Odometer, Klimatisierung, MaxCurrent, FinishTime, Wakeup u.v.m. via Sensoren und Script-Services.
 //
 // YAML-Beispiel:
 // vehicles:
@@ -11,16 +11,25 @@
 //     host: http://ha.local:8123
 //     token: !secret ha_token
 //     sensors:
-//       soc: sensor.id4_soc
-//       range: sensor.id4_range
-//       status: sensor.id4_charging
+//       soc: sensor.id4_soc                # Ladezustand [%] (erforderlich)
+//       range: sensor.id4_range            # Restreichweite [km] (optional)
+//       status: sensor.id4_charging        # Ladestatus (optional)
+//       limitSoc: number.id4_target_soc    # Ziel-Ladezustand [%] (optional)
+//       odometer: sensor.id4_odometer      # Kilometerstand [km] (optional)
+//       climater: binary_sensor.id4_clima  # Klimatisierung aktiv (optional)
+//       maxCurrent: sensor.id4_max_current # Maximalstrom [A] (optional)
+//       getMaxCurrent: sensor.id4_actual_max_current # Aktueller Maximalstrom [A] (optional)
+//       finishTime: sensor.id4_finish_time # Ladeende (ISO8601 oder Unix, optional)
 //     services:
-//       start_charging: script.id4_start
-//       stop_charging:  script.id4_stop
+//       start_charging: script.id4_start   # Laden starten (optional)
+//       stop_charging:  script.id4_stop    # Laden stoppen (optional)
+//       wakeup: script.id4_wakeup          # Fahrzeug aufwecken (optional)
 //     capacity: 77
 //
-// Änderungen auf Herstellerseite werden ausschließlich
-// in den Home-Assistant-Scripts gepflegt.
+// Hinweise:
+// - Alle Sensoren müssen in Home Assistant als Entity existieren und einen passenden Wert liefern.
+// - Änderungen an der Fahrzeug-API werden ausschließlich in den Home Assistant-Skripten/Sensoren gepflegt.
+// - Nicht benötigte Felder können weggelassen werden.
 
 package vehicle
 
