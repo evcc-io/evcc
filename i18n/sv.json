@@ -163,6 +163,7 @@
       "readFromFile": "Läs från fil",
       "remove": "Ta bort",
       "save": "Spara",
+      "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
@@ -446,7 +447,14 @@
           "title": "Säkerhetskopia"
         },
         "cancel": "Avbryt",
-        "confirmWithPassword": "Bekräfta"
+        "confirmWithPassword": "Bekräfta",
+        "description": "Säkerhetskopiera, återställ och nollställ dina data. Användbart om vill flytta till ett annat system.",
+        "note": "Anmärkning: Alla ovanstående ändringar ändrar endast databasens data. Konfigurationsfilen evcc.yaml ändras inte.",
+        "reset": {
+          "action": "Nollställ...",
+          "confirmationButton": "Nollställ & starta om",
+          "confirmationText": "Denna åtgärd raderar dina data permanent. Säkerställ att du har sparat en backup först."
+        }
       },
       "logs": "Loggar",
       "restart": "Omstart",
