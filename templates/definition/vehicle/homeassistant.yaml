@@ -57,14 +57,14 @@ params:
       en: e.g. http://192.168.1.10:8123
     example: "http://192.168.1.10:8123"
     required: true
-    
+
   - name: token
     description:
       de: Home Assistant Long-Lived Access Token
       en: Home Assistant Long-Lived Access Token
     required: true
     mask: true
-    
+
   - name: sensors_soc
     description:
       de: Ladezustand Sensor Entity ID
@@ -96,7 +96,7 @@ params:
       en: Service to stop charging
     example: "script.bmw_stop_charge"
     type: string
-        
+
   - preset: vehicle-base
 
 render: |
