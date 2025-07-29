@@ -57,50 +57,48 @@ params:
       en: e.g. http://192.168.1.10:8123
     example: "http://192.168.1.10:8123"
     required: true
-
   - name: token
     description:
       de: Home Assistant Long-Lived Access Token
       en: Home Assistant Long-Lived Access Token
     required: true
     mask: true
-
   - name: sensors_soc
     description:
       de: Ladezustand Sensor Entity ID
       en: State of Charge sensor entity ID
-    example: "sensor.bmw_soc"
+    example: "sensor.id4_soc"
     type: string
     required: true
   - name: sensors_range
     description:
       de: Reichweite Sensor Entity ID
       en: Range sensor entity ID
-    example: "sensor.bmw_range_km"
+    example: "sensor.id4_range_km"
     type: string
   - name: sensors_status
     description:
       de: Ladestatus Sensor Entity ID
       en: Charging status sensor entity ID
-    example: "sensor.bmw_charging"
+    example: "sensor.id4_charging"
     type: string
   - name: services_start_charging
     description:
       de: Service zum Laden starten
       en: Service to start charging
-    example: "script.bmw_start_charge"
+    example: "script.id4_start_charge"
     type: string
   - name: services_stop_charging
     description:
       de: Service zum Laden stoppen
       en: Service to stop charging
-    example: "script.bmw_stop_charge"
+    example: "script.id4_stop_charge"
     type: string
 
 render: |
   type: homeassistant
   host: {{ .host }}
-  token: {{ .token }}
+  token: {{ or .token "dummy-token" }}
   sensors:
     soc: {{ .sensors_soc }}
     {{- if .sensors_range }}
