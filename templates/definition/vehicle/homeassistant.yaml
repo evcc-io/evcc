@@ -141,4 +141,3 @@ render: |
     wakeup: {{ .services_wakeup }}
     {{- end }}
   {{- end }}
-  {{- include "vehicle-base" . }}
