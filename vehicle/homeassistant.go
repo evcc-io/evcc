@@ -1,35 +1,35 @@
 // SPDX-License-Identifier: MIT
-// homeassistant.go – Vehicle-Adapter für evcc
+// homeassistant.go – Vehicle adapter for evcc
 //
-// Einbindung von Fahrzeugdaten aus Home Assistant inklusive
-// Ladefreigabe (Start/Stop), Ziel-SOC, Odometer, Klimatisierung, MaxCurrent, FinishTime, Wakeup u.v.m. via Sensoren und Script-Services.
+// Integration of vehicle data from Home Assistant including
+// charge control (start/stop), target SOC, odometer, climatisation, max current, finish time, wakeup, etc. via sensors and script services.
 //
-// YAML-Beispiel:
+// YAML example:
 // vehicles:
 //   - name: id4
 //     type: homeassistant
 //     host: http://ha.local:8123
 //     token: !secret ha_token
 //     sensors:
-//       soc: sensor.id4_soc                # Ladezustand [%] (erforderlich)
-//       range: sensor.id4_range            # Restreichweite [km] (optional)
-//       status: sensor.id4_charging        # Ladestatus (optional)
-//       limitSoc: number.id4_target_soc    # Ziel-Ladezustand [%] (optional)
-//       odometer: sensor.id4_odometer      # Kilometerstand [km] (optional)
-//       climater: binary_sensor.id4_clima  # Klimatisierung aktiv (optional)
-//       maxCurrent: sensor.id4_max_current # Maximalstrom [A] (optional)
-//       getMaxCurrent: sensor.id4_actual_max_current # Aktueller Maximalstrom [A] (optional)
-//       finishTime: sensor.id4_finish_time # Ladeende (ISO8601 oder Unix, optional)
+//       soc: sensor.id4_soc                # State of charge [%] (required)
+//       range: sensor.id4_range            # Remaining range [km] (optional)
+//       status: sensor.id4_charging        # Charging status (optional)
+//       limitSoc: number.id4_target_soc    # Target state of charge [%] (optional)
+//       odometer: sensor.id4_odometer      # Odometer [km] (optional)
+//       climater: binary_sensor.id4_clima  # Climatisation active (optional)
+//       maxCurrent: sensor.id4_max_current # Max current [A] (optional)
+//       getMaxCurrent: sensor.id4_actual_max_current # Actual max current [A] (optional)
+//       finishTime: sensor.id4_finish_time # Finish time (ISO8601 or Unix, optional)
 //     services:
-//       start_charging: script.id4_start   # Laden starten (optional)
-//       stop_charging:  script.id4_stop    # Laden stoppen (optional)
-//       wakeup: script.id4_wakeup          # Fahrzeug aufwecken (optional)
+//       start_charging: script.id4_start   # Start charging (optional)
+//       stop_charging:  script.id4_stop    # Stop charging (optional)
+//       wakeup: script.id4_wakeup          # Wake up vehicle (optional)
 //     capacity: 77
 //
-// Hinweise:
-// - Alle Sensoren müssen in Home Assistant als Entity existieren und einen passenden Wert liefern.
-// - Änderungen an der Fahrzeug-API werden ausschließlich in den Home Assistant-Skripten/Sensoren gepflegt.
-// - Nicht benötigte Felder können weggelassen werden.
+// Notes:
+// - All sensors must exist as entities in Home Assistant and provide a suitable value.
+// - Changes to the vehicle API are handled exclusively in Home Assistant scripts/sensors.
+// - Unused fields can be omitted.
 
 package vehicle
 
@@ -47,7 +47,7 @@ import (
 )
 
 // -----------------------------
-// Konfigurations-Strukturen
+// Configuration structures
 // -----------------------------
 
 type haSensors struct {
@@ -69,17 +69,15 @@ type haServices struct {
 }
 
 type haConfig struct {
-	embed             `mapstructure:",squash"`
-	Host              string     `mapstructure:"host"`  // http://ha:8123
-	Token             string     `mapstructure:"token"` // Long-Lived Token
-	Sensors           haSensors  `mapstructure:"sensors"`
-	Services          haServices `mapstructure:"services"`
-	StartChargeScript string     `mapstructure:"start_charging_script"` // optional, analog VW/BMW
-	StopChargeScript  string     `mapstructure:"stop_charging_script"`  // optional, analog VW/BMW
+	embed    `mapstructure:",squash"`
+	Host     string     `mapstructure:"host"`  // http://ha:8123
+	Token    string     `mapstructure:"token"` // Long-Lived Token
+	Sensors  haSensors  `mapstructure:"sensors"`
+	Services haServices `mapstructure:"services"`
 }
 
 // -----------------------------
-// Adapter-Implementierung
+// Adapter implementation
 // -----------------------------
 
 type HomeAssistant struct {
@@ -91,10 +89,10 @@ type HomeAssistant struct {
 	wakeupScript string
 }
 
-// Registrierung beim Start
+// Register on startup
 func init() { registry.Add("homeassistant", newHAFromConfig) }
 
-// Konstruktor ab YAML-Config
+// Constructor from YAML config
 func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc haConfig
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -110,31 +108,21 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("ha-vehicle").Redact(cc.Token)
-	// Fallback: falls neue Felder nicht gesetzt, verwende alte Services
-	startScript := cc.StartChargeScript
-	if startScript == "" {
-		startScript = cc.Services.Start
-	}
-	stopScript := cc.StopChargeScript
-	if stopScript == "" {
-		stopScript = cc.Services.Stop
-	}
-	wakeupScript := cc.Services.Wakeup
 	return &HomeAssistant{
 		embed:        &cc.embed,
 		Helper:       request.NewHelper(log),
 		conf:         cc,
-		startScript:  startScript,
-		stopScript:   stopScript,
-		wakeupScript: wakeupScript,
+		startScript:  cc.Services.Start,
+		stopScript:   cc.Services.Stop,
+		wakeupScript: cc.Services.Wakeup,
 	}, nil
 }
 
 // -----------------------------
-// interne Hilfsfunktionen
+// Internal helper functions
 // -----------------------------
 
-// ruft /api/states/<entity> ab und liefert .state
+// Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
 	uri := fmt.Sprintf("%s/api/states/%s", strings.TrimSuffix(v.conf.Host, "/"), entity)
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
@@ -153,7 +141,7 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 	return resp.State, nil
 }
 
-// führt script.<name> als Service-Call ohne Payload aus
+// Calls script.<name> as a service call without payload
 func (v *HomeAssistant) callScript(script string) error {
 	if script == "" {
 		return api.ErrNotAvailable
@@ -176,100 +164,52 @@ func (v *HomeAssistant) callScript(script string) error {
 }
 
 // -----------------------------
-// Implementierung API-Interfaces
+// Implementation of API interfaces
 // -----------------------------
 
-// Soc liefert Ladezustand [%]
-func (v *HomeAssistant) Soc() (float64, error) {
-	s, err := v.getState(v.conf.Sensors.Soc)
+// generic helpers for fetching and parsing sensor values
+func (v *HomeAssistant) getFloatSensor(entity string) (float64, error) {
+	if entity == "" {
+		return 0, api.ErrNotAvailable
+	}
+	s, err := v.getState(entity)
 	if err != nil {
 		return 0, err
 	}
 	return strconv.ParseFloat(s, 64)
 }
 
-// Range liefert Restreichweite [km] (optional)
-func (v *HomeAssistant) Range() (int64, error) {
-	if v.conf.Sensors.Range == "" {
+func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
+	if entity == "" {
 		return 0, api.ErrNotAvailable
 	}
-	s, err := v.getState(v.conf.Sensors.Range)
+	s, err := v.getState(entity)
 	if err != nil {
 		return 0, err
 	}
 	return strconv.ParseInt(s, 10, 64)
 }
 
-// LimitSoc liefert Ziel-Ladezustand [%] (optional)
-func (v *HomeAssistant) LimitSoc() (float64, error) {
-	if v.conf.Sensors.LimitSoc == "" {
-		return 0, api.ErrNotAvailable
-	}
-	s, err := v.getState(v.conf.Sensors.LimitSoc)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseFloat(s, 64)
-}
-
-// Odometer liefert Kilometerstand [km] (optional)
-func (v *HomeAssistant) Odometer() (float64, error) {
-	if v.conf.Sensors.Odometer == "" {
-		return 0, api.ErrNotAvailable
-	}
-	s, err := v.getState(v.conf.Sensors.Odometer)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseFloat(s, 64)
-}
-
-// Climater liefert true, wenn Klimatisierung aktiv ist (optional)
-func (v *HomeAssistant) Climater() (bool, error) {
-	if v.conf.Sensors.Climater == "" {
+func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
+	if entity == "" {
 		return false, api.ErrNotAvailable
 	}
-	s, err := v.getState(v.conf.Sensors.Climater)
+	s, err := v.getState(entity)
 	if err != nil {
 		return false, err
 	}
-	return s == "on" || s == "true" || s == "1" || s == "active", nil
+	state := strings.ToLower(s)
+	return state == "on" || state == "true" || state == "1" || state == "active", nil
 }
 
-// MaxCurrent liefert den maximalen Ladestrom (optional)
-func (v *HomeAssistant) MaxCurrent() (int64, error) {
-	if v.conf.Sensors.MaxCurrent == "" {
-		return 0, api.ErrNotAvailable
-	}
-	s, err := v.getState(v.conf.Sensors.MaxCurrent)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseInt(s, 10, 64)
-}
-
-// GetMaxCurrent liefert den aktuell eingestellten maximalen Ladestrom (optional)
-func (v *HomeAssistant) GetMaxCurrent() (int64, error) {
-	if v.conf.Sensors.GetMaxCurrent == "" {
-		return 0, api.ErrNotAvailable
-	}
-	s, err := v.getState(v.conf.Sensors.GetMaxCurrent)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseInt(s, 10, 64)
-}
-
-// FinishTime liefert das geplante Ladeende (optional)
-func (v *HomeAssistant) FinishTime() (time.Time, error) {
-	if v.conf.Sensors.FinishTime == "" {
+func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
+	if entity == "" {
 		return time.Time{}, api.ErrNotAvailable
 	}
-	s, err := v.getState(v.conf.Sensors.FinishTime)
+	s, err := v.getState(entity)
 	if err != nil {
 		return time.Time{}, err
 	}
-	// Erwartet ISO8601-String oder Unix-Timestamp
 	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return time.Unix(ts, 0), nil
 	}
@@ -277,19 +217,52 @@ func (v *HomeAssistant) FinishTime() (time.Time, error) {
 	return t, err
 }
 
-// GetLimitSoc implements the api.SocLimiter interface
-func (v *HomeAssistant) GetLimitSoc() (int64, error) {
-	if v.conf.Sensors.LimitSoc == "" {
-		return 0, api.ErrNotAvailable
-	}
-	s, err := v.getState(v.conf.Sensors.LimitSoc)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseInt(s, 10, 64)
+// Soc returns state of charge [%]
+func (v *HomeAssistant) Soc() (float64, error) {
+	return v.getFloatSensor(v.conf.Sensors.Soc)
 }
 
-// Status liefert evcc-ChargeStatus (optional)
+// Range returns remaining range [km] (optional)
+func (v *HomeAssistant) Range() (int64, error) {
+	return v.getIntSensor(v.conf.Sensors.Range)
+}
+
+// LimitSoc returns target state of charge [%] (optional)
+func (v *HomeAssistant) LimitSoc() (float64, error) {
+	return v.getFloatSensor(v.conf.Sensors.LimitSoc)
+}
+
+// Odometer returns odometer reading [km] (optional)
+func (v *HomeAssistant) Odometer() (float64, error) {
+	return v.getFloatSensor(v.conf.Sensors.Odometer)
+}
+
+// Climater returns true if climatization is active (optional)
+func (v *HomeAssistant) Climater() (bool, error) {
+	return v.getBoolSensor(v.conf.Sensors.Climater)
+}
+
+// MaxCurrent returns the maximum charging current (optional)
+func (v *HomeAssistant) MaxCurrent() (int64, error) {
+	return v.getIntSensor(v.conf.Sensors.MaxCurrent)
+}
+
+// GetMaxCurrent returns the currently set maximum charging current (optional)
+func (v *HomeAssistant) GetMaxCurrent() (int64, error) {
+	return v.getIntSensor(v.conf.Sensors.GetMaxCurrent)
+}
+
+// FinishTime returns the planned charging end time (optional)
+func (v *HomeAssistant) FinishTime() (time.Time, error) {
+	return v.getTimeSensor(v.conf.Sensors.FinishTime)
+}
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *HomeAssistant) GetLimitSoc() (int64, error) {
+	return v.getIntSensor(v.conf.Sensors.LimitSoc)
+}
+
+// Status returns evcc charge status (optional)
 func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
 	if v.conf.Sensors.Status == "" {
 		return api.StatusNone, api.ErrNotAvailable
@@ -309,13 +282,13 @@ func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// StartCharge löst Script zum Starten aus
+// StartCharge triggers the start charging script
 func (v *HomeAssistant) StartCharge() error { return v.callScript(v.startScript) }
 
-// StopCharge löst Script zum Stoppen aus
+// StopCharge triggers the stop charging script
 func (v *HomeAssistant) StopCharge() error { return v.callScript(v.stopScript) }
 
-// ChargeEnable schaltet Laden an/aus (UI-Toggle)
+// ChargeEnable toggles charging on/off (UI toggle)
 func (v *HomeAssistant) ChargeEnable(enable bool) error {
 	if enable {
 		return v.StartCharge()
@@ -323,7 +296,7 @@ func (v *HomeAssistant) ChargeEnable(enable bool) error {
 	return v.StopCharge()
 }
 
-// WakeUp ruft das Wakeup-Script auf (optional)
+// WakeUp triggers the wakeup script (optional)
 func (v *HomeAssistant) WakeUp() error {
 	if v.wakeupScript == "" {
 		return api.ErrNotAvailable
@@ -332,7 +305,7 @@ func (v *HomeAssistant) WakeUp() error {
 }
 
 // -----------------------------
-// Compile-Time-Checks
+// Compile-time checks
 // -----------------------------
 
 var (
