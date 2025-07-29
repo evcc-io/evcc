@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/charger/registry"
 )
 
 // Modbus Register Addresses
@@ -34,10 +33,6 @@ const (
 	raedianRegStartStopSession      = 0x8105 // 1 reg, Write Only
 )
 
-func init() {
-	registry.Add("raedian", NewRaedianFromConfig)
-}
-
 // Charger is an api.Charger implementation
 type Charger struct {
 	conn *modbus.Connection
@@ -46,6 +41,7 @@ type Charger struct {
 }
 
 // NewRaedianFromConfig creates a new Raedian charger
+// This function would typically be called by the `evcc` configuration loader.
 func NewRaedianFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
@@ -234,3 +230,4 @@ func (c *Charger) Diagnose() {
 
 	c.log.INFO.Println("--------------------------------")
 }
+
