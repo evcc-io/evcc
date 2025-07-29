@@ -2,10 +2,16 @@ package core
 
 import (
 	"testing"
+	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGreenShare(t *testing.T) {
@@ -154,4 +160,33 @@ func TestRequiredBatteryMode(t *testing.T) {
 		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
+}
+
+func TestUpdateHouseholdConsumption(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	metrics.Init()
+
+	s := &Site{
+		log:             util.NewLogger("foo"),
+		gridPower:       4e3,
+		householdEnergy: &meterEnergy{clock: clock},
+	}
+
+	clock.Add(5 * time.Minute)
+	s.updateHouseholdConsumption(1e3)
+	require.False(t, s.householdEnergy.updated.IsZero())
+
+	clock.Add(5 * time.Minute)
+	s.updateHouseholdConsumption(1e3)
+	require.Equal(t, 0.25, s.householdEnergy.AccumulatedEnergy())
+
+	clock.Add(5 * time.Minute)
+	s.updateHouseholdConsumption(1e3)
+	require.Equal(t, 0.0, s.householdEnergy.AccumulatedEnergy()) // accumulator reset after 15 minutes
+
+	clock.Add(15 * time.Minute)
+	s.updateHouseholdConsumption(1e3)
+	require.Equal(t, 0.0, s.householdEnergy.AccumulatedEnergy()) // accumulator reset after 15 minutes
 }

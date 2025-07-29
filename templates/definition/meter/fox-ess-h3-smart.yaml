@@ -54,8 +54,8 @@ render: |
     register:
       address: 39618 # Grid Consumption Total
       type: holding
-      decode: int16
-    scale: 0.1
+      decode: uint16
+    scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
   power:

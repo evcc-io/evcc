@@ -1349,7 +1349,9 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		delta = lp.EffectiveMaxPower()
 
 		// expire timers
-		lp.phaseTimer = elapsed
+		if lp.hasPhaseSwitching() {
+			lp.phaseTimer = elapsed
+		}
 		lp.pvTimer = elapsed
 
 		if lp.charging() {
@@ -1402,7 +1404,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
-		if !lp.phaseTimer.IsZero() {
+		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
 			// calculate site power after a phase switch from activePhases phases -> 1 phase
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)

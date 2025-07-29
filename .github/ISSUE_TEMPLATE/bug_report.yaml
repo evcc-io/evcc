@@ -38,7 +38,7 @@ body:
       label: Configuration details
       render: yaml
       description: >
-        Show evcc configuration file <code>evcc.yaml</code>
+        Show evcc configuration file <code>evcc.yaml</code> and if using Config UI the output of `evcc config`
 
         Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
 

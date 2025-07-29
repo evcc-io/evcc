@@ -15,7 +15,11 @@ params:
     description:
       en: "Scale factor for power limit"
       de: "Skalierungsfaktor der Leistungsvorgabe"
+  - name: tempsource
+    choice: ["1", "2"]
+    default: "1"
 render: |
   type: ac-elwa-2
   {{- include "modbus" . }}
   scale: {{ .scale }}
+  tempsource: {{ .tempsource }}
