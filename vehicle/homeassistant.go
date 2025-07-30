@@ -1,40 +1,8 @@
-// SPDX-License-Identifier: MIT
-// homeassistant.go – Vehicle adapter for evcc
-//
-// Integration of vehicle data from Home Assistant including
-// charge control (start/stop), target SOC, odometer, climatisation, max current, finish time, wakeup, etc. via sensors and script services.
-//
-// YAML example:
-// vehicles:
-//   - name: id4
-//     type: homeassistant
-//     host: http://ha.local:8123
-//     token: !secret ha_token
-//     sensors:
-//       soc: sensor.id4_soc                # State of charge [%] (required)
-//       range: sensor.id4_range            # Remaining range [km] (optional)
-//       status: sensor.id4_charging        # Charging status (optional)
-//       limitSoc: number.id4_target_soc    # Target state of charge [%] (optional)
-//       odometer: sensor.id4_odometer      # Odometer [km] (optional)
-//       climater: binary_sensor.id4_clima  # Climatisation active (optional)
-//       maxCurrent: sensor.id4_max_current # Max current [A] (optional)
-//       getMaxCurrent: sensor.id4_actual_max_current # Actual max current [A] (optional)
-//       finishTime: sensor.id4_finish_time # Finish time (ISO8601 or Unix, optional)
-//     services:
-//       start_charging: script.id4_start   # Start charging (optional)
-//       stop_charging:  script.id4_stop    # Stop charging (optional)
-//       wakeup: script.id4_wakeup          # Wake up vehicle (optional)
-//     capacity: 77
-//
-// Notes:
-// - All sensors must exist as entities in Home Assistant and provide a suitable value.
-// - Changes to the vehicle API are handled exclusively in Home Assistant scripts/sensors.
-// - Unused fields can be omitted.
-
 package vehicle
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -47,12 +15,8 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// -----------------------------
-// Configuration structures
-// -----------------------------
-
 type haSensors struct {
-	Soc           string `mapstructure:"soc"`           // z.B. sensor.id4_soc  (erforderlich)
+	Soc           string `mapstructure:"soc"`           // z.B. sensor.id4_soc (erforderlich)
 	Range         string `mapstructure:"range"`         // optional
 	Status        string `mapstructure:"status"`        // optional
 	LimitSoc      string `mapstructure:"limitSoc"`      // optional
@@ -77,10 +41,6 @@ type haConfig struct {
 	Services haServices `mapstructure:"services"`
 }
 
-// -----------------------------
-// Adapter implementation
-// -----------------------------
-
 type HomeAssistant struct {
 	*embed
 	*request.Helper
@@ -90,7 +50,9 @@ type HomeAssistant struct {
 }
 
 // Register on startup
-func init() { registry.Add("homeassistant", newHAFromConfig) }
+func init() {
+	registry.Add("homeassistant", newHAFromConfig)
+}
 
 // Constructor from YAML config
 func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
@@ -98,13 +60,14 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+
 	switch {
 	case cc.Host == "":
-		return nil, fmt.Errorf("homeassistant: host missing")
+		return nil, fmt.Errorf("host missing")
 	case cc.Token == "":
-		return nil, fmt.Errorf("homeassistant: token missing")
+		return nil, fmt.Errorf("token missing")
 	case cc.Sensors.Soc == "":
-		return nil, fmt.Errorf("homeassistant: sensors.soc missing")
+		return nil, fmt.Errorf("sensors.soc missing")
 	}
 
 	log := util.NewLogger("ha-vehicle").Redact(cc.Token)
@@ -126,6 +89,7 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 		maxCurrent      func(int64) error
 		getMaxCurrent   func() (float64, error)
 	)
+
 	if cc.Sensors.Range != "" {
 		vehicleRange = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
 	}
@@ -164,14 +128,9 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 	), nil
 }
 
-// -----------------------------
-// Internal helper functions
-// -----------------------------
-
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
-	escaped := url.PathEscape(entity)
-	uri := fmt.Sprintf("%s/api/states/%s", v.host, escaped)
+	uri := fmt.Sprintf("%s/api/states/%s", v.host, url.PathEscape(entity))
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
 	})
@@ -185,6 +144,7 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 	if err = v.DoJSON(req, &resp); err != nil {
 		return "", err
 	}
+
 	return resp.State, nil
 }
 
@@ -197,13 +157,11 @@ If you need to call scripts with parameters, payload support should be added in 
 TODO: Add support for script parameters/payloads if needed.
 */
 func (v *HomeAssistant) callScript(script string) error {
-	if script == "" {
-		return api.ErrNotAvailable
-	}
 	domain, name, ok := strings.Cut(script, ".")
 	if !ok { // kein Punkt gefunden
-		return fmt.Errorf("homeassistant: invalid script name '%s'", script)
+		return fmt.Errorf("invalid script name '%s'", script)
 	}
+
 	uri := fmt.Sprintf("%s/api/services/%s/%s", v.host, url.PathEscape(domain), url.PathEscape(name))
 
 	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
@@ -213,74 +171,67 @@ func (v *HomeAssistant) callScript(script string) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = v.DoBody(req)
 	return err
 }
 
-// -----------------------------
-// Implementation of API interfaces
-// -----------------------------
-
 // generic helpers for fetching and parsing sensor values
 func (v *HomeAssistant) getFloatSensor(entity string) (float64, error) {
-	if entity == "" {
-		return 0, api.ErrNotAvailable
-	}
 	s, err := v.getState(entity)
 	if err != nil {
 		return 0, err
 	}
+
 	if s == "unknown" || s == "unavailable" {
 		return 0, api.ErrNotAvailable
 	}
+
 	return strconv.ParseFloat(s, 64)
 }
 
 func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
-	if entity == "" {
-		return 0, api.ErrNotAvailable
-	}
 	s, err := v.getState(entity)
 	if err != nil {
 		return 0, err
 	}
+
 	if s == "unknown" || s == "unavailable" {
 		return 0, api.ErrNotAvailable
 	}
+
 	return strconv.ParseInt(s, 10, 64)
 }
 
 func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
-	if entity == "" {
-		return false, api.ErrNotAvailable
-	}
 	s, err := v.getState(entity)
 	if err != nil {
 		return false, err
 	}
+
 	if s == "unknown" || s == "unavailable" {
 		return false, api.ErrNotAvailable
 	}
+
 	state := strings.ToLower(s)
 	return state == "on" || state == "true" || state == "1" || state == "active", nil
 }
 
 func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
-	if entity == "" {
-		return time.Time{}, api.ErrNotAvailable
-	}
 	s, err := v.getState(entity)
 	if err != nil {
 		return time.Time{}, err
 	}
+
 	if s == "unknown" || s == "unavailable" {
 		return time.Time{}, api.ErrNotAvailable
 	}
+
 	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return time.Unix(ts, 0), nil
 	}
-	t, err := time.Parse(time.RFC3339, s)
-	return t, err
+
+	return time.Parse(time.RFC3339, s)
 }
 
 // Soc returns state of charge [%]
@@ -348,46 +299,48 @@ func (v *HomeAssistant) GetLimitSoc() (int64, error) {
 	return v.getIntSensor(v.conf.Sensors.LimitSoc)
 }
 
-var haStatusMap = map[string]api.ChargeStatus{
-	"charging":            api.StatusC,
-	"on":                  api.StatusC,
-	"true":                api.StatusC,
-	"active":              api.StatusC,
-	"connected":           api.StatusB,
-	"ready":               api.StatusB,
-	"plugged":             api.StatusB,
-	"disconnected":        api.StatusA,
-	"off":                 api.StatusA,
-	"none":                api.StatusA,
-	"unavailable":         api.StatusA,
-	"unknown":             api.StatusA,
-	"notreadyforcharging": api.StatusA,
-}
-
 // Status returns evcc charge status (optional)
 func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
-	if v.conf.Sensors.Status == "" {
-		return api.StatusNone, api.ErrNotAvailable
+	var haStatusMap = map[string]api.ChargeStatus{
+		"charging":            api.StatusC,
+		"on":                  api.StatusC,
+		"true":                api.StatusC,
+		"active":              api.StatusC,
+		"connected":           api.StatusB,
+		"ready":               api.StatusB,
+		"plugged":             api.StatusB,
+		"disconnected":        api.StatusA,
+		"off":                 api.StatusA,
+		"none":                api.StatusA,
+		"unavailable":         api.StatusA,
+		"unknown":             api.StatusA,
+		"notreadyforcharging": api.StatusA,
 	}
+
 	s, err := v.getState(v.conf.Sensors.Status)
 	if err != nil {
 		return api.StatusNone, err
 	}
+
 	state := strings.ToLower(s)
 	if mapped, ok := haStatusMap[state]; ok {
 		return mapped, nil
 	}
-	v.log.WARN.Printf("homeassistant: unknown status state '%s' for entity '%s'", s, v.conf.Sensors.Status)
-	return api.StatusA, nil // Default to disconnected
+
+	return api.StatusA, errors.New("invalid state: " + s)
 }
 
 // startCharge triggers the Home Assistant start charging script (if configured).
 // Returns api.ErrNotAvailable if no start script is set.
-func (v *HomeAssistant) startCharge() error { return v.callScript(v.conf.Services.Start) }
+func (v *HomeAssistant) startCharge() error {
+	return v.callScript(v.conf.Services.Start)
+}
 
 // stopCharge triggers the Home Assistant stop charging script (if configured).
 // Returns api.ErrNotAvailable if no stop script is set.
-func (v *HomeAssistant) stopCharge() error { return v.callScript(v.conf.Services.Stop) }
+func (v *HomeAssistant) stopCharge() error {
+	return v.callScript(v.conf.Services.Stop)
+}
 
 // ChargeEnable enables or disables charging via the UI toggle.
 // Calls StartCharge or StopCharge accordingly.
