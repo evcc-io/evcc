@@ -592,6 +592,7 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// prevent context from being cancelled during test
 	close(done)
 	defer cancel()
 
