@@ -1,53 +1,19 @@
+
 template: homeassistant
 products:
   - description:
       generic: Home Assistant Vehicle Integration
       de: Home Assistant Fahrzeug Integration
       en: Home Assistant Vehicle Integration
-
+group: generic
+requirements:
+  description:
+    en: Requires a running Home Assistant instance with suitable vehicle entities and services.
+    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services.
 params:
-  - name: sensors_climater
-    description:
-      de: Klimatisierung Sensor Entity ID
-      en: Climater sensor entity ID
-    example: "binary_sensor.id_4_gtx_climater"
-    type: string
-  - name: sensors_maxCurrent
-    description:
-      de: Maximalstrom Sensor Entity ID
-      en: Max current sensor entity ID
-    example: "sensor.id_4_gtx_max_current"
-    type: string
-  - name: sensors_getMaxCurrent
-    description:
-      de: Aktueller Maximalstrom Sensor Entity ID
-      en: Get max current sensor entity ID
-    example: "sensor.id_4_gtx_get_max_current"
-    type: string
-  - name: sensors_finishTime
-    description:
-      de: Ladeende Sensor Entity ID (ISO8601 oder Unix)
-      en: Finish time sensor entity ID (ISO8601 or Unix)
-    example: "sensor.id_4_gtx_finish_time"
-    type: string
-  - name: services_wakeup
-    description:
-      de: Service zum Aufwecken
-      en: Service to wake up vehicle
-    example: "script.id_4_gtx_wakeup"
-    type: string
-  - name: sensors_limitSoc
-    description:
-      de: Ziel-Ladezustand Sensor Entity ID
-      en: Target state of charge sensor entity ID
-    example: "number.id_4_gtx_target_state_of_charge"
-    type: string
-  - name: sensors_odometer
-    description:
-      de: Kilometerstand Sensor Entity ID
-      en: Odometer sensor entity ID
-    example: "sensor.id_4_gtx_odometer"
-    type: string
+  - description:
+      de: Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
+      en: All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
   - name: host
     description:
       de: Home Assistant Host URL
@@ -63,77 +29,90 @@ params:
       en: Home Assistant Long-Lived Access Token
     required: true
     mask: true
-  - name: sensors_soc
+  - name: soc
     description:
-      de: Ladezustand Sensor Entity ID
-      en: State of Charge sensor entity ID
-    example: "sensor.id4_soc"
+      de: Ladezustand [%] (required)
+      en: State of charge [%] (required)
+    example: "sensor.vehicle_soc"
     type: string
     required: true
-  - name: sensors_range
+  - name: range
     description:
-      de: Reichweite Sensor Entity ID
-      en: Range sensor entity ID
-    example: "sensor.id4_range_km"
+      de: Restreichweite [km] (optional)
+      en: Remaining range [km] (optional)
+    example: "sensor.vehicle_range"
     type: string
-  - name: sensors_status
+  - name: status
     description:
-      de: Ladestatus Sensor Entity ID
-      en: Charging status sensor entity ID
-    example: "sensor.id4_charging"
+      de: Ladestatus (optional)
+      en: Charging status (optional)
+    example: "sensor.vehicle_charging"
     type: string
-  - name: services_start_charging
+  - name: limitSoc
     description:
-      de: Service zum Laden starten
-      en: Service to start charging
-    example: "script.id4_start_charge"
+      de: Ziel-Ladezustand [%] (optional)
+      en: Target state of charge [%] (optional)
+    example: "number.vehicle_target_state_of_charge"
     type: string
-  - name: services_stop_charging
+  - name: odometer
     description:
-      de: Service zum Laden stoppen
-      en: Service to stop charging
-    example: "script.id4_stop_charge"
+      de: Kilometerstand [km] (optional)
+      en: Odometer [km] (optional)
+    example: "sensor.vehicle_odometer"
+    type: string
+  - name: climater
+    description:
+      de: Klimatisierung aktiv (optional)
+      en: Climatisation active (optional)
+    example: "binary_sensor.vehicle_climater"
+    type: string
+  - name: maxCurrent
+    description:
+      de: Maximalstrom [A] (optional)
+      en: Max current [A] (optional)
+    example: "sensor.vehicle_max_current"
+    type: string
+  - name: getMaxCurrent
+    description:
+      de: Aktueller Maximalstrom [A] (optional)
+      en: Actual max current [A] (optional)
+    example: "sensor.vehicle_get_max_current"
+    type: string
+  - name: finishTime
+    description:
+      de: Ladeende (ISO8601 oder Unix, optional)
+      en: Finish time (ISO8601 or Unix, optional)
+    example: "sensor.vehicle_finish_time"
+    type: string
+  - name: start_charging
+    description:
+      de: Service zum Laden starten (optional)
+      en: Service to start charging (optional)
+    example: "script.vehicle_start_charge"
+    type: string
+  - name: stop_charging
+    description:
+      de: Service zum Laden stoppen (optional)
+      en: Service to stop charging (optional)
+    example: "script.vehicle_stop_charge"
+    type: string
+  - name: wakeup
+    description:
+      de: Service zum Aufwecken (optional)
+      en: Service to wake up vehicle (optional)
+    example: "script.vehicle_wakeup"
     type: string
 
-render: |
-  type: homeassistant
-  host: {{ .host }}
-  token: {{ or .token "dummy-token" }}
-  sensors:
-    soc: {{ .sensors_soc }}
-    {{- if .sensors_range }}
-    range: {{ .sensors_range }}
-    {{- end }}
-    {{- if .sensors_status }}
-    status: {{ .sensors_status }}
-    {{- end }}
-    {{- if .sensors_limitSoc }}
-    limitSoc: {{ .sensors_limitSoc }}
-    {{- end }}
-    {{- if .sensors_odometer }}
-    odometer: {{ .sensors_odometer }}
-    {{- end }}
-    {{- if .sensors_climater }}
-    climater: {{ .sensors_climater }}
-    {{- end }}
-    {{- if .sensors_maxCurrent }}
-    maxCurrent: {{ .sensors_maxCurrent }}
-    {{- end }}
-    {{- if .sensors_getMaxCurrent }}
-    getMaxCurrent: {{ .sensors_getMaxCurrent }}
-    {{- end }}
-    {{- if .sensors_finishTime }}
-    finishTime: {{ .sensors_finishTime }}
-    {{- end }}
-  {{- if or .services_start_charging .services_stop_charging }}
+render:
+  range: {{ .sensors_range }}
+  status: {{ .sensors_status }}
+  limitSoc: {{ .sensors_limitSoc }}
+  odometer: {{ .sensors_odometer }}
+  climater: {{ .sensors_climater }}
+  maxCurrent: {{ .sensors_maxCurrent }}
+  getMaxCurrent: {{ .sensors_getMaxCurrent }}
+  finishTime: {{ .sensors_finishTime }}
   services:
-    {{- if .services_start_charging }}
     start_charging: {{ .services_start_charging }}
-    {{- end }}
-    {{- if .services_stop_charging }}
     stop_charging: {{ .services_stop_charging }}
-    {{- end }}
-    {{- if .services_wakeup }}
     wakeup: {{ .services_wakeup }}
-    {{- end }}
-  {{- end }}
