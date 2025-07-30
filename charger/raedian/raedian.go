@@ -172,14 +172,6 @@ func (c *Charger) Voltages() (float64, float64, float64, error) {
 	return l1, l2, l3, nil
 }
 
-var _ api.PhaseSwitcher = (*Charger)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (c *Charger) Phases1p3p(phases int) error {
-	c.log.WARN.Println("Phase switching is not yet supported for Raedian Wallbox, as per the documentation it is a feature 'in roadmap'.")
-	return fmt.Errorf("phase switching not supported")
-}
-
 var _ api.Diagnosis = (*Charger)(nil)
 
 // Diagnose implements the api.Diagnosis interface
