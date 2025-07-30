@@ -218,6 +218,4 @@ func (c *Charger) Diagnose() {
 	} else {
 		fmt.Printf("\tSocket Lock State: ERROR - %v\n", err)
 	}
-
-	c.log.INFO.Println("--------------------------------")
 }
