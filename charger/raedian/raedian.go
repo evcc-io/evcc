@@ -77,11 +77,11 @@ func (c *Charger) Status() (api.ChargeStatus, error) {
 	status := binary.BigEndian.Uint16(b)
 
 	switch status {
-	case 0x0000:
+	case 0:
 		return api.StatusA, nil
-	case 0x0001, 0x0002:
+	case 1, 2:
 		return api.StatusB, nil
-	case 0x0003, 0x0004:
+	case 3, 4:
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("unknown status: %d", status)
