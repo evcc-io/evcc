@@ -92,7 +92,7 @@ func (c *Charger) Status() (api.ChargeStatus, error) {
 func (c *Charger) Enabled() (bool, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegCurrentChargingLimit, 1)
 	if err != nil {
-		return false, fmt.Errorf("could not read current limit: %w", err)
+		return false, err
 	}
 	currentLimit := binary.BigEndian.Uint16(b)
 	return currentLimit >= 6000, nil
