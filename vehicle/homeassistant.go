@@ -83,10 +83,8 @@ type haConfig struct {
 type HomeAssistant struct {
 	*embed
 	*request.Helper
-	conf         haConfig
-	startScript  string
-	stopScript   string
-	wakeupScript string
+	conf haConfig
+	host string // host without trailing slash
 }
 
 // Register on startup
@@ -108,14 +106,59 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("ha-vehicle").Redact(cc.Token)
-	return &HomeAssistant{
-		embed:        &cc.embed,
-		Helper:       request.NewHelper(log),
-		conf:         cc,
-		startScript:  cc.Services.Start,
-		stopScript:   cc.Services.Stop,
-		wakeupScript: cc.Services.Wakeup,
-	}, nil
+	host := strings.TrimSuffix(cc.Host, "/")
+	base := &HomeAssistant{
+		embed:  &cc.embed,
+		Helper: request.NewHelper(log),
+		conf:   cc,
+		host:   host,
+	}
+
+	// prepare optional feature functions
+	var (
+		vehicleRange    func() (int64, error)
+		vehicleOdometer func() (float64, error)
+		vehicleClimater func() (bool, error)
+		vehicleFinish   func() (time.Time, error)
+		maxCurrent      func(int64) error
+		getMaxCurrent   func() (float64, error)
+	)
+	if cc.Sensors.Range != "" {
+		vehicleRange = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
+	}
+	if cc.Sensors.Odometer != "" {
+		vehicleOdometer = func() (float64, error) { return base.getFloatSensor(cc.Sensors.Odometer) }
+	}
+	if cc.Sensors.Climater != "" {
+		vehicleClimater = func() (bool, error) { return base.getBoolSensor(cc.Sensors.Climater) }
+	}
+	if cc.Sensors.FinishTime != "" {
+		vehicleFinish = func() (time.Time, error) { return base.getTimeSensor(cc.Sensors.FinishTime) }
+	}
+	if cc.Sensors.MaxCurrent != "" {
+		// MaxCurrent is not a setter in HomeAssistant, so leave nil or implement if needed
+	}
+	if cc.Sensors.GetMaxCurrent != "" {
+		getMaxCurrent = func() (float64, error) {
+			v, err := base.getIntSensor(cc.Sensors.GetMaxCurrent)
+			return float64(v), err
+		}
+	}
+
+	// decorate all features
+	return decorateVehicle(
+		base,
+		base.GetLimitSoc,
+		base.Status,
+		vehicleRange,
+		vehicleOdometer,
+		vehicleClimater,
+		maxCurrent,
+		getMaxCurrent,
+		vehicleFinish,
+		base.WakeUp,
+		base.ChargeEnable,
+	), nil
 }
 
 // -----------------------------
@@ -124,7 +167,7 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
-	uri := fmt.Sprintf("%s/api/states/%s", strings.TrimSuffix(v.conf.Host, "/"), entity)
+	uri := fmt.Sprintf("%s/api/states/%s", v.host, entity)
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
 	})
@@ -150,7 +193,7 @@ func (v *HomeAssistant) callScript(script string) error {
 	if !ok { // kein Punkt gefunden
 		return fmt.Errorf("homeassistant: invalid script name '%s'", script)
 	}
-	uri := fmt.Sprintf("%s/api/services/%s/%s", v.conf.Host, domain, name)
+	uri := fmt.Sprintf("%s/api/services/%s/%s", v.host, domain, name)
 
 	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
@@ -282,32 +325,35 @@ func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// StartCharge triggers the start charging script
-func (v *HomeAssistant) StartCharge() error { return v.callScript(v.startScript) }
+// startCharge triggers the Home Assistant start charging script (if configured).
+// Returns api.ErrNotAvailable if no start script is set.
+func (v *HomeAssistant) startCharge() error { return v.callScript(v.conf.Services.Start) }
 
-// StopCharge triggers the stop charging script
-func (v *HomeAssistant) StopCharge() error { return v.callScript(v.stopScript) }
+// stopCharge triggers the Home Assistant stop charging script (if configured).
+// Returns api.ErrNotAvailable if no stop script is set.
+func (v *HomeAssistant) stopCharge() error { return v.callScript(v.conf.Services.Stop) }
 
-// ChargeEnable toggles charging on/off (UI toggle)
+// ChargeEnable enables or disables charging via the UI toggle.
+// Calls StartCharge or StopCharge accordingly.
 func (v *HomeAssistant) ChargeEnable(enable bool) error {
 	if enable {
-		return v.StartCharge()
+		return v.startCharge()
 	}
-	return v.StopCharge()
+	return v.stopCharge()
 }
 
-// WakeUp triggers the wakeup script (optional)
+// WakeUp triggers the Home Assistant wakeup script (if configured).
+// Returns api.ErrNotAvailable if no wakeup script is set.
 func (v *HomeAssistant) WakeUp() error {
-	if v.wakeupScript == "" {
+	if v.conf.Services.Wakeup == "" {
 		return api.ErrNotAvailable
 	}
-	return v.callScript(v.wakeupScript)
+	return v.callScript(v.conf.Services.Wakeup)
 }
 
 // -----------------------------
 // Compile-time checks
 // -----------------------------
-
 var (
 	_ api.Vehicle            = (*HomeAssistant)(nil)
 	_ api.VehicleRange       = (*HomeAssistant)(nil)
