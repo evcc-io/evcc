@@ -16,29 +16,29 @@ import (
 )
 
 type haSensors struct {
-	Soc           string `mapstructure:"soc"`           // z.B. sensor.id4_soc (erforderlich)
-	Range         string `mapstructure:"range"`         // optional
-	Status        string `mapstructure:"status"`        // optional
-	LimitSoc      string `mapstructure:"limitSoc"`      // optional
-	Odometer      string `mapstructure:"odometer"`      // optional
-	Climater      string `mapstructure:"climater"`      // optional
-	MaxCurrent    string `mapstructure:"maxCurrent"`    // optional
-	GetMaxCurrent string `mapstructure:"getMaxCurrent"` // optional
-	FinishTime    string `mapstructure:"finishTime"`    // optional
+	Soc           string // required
+	Range         string // optional
+	Status        string // optional
+	LimitSoc      string // optional
+	Odometer      string // optional
+	Climater      string // optional
+	MaxCurrent    string // optional
+	GetMaxCurrent string // optional
+	FinishTime    string // optional
 }
 
 type haServices struct {
 	Start  string `mapstructure:"start_charging"` // script.*  optional
 	Stop   string `mapstructure:"stop_charging"`  // script.*  optional
-	Wakeup string `mapstructure:"wakeup"`         // script.*  optional
+	Wakeup string // script.*  optional
 }
 
 type haConfig struct {
 	embed    `mapstructure:",squash"`
-	Host     string     `mapstructure:"host"`  // http://ha:8123
-	Token    string     `mapstructure:"token"` // Long-Lived Token
-	Sensors  haSensors  `mapstructure:"sensors"`
-	Services haServices `mapstructure:"services"`
+	Host     string // http://ha:8123
+	Token    string // Long-Lived Token
+	Sensors  haSensors
+	Services haServices
 }
 
 type HomeAssistant struct {
@@ -63,20 +63,19 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	switch {
 	case cc.Host == "":
-		return nil, fmt.Errorf("host missing")
+		return nil, fmt.Errorf("missing host")
 	case cc.Token == "":
-		return nil, fmt.Errorf("token missing")
+		return nil, fmt.Errorf("missing token")
 	case cc.Sensors.Soc == "":
-		return nil, fmt.Errorf("sensors.soc missing")
+		return nil, fmt.Errorf("missing soc sensor")
 	}
 
 	log := util.NewLogger("ha-vehicle").Redact(cc.Token)
-	host := strings.TrimSuffix(cc.Host, "/")
 	base := &HomeAssistant{
 		embed:  &cc.embed,
 		Helper: request.NewHelper(log),
 		conf:   cc,
-		host:   host,
+		host:   strings.TrimSuffix(cc.Host, "/"),
 		log:    log,
 	}
 
