@@ -191,8 +191,6 @@ func (c *Charger) Diagnose() {
 
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegSerial, 2); err == nil {
 		fmt.Printf("\tSerial: %d\n", binary.BigEndian.Uint32(b))
-	} else {
-		fmt.Printf("\tSerial: ERROR - %v\n", err)
 	}
 
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegFirmwareVersion, 1); err == nil {
