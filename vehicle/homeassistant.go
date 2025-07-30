@@ -350,17 +350,3 @@ func (v *HomeAssistant) WakeUp() error {
 	}
 	return v.callScript(v.conf.Services.Wakeup)
 }
-
-// -----------------------------
-// Compile-time checks
-// -----------------------------
-var (
-	_ api.Vehicle            = (*HomeAssistant)(nil)
-	_ api.VehicleRange       = (*HomeAssistant)(nil)
-	_ api.ChargeState        = (*HomeAssistant)(nil)
-	_ api.VehicleOdometer    = (*HomeAssistant)(nil)
-	_ api.SocLimiter         = (*HomeAssistant)(nil)
-	_ api.Resurrector        = (*HomeAssistant)(nil)
-	_ api.VehicleClimater    = (*HomeAssistant)(nil)
-	_ api.VehicleFinishTimer = (*HomeAssistant)(nil)
-)
