@@ -129,7 +129,7 @@ var _ api.Meter = (*Charger)(nil)
 func (c *Charger) CurrentPower() (float64, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegActivePower, 1)
 	if err != nil {
-		return 0, fmt.Errorf("could not read power register: %w", err)
+		return 0, err
 	}
 	val := binary.BigEndian.Uint16(b)
 	return float64(val), nil
