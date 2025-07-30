@@ -36,7 +36,6 @@ const (
 type Charger struct {
 	conn *modbus.Connection
 	log  *util.Logger
-	id   uint8
 }
 
 // NewRaedianFromConfig creates a new Raedian charger
