@@ -72,7 +72,7 @@ func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, p
 func (c *Charger) Status() (api.ChargeStatus, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegChargingState, 1)
 	if err != nil {
-		return api.StatusNone, fmt.Errorf("could not read status register: %w", err)
+		return api.StatusNone, err
 	}
 	status := binary.BigEndian.Uint16(b)
 
