@@ -37,6 +37,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -85,6 +86,7 @@ type HomeAssistant struct {
 	*request.Helper
 	conf haConfig
 	host string // host without trailing slash
+	log  *util.Logger
 }
 
 // Register on startup
@@ -112,6 +114,7 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 		Helper: request.NewHelper(log),
 		conf:   cc,
 		host:   host,
+		log:    log,
 	}
 
 	// prepare optional feature functions
@@ -167,7 +170,8 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
-	uri := fmt.Sprintf("%s/api/states/%s", v.host, entity)
+	escaped := url.PathEscape(entity)
+	uri := fmt.Sprintf("%s/api/states/%s", v.host, escaped)
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
 	})
@@ -184,7 +188,14 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 	return resp.State, nil
 }
 
-// Calls script.<name> as a service call without payload
+/*
+callScript calls script.<name> as a Home Assistant service call without payload.
+
+Note: This function currently does not support passing parameters to scripts.
+If you need to call scripts with parameters, payload support should be added in the future.
+
+TODO: Add support for script parameters/payloads if needed.
+*/
 func (v *HomeAssistant) callScript(script string) error {
 	if script == "" {
 		return api.ErrNotAvailable
@@ -193,7 +204,7 @@ func (v *HomeAssistant) callScript(script string) error {
 	if !ok { // kein Punkt gefunden
 		return fmt.Errorf("homeassistant: invalid script name '%s'", script)
 	}
-	uri := fmt.Sprintf("%s/api/services/%s/%s", v.host, domain, name)
+	uri := fmt.Sprintf("%s/api/services/%s/%s", v.host, url.PathEscape(domain), url.PathEscape(name))
 
 	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
@@ -219,6 +230,9 @@ func (v *HomeAssistant) getFloatSensor(entity string) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if s == "unknown" || s == "unavailable" {
+		return 0, api.ErrNotAvailable
+	}
 	return strconv.ParseFloat(s, 64)
 }
 
@@ -229,6 +243,9 @@ func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
 	s, err := v.getState(entity)
 	if err != nil {
 		return 0, err
+	}
+	if s == "unknown" || s == "unavailable" {
+		return 0, api.ErrNotAvailable
 	}
 	return strconv.ParseInt(s, 10, 64)
 }
@@ -241,6 +258,9 @@ func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if s == "unknown" || s == "unavailable" {
+		return false, api.ErrNotAvailable
+	}
 	state := strings.ToLower(s)
 	return state == "on" || state == "true" || state == "1" || state == "active", nil
 }
@@ -252,6 +272,9 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 	s, err := v.getState(entity)
 	if err != nil {
 		return time.Time{}, err
+	}
+	if s == "unknown" || s == "unavailable" {
+		return time.Time{}, api.ErrNotAvailable
 	}
 	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return time.Unix(ts, 0), nil
@@ -290,6 +313,26 @@ func (v *HomeAssistant) MaxCurrent() (int64, error) {
 	return v.getIntSensor(v.conf.Sensors.MaxCurrent)
 }
 
+// SetMaxCurrent sets the maximum charging current via Home Assistant number.set_value service (if configured)
+func (v *HomeAssistant) SetMaxCurrent(current int64) error {
+	entity := v.conf.Sensors.MaxCurrent
+	if entity == "" {
+		return api.ErrNotAvailable
+	}
+	// Home Assistant expects a POST to /api/services/number/set_value with entity_id and value
+	uri := fmt.Sprintf("%s/api/services/number/set_value", v.host)
+	payload := fmt.Sprintf(`{"entity_id": "%s", "value": %d}`, entity, current)
+	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte(payload)), map[string]string{
+		"Authorization": "Bearer " + v.conf.Token,
+		"Content-Type":  "application/json",
+	})
+	if err != nil {
+		return err
+	}
+	_, err = v.DoBody(req)
+	return err
+}
+
 // GetMaxCurrent returns the currently set maximum charging current (optional)
 func (v *HomeAssistant) GetMaxCurrent() (int64, error) {
 	return v.getIntSensor(v.conf.Sensors.GetMaxCurrent)
@@ -305,6 +348,22 @@ func (v *HomeAssistant) GetLimitSoc() (int64, error) {
 	return v.getIntSensor(v.conf.Sensors.LimitSoc)
 }
 
+var haStatusMap = map[string]api.ChargeStatus{
+	"charging":            api.StatusC,
+	"on":                  api.StatusC,
+	"true":                api.StatusC,
+	"active":              api.StatusC,
+	"connected":           api.StatusB,
+	"ready":               api.StatusB,
+	"plugged":             api.StatusB,
+	"disconnected":        api.StatusA,
+	"off":                 api.StatusA,
+	"none":                api.StatusA,
+	"unavailable":         api.StatusA,
+	"unknown":             api.StatusA,
+	"notreadyforcharging": api.StatusA,
+}
+
 // Status returns evcc charge status (optional)
 func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
 	if v.conf.Sensors.Status == "" {
@@ -314,15 +373,12 @@ func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-
-	switch strings.ToLower(s) {
-	case "charging", "on", "true", "active":
-		return api.StatusC, nil // Laden
-	case "connected", "ready", "plugged":
-		return api.StatusB, nil // Angesteckt
-	default:
-		return api.StatusA, nil // Getrennt
+	state := strings.ToLower(s)
+	if mapped, ok := haStatusMap[state]; ok {
+		return mapped, nil
 	}
+	v.log.WARN.Printf("homeassistant: unknown status state '%s' for entity '%s'", s, v.conf.Sensors.Status)
+	return api.StatusA, nil // Default to disconnected
 }
 
 // startCharge triggers the Home Assistant start charging script (if configured).
