@@ -201,16 +201,13 @@ func (wb *MyPv) Enabled() (bool, error) {
 		return false, err
 	}
 
-	var s = binary.BigEndian.Uint16(b)
-	switch s {
+	switch binary.BigEndian.Uint16(b) {
 	case
 		1, // heating PV excess
 		2: // boost backup
-		wb.log.DEBUG.Println("charger enabled:", "operation state", s)
 		return true, nil
 	case
 		0: // standby
-		wb.log.DEBUG.Println("charger disabled:", "operation state", s)
 		return false, nil
 	}
 
