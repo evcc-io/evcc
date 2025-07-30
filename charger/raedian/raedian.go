@@ -164,7 +164,7 @@ var _ api.PhaseVoltages = (*Charger)(nil)
 func (c *Charger) Voltages() (float64, float64, float64, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegVoltageL1, 3)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("could not read voltage registers: %w", err)
+		return 0, 0, 0, err
 	}
 	l1 := float64(binary.BigEndian.Uint16(b[0:2])) / 10
 	l2 := float64(binary.BigEndian.Uint16(b[2:4])) / 10
