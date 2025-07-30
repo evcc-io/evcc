@@ -212,7 +212,6 @@ func (wb *MyPv) Enabled() (bool, error) {
 	}
 
 	// fallback to cached value as last resort
-	wb.log.DEBUG.Println(fmt.Sprintf("fallback [enabled=%t]:", wb.enabled), "operation state", s)
 	return wb.enabled, nil
 }
 
