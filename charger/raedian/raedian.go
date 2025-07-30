@@ -150,7 +150,7 @@ var _ api.PhaseCurrents = (*Charger)(nil)
 func (c *Charger) Currents() (float64, float64, float64, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegChargingCurrentL1, 3)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("could not read currents registers: %w", err)
+		return 0, 0, 0, err
 	}
 	l1 := float64(binary.BigEndian.Uint16(b[0:2])) / 1000
 	l2 := float64(binary.BigEndian.Uint16(b[2:4])) / 1000
