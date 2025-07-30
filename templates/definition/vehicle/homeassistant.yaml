@@ -1,4 +1,3 @@
-
 template: homeassistant
 products:
   - description:
@@ -12,6 +11,9 @@ requirements:
     de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services.
 params:
   - description:
+      de: Home Assistant Entity IDs
+      en: Home Assistant entity IDs
+    help:
       de: Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
       en: All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
   - name: host
@@ -102,8 +104,7 @@ params:
       en: Service to wake up vehicle (optional)
     example: "script.vehicle_wakeup"
     type: string
-
-render:
+render: |
   range: {{ .sensors_range }}
   status: {{ .sensors_status }}
   limitSoc: {{ .sensors_limitSoc }}
