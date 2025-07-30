@@ -61,7 +61,6 @@ func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, p
 	wb := &Charger{
 		conn: conn,
 		log:  log,
-		id:   slaveID,
 	}
 
 	return wb, err
