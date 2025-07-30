@@ -176,8 +176,6 @@ var _ api.Diagnosis = (*Charger)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *Charger) Diagnose() {
-	c.log.INFO.Println("--- Raedian Wallbox Diagnosis ---")
-
 	if b, err := c.conn.ReadHoldingRegisters(raedianRegSerial, 2); err == nil {
 		fmt.Printf("\tSerial: %d\n", binary.BigEndian.Uint32(b))
 	}
