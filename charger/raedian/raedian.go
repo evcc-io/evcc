@@ -143,8 +143,7 @@ func (c *Charger) TotalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	val := binary.BigEndian.Uint16(b)
-	return float64(val) / 1000, nil
+	return float64(binary.BigEndian.Uint16(b)) / 1000, nil
 }
 
 var _ api.PhaseCurrents = (*Charger)(nil)
