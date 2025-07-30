@@ -1,0 +1,59 @@
+template: ochsner-bwwp
+products:
+  - brand: Ochsner
+    description:
+      generic: BWWP Genius 333
+group: heating
+params:
+  - name: host
+  - name: port
+    default: 502
+  - name: id
+    default: 1
+  # - name: tempsource
+  #   type: choice
+  #   choice: ["warmwater", "buffer"]
+  #   description:
+  #     de: Temperaturquelle (Warmwasser oder Pufferspeicher)
+  #     en: Temperature source (warm water or buffer)
+render: |
+  type: heatpump
+  setmaxpower:
+    source: const
+    value: 0
+    set:
+      source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      register:
+        address: 2201 # SUR Überschussleistung Auflösung 1 W
+        type: writesingle
+        decode: int16
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: 2010 # aktuelle Leistungsaufnahme
+      type: holding
+      decode: int16
+  # {{- if .tempsource }}
+  # temp:
+  #   source: modbus
+  #   uri: {{ .host }}:{{ .port }}
+  #   id: {{ .id }}
+  #   register:
+  #     address: 2200 # C1 Solltemperatur Auflösung 0,1°C
+  #     type: holding
+  #     decode: int16
+  #   scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: 2200 # C1 Solltemperatur Auflösung 0,1°C
+      type: holding
+      decode: int16
+    scale: 0.1
+  # {{- end }}
