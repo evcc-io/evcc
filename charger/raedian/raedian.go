@@ -141,7 +141,7 @@ var _ api.MeterEnergy = (*Charger)(nil)
 func (c *Charger) TotalEnergy() (float64, error) {
 	b, err := c.conn.ReadHoldingRegisters(raedianRegEnergyDelivered, 1)
 	if err != nil {
-		return 0, fmt.Errorf("could not read energy register: %w", err)
+		return 0, err
 	}
 	val := binary.BigEndian.Uint16(b)
 	return float64(val) / 1000, nil
