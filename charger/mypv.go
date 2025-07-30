@@ -45,14 +45,16 @@ type MyPv struct {
 }
 
 const (
-	elwaRegSetPower  = 1000
-	elwaRegTempLimit = 1002
-	elwaRegStatus    = 1003
-	elwaRegLoadState = 1059
-	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegSetPower       = 1000
+	elwaRegTempLimit      = 1002
+	elwaRegStatus         = 1003
+	elwaRegLoadState      = 1059
+	elwaRegPower          = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegOperationState = 1077
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
+var elwaStandbyPower uint16 = 10
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
@@ -183,7 +185,7 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 	}
 
 	// ignore standby power
-	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > 10 {
+	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > elwaStandbyPower {
 		res = api.StatusC
 	}
 
@@ -192,15 +194,22 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegSetPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
 	if err != nil {
 		return false, err
 	}
 
-	if binary.BigEndian.Uint16(b) == 0 {
-		wb.enabled = false
+	switch binary.BigEndian.Uint16(b) {
+	case
+		1, // heating PV excess
+		2: // boost backup
+		return true, nil
+	case
+		0: // standby
+		return false, nil
 	}
 
+	// fallback to cached value as last resort
 	return wb.enabled, nil
 }
 
