@@ -108,7 +108,7 @@ func (c *Charger) Enable(enable bool) error {
 	}
 	_, err := c.conn.WriteSingleRegister(raedianRegStartStopSession, value)
 	if err != nil {
-		return fmt.Errorf("could not enable/disable: %w", err)
+		return err
 	}
 	return nil
 }
