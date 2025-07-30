@@ -120,10 +120,7 @@ func (c *Charger) MaxCurrent(current int64) error {
 	}
 	value := uint16(current * 1000)
 	_, err := c.conn.WriteSingleRegister(raedianRegSetChargingCurrent, value)
-	if err != nil {
-		return fmt.Errorf("could not set current: %w", err)
-	}
-	return nil
+	return err
 }
 
 var _ api.Meter = (*Charger)(nil)
