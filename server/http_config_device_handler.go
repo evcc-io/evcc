@@ -592,8 +592,8 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// prevent context from being cancelled
 	close(done)
+	defer cancel()
 
 	jsonResult(w, testInstance(instance))
 }
