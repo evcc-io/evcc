@@ -35,7 +35,7 @@ type haServices struct {
 
 type haConfig struct {
 	embed    `mapstructure:",squash"`
-	Host     string // http://ha:8123
+	URI      string // http://homeassistant:8123
 	Token    string // Long-Lived Token
 	Sensors  haSensors
 	Services haServices
@@ -45,25 +45,24 @@ type HomeAssistant struct {
 	*embed
 	*request.Helper
 	conf haConfig
-	host string // host without trailing slash
-	log  *util.Logger
+	uri  string
 }
 
 // Register on startup
 func init() {
-	registry.Add("homeassistant", newHAFromConfig)
+	registry.Add("homeassistant", newHomeAssistantVehicleFromConfig)
 }
 
 // Constructor from YAML config
-func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
+func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc haConfig
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	switch {
-	case cc.Host == "":
-		return nil, fmt.Errorf("missing host")
+	case cc.URI == "":
+		return nil, fmt.Errorf("missing uri")
 	case cc.Token == "":
 		return nil, fmt.Errorf("missing token")
 	case cc.Sensors.Soc == "":
@@ -75,53 +74,41 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 		embed:  &cc.embed,
 		Helper: request.NewHelper(log),
 		conf:   cc,
-		host:   strings.TrimSuffix(cc.Host, "/"),
-		log:    log,
+		uri:    strings.TrimSuffix(cc.URI, "/"),
 	}
 
-	// prepare optional feature functions
+	// prepare optional feature functions with concise names
 	var (
-		vehicleRange    func() (int64, error)
-		vehicleOdometer func() (float64, error)
-		vehicleClimater func() (bool, error)
-		vehicleFinish   func() (time.Time, error)
-		maxCurrent      func(int64) error
-		getMaxCurrent   func() (float64, error)
+		rng      func() (int64, error)
+		odo      func() (float64, error)
+		climater func() (bool, error)
+		finish   func() (time.Time, error)
 	)
 
 	if cc.Sensors.Range != "" {
-		vehicleRange = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
+		rng = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
 	}
 	if cc.Sensors.Odometer != "" {
-		vehicleOdometer = func() (float64, error) { return base.getFloatSensor(cc.Sensors.Odometer) }
+		odo = func() (float64, error) { return base.getFloatSensor(cc.Sensors.Odometer) }
 	}
 	if cc.Sensors.Climater != "" {
-		vehicleClimater = func() (bool, error) { return base.getBoolSensor(cc.Sensors.Climater) }
+		climater = func() (bool, error) { return base.getBoolSensor(cc.Sensors.Climater) }
 	}
 	if cc.Sensors.FinishTime != "" {
-		vehicleFinish = func() (time.Time, error) { return base.getTimeSensor(cc.Sensors.FinishTime) }
-	}
-	if cc.Sensors.MaxCurrent != "" {
-		// MaxCurrent is not a setter in HomeAssistant, so leave nil or implement if needed
-	}
-	if cc.Sensors.GetMaxCurrent != "" {
-		getMaxCurrent = func() (float64, error) {
-			v, err := base.getIntSensor(cc.Sensors.GetMaxCurrent)
-			return float64(v), err
-		}
+		finish = func() (time.Time, error) { return base.getTimeSensor(cc.Sensors.FinishTime) }
 	}
 
 	// decorate all features
 	return decorateVehicle(
 		base,
-		base.GetLimitSoc,
-		base.Status,
-		vehicleRange,
-		vehicleOdometer,
-		vehicleClimater,
-		maxCurrent,
-		getMaxCurrent,
-		vehicleFinish,
+		base.getLimitSoc,
+		base.status,
+		rng,
+		odo,
+		climater,
+		nil, // maxCurrent setter not implemented
+		nil, // getMaxCurrent getter not implemented
+		finish,
 		base.WakeUp,
 		base.ChargeEnable,
 	), nil
@@ -129,7 +116,7 @@ func newHAFromConfig(other map[string]any) (api.Vehicle, error) {
 
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
-	uri := fmt.Sprintf("%s/api/states/%s", v.host, url.PathEscape(entity))
+	uri := fmt.Sprintf("%s/api/states/%s", v.uri, url.PathEscape(entity))
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
 	})
@@ -147,21 +134,13 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 	return resp.State, nil
 }
 
-/*
-callScript calls script.<name> as a Home Assistant service call without payload.
-
-Note: This function currently does not support passing parameters to scripts.
-If you need to call scripts with parameters, payload support should be added in the future.
-
-TODO: Add support for script parameters/payloads if needed.
-*/
 func (v *HomeAssistant) callScript(script string) error {
 	domain, name, ok := strings.Cut(script, ".")
 	if !ok { // kein Punkt gefunden
 		return fmt.Errorf("invalid script name '%s'", script)
 	}
 
-	uri := fmt.Sprintf("%s/api/services/%s/%s", v.host, url.PathEscape(domain), url.PathEscape(name))
+	uri := fmt.Sprintf("%s/api/services/%s/%s", v.uri, url.PathEscape(domain), url.PathEscape(name))
 
 	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
 		"Authorization": "Bearer " + v.conf.Token,
@@ -258,48 +237,18 @@ func (v *HomeAssistant) Climater() (bool, error) {
 	return v.getBoolSensor(v.conf.Sensors.Climater)
 }
 
-// MaxCurrent returns the maximum charging current (optional)
-func (v *HomeAssistant) MaxCurrent() (int64, error) {
-	return v.getIntSensor(v.conf.Sensors.MaxCurrent)
-}
-
-// SetMaxCurrent sets the maximum charging current via Home Assistant number.set_value service (if configured)
-func (v *HomeAssistant) SetMaxCurrent(current int64) error {
-	entity := v.conf.Sensors.MaxCurrent
-	if entity == "" {
-		return api.ErrNotAvailable
-	}
-	// Home Assistant expects a POST to /api/services/number/set_value with entity_id and value
-	uri := fmt.Sprintf("%s/api/services/number/set_value", v.host)
-	payload := fmt.Sprintf(`{"entity_id": "%s", "value": %d}`, entity, current)
-	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte(payload)), map[string]string{
-		"Authorization": "Bearer " + v.conf.Token,
-		"Content-Type":  "application/json",
-	})
-	if err != nil {
-		return err
-	}
-	_, err = v.DoBody(req)
-	return err
-}
-
-// GetMaxCurrent returns the currently set maximum charging current (optional)
-func (v *HomeAssistant) GetMaxCurrent() (int64, error) {
-	return v.getIntSensor(v.conf.Sensors.GetMaxCurrent)
-}
-
 // FinishTime returns the planned charging end time (optional)
 func (v *HomeAssistant) FinishTime() (time.Time, error) {
 	return v.getTimeSensor(v.conf.Sensors.FinishTime)
 }
 
-// GetLimitSoc implements the api.SocLimiter interface
-func (v *HomeAssistant) GetLimitSoc() (int64, error) {
+// getLimitSoc implements the api.SocLimiter interface (private)
+func (v *HomeAssistant) getLimitSoc() (int64, error) {
 	return v.getIntSensor(v.conf.Sensors.LimitSoc)
 }
 
-// Status returns evcc charge status (optional)
-func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
+// status returns evcc charge status (optional, private)
+func (v *HomeAssistant) status() (api.ChargeStatus, error) {
 	var haStatusMap = map[string]api.ChargeStatus{
 		"charging":            api.StatusC,
 		"on":                  api.StatusC,
@@ -330,18 +279,15 @@ func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
 }
 
 // startCharge triggers the Home Assistant start charging script (if configured).
-// Returns api.ErrNotAvailable if no start script is set.
 func (v *HomeAssistant) startCharge() error {
 	return v.callScript(v.conf.Services.Start)
 }
 
 // stopCharge triggers the Home Assistant stop charging script (if configured).
-// Returns api.ErrNotAvailable if no stop script is set.
 func (v *HomeAssistant) stopCharge() error {
 	return v.callScript(v.conf.Services.Stop)
 }
 
-// ChargeEnable enables or disables charging via the UI toggle.
 // Calls StartCharge or StopCharge accordingly.
 func (v *HomeAssistant) ChargeEnable(enable bool) error {
 	if enable {
@@ -351,7 +297,6 @@ func (v *HomeAssistant) ChargeEnable(enable bool) error {
 }
 
 // WakeUp triggers the Home Assistant wakeup script (if configured).
-// Returns api.ErrNotAvailable if no wakeup script is set.
 func (v *HomeAssistant) WakeUp() error {
 	if v.conf.Services.Wakeup == "" {
 		return api.ErrNotAvailable
