@@ -12,7 +12,7 @@
 			test-id="generalconfig-password"
 			:label="$t('config.general.password')"
 			text="*******"
-			modal-id="passwordModal"
+			modal-id="passwordUpdateModal"
 		/>
 
 		<GeneralConfigEntry

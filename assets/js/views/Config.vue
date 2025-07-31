@@ -374,6 +374,7 @@
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
+				<PasswordModal update-mode />
 			</div>
 		</div>
 	</div>
@@ -422,6 +423,7 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import PasswordModal from "../components/Auth/PasswordModal.vue";
 
 export default {
 	name: "Config",
@@ -458,6 +460,7 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 		WelcomeBanner,
+		PasswordModal,
 	},
 	mixins: [formatter, collector],
 	props: {

@@ -21,7 +21,7 @@ func Init() error {
 
 // Persist stores 15min consumption in Wh
 func Persist(ts time.Time, value float64) error {
-	return db.Instance.Save(meter{
+	return db.Instance.Create(meter{
 		Meter:     1,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
@@ -38,7 +38,7 @@ func Profile() (*[96]float64, error) {
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
 		FROM meters
 		WHERE meter = ?
-		GROUP BY strftime("HH:MM", ts)
+		GROUP BY strftime("%H:%M", ts)
 		ORDER BY ts`, 1)
 	if err != nil {
 		return nil, err
