@@ -21,6 +21,7 @@ type E3dc struct {
 	dischargeLimit uint32
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
+	cfg            rscp.ClientConfig // Try Workaround: configuration for the rscp client for workaround reconnecting
 }
 
 func init() {
@@ -87,6 +88,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		usage:          usage,
 		conn:           conn,
 		dischargeLimit: dischargeLimit,
+		cfg:            cfg,
 	}
 
 	// decorate battery
@@ -113,7 +115,8 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	case templates.UsageGrid:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
 		if err != nil {
-			m.conn.ResetClient()
+			m.conn.Disconnect()
+			m.conn, _ = rscp.NewClient(m.cfg) // Try Workaround:  because reconnecting with the old client does not work
 			return 0, err
 		}
 		return rscpValue(*res, cast.ToFloat64E)
@@ -124,7 +127,8 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
 		})
 		if err != nil {
-			m.conn.ResetClient()
+			m.conn.Disconnect()
+			m.conn, _ = rscp.NewClient(m.cfg) // Try Workaround:  because reconnecting with the old client does not work
 			return 0, err
 		}
 
@@ -138,7 +142,8 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	case templates.UsageBattery:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
 		if err != nil {
-			m.conn.ResetClient()
+			m.conn.Disconnect()
+			m.conn, _ = rscp.NewClient(m.cfg) // Try Workaround:  because reconnecting with the old client does not work
 			return 0, err
 		}
 		pwr, err := rscpValue(*res, cast.ToFloat64E)
@@ -159,7 +164,8 @@ func (m *E3dc) batterySoc() (float64, error) {
 
 	res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
 	if err != nil {
-		m.conn.ResetClient()
+		m.conn.Disconnect()
+		m.conn, _ = rscp.NewClient(m.cfg) // Try Workaround:  because reconnecting with the old client does not work
 		return 0, err
 	}
 
@@ -199,7 +205,8 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	}
 
 	if err != nil {
-		m.conn.ResetClient()
+		m.conn.Disconnect()
+		m.conn, _ = rscp.NewClient(m.cfg) // Try Workaround:  because reconnecting with the old client does not work
 	} else {
 		err = rscpError(res...)
 	}
