@@ -133,7 +133,6 @@ func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
-
 	uri := fmt.Sprintf("%s/api/states/%s", v.uri, url.PathEscape(entity))
 	req, err := request.New(http.MethodGet, uri, nil, nil)
 	if err != nil {
@@ -268,13 +267,6 @@ func (v *HomeAssistant) getLimitSoc() (int64, error) {
 	}
 	return int64(val), nil
 }
-
-// isUnavailable returns true if the state is "unknown" or "unavailable"
-func isUnavailable(s string) bool {
-	return s == "unknown" || s == "unavailable"
-}
-
-// ...existing code...
 
 // status returns evcc charge status (optional, private)
 func (v *HomeAssistant) status() (api.ChargeStatus, error) {
