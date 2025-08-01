@@ -1,5 +1,11 @@
 import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import {
+  expectModalVisible,
+  expectModalHidden,
+  openTopNavigation,
+  expectTopNavigationClosed,
+} from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -7,7 +13,7 @@ const mobile = devices["iPhone 12 Mini"].viewport;
 const desktop = devices["Desktop Chrome"].viewport;
 
 test.beforeAll(async () => {
-  await start("basics.evcc.yaml", "sessions.sql");
+  await start("sessions.evcc.yaml", "sessions.sql");
 });
 test.afterAll(async () => {
   await stop();
@@ -32,12 +38,12 @@ async function selectVehicleFilter(page: Page, value: string) {
 test.describe("basics", async () => {
   test("navigation to sessions", async ({ page }) => {
     await page.goto("/");
-    const topNavigationButton = await page.getByTestId("topnavigation-button");
-    await topNavigationButton.click();
+    await openTopNavigation(page);
     await page
       .getByTestId("topnavigation-dropdown")
       .getByRole("link", { name: "Charging sessions" })
       .click();
+    await expectTopNavigationClosed(page);
     await expect(page.getByRole("heading", { name: "Charging Sessions" })).toBeVisible();
   });
   test("month without data", async ({ page }) => {
@@ -303,40 +309,88 @@ test.describe("session details", async () => {
   test("show session details (session 5)", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
     await page.getByTestId("sessions-entry").nth(0).click();
-    await expect(page.getByTestId("session-details")).toBeVisible();
+    const modal = page.getByTestId("session-details");
+    await expectModalVisible(modal);
 
-    await expect(
-      page.getByTestId("session-details").getByRole("heading", { name: "Charging Session" })
-    ).toBeVisible();
-    await expect(page.getByTestId("session-details-loadpoint")).toContainText("Garage");
-    await expect(page.getByTestId("session-details-vehicle")).toContainText("weißes Model 3");
-    await expect(page.getByTestId("session-details-date")).toContainText(
+    await expect(modal.getByRole("heading", { name: "Charging Session" })).toBeVisible();
+    await expect(modal.getByLabel("Charging point")).toHaveValue("Garage");
+    await expect(modal.getByLabel("Vehicle")).toHaveValue("weißes Model 3");
+    await expect(modal.getByTestId("session-details-date")).toContainText(
       ["Thu, May 4, 22:00", "Fri, May 5, 06:00"].join("")
     );
-    await expect(page.getByTestId("session-details-energy")).toContainText("5.0 kWh");
-    await expect(page.getByTestId("session-details-energy")).toContainText("1:00");
-    await expect(page.getByTestId("session-details-solar")).toContainText("0.0% (0.0 kWh)");
-    await expect(page.getByTestId("session-details-price")).toContainText("2.50 € 50.0 ct/kWh");
-    await expect(page.getByTestId("session-details-co2")).toHaveCount(0);
-    await expect(page.getByTestId("session-details-odometer")).toHaveCount(0);
-    await expect(page.getByTestId("session-details-meter")).toHaveCount(0);
-    await expect(page.getByTestId("session-details-delete")).toContainText("Delete");
+    await expect(modal.getByTestId("session-details-energy")).toContainText("5.0 kWh");
+    await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
+    await expect(modal.getByTestId("session-details-solar")).toContainText("0.0% (0.0 kWh)");
+    await expect(modal.getByTestId("session-details-price")).toContainText("2.50 € 50.0 ct/kWh");
+    await expect(modal.getByTestId("session-details-co2")).toHaveCount(0);
+    await expect(modal.getByTestId("session-details-odometer")).toHaveCount(0);
+    await expect(modal.getByTestId("session-details-meter")).toHaveCount(0);
+    await expect(modal.getByTestId("session-details-delete")).toContainText("Delete");
   });
 
   test("show session details with CO2 data (session 1)", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=3");
     await page.getByTestId("sessions-entry").nth(0).click();
-    await expect(page.getByTestId("session-details")).toBeVisible();
+    const modal = page.getByTestId("session-details");
+    await expectModalVisible(modal);
 
-    await expect(page.getByTestId("session-details-loadpoint")).toContainText("Carport");
-    await expect(page.getByTestId("session-details-vehicle")).toContainText("blauer e-Golf");
-    await expect(page.getByTestId("session-details-date")).toContainText(
+    await expect(modal.getByLabel("Charging point")).toHaveValue("Carport");
+    await expect(modal.getByLabel("Vehicle")).toHaveValue("blauer e-Golf");
+    await expect(modal.getByTestId("session-details-date")).toContainText(
       ["Wed, Mar 1, 07:00", "Tue, May 2, 12:00"].join("")
     );
-    await expect(page.getByTestId("session-details-energy")).toContainText("10.0 kWh");
-    await expect(page.getByTestId("session-details-energy")).toContainText("1:00");
-    await expect(page.getByTestId("session-details-solar")).toContainText("100.0% (10.0 kWh)");
-    await expect(page.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
-    await expect(page.getByTestId("session-details-co2")).toContainText("300 g/kWh");
+    await expect(modal.getByTestId("session-details-energy")).toContainText("10.0 kWh");
+    await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
+    await expect(modal.getByTestId("session-details-solar")).toContainText("100.0% (10.0 kWh)");
+    await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
+    await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
+  });
+
+  test("edit session (session 5)", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await page.getByTestId("sessions-entry").nth(0).click();
+    const modal = page.getByTestId("session-details");
+    await expectModalVisible(modal);
+
+    await modal.getByLabel("Charging point").selectOption("Carport");
+    await modal.getByLabel("Vehicle").selectOption("blauer e-Golf");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    page.reload();
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(modal.getByLabel("Charging point")).toHaveValue("Carport");
+    await expect(modal.getByLabel("Vehicle")).toHaveValue("blauer e-Golf");
+  });
+
+  test("delete session (session 5)", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
+    await page.getByTestId("sessions-entry").nth(0).click();
+    const modal = page.getByTestId("session-details");
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(modal);
+
+    // confirm: cancel
+    const confirmModal = page.getByTestId("session-details-confirm");
+    await expectModalVisible(confirmModal);
+    await confirmModal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(confirmModal);
+    await expectModalVisible(modal);
+
+    // confirm: delete
+    await modal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(modal);
+    await expectModalVisible(confirmModal);
+    await confirmModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(confirmModal);
+    await expectModalHidden(modal);
+
+    // item removed
+    await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
+    page.reload();
+    await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
   });
 });

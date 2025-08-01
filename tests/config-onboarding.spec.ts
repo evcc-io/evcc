@@ -18,7 +18,7 @@ test.describe("onboarding", async () => {
     await page.goto("/");
 
     // set admin password
-    const admin = page.getByTestId("password-modal");
+    const admin = page.getByTestId("password-setup-modal");
     await expectModalVisible(admin);
     await admin.getByLabel("New password").fill(PASSWORD);
     await admin.getByLabel("Repeat password").fill(PASSWORD);
@@ -32,7 +32,7 @@ test.describe("onboarding", async () => {
     // login
     const login = page.getByTestId("login-modal");
     await expectModalVisible(login);
-    await login.getByLabel("Password").fill(PASSWORD);
+    await login.getByLabel("Administrator Password").fill(PASSWORD);
     await login.getByRole("button", { name: "Login" }).click();
     await expectModalHidden(login);
 
@@ -48,6 +48,8 @@ test.describe("onboarding", async () => {
     await expect(page.getByTestId("loadpoint-required")).toBeVisible();
     await page.getByTestId("add-loadpoint").click();
     const lpModal = page.getByTestId("loadpoint-modal");
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Add charging point" }).click();
     await lpModal.getByLabel("Title").fill("Solar Carport");
     await lpModal.getByRole("button", { name: "Add charger" }).click();
 

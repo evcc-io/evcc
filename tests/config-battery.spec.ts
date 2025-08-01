@@ -16,7 +16,7 @@ test.afterAll(async () => {
 test.describe("battery meter", async () => {
   test("create, edit and remove battery meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
 
@@ -69,7 +69,7 @@ test.describe("battery meter", async () => {
 
   test("advanced fields", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
