@@ -158,14 +158,10 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 }
 
 func (v *HomeAssistant) callScript(script string) error {
-	domain, name, ok := strings.Cut(script, ".")
-	if !ok { // kein Punkt gefunden
-		return errors.New("invalid script name:" + script)
-	}
-
-	uri := fmt.Sprintf("%s/api/services/%s/%s", v.uri, url.PathEscape(domain), url.PathEscape(name))
-	req, _ := request.New(http.MethodPost, uri, strings.NewReader("{}"))
-
+	// All configured services are scripts, so always use script.turn_on
+	payload := fmt.Sprintf(`{"entity_id": "%s"}`, script)
+	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
 	_, err := v.DoBody(req)
 	return err
 }
