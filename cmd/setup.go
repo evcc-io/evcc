@@ -909,19 +909,25 @@ func configureDevices(conf globalconfig.All) error {
 		return err
 	}
 
-	// TODO: add name/identifier to error for better highlighting in UI
+	// make sure all devices are configured
+	var errs []error
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
-		return &ClassError{ClassMeter, err}
+		errs = append(errs, &ClassError{ClassMeter, err})
 	}
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
-		return &ClassError{ClassCharger, err}
+		errs = append(errs, &ClassError{ClassCharger, err})
 	}
 	if err := configureVehicles(conf.Vehicles); err != nil {
-		return &ClassError{ClassVehicle, err}
+		errs = append(errs, &ClassError{ClassVehicle, err})
 	}
+	if errs != nil {
+		return errors.Join(errs...)
+	}
+
 	if err := configureCircuits(&conf.Circuits); err != nil {
 		return &ClassError{ClassCircuit, err}
 	}
+
 	return nil
 }
 
@@ -964,6 +970,11 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if err := configureDevices(*conf); err != nil {
+		// at this stage some devices may have a nil instance
+		if e := configureLoadpoints(*conf); e != nil {
+			return nil, errors.Join(err, &ClassError{ClassLoadpoint, e})
+		}
+
 		return nil, err
 	}
 
