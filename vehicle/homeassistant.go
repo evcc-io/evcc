@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -194,8 +195,7 @@ func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
 		return false, err
 	}
 
-	state := strings.ToLower(s)
-	return state == "on" || state == "true" || state == "1" || state == "active", nil
+	return slices.Contains([]string{"on", "true", "1", "active"}, strings.ToLower(s)), nil
 }
 
 func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
