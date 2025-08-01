@@ -14,8 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-//go:generate go tool decorate -f decorateHomeAssistant -b api.Vehicle -t "api.SocLimiter,GetLimitSoc,func() (int64, error)" -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.VehicleFinishTimer,FinishTime,func() (time.Time, error)" -t "api.Resurrector,WakeUp,func() error" -t "api.ChargeController,ChargeEnable,func(bool) error"
-
 type haConfig struct {
 	Soc        string `mapstructure:"soc"`        // required
 	LimitSoc   string `mapstructure:"limitSoc"`   // optional
@@ -31,11 +29,12 @@ type haConfig struct {
 type HomeAssistant struct {
 	*embed
 	*request.Helper
-	conf         haConfig
-	baseURL      string
-	token        string
-	startService string
-	stopService  string
+	conf          haConfig
+	baseURL       string
+	token         string
+	startService  string
+	stopService   string
+	wakeupService string
 }
 
 func init() {
@@ -59,6 +58,7 @@ func newHomeAssistantFromConfig(other map[string]interface{}) (api.Vehicle, erro
 		Services   struct {
 			StartCharging string `mapstructure:"start_charging"`
 			StopCharging  string `mapstructure:"stop_charging"`
+			Wakeup        string `mapstructure:"wakeup"`
 		} `mapstructure:"services"`
 	}{}
 
@@ -70,8 +70,12 @@ func newHomeAssistantFromConfig(other map[string]interface{}) (api.Vehicle, erro
 
 	// Use services if defined, otherwise fall back to enable field
 	enableService := cc.Enable
+	wakeupService := cc.Wakeup
 	if cc.Services.StartCharging != "" && cc.Services.StopCharging != "" {
 		enableService = "services" // mark that we have services configured
+	}
+	if cc.Services.Wakeup != "" {
+		wakeupService = cc.Services.Wakeup
 	}
 
 	v := &HomeAssistant{
@@ -85,13 +89,14 @@ func newHomeAssistantFromConfig(other map[string]interface{}) (api.Vehicle, erro
 			Climater:   cc.Climater,
 			Status:     cc.Status,
 			Enable:     enableService,
-			Wakeup:     cc.Wakeup,
+			Wakeup:     wakeupService,
 			FinishTime: cc.FinishTime,
 		},
-		baseURL:      strings.TrimSuffix(cc.URI, "/"),
-		token:        cc.Token,
-		startService: cc.Services.StartCharging,
-		stopService:  cc.Services.StopCharging,
+		baseURL:       strings.TrimSuffix(cc.URI, "/"),
+		token:         cc.Token,
+		startService:  cc.Services.StartCharging,
+		stopService:   cc.Services.StopCharging,
+		wakeupService: cc.Services.Wakeup,
 	}
 
 	// For now, return the base vehicle without decoration
@@ -156,7 +161,7 @@ func (v *HomeAssistant) ChargeEnable(enable bool) error {
 
 // WakeUp implements api.Resurrector
 func (v *HomeAssistant) WakeUp() error {
-	if v.conf.Wakeup == "" {
+	if v.wakeupService == "" && v.conf.Wakeup == "" {
 		return api.ErrNotAvailable
 	}
 	return v.wakeUp()
@@ -262,7 +267,13 @@ func (v *HomeAssistant) chargeEnable(enable bool) error {
 }
 
 func (v *HomeAssistant) wakeUp() error {
-	return v.callScript(v.conf.Wakeup)
+	// Use services wakeup if configured, otherwise fall back to top-level wakeup
+	if v.wakeupService != "" {
+		return v.callScript(v.wakeupService)
+	} else if v.conf.Wakeup != "" {
+		return v.callScript(v.conf.Wakeup)
+	}
+	return api.ErrNotAvailable
 }
 
 func (v *HomeAssistant) finishTime() (time.Time, error) {
@@ -335,16 +346,3 @@ func (v *HomeAssistant) callScript(script string) error {
 		return fmt.Errorf("invalid script name '%s'", script)
 	}
 
-	uri := fmt.Sprintf("%s/api/services/%s/%s", v.baseURL, url.PathEscape(domain), url.PathEscape(name))
-
-	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
-		"Content-Type":  "application/json",
-		"Authorization": "Bearer " + v.token,
-	})
-	if err != nil {
-		return err
-	}
-
-	_, err = v.DoBody(req)
-	return err
-}
