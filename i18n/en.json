@@ -621,7 +621,7 @@
     "about": "About",
     "authProviders": {
       "confirmLogout": "Are you sure you want to disconnect {title}?",
-      "title": "OAuth Status"
+      "title": "Authorization Status"
     },
     "blog": "Blog",
     "docs": "Documentation",

@@ -621,7 +621,7 @@
     "about": "Über",
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
-      "title": "OAuth Status"
+      "title": "Autorisierungsstatus"
     },
     "blog": "Blog",
     "docs": "Dokumentation",
