@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"dario.cat/mergo"
@@ -47,13 +48,51 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 	}
 }
 
-type loadpointFullConfig struct {
-	ID   int    `json:"id,omitempty"` // db row id
-	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
+// Hilfsfunktion: Struct zu map[string]any
+func structToMap(s any) map[string]any {
+	res := make(map[string]any)
+	v := reflect.ValueOf(s)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		res[t.Field(i).Name] = v.Field(i).Interface()
+	}
+	return res
+}
 
-	// static config
-	loadpoint.StaticConfig
-	loadpoint.DynamicConfig
+func loadpointConfig(dev config.Device[loadpoint.API]) map[string]any {
+	lp := dev.Instance()
+
+	var id int
+	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
+		id = configurable.ID()
+	}
+
+	// Basisdaten
+	res := map[string]any{
+		"id":   id,
+		"name": dev.Config().Name,
+	}
+
+	// StaticConfig generisch
+	for k, v := range structToMap(getLoadpointStaticConfig(lp)) {
+		res[k] = v
+	}
+	// DynamicConfig generisch
+	for k, v := range structToMap(getLoadpointDynamicConfig(lp)) {
+		res[k] = v
+	}
+
+	// Zusätzliche Felder aus YAML (Other)
+	for k, v := range dev.Config().Other {
+		if _, exists := res[k]; !exists {
+			res[k] = v
+		}
+	}
+
+	return res
 }
 
 func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, error) {
@@ -66,30 +105,10 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 	return loadpoint.SplitConfig(payload)
 }
 
-// loadpointConfig returns a single loadpoint's configuration
-func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
-	lp := dev.Instance()
-
-	var id int
-	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
-		id = configurable.ID()
-	}
-
-	res := loadpointFullConfig{
-		ID:   id,
-		Name: dev.Config().Name,
-
-		StaticConfig:  getLoadpointStaticConfig(lp),
-		DynamicConfig: getLoadpointDynamicConfig(lp),
-	}
-
-	return res
-}
-
 // loadpointsConfigHandler returns a device configurations by class
 func loadpointsConfigHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) loadpointFullConfig {
+		res := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) map[string]any {
 			return loadpointConfig(dev)
 		})
 
