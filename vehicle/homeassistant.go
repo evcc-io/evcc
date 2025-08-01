@@ -205,10 +205,6 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	if s == "unknown" || s == "unavailable" {
-		return time.Time{}, api.ErrNotAvailable
-	}
-
 	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return time.Unix(ts, 0), nil
 	}
