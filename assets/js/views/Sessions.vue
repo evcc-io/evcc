@@ -673,7 +673,7 @@ export default {
 		async loadSessions() {
 			const response = await api.get("sessions");
 			// ensure sessions are sorted by created date
-			const sortedSessions = response.data?.result.sort((a, b) => {
+			const sortedSessions = response.data.sort((a, b) => {
 				return new Date(a.created) - new Date(b.created);
 			});
 			this.sessions = sortedSessions;
