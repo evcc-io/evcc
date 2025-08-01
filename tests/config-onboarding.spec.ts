@@ -18,7 +18,7 @@ test.describe("onboarding", async () => {
     await page.goto("/");
 
     // set admin password
-    const admin = page.getByTestId("password-modal");
+    const admin = page.getByTestId("password-setup-modal");
     await expectModalVisible(admin);
     await admin.getByLabel("New password").fill(PASSWORD);
     await admin.getByLabel("Repeat password").fill(PASSWORD);
