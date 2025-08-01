@@ -89,6 +89,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		wakeup       func() error
 	)
 
+	if cc.Sensors.LimitSoc != "" {
+		limitSoc = func() (int64, error) { return res.getIntSensor(cc.Sensors.LimitSoc) }
+	}
 	if cc.Sensors.Status != "" {
 		status = func() (api.ChargeStatus, error) { return res.status(cc.Sensors.Status) }
 	}
@@ -113,9 +116,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		}
 	}
 	if cc.Services.Wakeup != "" {
-		wakeup = func() error {
-			return res.callScript(cc.Services.Wakeup)
-		}
+		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
 	}
 
 	// decorate all features
