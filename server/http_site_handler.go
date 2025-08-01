@@ -505,20 +505,13 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 		}
 
 		if req.Settings {
-			query := db.Instance.Exec("DELETE FROM settings")
-			if query.Error != nil {
-				jsonError(w, http.StatusInternalServerError, query.Error)
-				return
-			}
-			query = db.Instance.Exec("DELETE FROM configs")
-			if query.Error != nil {
-				jsonError(w, http.StatusInternalServerError, query.Error)
-				return
-			}
-			query = db.Instance.Exec("DELETE FROM caches")
-			if query.Error != nil {
-				jsonError(w, http.StatusInternalServerError, query.Error)
-				return
+			tables := []string{"settings", "configs", "caches", "meters"}
+
+			for _, table := range tables {
+				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
 			}
 		}
 
