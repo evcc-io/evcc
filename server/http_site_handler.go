@@ -515,6 +515,11 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 				jsonError(w, http.StatusInternalServerError, query.Error)
 				return
 			}
+			query = db.Instance.Exec("DELETE FROM caches")
+			if query.Error != nil {
+				jsonError(w, http.StatusInternalServerError, query.Error)
+				return
+			}
 		}
 
 		// close db connection to avoid on-shutdown writes

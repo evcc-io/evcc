@@ -457,7 +457,7 @@
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",
           "settings": "Configuration & settings",
-          "settingsDescription": "Deletes all configured devices, services, plans, etc.",
+          "settingsDescription": "Deletes all configured devices, services, plans, caches, etc.",
           "title": "Reset"
         },
         "restore": {
