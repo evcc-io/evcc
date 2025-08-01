@@ -98,7 +98,7 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 
 	var (
 		ype *yaml.ParserError
-		yue yaml.UnmarshalError
+		yue *yaml.UnmarshalError
 	)
 	switch {
 	case errors.As(err, &ype):
