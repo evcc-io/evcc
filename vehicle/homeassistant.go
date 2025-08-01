@@ -348,3 +348,16 @@ func (v *HomeAssistant) callScript(script string) error {
 		return fmt.Errorf("invalid script name '%s'", script)
 	}
 
+	uri := fmt.Sprintf("%s/api/services/%s/%s", v.baseURL, url.PathEscape(domain), url.PathEscape(name))
+
+	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": "Bearer " + v.token,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = v.DoBody(req)
+	return err
+}
