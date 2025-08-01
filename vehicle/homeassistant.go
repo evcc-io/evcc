@@ -63,16 +63,15 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, fmt.Errorf("missing soc sensor")
 	}
 
-	log := util.NewLogger("ha-vehicle").Redact(cc.Token)
-	base := &HomeAssistant{
+	res := &HomeAssistant{
 		embed:  &cc.embed,
-		Helper: request.NewHelper(log),
+		Helper: request.NewHelper(util.NewLogger("ha-vehicle").Redact(cc.Token)),
 		uri:    strings.TrimSuffix(cc.URI, "/"),
 		soc:    cc.Sensors.Soc,
 	}
 
-	base.Client.Transport = &transport.Decorator{
-		Base: base.Client.Transport,
+	res.Client.Transport = &transport.Decorator{
+		Base: res.Client.Transport,
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Authorization": "Bearer " + cc.Token,
 		}),
@@ -91,37 +90,37 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	)
 
 	if cc.Sensors.Status != "" {
-		status = func() (api.ChargeStatus, error) { return base.status(cc.Sensors.Status) }
+		status = func() (api.ChargeStatus, error) { return res.status(cc.Sensors.Status) }
 	}
 	if cc.Sensors.Range != "" {
-		rng = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
+		rng = func() (int64, error) { return res.getIntSensor(cc.Sensors.Range) }
 	}
 	if cc.Sensors.Odometer != "" {
-		odo = func() (float64, error) { return base.getFloatSensor(cc.Sensors.Odometer) }
+		odo = func() (float64, error) { return res.getFloatSensor(cc.Sensors.Odometer) }
 	}
 	if cc.Sensors.Climater != "" {
-		climater = func() (bool, error) { return base.getBoolSensor(cc.Sensors.Climater) }
+		climater = func() (bool, error) { return res.getBoolSensor(cc.Sensors.Climater) }
 	}
 	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return base.getTimeSensor(cc.Sensors.FinishTime) }
+		finish = func() (time.Time, error) { return res.getTimeSensor(cc.Sensors.FinishTime) }
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
 		chargeEnable = func(enable bool) error {
 			if enable {
-				return base.callScript(cc.Services.Start)
+				return res.callScript(cc.Services.Start)
 			}
-			return base.callScript(cc.Services.Stop)
+			return res.callScript(cc.Services.Stop)
 		}
 	}
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error {
-			return base.callScript(cc.Services.Wakeup)
+			return res.callScript(cc.Services.Wakeup)
 		}
 	}
 
 	// decorate all features
 	return decorateVehicle(
-		base,
+		res,
 		limitSoc,
 		status,
 		rng,
