@@ -32,20 +32,8 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 	lang := getLang(r)
 	templates.EncoderLanguage(lang)
 
-	if name := r.URL.Query().Get("name"); name != "" {
-		res, err := templates.ByName(class, name)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonWrite(w, res)
-		return
-	}
-
 	// filter deprecated properties
-	res := make([]templates.Template, 0)
-	for _, t := range templates.ByClass(class) {
+	filterParams := func(t templates.Template) templates.Template {
 		params := make([]templates.Param, 0, len(t.Params))
 		for _, p := range t.Params {
 			if p.Deprecated == nil || !*p.Deprecated {
@@ -53,7 +41,23 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		t.Params = params
-		res = append(res, t)
+		return t
+	}
+
+	if name := r.URL.Query().Get("name"); name != "" {
+		res, err := templates.ByName(class, name)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, filterParams(res))
+		return
+	}
+
+	var res []templates.Template
+	for _, t := range templates.ByClass(class) {
+		res = append(res, filterParams(t))
 	}
 
 	jsonWrite(w, res)
