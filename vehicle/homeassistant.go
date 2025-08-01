@@ -13,49 +13,43 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
-
-type haSensors struct {
-	Soc           string // required
-	Range         string // optional
-	Status        string // optional
-	LimitSoc      string // optional
-	Odometer      string // optional
-	Climater      string // optional
-	MaxCurrent    string // optional
-	GetMaxCurrent string // optional
-	FinishTime    string // optional
-}
-
-type haServices struct {
-	Start  string `mapstructure:"start_charging"` // script.*  optional
-	Stop   string `mapstructure:"stop_charging"`  // script.*  optional
-	Wakeup string // script.*  optional
-}
-
-type haConfig struct {
-	embed    `mapstructure:",squash"`
-	URI      string // http://homeassistant:8123
-	Token    string // Long-Lived Token
-	Sensors  haSensors
-	Services haServices
-}
 
 type HomeAssistant struct {
 	*embed
 	*request.Helper
-	conf haConfig
-	uri  string
+	uri string
+	soc string
 }
 
 // Register on startup
 func init() {
-	registry.Add("homeassistant", newHomeAssistantVehicleFromConfig)
+	registry.Add("homeassistant", NewHomeAssistantVehicleFromConfig)
 }
 
 // Constructor from YAML config
-func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
-	var cc haConfig
+func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
+	var cc struct {
+		embed   `mapstructure:",squash"`
+		URI     string
+		Token   string
+		Sensors struct {
+			Soc        string // required
+			Range      string // optional
+			Status     string // optional
+			LimitSoc   string // optional
+			Odometer   string // optional
+			Climater   string // optional
+			FinishTime string // optional
+		}
+		Services struct {
+			Start  string `mapstructure:"start_charging"` // script.*  optional
+			Stop   string `mapstructure:"stop_charging"`  // script.*  optional
+			Wakeup string // script.*  optional
+		}
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -73,18 +67,32 @@ func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	base := &HomeAssistant{
 		embed:  &cc.embed,
 		Helper: request.NewHelper(log),
-		conf:   cc,
 		uri:    strings.TrimSuffix(cc.URI, "/"),
+		soc:    cc.Sensors.Soc,
+	}
+
+	base.Client.Transport = &transport.Decorator{
+		Base: base.Client.Transport,
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Authorization": "Bearer " + cc.Token,
+		}),
 	}
 
 	// prepare optional feature functions with concise names
 	var (
-		rng      func() (int64, error)
-		odo      func() (float64, error)
-		climater func() (bool, error)
-		finish   func() (time.Time, error)
+		limitSoc     func() (int64, error)
+		status       func() (api.ChargeStatus, error)
+		rng          func() (int64, error)
+		odo          func() (float64, error)
+		climater     func() (bool, error)
+		finish       func() (time.Time, error)
+		chargeEnable func(bool) error
+		wakeup       func() error
 	)
 
+	if cc.Sensors.Status != "" {
+		status = func() (api.ChargeStatus, error) { return base.status(cc.Sensors.Status) }
+	}
 	if cc.Sensors.Range != "" {
 		rng = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
 	}
@@ -97,41 +105,50 @@ func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Sensors.FinishTime != "" {
 		finish = func() (time.Time, error) { return base.getTimeSensor(cc.Sensors.FinishTime) }
 	}
+	if cc.Services.Start != "" && cc.Services.Stop != "" {
+		chargeEnable = func(enable bool) error {
+			if enable {
+				return base.callScript(cc.Services.Start)
+			}
+			return base.callScript(cc.Services.Stop)
+		}
+	}
+	if cc.Services.Wakeup != "" {
+		wakeup = func() error {
+			return base.callScript(cc.Services.Wakeup)
+		}
+	}
 
 	// decorate all features
 	return decorateVehicle(
 		base,
-		base.getLimitSoc,
-		base.status,
+		limitSoc,
+		status,
 		rng,
 		odo,
 		climater,
 		nil, // maxCurrent setter not implemented
 		nil, // getMaxCurrent getter not implemented
 		finish,
-		base.WakeUp,
-		base.ChargeEnable,
+		wakeup,
+		chargeEnable,
 	), nil
+}
+
+func (v *HomeAssistant) Soc() (float64, error) {
+	return v.getFloatSensor(v.soc)
 }
 
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
-	uri := fmt.Sprintf("%s/api/states/%s", v.uri, url.PathEscape(entity))
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Authorization": "Bearer " + v.conf.Token,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	var resp struct {
+	var res struct {
 		State string `json:"state"`
 	}
-	if err = v.DoJSON(req, &resp); err != nil {
-		return "", err
-	}
 
-	return resp.State, nil
+	uri := fmt.Sprintf("%s/api/states/%s", v.uri, url.PathEscape(entity))
+	err := v.GetJSON(uri, &res)
+
+	return res.State, err
 }
 
 func (v *HomeAssistant) callScript(script string) error {
@@ -141,16 +158,9 @@ func (v *HomeAssistant) callScript(script string) error {
 	}
 
 	uri := fmt.Sprintf("%s/api/services/%s/%s", v.uri, url.PathEscape(domain), url.PathEscape(name))
+	req, _ := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")))
 
-	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
-		"Authorization": "Bearer " + v.conf.Token,
-		"Content-Type":  "application/json",
-	})
-	if err != nil {
-		return err
-	}
-
-	_, err = v.DoBody(req)
+	_, err := v.DoBody(req)
 	return err
 }
 
@@ -212,43 +222,8 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 	return time.Parse(time.RFC3339, s)
 }
 
-// Soc returns state of charge [%]
-func (v *HomeAssistant) Soc() (float64, error) {
-	return v.getFloatSensor(v.conf.Sensors.Soc)
-}
-
-// Range returns remaining range [km] (optional)
-func (v *HomeAssistant) Range() (int64, error) {
-	return v.getIntSensor(v.conf.Sensors.Range)
-}
-
-// LimitSoc returns target state of charge [%] (optional)
-func (v *HomeAssistant) LimitSoc() (float64, error) {
-	return v.getFloatSensor(v.conf.Sensors.LimitSoc)
-}
-
-// Odometer returns odometer reading [km] (optional)
-func (v *HomeAssistant) Odometer() (float64, error) {
-	return v.getFloatSensor(v.conf.Sensors.Odometer)
-}
-
-// Climater returns true if climatization is active (optional)
-func (v *HomeAssistant) Climater() (bool, error) {
-	return v.getBoolSensor(v.conf.Sensors.Climater)
-}
-
-// FinishTime returns the planned charging end time (optional)
-func (v *HomeAssistant) FinishTime() (time.Time, error) {
-	return v.getTimeSensor(v.conf.Sensors.FinishTime)
-}
-
-// getLimitSoc implements the api.SocLimiter interface (private)
-func (v *HomeAssistant) getLimitSoc() (int64, error) {
-	return v.getIntSensor(v.conf.Sensors.LimitSoc)
-}
-
 // status returns evcc charge status (optional, private)
-func (v *HomeAssistant) status() (api.ChargeStatus, error) {
+func (v *HomeAssistant) status(sensor string) (api.ChargeStatus, error) {
 	var haStatusMap = map[string]api.ChargeStatus{
 		"charging":            api.StatusC,
 		"on":                  api.StatusC,
@@ -265,7 +240,7 @@ func (v *HomeAssistant) status() (api.ChargeStatus, error) {
 		"notreadyforcharging": api.StatusA,
 	}
 
-	s, err := v.getState(v.conf.Sensors.Status)
+	s, err := v.getState(sensor)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -275,31 +250,5 @@ func (v *HomeAssistant) status() (api.ChargeStatus, error) {
 		return mapped, nil
 	}
 
-	return api.StatusA, errors.New("invalid state: " + s)
-}
-
-// startCharge triggers the Home Assistant start charging script (if configured).
-func (v *HomeAssistant) startCharge() error {
-	return v.callScript(v.conf.Services.Start)
-}
-
-// stopCharge triggers the Home Assistant stop charging script (if configured).
-func (v *HomeAssistant) stopCharge() error {
-	return v.callScript(v.conf.Services.Stop)
-}
-
-// Calls StartCharge or StopCharge accordingly.
-func (v *HomeAssistant) ChargeEnable(enable bool) error {
-	if enable {
-		return v.startCharge()
-	}
-	return v.stopCharge()
-}
-
-// WakeUp triggers the Home Assistant wakeup script (if configured).
-func (v *HomeAssistant) WakeUp() error {
-	if v.conf.Services.Wakeup == "" {
-		return api.ErrNotAvailable
-	}
-	return v.callScript(v.conf.Services.Wakeup)
+	return api.StatusNone, errors.New("invalid state: " + s)
 }
