@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"text/template"
@@ -15,7 +17,10 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
@@ -316,7 +321,7 @@ func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, logstash.Areas())
 }
 
-func resetHandler(w http.ResponseWriter, r *http.Request) {
+func clearCacheHandler(w http.ResponseWriter, r *http.Request) {
 	util.ResetCached()
 	jsonResult(w, "OK")
 }
@@ -347,4 +352,178 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResult(w, log)
+}
+
+// adminPasswordValid validates the admin password and returns true if valid
+func adminPasswordValid(authObject auth.Auth, password string) bool {
+	return authObject.GetAuthMode() == auth.Disabled || authObject.IsAdminPasswordValid(password)
+}
+
+func getBackup(authObject auth.Auth) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req loginRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !adminPasswordValid(authObject, req.Password) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
+			return
+		}
+
+		settings.Persist()
+
+		f, err := os.Open(db.FilePath)
+		if err != nil {
+			http.Error(w, "Could not open DB file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+
+		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
+
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
+
+		if _, err := io.Copy(w, f); err != nil {
+			http.Error(w, "Error streaming DB file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// createLocalDatabaseBackup creates a local backup in case of catastrophic error in reset or restore
+func createLocalDatabaseBackup() error {
+	backupPath := db.FilePath + ".bak"
+
+	src, err := os.Open(db.FilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open database file: %w", err)
+	}
+	defer src.Close()
+
+	dst, err := os.Create(backupPath)
+	if err != nil {
+		return fmt.Errorf("failed to create backup file: %w", err)
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		// clean up partial backup on error
+		os.Remove(backupPath)
+		return fmt.Errorf("failed to copy database: %w", err)
+	}
+
+	return nil
+}
+
+func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Parse multipart form
+		err := r.ParseMultipartForm(32 << 20) // 32MB max memory
+		if err != nil {
+			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !adminPasswordValid(authObject, r.FormValue("password")) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
+			return
+		}
+
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, "Failed to get uploaded file: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		settings.Persist()
+
+		// close db connection to avoid corruption
+		if err := db.Close(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		// create local backup before overwriting
+		if err := createLocalDatabaseBackup(); err != nil {
+			http.Error(w, "Failed to create local backup: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// overwrite DB file
+		f, err := os.Create(db.FilePath)
+		if err != nil {
+			http.Error(w, "Could not open DB file for writing: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+
+		if _, err := io.Copy(f, file); err != nil {
+			http.Error(w, "Failed to write DB file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		shutdown()
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Password string `json:"password"`
+			Sessions bool   `json:"sessions"`
+			Settings bool   `json:"settings"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if !adminPasswordValid(authObject, req.Password) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
+			return
+		}
+
+		settings.Persist()
+
+		if err := createLocalDatabaseBackup(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		if req.Sessions {
+			query := db.Instance.Exec("DELETE FROM sessions")
+			if query.Error != nil {
+				jsonError(w, http.StatusInternalServerError, query.Error)
+				return
+			}
+		}
+
+		if req.Settings {
+			query := db.Instance.Exec("DELETE FROM settings")
+			if query.Error != nil {
+				jsonError(w, http.StatusInternalServerError, query.Error)
+				return
+			}
+			query = db.Instance.Exec("DELETE FROM configs")
+			if query.Error != nil {
+				jsonError(w, http.StatusInternalServerError, query.Error)
+				return
+			}
+		}
+
+		// close db connection to avoid on-shutdown writes
+		if err := db.Close(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		shutdown()
+		w.WriteHeader(http.StatusNoContent)
+	}
 }

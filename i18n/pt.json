@@ -44,8 +44,12 @@
       "ocppLabel": "URL do servidor OCPP",
       "switchsockets": "Tomadas comandadas",
       "template": "Fabricante",
-      "titleAdd": "Adicionar Carregador",
-      "titleEdit": "Editar Carregador"
+      "titleAdd": {
+        "charging": "Adicionar Carregador"
+      },
+      "titleEdit": {
+        "charging": "Editar Carregador"
+      }
     },
     "circuits": {
       "description": "Assegura que a soma de todos os Postos de Carregamento conectados a um circuito não excede os limites de potência e corrente configurados. Os circuitos podem ser combinados para construir uma hierarquia.",
@@ -180,11 +184,17 @@
       "v2Support": "Voltar ao InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Adicionar Carregador",
+      "addCharger": {
+        "charging": "Adicionar Carregador"
+      },
       "addMeter": "Adicionar um Contador de Carregador dedicado",
       "cancel": "Cancelar",
-      "chargerError": "É necessário configurar um Carregador EV.",
-      "chargerLabel": "Carregador",
+      "chargerError": {
+        "charging": "É necessário configurar um Carregador EV."
+      },
+      "chargerLabel": {
+        "charging": "Carregador"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilização de uma gama de correntes de 6 a 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "não atribuído",
-      "defaultModeHelp": "Modo de carregamento ao ligar o veículo.",
+      "defaultModeHelp": {
+        "charging": "Modo de carregamento ao ligar o veículo."
+      },
       "defaultModeHelpKeep": "Mantém o último modo de carregamento selecionado.",
       "defaultModeLabel": "Modo predefinido",
       "delete": "Apagar",

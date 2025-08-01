@@ -47,23 +47,24 @@ type Keba struct {
 }
 
 const (
-	kebaRegChargingState   = 1000
-	kebaRegCableState      = 1004
-	kebaRegCurrents        = 1008 // 6 regs, mA
-	kebaRegSerial          = 1014 // leading zeros trimmed
-	kebaRegProduct         = 1016
-	kebaRegFirmware        = 1018
-	kebaRegPower           = 1020 // mW
-	kebaRegEnergy          = 1036 // Wh
-	kebaRegVoltages        = 1040 // 6 regs, V
-	kebaRegRfid            = 1500 // hex
-	kebaRegSessionEnergy   = 1502 // Wh
-	kebaRegPhaseSource     = 1550
-	kebaRegPhaseState      = 1552
-	kebaRegFailsafeTimeout = 1602
-	kebaRegMaxCurrent      = 5004 // mA
-	kebaRegEnable          = 5014
-	kebaRegTriggerPhase    = 5052
+	kebaRegChargingState        = 1000
+	kebaRegCableState           = 1004
+	kebaRegCurrents             = 1008 // 6 regs, mA
+	kebaRegSerial               = 1014 // leading zeros trimmed
+	kebaRegProduct              = 1016
+	kebaRegFirmware             = 1018
+	kebaRegPower                = 1020 // mW
+	kebaRegEnergy               = 1036 // Wh
+	kebaRegVoltages             = 1040 // 6 regs, V
+	kebaRegRfid                 = 1500 // hex
+	kebaRegSessionEnergy        = 1502 // Wh
+	kebaRegPhaseSource          = 1550
+	kebaRegPhaseState           = 1552
+	kebaRegFailsafeTimeout      = 1602
+	kebaRegMaxCurrent           = 5004 // mA
+	kebaRegEnable               = 5014
+	kebaRegWriteFailsafeTimeout = 5018 //unit16!
+	kebaRegTriggerPhase         = 5052
 )
 
 func init() {
@@ -161,7 +162,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(ctx, b)
+		go wb.heartbeat(ctx, u)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
@@ -192,8 +193,8 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 	return wb, err
 }
 
-func (wb *Keba) heartbeat(ctx context.Context, b []byte) {
-	timeout := time.Duration(binary.BigEndian.Uint32(b)) * time.Second / 2
+func (wb *Keba) heartbeat(ctx context.Context, u uint32) {
+	timeout := time.Duration(u) * time.Second / 2
 
 	for tick := time.Tick(timeout); ; {
 		select {
@@ -202,7 +203,7 @@ func (wb *Keba) heartbeat(ctx context.Context, b []byte) {
 			return
 		}
 
-		if _, err := wb.conn.WriteMultipleRegisters(kebaRegFailsafeTimeout, 2, b); err != nil {
+		if _, err := wb.conn.WriteSingleRegister(kebaRegWriteFailsafeTimeout, uint16(u)); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}

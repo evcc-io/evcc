@@ -29,6 +29,8 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+
 export default {
 	name: "DeviceTags",
 	mixins: [formatter],
@@ -37,11 +39,11 @@ export default {
 	},
 	computed: {
 		entries() {
-			return Object.entries(this.tags).map(
-				([name, { value, error, warning, muted, options }]) => {
+			return Object.entries(this.tags)
+				.filter(([name]) => !HIDDEN_TAGS.includes(name))
+				.map(([name, { value, error, warning, muted, options }]) => {
 					return { name, value, error, warning, muted, options };
-				}
-			);
+				});
 		},
 	},
 	methods: {

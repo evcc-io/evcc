@@ -1,15 +1,40 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
-export async function enableExperimental(page: Page): Promise<void> {
+export async function enableExperimental(page: Page, inline = true): Promise<void> {
+  if (inline) {
+    await page.getByRole("button", { name: "Enable Experimental Features" }).click();
+  } else {
+    await openTopNavigation(page);
+    await page.getByTestId("topnavigation-settings").click();
+    const modal = page.getByTestId("global-settings-modal");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Experimental 🧪").click();
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await expect(page.locator(".modal-backdrop")).not.toBeVisible();
+  }
+}
+
+export async function openTopNavigation(page: Page): Promise<void> {
   await expect(page.getByTestId("topnavigation-button")).toBeVisible();
   await page.getByTestId("topnavigation-button").click();
-  await page.getByTestId("topnavigation-settings").click();
-  const modal = page.getByTestId("global-settings-modal");
-  await expectModalVisible(modal);
-  await modal.getByLabel("Experimental 🧪").click();
-  await modal.getByRole("button", { name: "Close" }).click();
-  await expectModalHidden(modal);
-  await expect(page.locator(".modal-backdrop")).not.toBeVisible();
+  await expectTopNavigationOpened(page);
+}
+
+export async function closeTopNavigation(page: Page): Promise<void> {
+  await expectTopNavigationOpened(page);
+  await page.getByTestId("topnavigation-button").click();
+  await expectTopNavigationClosed(page);
+}
+
+export async function expectTopNavigationOpened(page: Page): Promise<void> {
+  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByTestId("topnavigation-dropdown")).toBeVisible();
+}
+
+export async function expectTopNavigationClosed(page: Page): Promise<void> {
+  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByTestId("topnavigation-dropdown")).not.toBeVisible();
 }
 
 export async function expectModalVisible(modal: Locator): Promise<void> {
