@@ -87,7 +87,7 @@ export default {
 	},
 	computed: {
 		telemetryEnabled() {
-			return settings.telemetry === true;
+			return store.state?.telemetry === true;
 		},
 		hiddenFeatures() {
 			return settings.hiddenFeatures === true;
