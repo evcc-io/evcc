@@ -2,6 +2,7 @@ template: volvo-connected
 products:
   - brand: Volvo
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
       Für die Nutzung mit evcc benötigst du einen Volvo Account und einen Volvo Connected Car API Key. 
