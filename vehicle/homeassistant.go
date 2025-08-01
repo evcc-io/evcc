@@ -56,11 +56,11 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	switch {
 	case cc.URI == "":
-		return nil, fmt.Errorf("missing uri")
+		return nil, errors.New("missing uri")
 	case cc.Token == "":
-		return nil, fmt.Errorf("missing token")
+		return nil, errors.New("missing token")
 	case cc.Sensors.Soc == "":
-		return nil, fmt.Errorf("missing soc sensor")
+		return nil, errors.New("missing soc sensor")
 	}
 
 	res := &HomeAssistant{
@@ -160,7 +160,7 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 func (v *HomeAssistant) callScript(script string) error {
 	domain, name, ok := strings.Cut(script, ".")
 	if !ok { // kein Punkt gefunden
-		return fmt.Errorf("invalid script name '%s'", script)
+		return errors.New("invalid script name:" + script)
 	}
 
 	uri := fmt.Sprintf("%s/api/services/%s/%s", v.uri, url.PathEscape(domain), url.PathEscape(name))
