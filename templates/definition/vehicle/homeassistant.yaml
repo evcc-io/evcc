@@ -75,14 +75,14 @@ params:
     type: string
   - name: start_charging
     description:
-      de: Service zum Laden starten
+      de: Service zum Laden starten  
       en: Service to start charging
     example: "script.vehicle_start_charge"
     type: string
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
-      en: Service to stop charging
+      en: Service to stop charging  
     example: "script.vehicle_stop_charge"
     type: string
   - name: wakeup
@@ -92,13 +92,37 @@ params:
     example: "script.vehicle_wakeup"
     type: string
 render: |
-  range: {{ .sensors_range }}
-  status: {{ .sensors_status }}
-  limitSoc: {{ .sensors_limitSoc }}
-  odometer: {{ .sensors_odometer }}
-  climater: {{ .sensors_climater }}
-  finishTime: {{ .sensors_finishTime }}
+  type: homeassistant
+  uri: {{ .uri }}
+  token: {{ .token }}
+  soc: {{ .soc }}
+  {{- if .range }}
+  range: {{ .range }}
+  {{- end }}
+  {{- if .status }}
+  status: {{ .status }}
+  {{- end }}
+  {{- if .limitSoc }}
+  limitSoc: {{ .limitSoc }}
+  {{- end }}
+  {{- if .odometer }}
+  odometer: {{ .odometer }}
+  {{- end }}
+  {{- if .climater }}
+  climater: {{ .climater }}
+  {{- end }}
+  {{- if .finishTime }}
+  finishTime: {{ .finishTime }}
+  {{- end }}
+  {{- if or .start_charging .stop_charging .wakeup }}
   services:
-    start_charging: {{ .services_start_charging }}
-    stop_charging: {{ .services_stop_charging }}
-    wakeup: {{ .services_wakeup }}
+    {{- if .start_charging }}
+    start_charging: {{ .start_charging }}
+    {{- end }}
+    {{- if .stop_charging }}
+    stop_charging: {{ .stop_charging }}
+    {{- end }}
+    {{- if .wakeup }}
+    wakeup: {{ .wakeup }}
+    {{- end }}
+  {{- end }}
