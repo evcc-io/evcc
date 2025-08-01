@@ -146,9 +146,15 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 	}
 
 	uri := fmt.Sprintf("%s/api/states/%s", v.uri, url.PathEscape(entity))
-	err := v.GetJSON(uri, &res)
+	if err := v.GetJSON(uri, &res); err != nil {
+		return "", err
+	}
 
-	return res.State, err
+	if res.State == "unknown" || res.State == "unavailable" {
+		return "", api.ErrNotAvailable
+	}
+
+	return res.State, nil
 }
 
 func (v *HomeAssistant) callScript(script string) error {
@@ -171,10 +177,6 @@ func (v *HomeAssistant) getFloatSensor(entity string) (float64, error) {
 		return 0, err
 	}
 
-	if s == "unknown" || s == "unavailable" {
-		return 0, api.ErrNotAvailable
-	}
-
 	return strconv.ParseFloat(s, 64)
 }
 
@@ -182,10 +184,6 @@ func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
 	s, err := v.getState(entity)
 	if err != nil {
 		return 0, err
-	}
-
-	if s == "unknown" || s == "unavailable" {
-		return 0, api.ErrNotAvailable
 	}
 
 	return strconv.ParseInt(s, 10, 64)
