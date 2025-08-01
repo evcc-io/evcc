@@ -15,6 +15,18 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
+// tokenTransport decorates all requests with the Authorization header
+type tokenTransport struct {
+	token     string
+	transport http.RoundTripper
+}
+
+func (t *tokenTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req2 := req.Clone(req.Context())
+	req2.Header.Set("Authorization", "Bearer "+t.token)
+	return t.transport.RoundTrip(req2)
+}
+
 type haSensors struct {
 	Soc           string // required
 	Range         string // optional
@@ -76,6 +88,11 @@ func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		conf:   cc,
 		uri:    strings.TrimSuffix(cc.URI, "/"),
 	}
+	// Set up custom transport to always add Authorization header
+	base.Helper.Client.Transport = &tokenTransport{
+		token:     cc.Token,
+		transport: http.DefaultTransport,
+	}
 
 	// prepare optional feature functions with concise names
 	var (
@@ -116,10 +133,9 @@ func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 // Calls /api/states/<entity> and returns .state
 func (v *HomeAssistant) getState(entity string) (string, error) {
+
 	uri := fmt.Sprintf("%s/api/states/%s", v.uri, url.PathEscape(entity))
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Authorization": "Bearer " + v.conf.Token,
-	})
+	req, err := request.New(http.MethodGet, uri, nil, nil)
 	if err != nil {
 		return "", err
 	}
@@ -143,8 +159,7 @@ func (v *HomeAssistant) callScript(script string) error {
 	uri := fmt.Sprintf("%s/api/services/%s/%s", v.uri, url.PathEscape(domain), url.PathEscape(name))
 
 	req, err := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")), map[string]string{
-		"Authorization": "Bearer " + v.conf.Token,
-		"Content-Type":  "application/json",
+		"Content-Type": "application/json",
 	})
 	if err != nil {
 		return err
@@ -243,9 +258,23 @@ func (v *HomeAssistant) FinishTime() (time.Time, error) {
 }
 
 // getLimitSoc implements the api.SocLimiter interface (private)
+// Use float64 for consistency with the public LimitSoc method
+// getLimitSoc implements the api.SocLimiter interface (private)
+// Gibt int64 zurück, wie vom Decorator erwartet
 func (v *HomeAssistant) getLimitSoc() (int64, error) {
-	return v.getIntSensor(v.conf.Sensors.LimitSoc)
+	val, err := v.getFloatSensor(v.conf.Sensors.LimitSoc)
+	if err != nil {
+		return 0, err
+	}
+	return int64(val), nil
 }
+
+// isUnavailable returns true if the state is "unknown" or "unavailable"
+func isUnavailable(s string) bool {
+	return s == "unknown" || s == "unavailable"
+}
+
+// ...existing code...
 
 // status returns evcc charge status (optional, private)
 func (v *HomeAssistant) status() (api.ChargeStatus, error) {
