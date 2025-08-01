@@ -14,6 +14,8 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
+//go:generate go tool decorate -f decorateHomeAssistant -b api.Vehicle -t "api.SocLimiter,GetLimitSoc,func() (int64, error)" -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.VehicleFinishTimer,FinishTime,func() (time.Time, error)" -t "api.Resurrector,WakeUp,func() error" -t "api.ChargeController,ChargeEnable,func(bool) error"
+
 type haConfig struct {
 	Soc        string `mapstructure:"soc"`        // required
 	LimitSoc   string `mapstructure:"limitSoc"`   // optional
