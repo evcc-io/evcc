@@ -3,7 +3,7 @@
 		<div class="chart position-relative">
 			<div
 				v-for="(slot, index) in slots"
-				:key="`${slot.day}-${slot.startHour}`"
+				:key="`${slot.day}-${fmtTimeString(slot.start)}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -27,7 +27,7 @@
 				</div>
 				<div class="slot-label">
 					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						formatHour(slot.startHour)
+						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
@@ -49,6 +49,10 @@
 			<div class="text-nowrap" data-testid="target-text">{{ targetText }}</div>
 			<PlanEndIcon v-if="targetOutOfRange" />
 		</div>
+		<div style="height: 200px">
+			<!-- @vue-ignore -->
+			<Bar ref="chart" :data="chartData" :options="options" />
+		</div>
 	</div>
 </template>
 
@@ -59,12 +63,39 @@ import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
 import type { Slot } from "@/types/evcc";
+import { Bar } from "vue-chartjs";
+import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
+import {
+	BarController,
+	BarElement,
+	CategoryScale,
+	Filler,
+	Legend,
+	LinearScale,
+	PointElement,
+	TimeSeriesScale,
+} from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import colors from "@/colors";
+
+registerChartComponents([
+	BarController,
+	BarElement,
+	Filler,
+	CategoryScale,
+	LinearScale,
+	TimeSeriesScale,
+	Legend,
+	PointElement,
+	ChartDataLabels,
+]);
 
 const BAR_WIDTH = 20;
 
 export default defineComponent({
 	name: "TariffChart",
 	components: {
+		Bar,
 		PlanEndIcon,
 	},
 	mixins: [formatter],
@@ -83,6 +114,88 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		chartData() {
+			return {
+				datasets: [
+					{
+						label: "Planner",
+						data: this.slots.map((s) => ({
+							x: s.start.toISOString(),
+							y: s.value,
+						})),
+						borderRadius: 8,
+						backgroundColor: colors.co2,
+						barThickness: 1,
+						minBarLength: 3,
+					},
+				],
+			};
+		},
+		options() {
+			return {
+				...commonOptions,
+				locale: this.$i18n?.locale,
+				borderSkipped: false,
+				animation: {
+					duration: 500, // --evcc-transition-medium
+					colors: true,
+					numbers: false,
+				},
+				scales: {
+					x: {
+						type: "timeseries",
+						display: true,
+						time: {
+							unit: "minute",
+							displayFormats: { minute: "HH:mm" },
+						},
+						grid: {
+							display: true,
+							color: colors.border,
+							offset: false,
+							// @ts-expect-error no-explicit-any
+							lineWidth(context) {
+								if (context.type !== "tick") {
+									return 0;
+								}
+								const label = context.tick?.label;
+								return Array.isArray(label) ? 1 : 0;
+							},
+						},
+						ticks: {
+							color: colors.muted,
+							autoSkip: false,
+							maxRotation: 0,
+							minRotation: 0,
+							source: "data",
+							align: "center",
+							padding: 0,
+							callback: (value: number) => {
+								const date = new Date(value);
+								const hour = date.getHours();
+								const minute = date.getMinutes();
+								if (minute !== 0) {
+									return "";
+								}
+								const hourFmt = this.hourShort(date);
+								if (hour === 0) {
+									return [hourFmt, this.weekdayShort(date)];
+								}
+								if (hour % 6 === 0) {
+									return hourFmt;
+								}
+								return "";
+							},
+						},
+						barPercentage: 0.6,
+						categoryPercentage: 0.7,
+					},
+					y: {
+						display: false,
+					},
+				},
+			};
+		},
 		valueInfo() {
 			let max = Number.MIN_VALUE;
 			let min = 0;
@@ -142,7 +255,7 @@ export default defineComponent({
 					return false;
 				}
 			}
-			if (slot.startHour === 0) {
+			if (slot.start.getHours() === 0) {
 				return true;
 			}
 			return false;
