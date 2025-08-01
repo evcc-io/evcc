@@ -195,10 +195,6 @@ func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
 		return false, err
 	}
 
-	if s == "unknown" || s == "unavailable" {
-		return false, api.ErrNotAvailable
-	}
-
 	state := strings.ToLower(s)
 	return state == "on" || state == "true" || state == "1" || state == "active", nil
 }
