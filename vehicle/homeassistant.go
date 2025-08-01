@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,18 +12,45 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
-// tokenTransport decorates all requests with the Authorization header
-type tokenTransport struct {
-	token     string
-	transport http.RoundTripper
+// Public wrappers to satisfy api.Vehicle interface, call function variables if set
+func (v *HomeAssistant) Soc() (float64, error) {
+	if v.socFunc != nil {
+		return v.socFunc()
+	}
+	return 0, api.ErrNotAvailable
 }
-
-func (t *tokenTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req2 := req.Clone(req.Context())
-	req2.Header.Set("Authorization", "Bearer "+t.token)
-	return t.transport.RoundTrip(req2)
+func (v *HomeAssistant) Range() (int64, error) {
+	if v.rangeFunc != nil {
+		return v.rangeFunc()
+	}
+	return 0, api.ErrNotAvailable
+}
+func (v *HomeAssistant) Odometer() (float64, error) {
+	if v.odoFunc != nil {
+		return v.odoFunc()
+	}
+	return 0, api.ErrNotAvailable
+}
+func (v *HomeAssistant) Climater() (bool, error) {
+	if v.climaterFunc != nil {
+		return v.climaterFunc()
+	}
+	return false, api.ErrNotAvailable
+}
+func (v *HomeAssistant) FinishTime() (time.Time, error) {
+	if v.finishFunc != nil {
+		return v.finishFunc()
+	}
+	return time.Time{}, api.ErrNotAvailable
+}
+func (v *HomeAssistant) LimitSoc() (float64, error) {
+	if v.limitSocFunc != nil {
+		return v.limitSocFunc()
+	}
+	return 0, api.ErrNotAvailable
 }
 
 type haSensors struct {
@@ -58,6 +84,60 @@ type HomeAssistant struct {
 	*request.Helper
 	conf haConfig
 	uri  string
+
+	socFunc      func() (float64, error)
+	rangeFunc    func() (int64, error)
+	odoFunc      func() (float64, error)
+	climaterFunc func() (bool, error)
+	finishFunc   func() (time.Time, error)
+	limitSocFunc func() (float64, error)
+}
+
+// Status implements api.ChargeState (optional)
+func (v *HomeAssistant) Status() (api.ChargeStatus, error) {
+	var haStatusMap = map[string]api.ChargeStatus{
+		"charging":            api.StatusC,
+		"on":                  api.StatusC,
+		"true":                api.StatusC,
+		"active":              api.StatusC,
+		"connected":           api.StatusB,
+		"ready":               api.StatusB,
+		"plugged":             api.StatusB,
+		"disconnected":        api.StatusA,
+		"off":                 api.StatusA,
+		"none":                api.StatusA,
+		"unavailable":         api.StatusA,
+		"unknown":             api.StatusA,
+		"notreadyforcharging": api.StatusA,
+	}
+
+	s, err := v.getState(v.conf.Sensors.Status)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	state := strings.ToLower(s)
+	if mapped, ok := haStatusMap[state]; ok {
+		return mapped, nil
+	}
+
+	return api.StatusA, fmt.Errorf("invalid state: %s", s)
+}
+
+// ChargeEnable implements api.ChargeController (start/stop charging via Home Assistant script)
+func (v *HomeAssistant) ChargeEnable(enable bool) error {
+	if enable {
+		return v.callScript(v.conf.Services.Start)
+	}
+	return v.callScript(v.conf.Services.Stop)
+}
+
+// WakeUp implements api.Resurrector (optional)
+func (v *HomeAssistant) WakeUp() error {
+	if v.conf.Services.Wakeup == "" {
+		return api.ErrNotAvailable
+	}
+	return v.callScript(v.conf.Services.Wakeup)
 }
 
 // Register on startup
@@ -88,47 +168,36 @@ func newHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		conf:   cc,
 		uri:    strings.TrimSuffix(cc.URI, "/"),
 	}
-	// Set up custom transport to always add Authorization header
-	base.Helper.Client.Transport = &tokenTransport{
-		token:     cc.Token,
-		transport: http.DefaultTransport,
+	// Set up custom transport to always add Authorization and Content-Type headers
+	base.Helper.Client.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Authorization": "Bearer " + cc.Token,
+			"Content-Type":  "application/json",
+		}),
+		Base: http.DefaultTransport,
 	}
 
-	// prepare optional feature functions with concise names
-	var (
-		rng      func() (int64, error)
-		odo      func() (float64, error)
-		climater func() (bool, error)
-		finish   func() (time.Time, error)
-	)
-
+	// assign all feature funcs to struct fields for clarity, only if configured
+	if cc.Sensors.Soc != "" {
+		base.socFunc = base.soc
+	}
 	if cc.Sensors.Range != "" {
-		rng = func() (int64, error) { return base.getIntSensor(cc.Sensors.Range) }
+		base.rangeFunc = base.rangeKm
 	}
 	if cc.Sensors.Odometer != "" {
-		odo = func() (float64, error) { return base.getFloatSensor(cc.Sensors.Odometer) }
+		base.odoFunc = base.odometer
 	}
 	if cc.Sensors.Climater != "" {
-		climater = func() (bool, error) { return base.getBoolSensor(cc.Sensors.Climater) }
+		base.climaterFunc = base.climater
 	}
 	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return base.getTimeSensor(cc.Sensors.FinishTime) }
+		base.finishFunc = base.finishTime
+	}
+	if cc.Sensors.LimitSoc != "" {
+		base.limitSocFunc = base.limitSoc
 	}
 
-	// decorate all features
-	return decorateVehicle(
-		base,
-		base.getLimitSoc,
-		base.status,
-		rng,
-		odo,
-		climater,
-		nil, // maxCurrent setter not implemented
-		nil, // getMaxCurrent getter not implemented
-		finish,
-		base.WakeUp,
-		base.ChargeEnable,
-	), nil
+	return base, nil
 }
 
 // Calls /api/states/<entity> and returns .state
@@ -226,101 +295,41 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 	return time.Parse(time.RFC3339, s)
 }
 
-// Soc returns state of charge [%]
-func (v *HomeAssistant) Soc() (float64, error) {
+// soc returns state of charge [%] (private)
+func (v *HomeAssistant) soc() (float64, error) {
 	return v.getFloatSensor(v.conf.Sensors.Soc)
 }
 
-// Range returns remaining range [km] (optional)
-func (v *HomeAssistant) Range() (int64, error) {
+// rangeKm returns remaining range [km] (private)
+func (v *HomeAssistant) rangeKm() (int64, error) {
 	return v.getIntSensor(v.conf.Sensors.Range)
 }
 
-// LimitSoc returns target state of charge [%] (optional)
-func (v *HomeAssistant) LimitSoc() (float64, error) {
+// limitSoc returns target state of charge [%] (private)
+func (v *HomeAssistant) limitSoc() (float64, error) {
 	return v.getFloatSensor(v.conf.Sensors.LimitSoc)
 }
 
-// Odometer returns odometer reading [km] (optional)
-func (v *HomeAssistant) Odometer() (float64, error) {
+// odometer returns odometer reading [km] (private)
+func (v *HomeAssistant) odometer() (float64, error) {
 	return v.getFloatSensor(v.conf.Sensors.Odometer)
 }
 
-// Climater returns true if climatization is active (optional)
-func (v *HomeAssistant) Climater() (bool, error) {
+// climater returns true if climatization is active (private)
+func (v *HomeAssistant) climater() (bool, error) {
 	return v.getBoolSensor(v.conf.Sensors.Climater)
 }
 
-// FinishTime returns the planned charging end time (optional)
-func (v *HomeAssistant) FinishTime() (time.Time, error) {
+// finishTime returns the planned charging end time (private)
+func (v *HomeAssistant) finishTime() (time.Time, error) {
 	return v.getTimeSensor(v.conf.Sensors.FinishTime)
 }
 
-// getLimitSoc implements the api.SocLimiter interface (private)
-// Use float64 for consistency with the public LimitSoc method
-// getLimitSoc implements the api.SocLimiter interface (private)
-// Gibt int64 zurück, wie vom Decorator erwartet
-func (v *HomeAssistant) getLimitSoc() (int64, error) {
-	val, err := v.getFloatSensor(v.conf.Sensors.LimitSoc)
-	if err != nil {
-		return 0, err
+// GetLimitSoc implements api.SocLimiter (Decorator-Interface)
+func (v *HomeAssistant) GetLimitSoc() (int64, error) {
+	if v.limitSocFunc != nil {
+		val, err := v.limitSocFunc()
+		return int64(val), err
 	}
-	return int64(val), nil
-}
-
-// status returns evcc charge status (optional, private)
-func (v *HomeAssistant) status() (api.ChargeStatus, error) {
-	var haStatusMap = map[string]api.ChargeStatus{
-		"charging":            api.StatusC,
-		"on":                  api.StatusC,
-		"true":                api.StatusC,
-		"active":              api.StatusC,
-		"connected":           api.StatusB,
-		"ready":               api.StatusB,
-		"plugged":             api.StatusB,
-		"disconnected":        api.StatusA,
-		"off":                 api.StatusA,
-		"none":                api.StatusA,
-		"unavailable":         api.StatusA,
-		"unknown":             api.StatusA,
-		"notreadyforcharging": api.StatusA,
-	}
-
-	s, err := v.getState(v.conf.Sensors.Status)
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	state := strings.ToLower(s)
-	if mapped, ok := haStatusMap[state]; ok {
-		return mapped, nil
-	}
-
-	return api.StatusA, errors.New("invalid state: " + s)
-}
-
-// startCharge triggers the Home Assistant start charging script (if configured).
-func (v *HomeAssistant) startCharge() error {
-	return v.callScript(v.conf.Services.Start)
-}
-
-// stopCharge triggers the Home Assistant stop charging script (if configured).
-func (v *HomeAssistant) stopCharge() error {
-	return v.callScript(v.conf.Services.Stop)
-}
-
-// Calls StartCharge or StopCharge accordingly.
-func (v *HomeAssistant) ChargeEnable(enable bool) error {
-	if enable {
-		return v.startCharge()
-	}
-	return v.stopCharge()
-}
-
-// WakeUp triggers the Home Assistant wakeup script (if configured).
-func (v *HomeAssistant) WakeUp() error {
-	if v.conf.Services.Wakeup == "" {
-		return api.ErrNotAvailable
-	}
-	return v.callScript(v.conf.Services.Wakeup)
+	return 0, api.ErrNotAvailable
 }
