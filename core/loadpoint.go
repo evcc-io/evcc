@@ -219,6 +219,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("circuit: %w", err)
 		}
 		lp.circuit = dev.Instance()
+		if lp.circuit == nil {
+			return nil, errors.New("missing circuit instance")
+		}
 	}
 
 	if lp.MeterRef != "" {
@@ -227,6 +230,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("meter: %w", err)
 		}
 		lp.chargeMeter = dev.Instance()
+		if lp.chargeMeter == nil {
+			return nil, errors.New("missing charge meter instance")
+		}
 	}
 
 	// default vehicle
@@ -248,7 +254,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 	}
 	lp.charger = dev.Instance()
 	if lp.charger == nil {
-		return nil, errors.New("broken charger")
+		return nil, errors.New("missing charger instance")
 	}
 
 	lp.configureChargerType(lp.charger)
