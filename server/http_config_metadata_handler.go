@@ -80,17 +80,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	res := make(products, 0)
 	for _, t := range tmpl {
 		// if usage filter is specified, only include templates with matching usage
-		includeUsage := usage == ""
-		if !includeUsage {
-			for _, u := range t.Usages() {
-				if u == usage {
-					includeUsage = true
-					break
-				}
-			}
-		}
-
-		if includeUsage {
+		if usage == "" || slices.Contains(t.Usages(), usage) {
 			for _, p := range t.Products {
 				res = append(res, product{
 					Name:     p.Title(lang),
