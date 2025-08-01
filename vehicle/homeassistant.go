@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -164,7 +163,7 @@ func (v *HomeAssistant) callScript(script string) error {
 	}
 
 	uri := fmt.Sprintf("%s/api/services/%s/%s", v.uri, url.PathEscape(domain), url.PathEscape(name))
-	req, _ := request.New(http.MethodPost, uri, bytes.NewBuffer([]byte("{}")))
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader("{}"))
 
 	_, err := v.DoBody(req)
 	return err
