@@ -30,11 +30,11 @@ func updateSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
 	settings.SetString(keys.SponsorToken, req.Token)
 	setConfigDirty()
 
-	jsonResult(w, sponsor.Status())
+	jsonWrite(w, sponsor.Status())
 }
 
 func deleteSponsorTokenHandler(w http.ResponseWriter, r *http.Request) {
 	settings.SetString(keys.SponsorToken, "")
 	setConfigDirty()
-	jsonResult(w, true)
+	jsonWrite(w, true)
 }

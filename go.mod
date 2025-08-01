@@ -240,6 +240,7 @@ require (
 tool (
 	github.com/dmarkham/enumer
 	github.com/evcc-io/evcc/cmd/decorate
+	github.com/evcc-io/evcc/cmd/openapi
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
 )
