@@ -190,7 +190,10 @@
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
-								<TelemetrySettings :sponsorActive="!!sponsor?.name" />
+								<TelemetrySettings
+									:sponsorActive="!!sponsor?.name"
+									:telemetry="telemetry"
+								/>
 							</div>
 							<Sponsor v-bind="sponsor" />
 						</div>
@@ -226,6 +229,7 @@ export default defineComponent({
 		co2Configured: Boolean,
 		sponsor: Object as PropType<SponsorType>,
 		currency: String as PropType<CURRENCY>,
+		telemetry: Boolean,
 	},
 	data() {
 		return {
