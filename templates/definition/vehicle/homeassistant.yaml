@@ -104,14 +104,15 @@ params:
     example: "script.vehicle_wakeup"
     type: string
 render: |
-  soc: {{ .sensors_soc }}
-  range: {{ .sensors_range }}
-  status: {{ .sensors_status }}
-  limitSoc: {{ .sensors_limitSoc }}
-  odometer: {{ .sensors_odometer }}
-  climater: {{ .sensors_climater }}
-  finishTime: {{ .sensors_finishTime }}
-  services:
-    start_charging: {{ .services_start_charging }}
-    stop_charging: {{ .services_stop_charging }}
-    wakeup: {{ .services_wakeup }}
+  sensors:
+    soc: {{ .soc }}
+    {{ if .range }}range: {{ .range }}{{ end }}
+    {{ if .status }}status: {{ .status }}{{ end }}
+    {{ if .limitSoc }}limitSoc: {{ .limitSoc }}{{ end }}
+    {{ if .odometer }}odometer: {{ .odometer }}{{ end }}
+    {{ if .climater }}climater: {{ .climater }}{{ end }}
+    {{ if .finishTime }}finishTime: {{ .finishTime }}{{ end }}
+  {{ if or .start_charging .stop_charging .wakeup }}services:
+    {{ if .start_charging }}start_charging: {{ .start_charging }}{{ end }}
+    {{ if .stop_charging }}stop_charging: {{ .stop_charging }}{{ end }}
+    {{ if .wakeup }}wakeup: {{ .wakeup }}{{ end }}{{ end }}
