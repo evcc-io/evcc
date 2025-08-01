@@ -9,7 +9,7 @@
 			data-testid="topnavigation-button"
 		>
 			<span
-				v-if="showBadge"
+				v-if="showRootBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
 				:class="badgeClass"
 			>
@@ -61,7 +61,7 @@
 			<li>
 				<router-link class="dropdown-item" to="/config" active-class="active">
 					<span
-						v-if="showBadge"
+						v-if="showConfigBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
 						:class="badgeClass"
 					></span>
@@ -75,9 +75,8 @@
 			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
-				<li><hr class="dropdown-divider" /></li>
 				<li>
-					<h6 class="dropdown-header">{{ $t("header.login") }}</h6>
+					<h6 class="dropdown-header">{{ $t("header.authProviders.title") }}</h6>
 				</li>
 				<li v-for="l in providerLogins" :key="l.title">
 					<button
@@ -86,14 +85,13 @@
 						@click="handleProviderAuthorization(l)"
 					>
 						<span
-							v-if="!l.loggedIn"
 							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
-							:class="badgeClass"
+							:class="l.authenticated ? 'bg-success' : 'bg-warning'"
 						></span>
 						{{ l.title }}
-						{{ $t(l.loggedIn ? "main.provider.logout" : "main.provider.login") }}
 					</button>
 				</li>
+				<li><hr class="dropdown-divider" /></li>
 			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
@@ -169,23 +167,23 @@ export default defineComponent({
 		batteryConfigured() {
 			return this.battery?.length;
 		},
-		logoutCount() {
-			return this.providerLogins.filter((login) => !login.loggedIn).length;
-		},
 		providerLogins(): Provider[] {
-			return Object.entries(this.authProviders).map(([k, v]) => ({
-				title: k,
-				loggedIn: v.authenticated,
-				loginPath: "providerauth/login?id=" + v.id,
-				logoutPath: "providerauth/logout?id=" + v.id,
+			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
+				title,
+				authenticated,
+				loginPath: "providerauth/login?id=" + id,
+				logoutPath: "providerauth/logout?id=" + id,
 			}));
 		},
 		loginRequired() {
-			return this.logoutCount > 0;
+			return Object.values(this.authProviders).some((p) => !p.authenticated);
 		},
-		showBadge() {
+		showConfigBadge() {
 			const userConfigError = isUserConfigError(this.fatal);
-			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
+			return this.sponsor.expiresSoon || userConfigError;
+		},
+		showRootBadge() {
+			return this.loginRequired || this.showConfigBadge;
 		},
 		badgeClass() {
 			if (this.fatal?.error) {
@@ -218,12 +216,24 @@ export default defineComponent({
 	},
 	methods: {
 		async handleProviderAuthorization(provider: Provider) {
-			if (!provider.loggedIn) {
-				baseAPI.get(provider.loginPath).then(function (response) {
+			const { title, authenticated, loginPath, logoutPath } = provider;
+			if (!authenticated) {
+				try {
+					const response = await baseAPI.get(loginPath);
 					window.location.href = response.data.loginUri;
-				});
+				} catch (error: any) {
+					console.error(error);
+					alert(`Failed to login: ${error.response?.data}`);
+				}
 			} else {
-				baseAPI.get(provider.logoutPath);
+				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
+					try {
+						await baseAPI.get(logoutPath);
+					} catch (error: any) {
+						console.error(error);
+						alert(`Failed to logout: ${error.response?.data}`);
+					}
+				}
 			}
 		},
 		openSettingsModal() {

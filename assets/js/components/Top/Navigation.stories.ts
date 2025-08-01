@@ -24,33 +24,33 @@ const Template: StoryFn<typeof Navigation> = (args) => ({
 export const Standard = Template.bind({});
 Standard.args = {};
 
-/* export const VehicleLogins = Template.bind({});
-VehicleLogins.args = {
+export const OAuthStatus = Template.bind({});
+OAuthStatus.args = {
   authProviders: {
     "Mercedes EQS": {
       authenticated: true,
-      uri: "https://login-provider-a.test/",
+      id: "mercedes-eqs-9oqwjdf9oqwjd",
     },
     "Nissan Leaf Pro": {
       authenticated: true,
-      uri: "https://login-provider-b.test/",
+      id: "nissan-leaf-pro-9oqwjdf9oqwjd",
     },
   },
 };
 
-export const PendingVehicleLogins = Template.bind({});
-PendingVehicleLogins.args = {
+export const PendingOAuthStatus = Template.bind({});
+PendingOAuthStatus.args = {
   authProviders: {
     "Mercedes EQS": {
       authenticated: true,
-      uri: "https://login-provider-a.test/",
+      id: "mercedes-eqs-9oqwjdf9oqwjd",
     },
     "Nissan Leaf Pro": {
       authenticated: false,
-      uri: "https://login-provider-b.test/",
+      id: "nissan-leaf-pro-9oqwjdf9oqwjd",
     },
   },
-}; */
+};
 
 export const TokenExpires = Template.bind({});
 TokenExpires.args = {
