@@ -1,9 +1,8 @@
 template: homeassistant
 products:
   - description:
-      generic: Home Assistant Vehicle Integration
-      de: Home Assistant Fahrzeug Integration
-      en: Home Assistant Vehicle Integration
+      de: Home Assistant Fahrzeug
+      en: Home Assistant Vehicle
 group: generic
 requirements:
   description:
