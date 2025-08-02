@@ -197,7 +197,7 @@ type API interface {
 	IsFastChargingActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
-	// GetRemainingEnergy is the remaining charge energy in Wh
+	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
 
 	//

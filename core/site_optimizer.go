@@ -10,6 +10,7 @@ import (
 
 	evopt "github.com/andig/evopt/client"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -57,15 +58,24 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	dt := timeSteps(minLen)
+	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
-	log.DEBUG.Printf("optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %ds",
+	log.DEBUG.Printf("optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
 		minLen,
 		grid[minLen-1].End.Local(),
 		len(grid), len(feedIn), len(solar),
-		dt[0],
+		firstSlotDuration,
 	)
 
-	gt := site.householdProfile(minLen)
+	gt := site.homeProfile(minLen)
+
+	for _, lp := range site.Loadpoints() {
+		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
+			for i := range profile {
+				gt[i] += profile[i]
+			}
+		}
+	}
 
 	req := evopt.OptimizationInput{
 		EtaC: &eta,
@@ -77,7 +87,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
-			Ft: maxValues(ratesToEnergy(solarRates, time.Duration(dt[0])*time.Second), 1, minLen),
+			Ft: maxValues(ratesToEnergy(solarRates, firstSlotDuration), 1, minLen),
 		},
 	}
 
@@ -157,7 +167,42 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	return nil
 }
 
-func (site *Site) householdProfile(minLen int) []float64 {
+// TODO consider charging efficiency
+func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen int) []float64 {
+	mode := lp.GetMode()
+	status := lp.GetStatus()
+
+	if status != api.StatusC || (mode != api.ModeMinPV && mode != api.ModeNow) {
+		return nil
+	}
+
+	power := lp.GetChargePower()
+	if minP := lp.EffectiveMinPower(); mode == api.ModeMinPV && minP < power {
+		power = minP
+	}
+
+	energy := lp.GetRemainingEnergy() * 1e3 // Wh
+
+	res := make([]float64, 0, minLen)
+	for i := range minLen {
+		d := 1.0 // hours
+		if i == 0 {
+			d = firstSlotDuration.Hours()
+		}
+
+		deltaEnergy := power * d // Wh
+		if deltaEnergy >= energy {
+			deltaEnergy = energy
+		}
+		energy -= deltaEnergy
+
+		res = append(res, deltaEnergy)
+	}
+
+	return res
+}
+
+func (site *Site) homeProfile(minLen int) []float64 {
 	now := time.Now().Truncate(time.Hour)
 
 	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
@@ -258,11 +303,7 @@ func ratesToEnergy(rr []api.Rate, firstSlot time.Duration) []api.Rate {
 }
 
 func endOfHour(ts time.Time) time.Time {
-	end := ts.Truncate(time.Hour)
-	if ts.After(end) {
-		end = end.Add(time.Hour)
-	}
-	return end
+	return ts.Truncate(time.Hour).Add(time.Hour)
 }
 
 func currentSlots(tariff api.Tariff) []api.Rate {

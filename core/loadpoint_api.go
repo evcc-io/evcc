@@ -737,25 +737,25 @@ func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 	}
 }
 
-// GetRemainingEnergy is the remaining charge energy in Wh
+// GetRemainingEnergy is the remaining charge energy in kWh
 func (lp *Loadpoint) GetRemainingEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.chargeRemainingEnergy
+	return lp.chargeRemainingEnergy / 1e3
 }
 
-// SetRemainingEnergy sets the remaining charge energy in Wh
+// SetRemainingEnergy sets the remaining charge energy in kWh
 func (lp *Loadpoint) SetRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setRemainingEnergy(chargeRemainingEnergy)
 }
 
-// setRemainingEnergy sets the remaining charge energy in Wh (no mutex)
+// setRemainingEnergy sets the remaining charge energy in kWh (no mutex)
 func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
-		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy)
+		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy*1e3)
 	}
 }
 
