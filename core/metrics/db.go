@@ -49,10 +49,9 @@ func Profile(from time.Time) (*[96]float64, error) {
 	res := make([]float64, 0, 96)
 
 	for rows.Next() {
-		var (
-			ts  SqlTime
-			val float64
-		)
+		var ts SqlTime
+		var val float64
+
 		if err := rows.Scan(&ts, &val); err != nil {
 			return nil, err
 		}

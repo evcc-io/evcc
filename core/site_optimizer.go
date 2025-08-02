@@ -195,7 +195,7 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 		}
 
 		deltaEnergy := power * d // Wh
-		if deltaEnergy >= energy && energyKnown {
+		if energyKnown && deltaEnergy >= energy {
 			deltaEnergy = energy
 		}
 		energy -= deltaEnergy
