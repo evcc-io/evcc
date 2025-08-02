@@ -95,7 +95,7 @@ require (
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.5.2
-	go.yaml.in/yaml/v3 v3.0.3-0.20250628205850-5052b5ff8cbd
+	go.yaml.in/yaml/v4 v4.0.0-20250730171608-926dd0b54a90
 	golang.org/x/crypto v0.38.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20250529171604-18228cd6f13e
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
