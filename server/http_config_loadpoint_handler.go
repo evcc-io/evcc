@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"reflect"
 	"strconv"
 
 	"dario.cat/mergo"
@@ -76,24 +75,24 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 
 	lp := dev.Instance()
 
-	// missing instance due to error, decode config from database
-	if lp == nil || reflect.ValueOf(lp).IsNil() {
-		cc := dev.Config()
+	// // missing instance due to error, decode config from database
+	// if lp == nil || reflect.ValueOf(lp).IsNil() {
+	// 	cc := dev.Config()
 
-		dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
+	// 	dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
 
-		var static loadpoint.StaticConfig
-		_ = util.DecodeOther(staticMap, &static)
+	// 	var static loadpoint.StaticConfig
+	// 	_ = util.DecodeOther(staticMap, &static)
 
-		res := loadpointFullConfig{
-			ID:            id,
-			Name:          dev.Config().Name,
-			StaticConfig:  static,
-			DynamicConfig: dynamic,
-		}
+	// 	res := loadpointFullConfig{
+	// 		ID:            id,
+	// 		Name:          dev.Config().Name,
+	// 		StaticConfig:  static,
+	// 		DynamicConfig: dynamic,
+	// 	}
 
-		return res
-	}
+	// 	return res
+	// }
 
 	res := loadpointFullConfig{
 		ID:            id,
