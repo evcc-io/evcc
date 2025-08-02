@@ -23,6 +23,16 @@ params:
     required: true
   - name: password
     required: true
+  - name: addexternalpower
+    description:
+      de: Externe Erzeugung addieren
+      en: Add external generation
+    help:
+      de: Aktiviert die Einspeisung von externen Quellen (z.B. Notstrom)
+      en: Enables power feed from external sources (e.g. emergency power)
+    default: false
+    type: bool
+    advanced: true
   - name: key
     description:
       generic: RSCP-Password
@@ -53,4 +63,7 @@ render: |
   {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
   capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  addexternalpower: {{ .addexternalpower }}
   {{- end }}
