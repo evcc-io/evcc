@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-Serverio URL",
       "switchsockets": "Išmanios rozetės",
       "template": "Gamintojas",
-      "titleAdd": "Pridėti įkroviklį",
-      "titleEdit": "Redaguoti įkroviklį"
+      "titleAdd": {
+        "charging": "Pridėti Įkroviklį",
+        "heating": "Pridėti Šildytuvą"
+      },
+      "titleEdit": {
+        "charging": "Redaguoti įkroviklį",
+        "heating": "Redaguoti Šildytuvą"
+      },
+      "type": {
+        "custom": {
+          "charging": "Vartotojo nustatytas įkroviklis",
+          "heating": "Vartotojo nustatytas šildytuvas"
+        },
+        "heatpump": "Vartotojo nustatytas šilumos siurblys",
+        "sgready": "Vartotojo nustatytas šilumos siurblys (SG-Ready, visi)",
+        "sgready-boost": "Vartotojo nustatytas šilumos siurblys (SG-Ready, boost)",
+        "switchsocket": "Vartotojo apibrėžta išmanioji rozetė"
+      }
     },
     "circuits": {
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
@@ -139,12 +155,15 @@
       "docsLink": "Žiūrėkite dokumentaciją.",
       "experimental": "Eksperimentinis",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
+      "invalidFileSelected": "Pasirinktas netinkamas failas",
+      "noFileSelected": "Nepasirinktas failas.",
       "off": "išjungta",
       "on": "Įjungta",
       "password": "Slaptažodis",
       "readFromFile": "Skaityti iš failo",
       "remove": "Pašalinti",
       "save": "Išsaugoti",
+      "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
       "telemetry": "Telemetrija",
       "templateLoading": "Įkrauname...",
@@ -180,11 +199,20 @@
       "v2Support": "Atgal į InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Pridėti įkroviklį",
-      "addMeter": "Pridėti įkroviklio skaitiklį",
+      "addCharger": {
+        "charging": "Pridėti įkroviklį",
+        "heating": "Pridėti šildytuvą"
+      },
+      "addMeter": "Pridėti energijos skaitiklį",
       "cancel": "Atšaukti",
-      "chargerError": "Reikia sukonfigūruoti įkroviklį.",
-      "chargerLabel": "Įkroviklis",
+      "chargerError": {
+        "charging": "Reikia sukonfigūruoti įkroviklį.",
+        "heating": "Reikia sukonfigūruoti šildytuvą."
+      },
+      "chargerLabel": {
+        "charging": "Įkroviklis",
+        "heating": "Šildytuvas"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Naudos įkrovimo srovę nuo 6 iki 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,12 +220,15 @@
       "chargerPowerCustom": "kiti",
       "chargerPowerCustomHelp": "Nurodykite įkrovimo srovės ribas.",
       "chargerTypeLabel": "Įkroviklio tipas",
-      "chargingTitle": "Įkrovimas",
+      "chargingTitle": "Elgesys",
       "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitLabel": "Grandinė",
       "circuitUnassigned": "nepriskirtas",
-      "defaultModeHelp": "Įkrovimo režimas prijungus automobilį.",
-      "defaultModeHelpKeep": "Išsaugo paskutinį pasirinktą įkrovimo režimą.",
+      "defaultModeHelp": {
+        "charging": "Įkrovimo režimas prijungus automobilį.",
+        "heating": "Nustatoma sistemos paleidimo metu."
+      },
+      "defaultModeHelpKeep": "Išsaugo paskutinį pasirinktą režimą.",
       "defaultModeLabel": "Numatytasis režimas",
       "delete": "Ištrinti",
       "electricalSubtitle": "Jei abejojate, pasitarkite su elektriku.",
@@ -210,11 +241,15 @@
       "minCurrentHelp": "Tik jei žinote, ką darote, leiskite žemiau 6 A.",
       "minCurrentLabel": "Min srovė",
       "noVehicles": "Nėra sukonfigūruotų automobilių.",
+      "option": {
+        "charging": "Pridėti įkrovimo vietą",
+        "heating": "Pridėti šildymo prietaisą"
+      },
       "phases1p": "1-fazė",
       "phases3p": "3-fazės",
       "phasesAutomatic": "Automatinės fazės",
       "phasesAutomaticHelp": "Jūsų įkroviklis palaiko automatinį perjungimą tarp 1 ir 3 fazių įkrovimo. Pagrindiniame ekrane galite reguliuoti fazių elgesį įkrovimo metu.",
-      "phasesHelp": "Kiek fazių prijungta prie įkroviklio.",
+      "phasesHelp": "Prijungtų fazių skaičius.",
       "phasesLabel": "Fazės",
       "pollIntervalDanger": "Reguliarios automobilio užklausos gali iškrauti automobilio akumuliatorių. Kai kurie automobilių gamintojai gali užblokuoti duomenis ar aktyviai neleisti įkrauti. Nerekomenduojama! Naudokite tik pilnai suprasdami riziką.",
       "pollIntervalHelp": "Laikas tarp transporto priemonės API atnaujinimų. Trumpi intervalai gali iškrauti transporto priemonės akumuliatorių.",
@@ -226,28 +261,39 @@
       "pollModeConnected": "kai prijungtas",
       "pollModeConnectedHelp": "Reguliariai atnaujinti automobilio būseną kai prijungtas.",
       "pollModeLabel": "Naujinimų elgsena",
-      "priorityHelp": "Aukštesnio prioriteto įkrovimo taškai gauna pirmenybę prieigai prie saulės energijos pertekliaus.",
+      "priorityHelp": "Aukštesnis prioritetas gauna pirmenybę naudoti saulės energijos perteklių.",
       "priorityLabel": "Pirmenybė",
       "save": "Išsaugoti",
       "showAllSettings": "Rodyti visus nustatymus",
       "solarBehaviorCustomHelp": "Apibrėžkite savo įjungimo ir išjungimo slenksčius ir delsas.",
-      "solarBehaviorDefaultHelp": "Įkraukite tik su saulės energijos pertekliumi. Pradėkite po {enableDelay} esant pertekliui. Sustokite, kai nepakanka pertekliaus {disableDelay}.",
-      "solarBehaviorLabel": "Elgsena įkraunant saulės energija",
+      "solarBehaviorDefaultHelp": "Pradėti po {enableDelay} esant pertekliui. Sustoti, kai nepakanka pertekliaus {disableDelay}.",
+      "solarBehaviorLabel": "Saulės",
       "solarModeCustom": "pritaikytas",
       "solarModeMaximum": "saulės maksimumas",
       "thresholdDisableDelayLabel": "Išjungimo delsa",
       "thresholdDisableHelpInvalid": "Prašome naudoti teigiamą vertę.",
-      "thresholdDisableHelpPositive": "Sustabdykite įkrovimą, kai iš tinklo ilgiau nei {delay} naudojama daugiau nei {power}.",
-      "thresholdDisableHelpZero": "Stabdyti, kai nėra minimalios įkrovimo galios ilgiau nei {delay}.",
+      "thresholdDisableHelpPositive": "Sustoti, kai iš tinklo ilgiau nei {delay} naudojama daugiau nei {power}.",
+      "thresholdDisableHelpZero": "Sustoti, kai minimalios reikalingos galios trūksta ilgiau nei {delay}.",
       "thresholdDisableLabel": "Tinklo galia išjungimui",
       "thresholdEnableDelayLabel": "Įjungimo delsa",
       "thresholdEnableHelpInvalid": "Prašome naudoti neigiamą reikšmę.",
-      "thresholdEnableHelpNegative": "Pradėti įkrauti, kai {surplus} perteklius yra ilgiau nei {delay}.",
+      "thresholdEnableHelpNegative": "Pradėti, kai {surplus} perteklius yra ilgiau nei {delay}.",
       "thresholdEnableHelpZero": "Pradėti po {delay} esant minimaliam reikalingam energijos pertekliui.",
       "thresholdEnableLabel": "Tinklo galia įjungimui",
-      "titleAdd": "Pridėti įkrovimo vietą",
-      "titleEdit": "Redaguoti įkrovimo vietą",
-      "titleExample": "Garažas, Aikštelė, ir pan.",
+      "titleAdd": {
+        "charging": "Pridėti Įkrovimo Vietą",
+        "heating": "Pridėti Šildymo Prietaisą",
+        "unknown": "Pridėti Įkroviklį arba Šildytuvą"
+      },
+      "titleEdit": {
+        "charging": "Redaguoti Įkroviklį",
+        "heating": "Redaguoti Šildymo Prietaisą",
+        "unknown": "Redaguoti Įkroviklį arba Šildytuvą"
+      },
+      "titleExample": {
+        "charging": "Garažas, Aikštelė ir pan.",
+        "heating": "Šilumos siurblys, Šildytuvas ir pan."
+      },
       "titleLabel": "Pavadinimas",
       "vehicleAutoDetection": "automatinis automobilio aptikimas",
       "vehicleHelpAutoDetection": "Automatiškai parenka labiausiai tikėtiną automobilį. Galimas rankinis koregavimas.",
@@ -258,7 +304,7 @@
     "main": {
       "addAdditional": "Pridėti papildomą skaitiklį",
       "addGrid": "Pridėti tinklo skaitiklį",
-      "addLoadpoint": "Pridėti įkroviklį",
+      "addLoadpoint": "Pridėti įkroviklį arba šildytuvą",
       "addPvBattery": "Pridėti saulės elektrinę arba kaupiklį",
       "addTariffs": "Pridėti tarifus",
       "addVehicle": "Pridėti automobilį",
@@ -351,6 +397,10 @@
         "big": "mažėjantys baitai",
         "little": "didėjantys baitai"
       },
+      "operationMode": {
+        "heating": "Šildymas",
+        "standby": "Budėjimo režimas"
+      },
       "schema": {
         "http": "HTTP (nešifruotas)",
         "https": "HTTPS (užšifruotas)"
@@ -370,7 +420,7 @@
       "general": "Pagrindiniai",
       "grid": "Elektros tinklas",
       "integrations": "Integracijos",
-      "loadpoints": "Įkrovikliai",
+      "loadpoints": "Įkrovimas ir Šildymas",
       "meter": "Saulės elektrinės ir kaupikliai",
       "system": "Sistema",
       "vehicles": "Automobiliai"
@@ -388,6 +438,39 @@
       "trialToken": "Bandomasis token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Atsisiųsti atsarginę kopiją...",
+          "confirmationButton": "Atsisiųsti atsarginę kopiją",
+          "confirmationText": "Norėdami atsisiųsti duomenų bazės failą, įveskite slaptažodį.",
+          "description": "Sukurkite duomenų atsarginę kopiją faile. Šis failas gali būti naudojamas duomenims atkurti sistemos gedimo atveju.",
+          "title": "Atsarginė kopija"
+        },
+        "cancel": "Atšaukti",
+        "confirmWithPassword": "Patvirtinti veiksmą",
+        "description": "Duomenų atsarginių kopijų kūrimas, atkūrimas ir nustatymas iš naujo. Patogu ir kai norite perkelti duomenis į kitą sistemą.",
+        "note": "Pastaba: Visi aukščiau išvardyti veiksmai paveikia tik jūsų duomenų bazės duomenis. Konfigūracijos failas evcc.yaml lieka nepakitęs.",
+        "reset": {
+          "action": "Atstatyti...",
+          "confirmationButton": "Atstatyti ir paleisti iš naujo",
+          "confirmationText": "Tai visam laikui ištrins jūsų pasirinktus duomenis. Pirmiausia įsitikinkite, kad atsisiuntėte atsarginę kopiją.",
+          "description": "Kyla problemų dėl konfigūracijos ir norite pradėti iš naujo? Ištrinkite visus duomenis ir pradėkite iš naujo.",
+          "sessions": "Įkrovimo sesijos",
+          "sessionsDescription": "Ištrina įkrovimo sesijų istoriją.",
+          "settings": "Konfigūracija ir nustatymai",
+          "settingsDescription": "Ištrina visus sukonfigūruotus įrenginius, paslaugas, planus ir kt.",
+          "title": "Atstatyti"
+        },
+        "restore": {
+          "action": "Atkurti...",
+          "confirmationButton": "Atkurti ir paleisti iš naujo",
+          "confirmationText": "Tai perrašys visą jūsų duomenų bazę. Pirmiausia įsitikinkite, kad atsisiuntėte atsarginę kopiją.",
+          "description": "Atkurkite duomenis iš atsarginės kopijos. Tai perrašys visus dabartinius duomenis.",
+          "labelFile": "Atsarginės kopijos failas",
+          "title": "Atkurti"
+        },
+        "title": "Atsarginių kopijų kūrimas ir atkūrimas"
+      },
       "logs": "Žurnalai",
       "restart": "Paleisti iš naujo",
       "restartRequiredDescription": "Paleiskite iš naujo, kad įsigaliotų pakeitimai.",
@@ -420,7 +503,7 @@
       "delete": "Ištrinti",
       "generic": "Kitos integracijos",
       "identifiers": "RFID identifikatoriai",
-      "identifiersHelp": "RFID identifikatorių, skirtų transporto priemonei identifikuoti, sąrašas. Vienas įrašas eilutėje. Dabartinį identifikatorių galite rasti atitinkamame įkrovimo taško apžvalgos puslapyje.",
+      "identifiersHelp": "RFID identifikatorių, skirtų transporto priemonei identifikuoti, sąrašas. Vienas įrašas eilutėje. Dabartinį identifikatorių galite rasti atitinkamo įkroviklio apžvalgos puslapyje.",
       "maximumCurrent": "Didžiausia srovė",
       "maximumCurrentHelp": "Turi būti didesnė nei minimali srovė.",
       "maximumPhases": "Maksimalus fazių skaičius",
@@ -587,7 +670,7 @@
     "iframeIssue": "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP.",
     "invalid": "Neteisingas slaptažodis.",
     "login": "Prisijungti",
-    "password": "Slaptažodis",
+    "password": "Administratoriaus slaptažodis",
     "reset": "Atstatyti slaptažodį?",
     "title": "Autentifikavimas"
   },
@@ -779,6 +862,8 @@
       "connected": "Prijungtas.",
       "disconnectRequired": "Sesija nutraukta. Prisijunkite iš naujo.",
       "disconnected": "Neprijungtas.",
+      "feedinPriorityNextStart": "Aukštos pardavimo kainos prasideda už {duration}.",
+      "feedinPriorityPausing": "Įkrovimas saulės energija pristabdytas, tam, kad pasinaudoti aukšta energijos pardavimo kaina.",
       "finished": "Baigta.",
       "minCharge": "Minimalus įkrovimas iki {soc}.",
       "pvDisable": "Trūksta pertekliaus. Pauzė netrukus.",
@@ -973,6 +1058,14 @@
     "resetAction": "Pašalinti limitą",
     "resetWarning": "Nėra sukonfigūruotos dinaminės tinklo kainos ar CO₂ šaltinio. Tačiau vis dar yra {limit} apribojimas. Išvalyti konfigūraciją?",
     "saved": "Išsaugota."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pristabdyta valandomis",
+    "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
+    "priceLabel": "Pardavimo kaina",
+    "priceLimit": "Pardavimo limitas",
+    "resetWarning": "Kintamas pardavimo tarifas nesukonfigūruotas. Tačiau, yra įvestas limitas {limit}. Išvalyti konfigūraciją?",
+    "title": "Pardavimo pirmenybė"
   },
   "startupError": {
     "configFile": "Naudojamas konfiguracijos failas:",

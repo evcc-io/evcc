@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Switchable sockets",
       "template": "Manufacturer",
-      "titleAdd": "Add Charger",
-      "titleEdit": "Edit Charger"
+      "titleAdd": {
+        "charging": "Add Charger",
+        "heating": "Add Heater"
+      },
+      "titleEdit": {
+        "charging": "Edit Charger",
+        "heating": "Edit Heater"
+      },
+      "type": {
+        "custom": {
+          "charging": "User-defined charger",
+          "heating": "User-defined heater"
+        },
+        "heatpump": "User-defined heat pump",
+        "sgready": "User-defined heat pump (sg-ready, all)",
+        "sgready-boost": "User-defined heat pump (sg-ready, boost)",
+        "switchsocket": "User-defined switch socket"
+      }
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
@@ -139,12 +155,15 @@
       "docsLink": "See documentation.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
+      "invalidFileSelected": "Invalid file selected",
+      "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
       "save": "Save",
+      "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
@@ -180,11 +199,20 @@
       "v2Support": "Back to InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Add charger",
-      "addMeter": "Add dedicated charger meter",
+      "addCharger": {
+        "charging": "Add charger",
+        "heating": "Add heater"
+      },
+      "addMeter": "Add dedicated energy meter",
       "cancel": "Cancel",
-      "chargerError": "Configuring a charger is required.",
-      "chargerLabel": "Charger",
+      "chargerError": {
+        "charging": "Configuring a charger is required.",
+        "heating": "Configuring a heater is required."
+      },
+      "chargerLabel": {
+        "charging": "Charger",
+        "heating": "Heater"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,12 +220,15 @@
       "chargerPowerCustom": "other",
       "chargerPowerCustomHelp": "Define a custom current range.",
       "chargerTypeLabel": "Charger type",
-      "chargingTitle": "Charging",
+      "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
-      "defaultModeHelp": "Charging mode when connecting the vehicle.",
-      "defaultModeHelpKeep": "Keeps the last selected charging mode.",
+      "defaultModeHelp": {
+        "charging": "Charging mode when connecting the vehicle.",
+        "heating": "Is set when on system start."
+      },
+      "defaultModeHelpKeep": "Keeps the last selected mode.",
       "defaultModeLabel": "Default mode",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
@@ -210,11 +241,15 @@
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
       "minCurrentLabel": "Minimum current",
       "noVehicles": "No vehicles are configured.",
+      "option": {
+        "charging": "Add charging point",
+        "heating": "Add heating device"
+      },
       "phases1p": "1-phase",
       "phases3p": "3-phase",
       "phasesAutomatic": "Automatic phases",
       "phasesAutomaticHelp": "Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging.",
-      "phasesHelp": "Number of phases connected to the charger.",
+      "phasesHelp": "Number of phases connected.",
       "phasesLabel": "Phases",
       "pollIntervalDanger": "Regularly querying the vehicle may drain the vehicle battery. Some vehicle manufacturers may actively prevent charging in this case. Not recommended! Only use this if you're aware of the risks.",
       "pollIntervalHelp": "Time between vehicle API updates. Short intervals may drain the vehicle battery.",
@@ -226,28 +261,39 @@
       "pollModeConnected": "connected",
       "pollModeConnectedHelp": "Update vehicle status in regular intervals when connected.",
       "pollModeLabel": "Update behaviour",
-      "priorityHelp": "Higher priority charge points get preferred access to solar surplus.",
+      "priorityHelp": "Higher priority get preferred access to solar surplus.",
       "priorityLabel": "Priority",
       "save": "Save",
       "showAllSettings": "Show all settings",
       "solarBehaviorCustomHelp": "Define your own enable and disable thresholds and delays.",
-      "solarBehaviorDefaultHelp": "Only charge with solar surplus. Start after {enableDelay} of surplus. Stop when there is not enough surplus for {disableDelay}.",
-      "solarBehaviorLabel": "Solar behaviour",
+      "solarBehaviorDefaultHelp": "Start after {enableDelay} of sufficient surplus. Stop when there is not enough surplus for {disableDelay}.",
+      "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
-      "thresholdDisableHelpPositive": "Stop charging, when more than {power} is used from the grid for {delay}.",
-      "thresholdDisableHelpZero": "Stop when minimum charge power can't be satisfied for {delay}.",
+      "thresholdDisableHelpPositive": "Stop, when more than {power} is used from the grid for {delay}.",
+      "thresholdDisableHelpZero": "Stop when minimum required power can't be satisfied for {delay}.",
       "thresholdDisableLabel": "Disable grid power",
       "thresholdEnableDelayLabel": "Enable delay",
       "thresholdEnableHelpInvalid": "Please use a negative value.",
-      "thresholdEnableHelpNegative": "Start charging, when {surplus} surplus is available for {delay}.",
-      "thresholdEnableHelpZero": "Start when minimum charge power surplus is available for {delay}.",
+      "thresholdEnableHelpNegative": "Start, when {surplus} surplus is available for {delay}.",
+      "thresholdEnableHelpZero": "Start when minimum required power can be satisfied for {delay}.",
       "thresholdEnableLabel": "Enable grid power",
-      "titleAdd": "Add Charge Point",
-      "titleEdit": "Edit Charge Point",
-      "titleExample": "Garage, Carport, etc.",
+      "titleAdd": {
+        "charging": "Add Charging Point",
+        "heating": "Add Heating Device",
+        "unknown": "Add Charger or Heater"
+      },
+      "titleEdit": {
+        "charging": "Edit Charging Point",
+        "heating": "Edit Heating Device",
+        "unknown": "Edit Charger or Heater"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Heatpump, Heater, etc."
+      },
       "titleLabel": "Title",
       "vehicleAutoDetection": "auto detection",
       "vehicleHelpAutoDetection": "Automatically selects the most plausible vehicle. Manual override is possible.",
@@ -258,13 +304,13 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addGrid": "Add grid meter",
-      "addLoadpoint": "Add charge point",
+      "addLoadpoint": "Add charger or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
       "configured": "configured",
       "edit": "edit",
-      "loadpointRequired": "At least one charge point has to be configured.",
+      "loadpointRequired": "At least one charging point has to be configured.",
       "name": "Name",
       "title": "Configuration",
       "unconfigured": "not configured",
@@ -351,6 +397,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Heating",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (unencrypted)",
         "https": "HTTPS (encrypted)"
@@ -370,7 +420,7 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points",
+      "loadpoints": "Charging & Heating",
       "meter": "Solar & Battery",
       "system": "System",
       "vehicles": "Vehicles"
@@ -388,6 +438,38 @@
       "trialToken": "Trial token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download backup...",
+          "confirmationButton": "Download backup",
+          "confirmationText": "Please enter your password to download the database file.",
+          "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
+          "title": "Backup"
+        },
+        "cancel": "Cancel",
+        "description": "Backup, restore and reset your data. Useful if you want to move your data to another system.",
+        "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
+        "reset": {
+          "action": "Reset...",
+          "confirmationButton": "Reset & restart",
+          "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
+          "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "sessions": "Charging sessions",
+          "sessionsDescription": "Deletes your charging session history.",
+          "settings": "Configuration & settings",
+          "settingsDescription": "Deletes all configured devices, services, plans, caches, etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Restore...",
+          "confirmationButton": "Restore & restart",
+          "confirmationText": "This will overwrite your complete database. Ensure you've downloaded a backup first.",
+          "description": "Restore your data from a backup file. This will overwrite all your current data.",
+          "labelFile": "Backup file",
+          "title": "Restore"
+        },
+        "title": "Backup & Restore"
+      },
       "logs": "Logs",
       "restart": "Restart",
       "restartRequiredDescription": "Please restart to see the effect.",
@@ -420,7 +502,7 @@
       "delete": "Delete",
       "generic": "Other integrations",
       "identifiers": "RFID identifiers",
-      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charge point on the overview page.",
+      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charging point on the overview page.",
       "maximumCurrent": "Maximum current",
       "maximumCurrentHelp": "Must be greater than minimum current.",
       "maximumPhases": "Maximum phases",
@@ -582,12 +664,11 @@
   "loginModal": {
     "cancel": "Cancel",
     "demoMode": "Login is not supported in demo mode.",
-    "error": "Login failed: ",
     "iframeHint": "Open evcc in a new tab.",
     "iframeIssue": "Your password is correct, but your browser seems to have dropped the authentication cookie. This can happen if you run evcc in an iframe via HTTP.",
     "invalid": "Password is invalid.",
     "login": "Login",
-    "password": "Password",
+    "password": "Administrator Password",
     "reset": "Reset password?",
     "title": "Authentication"
   },

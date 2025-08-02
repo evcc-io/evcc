@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",
-      "titleAdd": "Tilføj oplader",
-      "titleEdit": "Ændre oplader"
+      "titleAdd": {
+        "charging": "Tilføj oplader",
+        "heating": "Tilføj varmelegeme"
+      },
+      "titleEdit": {
+        "charging": "Ændre oplader",
+        "heating": "Rediger varmelegemet"
+      },
+      "type": {
+        "custom": {
+          "charging": "Brugerdefineret oplader",
+          "heating": "Brugerdefineret varmelegeme"
+        },
+        "heatpump": "Brugerdefineret varmepumpe",
+        "sgready": "Brugerdefineret varmepumpe (sg-klar, alle)",
+        "sgready-boost": "Brugerdefineret varmepumpe (sg-klar, boost)",
+        "switchsocket": "Brugerdefineret stikkontakt"
+      }
     },
     "circuits": {
       "description": "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
@@ -139,12 +155,15 @@
       "docsLink": "Se dokumentation.",
       "experimental": "Eksperimentel",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
+      "invalidFileSelected": "Ugyldig fil er valgt",
+      "noFileSelected": "Ingen fil valgt.",
       "off": "slukket",
       "on": "tændt",
       "password": "Adgangskode",
       "readFromFile": "Læs fra fil",
       "remove": "Fjern",
       "save": "Gem",
+      "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
       "telemetry": "Telemetri",
       "templateLoading": "Indlæser...",
@@ -180,11 +199,20 @@
       "v2Support": "Tilbage til InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Tilføj oplader",
-      "addMeter": "Tilføj dedikeret opladningsmåler",
+      "addCharger": {
+        "charging": "Tilføj oplader",
+        "heating": "Tilføj varmelegeme"
+      },
+      "addMeter": "Tilføj dedikeret energimåler",
       "cancel": "Afbryd",
-      "chargerError": "Konfiguration af en oplader er påkrævet.",
-      "chargerLabel": "Oplader",
+      "chargerError": {
+        "charging": "Konfiguration af en oplader er påkrævet.",
+        "heating": "Varmelegemet skal konfigureres."
+      },
+      "chargerLabel": {
+        "charging": "Oplader",
+        "heating": "Varmelegeme"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Benytter en strømstyrke mellem 6 og 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,12 +220,15 @@
       "chargerPowerCustom": "andre",
       "chargerPowerCustomHelp": "Definer strømstyrke interval.",
       "chargerTypeLabel": "Oplader type",
-      "chargingTitle": "Lader",
+      "chargingTitle": "Tilstand",
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
-      "defaultModeHelp": "Opladningstilstand når køretøjet forbindes.",
-      "defaultModeHelpKeep": "Gemmer den senest valgte opladningstilstand.",
+      "defaultModeHelp": {
+        "charging": "Opladningstilstand når køretøjet forbindes.",
+        "heating": "Indstilles ved systemstart."
+      },
+      "defaultModeHelpKeep": "Gemmer den senest valgte tilstand.",
       "defaultModeLabel": "Standardtilstand",
       "delete": "Slet",
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
@@ -210,11 +241,15 @@
       "minCurrentHelp": "Brug kun lavere end 6 A, hvis du er sikker på hvad du gør.",
       "minCurrentLabel": "Minimum strømstyrke",
       "noVehicles": "Ingen køretøjer er konfigureret.",
+      "option": {
+        "charging": "\"Tilføj ladepunkt",
+        "heating": "Tilføj varmeenhed"
+      },
       "phases1p": "1-fase",
       "phases3p": "3-faser",
       "phasesAutomatic": "Automatisk fase-valg",
       "phasesAutomaticHelp": "Din oplader understøtter automatisk skift mellem 1- og 3-faset opladning. I hovedmenuen kan du justere faseadfærd under opladning.",
-      "phasesHelp": "Antal faser forbundet til opladeren.",
+      "phasesHelp": "Antal forbundne faser.",
       "phasesLabel": "Faser",
       "pollIntervalDanger": "Regelmæssig forespørgsel på køretøjet kan dræne køretøjets batteri. Nogle køretøjsproducenter kan aktivt forhindre opladning i dette tilfælde. Anbefales ikke! Brug kun dette, hvis du er opmærksom på risiciene.",
       "pollIntervalHelp": "Tid mellem køretøjets API-opdateringer. Korte intervaller kan dræne køretøjets batteri.",
@@ -226,28 +261,39 @@
       "pollModeConnected": "forbundet",
       "pollModeConnectedHelp": "Opdater køretøjets status med jævne mellemrum, når det er forbundet.",
       "pollModeLabel": "opdaterings adfærd",
-      "priorityHelp": "Højere prioriterede ladepunkter får fortrin til solenergioverskud.",
+      "priorityHelp": "Højere prioriterede får fortrin til solenergioverskud.",
       "priorityLabel": "Prioritet",
       "save": "Gem",
       "showAllSettings": "Vis alle indstillinger",
       "solarBehaviorCustomHelp": "Definer dine egne aktiverings- og deaktiveringstærskler samt forsinkelser.",
-      "solarBehaviorDefaultHelp": "Oplad kun med solenergioverskud. Start efter {enableDelay} af overskud. Stop, når der ikke er nok overskud til {disableDelay}.",
-      "solarBehaviorLabel": "Solar indstillinger",
+      "solarBehaviorDefaultHelp": "Start efter {enableDelay} af tilstrækkeligt overskud. Stop, når der ikke er nok overskud i {disableDelay}.",
+      "solarBehaviorLabel": "Solar",
       "solarModeCustom": "egen",
       "solarModeMaximum": "max solenergi",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Brug en positiv værdi.",
-      "thresholdDisableHelpPositive": "Stop opladningen, når der bruges mere end {power} fra elnettet i {delay}.",
-      "thresholdDisableHelpZero": "Stop, når den minimale opladningseffekt ikke kan opfyldes i {delay}.",
+      "thresholdDisableHelpPositive": "Stop, når der bruges mere end {power} fra elnettet i {delay}.",
+      "thresholdDisableHelpZero": "Stop, når den minimale effekt ikke kan opfyldes i {delay}.",
       "thresholdDisableLabel": "Deaktiver strøm fra elnettet",
       "thresholdEnableDelayLabel": "Aktiver forsinkelse",
       "thresholdEnableHelpInvalid": "Brug en negativ værdi.",
-      "thresholdEnableHelpNegative": "Start opladning, når {surplus} overskud er tilgængelig i {delay}.",
-      "thresholdEnableHelpZero": "Start, når mindste overskud af opladningsstrøm er tilgængelig i {delay}.",
+      "thresholdEnableHelpNegative": "Start når {surplus} overskud er tilgængelig i {delay}.",
+      "thresholdEnableHelpZero": "Start når den minimale nødvendige effekt kan opfyldes i {delay}.",
       "thresholdEnableLabel": "Brug elnettet",
-      "titleAdd": "Tilføj Opladningspunkt",
-      "titleEdit": "Rediger opladningspunkt",
-      "titleExample": "Garage, Carport osv.",
+      "titleAdd": {
+        "charging": "Tilføj ladepunkt",
+        "heating": "Tilføj varmeenhed",
+        "unknown": "Tilføj lader eller varmelegeme"
+      },
+      "titleEdit": {
+        "charging": "Rediger ladepunkt",
+        "heating": "Rediger varmeenhed",
+        "unknown": "Rediger lader eller varmelegeme"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport osv.",
+        "heating": "Varmepumpe, varmelegeme osv."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "Automatisk registrering",
       "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge.",
@@ -258,7 +304,7 @@
     "main": {
       "addAdditional": "Tilføj en ekstra måler",
       "addGrid": "Tilføj måler til elnet",
-      "addLoadpoint": "Tilføj opladningspunkt",
+      "addLoadpoint": "Tilføj lader eller varmelegeme",
       "addPvBattery": "Tilføj solpanel eller batteri",
       "addTariffs": "Tilføj tariffer",
       "addVehicle": "Tilføj køretøj",
@@ -351,6 +397,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Opvarmning",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (ikke-krypteret)",
         "https": "HTTPS (krypteret)"
@@ -370,7 +420,7 @@
       "general": "Generelle",
       "grid": "Elnettet",
       "integrations": "Integrationer",
-      "loadpoints": "Ladepunkter",
+      "loadpoints": "Lader og varmelegemer",
       "meter": "Sol og batteri",
       "system": "System",
       "vehicles": "Køretøjer"
@@ -388,6 +438,39 @@
       "trialToken": "Test token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download sikkerhedskopi...",
+          "confirmationButton": "Download sikkerhedskopi",
+          "confirmationText": "Indtast venligst din adgangskode for at downloade databasefilen.",
+          "description": "Sikkerhedskopier dine data til en fil. Den kan bruges til at gendanne dine data i tilfælde af systemfejl.",
+          "title": "Sikkerhedskopier"
+        },
+        "cancel": "Afbryd",
+        "confirmWithPassword": "Bekræft handling",
+        "description": "Sikkerhedskopier, gendan og nulstil dine data. Nyttig, hvis du vil flytte dine data til et andet system.",
+        "note": "Bemærk: Alle ovenstående handlinger påvirker kun dine databasedata. Konfigurationsfilen evcc.yaml forbliver uændret.",
+        "reset": {
+          "action": "Nulstil...",
+          "confirmationButton": "Nulstil & genstart",
+          "confirmationText": "Dette sletter dine valgte data. Sørg for, at du har downloadet en sikkerhedskopi.",
+          "description": "Har du problemer med konfigurationen og vil starte forfra? Slet alle data og start forfra.",
+          "sessions": "Opladningssessioner",
+          "sessionsDescription": "Sletter din opladningshistorik.",
+          "settings": "Konfiguration og indstillinger",
+          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester, abonnementer osv.",
+          "title": "Nulstil"
+        },
+        "restore": {
+          "action": "Gendan...",
+          "confirmationButton": "Gendan & genstart",
+          "confirmationText": "Dette vil overskrive hele din database. Sørg for at du først har downloadet en sikkerhedskopi.",
+          "description": "Gendan dine data fra en sikkerhedskopi. Dette vil overskrive alle dine nuværende data.",
+          "labelFile": "Sikkerhedskopi fil",
+          "title": "Gendan"
+        },
+        "title": "Sikkerhedskopiering og gendannelse"
+      },
       "logs": "Log",
       "restart": "Genstart",
       "restartRequiredDescription": "Genstart for at se effekten.",
@@ -420,7 +503,7 @@
       "delete": "Slet",
       "generic": "Andre integrationer",
       "identifiers": "RFID identifikatorer",
-      "identifiersHelp": "Liste over RFID-strenge til at identificere køretøjet. En indtastning pr. linje. Den aktuelle identifikator kan findes på det respektive ladepunkt på oversigtssiden.",
+      "identifiersHelp": "Liste over RFID-strenge til identifikation af køretøjet. Én post pr. linje. Den aktuelle identifikator findes på den respektive ladestation på oversigtssiden.",
       "maximumCurrent": "Maksimal strømstyrke",
       "maximumCurrentHelp": "Skal være højere end minimal strømstyrke.",
       "maximumPhases": "Maksimal antal faser",
@@ -779,6 +862,8 @@
       "connected": "Forbundet.",
       "disconnectRequired": "Opladning afbrudt, Prøv at forbinde igen.",
       "disconnected": "Afbrudt.",
+      "feedinPriorityNextStart": "Høj indføringspris i {duration}.",
+      "feedinPriorityPausing": "Solopladning sat på pause for at maksimere nettilførsel.",
       "finished": "Færdig.",
       "minCharge": "Minimum opladning til {soc}.",
       "pvDisable": "Ikke nok overskud. Holder snart pause.",
@@ -973,6 +1058,14 @@
     "resetAction": "Fjern begrænsning",
     "resetWarning": "Dynamisk elnet pris eller CO₂-kilde er ikke konfigureret. Men der er alligevel sat en begrænsning på {limit}. Skal din konfiguration justeres?",
     "saved": "Gemt."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pauserede timer",
+    "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
+    "priceLabel": "Indfødningspris",
+    "priceLimit": "Indfødningsgrænse",
+    "resetWarning": "Der er ingen dynamisk indfødnings tarif konfigureret. Der er dog stadig en grænse på {limit}. Ryd op i din konfiguration?",
+    "title": "Indfødnings prioritet"
   },
   "startupError": {
     "configFile": "Konfigurationsfil brugt:",

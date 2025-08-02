@@ -19,6 +19,7 @@ func Oauth2Config(id, secret, redirecturi string) *oauth2.Config {
 			oidc.ScopeOpenID,
 			"conve:vehicle_relation",
 			"energy:state:read",
+			"conve:odometer_status",
 		},
 	}
 }

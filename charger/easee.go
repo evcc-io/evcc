@@ -70,11 +70,11 @@ type Easee struct {
 }
 
 func init() {
-	registry.Add("easee", NewEaseeFromConfig)
+	registry.AddCtx("easee", NewEaseeFromConfig)
 }
 
 // NewEaseeFromConfig creates a Easee charger from generic config
-func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEaseeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User      string
 		Password  string
@@ -93,11 +93,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
+	return NewEasee(ctx, cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
+func NewEasee(ctx context.Context, user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -166,7 +166,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		}
 	}
 
-	client, err := signalr.NewClient(context.Background(),
+	client, err := signalr.NewClient(ctx,
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithBackoff(func() backoff.BackOff {
 			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
@@ -180,7 +180,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(ctx, request.Timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -188,6 +188,8 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	// wait for first update
 	select {
 	case <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
@@ -311,7 +313,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
-		c.sessionEnergy = value.(float64)
+		// SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
+		// Reset to 0 is done in case CHARGER_OP_MODE
+		if value.(float64) != 0 {
+			c.sessionEnergy = value.(float64)
+		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
@@ -333,7 +339,16 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		c.opMode = value.(int)
+		opMode := value.(int)
+
+		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
+		// This should be done in a proper way by the api, but it's not.
+		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			c.sessionEnergy = 0
+			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+		}
+
+		c.opMode = opMode
 
 		// startup completed
 		c.startDone()

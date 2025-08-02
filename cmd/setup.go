@@ -22,6 +22,8 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
@@ -31,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -50,6 +53,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	vpr "github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
@@ -84,18 +88,20 @@ func nameValid(name string) error {
 }
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
-	err := viper.ReadInConfig()
-
-	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
-		return err
+	if err := viper.ReadInConfig(); err != nil {
+		if !errors.As(err, &vpr.ConfigFileNotFoundError{}) {
+			return fmt.Errorf("failed reading config file: %w", err)
+		}
 	}
 
-	log.INFO.Println("using config file:", cfgFile)
+	if cfgFile := viper.ConfigFileUsed(); cfgFile != "" {
+		log.INFO.Println("using config file:", cfgFile)
+	} else {
+		log.INFO.Println("config file not found, database-only mode")
+	}
 
-	if err == nil {
-		if err = viper.UnmarshalExact(conf); err != nil {
-			err = fmt.Errorf("failed parsing config file: %w", err)
-		}
+	if err := viper.UnmarshalExact(conf); err != nil {
+		return fmt.Errorf("failed parsing config file: %w", err)
 	}
 
 	// user did not specify a database path
@@ -125,11 +131,9 @@ If you know what you're doing, you can skip the database check with the --ignore
 	}
 
 	// parse log levels after reading config
-	if err == nil {
-		parseLogLevels()
-	}
+	parseLogLevels()
 
-	return err
+	return nil
 }
 
 func isWritable(filePath string) bool {
@@ -573,7 +577,19 @@ func configureDatabase(conf globalconfig.DB) error {
 		return err
 	}
 
+	if err := session.Init(); err != nil {
+		return err
+	}
+
+	if err := metrics.Init(); err != nil {
+		return err
+	}
+
 	if err := settings.Init(); err != nil {
+		return err
+	}
+
+	if err := cache.Init(); err != nil {
 		return err
 	}
 
@@ -799,7 +815,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewCachedFromConfig(ctx, conf.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err

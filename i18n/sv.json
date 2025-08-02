@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
-      "titleAdd": "Lägg till laddare",
-      "titleEdit": "Ändra laddare"
+      "titleAdd": {
+        "charging": "Lägg till laddare",
+        "heating": "Lägg till värmare"
+      },
+      "titleEdit": {
+        "charging": "Ändra laddare",
+        "heating": "Ändra värmare"
+      },
+      "type": {
+        "custom": {
+          "charging": "Egendefinierad laddare",
+          "heating": "Egendefinierad värmare"
+        },
+        "heatpump": "Egendefinierad värmepump",
+        "sgready": "Egendefinierad värmepump (sg-ready, alla)",
+        "sgready-boost": "Egendefinierad värmepump (sg-ready, boost)",
+        "switchsocket": "Egendefinierad strömbrytare"
+      }
     },
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
@@ -139,12 +155,15 @@
       "docsLink": "Se dokumentation.",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
+      "invalidFileSelected": "Ogiltig fil vald",
+      "noFileSelected": "Ingen fil vald.",
       "off": "av",
       "on": "på",
       "password": "Lösenord",
       "readFromFile": "Läs från fil",
       "remove": "Ta bort",
       "save": "Spara",
+      "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
@@ -180,11 +199,20 @@
       "v2Support": "Tillbaka till InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Lägg till laddare",
+      "addCharger": {
+        "charging": "Lägg till laddare",
+        "heating": "Lägg till värmare"
+      },
       "addMeter": "Lägg till dedikerad laddmätare",
       "cancel": "Avbryt",
-      "chargerError": "Konfigurering av laddare krävs.",
-      "chargerLabel": "Laddare",
+      "chargerError": {
+        "charging": "Konfigurering av laddare krävs.",
+        "heating": "En värmare måste konfigureras."
+      },
+      "chargerLabel": {
+        "charging": "Laddare",
+        "heating": "Värmare"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +224,10 @@
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
-      "defaultModeHelp": "Laddningsläge vid anslutning till fordon.",
+      "defaultModeHelp": {
+        "charging": "Laddningsläge vid anslutning till fordon.",
+        "heating": "Ställs in vid systemstart."
+      },
       "defaultModeHelpKeep": "Använder senast valda laddningsläge.",
       "defaultModeLabel": "Standardinställning",
       "delete": "Radera",
@@ -210,6 +241,10 @@
       "minCurrentHelp": "Ange endast under 6 A om du vet vad du gör.",
       "minCurrentLabel": "Minimum strömstyrka",
       "noVehicles": "Inga fordon är konfigurerade.",
+      "option": {
+        "charging": "Lägg till laddplats",
+        "heating": "Lägg till värmare"
+      },
       "phases1p": "1-fas",
       "phases3p": "3-fas",
       "phasesAutomatic": "Automatisk fasväljare",
@@ -245,9 +280,20 @@
       "thresholdEnableHelpNegative": "Börjar ladda när {surplus} överskott finns i {delay}.",
       "thresholdEnableHelpZero": "Starta när minimum överskott av laddningseffekt finns i {delay}.",
       "thresholdEnableLabel": "Anslut elnätet",
-      "titleAdd": "Lägg till laddare",
-      "titleEdit": "Redigera laddare",
-      "titleExample": "Garage, Carport, et cetera.",
+      "titleAdd": {
+        "charging": "Lägg till laddplats",
+        "heating": "Lägg till värmare",
+        "unknown": "Lägg till laddare eller värmare"
+      },
+      "titleEdit": {
+        "charging": "Redigera laddare",
+        "heating": "Ändra värmarenhet",
+        "unknown": "Ändra laddare eller värmare"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Värmepump, värmare etc."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatisk detektering",
       "vehicleHelpAutoDetection": "Väljer automatiskt det mest troliga fordonet. Manuell inställning är möjlig.",
@@ -351,6 +397,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Värmer",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (okrypterad)",
         "https": "HTTPS (krypterad)"
@@ -388,6 +438,24 @@
       "trialToken": "Testtoken"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download backup...",
+          "confirmationButton": "Download backup",
+          "confirmationText": "Ange ditt lösenord för att ladda hem databasfilen.",
+          "description": "Säkerhetskopiera dina data. Denna fil används för att återställa data i händelse av en systemkrasch.",
+          "title": "Säkerhetskopia"
+        },
+        "cancel": "Avbryt",
+        "confirmWithPassword": "Bekräfta",
+        "description": "Säkerhetskopiera, återställ och nollställ dina data. Användbart om vill flytta till ett annat system.",
+        "note": "Anmärkning: Alla ovanstående ändringar ändrar endast databasens data. Konfigurationsfilen evcc.yaml ändras inte.",
+        "reset": {
+          "action": "Nollställ...",
+          "confirmationButton": "Nollställ & starta om",
+          "confirmationText": "Denna åtgärd raderar dina data permanent. Säkerställ att du har sparat en backup först."
+        }
+      },
       "logs": "Loggar",
       "restart": "Omstart",
       "restartRequiredDescription": "Starta om för att de nya inställningarna ska börja gälla.",
@@ -779,6 +847,8 @@
       "connected": "Inkopplad.",
       "disconnectRequired": "Session avbruten. Prova att återansluta.",
       "disconnected": "Frånkopplad.",
+      "feedinPriorityNextStart": "Snabb inmatning börjar om {duration}.",
+      "feedinPriorityPausing": "Solladdning har pausats för att maximera inmatning.",
       "finished": "Färdig.",
       "minCharge": "Minimiladdning till {soc}.",
       "pvDisable": "Inte tillräckligt med överskott. Pausar strax.",
@@ -973,6 +1043,14 @@
     "resetAction": "Ta bort begränsning",
     "resetWarning": "Varken dynamiskt elpris eller CO₂-avtryck är konfigurerat. Emellertid finns fortfarande en begränsning på {limit}. Din konfiguration kanske behöver kontrolleras?",
     "saved": "Sparad."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pausade timmar",
+    "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
+    "priceLabel": "Inmatningshastighet",
+    "priceLimit": "Inmatningsbegränsning",
+    "resetWarning": "Det finns ingen konfigurerad dynamisk inmatningstariff. Däremot finns det en begränsning på {limit}. Städa i konfigurationen?",
+    "title": "Inmatningsprioritet"
   },
   "startupError": {
     "configFile": "Konfigurationsfil som används:",

@@ -18,7 +18,7 @@
 					>
 						{{ $t("config.main.loadpointRequired") }}
 					</p>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
 							:key="loadpoint.name"
@@ -47,10 +47,10 @@
 							:attention="loadpointsRequired"
 							@click="newLoadpoint"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="vehicle in vehicles"
 							:key="vehicle.name"
@@ -73,10 +73,10 @@
 							:title="$t('config.main.addVehicle')"
 							@click="newVehicle"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-if="gridMeter"
 							:title="$t('config.grid.title')"
@@ -120,9 +120,9 @@
 							data-testid="add-tariffs"
 							@click="openModal('tariffsModal')"
 						/>
-					</ul>
+					</div>
 					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
@@ -169,10 +169,10 @@
 							:title="$t('config.main.addPvBattery')"
 							@click="addSolarBatteryMeter"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }} 🧪</h2>
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
@@ -198,11 +198,11 @@
 							:title="$t('config.main.addAdditional')"
 							@click="newAdditionalMeter"
 						/>
-					</ul>
+					</div>
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
-					<ul class="p-0 config-list">
+					<div class="p-0 config-list">
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -303,16 +303,22 @@
 								<DeviceTags :tags="hemsTags" />
 							</template>
 						</DeviceCard>
-					</ul>
+					</div>
 				</div>
 
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 mb-5">
+				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
+					<button
+						class="btn btn-outline-secondary text-truncate"
+						@click="openModal('backupRestoreModal')"
+					>
+						{{ $t("config.system.backupRestore.title") }}
+					</button>
 					<button class="btn btn-outline-danger" @click="restart">
 						{{ $t("config.system.restart") }}
 					</button>
@@ -348,6 +354,7 @@
 				<ChargerModal
 					:id="selectedChargerId"
 					:name="selectedChargerName"
+					:loadpointType="selectedLoadpointType"
 					:fade="loadpointSubModalOpen ? 'right' : ''"
 					:isSponsor="isSponsor"
 					@added="chargerAdded"
@@ -366,6 +373,8 @@
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal @changed="yamlChanged" />
 				<EebusModal @changed="yamlChanged" />
+				<BackupRestoreModal v-bind="backupRestoreProps" />
+				<PasswordModal update-mode />
 			</div>
 		</div>
 	</div>
@@ -411,13 +420,16 @@ import TariffsModal from "../components/Config/TariffsModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
+import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import PasswordModal from "../components/Auth/PasswordModal.vue";
 
 export default {
 	name: "Config",
 	components: {
 		NewDeviceButton,
+		BackupRestoreModal,
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
@@ -448,6 +460,7 @@ export default {
 		VehicleIcon,
 		VehicleModal,
 		WelcomeBanner,
+		PasswordModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -467,6 +480,7 @@ export default {
 			selectedMeterTypeChoices: [],
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
+			selectedLoadpointType: undefined,
 			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
@@ -587,6 +601,11 @@ export default {
 		messagingTags() {
 			return { configured: { value: store.state?.messaging || false } };
 		},
+		backupRestoreProps() {
+			return {
+				authDisabled: store.state?.authDisabled || false,
+			};
+		},
 	},
 	watch: {
 		offline() {
@@ -627,37 +646,37 @@ export default {
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
-			if (response.data?.result) {
+			if (response.data) {
 				restart.restartNeeded = true;
 			}
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
-			this.vehicles = response.data?.result || [];
+			this.vehicles = response.data || [];
 		},
 		async loadChargers() {
 			const response = await api.get("/config/devices/charger");
-			this.chargers = response.data?.result || [];
+			this.chargers = response.data || [];
 		},
 		async loadMeters() {
 			const response = await api.get("/config/devices/meter");
-			this.meters = response.data?.result || [];
+			this.meters = response.data || [];
 		},
 		async loadCircuits() {
 			const response = await api.get("/config/devices/circuit");
-			this.circuits = response.data?.result || [];
+			this.circuits = response.data || [];
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {
 				validateStatus: (status) => status < 500,
 			});
 			if (response.status === 200) {
-				this.site = response.data?.result;
+				this.site = response.data;
 			}
 		},
 		async loadLoadpoints() {
 			const response = await api.get("/config/loadpoints");
-			this.loadpoints = response.data?.result || [];
+			this.loadpoints = response.data || [];
 		},
 		getMetersByNames(names) {
 			if (!names || !this.meters) {
@@ -689,7 +708,7 @@ export default {
 		chargerModal() {
 			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
 		},
-		editLoadpointCharger(name) {
+		editLoadpointCharger(name, loadpointType) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
 			if (charger && charger.id === undefined) {
@@ -699,7 +718,7 @@ export default {
 				return;
 			}
 			this.loadpointModal().hide();
-			this.$nextTick(() => this.editCharger(charger?.id));
+			this.$nextTick(() => this.editCharger(charger?.id, loadpointType));
 		},
 		editLoadpointMeter(name) {
 			this.loadpointSubModalOpen = true;
@@ -733,12 +752,9 @@ export default {
 			this.selectedMeterTypeChoices = ["aux", "ext"];
 			this.$nextTick(() => this.meterModal().show());
 		},
-		editCharger(id) {
+		editCharger(id, loadpointType) {
 			this.selectedChargerId = id;
-			this.$nextTick(() => this.chargerModal().show());
-		},
-		newCharger() {
-			this.selectedChargerId = undefined;
+			this.selectedLoadpointType = loadpointType;
 			this.$nextTick(() => this.chargerModal().show());
 		},
 		async meterChanged() {
@@ -806,7 +822,7 @@ export default {
 		meterRemoved(type) {
 			if (type === "charge") {
 				// update loadpoint
-				this.$refs.loadpointModal?.setMeter(undefined);
+				this.$refs.loadpointModal?.setMeter("");
 			} else {
 				// update site grid, pv, battery, aux, ext
 				this.loadSite();
@@ -819,7 +835,7 @@ export default {
 			this.$refs.loadpointModal?.setCharger(name);
 		},
 		chargerRemoved() {
-			this.$refs.loadpointModal?.setCharger(undefined);
+			this.$refs.loadpointModal?.setCharger("");
 			this.chargerChanged();
 		},
 		meterModalClosed() {
@@ -849,7 +865,7 @@ export default {
 			try {
 				const response = await api.get(`/config/devices/${type}/${name}/status`);
 				if (!this.deviceValues[type]) this.deviceValues[type] = {};
-				this.deviceValues[type][name] = response.data.result;
+				this.deviceValues[type][name] = response.data;
 			} catch (error) {
 				console.error("Error fetching device values for", type, name, error);
 				return null;
@@ -920,7 +936,8 @@ export default {
 		},
 		chargerIcon(chargerName) {
 			const charger = this.chargers.find((c) => c.name === chargerName);
-			return charger?.config?.icon;
+
+			return charger?.config?.icon || this.deviceValues?.charger?.[chargerName]?.icon?.value;
 		},
 	},
 };

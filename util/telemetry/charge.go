@@ -22,6 +22,7 @@ const (
 
 var (
 	instanceID string
+	publisher  chan<- util.Param
 
 	mu                              sync.Mutex
 	updated                         time.Time
@@ -31,6 +32,13 @@ var (
 func Enabled() bool {
 	enabled, _ := settings.Bool(keys.Telemetry)
 	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
+}
+
+// publish publishes the current telemetry enabled state
+func publish() {
+	if publisher != nil {
+		publisher <- util.Param{Key: keys.Telemetry, Val: Enabled()}
+	}
 }
 
 func Enable(enable bool) error {
@@ -44,16 +52,20 @@ func Enable(enable bool) error {
 	}
 
 	settings.SetBool(keys.Telemetry, enable)
+	publish()
 
 	return nil
 }
 
-func Create(machineID string) {
+func Create(machineID string, valueChan chan<- util.Param) {
 	instanceID = machineID
+	publisher = valueChan
 
 	if machineID == "" {
 		instanceID = machine.ProtectedID("evcc-api")
 	}
+
+	publish()
 }
 
 // UpdateChargeProgress uploads power and energy data every 30 seconds

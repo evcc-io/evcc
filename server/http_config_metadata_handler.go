@@ -32,20 +32,8 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 	lang := getLang(r)
 	templates.EncoderLanguage(lang)
 
-	if name := r.URL.Query().Get("name"); name != "" {
-		res, err := templates.ByName(class, name)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, res)
-		return
-	}
-
 	// filter deprecated properties
-	res := make([]templates.Template, 0)
-	for _, t := range templates.ByClass(class) {
+	filterParams := func(t templates.Template) templates.Template {
 		params := make([]templates.Param, 0, len(t.Params))
 		for _, p := range t.Params {
 			if p.Deprecated == nil || !*p.Deprecated {
@@ -53,10 +41,26 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		t.Params = params
-		res = append(res, t)
+		return t
 	}
 
-	jsonResult(w, res)
+	if name := r.URL.Query().Get("name"); name != "" {
+		res, err := templates.ByName(class, name)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, filterParams(res))
+		return
+	}
+
+	var res []templates.Template
+	for _, t := range templates.ByClass(class) {
+		res = append(res, filterParams(t))
+	}
+
+	jsonWrite(w, res)
 }
 
 // productsHandler returns the list of products by class
@@ -76,17 +80,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	res := make(products, 0)
 	for _, t := range tmpl {
 		// if usage filter is specified, only include templates with matching usage
-		includeUsage := usage == ""
-		if !includeUsage {
-			for _, u := range t.Usages() {
-				if u == usage {
-					includeUsage = true
-					break
-				}
-			}
-		}
-
-		if includeUsage {
+		if usage == "" || slices.Contains(t.Usages(), usage) {
 			for _, p := range t.Products {
 				res = append(res, product{
 					Name:     p.Title(lang),
@@ -101,5 +95,5 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }

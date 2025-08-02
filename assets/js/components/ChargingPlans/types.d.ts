@@ -19,7 +19,7 @@ export interface PlanWrapper {
 
 export interface PlanResponse {
   status: number;
-  data: { result: PlanWrapper };
+  data: PlanWrapper;
 }
 
 export type StaticPlan = StaticSocPlan | StaticEnergyPlan;

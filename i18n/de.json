@@ -44,8 +44,24 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Schaltbare Steckdosen",
       "template": "Hersteller",
-      "titleAdd": "Wallbox hinzufügen",
-      "titleEdit": "Wallbox bearbeiten"
+      "titleAdd": {
+        "charging": "Wallbox hinzufügen",
+        "heating": "Heizung hinzufügen"
+      },
+      "titleEdit": {
+        "charging": "Wallbox bearbeiten",
+        "heating": "Heizung bearbeiten"
+      },
+      "type": {
+        "custom": {
+          "charging": "Benutzerdefinierte Wallbox",
+          "heating": "Benutzerdefinierte Heizung"
+        },
+        "heatpump": "Benutzerdefinierte Wärmepumpe",
+        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready, komplett)",
+        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready, boost)",
+        "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
+      }
     },
     "circuits": {
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
@@ -139,12 +155,15 @@
       "docsLink": "Siehe Dokumentation.",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
+      "invalidFileSelected": "Ungültige Datei ausgewählt",
+      "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "save": "Speichern",
+      "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
@@ -180,11 +199,20 @@
       "v2Support": "Zurück zu InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Wallbox hinzufügen",
-      "addMeter": "Zusätzlichen Zähler hinzufügen",
+      "addCharger": {
+        "charging": "Wallbox hinzufügen",
+        "heating": "Heizung hinzufügen"
+      },
+      "addMeter": "Zusätzlichen Energiezähler hinzufügen",
       "cancel": "Abbrechen",
-      "chargerError": "Wallbox muss konfiguriert sein.",
-      "chargerLabel": "Wallbox",
+      "chargerError": {
+        "charging": "Wallbox muss konfiguriert sein.",
+        "heating": "Heizung muss konfiguriert sein."
+      },
+      "chargerLabel": {
+        "charging": "Wallbox",
+        "heating": "Heizung"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,12 +220,15 @@
       "chargerPowerCustom": "andere",
       "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
       "chargerTypeLabel": "Ladetyp",
-      "chargingTitle": "Laden",
+      "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
-      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
-      "defaultModeHelpKeep": "Der letzte ausgewählte Modus wird beibehalten.",
+      "defaultModeHelp": {
+        "charging": "Lademodus beim Anschließen des Fahrzeugs.",
+        "heating": "Wird beim Systemstart gesetzt."
+      },
+      "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
@@ -205,16 +236,20 @@
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
-      "maxCurrentHelp": "Muss größer als der minimale Strom sein.",
+      "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
+      "option": {
+        "charging": "Ladepunkt hinzufügen",
+        "heating": "Heizungsgerät hinzufügen"
+      },
       "phases1p": "1-phasig",
       "phases3p": "3-phasig",
       "phasesAutomatic": "Automatische Phasen",
       "phasesAutomaticHelp": "Deine Wallbox unterstützt automatisches Umschalten zwischen 1- und 3-phasigem Laden. In der Hauptansicht kannst du das Phasenverhalten während des Ladens anpassen.",
-      "phasesHelp": "Anzahl der an die Wallbox angeschlossenen Phasen.",
+      "phasesHelp": "Anzahl der angeschlossenen Phasen.",
       "phasesLabel": "Phasen",
       "pollIntervalDanger": "Regelmäßiges Abfragen des Fahrzeuges kann dazu führen, dass die Fahrzeugbatterie entleert wird. Einige Fahrzeughersteller sperren das Laden in solchen Fällen auch aktiv. Nicht empfohlen! Verwende diese Einstellung nur, wenn du dir der Risiken bewusst bist.",
       "pollIntervalHelp": "Zeit zwischen Fahrzeug-API-Updates. Kurze Intervalle können die Fahrzeugbatterie belasten.",
@@ -226,28 +261,39 @@
       "pollModeConnected": "wenn verbunden",
       "pollModeConnectedHelp": "Fahrzeugstatus in regelmäßigen Abständen abfragen, wenn verbunden.",
       "pollModeLabel": "Update-Verhalten",
-      "priorityHelp": "Ladepunkte mit höherer Priorität haben Vorrang beim PV-Überschuss.",
+      "priorityHelp": "Höherer Prioritäten haben Vorrang beim PV-Überschuss.",
       "priorityLabel": "Priorität",
       "save": "Speichern",
       "showAllSettings": "Alle Einstellungen anzeigen",
       "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
-      "solarBehaviorDefaultHelp": "Nur mit PV-Überschuss laden. Start nach {enableDelay} Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
-      "solarBehaviorLabel": "PV-Verhalten",
-      "solarModeCustom": "eigenes",
+      "solarBehaviorDefaultHelp": "Start nach {enableDelay} ausreichend vorhandenem Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
+      "solarBehaviorLabel": "PV-Überschuss",
+      "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
       "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
-      "thresholdDisableHelpZero": "Stoppen, wenn minimale Ladeleistung für {delay} nicht erreicht werden kann.",
+      "thresholdDisableHelpZero": "Stoppen, wenn minimale Mindestleistung für {delay} nicht erreicht werden kann.",
       "thresholdDisableLabel": "Netzleistung ausschalten",
       "thresholdEnableDelayLabel": "Einschaltverzögerung",
       "thresholdEnableHelpInvalid": "Bitte verwende einen negativen Wert.",
-      "thresholdEnableHelpNegative": "Laden starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
-      "thresholdEnableHelpZero": "Starten, wenn minimale Ladeleistung für {delay} als Überschuss verfügbar ist.",
+      "thresholdEnableHelpNegative": "Starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
+      "thresholdEnableHelpZero": "Starten, wenn erforderliche Mindestleistung für {delay} als Überschuss verfügbar ist.",
       "thresholdEnableLabel": "Netzleistung einschalten",
-      "titleAdd": "Ladepunkt hinzufügen",
-      "titleEdit": "Ladepunkt bearbeiten",
-      "titleExample": "Garage, Carport, etc.",
+      "titleAdd": {
+        "charging": "Ladepunkt hinzufügen",
+        "heating": "Heizung hinzufügen",
+        "unknown": "Wallbox oder Heizung hinzufügen"
+      },
+      "titleEdit": {
+        "charging": "Ladepunkt bearbeiten",
+        "heating": "Heizung bearbeiten",
+        "unknown": "Wallbox oder Heizung bearbeiten"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Wärmepumpe, Heizung, etc."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische Erkennung",
       "vehicleHelpAutoDetection": "Wählt automatisch das plausibelste Fahrzeug aus. Manuelle Übersteuerung möglich.",
@@ -258,7 +304,7 @@
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
-      "addLoadpoint": "Ladepunkt hinzufügen",
+      "addLoadpoint": "Wallbox oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
       "addTariffs": "Tarife hinzufügen",
       "addVehicle": "Fahrzeug hinzufügen",
@@ -351,6 +397,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Heizen",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (unverschlüsselt)",
         "https": "HTTPS (verschlüsselt)"
@@ -370,7 +420,7 @@
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
-      "loadpoints": "Ladepunkte",
+      "loadpoints": "Laden & Heizen",
       "meter": "PV & Batterie",
       "system": "System",
       "vehicles": "Fahrzeuge"
@@ -388,6 +438,38 @@
       "trialToken": "Testtoken"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Sicherung herunterladen...",
+          "confirmationButton": "Sicherung herunterladen",
+          "confirmationText": "Bitte gib dein Passwort ein, um die Datenbankdatei herunterzuladen.",
+          "description": "Sichere deine Daten in eine Datei. Diese Datei kann verwendet werden, um deine Daten im Falle eines Systemausfalls wiederherzustellen.",
+          "title": "Sichern"
+        },
+        "cancel": "Abbrechen",
+        "description": "Sichern, wiederherstellen und zurücksetzen deiner Daten. Nützlich, wenn du deine Daten auf ein anderes System übertragen möchtest.",
+        "note": "Hinweis: Alle oben genannten Aktionen betreffen nur deine Datenbankdaten. Die evcc.yaml-Konfigurationsdatei bleibt unverändert.",
+        "reset": {
+          "action": "Zurücksetzen...",
+          "confirmationButton": "Zurücksetzen & Neustart",
+          "confirmationText": "Dies löscht deine ausgewählten Daten dauerhaft. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
+          "description": "Hast du Probleme mit der Konfiguration und möchtest von vorne beginnen? Lösche alle Daten und beginne neu.",
+          "sessions": "Ladevorgänge",
+          "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
+          "settings": "Konfiguration & Einstellungen",
+          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, Caches, usw.",
+          "title": "Zurücksetzen"
+        },
+        "restore": {
+          "action": "Wiederherstellen...",
+          "confirmationButton": "Wiederherstellen & Neustart",
+          "confirmationText": "Dies überschreibt deine komplette Datenbank. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
+          "description": "Stelle deine Daten aus einer Sicherungsdatei wieder her. Dies überschreibt alle deine aktuellen Daten.",
+          "labelFile": "Sicherungsdatei",
+          "title": "Wiederherstellen"
+        },
+        "title": "Sichern & Wiederherstellen"
+      },
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",
@@ -581,13 +663,12 @@
   },
   "loginModal": {
     "cancel": "Abbrechen",
-    "demoMode": "Login ist in Demo-Modus nicht verfügbar.",
-    "error": "Login fehlgeschlagen: ",
+    "demoMode": "Login ist im Demo-Modus nicht verfügbar.",
     "iframeHint": "Öffne evcc in einem neuen Tab.",
     "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
     "invalid": "Passwort ist ungültig.",
     "login": "Anmelden",
-    "password": "Passwort",
+    "password": "Administrator Passwort",
     "reset": "Passwort zurücksetzen?",
     "title": "Authentifizierung"
   },
@@ -779,6 +860,8 @@
       "connected": "Verbunden.",
       "disconnectRequired": "Vorgang abgebrochen. Erneut verbinden.",
       "disconnected": "Nicht verbunden.",
+      "feedinPriorityNextStart": "Hohe Einspeisevergütungen beginnen in {duration}.",
+      "feedinPriorityPausing": "Solarladen pausiert, um die Einspeisung zu maximieren.",
       "finished": "Abgeschlossen.",
       "minCharge": "Mindestladung bis {soc}.",
       "pvDisable": "Zu wenig Überschuss. Ladung wird gleich pausiert.",
@@ -973,6 +1056,14 @@
     "resetAction": "Grenze löschen",
     "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
     "saved": "Gepeichert."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Pausierte Stunden",
+    "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
+    "priceLabel": "Einspeisetarif",
+    "priceLimit": "Einspeisegrenze",
+    "resetWarning": "Es ist kein dynamischer Einspeisetarif konfiguriert. Dennoch ist ein Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
+    "title": "Einspeisung priorisieren"
   },
   "startupError": {
     "configFile": "Verwendete Konfigurationsdatei:",

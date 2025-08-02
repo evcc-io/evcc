@@ -1,5 +1,11 @@
 <template>
-	<component :is="singleIcon" v-if="single" :class="`icon icon--${size}`"></component>
+	<component
+		:is="singleIcon"
+		v-if="single"
+		:class="`icon icon--${size}`"
+		role="img"
+		:aria-label="name"
+	></component>
 	<MultiIcon v-else :count="count" :size="size"></MultiIcon>
 </template>
 
