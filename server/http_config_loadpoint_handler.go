@@ -86,9 +86,8 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 		_ = util.DecodeOther(staticMap, &static)
 
 		res := loadpointFullConfig{
-			ID:   id,
-			Name: dev.Config().Name,
-
+			ID:            id,
+			Name:          dev.Config().Name,
 			StaticConfig:  static,
 			DynamicConfig: dynamic,
 		}
@@ -97,9 +96,8 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 	}
 
 	res := loadpointFullConfig{
-		ID:   id,
-		Name: dev.Config().Name,
-
+		ID:            id,
+		Name:          dev.Config().Name,
 		StaticConfig:  getLoadpointStaticConfig(lp),
 		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
