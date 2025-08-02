@@ -89,6 +89,7 @@ import type {
 	Notification,
 	SMART_COST_TYPE,
 	Sponsor,
+	FatalError,
 } from "@/types/evcc";
 import type { Grid } from "./types";
 
@@ -151,7 +152,7 @@ export default defineComponent({
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
-		fatal: Object,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
 		telemetry: Boolean,
 	},
