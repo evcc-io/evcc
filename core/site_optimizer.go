@@ -41,9 +41,15 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	log := util.NewLogger("evopt")
 
+	solarTariff := site.GetTariff(api.TariffUsageSolar)
+	solarRates, err := solarTariff.Rates()
+	if err != nil {
+		return err
+	}
+
+	solar := currentSlots(solarTariff)
 	grid := currentSlots(site.GetTariff(api.TariffUsageGrid))
 	feedIn := currentSlots(site.GetTariff(api.TariffUsageFeedIn))
-	solar := currentSlots(site.GetTariff(api.TariffUsageSolar))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn), len(solar)})
 	if minLen < 8 {
@@ -71,7 +77,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
-			Ft: maxValues(solar, 1, minLen),
+			Ft: maxValues(solarEnergy(solarRates, time.Duration(dt[0])*time.Second), 1, minLen),
 		},
 	}
 
@@ -229,6 +235,35 @@ func slotsToHours(now time.Time, profile *[96]float64) []float64 {
 	}
 
 	return result
+}
+
+func solarEnergy(rates []api.Rate, firstSlot time.Duration) []api.Rate {
+	powers := timestampSeries(rates)
+	res := make([]api.Rate, 0, len(rates))
+
+	for _, r := range rates {
+		from := r.Start
+
+		if len(res) == 0 {
+			from = endOfHour(r.End).Add(-firstSlot)
+		}
+
+		res = append(res, api.Rate{
+			Start: from,
+			End:   r.End,
+			Value: powers.energy(from, r.End),
+		})
+	}
+
+	return res
+}
+
+func endOfHour(ts time.Time) time.Time {
+	end := ts.Truncate(time.Hour)
+	if ts.After(end) {
+		end = end.Add(time.Hour)
+	}
+	return end
 }
 
 func currentSlots(tariff api.Tariff) []api.Rate {
