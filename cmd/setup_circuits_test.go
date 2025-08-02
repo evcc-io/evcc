@@ -58,7 +58,7 @@ loadpoints:
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, api.Charger(api.NewMockCharger(gomock.NewController(suite.T()))))))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
@@ -89,7 +89,7 @@ loadpoints:
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, api.Charger(api.NewMockCharger(gomock.NewController(suite.T()))))))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
@@ -146,7 +146,7 @@ loadpoints:
 	// mock charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, api.Charger(api.NewMockCharger(gomock.NewController(suite.T()))))))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
