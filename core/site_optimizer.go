@@ -69,22 +69,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	gt := site.homeProfile(minLen)
 
-	for _, lp := range site.Loadpoints() {
-		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
-			for i := range profile {
-				gt[i] += profile[i]
-			}
-		}
-	}
-
 	req := evopt.OptimizationInput{
 		EtaC: &eta,
 		EtaD: &eta,
 		TimeSeries: evopt.TimeSeries{
 			Dt: dt,
-			Gt: lo.Map(gt, func(v float64, i int) float32 {
-				return float32(v)
-			}),
+			Gt: asFloat32(gt),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
 			Ft: maxValues(ratesToEnergy(solarRates, firstSlotDuration), 1, minLen),
@@ -92,17 +82,30 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for _, lp := range site.Loadpoints() {
-		if v := lp.GetVehicle(); v != nil {
-			req.Batteries = append(req.Batteries, evopt.BatteryConfig{
-				CMin:     float32(lp.EffectiveMinPower()),
-				CMax:     float32(lp.EffectiveMaxPower()),
-				DMax:     0,
-				SMin:     0,
-				SMax:     float32(v.Capacity() * 1e3),              // Wh
-				SInitial: float32(v.Capacity() * lp.GetSoc() * 10), // Wh
-				PA:       pa,
-			})
+		bat := evopt.BatteryConfig{
+			CMin: float32(lp.EffectiveMinPower()),
+			CMax: float32(lp.EffectiveMaxPower()),
+			DMax: 0,
+			SMin: 0,
+			PA:   pa,
 		}
+
+		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
+			acc := make([]float64, len(profile))
+			var sum float64
+			for i := range profile {
+				sum += profile[i]
+				acc[i] = sum
+			}
+			bat.SGoal = lo.ToPtr(asFloat32(acc))
+		}
+
+		if v := lp.GetVehicle(); v != nil {
+			bat.SMax = float32(v.Capacity() * 1e3)                  // Wh
+			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
+		}
+
+		req.Batteries = append(req.Batteries, bat)
 	}
 
 	for _, b := range battery {
@@ -300,6 +303,12 @@ func ratesToEnergy(rr []api.Rate, firstSlot time.Duration) []api.Rate {
 	}
 
 	return res
+}
+
+func asFloat32(gt []float64) []float32 {
+	return lo.Map(gt, func(v float64, i int) float32 {
+		return float32(v)
+	})
 }
 
 func endOfHour(ts time.Time) time.Time {
