@@ -82,8 +82,10 @@ func (v *Identity) getDeviceID() (string, error) {
 		"ccsp-service-id":     v.config.CCSPServiceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"Content-type":        "application/json;charset=UTF-8",
-		"User-Agent":          "okhttp/3.10.0",
+		"User-Agent":          "okhttp/3.12.0",
 		"Stamp":               stamp,
+		"Accept":              "application/json",
+		"Accept-Language":     "en-US,en;q=0.8",
 	}
 
 	var res struct {
@@ -110,6 +112,9 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 	cookieClient.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
+
+	// Extend timeout for EU connections
+	cookieClient.Client.Timeout = 60 * time.Second
 
 	uri := fmt.Sprintf(
 		"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
@@ -158,7 +163,12 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var resp *http.Response
 
 	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, "en", info.ServiceId, info.UserId)
+		// Use appropriate language for EU region
+		lang := "en"
+		if strings.Contains(v.config.URI, ".eu-") {
+			lang = "en-GB"
+		}
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, lang, info.ServiceId, info.UserId)
 
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {
@@ -200,6 +210,8 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 					if doc, err2 := goquery.NewDocumentFromReader(resp.Body); err2 == nil {
 						if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
+							err = errors.New(span.Text())
+						} else if span := doc.Find("span.kc-feedback-text"); span != nil && span.Length() == 1 {
 							err = errors.New(span.Text())
 						}
 					}
@@ -279,7 +291,7 @@ func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
-		"User-Agent":    "okhttp/3.10.0",
+		"User-Agent":    "okhttp/3.12.0",
 	}
 
 	data := url.Values{
@@ -301,12 +313,12 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
-		"User-Agent":    "okhttp/3.10.0",
+		"User-Agent":    "okhttp/3.12.0",
 	}
 
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
-		"redirect_uri":  {"https://www.getpostman.com/oauth2/callback"},
+		"redirect_uri":  {v.config.URI + "/api/v1/user/oauth2/redirect"},
 		"refresh_token": {token.RefreshToken},
 	}
 
@@ -376,8 +388,10 @@ func (v *Identity) Request(req *http.Request) error {
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
-		"User-Agent":          "okhttp/3.10.0",
+		"User-Agent":          "okhttp/3.12.0",
 		"Stamp":               stamp,
+		"Accept":              "application/json",
+		"Accept-Language":     "en-US,en;q=0.8",
 	} {
 		req.Header.Set(k, v)
 	}
