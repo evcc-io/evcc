@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"dario.cat/mergo"
@@ -200,13 +201,21 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
+	var zero T
+
 	dev, err := h.ByName(name)
 	if err != nil {
-		var zero T
 		return zero, err
 	}
 
-	return dev.Instance(), nil
+	instance := dev.Instance()
+
+	// check if device instance is nil
+	if reflect.ValueOf(instance).IsNil() {
+		return zero, fmt.Errorf("instance %s not found", name)
+	}
+
+	return instance, nil
 }
 
 // deviceStatusHandler returns the device test status by class
