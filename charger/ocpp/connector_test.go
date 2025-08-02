@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ func (suite *connTestSuite) SetupTest() {
 	// setup instance
 	Instance()
 	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
-	suite.conn, _ = NewConnector(util.NewLogger("foo"), 1, suite.cp, "", Timeout)
+	suite.conn, _ = NewConnector(context.TODO(), util.NewLogger("foo"), 1, suite.cp, "", Timeout)
 
 	suite.clock = clock.NewMock()
 	suite.conn.clock = suite.clock

@@ -76,7 +76,7 @@ export default {
 				case "phasePowers":
 					return value.map((v) => this.fmtW(v, POWER_UNIT.KW, false)).join(" · ") + " kW";
 				case "chargeStatus":
-					return this.$t(`config.deviceValue.chargeStatus${value}`);
+					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
 				case "gridPrice":
 				case "feedinPrice":
 					return this.fmtPricePerKWh(value, options.currency, true);
