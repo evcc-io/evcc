@@ -23,16 +23,28 @@ params:
     required: true
   - name: password
     required: true
-  - name: addexternalpower
+  - name: useinternalpower
     description:
-      de: Externe Erzeugung addieren
-      en: Add external generation
+      de: Interne Erzeugung auslesen
+      en: Read internal generation
     help:
-      de: Aktiviert die Einspeisung von externen Quellen (z.B. Notstrom)
-      en: Enables power feed from external sources (e.g. emergency power)
-    default: false
+      de: Lese die Leistung vom internen Wechselrichter aus
+      en: Reads the power from the internal inverter
+    default: true
     type: bool
     advanced: true
+    usages: ["pv"]
+  - name: useexternalpower
+    description:
+      de: Externe Erzeugung auslesen
+      en: Read external generation
+    help:
+      de: Liest die Leistung am externen Leistungsmesser aus und addiert diese zur internen Erzeugung
+      en: Reads the power from the external power meter and adds it to the internal generation
+    default: true
+    type: bool
+    advanced: true
+    usages: ["pv"]
   - name: key
     description:
       generic: RSCP-Password
@@ -50,9 +62,11 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: int
     advanced: true
+    usages: ["battery"]
   - name: maxacpower
   - name: capacity
     advanced: true
+    usages: ["battery"]
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -65,5 +79,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- if eq .usage "pv" }}
-  addexternalpower: {{ .addexternalpower }}
+  useinternalpower: {{ .useinternalpower }}
+  useexternalpower: {{ .useexternalpower }}
   {{- end }}

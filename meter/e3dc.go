@@ -19,7 +19,8 @@ import (
 type E3dc struct {
 	mu               sync.Mutex
 	dischargeLimit   uint32
-	addExternalPower bool
+	useInternalPower bool
+	useExternalPower bool
 	usage            templates.Usage // TODO check if we really want to depend on templates
 	conn             *rscp.Client
 	retry            func(err error) error
@@ -41,7 +42,8 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Password          string
 		Key               string
 		DischargeLimit    uint32
-		AddExternalPower  bool
+		UseInternalPower  bool
+		UseExternalPower  bool
 		Timeout           time.Duration
 	}{
 		Timeout: request.Timeout,
@@ -69,12 +71,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.AddExternalPower, cc.batteryCapacity.Decorator(), cc.batteryMaxACPower.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.UseInternalPower, cc.UseExternalPower, cc.batteryCapacity.Decorator(), cc.batteryMaxACPower.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, addExternalPower bool, capacity, maxacpower func() float64) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, useInternalPower, useExternalPower bool, capacity, maxacpower func() float64) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -90,7 +92,8 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		usage:            usage,
 		conn:             conn,
 		dischargeLimit:   dischargeLimit,
-		addExternalPower: addExternalPower,
+		useInternalPower: useInternalPower,
+		useExternalPower: useExternalPower,
 	}
 
 	m.retry = func(err error) error {
@@ -144,10 +147,14 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		if m.addExternalPower {
+		if m.useInternalPower && m.useExternalPower {
 			return values[0] - values[1], nil
-		} else {
+		} else if m.useInternalPower && !m.useExternalPower {
 			return values[0], nil
+		} else if !m.useInternalPower && m.useExternalPower {
+			return values[0], nil
+		} else {
+			return 0, nil
 		}
 
 	case templates.UsageBattery:
