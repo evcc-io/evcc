@@ -4,14 +4,15 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -41,6 +42,7 @@ type Config struct {
 	CCSPApplicationID string
 	PushType          string
 	Cfb               string
+	LoginFormHost     string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -111,6 +113,7 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 		PublicSuffixList: publicsuffix.List,
 	})
 
+	// TODO: check whether &lang= is necessary
 	uri := fmt.Sprintf(
 		"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
 		v.config.URI,
@@ -154,95 +157,88 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		err = cookieClient.DoJSON(req, &info)
 	}
 
-	var action string
 	var resp *http.Response
 
+	// get the connector_session_key
+	var connectorSessionKey string
 	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, "en", info.ServiceId, info.UserId)
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.AuthClientID, v.config.URI, "en")
+
+		fmt.Printf("Requesting Service login form %s with AuthClient %s, BaseUri %s, InfoSvcId %s, InfoUserId %s\n", uri, v.config.AuthClientID, v.config.URI, info.ServiceId, info.UserId)
 
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {
 			if resp, err = cookieClient.Do(req); err == nil {
 				defer resp.Body.Close()
 
-				var doc *goquery.Document
-				if doc, err = goquery.NewDocumentFromReader(resp.Body); err == nil {
-					err = errors.New("form not found")
+				// code adapted from hyundai_kia_connect_api
 
-					if form := doc.Find("form"); form != nil && form.Length() == 1 {
-						var ok bool
-						if action, ok = form.Attr("action"); ok {
-							err = nil
-						}
-					}
+				// get redirect URL from request
+				urlRedirect := resp.Request.URL
+
+				// find connector session key
+				cKeySearch := regexp.MustCompile(`connector_session_key%3D([0-9a-fA-F-]{36})`)
+				cskArray := cKeySearch.FindStringSubmatch(urlRedirect.String())
+				err = errors.New("connector session key not found")
+				if len(cskArray) > 1 {
+					connectorSessionKey = cskArray[1]
+					err = nil
+					fmt.Printf("Connector Session Key: %s\n", connectorSessionKey)
 				}
 			}
 		}
 	}
 
-	if err == nil {
-		data := url.Values{
-			"username":     {user},
-			"password":     {password},
-			"credentialId": {""},
-			"rememberMe":   {"on"},
-		}
-
-		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
-		if err == nil {
-			cookieClient.CheckRedirect = request.DontFollow
-			if resp, err = cookieClient.Do(req); err == nil {
-				defer resp.Body.Close()
-
-				// need 302
-				if resp.StatusCode != http.StatusFound {
-					err = errors.New("missing redirect")
-
-					if doc, err2 := goquery.NewDocumentFromReader(resp.Body); err2 == nil {
-						if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
-							err = errors.New(span.Text())
-						}
-					}
-				}
-			}
-
-			cookieClient.CheckRedirect = nil
-		}
-	}
-
-	if err == nil {
-		resp, err = cookieClient.Get(resp.Header.Get("Location"))
-		if err == nil {
-			defer resp.Body.Close()
-		}
-	}
-
+	// if we have the connectorSessionKey, go on and find the login code
 	var code string
 	if err == nil {
-		data := map[string]string{
-			"intUserId": "",
+		// build new request uri
+		uri := fmt.Sprintf("%s%s", v.config.LoginFormHost, "/auth/account/signin")
+		data := url.Values{
+			"client_id":             {v.config.CCSPServiceID},
+			"encryptedPassword":     {"false"},
+			"orgHmgSid":             {""},
+			"password":              {password},
+			"redirect_uri":          {v.config.URI + "/api/v1/user/oauth2/redirect"},
+			"state":                 {"ccsp"},
+			"username":              {user},
+			"remember_me":           {"false"},
+			"connector_session_key": {connectorSessionKey},
+			"_csrf":                 {""},
 		}
 
-		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
+		fmt.Printf("Trying to get code from:\n%s\nUsing data:\n%v\n", uri, data)
+
+		// create a client that doesn't honor redirects so we receive the original response
+		sc := http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+
+		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
 		if err == nil {
-			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
-			cookieClient.CheckRedirect = request.DontFollow
+			req.PostForm = data
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Add("Origin", v.config.LoginFormHost)
+			fmt.Printf("Subreq headers:\n%v\n", req.Header)
 
-			var res struct {
-				RedirectUrl string `json:"redirectUrl"`
-			}
-
-			if err = cookieClient.DoJSON(req, &res); err == nil {
-				var uri *url.URL
-				if uri, err = url.Parse(res.RedirectUrl); err == nil {
-					if code = uri.Query().Get("code"); len(code) == 0 {
-						err = errors.New("code not found")
-					}
+			if resp, err = sc.Do(req); err == nil {
+				location := resp.Header.Get("Location")
+				fmt.Printf("Got Location:\n%v\n\n%s\n", resp.Header, location)
+				// extract code from URL
+				err = errors.New("code location not found")
+				codeSearch := regexp.MustCompile(`code=([0-9a-fA-F-]{36}\.[0-9a-fA-F-]{36}\.[0-9a-fA-F-]{36})`)
+				clArray := codeSearch.FindStringSubmatch(location)
+				if len(clArray) > 1 {
+					code = clArray[1]
+					err = nil
 				}
 			}
 		}
 	}
 
+	fmt.Printf("Returning code: %s, err: %v\n", code, err)
 	return code, err
 }
 
@@ -273,6 +269,35 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	}
 
 	return accCode, err
+}
+
+func (v *Identity) exchangeCodeV2(accCode string) (*oauth2.Token, error) {
+	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
+	data := url.Values{
+		"grant_type":    {"authorization_code"},
+		"code":          {accCode},
+		"redirect_uri":  {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"client_id":     {v.config.CCSPServiceID},
+		"client_secret": {"secret"},
+	}
+
+	hc := http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	fmt.Printf("Calling uri %s with data:\n%v\n", uri, data)
+
+	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	if err == nil {
+		req.PostForm = data
+		if resp, err := hc.Do(req); err == nil {
+			bla, _ := io.ReadAll(resp.Body)
+			fmt.Printf("Got:\n%v\n", string(bla))
+		}
+	}
+	return nil, errors.New("hard brake")
 }
 
 func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
@@ -324,6 +349,7 @@ func (v *Identity) Login(user, password, language string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
+	fmt.Printf("Trying login with user: %s, pass: %s, language: %s\n", user, password, language)
 
 	v.deviceID, err = v.getDeviceID()
 
@@ -346,7 +372,7 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 	if err == nil {
 		var token *oauth2.Token
-		if token, err = v.exchangeCode(code); err == nil {
+		if token, err = v.exchangeCodeV2(code); err == nil {
 			v.TokenSource = oauth.RefreshTokenSource(token, v)
 		}
 	}
