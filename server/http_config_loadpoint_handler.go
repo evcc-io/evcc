@@ -68,11 +68,31 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
-	lp := dev.Instance()
-
 	var id int
 	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
 		id = configurable.ID()
+	}
+
+	lp := dev.Instance()
+
+	// missing instance due to error, decode config from database
+	if lp == nil {
+		cc := dev.Config()
+
+		dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
+
+		var static loadpoint.StaticConfig
+		_ = util.DecodeOther(staticMap, &static)
+
+		res := loadpointFullConfig{
+			ID:   id,
+			Name: dev.Config().Name,
+
+			StaticConfig:  static,
+			DynamicConfig: dynamic,
+		}
+
+		return res
 	}
 
 	res := loadpointFullConfig{
