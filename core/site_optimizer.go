@@ -50,10 +50,13 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return fmt.Errorf("not enough slots for optimization: %d", minLen)
 	}
 
-	log.DEBUG.Printf("optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d",
+	dt := timeSteps(minLen)
+
+	log.DEBUG.Printf("optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %ds",
 		minLen,
 		grid[minLen-1].End.Local(),
 		len(grid), len(feedIn), len(solar),
+		dt[0],
 	)
 
 	gt := site.householdProfile(minLen)
@@ -62,7 +65,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		EtaC: &eta,
 		EtaD: &eta,
 		TimeSeries: evopt.TimeSeries{
-			Gt: gt,
+			Dt: dt,
+			Gt: lo.Map(gt, func(v float64, i int) float32 {
+				return float32(v)
+			}),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
 			Ft: maxValues(solar, 1, minLen),
@@ -145,26 +151,84 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	return nil
 }
 
-func (site *Site) householdProfile(minLen int) []float32 {
-	fallback := lo.RepeatBy(minLen, func(_ int) float32 {
-		return 0
-	})
-
+func (site *Site) householdProfile(minLen int) []float64 {
 	now := time.Now().Truncate(time.Hour)
 
-	household, err := metrics.Profile(now.AddDate(0, 0, -30))
+	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
 	if err != nil {
 		site.log.ERROR.Printf("household metrics profile: %v", err)
-		return fallback
+		return lo.RepeatBy(minLen, func(_ int) float64 {
+			return 0
+		})
 	}
 
-	// make sure we can wrap around
-	slots := append(household[:], household[:]...)
-	_ = slots
-
-	var res []float32
+	res := slotsToHours(now, profile)
+	for len(res) < minLen {
+		res = append(res, profile[:]...)
+	}
+	if len(res) > minLen {
+		res = res[:minLen]
+	}
 
 	return res
+}
+
+// slotsToHours converts a daily consumption profile consisting of 96 15min slots
+// to an hourly profile by totaling the values per hour and returning the first minLen values.
+// the first value is fractional part of the the current hour, prorated.
+func slotsToHours(now time.Time, profile *[96]float64) []float64 {
+	if profile == nil {
+		return []float64{}
+	}
+
+	// Calculate current 15-minute slot within the day (0-95)
+	currentMinute := now.Hour()*60 + now.Minute()
+	currentSlot := currentMinute / 15
+
+	// Calculate remaining minutes in current hour for prorating
+	minutesIntoHour := now.Minute()
+	remainingMinutesInHour := 60 - minutesIntoHour
+
+	var result []float64
+
+	// Handle the partial current hour first
+	if remainingMinutesInHour > 0 && currentSlot < 96 {
+		var partialHourValue float64
+		slotsInCurrentHour := remainingMinutesInHour / 15
+		if remainingMinutesInHour%15 != 0 {
+			slotsInCurrentHour++
+		}
+
+		// Sum the remaining slots in the current hour
+		for i := 0; i < slotsInCurrentHour && currentSlot+i < 96; i++ {
+			if currentSlot+i >= 0 {
+				partialHourValue += profile[currentSlot+i]
+			}
+		}
+
+		// Prorate based on the fraction of the hour remaining
+		fractionOfHour := float64(remainingMinutesInHour) / 60.0
+		partialHourValue *= fractionOfHour
+
+		result = append(result, float64(partialHourValue))
+	}
+
+	// Process complete hours starting from the next hour
+	nextHourSlot := (currentSlot/4 + 1) * 4
+
+	// Don't wrap around at end of day - only process remaining hours
+	for hourSlot := nextHourSlot; len(result) < 24 && hourSlot < 96; hourSlot += 4 {
+		var hourValue float64
+
+		// Sum 4 slots (4 × 15min = 60min = 1 hour)
+		for i := 0; i < 4 && hourSlot+i < 96; i++ {
+			hourValue += profile[hourSlot+i]
+		}
+
+		result = append(result, float64(hourValue))
+	}
+
+	return result
 }
 
 func currentSlots(tariff api.Tariff) []api.Rate {
@@ -181,6 +245,21 @@ func currentSlots(tariff api.Tariff) []api.Rate {
 	return lo.Filter(rates, func(slot api.Rate, _ int) bool {
 		return !slot.End.Before(now) // filter past slots
 	})
+}
+
+func timeSteps(minLen int) []int {
+	res := make([]int, 0, minLen)
+
+	eoh := now.BeginningOfHour().Add(time.Hour)
+	if d := time.Until(eoh); d > time.Second {
+		res = append(res, int(d.Seconds()))
+	}
+
+	for i := len(res); i < minLen; i++ {
+		res = append(res, 3600) // 1 hour in seconds
+	}
+
+	return res
 }
 
 func maxValues(rates []api.Rate, div float64, maxLen int) []float32 {

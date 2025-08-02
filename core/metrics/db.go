@@ -39,17 +39,14 @@ func Profile(from time.Time) (*[96]float64, error) {
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts)
-		ORDER BY ts ASC`, 1, from,
+		ORDER BY strftime("%H:%M", ts) ASC`, 1, from,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	fromSlot := slotNum(from)
-
-	front := make([]float64, 0, 96)
-	back := make([]float64, 0, 96)
+	res := make([]float64, 0, 96)
 
 	for rows.Next() {
 		var (
@@ -60,16 +57,12 @@ func Profile(from time.Time) (*[96]float64, error) {
 			return nil, err
 		}
 
-		slot := slotNum(time.Time(ts))
-		if slot < fromSlot && len(front) == 0 {
-			back = append(back, val)
-			continue
+		if slotNum(time.Time(ts)) != len(res) {
+			return nil, ErrIncomplete
 		}
 
-		front = append(front, val)
+		res = append(res, val)
 	}
-
-	res := append(front, back...)
 
 	if len(res) != 96 {
 		return nil, ErrIncomplete
