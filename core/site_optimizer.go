@@ -94,7 +94,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			acc := make([]float64, len(profile))
 			var sum float64
 			for i := range profile {
-				sum += profile[i]
+				sum += profile[i] * float64(*req.EtaC)
 				acc[i] = sum
 			}
 			bat.SGoal = lo.ToPtr(asFloat32(acc))
