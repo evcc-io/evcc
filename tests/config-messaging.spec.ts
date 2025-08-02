@@ -2,8 +2,6 @@ import { test, expect, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
-const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
-
 test.use({ baseURL: baseUrl() });
 
 test.afterEach(async () => {
@@ -19,7 +17,7 @@ async function goToConfig(page: Page) {
 
 test.describe("messaging", async () => {
   test("save a comment", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
     await goToConfig(page);
 
     await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();

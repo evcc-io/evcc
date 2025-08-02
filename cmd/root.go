@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -89,6 +90,9 @@ func init() {
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
 
+	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
+	bind(rootCmd, "mcp")
+
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
 
@@ -136,13 +140,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-			log.INFO.Println("config file missing, create configuration using config UI")
-			// evcc.yaml not found, use default configuration
-			if err := viper.UnmarshalExact(&conf); err != nil {
-				log.FATAL.Fatalf("failed to unmarshal default configuration: %v", err)
-			}
-		} else {
+		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); cfgErr != nil {
 			// evcc.yaml found, might have errors
 			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 		}
@@ -158,7 +156,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -191,7 +189,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup telemetry
 	if err == nil {
-		telemetry.Create(conf.Plant)
+		telemetry.Create(conf.Plant, valueChan)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
 		}
@@ -259,6 +257,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
 	}
 
+	// setup MCP
+	if viper.GetBool("mcp") {
+		const path = "/mcp"
+		local := conf.Network.URI()
+		router := httpd.Router()
+
+		var handler http.Handler
+		if handler, err = mcp.NewHandler(router, local, path); err == nil {
+			router.PathPrefix(path).Handler(handler)
+		}
+	}
+
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
@@ -310,6 +320,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
 		authObject.SetAuthMode(auth.Disabled)
+		valueChan <- util.Param{Key: keys.AuthDisabled, Val: true}
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {

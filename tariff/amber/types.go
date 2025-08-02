@@ -1,6 +1,14 @@
 package amber
 
-const URI = "https://api.amber.com.au/v1/sites/%s/prices/current?resolution=30&next=96"
+import "fmt"
+
+const (
+	// ForecastIntervals represents 72 hours of 5-minute intervals for price forecasting
+	// This is an "up to" figure, so it should still be OK for 30-minute billing customers
+	ForecastIntervals = 864 // 72 hours * 12 intervals per hour
+)
+
+var URI = fmt.Sprintf("https://api.amber.com.au/v1/sites/%%s/prices/current?next=%d", ForecastIntervals)
 
 type AdvancedPrice struct {
 	Low       float64 `json:"low"`

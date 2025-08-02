@@ -89,7 +89,7 @@ watch(
   (configured) => {
     console.log("configured", configured);
     const modal = Modal.getOrCreateInstance(
-      document.getElementById("passwordModal") as HTMLElement
+      document.getElementById("passwordSetupModal") as HTMLElement
     );
     if (configured) {
       modal.hide();

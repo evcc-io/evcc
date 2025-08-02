@@ -2,23 +2,23 @@
   "batterySettings": {
     "batteryLevel": "Batterijniveau",
     "bufferStart": {
-      "above": "indien boven {soc}.",
+      "above": "{soc} bereikt heeft.",
       "full": "wanneer op {soc}.",
       "never": "enkel bij voldoende overschot."
     },
     "capacity": "{energy} van {total}",
     "control": "Batterijsturing",
-    "discharge": "Voorkom ontladen in de snelle modus en bij gepland laden.",
+    "discharge": "Voorkom het ontladen van de thuisaccu bij gebruik van de snelle modus of bij gepland laden.",
     "disclaimerHint": "Opgelet:",
     "disclaimerText": "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast.",
     "gridChargeTab": "Netladen",
     "legendBottomName": "Thuisaccu heeft prioriteit",
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
-    "legendMiddleSubline": "wanneer de thuisaccu boven {soc} is.",
-    "legendTopAutostart": "Start automatisch",
-    "legendTopName": "Batterij-ondersteund opladen",
-    "legendTopSubline": "wanneer de thuisaccu boven {soc} is.",
+    "legendMiddleSubline": "als de thuisaccu {soc} bereikt heeft.",
+    "legendTopAutostart": "Laden vanuit de thuisbatterij eens de batterij",
+    "legendTopName": "Opladen met energie uit de thuisaccu",
+    "legendTopSubline": "stoppen wanneer de thuisaccu {soc} bereikt.",
     "modalTitle": "Thuisaccu",
     "usageTab": "Batterijgebruik"
   },
@@ -44,8 +44,12 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
-      "titleAdd": "Voeg Lader toe",
-      "titleEdit": "Editeer Lader"
+      "titleAdd": {
+        "charging": "Voeg Lader toe"
+      },
+      "titleEdit": {
+        "charging": "Editeer Lader"
+      }
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
@@ -180,11 +184,17 @@
       "v2Support": "Terug naar InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Laadpunt toevoegen",
+      "addCharger": {
+        "charging": "Laadpunt toevoegen"
+      },
       "addMeter": "Toevoegen van een toegewijde laadmeter",
       "cancel": "Annuleren",
-      "chargerError": "Het configureren van een oplader is vereist.",
-      "chargerLabel": "Oplader",
+      "chargerError": {
+        "charging": "Het configureren van een oplader is vereist."
+      },
+      "chargerLabel": {
+        "charging": "Oplader"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Zal een stroom van 6 tot 16 A gebruiken.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +206,9 @@
       "circuitHelp": "Toewijzing van Load management om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "niet toegewezen",
-      "defaultModeHelp": "Laadmodus bij het aansluiten van een voertuig.",
+      "defaultModeHelp": {
+        "charging": "Laadmodus bij het aansluiten van een voertuig."
+      },
       "defaultModeHelpKeep": "Behoud de laatst-geselecteerde laadmodus.",
       "defaultModeLabel": "Standaard mode",
       "delete": "Wissen",
@@ -779,6 +791,8 @@
       "connected": "Verbonden.",
       "disconnectRequired": "Sessie beëindigd. Maak opnieuw verbinding.",
       "disconnected": "Niet verbonden.",
+      "feedinPriorityNextStart": "Hoge energieprijs start over {duration}.",
+      "feedinPriorityPausing": "Zonne opladen gepauzeerd om grid import te maximaliseren.",
       "finished": "Geëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt gepauzeerd.",
@@ -973,6 +987,13 @@
     "resetAction": "Limiet verwijderen",
     "resetWarning": "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opruimen?",
     "saved": "Opgeslagen."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Gepauzeerde uren",
+    "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
+    "priceLabel": "Teruglevertarief",
+    "priceLimit": "Terugleverprijs limiet",
+    "title": "Terugleveren prioritiseren"
   },
   "startupError": {
     "configFile": "Gebruikt configuratiebestand:",
