@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -170,9 +169,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		if err == nil {
 			if resp, err = cookieClient.Do(req); err == nil {
 				defer resp.Body.Close()
-
 				// code adapted from hyundai_kia_connect_api
-
 				// get redirect URL from request
 				urlRedirect := resp.Request.URL
 
@@ -210,6 +207,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		fmt.Printf("Trying to get code from:\n%s\nUsing data:\n%v\n", uri, data)
 
 		// create a client that doesn't honor redirects so we receive the original response
+		// no idea how to do that with the internal request.New(...) function
 		sc := http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -271,8 +269,12 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	return accCode, err
 }
 
-func (v *Identity) exchangeCodeV2(accCode string) (*oauth2.Token, error) {
+func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
+	headers := map[string]string{
+		"Content-type": "application/x-www-form-urlencoded",
+		"User-Agent":   "okhttp/3.10.0",
+	}
 	data := url.Values{
 		"grant_type":    {"authorization_code"},
 		"code":          {accCode},
@@ -281,43 +283,12 @@ func (v *Identity) exchangeCodeV2(accCode string) (*oauth2.Token, error) {
 		"client_secret": {"secret"},
 	}
 
-	hc := http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	fmt.Printf("Calling uri %s with data:\n%v\n", uri, data)
-
-	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
-	if err == nil {
-		req.PostForm = data
-		if resp, err := hc.Do(req); err == nil {
-			bla, _ := io.ReadAll(resp.Body)
-			fmt.Printf("Got:\n%v\n", string(bla))
-		}
-	}
-	return nil, errors.New("hard brake")
-}
-
-func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
-	headers := map[string]string{
-		"Authorization": "Basic " + v.config.BasicToken,
-		"Content-type":  "application/x-www-form-urlencoded",
-		"User-Agent":    "okhttp/3.10.0",
-	}
-
-	data := url.Values{
-		"grant_type":   {"authorization_code"},
-		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
-		"code":         {accCode},
-	}
-
 	var token oauth2.Token
 
-	req, _ := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	err := v.DoJSON(req, &token)
 
+	fmt.Printf("Extracted token: %v\n", token)
 	return util.TokenWithExpiry(&token), err
 }
 
@@ -372,7 +343,7 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 	if err == nil {
 		var token *oauth2.Token
-		if token, err = v.exchangeCodeV2(code); err == nil {
+		if token, err = v.exchangeCode(code); err == nil {
 			v.TokenSource = oauth.RefreshTokenSource(token, v)
 		}
 	}
