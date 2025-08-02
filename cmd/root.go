@@ -357,12 +357,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err != nil {
 		// improve error message
 		err = wrapFatalError(err)
-
-		if uw, ok := err.(interface{ Unwrap() []error }); ok {
-			valueChan <- util.Param{Key: keys.Fatal, Val: uw.Unwrap()}
-		} else {
-			valueChan <- util.Param{Key: keys.Fatal, Val: err}
-		}
+		valueChan <- util.Param{Key: keys.Fatal, Val: err}
 
 		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)
