@@ -10,17 +10,17 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestRates(t *testing.T) {
-	suite.Run(t, new(ratesTestSuite))
+func TestSolarRates(t *testing.T) {
+	suite.Run(t, new(solarTestSuite))
 }
 
-type ratesTestSuite struct {
+type solarTestSuite struct {
 	suite.Suite
 	clock *clock.Mock
 	rr    api.Rates
 }
 
-func (t *ratesTestSuite) rate(start int, val float64) api.Rate {
+func (t *solarTestSuite) rate(start int, val float64) api.Rate {
 	return api.Rate{
 		Start: t.clock.Now().Add(time.Duration(start) * time.Hour),
 		End:   t.clock.Now().Add(time.Duration(start+1) * time.Hour),
@@ -28,13 +28,13 @@ func (t *ratesTestSuite) rate(start int, val float64) api.Rate {
 	}
 }
 
-func (t *ratesTestSuite) SetupSuite() {
+func (t *solarTestSuite) SetupSuite() {
 	t.clock = clock.NewMock()
 	t.clock.Set(now.BeginningOfDay())
 	t.rr = api.Rates{t.rate(0, 0), t.rate(1, 1), t.rate(2, 2), t.rate(3, 3), t.rate(4, 4)}
 }
 
-func (t *ratesTestSuite) TestIndex() {
+func (t *solarTestSuite) TestIndex() {
 	for i, tc := range []struct {
 		ts  float64
 		idx int
@@ -53,7 +53,7 @@ func (t *ratesTestSuite) TestIndex() {
 	}
 }
 
-func (t *ratesTestSuite) TestEnergy() {
+func (t *solarTestSuite) TestEnergy() {
 	for i, tc := range []struct {
 		from, to float64
 		expected float64
@@ -80,7 +80,7 @@ func (t *ratesTestSuite) TestEnergy() {
 	}
 }
 
-func (t *ratesTestSuite) TestShort() {
+func (t *solarTestSuite) TestShort() {
 	t.clock.Set(now.BeginningOfDay())
 	rr := api.Rates{t.rate(0, 0), t.rate(1, 1)}
 
