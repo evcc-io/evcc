@@ -212,7 +212,7 @@ func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
 
 	// check if device instance is nil
 	if reflect.ValueOf(instance).IsNil() {
-		return zero, fmt.Errorf("instance %s not found", name)
+		return zero, fmt.Errorf("instance %s not initialized", name)
 	}
 
 	return instance, nil
