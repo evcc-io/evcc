@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 //go:embed defaults.yaml
