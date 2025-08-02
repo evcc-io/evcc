@@ -37,6 +37,12 @@ const preview = {
 setup((app) => {
   app.config.globalProperties.$hiddenFeatures = () => true;
   app.use(setupI18n());
+
+  // Mock router-link for Storybook
+  app.component("router-link", {
+    props: ["to", "activeClass"],
+    template: '<a :href="to"><slot /></a>',
+  });
 });
 
 export default preview;

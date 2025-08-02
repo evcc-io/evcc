@@ -620,10 +620,13 @@
   },
   "header": {
     "about": "About",
+    "authProviders": {
+      "confirmLogout": "Are you sure you want to disconnect {title}?",
+      "title": "Authorization Status"
+    },
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",
-    "login": "Vehicle Logins",
     "logout": "Logout",
     "nativeSettings": "Change Server",
     "needHelp": "Need Help?",
