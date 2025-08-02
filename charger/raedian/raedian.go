@@ -101,8 +101,6 @@ func (c *Charger) Enable(enable bool) error {
 	var value uint16
 	if !enable {
 		value = 0x01
-	} else {
-		value = 0x00
 	}
 	_, err := c.conn.WriteSingleRegister(raedianRegStartStopSession, value)
 	if err != nil {
