@@ -77,7 +77,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
-			Ft: maxValues(solarEnergy(solarRates, time.Duration(dt[0])*time.Second), 1, minLen),
+			Ft: maxValues(ratesToEnergy(solarRates, time.Duration(dt[0])*time.Second), 1, minLen),
 		},
 	}
 
@@ -237,11 +237,10 @@ func slotsToHours(now time.Time, profile *[96]float64) []float64 {
 	return result
 }
 
-func solarEnergy(rates []api.Rate, firstSlot time.Duration) []api.Rate {
-	powers := timestampSeries(rates)
-	res := make([]api.Rate, 0, len(rates))
+func ratesToEnergy(rr []api.Rate, firstSlot time.Duration) []api.Rate {
+	res := make([]api.Rate, 0, len(rr))
 
-	for _, r := range rates {
+	for _, r := range rr {
 		from := r.Start
 
 		if len(res) == 0 {
@@ -251,7 +250,7 @@ func solarEnergy(rates []api.Rate, firstSlot time.Duration) []api.Rate {
 		res = append(res, api.Rate{
 			Start: from,
 			End:   r.End,
-			Value: powers.energy(from, r.End),
+			Value: solarEnergy(rr, from, r.End),
 		})
 	}
 
