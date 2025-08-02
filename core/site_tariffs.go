@@ -15,11 +15,11 @@ import (
 )
 
 type solarDetails struct {
-	Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
+	Scale            *float64   `json:"scale,omitempty"`            // scale factor yield/forecasted today
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Timeseries       api.Rates  `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 }
 
 type dailyDetails struct {
@@ -113,27 +113,27 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// calculate adjusted solar forecast
-	if solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar))); len(solar) > 0 {
+	if solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
 	site.publish(keys.Forecast, fc)
 }
 
-func (site *Site) solarDetails(solar timeseries) solarDetails {
+func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
 		Timeseries: solar,
 	}
 
-	last := solar[len(solar)-1].Timestamp
+	last := solar[len(solar)-1].Start
 
 	bod := beginningOfDay(time.Now())
 	eod := bod.AddDate(0, 0, 1)
 	eot := eod.AddDate(0, 0, 1)
 
-	remainingToday := solar.energy(time.Now(), eod)
-	tomorrow := solar.energy(eod, eot)
-	dayAfterTomorrow := solar.energy(eot, eot.AddDate(0, 0, 1))
+	remainingToday := energy(solar, time.Now(), eod)
+	tomorrow := energy(solar, eod, eot)
+	dayAfterTomorrow := energy(solar, eot, eot.AddDate(0, 0, 1))
 
 	res.Today = dailyDetails{
 		Yield:    remainingToday,
@@ -149,7 +149,7 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 	}
 
 	// accumulate forecasted energy since last update
-	site.fcstEnergy.AddEnergy(solar.energy(site.fcstEnergy.updated, time.Now()) / 1e3)
+	site.fcstEnergy.AddEnergy(energy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
 
 	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
