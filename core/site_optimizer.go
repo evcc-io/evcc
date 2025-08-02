@@ -185,6 +185,7 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 	}
 
 	energy := lp.GetRemainingEnergy() * 1e3 // Wh
+	energyKnown := energy > 0
 
 	res := make([]float64, 0, minLen)
 	for i := range minLen {
@@ -194,7 +195,7 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 		}
 
 		deltaEnergy := power * d // Wh
-		if deltaEnergy >= energy {
+		if deltaEnergy >= energy && energyKnown {
 			deltaEnergy = energy
 		}
 		energy -= deltaEnergy
