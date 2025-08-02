@@ -64,6 +64,10 @@ func Profile(from time.Time) (*[96]float64, error) {
 		res = append(res, val)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	if len(res) != 96 {
 		return nil, ErrIncomplete
 	}
