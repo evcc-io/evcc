@@ -87,7 +87,7 @@ export default {
 	},
 	computed: {
 		telemetryEnabled() {
-			return settings.telemetry === true;
+			return store.state?.telemetry === true;
 		},
 		hiddenFeatures() {
 			return settings.hiddenFeatures === true;
@@ -125,7 +125,7 @@ export default {
 					validateStatus: (code) => [200, 404].includes(code),
 				});
 				if (res.status === 200) {
-					this.title = res.data.result.title;
+					this.title = res.data.title;
 				} else {
 					console.log("TODO: implement site endpoint in config error mode");
 				}

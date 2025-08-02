@@ -453,7 +453,18 @@
         "reset": {
           "action": "Nollställ...",
           "confirmationButton": "Nollställ & starta om",
-          "confirmationText": "Denna åtgärd raderar dina data permanent. Säkerställ att du har sparat en backup först."
+          "confirmationText": "Denna åtgärd raderar dina data permanent. Säkerställ att du har sparat en backup först.",
+          "description": "Har du problem med konfigurationen och vill börja om? Radera all data och starta om.",
+          "sessions": "Laddningar",
+          "sessionsDescription": "Raderar din laddningshistorik.",
+          "settings": "Konfiguration & inställningar",
+          "settingsDescription": "Raderar alla konfigurerade enheter, tjänster, abonnemang etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Återställ...",
+          "confirmationButton": "Återställ & starta om",
+          "confirmationText": "Detta kommer att radera hela databasen. Se till att säkerhetskopiera först."
         }
       },
       "logs": "Loggar",

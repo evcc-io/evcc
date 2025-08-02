@@ -16,7 +16,7 @@ import (
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var ErrNotFound = errors.New("not found")

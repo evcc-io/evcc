@@ -155,12 +155,15 @@
       "docsLink": "ஆவணங்களைக் காண்க.",
       "experimental": "சோதனை",
       "hideAdvancedSettings": "மேம்பட்ட அமைப்புகளை மறைக்க",
+      "invalidFileSelected": "தவறான கோப்பு தேர்ந்தெடுக்கப்பட்டது",
+      "noFileSelected": "எந்த கோப்பும் தேர்ந்தெடுக்கப்படவில்லை.",
       "off": "ஆஃப்",
       "on": "ஆன்",
       "password": "கடவுச்சொல்",
       "readFromFile": "கோப்பிலிருந்து படியுங்கள்",
       "remove": "அகற்று",
       "save": "சேமி",
+      "selectFile": "உலாவு",
       "showAdvancedSettings": "மேம்பட்ட அமைப்புகளைக் காட்டு",
       "telemetry": "டெலிமெட்ரி",
       "templateLoading": "ஏற்றுகிறது ...",
@@ -435,6 +438,38 @@
       "trialToken": "சோதனை கிள்ளாக்கு"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "காப்புப்பிரதியைப் பதிவிறக்குக ...",
+          "confirmationButton": "காப்புப்பிரதியைப் பதிவிறக்கவும்",
+          "confirmationText": "தரவுத்தள கோப்பைப் பதிவிறக்க உங்கள் கடவுச்சொல்லை உள்ளிடவும்.",
+          "description": "உங்கள் தரவை ஒரு கோப்பில் காப்புப் பிரதி எடுக்கவும். கணினி தோல்வி ஏற்பட்டால் உங்கள் தரவை மீட்டெடுக்க இந்த கோப்பு பயன்படுத்தப்படலாம்.",
+          "title": "காப்புப்பிரதி"
+        },
+        "cancel": "ரத்துசெய்",
+        "description": "உங்கள் தரவை காப்புப் பிரதி, மீட்டமை மற்றும் மீட்டமைக்கவும். உங்கள் தரவை வேறொரு கணினிக்கு நகர்த்த விரும்பினால் பயனுள்ளதாக இருக்கும்.",
+        "note": "குறிப்பு: மேலே உள்ள அனைத்து செயல்களும் உங்கள் தரவுத்தள தரவை மட்டுமே பாதிக்கின்றன. EVCC.YAML உள்ளமைவு கோப்பு மாறாமல் உள்ளது.",
+        "reset": {
+          "action": "மீட்டமை ...",
+          "confirmationButton": "மீட்டமை மற்றும் மறுதொடக்கம்",
+          "confirmationText": "இது நீங்கள் தேர்ந்தெடுத்த தரவை நிரந்தரமாக நீக்கும். நீங்கள் முதலில் ஒரு காப்புப்பிரதியை பதிவிறக்கம் செய்துள்ளீர்கள் என்பதை உறுதிப்படுத்தவும்.",
+          "description": "உள்ளமைவில் சிக்கல்கள் மற்றும் தொடங்க விரும்புகிறீர்களா? எல்லா தரவையும் நீக்கி புதியதாகத் தொடங்கவும்.",
+          "sessions": "சார்சிங் அமர்வுகள்",
+          "sessionsDescription": "உங்கள் சார்சிங் அமர்வு வரலாற்றை நீக்குகிறது.",
+          "settings": "உள்ளமைவு மற்றும் அமைப்புகள்",
+          "settingsDescription": "உள்ளமைக்கப்பட்ட அனைத்து சாதனங்கள், சேவைகள், திட்டங்கள், தற்காலிக சேமிப்புகள் போன்றவற்றை நீக்குகிறது.",
+          "title": "மீட்டமை"
+        },
+        "restore": {
+          "action": "மீட்டமைக்க ...",
+          "confirmationButton": "மீட்டெடுத்து மறுதொடக்கம் செய்யுங்கள்",
+          "confirmationText": "இது உங்கள் முழுமையான தரவுத்தளத்தை மேலெழுதும். நீங்கள் முதலில் ஒரு காப்புப்பிரதியை பதிவிறக்கம் செய்துள்ளீர்கள் என்பதை உறுதிப்படுத்தவும்.",
+          "description": "காப்புப்பிரதி கோப்பிலிருந்து உங்கள் தரவை மீட்டெடுக்கவும். இது உங்கள் தற்போதைய எல்லா தரவையும் மேலெழுதும்.",
+          "labelFile": "காப்புப்பிரதி கோப்பு",
+          "title": "மீட்டெடு"
+        },
+        "title": "காப்புப்பிரதி மற்றும் மீட்டமை"
+      },
       "logs": "பதிவுகள்",
       "restart": "மறுதொடக்கம்",
       "restartRequiredDescription": "விளைவைக் காண தயவுசெய்து மறுதொடக்கம் செய்யுங்கள்.",
@@ -614,17 +649,17 @@
     "secondaryActions": "Still not able பெறுநர் solve your problem? Here அரே some more heavy-handed options."
   },
   "log": {
-    "areaLabel": "Filter by area",
+    "areaLabel": "பரப்பளவில் வடிகட்டவும்",
     "areas": "அனைத்து பகுதிகளும்",
     "download": "முழுமையான பதிவிறக்கம் பதிவு",
-    "levelLabel": "Filter by log level",
+    "levelLabel": "பதிவு நிலை மூலம் வடிகட்டவும்",
     "nAreas": "{count} பகுதிகள்",
     "noResults": "பொருந்தக்கூடிய பதிவு உள்ளீடுகள் இல்லை.",
     "search": "தேடு",
     "selectAll": "அனைத்தையும் தெரிவுசெய்",
     "showAll": "Show அனைத்தும் entries",
     "title": "பதிவுகள்",
-    "update": "Auto update"
+    "update": "ஆட்டோ புதுப்பிப்பு"
   },
   "loginModal": {
     "cancel": "கைவிடு",
@@ -633,22 +668,22 @@
     "iframeHint": "Open evcc in a புதிய tab.",
     "iframeIssue": "Your password is correct, but your browser seems பெறுநர் have dropped the authentication cookie. This can happen if you ஓடு evcc in an iframe வழிமம் HTTP.",
     "invalid": "கடவுச்சொல் தவறானது.",
-    "login": "Login",
-    "password": "Password",
-    "reset": "Reset password?",
-    "title": "Authentication"
+    "login": "புகுபதிவு",
+    "password": "நிர்வாகி கடவுச்சொல்",
+    "reset": "கடவுச்சொல்லை மீட்டமைக்கவா?",
+    "title": "ஏற்பு"
   },
   "main": {
     "chargingPlan": {
-      "active": "Active",
+      "active": "செயலில்",
       "addRepeatingPlan": "மறுநிகழ்வு திட்டத்தைச் சேர்",
       "arrivalTab": "வருகை",
-      "day": "Day",
+      "day": "நாள்",
       "departureTab": "புறப்படுதல்",
       "goal": "மின்சேர்வி இலக்கு",
       "modalTitle": "மின்சேர்வி திட்டம்",
-      "none": "none",
-      "planNumber": "Plan {number}",
+      "none": "எதுவுமில்லை",
+      "planNumber": "திட்டம் {number}",
       "preconditionDescription": "பேட்டரி முன்நிபந்தனைக்கு புறப்படுவதற்கு முன் {காலம் {காலம்.",
       "preconditionLong": "தாமதமாக சார்சிங்",
       "preconditionOptionAll": "எல்லாம்",
@@ -659,7 +694,7 @@
       "repeatingPlans": "மறுநிகழ்வு திட்டங்கள்",
       "selectAll": "அனைத்தையும் தேர்ந்தெடு",
       "time": "நேரம்",
-      "title": "Plan",
+      "title": "திட்டம்",
       "titleMinSoc": "\"குறை. மின்னூட்டு\"",
       "titleTargetCharge": "புறப்படுதல்",
       "unsavedChanges": "There அரே unsaved changes. இடு now?",
@@ -667,13 +702,13 @@
       "weekdays": "நாட்கள்"
     },
     "energyflow": {
-      "battery": "Battery",
+      "battery": "மின்கலம்",
       "batteryCharge": "மின்கலம் மின்சேர்வி",
       "batteryDischarge": "மின்கலம் மின்நீக்கி",
       "batteryGridChargeActive": "கட்டம் சார்சிங் செயலில்",
       "batteryGridChargeLimit": "எப்போது கட்டம் சார்சிங்",
       "batteryHold": "மின்கலம் (பூட்டபட்டது)",
-      "batteryTooltip": "{energy} of {total} ({soc})",
+      "batteryTooltip": "{energy} ({total}) இன் {soc}",
       "forecastTooltip": "முன்னறிவிப்பு: இன்று சூரிய விளைவாக்கம்",
       "gridImport": "கட்டம் பயன்பாடு",
       "homePower": "நுகர்வு",
@@ -693,7 +728,7 @@
     "loadpoint": {
       "avgPrice": "⌀ விலை",
       "charged": "மின்சேர்க்கப்பட்டது",
-      "co2": "⌀ CO₂",
+      "co2": "Co co₂",
       "duration": "காலம்",
       "fallbackName": "மின்சேர்வி புள்ளி",
       "finished": "நேரம் முடிந்தது",
@@ -711,10 +746,10 @@
         "mode": "ஞாயிறு மற்றும் குறை+ஞாயிறு பயன்முறையில் மட்டுமே கிடைக்கும்.",
         "once": "Boost செயலில் க்கு this charging session."
       },
-      "batteryUsage": "Home Battery",
+      "batteryUsage": "முகப்பு பேட்டரி",
       "currents": "மின்சேர்வி மின்னோட்டம்",
-      "default": "default",
-      "disclaimerHint": "Note:",
+      "default": "இயல்புநிலை",
+      "disclaimerHint": "குறிப்பு:",
       "limitSoc": {
         "description": "இந்த வாகனம் இணைக்கப்படும்போது பயன்படுத்தப்படும் மின்சேர்வி வரம்பு.",
         "label": "இயல்புநிலை வரம்பு"
@@ -752,7 +787,7 @@
       "smart": "அறிவாளி"
     },
     "provider": {
-      "login": "log in",
+      "login": "புகுபதிகை",
       "logout": "விடு பதிகை"
     },
     "startConfiguration": "உள்ளமைவைத் தொடங்குவோம்",
@@ -760,12 +795,12 @@
       "activate": "செயல்படுத்து",
       "co2Limit": "CO₂ வரம்பு {co2}",
       "costLimitIgnore": "கட்டமைக்கப்பட்ட {limit} இந்தக் காலகட்டத்தில் புறக்கணிக்கப்படும்.",
-      "currentPlan": "Active plan",
+      "currentPlan": "செயலில் திட்டம்",
       "descriptionEnergy": "எப்போது {targetEnergy} வாகனத்தில் ஏற்றப்பட வேண்டும்?",
       "descriptionSoc": "When should the vehicle be charged பெறுநர் {targetSoc}?",
       "goalReached": "இலக்கு ஏற்கனவே அடைந்தது",
       "inactiveLabel": "இலக்கு நேரம்",
-      "nextPlan": "Next plan",
+      "nextPlan": "அடுத்த திட்டம்",
       "notReachableInTime": "இலக்கு எட்டப்படும் {overrun} பின்னர்.",
       "onlyInPvMode": "கட்டணம் வசூலிக்கும் திட்டம் சூரிய பயன்முறையில் மட்டுமே வேலை செய்கிறது.",
       "planDuration": "மின்சேர்வி நேரம்",
@@ -775,7 +810,7 @@
       "preview": "முன்னோட்டம் திட்டம்",
       "priceLimit": "விலை வரம்பு {price}",
       "remove": "அகற்று",
-      "setTargetTime": "none",
+      "setTargetTime": "எதுவுமில்லை",
       "targetIsAboveLimit": "{limit} இன் கட்டமைக்கப்பட்ட மின்சேர்வி வரம்பு இந்தக் காலகட்டத்தில் புறக்கணிக்கப்படும்.",
       "targetIsAboveVehicleLimit": "வாகன வரம்பு இலக்கு மின்சேர்வியை விடக் கீழே உள்ளது.",
       "targetIsInThePast": "எதிர்காலத்தில் ஒரு நேரத்தைத் தேர்ந்தெடுங்கள், மார்டி.",
@@ -783,7 +818,7 @@
       "title": "இலக்கு நேரம்",
       "today": "இன்று",
       "tomorrow": "நாளை",
-      "update": "Update",
+      "update": "புதுப்பிப்பு",
       "vehicleCapacityDocs": "Learn how பெறுநர் configure it.",
       "vehicleCapacityRequired": "The vehicle மின்கலம் capacity is required பெறுநர் estimate the charging time."
     },
@@ -842,7 +877,7 @@
       "waitForVehicle": "ஆயத்தம். வாகனத்திற்காக காத்திருக்கிறது…",
       "welcome": "இணைப்பை உறுதிப்படுத்த குறுகிய ஆரம்ப கட்டணம்."
     },
-    "vehicles": "Parking",
+    "vehicles": "பார்க்கிங்",
     "welcome": "வணக்கம்!"
   },
   "notifications": {

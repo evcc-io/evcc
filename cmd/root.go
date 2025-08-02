@@ -189,7 +189,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup telemetry
 	if err == nil {
-		telemetry.Create(conf.Plant)
+		telemetry.Create(conf.Plant, valueChan)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
 		}

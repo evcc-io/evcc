@@ -12,16 +12,20 @@
 					{{ $t("config.validation.failed") }}
 				</span>
 			</strong>
-			<span
-				v-if="isRunning"
-				class="spinner-border spinner-border-sm"
-				role="status"
-				aria-hidden="true"
-			></span>
-			<a v-else href="#" class="alert-link" tabindex="0" @click.prevent="$emit('test')">
-				{{ $t("config.validation.validate") }}
-			</a>
+			<div v-if="!showTokenRequired">
+				<span
+					v-if="isRunning"
+					class="spinner-border spinner-border-sm"
+					role="status"
+					aria-hidden="true"
+				></span>
+				<a v-else href="#" class="alert-link" tabindex="0" @click.prevent="test">
+					{{ $t("config.validation.validate") }}
+				</a>
+			</div>
 		</div>
+		<hr v-if="showTokenRequired" class="divider" />
+		<SponsorTokenRequired v-if="showTokenRequired" compact />
 		<hr v-if="error" class="divider" />
 		<div v-if="error" class="text-danger">
 			{{ error }}
@@ -36,10 +40,11 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import DeviceTags from "./DeviceTags.vue";
+import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 
 export default defineComponent({
 	name: "TestResult",
-	components: { DeviceTags },
+	components: { DeviceTags, SponsorTokenRequired },
 	props: {
 		isUnknown: Boolean,
 		isSuccess: Boolean,
@@ -47,8 +52,28 @@ export default defineComponent({
 		isRunning: Boolean,
 		result: Object as PropType<Record<string, any> | null>,
 		error: String as PropType<string | null>,
+		sponsorTokenRequired: Boolean,
 	},
 	emits: ["test"],
+	data() {
+		return {
+			showTokenRequired: false,
+		};
+	},
+	watch: {
+		sponsorTokenRequired() {
+			this.showTokenRequired = false;
+		},
+	},
+	methods: {
+		test() {
+			if (this.sponsorTokenRequired) {
+				this.showTokenRequired = true;
+			} else {
+				this.$emit("test");
+			}
+		},
+	},
 });
 </script>
 <style scoped>

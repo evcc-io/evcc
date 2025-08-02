@@ -1,7 +1,7 @@
 <template>
 	<button v-if="clickable" type="button" class="entry" @click="handleClick">
 		<component :is="iconComponent" v-if="iconComponent" :class="iconClass" />
-		<div v-if="hasContent">
+		<div v-if="hasContent" :class="{ tabular }">
 			<slot>
 				{{ content }}
 			</slot>
@@ -9,7 +9,7 @@
 	</button>
 	<div v-else class="entry">
 		<component :is="iconComponent" v-if="iconComponent" :class="iconClass" />
-		<div v-if="hasContent">
+		<div v-if="hasContent" :class="{ tabular }">
 			<slot>
 				{{ content }}
 			</slot>
@@ -29,6 +29,7 @@ export default defineComponent({
 		iconComponent: { type: [String, Object], default: null },
 		iconClass: { type: String, default: "" },
 		clickable: { type: Boolean, default: false },
+		tabular: { type: Boolean, default: false },
 	},
 	emits: ["click"],
 	data() {
@@ -103,5 +104,8 @@ export default defineComponent({
 
 .phaseDown {
 	transform: rotate(-90deg);
+}
+.tabular {
+	font-variant-numeric: tabular-nums;
 }
 </style>

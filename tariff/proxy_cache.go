@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/server/db/cache"
 )
 
 type cached struct {
@@ -18,7 +18,7 @@ func cacheKey(typ string, other map[string]any) string {
 }
 
 func cachePut(key string, typ api.TariffType, rates api.Rates) error {
-	return settings.SetJson(key, &cached{
+	return cache.Put(key, &cached{
 		Type:  typ,
 		Rates: rates,
 	})
@@ -26,5 +26,5 @@ func cachePut(key string, typ api.TariffType, rates api.Rates) error {
 
 func cacheGet(key string) (*cached, error) {
 	var res cached
-	return &res, settings.Json(key, &res)
+	return &res, cache.Get(key, &res)
 }

@@ -153,6 +153,7 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: Object,
 		forecast: Object as PropType<Forecast>,
+		telemetry: Boolean,
 	},
 	computed: {
 		batteryConfigured() {
@@ -216,6 +217,7 @@ export default defineComponent({
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
+					telemetry: this.telemetry,
 				},
 			};
 		},

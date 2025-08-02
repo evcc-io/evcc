@@ -18,7 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
@@ -73,7 +73,7 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[string]any, error) {
@@ -196,7 +196,7 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO return application/yaml content type if type != template
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
@@ -242,7 +242,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, testInstance(instance))
+	jsonWrite(w, testInstance(instance))
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
@@ -313,7 +313,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		Name: config.NameForID(conf.ID),
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
@@ -387,7 +387,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		ID: id,
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func configurableDevice[T any](name string, h config.Handler[T]) (config.ConfigurableDevice[T], error) {
@@ -529,7 +529,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			ID: id,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -595,5 +595,5 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	// prevent context from being cancelled
 	close(done)
 
-	jsonResult(w, testInstance(instance))
+	jsonWrite(w, testInstance(instance))
 }

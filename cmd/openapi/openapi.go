@@ -3,19 +3,13 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"net/url"
 	"os"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
 func main() {
-	uri, err := url.Parse(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	doc, err := openapi3.NewLoader().LoadFromURI(uri)
+	doc, err := openapi3.NewLoader().LoadFromFile(os.Args[1])
 	if err != nil {
 		log.Fatal("failed to load OpenAPI spec:", err)
 	}
@@ -28,9 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := os.WriteFile("openapi.json", b, 0o644); err != nil {
+	if err := os.WriteFile(os.Args[2], b, 0o644); err != nil {
 		log.Fatal(err)
 	}
-
-	log.Println("OpenAPI spec written to openapi.json")
 }

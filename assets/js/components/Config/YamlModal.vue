@@ -100,8 +100,8 @@ export default {
 		async load() {
 			try {
 				const { data } = await api.get(this.endpoint);
-				this.serverYaml = data.result;
-				this.yaml = data.result || this.defaultYaml;
+				this.serverYaml = data;
+				this.yaml = data || this.defaultYaml;
 			} catch (e) {
 				console.error(e);
 			}

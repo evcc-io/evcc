@@ -21,6 +21,7 @@ type E3dc struct {
 	dischargeLimit uint32
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
+	retry          func(err error) error
 }
 
 func init() {
@@ -89,6 +90,15 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		dischargeLimit: dischargeLimit,
 	}
 
+	m.retry = func(err error) error {
+		if err == nil {
+			return nil
+		}
+		m.conn.Disconnect()
+		m.conn, err = rscp.NewClient(cfg)
+		return err
+	}
+
 	// decorate battery
 	var (
 		batteryCapacity func() float64
@@ -112,9 +122,8 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	switch m.usage {
 	case templates.UsageGrid:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
-		if err != nil {
-			m.conn.Disconnect()
-			return 0, err
+		if e := m.retry(err); e != nil {
+			return 0, e
 		}
 		return rscpValue(*res, cast.ToFloat64E)
 
@@ -123,9 +132,8 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil),
 			*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
 		})
-		if err != nil {
-			m.conn.Disconnect()
-			return 0, err
+		if e := m.retry(err); e != nil {
+			return 0, e
 		}
 
 		values, err := rscpValues(res, cast.ToFloat64E)
@@ -137,9 +145,8 @@ func (m *E3dc) CurrentPower() (float64, error) {
 
 	case templates.UsageBattery:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
-		if err != nil {
-			m.conn.Disconnect()
-			return 0, err
+		if e := m.retry(err); e != nil {
+			return 0, e
 		}
 		pwr, err := rscpValue(*res, cast.ToFloat64E)
 		if err != nil {
@@ -158,9 +165,8 @@ func (m *E3dc) batterySoc() (float64, error) {
 	defer m.mu.Unlock()
 
 	res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
-	if err != nil {
-		m.conn.Disconnect()
-		return 0, err
+	if e := m.retry(err); e != nil {
+		return 0, e
 	}
 
 	return rscpValue(*res, cast.ToFloat64E)
@@ -198,12 +204,11 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 		return api.ErrNotAvailable
 	}
 
-	if err != nil {
-		m.conn.Disconnect()
-	} else {
-		err = rscpError(res...)
+	if e := m.retry(err); e != nil {
+		return e
 	}
-	return err
+
+	return rscpError(res...)
 }
 
 func e3dcDischargeBatteryLimit(active bool, limit uint32) rscp.Message {

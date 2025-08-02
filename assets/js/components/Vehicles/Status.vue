@@ -18,6 +18,7 @@
 				:data-testid="item.testId"
 				:class="item.itemClass"
 				:clickable="item.clickable"
+				:tabular="item.tabular"
 				@click="item.clickHandler"
 			>
 				<!-- items with complex content -->
@@ -224,6 +225,7 @@ export default defineComponent({
 					tooltipContent: this.pvAction === "enable" ? t("pvEnable") : t("pvDisable"),
 					iconComponent: this.pvAction === "enable" ? SunUpIcon : SunDownIcon,
 					testId: "vehicle-status-pvtimer",
+					tabular: true,
 				},
 				{
 					id: "phaseTimer",
@@ -233,6 +235,7 @@ export default defineComponent({
 					iconComponent: "shopicon-regular-angledoublerightsmall",
 					iconClass: this.phaseAction === "scale1p" ? "phaseUp" : "phaseDown",
 					testId: "vehicle-status-phasetimer",
+					tabular: true,
 				},
 				{
 					id: "tempLimit",
