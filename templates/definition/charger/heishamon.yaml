@@ -99,12 +99,11 @@ render: |
     switch:
       - case: 1 # dimm
         set:
-          {{- if eq .heating_zone "dhw" }}
           source: mqtt
+          {{- if eq .heating_zone "dhw" }}
           topic: {{.heishamon_mqtt_topic}}/commands/SetDHWTemp
           payload: {{.dhw_dimm_temperature}}
           {{- else }}
-          source: mqtt
           topic: {{.heishamon_mqtt_topic}}/commands/SetZ{{.heating_zone}}HeatRequestTemperature
           payload: {{.dimm_temperature_offset}}
           {{- end }}
