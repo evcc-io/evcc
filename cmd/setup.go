@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -585,6 +586,10 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := settings.Init(); err != nil {
+		return err
+	}
+
+	if err := cache.Init(); err != nil {
 		return err
 	}
 
