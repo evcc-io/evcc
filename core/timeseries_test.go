@@ -53,23 +53,6 @@ func (t *ratesTestSuite) TestIndex() {
 	}
 }
 
-func (t *ratesTestSuite) TestValue() {
-	for i, tc := range []struct {
-		ts, val float64
-	}{
-		{-1, 0},
-		{0, 0},
-		{0.5, 0.5},
-		{1, 1},
-		{4, 4},
-		{99, 0},
-	} {
-		ts := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.ts))
-		res := value(t.rr, ts)
-		t.Equal(tc.val, res, "%d. %+v", i+1, tc)
-	}
-}
-
 func (t *ratesTestSuite) TestEnergy() {
 	for i, tc := range []struct {
 		from, to float64
@@ -92,7 +75,7 @@ func (t *ratesTestSuite) TestEnergy() {
 		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
 		to := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.to))
 
-		res := energy(t.rr, from, to)
+		res := solarEnergy(t.rr, from, to)
 		t.Equal(tc.expected, res, "%d. %+v", i+1, tc)
 	}
 }
@@ -116,7 +99,6 @@ func (t *ratesTestSuite) TestShort() {
 		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
 		to := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.to))
 
-		t.Equal(tc.energy, energy(rr, from, to), "%d. energy %+v", i+1, tc)
-		t.Equal(tc.value, value(rr, to), "%d. value %+v", i+1, tc)
+		t.Equal(tc.energy, solarEnergy(rr, from, to), "%d. energy %+v", i+1, tc)
 	}
 }

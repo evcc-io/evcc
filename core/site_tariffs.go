@@ -136,9 +136,9 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	eod := bod.AddDate(0, 0, 1)
 	eot := eod.AddDate(0, 0, 1)
 
-	remainingToday := energy(solar, time.Now(), eod)
-	tomorrow := energy(solar, eod, eot)
-	dayAfterTomorrow := energy(solar, eot, eot.AddDate(0, 0, 1))
+	remainingToday := solarEnergy(solar, time.Now(), eod)
+	tomorrow := solarEnergy(solar, eod, eot)
+	dayAfterTomorrow := solarEnergy(solar, eot, eot.AddDate(0, 0, 1))
 
 	res.Today = dailyDetails{
 		Yield:    remainingToday,
@@ -154,7 +154,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	}
 
 	// accumulate forecasted energy since last update
-	site.fcstEnergy.AddEnergy(energy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
+	site.fcstEnergy.AddEnergy(solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
 
 	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {

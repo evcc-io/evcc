@@ -20,21 +20,10 @@ func interpolate(rr api.Rates, i int, ts time.Time) float64 {
 	return rp.Value + float64(ts.Sub(rp.Start))*(r.Value-rp.Value)/float64(r.Start.Sub(rp.Start))
 }
 
-func value(rr api.Rates, ts time.Time) float64 {
-	idx, ok := search(rr, ts)
-	if ok {
-		return rr[idx].Value
-	}
-	if idx == 0 || idx >= len(rr) {
-		return 0
-	}
-	return interpolate(rr, idx, ts)
-}
-
-// energy calculates the energy consumption between from and to,
+// solarEnergy calculates the energy consumption between from and to,
 // assuming the rates containing the power at given timestamp.
 // Result is in Wh
-func energy(rr api.Rates, from, to time.Time) float64 {
+func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 	var energy float64
 
 	idx, ok := search(rr, from)
