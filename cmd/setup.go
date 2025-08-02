@@ -1101,8 +1101,11 @@ func configureLoadpoints(conf globalconfig.All) error {
 			err = &DeviceError{cc.Name, e}
 		}
 
-		if e := dynamic.Apply(instance); e != nil && err == nil {
-			err = &DeviceError{cc.Name, e}
+		if instance != nil {
+			// ignore dynamic config in case of startup errors that will leave instance empty
+			if e := dynamic.Apply(instance); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
+			}
 		}
 
 		if err != nil {
