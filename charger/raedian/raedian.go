@@ -125,8 +125,7 @@ func (c *Charger) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	val := binary.BigEndian.Uint16(b)
-	return float64(val), nil
+	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
 var _ api.MeterEnergy = (*Charger)(nil)
