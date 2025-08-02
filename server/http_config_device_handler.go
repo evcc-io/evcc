@@ -200,7 +200,7 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, res)
 }
 
-func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
+func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
 	var zero T
 
 	dev, err := h.ByName(name)
@@ -211,7 +211,7 @@ func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
 	instance := dev.Instance()
 
 	// check if device instance is nil
-	if rv := reflect.ValueOf(instance); rv.IsZero() || rv.IsNil() {
+	if instance == zero || reflect.ValueOf(instance).IsNil() {
 		return zero, fmt.Errorf("instance %s not initialized", name)
 	}
 
