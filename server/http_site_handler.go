@@ -26,8 +26,8 @@ import (
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
+	"go.yaml.in/yaml/v4"
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
@@ -99,7 +99,7 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 
 	var (
 		ype *yaml.ParserError
-		yue yaml.UnmarshalError
+		yue *yaml.UnmarshalError
 	)
 	switch {
 	case errors.As(err, &ype):
