@@ -34,7 +34,6 @@ func (t *ratesTestSuite) SetupSuite() {
 	t.rr = api.Rates{t.rate(0, 0), t.rate(1, 1), t.rate(2, 2), t.rate(3, 3), t.rate(4, 4)}
 }
 
-
 func (t *ratesTestSuite) TestIndex() {
 	for i, tc := range []struct {
 		ts  float64
