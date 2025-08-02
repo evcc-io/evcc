@@ -210,8 +210,8 @@ func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
 
 	instance := dev.Instance()
 
-	// check if device instance is nil
-	if instance == zero || reflect.ValueOf(instance).IsNil() {
+	// check if device instance is nil (https://github.com/golang/go/issues/46320#issuecomment-965970859)
+	if rv := reflect.ValueOf(&instance); rv.Elem().IsZero() || rv.Elem().IsNil() {
 		return zero, fmt.Errorf("instance %s not initialized", name)
 	}
 
