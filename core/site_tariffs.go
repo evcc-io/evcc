@@ -14,12 +14,17 @@ import (
 	"github.com/samber/lo"
 )
 
+type tsEntry struct {
+	Timestamp time.Time `json:"ts"`
+	Value     float64   `json:"val"`
+}
+
 type solarDetails struct {
-	Scale            *float64   `json:"scale,omitempty"`            // scale factor yield/forecasted today
+	Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       api.Rates  `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Timeseries       []tsEntry    `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 }
 
 type dailyDetails struct {
@@ -122,7 +127,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
-		Timeseries: solar,
+		Timeseries: lo.Map(solar, func(r api.Rate, _ int) tsEntry {
+			return tsEntry{Timestamp: r.Start, Value: r.Value}
+		}),
 	}
 
 	last := solar[len(solar)-1].Start
