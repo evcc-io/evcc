@@ -98,6 +98,7 @@ require (
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.5.2
+	go.yaml.in/yaml/v4 v4.0.0-20250730171608-926dd0b54a90
 	golang.org/x/crypto v0.40.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20250711192710-b903b535d3ef
 	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792
@@ -108,7 +109,6 @@ require (
 	golang.org/x/tools v0.35.0
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.6
-	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.30.1
 )
 
@@ -231,6 +231,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.66.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
@@ -244,8 +245,6 @@ tool (
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
 )
-
-replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 

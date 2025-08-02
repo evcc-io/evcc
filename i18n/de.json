@@ -435,6 +435,7 @@
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
+      "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken"
     },
     "system": {
@@ -457,7 +458,7 @@
           "sessions": "Ladevorgänge",
           "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
           "settings": "Konfiguration & Einstellungen",
-          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, usw.",
+          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, Caches, usw.",
           "title": "Zurücksetzen"
         },
         "restore": {

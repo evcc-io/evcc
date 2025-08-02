@@ -26,8 +26,8 @@ import (
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
+	"go.yaml.in/yaml/v4"
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
@@ -99,7 +99,7 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 
 	var (
 		ype *yaml.ParserError
-		yue yaml.UnmarshalError
+		yue *yaml.UnmarshalError
 	)
 	switch {
 	case errors.As(err, &ype):
@@ -501,15 +501,13 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 		}
 
 		if req.Settings {
-			query := db.Instance.Exec("DELETE FROM settings")
-			if query.Error != nil {
-				jsonError(w, http.StatusInternalServerError, query.Error)
-				return
-			}
-			query = db.Instance.Exec("DELETE FROM configs")
-			if query.Error != nil {
-				jsonError(w, http.StatusInternalServerError, query.Error)
-				return
+			tables := []string{"settings", "configs", "caches", "meters"}
+
+			for _, table := range tables {
+				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
 			}
 		}
 

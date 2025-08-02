@@ -40,6 +40,7 @@ RUN go mod download
 # install tools
 COPY Makefile .
 COPY cmd/decorate/ cmd/decorate/
+COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
 RUN make install
 
