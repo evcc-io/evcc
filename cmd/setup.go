@@ -911,24 +911,24 @@ func configureDevices(conf globalconfig.All) error {
 
 	// make sure all devices are configured
 	var errs []error
+
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
 		errs = append(errs, &ClassError{ClassMeter, err})
 	}
+
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
 		errs = append(errs, &ClassError{ClassCharger, err})
 	}
+
 	if err := configureVehicles(conf.Vehicles); err != nil {
 		errs = append(errs, &ClassError{ClassVehicle, err})
 	}
-	if errs != nil {
-		return errors.Join(errs...)
-	}
 
 	if err := configureCircuits(&conf.Circuits); err != nil {
-		return &ClassError{ClassCircuit, err}
+		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
@@ -969,22 +969,23 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
-	if err := configureDevices(*conf); err != nil {
-		// at this stage some devices may have a nil instance
-		if e := configureLoadpoints(*conf); e != nil {
-			return nil, errors.Join(err, &ClassError{ClassLoadpoint, e})
-		}
+	var errs []error
 
-		return nil, err
+	if err := configureDevices(*conf); err != nil {
+		errs = append(errs, err)
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, &ClassError{ClassLoadpoint, err}
+		errs = append(errs, &ClassError{ClassLoadpoint, err})
 	}
 
 	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		errs = append(errs, &ClassError{ClassTariff, err})
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
 	}
 
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {

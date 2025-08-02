@@ -242,6 +242,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("default vehicle: %w", err)
 		}
 		lp.defaultVehicle = dev.Instance()
+		if lp.defaultVehicle == nil {
+			return nil, errors.New("missing default vehicle instance")
+		}
 	}
 
 	if lp.ChargerRef == "" {
