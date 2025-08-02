@@ -5,7 +5,19 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/samber/lo"
 )
+
+type tsEntry struct {
+	Timestamp time.Time `json:"ts"`
+	Value     float64   `json:"val"`
+}
+
+func solarTimeseries(rr api.Rates) []tsEntry {
+	return lo.Map(rr, func(r api.Rate, _ int) tsEntry {
+		return tsEntry{Timestamp: r.Start, Value: r.Value}
+	})
+}
 
 func search(rr api.Rates, ts time.Time) (int, bool) {
 	return slices.BinarySearchFunc(rr, ts, func(v api.Rate, ts time.Time) int {
