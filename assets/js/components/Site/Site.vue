@@ -22,7 +22,10 @@
 			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
-			<div v-if="fatal" class="flex-grow-1 align-items-center d-flex justify-content-center">
+			<div
+				v-if="hasFatalError"
+				class="flex-grow-1 align-items-center d-flex justify-content-center"
+			>
 				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
 			</div>
 			<div
@@ -221,6 +224,9 @@ export default defineComponent({
 					telemetry: this.telemetry,
 				},
 			};
+		},
+		hasFatalError() {
+			return this.fatal.length > 0;
 		},
 	},
 	methods: {
