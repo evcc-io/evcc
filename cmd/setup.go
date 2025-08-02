@@ -928,7 +928,7 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
-	return errors.Join(errs...)
+	return joinErrors(errs...)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
@@ -985,7 +985,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 	}
 
 	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
+		return nil, joinErrors(errs...)
 	}
 
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
