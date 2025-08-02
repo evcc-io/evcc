@@ -795,7 +795,7 @@ export default {
 		async loadConfiguration() {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
-				this.values = deepClone(res.data.result);
+				this.values = deepClone(res.data);
 				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();

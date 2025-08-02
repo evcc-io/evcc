@@ -4,7 +4,7 @@
 		:title="$t('settings.title')"
 		data-testid="global-settings-modal"
 	>
-		<UserInterfaceSettings :sponsor="sponsor" />
+		<UserInterfaceSettings :sponsor="sponsor" :telemetry="telemetry" />
 	</GenericModal>
 </template>
 
@@ -19,6 +19,7 @@ export default defineComponent({
 	components: { GenericModal, UserInterfaceSettings },
 	props: {
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
+		telemetry: Boolean,
 	},
 });
 </script>
