@@ -435,6 +435,7 @@
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
+      "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken"
     },
     "system": {
