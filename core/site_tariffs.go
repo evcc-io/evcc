@@ -127,14 +127,12 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
-		Timeseries: lo.Map(solar, func(r api.Rate, _ int) tsEntry {
-			return tsEntry{Timestamp: r.Start, Value: r.Value}
-		}),
+		Timeseries: asTimeseries(solar),
 	}
 
 	last := solar[len(solar)-1].Start
 
-	bod := beginningOfDay(time.Now())
+	bod := now.BeginningOfDay()
 	eod := bod.AddDate(0, 0, 1)
 	eot := eod.AddDate(0, 0, 1)
 
@@ -181,6 +179,8 @@ func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
 	return tariff != nil && tariff.Type() != api.TariffTypePriceStatic
 }
 
-func beginningOfDay(t time.Time) time.Time {
-	return now.With(t).BeginningOfDay()
+func asTimeseries(solar api.Rates) []tsEntry {
+	return lo.Map(solar, func(r api.Rate, _ int) tsEntry {
+		return tsEntry{Timestamp: r.Start, Value: r.Value}
+	})
 }
