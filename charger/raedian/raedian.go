@@ -92,8 +92,7 @@ func (c *Charger) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	currentLimit := binary.BigEndian.Uint16(b)
-	return currentLimit >= 6000, nil
+	return binary.BigEndian.Uint16(b) >= 6000, nil
 }
 
 // Enable implements the api.Charger interface
