@@ -113,8 +113,7 @@ func (c *Charger) MaxCurrent(current int64) error {
 	if current < 6 {
 		current = 0
 	}
-	value := uint16(current * 1000)
-	_, err := c.conn.WriteSingleRegister(raedianRegSetChargingCurrent, value)
+	_, err := c.conn.WriteSingleRegister(raedianRegSetChargingCurrent, uint16(current * 1000))
 	return err
 }
 
