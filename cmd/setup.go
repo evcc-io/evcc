@@ -914,20 +914,26 @@ func configureDevices(conf globalconfig.All) error {
 		return err
 	}
 
-	// TODO: add name/identifier to error for better highlighting in UI
+	// make sure all devices are configured
+	var errs []error
+
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
-		return &ClassError{ClassMeter, err}
+		errs = append(errs, &ClassError{ClassMeter, err})
 	}
+
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
-		return &ClassError{ClassCharger, err}
+		errs = append(errs, &ClassError{ClassCharger, err})
 	}
+
 	if err := configureVehicles(conf.Vehicles); err != nil {
-		return &ClassError{ClassVehicle, err}
+		errs = append(errs, &ClassError{ClassVehicle, err})
 	}
+
 	if err := configureCircuits(&conf.Circuits); err != nil {
-		return &ClassError{ClassCircuit, err}
+		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
-	return nil
+
+	return joinErrors(errs...)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
@@ -968,17 +974,23 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
+	var errs []error
+
 	if err := configureDevices(*conf); err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, &ClassError{ClassLoadpoint, err}
+		errs = append(errs, &ClassError{ClassLoadpoint, err})
 	}
 
 	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		errs = append(errs, &ClassError{ClassTariff, err})
+	}
+
+	if len(errs) > 0 {
+		return nil, joinErrors(errs...)
 	}
 
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
@@ -1094,8 +1106,11 @@ func configureLoadpoints(conf globalconfig.All) error {
 			err = &DeviceError{cc.Name, e}
 		}
 
-		if e := dynamic.Apply(instance); e != nil && err == nil {
-			err = &DeviceError{cc.Name, e}
+		if instance != nil {
+			// ignore dynamic config in case of startup errors that will leave instance empty
+			if e := dynamic.Apply(instance); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
+			}
 		}
 
 		if err != nil {

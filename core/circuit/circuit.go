@@ -2,6 +2,7 @@ package circuit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -66,6 +67,9 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]inter
 			return nil, err
 		}
 		meter = dev.Instance()
+		if meter == nil {
+			return nil, errors.New("missing meter instance")
+		}
 	}
 
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
@@ -88,7 +92,11 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]inter
 		if err != nil {
 			return nil, err
 		}
-		circuit.setParent(dev.Instance())
+		parent := dev.Instance()
+		if parent == nil {
+			return nil, fmt.Errorf("missing parent circuit instance: %s", cc.ParentRef)
+		}
+		circuit.setParent(parent)
 	}
 
 	return circuit, err

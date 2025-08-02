@@ -157,7 +157,7 @@ export default defineComponent({
 		},
 		forecast: Object,
 		battery: Array,
-		fatal: Object as PropType<FatalError>,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -188,7 +188,7 @@ export default defineComponent({
 			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
 		},
 		badgeClass() {
-			if (this.fatal?.error) {
+			if (this.fatal.length > 0) {
 				return "bg-danger";
 			}
 			return "bg-warning";

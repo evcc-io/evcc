@@ -25,7 +25,7 @@
 							:title="loadpoint.title"
 							:name="loadpoint.name"
 							:editable="!!loadpoint.id"
-							:error="deviceError('loadpoint', loadpoint.name)"
+							:error="hasDeviceError('loadpoint', loadpoint.name)"
 							data-testid="loadpoint"
 							@edit="editLoadpoint(loadpoint.id)"
 						>
@@ -57,7 +57,7 @@
 							:title="vehicle.config?.title || vehicle.name"
 							:name="vehicle.name"
 							:editable="vehicle.id >= 0"
-							:error="deviceError('vehicle', vehicle.name)"
+							:error="hasDeviceError('vehicle', vehicle.name)"
 							data-testid="vehicle"
 							@edit="editVehicle(vehicle.id)"
 						>
@@ -82,7 +82,7 @@
 							:title="$t('config.grid.title')"
 							:name="gridMeter.name"
 							:editable="!!gridMeter.id"
-							:error="deviceError('meter', gridMeter.name)"
+							:error="hasDeviceError('meter', gridMeter.name)"
 							data-testid="grid"
 							@edit="editMeter(gridMeter.id, 'grid')"
 						>
@@ -103,7 +103,7 @@
 							v-if="tariffTags"
 							:title="$t('config.tariffs.title')"
 							editable
-							:error="fatalClass === 'tariff'"
+							:error="hasClassError('tariff')"
 							data-testid="tariffs"
 							@edit="openModal('tariffsModal')"
 						>
@@ -133,7 +133,7 @@
 							"
 							:name="meter.name"
 							:editable="!!meter.id"
-							:error="deviceError('meter', meter.name)"
+							:error="hasDeviceError('meter', meter.name)"
 							data-testid="pv"
 							@edit="editMeter(meter.id, 'pv')"
 						>
@@ -154,7 +154,7 @@
 							"
 							:name="meter.name"
 							:editable="!!meter.id"
-							:error="deviceError('meter', meter.name)"
+							:error="hasDeviceError('meter', meter.name)"
 							data-testid="battery"
 							@edit="editMeter(meter.id, 'battery')"
 						>
@@ -183,7 +183,7 @@
 							"
 							:name="meter.name"
 							:editable="!!meter.id"
-							:error="deviceError('meter', meter.name)"
+							:error="hasDeviceError('meter', meter.name)"
 							data-testid="aux"
 							@edit="editMeter(meter.id, 'aux')"
 						>
@@ -206,7 +206,7 @@
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
-							:error="fatalClass === 'mqtt'"
+							:error="hasClassError('mqtt')"
 							data-testid="mqtt"
 							@edit="openModal('mqttModal')"
 						>
@@ -218,7 +218,7 @@
 						<DeviceCard
 							:title="$t('config.messaging.title')"
 							editable
-							:error="fatalClass === 'messenger'"
+							:error="hasClassError('messenger')"
 							data-testid="messaging"
 							@edit="openModal('messagingModal')"
 						>
@@ -230,7 +230,7 @@
 						<DeviceCard
 							:title="$t('config.influx.title')"
 							editable
-							:error="fatalClass === 'influx'"
+							:error="hasClassError('influx')"
 							data-testid="influx"
 							@edit="openModal('influxModal')"
 						>
@@ -242,7 +242,7 @@
 						<DeviceCard
 							:title="`${$t('config.eebus.title')} 🧪`"
 							editable
-							:error="fatalClass === 'eebus'"
+							:error="hasClassError('eebus')"
 							data-testid="eebus"
 							@edit="openModal('eebusModal')"
 						>
@@ -255,7 +255,7 @@
 						<DeviceCard
 							:title="`${$t('config.circuits.title')} 🧪`"
 							editable
-							:error="fatalClass === 'circuit'"
+							:error="hasClassError('circuit')"
 							data-testid="circuits"
 							@edit="openModal('circuitsModal')"
 						>
@@ -282,7 +282,7 @@
 						<DeviceCard
 							:title="$t('config.modbusproxy.title')"
 							editable
-							:error="fatalClass === 'modbusproxy'"
+							:error="hasClassError('modbusproxy')"
 							data-testid="modbusproxy"
 							@edit="openModal('modbusProxyModal')"
 						>
@@ -294,7 +294,7 @@
 						<DeviceCard
 							:title="$t('config.hems.title')"
 							editable
-							:error="fatalClass === 'hems'"
+							:error="hasClassError('hems')"
 							data-testid="hems"
 							@edit="openModal('hemsModal')"
 						>
@@ -495,9 +495,6 @@ export default {
 	computed: {
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
-		},
-		fatalClass() {
-			return store.state?.fatal?.class;
 		},
 		siteTitle() {
 			return this.site?.title;
@@ -930,9 +927,13 @@ export default {
 			}
 			return result;
 		},
-		deviceError(type, name) {
-			const fatal = store.state?.fatal || {};
-			return fatal.class === type && fatal.device === name;
+		hasDeviceError(type, name) {
+			const fatals = store.state?.fatal || [];
+			return fatals.some((fatal) => fatal.class === type && fatal.device === name);
+		},
+		hasClassError(className) {
+			const fatals = store.state?.fatal || [];
+			return fatals.some((fatal) => fatal.class === className);
 		},
 		chargerIcon(chargerName) {
 			const charger = this.chargers.find((c) => c.name === chargerName);

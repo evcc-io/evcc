@@ -13,7 +13,7 @@ const auth = reactive({
 });
 
 export async function updateAuthStatus() {
-  if (store.state.offline || isSystemError(store.state.fatal)) {
+  if (store.state.offline || isSystemError(store.state.fatal ?? [])) {
     // system not ready, skip auth check
     return;
   }

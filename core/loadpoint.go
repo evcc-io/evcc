@@ -219,6 +219,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("circuit: %w", err)
 		}
 		lp.circuit = dev.Instance()
+		if lp.circuit == nil {
+			return lp, errors.New("missing circuit instance")
+		}
 	}
 
 	if lp.MeterRef != "" {
@@ -227,6 +230,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("meter: %w", err)
 		}
 		lp.chargeMeter = dev.Instance()
+		if lp.chargeMeter == nil {
+			return lp, errors.New("missing charge meter instance")
+		}
 	}
 
 	// default vehicle
@@ -236,6 +242,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("default vehicle: %w", err)
 		}
 		lp.defaultVehicle = dev.Instance()
+		if lp.defaultVehicle == nil {
+			return lp, errors.New("missing default vehicle instance")
+		}
 	}
 
 	if lp.ChargerRef == "" {
@@ -247,6 +256,10 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		return lp, fmt.Errorf("charger: %w", err)
 	}
 	lp.charger = dev.Instance()
+	if lp.charger == nil {
+		return lp, errors.New("missing charger instance")
+	}
+
 	lp.configureChargerType(lp.charger)
 
 	// phase switching defaults based on charger capabilities
