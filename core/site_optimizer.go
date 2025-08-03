@@ -91,13 +91,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
-			acc := make([]float64, len(profile))
-			var sum float64
-			for i := range profile {
-				sum += profile[i] * float64(*req.EtaC)
-				acc[i] = sum
-			}
-			bat.SGoal = lo.ToPtr(asFloat32(acc))
+			bat.PDemand = lo.ToPtr(asFloat32(profile))
 		}
 
 		if v := lp.GetVehicle(); v != nil {
