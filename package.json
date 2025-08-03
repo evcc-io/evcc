@@ -55,7 +55,7 @@
     "monaco-editor": "^0.52.2",
     "mqtt": "^5.11.0",
     "prettier": "^3.0.0",
-    "prettier-plugin-sh": "^0.17.4",
+    "prettier-plugin-sh": "^0.18.0",
     "rollup-plugin-visualizer": "^6.0.1",
     "smoothscroll-polyfill": "^0.4.4",
     "snarkdown": "^2.0.0",
@@ -95,7 +95,7 @@
     "@types/kill-port": "^2.0.3",
     "@types/smoothscroll-polyfill": "^0.3.4",
     "@types/wait-on": "^5.3.4",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.0.0",
     "eslint-plugin-storybook": "^0.12.0",
     "prettier-plugin-sort-json": "^4.1.1",
     "storybook": "^8.6.4"
