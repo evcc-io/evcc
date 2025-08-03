@@ -172,8 +172,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 				// extract redirect URL
 				if nextUri := urlRedirect.Get("next_uri"); nextUri != "" {
 					if nextVal, ok := url.Parse(nextUri); ok == nil {
-						if csKeyVal := nextVal.Query().Get("connector_session_key"); csKeyVal != "" {
-							connectorSessionKey = csKeyVal
+						if connectorSessionKey := nextVal.Query().Get("connector_session_key"); connectorSessionKey != "" {
 							err = nil
 						}
 					}
@@ -218,8 +217,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 				location := resp.Header.Get("Location")
 				err = errors.New("code location not found")
 				if locationUrl, ok := url.Parse(location); ok == nil {
-					if locationUrl.Query().Has("code") {
-						code = locationUrl.Query().Get("code")
+					if code = locationUrl.Query().Get("code"); code != "" {
 						err = nil
 					}
 				}
