@@ -27,8 +27,9 @@ export interface Auth {
 export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
 export interface FatalError {
-  error: any;
-  class?: any;
+  error: string;
+  class?: string;
+  device?: string;
 }
 
 export interface State {
@@ -37,7 +38,7 @@ export interface State {
   loadpoints: [];
   forecast?: Forecast;
   currency?: CURRENCY;
-  fatal?: FatalError;
+  fatal?: FatalError[];
   auth?: Auth;
   vehicles: Vehicle[];
 }

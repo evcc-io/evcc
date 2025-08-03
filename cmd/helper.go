@@ -94,6 +94,18 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
+// joinErrors is like errors.Join but does not wrap single errors (refs https://groups.google.com/g/golang-nuts/c/N0D1g5Ec_ZU)
+func joinErrors(errs ...error) error {
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.Join(errs...)
+	}
+}
+
 func wrapFatalError(err error) error {
 	if err == nil {
 		return nil
