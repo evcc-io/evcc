@@ -334,6 +334,7 @@
 					:meters="meters"
 					:circuits="circuits"
 					:fade="loadpointSubModalOpen ? 'left' : ''"
+					:hasDeviceError="hasDeviceError"
 					@updated="loadpointChanged"
 					@open-charger-modal="editLoadpointCharger"
 					@open-meter-modal="editLoadpointMeter"
