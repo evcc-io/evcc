@@ -203,6 +203,9 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 		current = wb.curr
 	}
 
+	// break to avoid too fast commands
+	time.Sleep(2 * time.Second)
+
 	return wb.setCurrent(current)
 }
 
