@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -168,15 +167,16 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 				defer resp.Body.Close()
 				// code adapted from hyundai_kia_connect_api
 				// get redirect URL from request
-				urlRedirect := resp.Request.URL
-
-				// find connector session key
-				cKeySearch := regexp.MustCompile(`connector_session_key%3D([0-9a-fA-F-]{36})`)
-				cskArray := cKeySearch.FindStringSubmatch(urlRedirect.String())
 				err = errors.New("connector session key not found")
-				if len(cskArray) > 1 {
-					connectorSessionKey = cskArray[1]
-					err = nil
+				urlRedirect := resp.Request.URL.Query()
+				// extract redirect URL
+				if nextUri := urlRedirect.Get("next_uri"); nextUri != "" {
+					if nextVal, ok := url.Parse(nextUri); ok == nil {
+						if csKeyVal := nextVal.Query().Get("connector_session_key"); csKeyVal != "" {
+							connectorSessionKey = csKeyVal
+							err = nil
+						}
+					}
 				}
 			}
 		}
@@ -216,13 +216,13 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 			if resp, err = sc.Do(req); err == nil {
 				location := resp.Header.Get("Location")
-				// extract code from URL
-				err = errors.New("code location not found")
-				codeSearch := regexp.MustCompile(`code=([0-9a-fA-F-]{36}\.[0-9a-fA-F-]{36}\.[0-9a-fA-F-]{36})`)
-				clArray := codeSearch.FindStringSubmatch(location)
-				if len(clArray) > 1 {
-					code = clArray[1]
-					err = nil
+				if locationUrl, ok := url.Parse(location); ok == nil {
+					err = errors.New("code location not found")
+					queryVals := locationUrl.Query()
+					if queryVals.Has("code") {
+						code = queryVals.Get("code")
+						err = nil
+					}
 				}
 			}
 		}
