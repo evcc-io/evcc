@@ -23,6 +23,7 @@ params:
     description:
       de: Home Assistant Long-Lived Access Token
       en: Home Assistant Long-Lived Access Token
+    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
     required: true
     mask: true
   - name: soc
