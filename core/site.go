@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -196,6 +197,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.gridMeter = dev.Instance()
+		if site.gridMeter == nil {
+			return errors.New("missing grid meter instance")
+		}
 	}
 
 	// multiple pv

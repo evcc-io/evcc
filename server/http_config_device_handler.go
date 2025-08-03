@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"dario.cat/mergo"
@@ -199,14 +200,22 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, res)
 }
 
-func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
+func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
+	var zero T
+
 	dev, err := h.ByName(name)
 	if err != nil {
-		var zero T
 		return zero, err
 	}
 
-	return dev.Instance(), nil
+	instance := dev.Instance()
+
+	// check if device instance is nil (https://github.com/golang/go/issues/46320#issuecomment-965970859)
+	if rv := reflect.ValueOf(&instance); rv.Elem().IsZero() || rv.Elem().IsNil() {
+		return zero, fmt.Errorf("instance %s not initialized", name)
+	}
+
+	return instance, nil
 }
 
 // deviceStatusHandler returns the device test status by class
@@ -592,8 +601,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// prevent context from being cancelled
+	// prevent context from being cancelled during test
 	close(done)
+	defer cancel()
 
 	jsonWrite(w, testInstance(instance))
 }

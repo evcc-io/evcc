@@ -241,6 +241,10 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
+			// HACK: soft-require stationid. Can be removed once https://github.com/evcc-io/evcc/pull/22115 is merged
+			params.forEach((p) => {
+				if (p.Name === "stationid") p.Required = true;
+			});
 			return params.filter(
 				(p) =>
 					!CUSTOM_FIELDS.includes(p.Name) &&
@@ -248,10 +252,10 @@ export default defineComponent({
 			);
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
+			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
+			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
 		modbus() {
 			const params = this.template?.Params || [];
