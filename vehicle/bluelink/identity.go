@@ -216,11 +216,10 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 			if resp, err = sc.Do(req); err == nil {
 				location := resp.Header.Get("Location")
+				err = errors.New("code location not found")
 				if locationUrl, ok := url.Parse(location); ok == nil {
-					err = errors.New("code location not found")
-					queryVals := locationUrl.Query()
-					if queryVals.Has("code") {
-						code = queryVals.Get("code")
+					if locationUrl.Query().Has("code") {
+						code = locationUrl.Query().Get("code")
 						err = nil
 					}
 				}
