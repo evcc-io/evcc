@@ -145,83 +145,100 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 
 func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
 	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
+	if err != nil {
+		return "", err
+	}
 
 	var info struct {
 		UserId    string `json:"userId"`
 		ServiceId string `json:"serviceId"`
 	}
 
-	if err == nil {
-		err = cookieClient.DoJSON(req, &info)
+	err = cookieClient.DoJSON(req, &info)
+	if err != nil {
+		return "", err
 	}
 
 	var resp *http.Response
 
 	// get the connector_session_key
-	var connectorSessionKey string
-	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.AuthClientID, v.config.URI, "en")
-		req, err = request.New(http.MethodGet, uri, nil)
-		if err == nil {
-			if resp, err = cookieClient.Do(req); err == nil {
-				defer resp.Body.Close()
-				// code adapted from hyundai_kia_connect_api
-				// get redirect URL from request
-				err = errors.New("connector session key not found")
-				urlRedirect := resp.Request.URL.Query()
-				// extract redirect URL
-				if nextUri := urlRedirect.Get("next_uri"); nextUri != "" {
-					if nextVal, ok := url.Parse(nextUri); ok == nil {
-						if connectorSessionKey = nextVal.Query().Get("connector_session_key"); connectorSessionKey != "" {
-							err = nil
-						}
-					}
-				}
-			}
-		}
+	uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.AuthClientID, v.config.URI, "en")
+	req, err = request.New(http.MethodGet, uri, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err = cookieClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// get redirect URL from request
+	nextUri := resp.Request.URL.Query().Get("next_uri")
+	if nextUri == "" {
+		return "", errors.New("empty redirect url on connector session key request")
+	}
+
+	nextVal, err := url.Parse(nextUri)
+	if err != nil {
+		return "", err
+	}
+
+	connectorSessionKey := nextVal.Query().Get("connector_session_key")
+	if connectorSessionKey == "" {
+		return "", errors.New("empty or non-existing connector session key")
 	}
 
 	// if we have the connectorSessionKey, go on and find the login code
-	var code string
-	if err == nil {
-		// build new request uri
-		uri := fmt.Sprintf("%s%s", v.config.LoginFormHost, "/auth/account/signin")
-		data := url.Values{
-			"client_id":             {v.config.CCSPServiceID},
-			"encryptedPassword":     {"false"},
-			"orgHmgSid":             {""},
-			"password":              {password},
-			"redirect_uri":          {v.config.URI + "/api/v1/user/oauth2/redirect"},
-			"state":                 {"ccsp"},
-			"username":              {user},
-			"remember_me":           {"false"},
-			"connector_session_key": {connectorSessionKey},
-			"_csrf":                 {""},
-		}
+	// build new request uri
+	uri = fmt.Sprintf("%s%s", v.config.LoginFormHost, "/auth/account/signin")
+	data := url.Values{
+		"client_id":             {v.config.CCSPServiceID},
+		"encryptedPassword":     {"false"},
+		"orgHmgSid":             {""},
+		"password":              {password},
+		"redirect_uri":          {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"state":                 {"ccsp"},
+		"username":              {user},
+		"remember_me":           {"false"},
+		"connector_session_key": {connectorSessionKey},
+		"_csrf":                 {""},
+	}
 
-		// create a client that doesn't honor redirects so we receive the original response
-		// no idea how to do that with the internal request.New(...) function
-		sc := http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
+	// create a client that doesn't honor redirects so we receive the original response
+	// no idea how to do that with the internal request.New(...) function
+	sc := http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 
-		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
-		if err == nil {
-			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			req.Header.Add("Origin", v.config.LoginFormHost)
+	req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Origin", v.config.LoginFormHost)
 
-			if resp, err = sc.Do(req); err == nil {
-				location := resp.Header.Get("Location")
-				err = errors.New("code location not found")
-				if locationUrl, ok := url.Parse(location); ok == nil {
-					if code = locationUrl.Query().Get("code"); code != "" {
-						err = nil
-					}
-				}
-			}
-		}
+	resp, err = sc.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	location := resp.Header.Get("Location")
+	if location == "" {
+		return "", errors.New("empty location url for code extraction")
+	}
+
+	locationUrl, err := url.Parse(location)
+	if err != nil {
+		return "", errors.New("failed to parse location url for code extraction")
+	}
+
+	code := locationUrl.Query().Get("code")
+	if code == "" {
+		return "", errors.New("empty code on extraction")
 	}
 
 	return code, err
