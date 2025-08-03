@@ -488,9 +488,11 @@ func (m *E3dc) ReadFromPM(pm_idx uint16, verfy_type int16) ([3]float64, [3]float
 		default:
 		}
 	}
-	current[0] = power[0] / voltage[0]
-	current[1] = power[1] / voltage[1]
-	current[2] = power[2] / voltage[2]
+	if voltage[0] > 100 && voltage[1] > 100 && voltage[2] > 100 {
+		current[0] = power[0] / voltage[0]
+		current[1] = power[1] / voltage[1]
+		current[2] = power[2] / voltage[2]
+	}
 	return voltage, current, power, total_energy / 1000, nil
 }
 
