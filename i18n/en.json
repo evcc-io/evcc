@@ -435,6 +435,7 @@
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredLearnMore": "Learn more.",
+      "tokenRequiredShort": "No sponsor token configured.",
       "trialToken": "Trial token"
     },
     "system": {
