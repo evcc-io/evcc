@@ -914,20 +914,26 @@ func configureDevices(conf globalconfig.All) error {
 		return err
 	}
 
-	// TODO: add name/identifier to error for better highlighting in UI
+	// make sure all devices are configured
+	var errs []error
+
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
-		return &ClassError{ClassMeter, err}
+		errs = append(errs, &ClassError{ClassMeter, err})
 	}
+
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
-		return &ClassError{ClassCharger, err}
+		errs = append(errs, &ClassError{ClassCharger, err})
 	}
+
 	if err := configureVehicles(conf.Vehicles); err != nil {
-		return &ClassError{ClassVehicle, err}
+		errs = append(errs, &ClassError{ClassVehicle, err})
 	}
+
 	if err := configureCircuits(&conf.Circuits); err != nil {
-		return &ClassError{ClassCircuit, err}
+		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
-	return nil
+
+	return joinErrors(errs...)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
@@ -962,38 +968,39 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 			return nil, err
 		}
 		conf.Interval = time.Duration(d)
-
-		// TODO remove yaml file
-		// } else if conf.Interval != 0 {
-		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
+	var errs []error
+
 	if err := configureDevices(*conf); err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, &ClassError{ClassLoadpoint, err}
+		errs = append(errs, &ClassError{ClassLoadpoint, err})
 	}
 
 	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		lp := dev.Instance()
-		return lp.(*core.Loadpoint)
+		return dev.Instance().(*core.Loadpoint)
 	})
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return site, joinErrors(errs...)
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
 		if err := validateCircuits(loadpoints); err != nil {
-			return nil, &ClassError{ClassCircuit, err}
+			return site, &ClassError{ClassCircuit, err}
 		}
 	}
 
@@ -1037,11 +1044,11 @@ CONTINUE:
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
-		return nil, err
+		return site, err
 	}
 
 	if err := site.Boot(log, loadpoints, tariffs); err != nil {
-		return nil, fmt.Errorf("failed configuring site: %w", err)
+		return site, fmt.Errorf("failed booting site: %w", err)
 	}
 
 	return site, nil
@@ -1094,8 +1101,11 @@ func configureLoadpoints(conf globalconfig.All) error {
 			err = &DeviceError{cc.Name, e}
 		}
 
-		if e := dynamic.Apply(instance); e != nil && err == nil {
-			err = &DeviceError{cc.Name, e}
+		if instance != nil {
+			// ignore dynamic config in case of startup errors that will leave instance empty
+			if e := dynamic.Apply(instance); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
+			}
 		}
 
 		if err != nil {
