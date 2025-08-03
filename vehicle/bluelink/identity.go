@@ -30,8 +30,6 @@ const (
 	TokenURL           = "/api/v1/user/oauth2/token"
 )
 
-// OAuth2Config is the new OAuth2 API configuration
-
 // Config is the bluelink API configuration
 type Config struct {
 	URI               string
