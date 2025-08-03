@@ -53,7 +53,7 @@
 						class="me-2 flex-grow-1"
 						readonly
 						required
-						:invalid="!charger"
+						:invalid="!charger || hasDeviceError('charger', values.charger)"
 						@click.prevent="editCharger"
 					/>
 					<button
@@ -91,6 +91,7 @@
 							class="me-2 flex-grow-1"
 							required
 							readonly
+							:invalid="hasDeviceError('meter', values.meter)"
 							@click="editMeter"
 						/>
 						<button
@@ -632,6 +633,7 @@ export default {
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as () => Meter[], default: () => [] },
 		circuits: { type: Array as () => Circuit[], default: () => [] },
+		hasDeviceError: { type: Function, default: () => false },
 	},
 	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
 	data() {
@@ -795,7 +797,7 @@ export default {
 		async loadConfiguration() {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
-				this.values = deepClone(res.data.result);
+				this.values = deepClone(res.data);
 				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();
