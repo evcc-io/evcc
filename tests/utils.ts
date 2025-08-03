@@ -60,3 +60,66 @@ export async function editorPaste(editor: Locator, page: Page, text: string): Pr
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
   await page.keyboard.press("ControlOrMeta+KeyV", { delay: 50 });
 }
+
+export enum LoadpointType {
+  Charging = "charging",
+  Heating = "heating",
+}
+
+export async function addDemoCharger(
+  page: Page,
+  type: LoadpointType = LoadpointType.Charging
+): Promise<void> {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal
+    .getByRole("button", { name: type === LoadpointType.Heating ? "Add heater" : "Add charger" })
+    .click();
+
+  const modal = page.getByTestId("charger-modal");
+  await expectModalVisible(modal);
+  await modal
+    .getByLabel("Manufacturer")
+    .selectOption(type === LoadpointType.Heating ? "Demo heat pump" : "Demo charger");
+  await modal.getByRole("button", { name: "Save" }).click();
+  await expectModalHidden(modal);
+  await expectModalVisible(lpModal);
+}
+
+export async function addDemoMeter(page: Page, power = "0"): Promise<void> {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
+
+  const modal = page.getByTestId("meter-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Manufacturer").selectOption("Demo meter");
+  await modal.getByLabel("Power").fill(power);
+  await modal.getByRole("button", { name: "Save" }).click();
+  await expectModalHidden(modal);
+  await expectModalVisible(lpModal);
+}
+
+export async function addVehicle(page: Page, title: string): Promise<void> {
+  await page.getByRole("button", { name: "Add vehicle" }).click();
+  const modal = page.getByTestId("vehicle-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Manufacturer").selectOption("Generic vehicle (without API)");
+  await modal.getByLabel("Title").fill(title);
+  await modal.getByRole("button", { name: "Validate & save" }).click();
+  await expectModalHidden(modal);
+}
+
+export async function newLoadpoint(
+  page: Page,
+  title: string,
+  type: LoadpointType = LoadpointType.Charging
+): Promise<void> {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await page.getByRole("button", { name: "Add charger or heater" }).click();
+  await expectModalVisible(lpModal);
+  await lpModal
+    .getByRole("button", {
+      name: type === LoadpointType.Heating ? "Add heating device" : "Add charging point",
+    })
+    .click();
+  await lpModal.getByLabel("Title").fill(title);
+}
