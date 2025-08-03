@@ -968,10 +968,6 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 			return nil, err
 		}
 		conf.Interval = time.Duration(d)
-
-		// TODO remove yaml file
-		// } else if conf.Interval != 0 {
-		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
 	var errs []error
@@ -989,23 +985,22 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
-	if len(errs) > 0 {
-		return nil, joinErrors(errs...)
-	}
-
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		lp := dev.Instance()
-		return lp.(*core.Loadpoint)
+		return dev.Instance().(*core.Loadpoint)
 	})
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return site, joinErrors(errs...)
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
 		if err := validateCircuits(loadpoints); err != nil {
-			return nil, &ClassError{ClassCircuit, err}
+			return site, &ClassError{ClassCircuit, err}
 		}
 	}
 
@@ -1049,11 +1044,11 @@ CONTINUE:
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
-		return nil, err
+		return site, err
 	}
 
 	if err := site.Boot(log, loadpoints, tariffs); err != nil {
-		return nil, fmt.Errorf("failed configuring site: %w", err)
+		return site, fmt.Errorf("failed booting site: %w", err)
 	}
 
 	return site, nil
