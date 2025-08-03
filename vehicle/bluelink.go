@@ -42,14 +42,14 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 // NewKiaFromConfig creates a new vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.kia.com:8080",                            // BASE_URL
-		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==", // BASIC_AUTHORITAZION
-		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",                         // CCSP_SERVICE_ID
-		CCSPApplicationID: bluelink.KiaAppID,                                              // APP_ID
-		AuthClientID:      "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",                         // New CLIENT_ID from Hyundai_kia_connect_api
+		URI:               "https://prd.eu-ccapi.kia.com:8080",
+		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
+		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
+		CCSPApplicationID: bluelink.KiaAppID,
+		AuthClientID:      "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
 		PushType:          "APNS",
-		Cfb:               "wLTVxwidmH8CfJYBWSnHD6E0huk0ozdiuygB4hLkM5XCgzAL1Dk5sE36d/bx5PFMbZs=", // CFB
+		Cfb:               "wLTVxwidmH8CfJYBWSnHD6E0huk0ozdiuygB4hLkM5XCgzAL1Dk5sE36d/bx5PFMbZs=",
 		LoginFormHost:     "https://idpconnect-eu.kia.com",
 	}
 
