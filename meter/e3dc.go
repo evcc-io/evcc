@@ -136,6 +136,10 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	case templates.UsagePV:
 		var questions []rscp.Message
 
+		if !m.useInternalPower && !m.useExternalPower {
+			return 0.0, nil
+		}
+
 		if m.useInternalPower {
 			questions = append(questions, *rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil))
 		}
@@ -180,6 +184,125 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	default:
 		return 0, api.ErrNotAvailable
 	}
+}
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (m *E3dc) TotalEnergy() (float64, error) {
+
+	switch m.usage {
+	case templates.UsageGrid:
+		_, _, _, total_energy, err := m.ReadFromPM(0, 1) // Verify type 1 for root meter
+		if err != nil {
+			return 0, err
+		}
+		return total_energy, nil
+	case templates.UsagePV:
+		total_energy := 0.0
+		if m.useInternalPower {
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			res, err := m.conn.SendMultiple([]rscp.Message{
+				*rscp.NewMessage(rscp.EMS_REQ_PV_ENERGY, nil),
+			})
+
+			if e := m.retry(err); e != nil {
+				return 0, e
+			}
+
+			tags, values, err := rscpValuesWithTag(res, cast.ToFloat64E)
+			if err != nil {
+				return 0, err
+			}
+			total_energy_int := 0.0
+			for tag_idx := range tags {
+				if tags[tag_idx] == rscp.EMS_PARAM_AC_ENERGY_IN {
+					// this is the total energy produced by the inverter system per phase
+					for _, v := range values[tag_idx] {
+						total_energy_int += v
+					}
+					return total_energy_int / 1000, nil
+				}
+			}
+			total_energy += total_energy_int
+		}
+		if m.useExternalPower {
+			_, _, _, total_energy_ext, err := m.ReadFromPM(1, 2) // Verify type 2 for external meter
+			if err != nil {
+				return 0, err
+			}
+			total_energy += -total_energy_ext // external power is inverse to internal
+		}
+		return total_energy, nil
+	default:
+		break
+	}
+	return 0.0, nil
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (m *E3dc) Currents() (float64, float64, float64, error) {
+
+	switch m.usage {
+	case templates.UsageGrid:
+		_, currents, _, _, err := m.ReadFromPM(0, 1) // Verify type 1 for root meter
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		return currents[0], currents[1], currents[2], nil
+	case templates.UsagePV:
+		if m.useInternalPower && !m.useExternalPower {
+			_, currents, _, _, err := m.ReadFromPVI(0)
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			return currents[0], currents[1], currents[2], nil
+		} else if !m.useInternalPower && m.useExternalPower {
+			_, currents, _, _, err := m.ReadFromPM(1, 2) // Verify type 2 for external meter
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			return currents[0], currents[1], currents[2], nil
+		} else if m.useInternalPower && m.useExternalPower {
+			_, currents_int, _, _, err := m.ReadFromPVI(0)
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			_, currents_ext, _, _, err := m.ReadFromPM(1, 2) // Verify type 2 for external meter
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			return currents_int[0] + currents_ext[0], currents_int[1] + currents_ext[1], currents_int[2] + currents_ext[2], err
+		}
+	}
+	return 0, 0, 0, nil
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (m *E3dc) Voltages() (float64, float64, float64, error) {
+
+	switch m.usage {
+	case templates.UsageGrid:
+		voltages, _, _, _, err := m.ReadFromPM(0, 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		return voltages[0], voltages[1], voltages[2], nil
+	case templates.UsagePV:
+		if m.useInternalPower { // Show voltages for internal power also if interal + external power is used
+			voltages, _, _, _, err := m.ReadFromPM(0, 1) // Verify type 1 for root meter
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			return voltages[0], voltages[1], voltages[2], nil
+		} else if !m.useInternalPower && m.useExternalPower {
+			voltages, _, _, _, err := m.ReadFromPM(1, 2) // Verify type 2 for external meter
+			if err != nil {
+				return 0, 0, 0, err
+			}
+			return voltages[0], voltages[1], voltages[2], nil
+		}
+	}
+	return 0, 0, 0, nil
 }
 
 func (m *E3dc) batterySoc() (float64, error) {
@@ -249,6 +372,132 @@ func e3dcBatteryCharge(amount uint32) rscp.Message {
 	return *rscp.NewMessage(rscp.EMS_REQ_START_MANUAL_CHARGE, amount)
 }
 
+// Read voltage, current, power and energy from PVI (inverter) namespace for the given inverter index
+func (m *E3dc) ReadFromPVI(pvi_idx uint16) ([3]float64, [3]float64, [3]float64, float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var voltage = [3]float64{0}
+	var power = [3]float64{0}
+	var current = [3]float64{0}
+	var energy = [3]float64{0}
+	var total_energy = float64(0)
+
+	request := *rscp.NewMessage(
+		rscp.PVI_REQ_DATA, []rscp.Message{
+			*rscp.NewMessage(rscp.PVI_INDEX, pvi_idx),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_ENERGY_ALL, uint8(0)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_ENERGY_ALL, uint8(1)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_ENERGY_ALL, uint8(2)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_CURRENT, uint8(0)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_CURRENT, uint8(1)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_CURRENT, uint8(2)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_VOLTAGE, uint8(0)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_VOLTAGE, uint8(1)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_VOLTAGE, uint8(2)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_POWER, uint8(0)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_POWER, uint8(1)),
+			*rscp.NewMessage(rscp.PVI_REQ_AC_POWER, uint8(2)),
+		})
+	res, err := m.conn.SendMultiple([]rscp.Message{request})
+
+	if e := m.retry(err); e != nil {
+		return [3]float64{0}, [3]float64{0}, [3]float64{0}, 0, e
+	}
+
+	tags, values, err := rscpValuesWithTag(res, cast.ToFloat64E)
+	if err != nil {
+		return [3]float64{0}, [3]float64{0}, [3]float64{0}, 0, err
+	}
+
+	for tag_idx := range tags {
+		switch tags[tag_idx] {
+		case rscp.PVI_AC_VOLTAGE:
+			voltage[uint16(values[tag_idx][0])] = values[tag_idx][1]
+		case rscp.PVI_AC_POWER:
+			power[uint16(values[tag_idx][0])] = values[tag_idx][1]
+		case rscp.PVI_AC_CURRENT:
+			current[uint16(values[tag_idx][0])] = values[tag_idx][1]
+		case rscp.PVI_AC_ENERGY_ALL:
+			energy[uint16(values[tag_idx][0])] = values[tag_idx][1]
+		default:
+		}
+	}
+	total_energy = energy[0] + energy[1] + energy[2]
+	return voltage, current, power, total_energy / 1000, nil
+}
+
+// ##########################################################################################
+// Functions to interact with RSCP
+// Read voltage, current, power and energy from Powermeter namespace for the given powermeter index (usually 0 = ROOT = Grid and 1 = external PV inverter/generator)
+func (m *E3dc) ReadFromPM(pm_idx uint16, verfy_type int16) ([3]float64, [3]float64, [3]float64, float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var voltage = [3]float64{0}
+	var power = [3]float64{0}
+	var current = [3]float64{0}
+	var total_energy = float64(0)
+
+	request := *rscp.NewMessage(
+		rscp.PM_REQ_DATA, []rscp.Message{
+			*rscp.NewMessage(rscp.PM_INDEX, pm_idx),
+			*rscp.NewMessage(rscp.PM_REQ_TYPE, nil),
+			*rscp.NewMessage(rscp.PM_REQ_POWER_L1, nil),
+			*rscp.NewMessage(rscp.PM_REQ_POWER_L2, nil),
+			*rscp.NewMessage(rscp.PM_REQ_POWER_L3, nil),
+			*rscp.NewMessage(rscp.PM_REQ_ENERGY_L1, nil),
+			*rscp.NewMessage(rscp.PM_REQ_ENERGY_L2, nil),
+			*rscp.NewMessage(rscp.PM_REQ_ENERGY_L3, nil),
+			*rscp.NewMessage(rscp.PM_REQ_VOLTAGE_L1, nil),
+			*rscp.NewMessage(rscp.PM_REQ_VOLTAGE_L2, nil),
+			*rscp.NewMessage(rscp.PM_REQ_VOLTAGE_L3, nil),
+		})
+	res, err := m.conn.SendMultiple([]rscp.Message{request})
+
+	if e := m.retry(err); e != nil {
+		return [3]float64{0}, [3]float64{0}, [3]float64{0}, 0, e
+	}
+
+	tags, values, err := rscpValuesWithTag(res, cast.ToFloat64E)
+	if err != nil {
+		return [3]float64{0}, [3]float64{0}, [3]float64{0}, 0, err
+	}
+
+	for tag_idx := range tags {
+		switch tags[tag_idx] {
+		case rscp.PM_TYPE:
+			if verfy_type != -1 && values[tag_idx][0] != float64(verfy_type) {
+				return [3]float64{0}, [3]float64{0}, [3]float64{0}, 0, nil // Not the requested meter type
+			}
+		case rscp.PM_VOLTAGE_L1:
+			voltage[0] = values[tag_idx][0]
+			voltage[1] = values[tag_idx][0]
+		case rscp.PM_VOLTAGE_L2:
+			//voltage[1] = values[tag_idx][0]  // False reading on L2 use L1 instead
+		case rscp.PM_VOLTAGE_L3:
+			voltage[2] = values[tag_idx][0]
+		case rscp.PM_POWER_L1:
+			power[0] = values[tag_idx][0]
+		case rscp.PM_POWER_L2:
+			power[1] = values[tag_idx][0]
+		case rscp.PM_POWER_L3:
+			power[2] = values[tag_idx][0]
+		case rscp.PM_ENERGY_L1:
+			total_energy += values[tag_idx][0]
+		case rscp.PM_ENERGY_L2:
+			total_energy += values[tag_idx][0]
+		case rscp.PM_ENERGY_L3:
+			total_energy += values[tag_idx][0]
+		default:
+		}
+	}
+	current[0] = power[0] / voltage[0]
+	current[1] = power[1] / voltage[1]
+	current[2] = power[2] / voltage[2]
+	return voltage, current, power, total_energy / 1000, nil
+}
+
 func rscpError(msg ...rscp.Message) error {
 	var errs []error
 	for _, m := range msg {
@@ -281,4 +530,30 @@ func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]T, error
 	}
 
 	return res, nil
+}
+
+func rscpValuesWithTag[T any](msg []rscp.Message, fun func(any) (T, error)) ([]rscp.Tag, [][]T, error) {
+	//res := make([]T, 0, len(msg))
+	res := [][]T{}
+	var tags []rscp.Tag
+	var err error
+	var v []T
+	var newVal T
+	for _, m := range msg {
+		for _, v_arr := range m.Value.([]rscp.Message) {
+			if v_arr.DataType == rscp.Container {
+				v, err = rscpValues(v_arr.Value.([]rscp.Message), fun)
+			} else {
+				newVal, err = rscpValue(v_arr, fun)
+				v = []T{newVal}
+			}
+			if err != nil {
+				return nil, nil, err
+			}
+			tags = append(tags, v_arr.Tag)
+			res = append(res, v)
+		}
+	}
+
+	return tags, res, nil
 }

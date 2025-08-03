@@ -5,11 +5,11 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key (=RSCP-Passwort) muss im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt werden. Die IP-Adressen von evcc und des Hauskraftwerks müssen sich im selben Subnetz befinden.
+      Die Zugangsdaten werden im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt. Die IP-Adressen von evcc und des Hauskraftwerks müssen sich im selben Subnetz befinden.
 
       **Achtung**: Die aktive Batteriesteuerung überschreibt Einstellungen im Smart-Power/Betriebsbereich.
     en: |
-      Username and password are identical to Web Portal or My E3/DC App access. Key (=RSCP-Password) must be set in the E3/DC system at Personalize/User Profile. The IP adresses of evcc and E3/DC system must be in the same subnet.
+      The access data is created in the home power plant under Personalize/User Profile. The IP addresses of evcc and the home power plant must be in the same subnet.
 
       **Note**: Active battery control will override Smart-Power/Operating Range settings.
 params:
@@ -21,8 +21,15 @@ params:
     default: 5033
   - name: user
     required: true
+    default: local.user
+    help:
+      de: Offline RSCP-Nutzer (local.user). Alternativ der Benutzername vom Web-Portal bzw. My E3/DC App. Alternatively die E-Mail-Adresse des E3/DC-Kontos,
+      en: Offline RSCP user (local.user). Alternatively the username from Web Portal or My E3/DC App. Alternatively the email address of the E3/DC account
   - name: password
     required: true
+    help:
+      de: Passwort für den offline RSCP-Nutzer (local.user). Alternantiv das Passwort vom Web-Portal bzw. My E3/DC App
+      en: Password for offline RSCP user (local.user). Alternatively the password from Web Portal or My E3/DC App      
   - name: useinternalpower
     description:
       de: Interne Erzeugung auslesen
@@ -47,11 +54,17 @@ params:
     usages: ["pv"]
   - name: key
     description:
-      generic: RSCP-Password
+      de: RSCP-Passwort
+      en: RSCP-Password
+    help:
+      de: Das RSCP-Passwort wird im Hauskraftwerk unter Personalisieren/Sicherheit gesetzt.
+      en: The RSCP password is set in the home power plant under Personalize/Security.
+    default: local.rscp
     required: true
   - name: battery
     description:
-      generic: Battery
+      de: Batterie
+      en: Battery
     deprecated: true
   - name: dischargelimit
     description:
