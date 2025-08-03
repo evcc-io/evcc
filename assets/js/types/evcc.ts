@@ -41,6 +41,7 @@ export interface State {
   fatal?: FatalError[];
   auth?: Auth;
   vehicles: Vehicle[];
+  evopt?: EvOpt;
 }
 
 export enum SMART_COST_TYPE {
@@ -210,3 +211,49 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export type ValueOf<T> = T[keyof T];
+
+// EvOpt interfaces for optimization service
+export interface EvOpt {
+  req: EvOptRequest;
+  res: EvOptResponse;
+}
+
+export interface EvOptRequest {
+  batteries: EvOptBattery[];
+  eta_c: number;
+  eta_d: number;
+  time_series: EvOptTimeSeries;
+}
+
+export interface EvOptBattery {
+  c_max: number; // Maximum charging power (W)
+  c_min: number; // Minimum charging power (W)
+  d_max: number; // Maximum discharging power (W)
+  p_a: number; // Auxiliary power consumption
+  s_initial: number; // Initial state of charge (Wh)
+  s_max: number; // Maximum state of charge (Wh)
+  s_min: number; // Minimum state of charge (Wh)
+}
+
+export interface EvOptTimeSeries {
+  dt: number[]; // Delta time intervals (seconds)
+  ft: number[]; // Solar forecast (W)
+  gt: number[]; // Grid tariff
+  p_E: number[]; // Grid feedin price (€/Wh)
+  p_N: number[]; // Grid import price (€/Wh)
+}
+
+export interface EvOptResponse {
+  batteries: EvOptBatteryResult[];
+  flow_direction: number[];
+  grid_export: number[];
+  grid_import: number[];
+  objective_value: number;
+  status: string;
+}
+
+export interface EvOptBatteryResult {
+  charging_power: number[]; // Charging power per time slot (W)
+  discharging_power: number[]; // Discharging power per time slot (W)
+  state_of_charge: number[]; // State of charge per time slot (Wh)
+}
