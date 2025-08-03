@@ -30,7 +30,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: bluelink.HyundaiAppID,
 		AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		BrandAuthUrl:      "%s/auth/apiv2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
+		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
 		PushType:          "GCM",
 		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
 		LoginFormHost:     "https://idpconnect-eu.hyundai.com",
