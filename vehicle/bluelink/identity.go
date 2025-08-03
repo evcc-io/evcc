@@ -30,6 +30,8 @@ const (
 	TokenURL           = "/api/v1/user/oauth2/token"
 )
 
+// OAuth2Config is the new OAuth2 API configuration
+
 // Config is the bluelink API configuration
 type Config struct {
 	URI               string
@@ -172,7 +174,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 				// extract redirect URL
 				if nextUri := urlRedirect.Get("next_uri"); nextUri != "" {
 					if nextVal, ok := url.Parse(nextUri); ok == nil {
-						if connectorSessionKey := nextVal.Query().Get("connector_session_key"); connectorSessionKey != "" {
+						if connectorSessionKey = nextVal.Query().Get("connector_session_key"); connectorSessionKey != "" {
 							err = nil
 						}
 					}
@@ -209,7 +211,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
 		if err == nil {
-			req.PostForm = data
 			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 			req.Header.Add("Origin", v.config.LoginFormHost)
 
