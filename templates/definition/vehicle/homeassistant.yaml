@@ -14,9 +14,6 @@ params:
     description:
       de: Home Assistant URI
       en: Home Assistant URI
-    help:
-      de: z.B. http://192.168.1.10:8123
-      en: e.g. http://192.168.1.10:8123
     example: "http://192.168.1.10:8123"
     required: true
   - name: token
