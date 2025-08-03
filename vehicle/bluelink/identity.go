@@ -162,9 +162,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var connectorSessionKey string
 	if err == nil {
 		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.AuthClientID, v.config.URI, "en")
-
-		fmt.Printf("Requesting Service login form %s with AuthClient %s, BaseUri %s, InfoSvcId %s, InfoUserId %s\n", uri, v.config.AuthClientID, v.config.URI, info.ServiceId, info.UserId)
-
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {
 			if resp, err = cookieClient.Do(req); err == nil {
@@ -180,7 +177,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 				if len(cskArray) > 1 {
 					connectorSessionKey = cskArray[1]
 					err = nil
-					fmt.Printf("Connector Session Key: %s\n", connectorSessionKey)
 				}
 			}
 		}
@@ -204,8 +200,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 			"_csrf":                 {""},
 		}
 
-		fmt.Printf("Trying to get code from:\n%s\nUsing data:\n%v\n", uri, data)
-
 		// create a client that doesn't honor redirects so we receive the original response
 		// no idea how to do that with the internal request.New(...) function
 		sc := http.Client{
@@ -219,11 +213,9 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 			req.PostForm = data
 			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 			req.Header.Add("Origin", v.config.LoginFormHost)
-			fmt.Printf("Subreq headers:\n%v\n", req.Header)
 
 			if resp, err = sc.Do(req); err == nil {
 				location := resp.Header.Get("Location")
-				fmt.Printf("Got Location:\n%v\n\n%s\n", resp.Header, location)
 				// extract code from URL
 				err = errors.New("code location not found")
 				codeSearch := regexp.MustCompile(`code=([0-9a-fA-F-]{36}\.[0-9a-fA-F-]{36}\.[0-9a-fA-F-]{36})`)
@@ -236,7 +228,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		}
 	}
 
-	fmt.Printf("Returning code: %s, err: %v\n", code, err)
 	return code, err
 }
 
@@ -288,7 +279,6 @@ func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	err := v.DoJSON(req, &token)
 
-	fmt.Printf("Extracted token: %v\n", token)
 	return util.TokenWithExpiry(&token), err
 }
 
@@ -320,8 +310,6 @@ func (v *Identity) Login(user, password, language string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
-	fmt.Printf("Trying login with user: %s, pass: %s, language: %s\n", user, password, language)
-
 	v.deviceID, err = v.getDeviceID()
 
 	var cookieClient *request.Helper
