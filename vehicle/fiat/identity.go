@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/session"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -206,7 +206,7 @@ func (v *Identity) Sign(req *http.Request, body io.ReadSeeker) error {
 	}
 
 	// sign request
-	signer := v4.NewSigner(credentials.NewStaticCredentials(
+	signer := v4.NewSigner(credentials.NewStaticCredentialsProvider(
 		*v.creds.AccessKeyId, *v.creds.SecretKey, *v.creds.SessionToken,
 	))
 	_, err := signer.Sign(req, body, "execute-api", Region, time.Now())
