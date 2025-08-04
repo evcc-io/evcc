@@ -1,9 +1,6 @@
 package fiat
 
 import (
-	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/session"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -33,7 +30,7 @@ type Identity struct {
 	*request.Helper
 	user, password string
 	uid            string
-	creds          *types.Credentials
+	creds          *cognitoidentity.Credentials
 }
 
 // NewIdentity creates Fiat identity
@@ -49,6 +46,8 @@ func NewIdentity(log *util.Logger, user, password string) *Identity {
 func (v *Identity) Login() error {
 	v.Client.Jar, _ = cookiejar.New(nil)
 
+	uri := fmt.Sprintf("%s/accounts.webSdkBootstrap", LoginURI)
+
 	data := url.Values{
 		"APIKey":   {ApiKey},
 		"pageURL":  {"https://myuconnect.fiat.com/de/de/vehicle-services"},
@@ -57,12 +56,18 @@ func (v *Identity) Login() error {
 		"format":   {"json"},
 	}
 
-	uri := fmt.Sprintf("%s/accounts.webSdkBootstrap?%s", LoginURI, data.Encode())
-	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+	headers := map[string]string{
 		"Accept": "*/*",
-	})
-	if _, err := v.Do(req); err != nil {
-		return err
+	}
+
+	req, err := request.New(http.MethodGet, uri, nil, headers)
+	if err == nil {
+		req.URL.RawQuery = data.Encode()
+
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	var res struct {
@@ -75,38 +80,39 @@ func (v *Identity) Login() error {
 		}
 	}
 
-	uri = fmt.Sprintf("%s/accounts.login", LoginURI)
+	if err == nil {
+		uri = fmt.Sprintf("%s/accounts.login", LoginURI)
 
-	data = url.Values{
-		"loginID":           {v.user},
-		"password":          {v.password},
-		"sessionExpiration": {"7776000"},
-		"APIKey":            {ApiKey},
-		"pageURL":           {"https://myuconnect.fiat.com/de/de/login"},
-		"sdk":               {"js_latest"},
-		"sdkBuild":          {"12234"},
-		"format":            {"json"},
-		"targetEnv":         {"jssdk"},
-		"include":           {"profile,data,emails"}, // subscriptions,preferences
-		"includeUserInfo":   {"true"},
-		"loginMode":         {"standard"},
-		"lang":              {"de0de"},
-		"source":            {"showScreenSet"},
-		"authMode":          {"cookie"},
-	}
+		data := url.Values{
+			"loginID":           {v.user},
+			"password":          {v.password},
+			"sessionExpiration": {"7776000"},
+			"APIKey":            {ApiKey},
+			"pageURL":           {"https://myuconnect.fiat.com/de/de/login"},
+			"sdk":               {"js_latest"},
+			"sdkBuild":          {"12234"},
+			"format":            {"json"},
+			"targetEnv":         {"jssdk"},
+			"include":           {"profile,data,emails"}, // subscriptions,preferences
+			"includeUserInfo":   {"true"},
+			"loginMode":         {"standard"},
+			"lang":              {"de0de"},
+			"source":            {"showScreenSet"},
+			"authMode":          {"cookie"},
+		}
 
-	req, _ = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Accept":       "*/*",
-		"Content-Type": "application/x-www-form-urlencoded",
-	})
-	if err := v.DoJSON(req, &res); err != nil {
-		return err
-	}
-	if err := res.ErrorInfo.Error(); err != nil {
-		return err
-	}
+		headers := map[string]string{
+			"Accept":       "*/*",
+			"Content-Type": "application/x-www-form-urlencoded",
+		}
 
-	v.uid = res.UID
+		if req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers); err == nil {
+			if err = v.DoJSON(req, &res); err == nil {
+				err = res.ErrorInfo.Error()
+				v.uid = res.UID
+			}
+		}
+	}
 
 	var token struct {
 		ErrorInfo
@@ -114,70 +120,75 @@ func (v *Identity) Login() error {
 		IDToken      string `json:"id_token"`
 	}
 
-	data = url.Values{
-		"fields":      {"profile.firstName,profile.lastName,profile.email,country,locale,data.disclaimerCodeGSDP"}, // data.GSDPisVerified
-		"APIKey":      {ApiKey},
-		"pageURL":     {"https://myuconnect.fiat.com/de/de/dashboard"},
-		"sdk":         {"js_latest"},
-		"sdkBuild":    {"12234"},
-		"format":      {"json"},
-		"login_token": {res.SessionInfo.LoginToken},
-		"authMode":    {"cookie"},
-	}
+	if err == nil {
+		uri = fmt.Sprintf("%s/accounts.getJWT", LoginURI)
 
-	uri = fmt.Sprintf("%s/accounts.getJWT?%s", LoginURI, data.Encode())
+		data := url.Values{
+			"fields":      {"profile.firstName,profile.lastName,profile.email,country,locale,data.disclaimerCodeGSDP"}, // data.GSDPisVerified
+			"APIKey":      {ApiKey},
+			"pageURL":     {"https://myuconnect.fiat.com/de/de/dashboard"},
+			"sdk":         {"js_latest"},
+			"sdkBuild":    {"12234"},
+			"format":      {"json"},
+			"login_token": {res.SessionInfo.LoginToken},
+			"authMode":    {"cookie"},
+		}
 
-	req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "*/*",
-	})
-	if err := v.DoJSON(req, &token); err != nil {
-		return err
-	}
-	if err := token.ErrorInfo.Error(); err != nil {
-		return err
+		headers := map[string]string{
+			"Accept": "*/*",
+		}
+
+		if req, err = request.New(http.MethodGet, uri, nil, headers); err == nil {
+			req.URL.RawQuery = data.Encode()
+			if err = v.DoJSON(req, &token); err == nil {
+				err = token.ErrorInfo.Error()
+			}
+		}
 	}
 
 	var identity struct {
 		Token, IdentityID string
 	}
 
-	gigya := struct {
-		GigyaToken string `json:"gigya_token"`
-	}{
-		GigyaToken: token.IDToken,
+	if err == nil {
+		data := struct {
+			GigyaToken string `json:"gigya_token"`
+		}{
+			GigyaToken: token.IDToken,
+		}
+
+		headers := map[string]string{
+			"Content-Type":        "application/json",
+			"X-Clientapp-Version": "1.0",
+			"ClientRequestId":     lo.RandomString(16, lo.LettersCharset),
+			"X-Api-Key":           XApiKey,
+			"X-Originator-Type":   "web",
+		}
+
+		if req, err = request.New(http.MethodPost, TokenURI, request.MarshalJSON(data), headers); err == nil {
+			err = v.DoJSON(req, &identity)
+		}
 	}
 
-	headers := map[string]string{
-		"Content-Type":        "application/json",
-		"X-Clientapp-Version": "1.0",
-		"ClientRequestId":     lo.RandomString(16, lo.LettersCharset),
-		"X-Api-Key":           XApiKey,
-		"X-Originator-Type":   "web",
+	var credRes *cognitoidentity.GetCredentialsForIdentityOutput
+
+	if err == nil {
+		session := session.Must(session.NewSession(&aws.Config{Region: aws.String(Region)}))
+		svc := cognitoidentity.New(session)
+
+		credRes, err = svc.GetCredentialsForIdentity(&cognitoidentity.GetCredentialsForIdentityInput{
+			IdentityId: &identity.IdentityID,
+			Logins: map[string]*string{
+				"cognito-identity.amazonaws.com": &identity.Token,
+			},
+		})
 	}
 
-	req, _ = request.New(http.MethodPost, TokenURI, request.MarshalJSON(gigya), headers)
-	if err := v.DoJSON(req, &identity); err != nil {
-		return err
+	if err == nil {
+		v.creds = credRes.Credentials
 	}
 
-	cfg, cfgErr := config.LoadDefaultConfig(context.Background(), config.WithRegion(Region))
-	if cfgErr != nil {
-		return cfgErr
-	}
-	svc := cognitoidentity.NewFromConfig(cfg)
-
-	credRes, err := svc.GetCredentialsForIdentity(context.Background(), &cognitoidentity.GetCredentialsForIdentityInput{
-		IdentityId: &identity.IdentityID,
-		Logins: map[string]string{
-			"cognito-identity.amazonaws.com": identity.Token,
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	v.creds = credRes.Credentials
-	return nil
+	return err
 }
 
 // UID returns the logged in users uid
@@ -195,38 +206,10 @@ func (v *Identity) Sign(req *http.Request, body io.ReadSeeker) error {
 	}
 
 	// sign request
-	credProvider := credentials.NewStaticCredentialsProvider(
+	signer := v4.NewSigner(credentials.NewStaticCredentialsProvider(
 		*v.creds.AccessKeyId, *v.creds.SecretKey, *v.creds.SessionToken,
-	)
-	credentials, err := credProvider.Retrieve(context.Background())
-	if err != nil {
-		return err
-	}
-
-	// Calculate payload hash
-	var payloadHash string
-	if body != nil {
-		// Read the body content
-		bodyBytes, err := io.ReadAll(body)
-		if err != nil {
-			return err
-		}
-
-		// Reset the body seeker to the beginning
-		if _, err := body.Seek(0, io.SeekStart); err != nil {
-			return err
-		}
-
-		// Calculate SHA-256 hash
-		hash := sha256.Sum256(bodyBytes)
-		payloadHash = hex.EncodeToString(hash[:])
-	} else {
-		// For empty payloads, use the SHA-256 hash of empty string
-		payloadHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	}
-
-	signer := v4.NewSigner()
-	err = signer.SignHTTP(context.Background(), credentials, req, payloadHash, "execute-api", Region, time.Now())
+	))
+	_, err := signer.Sign(req, body, "execute-api", Region, time.Now())
 
 	return err
 }
