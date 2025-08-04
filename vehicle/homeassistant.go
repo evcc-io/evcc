@@ -217,6 +217,7 @@ func (v *HomeAssistant) status(sensor string) (api.ChargeStatus, error) {
 		"connected":           api.StatusB,
 		"ready":               api.StatusB,
 		"plugged":             api.StatusB,
+		"charging_completed":  api.StatusB,
 		"disconnected":        api.StatusA,
 		"off":                 api.StatusA,
 		"none":                api.StatusA,
