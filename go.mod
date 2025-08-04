@@ -13,7 +13,7 @@ require (
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/aws/aws-sdk-go v1.55.8
+	github.com/aws/aws-sdk-go v1.55.7
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
@@ -50,7 +50,7 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/gregdel/pushover v1.3.1
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/grid-x/modbus v0.0.0-20250801110857-752051ed9df7
+	github.com/grid-x/modbus v0.0.0-20250717144429-344b140e33c1
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hasura/go-graphql-client v0.14.4
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
@@ -77,7 +77,7 @@ require (
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/philippseith/signalr v0.7.0
 	github.com/prometheus-community/pro-bing v0.7.0
-	github.com/prometheus/client_golang v1.23.0
+	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.65.0
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.51.0
@@ -91,7 +91,7 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/teslamotors/vehicle-command v0.4.0
+	github.com/teslamotors/vehicle-command v0.3.4
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20250608084036-9a13257a4991
@@ -100,7 +100,7 @@ require (
 	go.uber.org/mock v0.5.2
 	go.yaml.in/yaml/v4 v4.0.0-20250730171608-926dd0b54a90
 	golang.org/x/crypto v0.40.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20250803194717-c247dead11de
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20250711192710-b903b535d3ef
 	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792
 	golang.org/x/net v0.42.0
 	golang.org/x/oauth2 v0.30.0
@@ -198,7 +198,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.48.2 // indirect
 	github.com/quic-go/webtransport-go v0.8.1-0.20241018022711-4ac2c9250e66 // indirect
