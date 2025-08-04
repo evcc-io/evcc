@@ -312,7 +312,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language, region string) (err error) {
+func (v *Identity) Login(user, password, language, region, brand string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
