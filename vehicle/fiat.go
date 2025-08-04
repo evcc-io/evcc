@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -20,11 +19,11 @@ type Fiat struct {
 }
 
 func init() {
-	registry.AddCtx("fiat", NewFiatFromConfig)
+	registry.Add("fiat", NewFiatFromConfig)
 }
 
 // NewFiatFromConfig creates a new vehicle
-func NewFiatFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                    `mapstructure:",squash"`
 		User, Password, VIN, PIN string
@@ -48,7 +47,7 @@ func NewFiatFromConfig(ctx context.Context, other map[string]interface{}) (api.V
 	}
 
 	log := util.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)
-	identity := fiat.NewIdentity(log, ctx, cc.User, cc.Password)
+	identity := fiat.NewIdentity(log, cc.User, cc.Password)
 
 	err := identity.Login()
 	if err != nil {
