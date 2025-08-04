@@ -3,7 +3,6 @@ package vehicle
 import (
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"net/url"
 	"slices"
@@ -174,9 +173,6 @@ func (v *HomeAssistant) getFloatSensor(entity string) (float64, error) {
 		return 0, err
 	}
 
-	// Replace comma with dot for locales that use comma as decimal separator
-	s = strings.ReplaceAll(s, ",", ".")
-
 	return strconv.ParseFloat(s, 64)
 }
 
@@ -186,14 +182,11 @@ func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
 		return 0, err
 	}
 
-	// Replace comma with dot for locales that use comma as decimal separator
-	s = strings.ReplaceAll(s, ",", ".")
-
-	fval, err := strconv.ParseFloat(s, 64)
+	f, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		return 0, err
 	}
-	return int64(math.Round(fval)), nil
+	return int64(f), nil // truncation
 }
 
 func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
