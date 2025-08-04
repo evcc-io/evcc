@@ -6,28 +6,21 @@ products:
 group: generic
 requirements:
   description:
-    en: Requires a running Home Assistant instance with suitable vehicle entities and services.
-    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services.
+    en: Requires a running Home Assistant instance with suitable vehicle entities and services. All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
+    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services. Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
 params:
-  - description:
-      de: Home Assistant Entity IDs
-      en: Home Assistant entity IDs
-    help:
-      de: Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
-      en: All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
+  - preset: vehicle-common
   - name: uri
     description:
       de: Home Assistant URI
       en: Home Assistant URI
-    help:
-      de: z.B. http://192.168.1.10:8123
-      en: e.g. http://192.168.1.10:8123
     example: "http://192.168.1.10:8123"
     required: true
   - name: token
     description:
       de: Home Assistant Long-Lived Access Token
       en: Home Assistant Long-Lived Access Token
+    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
     required: true
     mask: true
   - name: soc
@@ -67,18 +60,6 @@ params:
       en: Climatisation active
     example: "binary_sensor.vehicle_climater"
     type: string
-  - name: maxCurrent
-    description:
-      de: Maximalstrom [A]
-      en: Max current [A]
-    example: "sensor.vehicle_max_current"
-    type: string
-  - name: getMaxCurrent
-    description:
-      de: Aktueller Maximalstrom [A]
-      en: Actual max current [A]
-    example: "sensor.vehicle_get_max_current"
-    type: string
   - name: finishTime
     description:
       de: Ladeende (ISO8601 oder Unix)
@@ -104,6 +85,10 @@ params:
     example: "script.vehicle_wakeup"
     type: string
 render: |
+  type: homeassistant
+  {{ include "vehicle-common" . }}
+  uri: {{ .uri }}
+  token: {{ .token }}
   sensors:
     soc: {{ .soc }}
     {{ if .range }}range: {{ .range }}{{ end }}
