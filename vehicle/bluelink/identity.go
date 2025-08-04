@@ -65,7 +65,6 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 }
 
 func (v *Identity) getDeviceID() (string, error) {
-	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
 	stamp, err := v.stamp()
 	if err != nil {
 		return "", err
@@ -144,18 +143,14 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 }
 
 func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
-	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
-	if err != nil {
-		return "", err
-	}
+	req, _ := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
 		UserId    string `json:"userId"`
 		ServiceId string `json:"serviceId"`
 	}
 
-	err = cookieClient.DoJSON(req, &info)
-	if err != nil {
+	if err := cookieClient.DoJSON(req, &info); err != nil {
 		return "", err
 	}
 
@@ -163,12 +158,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 	// get the connector_session_key
 	uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.AuthClientID, v.config.URI, "en")
-	req, err = request.New(http.MethodGet, uri, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err = cookieClient.Do(req)
+	resp, err := cookieClient.Get(uri)
 	if err != nil {
 		return "", err
 	}
@@ -214,12 +204,13 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		},
 	}
 
-	req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Origin":       v.config.LoginFormHost,
+	})
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Origin", v.config.LoginFormHost)
 
 	resp, err = sc.Do(req)
 	if err != nil {
@@ -228,20 +219,20 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 
 	location := resp.Header.Get("Location")
 	if location == "" {
-		return "", errors.New("empty location url for code extraction")
+		return "", errors.New("missing location header")
 	}
 
 	locationUrl, err := url.Parse(location)
 	if err != nil {
-		return "", errors.New("failed to parse location url for code extraction")
+		return "", err
 	}
 
 	code := locationUrl.Query().Get("code")
 	if code == "" {
-		return "", errors.New("empty code on extraction")
+		return "", errors.New("missing code")
 	}
 
-	return code, err
+	return code, nil
 }
 
 func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
