@@ -182,7 +182,11 @@ func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
 		return 0, err
 	}
 
-	return strconv.ParseInt(s, 10, 64)
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, err
+	}
+	return int64(f), nil // truncation
 }
 
 func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
@@ -217,6 +221,7 @@ func (v *HomeAssistant) status(sensor string) (api.ChargeStatus, error) {
 		"connected":           api.StatusB,
 		"ready":               api.StatusB,
 		"plugged":             api.StatusB,
+		"charging_completed":  api.StatusB,
 		"disconnected":        api.StatusA,
 		"off":                 api.StatusA,
 		"none":                api.StatusA,
