@@ -31,13 +31,14 @@ const (
 
 type Identity struct {
 	*request.Helper
+	ctx            context.Context
 	user, password string
 	uid            string
 	creds          *types.Credentials
 }
 
 // NewIdentity creates Fiat identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log *util.Logger, ctx context.Context, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,
@@ -160,13 +161,13 @@ func (v *Identity) Login() error {
 		return err
 	}
 
-	cfg, cfgErr := config.LoadDefaultConfig(context.Background(), config.WithRegion(Region))
-	if cfgErr != nil {
-		return cfgErr
+	cfg, err := config.LoadDefaultConfig(v.ctx, config.WithRegion(Region))
+	if err != nil {
+		return err
 	}
 	svc := cognitoidentity.NewFromConfig(cfg)
 
-	credRes, err := svc.GetCredentialsForIdentity(context.Background(), &cognitoidentity.GetCredentialsForIdentityInput{
+	credRes, err := svc.GetCredentialsForIdentity(v.ctx, &cognitoidentity.GetCredentialsForIdentityInput{
 		IdentityId: &identity.IdentityID,
 		Logins: map[string]string{
 			"cognito-identity.amazonaws.com": identity.Token,
@@ -198,35 +199,38 @@ func (v *Identity) Sign(req *http.Request, body io.ReadSeeker) error {
 	credProvider := credentials.NewStaticCredentialsProvider(
 		*v.creds.AccessKeyId, *v.creds.SecretKey, *v.creds.SessionToken,
 	)
-	credentials, err := credProvider.Retrieve(context.Background())
+	credentials, err := credProvider.Retrieve(v.ctx)
 	if err != nil {
 		return err
 	}
 
-	// Calculate payload hash
-	var payloadHash string
-	if body != nil {
-		// Read the body content
-		bodyBytes, err := io.ReadAll(body)
-		if err != nil {
-			return err
-		}
-
-		// Reset the body seeker to the beginning
-		if _, err := body.Seek(0, io.SeekStart); err != nil {
-			return err
-		}
-
-		// Calculate SHA-256 hash
-		hash := sha256.Sum256(bodyBytes)
-		payloadHash = hex.EncodeToString(hash[:])
-	} else {
-		// For empty payloads, use the SHA-256 hash of empty string
-		payloadHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	payloadHash, err := hashBody(body)
+	if err != nil {
+		return err
 	}
 
 	signer := v4.NewSigner()
-	err = signer.SignHTTP(context.Background(), credentials, req, payloadHash, "execute-api", Region, time.Now())
+	return signer.SignHTTP(v.ctx, credentials, req, payloadHash, "execute-api", Region, time.Now())
+}
 
-	return err
+func hashBody(body io.ReadSeeker) (string, error) {
+	if body == nil {
+		// For empty payloads, use the SHA-256 hash of empty string
+		return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", nil
+	}
+
+	// Read the body content
+	bodyBytes, err := io.ReadAll(body)
+	if err != nil {
+		return "", err
+	}
+
+	// Reset the body seeker to the beginning
+	if _, err := body.Seek(0, io.SeekStart); err != nil {
+		return "", err
+	}
+
+	// Calculate SHA-256 hash
+	hash := sha256.Sum256(bodyBytes)
+	return hex.EncodeToString(hash[:]), nil
 }
