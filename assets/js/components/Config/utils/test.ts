@@ -30,6 +30,7 @@ export const performTest = async (
   state.isSuccess = false;
   state.isError = false;
   state.isRunning = true;
+  state.error = null;
   state.errorLine = null;
   try {
     const res = await api();
