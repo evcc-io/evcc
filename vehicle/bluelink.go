@@ -63,12 +63,16 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		User, Password string
 		VIN            string
 		Language       string
+		Region         string
+		Brand          string `mapstructure:"template"`
 		Expiry         time.Duration
 		Cache          time.Duration
 	}{
 		Language: "en",
-		Expiry:   expiry,
-		Cache:    interval,
+		// default for now, remove once there are more supported regions
+		Region: "Europe",
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -78,7 +82,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bluelink.NewIdentity(log, settings)
 
-	if err := identity.Login(cc.User, cc.Password, cc.Language); err != nil {
+	if err := identity.Login(cc.User, cc.Password, cc.Language, cc.Region); err != nil {
 		return nil, err
 	}
 

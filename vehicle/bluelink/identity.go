@@ -235,6 +235,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	return code, nil
 }
 
+/* no longer used atm, probably doesn't work anymore anyway
 func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
 	data := map[string]interface{}{
 		"email":    user,
@@ -263,6 +264,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 
 	return accCode, err
 }
+*/
 
 func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
@@ -310,39 +312,42 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language string) (err error) {
+func (v *Identity) Login(user, password, language, region string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
 	v.deviceID, err = v.getDeviceID()
-
-	var cookieClient *request.Helper
-	if err == nil {
-		cookieClient, err = v.getCookies()
-	}
-
-	if err == nil {
-		err = v.setLanguage(cookieClient, language)
-	}
-
-	var code string
-	if err == nil {
-		// try new login first, then fallback
-		if code, err = v.brandLogin(cookieClient, user, password); err != nil {
-			code, err = v.bluelinkLogin(cookieClient, user, password)
-		}
-	}
-
-	if err == nil {
-		var token *oauth2.Token
-		if token, err = v.exchangeCode(code); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource(token, v)
-		}
-	}
-
 	if err != nil {
-		err = fmt.Errorf("login failed: %w", err)
+		return fmt.Errorf("Login failed: %w", err)
 	}
+
+	cookieClient, err := v.getCookies()
+	if err != nil {
+		return fmt.Errorf("Login failed: %w", err)
+	}
+
+	err = v.setLanguage(cookieClient, language)
+	if err != nil {
+		return fmt.Errorf("Login failed: %w", err)
+	}
+
+	// determine what login to use depending on `region`
+	var code string
+	switch region {
+	case BlueLinkRegionEurope:
+		code, err = v.brandLogin(cookieClient, user, password)
+	default:
+		err = errors.New("unsupported region")
+	}
+	if err != nil {
+		return fmt.Errorf("Login failed: %w", err)
+	}
+
+	token, err := v.exchangeCode(code)
+	if err != nil {
+		return fmt.Errorf("Login failed: %w", err)
+	}
+	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	return err
 }
