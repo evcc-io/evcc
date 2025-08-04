@@ -54,9 +54,6 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 	if switchEntity == "" {
 		return nil, errors.New("missing switch entity")
 	}
-	if powerEntity == "" {
-		return nil, errors.New("missing power entity")
-	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
 	c.Helper.Client.Transport = &transport.Decorator{
