@@ -208,8 +208,6 @@ import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY } from "@/types/evcc";
-import TopNavigation from "@/components/Top/Navigation.vue";
-import collector from "@/mixins/collector";
 
 export default defineComponent({
 	name: "Sessions",
@@ -232,7 +230,7 @@ export default defineComponent({
 		CostGroupedChart,
 		AvgCostGroupedChart,
 	},
-	mixins: [formatter, collector],
+	mixins: [formatter],
 	props: {
 		notifications: Array as PropType<Notification[]>,
 		month: { type: Number, default: () => new Date().getMonth() + 1 },
@@ -433,10 +431,6 @@ export default defineComponent({
 		startDate() {
 			return new Date(this.sessions[0]?.created || Date.now());
 		},
-		topNavigation() {
-			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
-		},
 		sessionsWithDefaults() {
 			return this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
@@ -592,17 +586,14 @@ export default defineComponent({
 			return this.showMonthNavigation || this.showYearNavigation;
 		},
 		groupEntriesAvailable() {
-			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) {
-				return false;
-			} else {
-				return (
-					new Set(
-						this.currentSessions.map(
-							(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
-						)
-					).size > 1
-				);
-			}
+			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) return false;
+			return (
+				new Set(
+					this.currentSessions.map(
+						(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
+					)
+				).size > 1
+			);
 		},
 		showSolarYearChart() {
 			return this.period !== PERIODS.MONTH && this.selectedGroup === GROUPS.NONE;
@@ -623,18 +614,14 @@ export default defineComponent({
 		suggestedMaxAvgPrice() {
 			// returns the 98th percentile of avg prices for all sessions
 			const sessionsWithPrice = this.sessions.filter((s) => s.pricePerKWh !== null);
-			const prices = sessionsWithPrice
-				.map((s) => s.pricePerKWh)
-				.filter((p): p is number => p !== null);
+			const prices = sessionsWithPrice.map((s) => s.pricePerKWh ?? 0);
 			return this.percentile(prices, 98) ?? 0;
 		},
 		suggestedMaxAvgCo2() {
 			// returns the 98th percentile of avg co2 emissions for all sessions
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2 = sessionsWithCo2
-				.map((s) => s.co2PerKWh)
-				.filter((c): c is number => c !== null);
-			return this.percentile(co2, 98) ?? 0;
+			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh ?? 0);
+			return this.percentile(co2, 98);
 		},
 		suggestedMaxAvgCost() {
 			return this.activeType === TYPES.PRICE
@@ -649,8 +636,7 @@ export default defineComponent({
 				acc[key] = (acc[key] || 0) + (s.co2PerKWh ?? 0) * s.chargedEnergy;
 				return acc;
 			}, {});
-			const percentileValue = this.percentile(Object.values(co2Map), 98);
-			return Math.max(percentileValue !== null ? percentileValue : 0, 5); // 5kg default
+			return Math.max(this.percentile(Object.values(co2Map), 98) ?? 0, 5); // 5kg default
 		},
 		suggestedMaxPrice() {
 			// returns the 98th percentile of total price by time period
@@ -660,8 +646,7 @@ export default defineComponent({
 				acc[key] = (acc[key] || 0) + (s.price || 0);
 				return acc;
 			}, {});
-			const percentileValue = this.percentile(Object.values(priceMap), 98);
-			return Math.max(percentileValue !== null ? percentileValue : 0, 1); // 1 CURRENCY default
+			return Math.max(this.percentile(Object.values(priceMap), 98) ?? 0, 1); // 1 CURRENCY default
 		},
 		suggestedMaxCost() {
 			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
