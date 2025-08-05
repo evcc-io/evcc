@@ -214,17 +214,17 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 // status returns evcc charge status (optional, private)
 func (v *HomeAssistant) status(sensor string) (api.ChargeStatus, error) {
 	var haStatusMap = map[string]api.ChargeStatus{
-		"c":				   api.StatusC,
+		"c":                   api.StatusC,
 		"charging":            api.StatusC,
 		"on":                  api.StatusC,
 		"true":                api.StatusC,
 		"active":              api.StatusC,
-		"b":				   api.StatusB,
+		"b":                   api.StatusB,
 		"connected":           api.StatusB,
 		"ready":               api.StatusB,
 		"plugged":             api.StatusB,
 		"charging_completed":  api.StatusB,
-		"a":				   api.StatusA,
+		"a":                   api.StatusA,
 		"disconnected":        api.StatusA,
 		"off":                 api.StatusA,
 		"none":                api.StatusA,
