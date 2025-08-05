@@ -38,7 +38,11 @@
 							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
-					<div v-if="fatalText" class="text-break">{{ fatalText }}</div>
+					<div class="d-flex flex-column gap-1">
+						<div v-for="fatalText in fatalTexts" :key="fatalText" class="text-break">
+							{{ fatalText }}
+						</div>
+					</div>
 				</div>
 				<RestartButton error @restart="restart" />
 			</div>
@@ -62,7 +66,7 @@ export default defineComponent({
 	},
 	props: {
 		offline: Boolean,
-		fatal: Object as PropType<FatalError>,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
 		return { dismissed: false };
@@ -82,14 +86,14 @@ export default defineComponent({
 				!this.offline &&
 				!this.restartNeeded &&
 				!this.restarting &&
-				this.fatal?.error &&
+				this.fatal.length > 0 &&
 				!this.dismissed
 			);
 		},
-		fatalText() {
-			const { error, class: errorClass } = this.fatal || {};
-			if (!error) return;
-			return errorClass ? `${errorClass}: ${error}` : error;
+		fatalTexts() {
+			return this.fatal.map(({ error, class: errorClass }) =>
+				errorClass ? `${errorClass}: ${error}` : error
+			);
 		},
 	},
 	watch: {

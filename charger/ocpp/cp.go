@@ -67,6 +67,13 @@ func (cp *CP) registerConnector(id int, conn *Connector) error {
 	return nil
 }
 
+func (cp *CP) deregisterConnector(id int) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	delete(cp.connectors, id)
+}
+
 func (cp *CP) connectorByID(id int) *Connector {
 	cp.mu.RLock()
 	defer cp.mu.RUnlock()

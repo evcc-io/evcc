@@ -1,0 +1,103 @@
+template: homeassistant
+products:
+  - description:
+      de: Home Assistant Fahrzeug
+      en: Home Assistant Vehicle
+group: generic
+requirements:
+  description:
+    en: Requires a running Home Assistant instance with suitable vehicle entities and services. All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
+    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services. Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
+params:
+  - preset: vehicle-common
+  - name: uri
+    description:
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: "http://192.168.1.10:8123"
+    required: true
+  - name: token
+    description:
+      de: Home Assistant Long-Lived Access Token
+      en: Home Assistant Long-Lived Access Token
+    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+    required: true
+    mask: true
+  - name: soc
+    description:
+      de: Ladezustand [%]
+      en: State of charge [%]
+    example: "sensor.vehicle_soc"
+    type: string
+    required: true
+  - name: range
+    description:
+      de: Restreichweite [km]
+      en: Remaining range [km]
+    example: "sensor.vehicle_range"
+    type: string
+  - name: status
+    description:
+      de: Ladestatus
+      en: Charging status
+    example: "sensor.vehicle_charging"
+    type: string
+  - name: limitSoc
+    description:
+      de: Ziel-Ladezustand [%]
+      en: Target state of charge [%]
+    example: "number.vehicle_target_state_of_charge"
+    type: string
+  - name: odometer
+    description:
+      de: Kilometerstand [km]
+      en: Odometer [km]
+    example: "sensor.vehicle_odometer"
+    type: string
+  - name: climater
+    description:
+      de: Klimatisierung aktiv
+      en: Climatisation active
+    example: "binary_sensor.vehicle_climater"
+    type: string
+  - name: finishTime
+    description:
+      de: Ladeende (ISO8601 oder Unix)
+      en: Finish time (ISO8601 or Unix)
+    example: "sensor.vehicle_finish_time"
+    type: string
+  - name: start_charging
+    description:
+      de: Service zum Laden starten
+      en: Service to start charging
+    example: "script.vehicle_start_charge"
+    type: string
+  - name: stop_charging
+    description:
+      de: Service zum Laden stoppen
+      en: Service to stop charging
+    example: "script.vehicle_stop_charge"
+    type: string
+  - name: wakeup
+    description:
+      de: Service zum Aufwecken
+      en: Service to wake up vehicle
+    example: "script.vehicle_wakeup"
+    type: string
+render: |
+  type: homeassistant
+  {{ include "vehicle-common" . }}
+  uri: {{ .uri }}
+  token: {{ .token }}
+  sensors:
+    soc: {{ .soc }}
+    {{ if .range }}range: {{ .range }}{{ end }}
+    {{ if .status }}status: {{ .status }}{{ end }}
+    {{ if .limitSoc }}limitSoc: {{ .limitSoc }}{{ end }}
+    {{ if .odometer }}odometer: {{ .odometer }}{{ end }}
+    {{ if .climater }}climater: {{ .climater }}{{ end }}
+    {{ if .finishTime }}finishTime: {{ .finishTime }}{{ end }}
+  {{ if or .start_charging .stop_charging .wakeup }}services:
+    {{ if .start_charging }}start_charging: {{ .start_charging }}{{ end }}
+    {{ if .stop_charging }}stop_charging: {{ .stop_charging }}{{ end }}
+    {{ if .wakeup }}wakeup: {{ .wakeup }}{{ end }}{{ end }}
