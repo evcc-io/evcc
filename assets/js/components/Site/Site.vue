@@ -136,7 +136,7 @@ export default defineComponent({
 
 		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
 
-		currency: { type: String as PropType<CURRENCY>, required: true },
+		currency: { type: String as PropType<CURRENCY> },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
