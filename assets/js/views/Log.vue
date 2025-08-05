@@ -273,12 +273,12 @@ export default defineComponent({
 			}
 		},
 		scrollToTop() {
-			(this.$refs["log"] as HTMLElement).scrollTop = 0;
+			const log = this.$refs["log"] as HTMLElement;
+			log.scrollTop = 0;
 		},
 		scrollToBottom() {
-			(this.$refs["log"] as HTMLElement).scrollTop = (
-				this.$refs["log"] as HTMLElement
-			).scrollHeight;
+			const log = this.$refs["log"] as HTMLElement;
+			log.scrollTop = log.scrollHeight;
 		},
 		toggleAutoFollow() {
 			if (this.autoFollow) {
@@ -288,17 +288,15 @@ export default defineComponent({
 				this.startInterval();
 			}
 		},
-		updateQuery({ level, areas }: { level?: string; areas?: string[] }) {
-			const newLevel: string | undefined = level || this.level;
-			const newAreas = areas || this.areas;
+		updateQuery({ level: l, areas: a }: { level?: string; areas?: string[] }) {
+			const newLevel = l || this.level;
+			const newAreas = a || this.areas;
 
-			this.$router.push({
-				query: {
-					// reset to default level
-					level: newLevel === DEFAULT_LEVEL ? newLevel : undefined,
-					areas: newAreas.length ? newAreas.join(",") : undefined,
-				},
-			});
+			// reset to default level
+			const level = newLevel === DEFAULT_LEVEL ? undefined : newLevel;
+			const areas = newAreas.length ? newAreas.join(",") : undefined;
+
+			this.$router.push({ query: { level, areas } });
 		},
 		changeLevel(event: Event) {
 			this.updateQuery({ level: (event.target as HTMLSelectElement).value });
@@ -306,11 +304,11 @@ export default defineComponent({
 		changeAreas(areas: string[]) {
 			this.updateQuery({ areas });
 		},
-		onCopy(event: Event) {
+		onCopy(e: Event) {
 			const selection = window.getSelection()?.toString();
-			const clipboardEvent = event as ClipboardEvent;
-			clipboardEvent.clipboardData?.setData("text/plain", "```\n" + selection + "\n```");
-			clipboardEvent.preventDefault();
+			const event = e as ClipboardEvent;
+			event.clipboardData?.setData("text/plain", "```\n" + selection + "\n```");
+			event.preventDefault();
 		},
 	},
 });
