@@ -112,7 +112,7 @@
 								v-else
 								:sessions="currentSessions"
 								:color-mappings="colorMappings"
-								:group-by="selectedGroup"
+								:group-by="selectedGroupWithoutNone"
 							/>
 						</div>
 						<AvgCostGroupedChart
@@ -120,7 +120,7 @@
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
 							:suggested-max-price="suggestedMaxAvgCost"
-							:group-by="selectedGroup"
+							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
 							:currency="currency"
 						/>
@@ -131,13 +131,13 @@
 							v-if="activeType === types.SOLAR"
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
-							:group-by="selectedGroup"
+							:group-by="selectedGroupWithoutNone"
 						/>
 						<CostGroupedChart
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
-							:group-by="selectedGroup"
+							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
 							:currency="currency"
 						/>
@@ -176,7 +176,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
@@ -205,9 +205,11 @@ import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
-import { TYPES, GROUPS, PERIODS } from "../components/Sessions/types";
+import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
+import { defineComponent, type PropType } from "vue";
+import { CURRENCY } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Sessions",
 	components: {
 		SessionDetailsModal,
@@ -230,20 +232,20 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		notifications: Array,
+		notifications: Array as PropType<Notification[]>,
 		month: { type: Number, default: () => new Date().getMonth() + 1 },
 		year: { type: Number, default: () => new Date().getFullYear() },
-		period: { type: String, default: PERIODS.MONTH },
+		period: { type: String as PropType<PERIODS>, default: PERIODS.MONTH },
 		loadpointFilter: { type: String, default: "" },
 		vehicleFilter: { type: String, default: "" },
 		offline: Boolean,
 	},
 	data() {
 		return {
-			sessions: [],
-			selectedType: settings.sessionsType || TYPES.SOLAR,
-			selectedGroup: settings.sessionsGroup || GROUPS.NONE,
-			selectedSessionId: undefined,
+			sessions: [] as Session[],
+			selectedType: (settings.sessionsType || TYPES.SOLAR) as TYPES,
+			selectedGroup: (settings.sessionsGroup || GROUPS.NONE) as GROUPS,
+			selectedSessionId: undefined as number | undefined,
 			periods: PERIODS,
 			types: TYPES,
 			groups: GROUPS,
@@ -253,8 +255,11 @@ export default {
 		return { title: this.$t("sessions.title") };
 	},
 	computed: {
+		selectedGroupWithoutNone() {
+			return this.selectedGroup !== this.groups.NONE ? this.selectedGroup : undefined;
+		},
 		currency() {
-			return store.state.currency || "EUR";
+			return store.state.currency || CURRENCY.EUR;
 		},
 		energyTitle() {
 			return this.$t("sessions.chartTitle.energy");
@@ -369,24 +374,24 @@ export default {
 			}
 		},
 		totalPrice() {
-			return this.currentSessionsWithPrice.reduce((acc, s) => acc + s.price, 0);
+			return this.currentSessionsWithPrice.reduce((acc, s) => acc + (s.price ?? 0), 0);
 		},
 		pricePerKWh() {
 			const list = this.currentSessionsWithPrice;
 			const energy = list.reduce((acc, s) => acc + s.chargedEnergy, 0);
-			return energy ? this.totalPrice / energy : null;
+			return energy ? this.totalPrice / energy : 0;
 		},
 		currentSessionsWithCo2() {
 			return this.currentSessions.filter((s) => s.co2PerKWh !== null);
 		},
 		totalCo2() {
 			const list = this.currentSessionsWithCo2;
-			return list.reduce((acc, s) => acc + s.co2PerKWh * s.chargedEnergy, 0);
+			return list.reduce((acc, s) => acc + (s.co2PerKWh ?? 0) * s.chargedEnergy, 0);
 		},
 		co2PerKWh() {
 			const list = this.currentSessionsWithCo2;
 			const energy = list.reduce((acc, s) => acc + s.chargedEnergy, 0);
-			return energy ? this.totalCo2 / energy : null;
+			return energy ? this.totalCo2 / energy : 0;
 		},
 		costTitle() {
 			const type = this.activeType === TYPES.PRICE ? "Price" : "Co2";
@@ -426,10 +431,6 @@ export default {
 		startDate() {
 			return new Date(this.sessions[0]?.created || Date.now());
 		},
-		topNavigation() {
-			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
-		},
 		sessionsWithDefaults() {
 			return this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
@@ -456,7 +457,7 @@ export default {
 		},
 		vehicleList() {
 			const vehicles = store.state.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ ...vehicle, name }));
 		},
 		loadpointList() {
 			const loadpoints = store.state.loadpoints || [];
@@ -468,7 +469,7 @@ export default {
 		monthName() {
 			const date = new Date();
 			date.setMonth(this.month - 1, 1);
-			return this.fmtMonth(date);
+			return this.fmtMonth(date, false);
 		},
 		csvLinkLabel() {
 			if (this.period === PERIODS.MONTH) {
@@ -497,8 +498,8 @@ export default {
 			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
 
 			// Aggregate energy to get sorted list of loadpoints/vehicles for coloring
-			const aggregateEnergy = (group) => {
-				return this.sessionsWithDefaults.reduce((acc, session) => {
+			const aggregateEnergy = (group: Exclude<GROUPS, GROUPS.NONE>) => {
+				return this.sessionsWithDefaults.reduce((acc: Record<string, number>, session) => {
 					if (new Date(session.created) >= lastThreeMonths) {
 						const key = session[group];
 						acc[key] = (acc[key] || 0) + session.chargedEnergy;
@@ -508,8 +509,11 @@ export default {
 			};
 
 			// Assign colors based on energy usage
-			const assignColors = (energyAggregation, colorType) => {
-				const result = {};
+			const assignColors = (
+				energyAggregation: Record<string, number>,
+				colorType: Exclude<GROUPS, GROUPS.NONE>
+			) => {
+				const result: Record<string, string> = {};
 				let colorIndex = 0;
 
 				// Assign colors by used energy in the last three months
@@ -533,11 +537,11 @@ export default {
 				return result;
 			};
 
-			const loadpointEnergy = aggregateEnergy("loadpoint");
-			const loadpointColors = assignColors(loadpointEnergy, "loadpoint");
+			const loadpointEnergy = aggregateEnergy(GROUPS.LOADPOINT);
+			const loadpointColors = assignColors(loadpointEnergy, GROUPS.LOADPOINT);
 
-			const vehicleEnergy = aggregateEnergy("vehicle");
-			const vehicleColors = assignColors(vehicleEnergy, "vehicle");
+			const vehicleEnergy = aggregateEnergy(GROUPS.VEHICLE);
+			const vehicleColors = assignColors(vehicleEnergy, GROUPS.VEHICLE);
 
 			const solar = { self: colors.self, grid: colors.grid };
 			const cost = { price: colors.price, co2: colors.co2 };
@@ -583,14 +587,24 @@ export default {
 		},
 		groupEntriesAvailable() {
 			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) return false;
-			return new Set(this.currentSessions.map((s) => s[this.selectedGroup])).size > 1;
+			return (
+				new Set(
+					this.currentSessions.map(
+						(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
+					)
+				).size > 1
+			);
 		},
 		showSolarYearChart() {
 			return this.period !== PERIODS.MONTH && this.selectedGroup === GROUPS.NONE;
 		},
 		showExtraCharts() {
 			const hasMultipleEntries =
-				new Set(this.currentTypeSessions.map((s) => s[this.selectedGroup])).size > 1;
+				new Set(
+					this.currentTypeSessions.map(
+						(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
+					)
+				).size > 1;
 			const isGrouped = [GROUPS.LOADPOINT, GROUPS.VEHICLE].includes(this.selectedGroup);
 			const isSolar = this.activeType === TYPES.SOLAR;
 			const isNotMonth = this.period !== PERIODS.MONTH;
@@ -600,14 +614,14 @@ export default {
 		suggestedMaxAvgPrice() {
 			// returns the 98th percentile of avg prices for all sessions
 			const sessionsWithPrice = this.sessions.filter((s) => s.pricePerKWh !== null);
-			const prices = sessionsWithPrice.map((s) => s.pricePerKWh);
-			return this.percentile(prices, 98);
+			const prices = sessionsWithPrice.map((s) => s.pricePerKWh ?? 0);
+			return this.percentile(prices, 98) ?? 0;
 		},
 		suggestedMaxAvgCo2() {
 			// returns the 98th percentile of avg co2 emissions for all sessions
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh);
-			return this.percentile(co2, 98);
+			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh ?? 0);
+			return this.percentile(co2, 98) ?? 0;
 		},
 		suggestedMaxAvgCost() {
 			return this.activeType === TYPES.PRICE
@@ -617,22 +631,22 @@ export default {
 		suggestedMaxCo2() {
 			// returns the 98th percentile of total co2 emissions by time period
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2Map = sessionsWithCo2.reduce((acc, s) => {
+			const co2Map = sessionsWithCo2.reduce((acc: Record<string, number>, s) => {
 				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + s.co2PerKWh * s.chargedEnergy;
+				acc[key] = (acc[key] || 0) + (s.co2PerKWh ?? 0) * s.chargedEnergy;
 				return acc;
 			}, {});
-			return Math.max(this.percentile(Object.values(co2Map), 98), 5); // 5kg default
+			return Math.max(this.percentile(Object.values(co2Map), 98) ?? 0, 5); // 5kg default
 		},
 		suggestedMaxPrice() {
 			// returns the 98th percentile of total price by time period
 			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
-			const priceMap = sessionsWithPrice.reduce((acc, s) => {
+			const priceMap = sessionsWithPrice.reduce((acc: Record<string, number>, s) => {
 				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + s.price;
+				acc[key] = (acc[key] || 0) + (s.price || 0);
 				return acc;
 			}, {});
-			return Math.max(this.percentile(Object.values(priceMap), 98), 1); // 1 CURRENCY default
+			return Math.max(this.percentile(Object.values(priceMap), 98) ?? 0, 1); // 1 CURRENCY default
 		},
 		suggestedMaxCost() {
 			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
@@ -647,10 +661,10 @@ export default {
 		this.loadSessions();
 	},
 	methods: {
-		changePeriod(newPeriod) {
-			let month = this.month;
-			let year = this.year;
-			let period = newPeriod;
+		changePeriod(newPeriod: PERIODS) {
+			let month: number | undefined = this.month;
+			let year: number | undefined = this.year;
+			let period: PERIODS | undefined = newPeriod;
 			switch (period) {
 				case PERIODS.TOTAL:
 					month = undefined;
@@ -664,8 +678,12 @@ export default {
 			}
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
 		},
-		dateToPeriodKey(date) {
-			const options = { year: "numeric", month: "numeric", day: "numeric" };
+		dateToPeriodKey(date: Date) {
+			const options: Intl.DateTimeFormatOptions = {
+				year: "numeric",
+				month: "numeric",
+				day: "numeric",
+			};
 			if (this.period === PERIODS.YEAR) options.day = undefined;
 			if (this.period === PERIODS.TOTAL) options.month = undefined;
 			return date.toLocaleDateString(undefined, options);
@@ -673,44 +691,46 @@ export default {
 		async loadSessions() {
 			const response = await api.get("sessions");
 			// ensure sessions are sorted by created date
-			const sortedSessions = response.data.sort((a, b) => {
-				return new Date(a.created) - new Date(b.created);
+			const sortedSessions = response.data?.sort((a: Session, b: Session) => {
+				return new Date(a.created).getTime() - new Date(b.created).getTime();
 			});
 			this.sessions = sortedSessions;
 		},
-		showDetails(sessionId) {
+		showDetails(sessionId: number) {
 			this.selectedSessionId = sessionId;
-			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("sessionDetailsModal") as HTMLElement
+			);
 			modal.show();
 		},
-		csvHrefLink(year, month) {
+		csvHrefLink(year?: number, month?: number) {
 			const params = new URLSearchParams({
 				format: "csv",
 				lang: this.$i18n?.locale,
 			});
-			if (year) params.append("year", year);
-			if (month) params.append("month", month);
+			if (year) params.append("year", year.toString());
+			if (month) params.append("month", month.toString());
 			return `./api/sessions?${params.toString()}`;
 		},
-		updateType(type) {
+		updateType(type: TYPES) {
 			this.selectedType = type;
 			settings.sessionsType = type;
 		},
-		updateGroup(group) {
+		updateGroup(group: GROUPS) {
 			this.selectedGroup = group;
 			settings.sessionsGroup = group;
 		},
-		updateDate({ year, month }) {
+		updateDate({ year, month }: { year: number; month: number }) {
 			this.$router.push({ query: { ...this.$route.query, year, month } });
 		},
-		percentile(arr, p) {
+		percentile(arr: number[], p: number): number | null {
 			if (arr.length === 0) return null;
 			const sorted = arr.sort((a, b) => a - b);
 			const index = (p / 100) * (sorted.length - 1);
 			return sorted[Math.floor(index)];
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

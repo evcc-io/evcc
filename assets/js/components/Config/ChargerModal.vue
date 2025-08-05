@@ -90,7 +90,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
@@ -102,9 +102,9 @@ import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
+import { ConfigType } from "@/types/evcc";
 import {
 	handleError,
-	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,
@@ -121,7 +121,7 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyBoostYaml from "./defaultYaml/sgreadyBoost.yaml?raw";
-import { LOADPOINT_TYPE } from "@/types/evcc";
+import { LOADPOINT_TYPE, type LoadpointType } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template };
 const device = createDeviceUtils("charger");
@@ -165,7 +165,7 @@ export default defineComponent({
 	props: {
 		id: Number,
 		name: String,
-		loadpointType: { type: String as () => LOADPOINT_TYPE | null, default: null },
+		loadpointType: { type: String as PropType<LoadpointType>, default: null },
 		fade: String,
 		isSponsor: Boolean,
 	},
