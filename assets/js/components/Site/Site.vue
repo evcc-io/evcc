@@ -22,7 +22,10 @@
 			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
-			<div v-if="fatal" class="flex-grow-1 align-items-center d-flex justify-content-center">
+			<div
+				v-if="hasFatalError"
+				class="flex-grow-1 align-items-center d-flex justify-content-center"
+			>
 				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
 			</div>
 			<div
@@ -89,6 +92,7 @@ import type {
 	Notification,
 	SMART_COST_TYPE,
 	Sponsor,
+	FatalError,
 } from "@/types/evcc";
 import type { Grid } from "./types";
 
@@ -151,8 +155,9 @@ export default defineComponent({
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
-		fatal: Object,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
+		telemetry: Boolean,
 	},
 	computed: {
 		batteryConfigured() {
@@ -216,8 +221,12 @@ export default defineComponent({
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
+					telemetry: this.telemetry,
 				},
 			};
+		},
+		hasFatalError() {
+			return this.fatal.length > 0;
 		},
 	},
 	methods: {

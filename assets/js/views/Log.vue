@@ -231,7 +231,7 @@ export default defineComponent({
 						count: showAll ? null : DEFAULT_COUNT,
 					},
 				});
-				this.lines = response.data?.result || [];
+				this.lines = response.data || [];
 				this.$nextTick(() => {
 					if (showAll) {
 						this.scrollToTop();
@@ -260,7 +260,7 @@ export default defineComponent({
 		async updateAreas() {
 			try {
 				const response = await api.get("/system/log/areas");
-				this.availableAreas = response.data?.result || [];
+				this.availableAreas = response.data || [];
 			} catch (e) {
 				console.error(e);
 			}

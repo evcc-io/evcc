@@ -97,7 +97,7 @@
 							{{ name }}
 						</option>
 					</select>
-					<small class="ms-3">~ {{ maxPower }}</small>
+					<small class="ms-3" data-testid="max-power">~ {{ maxPower }}</small>
 				</div>
 			</div>
 
@@ -120,7 +120,7 @@
 							{{ name }}
 						</option>
 					</select>
-					<small class="ms-3">~ {{ minPower }}</small>
+					<small class="ms-3" data-testid="min-power">~ {{ minPower }}</small>
 				</div>
 			</div>
 		</div>
@@ -283,7 +283,7 @@ export default defineComponent({
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
 		currentOption(value: number, isDefault: boolean) {
-			let name = `${this.fmtNumber(value, 0)} A`;
+			let name = `${this.fmtNumber(value, value <= 1 ? undefined : 0)} A`;
 			if (isDefault) {
 				name += ` (${this.$t("main.loadpointSettings.default")})`;
 			}

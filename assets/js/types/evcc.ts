@@ -28,8 +28,8 @@ export type VehicleLogins = Record<string, { authenticated: boolean; uri: string
 
 export interface FatalError {
   error: string;
-  class: string;
-  device: string;
+  class?: string;
+  device?: string;
 }
 
 export interface State {
@@ -38,7 +38,7 @@ export interface State {
   loadpoints: [];
   forecast?: Forecast;
   currency?: CURRENCY;
-  fatal?: FatalError;
+  fatal?: FatalError[];
   auth?: Auth;
   version?: string;
   battery?: Battery[];
@@ -204,6 +204,11 @@ export enum PHASES {
   ONE_PHASE = 1,
   TWO_PHASES = 2,
   THREE_PHASES = 3,
+}
+
+export enum LOADPOINT_TYPE {
+  CHARGING = "charging",
+  HEATING = "heating",
 }
 
 export type SessionInfoKey =

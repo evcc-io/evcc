@@ -18,12 +18,15 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 const (
-	typeCustom   = "custom"   // typeCustom is the custom configuration type
-	typeTemplate = "template" // typeTemplate is the updatable configuration type
+	typeCustom       = "custom"       // typeCustom is the custom configuration type
+	typeTemplate     = "template"     // typeTemplate is the updatable configuration type
+	typeHeatpump     = "heatpump"     // typeHeatpump is the heatpump configuration type
+	typeSwitchSocket = "switchsocket" // typeSwitchSocket is the switch socket configuration type
+	typeSgReady      = "sgready"      // typeSgReady is the SG-Ready configuration type
 
 	// masked indicates a masked config parameter value
 	masked = "***"
@@ -280,6 +283,18 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("phases1p3p", true, nil)
 	}
 
+	if hasFeature(instance, api.Heating) {
+		makeResult("heating", true, nil)
+	}
+
+	if hasFeature(instance, api.IntegratedDevice) {
+		makeResult("integratedDevice", true, nil)
+	}
+
+	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
+		makeResult("icon", dev.Icon(), nil)
+	}
+
 	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
 		makeResult("singlePhase", true, nil)
 	}
@@ -338,8 +353,11 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return res, nil
 	}
 
-	if !strings.EqualFold(res.Type, typeCustom) {
-		return configReq{}, errors.New("invalid config: yaml only allowed for custom type")
+	if !(strings.EqualFold(res.Type, typeCustom) ||
+		strings.EqualFold(res.Type, typeHeatpump) ||
+		strings.EqualFold(res.Type, typeSwitchSocket) ||
+		strings.EqualFold(res.Type, typeSgReady)) {
+		return configReq{}, errors.New("invalid config: yaml only allowed for custom, heatpump, switchsocket, and sgready types")
 	}
 
 	if len(res.Other) != 0 {
