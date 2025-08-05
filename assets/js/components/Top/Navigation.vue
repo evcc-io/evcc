@@ -141,18 +141,8 @@ export default defineComponent({
 	name: "TopNavigation",
 	mixins: [collector],
 	props: {
-		authProviders: {
-			type: Object as PropType<AuthProviders>,
-			default: () => {
-				return {};
-			},
-		},
-		sponsor: {
-			type: Object as PropType<Sponsor>,
-			default: () => {
-				return {};
-			},
-		},
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
 		battery: Array,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },

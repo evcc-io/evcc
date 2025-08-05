@@ -43,11 +43,8 @@ export default defineComponent({
 		title: String,
 	},
 	computed: {
-		topNavigation() {
-			const authProviders = store.state.providerAuth
-				? store.state.providerAuth.authProviders
-				: {};
-			return { authProviders, ...this.collectProps(Navigation, store.state) };
+		topNavigation(): any {
+			return this.collectProps(Navigation, store.state);
 		},
 	},
 });

@@ -20,10 +20,6 @@ declare global {
   }
 }
 
-export interface Auth {
-  authProviders: AuthProviders;
-}
-
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export interface MqttConfig {
@@ -54,7 +50,7 @@ export interface State {
   forecast?: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
-  providerAuth?: Auth;
+  providerAuth?: AuthProviders;
   version?: string;
   battery?: Battery[];
   tariffGrid?: number;
