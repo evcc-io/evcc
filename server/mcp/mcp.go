@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+
+	mcpgo "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 //go:embed openapi.json
@@ -42,6 +45,8 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 		server.WithLogging(),
 	)
 
+	srv2 := mcpgo.NewServer(&mcpgo.Implementation{Name: "evcc", Version: util.Version}, nil)
+
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
 		TagFilter: []string{
@@ -58,6 +63,11 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 		mcp.WithDescription("Documentation"),
 	), docsTool)
 
+	srv2.AddTool(&mcpgo.Tool{
+		Name:  "docs",
+		Title: "Documentation",
+	}, docsTool2)
+
 	srv.AddPrompt(mcp.NewPrompt("create-charge-plan",
 		mcp.WithPromptDescription("Create an optimized charge plan for a loadpoint or vehicle"),
 		mcp.WithArgument("loadpoint",
@@ -71,6 +81,8 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	handler := server.NewStreamableHTTPServer(srv,
 		server.WithEndpointPath(basePath),
 	)
+
+	go srv2.Run(context.Background(), mcpgo.NewStdioTransport())
 
 	return handler, nil
 }
