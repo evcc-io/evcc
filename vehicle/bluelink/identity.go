@@ -142,7 +142,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 	return err
 }
 
-func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) brandLoginEU(cookieClient *request.Helper, user, password string) (string, error) {
 	req, _ := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
@@ -334,10 +334,10 @@ func (v *Identity) Login(user, password, language, region, brand string) (err er
 	// determine what login to use depending on `region`
 	var code string
 	switch region {
-	case BlueLinkRegionEurope:
-		code, err = v.brandLogin(cookieClient, user, password)
+	case RegionEurope:
+		code, err = v.brandLoginEU(cookieClient, user, password)
 	default:
-		err = errors.New("unsupported region")
+		err = fmt.Errorf("unsupported region (%s)", region)
 	}
 	if err != nil {
 		return fmt.Errorf("Login failed: %w", err)

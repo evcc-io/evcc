@@ -20,6 +20,7 @@ type Bluelink struct {
 func init() {
 	registry.Add("kia", NewKiaFromConfig)
 	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.Add("genesis", NewGenesisFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
@@ -56,6 +57,23 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return newBluelinkFromConfig("kia", other, settings)
 }
 
+// NewKiaGenesisConfig creates a new vehicle
+func NewGenesisFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	settings := bluelink.Config{
+		URI:               "https://prd.eu-ccapi.genesis.com:443",
+		BasicToken:        "MzAyMGFmYTItMzBmZi00MTJhLWFhNTEtZDI4ZmJlOTAxZTEwOkZLRGRsZWYyZmZkbGVGRXdlRUxGS0VSaUxFUjJGRUQyMXNEZHdkZ1F6NmhGRVNFMw==",
+		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		CCSPApplicationID: bluelink.GenesisAppID,
+		AuthClientID:      "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
+		PushType:          "GCM",
+		Cfb:               "RFtoRq/vDXJmRndoZaZQyYo3/qFLtVReW8P7utRPcc0ZxOzOELm9mexvviBk/qqIp4A=",
+		LoginFormHost:     "https://accounts-eu.genesis.com",
+	}
+
+	return newBluelinkFromConfig("kia", other, settings)
+}
+
 // newBluelinkFromConfig creates a new Vehicle
 func newBluelinkFromConfig(brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
 	cc := struct {
@@ -70,7 +88,9 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 	}{
 		Language: "en",
 		// default for now, remove once there are more supported regions
-		Region: "Europe",
+		// might also work as fallback for vehicles created when there was
+		// no region differentiation
+		Region: bluelink.RegionEurope,
 		Expiry: expiry,
 		Cache:  interval,
 	}
