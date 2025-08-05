@@ -31,6 +31,25 @@ var (
 // 	os.Setenv("EVOPT_URI", "http://localhost:7050")
 // }
 
+type batteryType string
+
+const (
+	batteryTypeLoadpoint batteryType = "loadpoint"
+	batteryTypeVehicle   batteryType = "vehicle"
+	batteryTypeBattery   batteryType = "battery"
+)
+
+type batteryDetail struct {
+	Type     batteryType `json:"type"`
+	Capacity float64     `json:"capacity,omitempty"`
+	Title    string      `json:"title,omitempty"`
+}
+
+type responseDetails struct {
+	Timestamps     []time.Time     `json:"timestamp"`
+	BatteryDetails []batteryDetail `json:"batteryDetails"`
+}
+
 func (site *Site) optimizerUpdate(battery []measurement) error {
 	defer func() {
 		updated = time.Now()
@@ -81,6 +100,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		},
 	}
 
+	details := responseDetails{
+		Timestamps: asTimestamps(dt),
+	}
+
 	for _, lp := range site.Loadpoints() {
 		bat := evopt.BatteryConfig{
 			CMin: float32(lp.EffectiveMinPower()),
@@ -94,12 +117,20 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			bat.PDemand = lo.ToPtr(asFloat32(profile))
 		}
 
+		detail := batteryDetail{Type: batteryTypeLoadpoint}
+
 		if v := lp.GetVehicle(); v != nil {
 			bat.SMax = float32(v.Capacity() * 1e3)                  // Wh
 			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
+
+			detail.Type = batteryTypeVehicle
+			detail.Capacity = v.Capacity()
+			detail.Title = v.GetTitle()
 		}
 
 		req.Batteries = append(req.Batteries, bat)
+
+		details.BatteryDetails = append(details.BatteryDetails, detail)
 	}
 
 	for _, b := range battery {
@@ -116,6 +147,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
+		})
+
+		details.BatteryDetails = append(details.BatteryDetails, batteryDetail{
+			Type:     batteryTypeBattery,
+			Capacity: *b.Capacity,
 		})
 	}
 
@@ -154,11 +190,13 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	site.publish("evopt", struct {
-		Req evopt.OptimizationInput  `json:"req"`
-		Res evopt.OptimizationResult `json:"res"`
+		Req     evopt.OptimizationInput  `json:"req"`
+		Res     evopt.OptimizationResult `json:"res"`
+		Details responseDetails          `json:"details"`
 	}{
-		Req: req,
-		Res: *resp.JSON200,
+		Req:     req,
+		Res:     *resp.JSON200,
+		Details: details,
 	})
 
 	return nil
@@ -338,6 +376,16 @@ func timeSteps(minLen int) []int {
 		res = append(res, 3600) // 1 hour in seconds
 	}
 
+	return res
+}
+
+func asTimestamps(dt []int) []time.Time {
+	res := make([]time.Time, 0, len(dt))
+	eoh := endOfHour(time.Now())
+	res = append(res, eoh.Add(-time.Duration(dt[0])*time.Second))
+	for i := range len(res) - 1 {
+		res = append(res, eoh.Add(time.Duration(dt[i+1])*time.Second))
+	}
 	return res
 }
 
