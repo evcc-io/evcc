@@ -79,9 +79,6 @@ snapshot::
 release::
 	goreleaser --clean
 
-openapi::
-	cd server/mcp && go tool openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
-
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .

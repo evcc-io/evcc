@@ -37,12 +37,18 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status, err := v.telemetryG()
 
 	res := api.StatusA
+
+	if len(status.Battery) == 0 {
+		return res, nil
+	}
+
 	if status.Battery[0].ChargingStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
 		res = api.StatusB
 	}
 	if status.Battery[0].ChargingStatus == "CHARGING_STATUS_CHARGING" {
-		res = api.StatusB
+		res = api.StatusC
 	}
+
 	return res, err
 }
 

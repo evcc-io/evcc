@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, simulatorUrl, simulatorConfig } from "./simulator";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorUrl,
+  simulatorConfig,
+  simulatorApply,
+} from "./simulator";
 
 test.use({ baseURL: baseUrl() });
 
@@ -18,7 +24,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel("Grid Power").fill("500");
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
   await page.getByTestId("loadpoint0").getByText("B (connected)").click();
-  await page.getByRole("button", { name: "Apply changes" }).click();
+  await simulatorApply(page);
 });
 
 test.afterEach(async () => {
@@ -74,6 +80,7 @@ test.describe("limitSoc", async () => {
     await page.getByRole("combobox", { name: "Default limit" }).selectOption("80%");
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
+    await page.waitForLoadState("networkidle");
 
     await restart(simulatorConfig());
     await page.reload();

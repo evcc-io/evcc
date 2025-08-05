@@ -109,6 +109,11 @@ func (t *Amber) run(done chan error) {
 				if r.AdvancedPrice != nil {
 					ar.Value = r.AdvancedPrice.Predicted / 1e2
 				}
+
+				// Invert feed-in prices to match evcc expectations (positive = paid for exports)
+				if t.channel == "feedin" {
+					ar.Value = -ar.Value
+				}
 				data = append(data, ar)
 			}
 		}

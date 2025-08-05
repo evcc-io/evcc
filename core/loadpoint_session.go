@@ -4,6 +4,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
@@ -72,10 +73,6 @@ func (lp *Loadpoint) stopSession() {
 		s.MeterStop = &meterStop
 	}
 
-	if chargedEnergy := lp.GetChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
-		lp.energyMetrics.Update(chargedEnergy)
-	}
-
 	s.SolarPercentage = lo.ToPtr(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
@@ -125,5 +122,13 @@ func (lp *Loadpoint) resetHeatingSession() {
 
 	lp.stopSession()
 	lp.clearSession()
+
+	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
+		cr.ResetCharge()
+	}
+	if ct, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
+		ct.ResetCharge()
+	}
+
 	lp.createSession()
 }

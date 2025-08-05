@@ -140,13 +140,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-			log.INFO.Println("config file missing, create configuration using config UI")
-			// evcc.yaml not found, use default configuration
-			if err := viper.UnmarshalExact(&conf); err != nil {
-				log.FATAL.Fatalf("failed to unmarshal default configuration: %v", err)
-			}
-		} else {
+		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); cfgErr != nil {
 			// evcc.yaml found, might have errors
 			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 		}
@@ -195,7 +189,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup telemetry
 	if err == nil {
-		telemetry.Create(conf.Plant)
+		telemetry.Create(conf.Plant, valueChan)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
 		}
@@ -326,6 +320,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
 		authObject.SetAuthMode(auth.Disabled)
+		valueChan <- util.Param{Key: keys.AuthDisabled, Val: true}
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
@@ -360,9 +355,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		// improve error message
-		err = wrapFatalError(err)
-		valueChan <- util.Param{Key: keys.Fatal, Val: err}
+		if uw, ok := err.(interface{ Unwrap() []error }); ok {
+			valueChan <- util.Param{Key: keys.Fatal, Val: uw.Unwrap()}
+		} else {
+			valueChan <- util.Param{Key: keys.Fatal, Val: []error{wrapFatalError(err)}}
+		}
 
 		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)

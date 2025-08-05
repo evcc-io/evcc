@@ -1,6 +1,6 @@
-## required attributes
+## required attributes [type: custom]
 
-status: # charger status [A..F]
+status: # charger status (A: not connected, B: connected, C: charging)
   source: const
   value: "A"
 enabled: # is charging enabled?
@@ -27,9 +27,6 @@ maxcurrent: # set maximum charge current in A
 #soc: # state of charge in %
 #  source: const
 #  value: 75
-#phases: # number of physical phases (1..3)
-#  source: const
-#  value: 3
 #powers: # phase powers in W
 #  - source: const
 #    value: 3600
@@ -51,27 +48,16 @@ maxcurrent: # set maximum charge current in A
 #    value: 230.2
 #  - source: const
 #    value: 230.3
-#temp: # current temperature in °C (heating)
-#  source: const
-#  value: 45.5
-#templimit: # temperature limit in °C (heating)
-#  source: const
-#  value: 60
-#getmode: # SG-Ready mode (heat pump)
-#  source: const
-#  value: 1
 
 ## optional attributes (writeable)
 
-#maxcurrentmilis: # set maximum charge current in A with decimal precision
+#maxcurrentmillis: # set maximum charge current in A with decimal precision
 #  source: js
-#  script: console.log(maxcurrentmilis);
+#  script: console.log(maxcurrentmillis);
 #phases1p3p: # switch phases (requires 'tos: true')
 #  source: js
 #  script: console.log(phases1p3p);
+#tos: true
 #wakeup: # wake up vehicle
 #  source: js
 #  script: console.log(wakeup);
-#setmode: # change SG-Ready mode (1: normal, 2: boost, 3: stop)
-#  source: js
-#  script: console.log(setmode);

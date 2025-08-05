@@ -90,7 +90,7 @@ export default defineComponent({
     fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
-    fmtNumber(number: number, decimals: number, unit?: string) {
+    fmtNumber(number: number, decimals: number | undefined, unit?: string) {
       const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style,
