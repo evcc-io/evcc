@@ -621,7 +621,7 @@ export default defineComponent({
 			// returns the 98th percentile of avg co2 emissions for all sessions
 			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
 			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh ?? 0);
-			return this.percentile(co2, 98);
+			return this.percentile(co2, 98) ?? 0;
 		},
 		suggestedMaxAvgCost() {
 			return this.activeType === TYPES.PRICE
