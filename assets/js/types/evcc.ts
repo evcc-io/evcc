@@ -20,11 +20,7 @@ declare global {
   }
 }
 
-export interface Auth {
-  vehicles: VehicleLogins;
-}
-
-export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
+export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export interface MqttConfig {
   broker: string;
@@ -54,7 +50,7 @@ export interface State {
   forecast?: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
-  auth?: Auth;
+  providerAuth?: AuthProviders;
   version?: string;
   battery?: Battery[];
   tariffGrid?: number;
