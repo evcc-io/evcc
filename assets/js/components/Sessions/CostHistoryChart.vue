@@ -52,7 +52,7 @@ export default defineComponent({
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
-		suggestedMaxAvgCost: { type: Number as PropType<number | null>, default: 0 },
+		suggestedMaxAvgCost: { type: Number, default: 0 },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},
 	computed: {

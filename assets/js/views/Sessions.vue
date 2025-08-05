@@ -626,7 +626,7 @@ export default defineComponent({
 			const prices = sessionsWithPrice
 				.map((s) => s.pricePerKWh)
 				.filter((p): p is number => p !== null);
-			return this.percentile(prices, 98);
+			return this.percentile(prices, 98) ?? 0;
 		},
 		suggestedMaxAvgCo2() {
 			// returns the 98th percentile of avg co2 emissions for all sessions
@@ -634,7 +634,7 @@ export default defineComponent({
 			const co2 = sessionsWithCo2
 				.map((s) => s.co2PerKWh)
 				.filter((c): c is number => c !== null);
-			return this.percentile(co2, 98);
+			return this.percentile(co2, 98) ?? 0;
 		},
 		suggestedMaxAvgCost() {
 			return this.activeType === TYPES.PRICE

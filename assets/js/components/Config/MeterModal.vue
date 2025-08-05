@@ -137,7 +137,7 @@ import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSe
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 import { initialTestState, performTest } from "./utils/test";
-import { ConfigType } from "@/types/evcc";
+import { ConfigType, type SelectedMeterType } from "@/types/evcc";
 import {
 	handleError,
 	type DeviceValues,
@@ -150,7 +150,6 @@ import {
 	type TemplateType,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/meter.yaml?raw";
-import type { SelectedMeterType } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template, deviceTitle: "", deviceIcon: "" };
 const device = createDeviceUtils("meter");
