@@ -87,7 +87,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		Cache          time.Duration
 	}{
 		Language: "en",
-		// default for now, remove once there are more supported regions
+		// default for now, remove once there are more supported regions?
 		// might also work as fallback for vehicles created when there was
 		// no region differentiation
 		Region: bluelink.RegionEurope,

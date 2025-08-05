@@ -19,6 +19,12 @@ const (
 )
 
 const (
+	CAClientID     = "HATAHSPACA0232141ED9722C"
+	CAClientSecret = "CLISCR01AHSPA"
+	CADeviceID     = "TW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEzOC4wLjAuMCBTYWZhcmkvNTM3LjM2IEVkZy8xMzguMC4wLjArV2luMzIrMTIzNCsxMjM0"
+)
+
+const (
 	BrandKia     = "kia"
 	BrandHyundai = "hyundai"
 	BrandGenesis = "genesis"
