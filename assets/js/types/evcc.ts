@@ -66,6 +66,7 @@ export interface State {
   circuits?: Record<string, Circuit>;
   siteTitle?: string;
   vehicles: Record<string, Vehicle>;
+  authDisabled?: boolean;
 }
 
 export interface Config {
@@ -91,12 +92,30 @@ export interface Entity {
   config: Config;
 }
 
-export interface Meter extends Entity {
+export enum ConfigType {
+  Template = "template",
+  Custom = "custom",
+  Heatpump = "heatpump",
+  SwitchSocket = "switchsocket",
+  SgReady = "sgready",
+  SgReadyBoost = "sgready-boost",
+}
+
+export type ConfigVehicle = Entity;
+
+// Configuration-specific types for device setup/configuration contexts
+export interface ConfigCharger extends Omit<Entity, "type"> {
+  deviceProduct: string;
+  type: ConfigType;
+}
+
+export interface ConfigMeter extends Entity {
+  deviceProduct: string;
   deviceTitle?: string;
   deviceIcon?: string;
 }
-export type ConfigVehicle = Entity;
-export type Charger = Entity;
+
+export type ConfigCircuit = Entity;
 
 export interface LoadpointThreshold {
   delay: number;
@@ -211,6 +230,8 @@ export enum LOADPOINT_TYPE {
   HEATING = "heating",
 }
 
+export type LoadpointType = ValueOf<typeof LOADPOINT_TYPE>;
+
 export type SessionInfoKey =
   | "remaining"
   | "finished"
@@ -294,11 +315,20 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle";
-export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+export interface SiteConfig {
+  grid: string;
+  pv: string[];
+  battery: string[];
+  title: string;
+  aux: string[] | null;
+  ext: string[] | null;
+}
 
 export type ValueOf<T> = T[keyof T];

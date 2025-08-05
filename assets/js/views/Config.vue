@@ -423,14 +423,19 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent } from "vue";
 import type {
-	Charger,
+	ConfigCharger,
 	ConfigVehicle,
-	Circuit,
+	ConfigCircuit,
 	Loadpoint,
-	Meter,
+	ConfigMeter,
+	LoadpointType,
 	Timeout,
 	SelectedMeterType,
+	SiteConfig,
+	DeviceType,
 } from "@/types/evcc";
+
+type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
@@ -481,17 +486,17 @@ export default defineComponent({
 	data() {
 		return {
 			vehicles: [] as ConfigVehicle[],
-			meters: [] as Meter[],
+			meters: [] as ConfigMeter[],
 			loadpoints: [] as Loadpoint[],
-			chargers: [] as Charger[],
-			circuits: [] as Circuit[],
+			chargers: [] as ConfigCharger[],
+			circuits: [] as ConfigCircuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
 			selectedMeterType: undefined as SelectedMeterType | undefined,
 			selectedMeterTypeChoices: [] as string[],
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
-			selectedLoadpointType: undefined,
+			selectedLoadpointType: undefined as LoadpointType | undefined,
 			loadpointSubModalOpen: false,
 			site: {
 				grid: "",
@@ -500,20 +505,14 @@ export default defineComponent({
 				title: "",
 				aux: null as string[] | null,
 				ext: null as string[] | null,
-			} as {
-				grid: string;
-				pv: string[];
-				battery: string[];
-				title: string;
-				aux: string[] | null;
-				ext: string[] | null;
-				[key: string]: any;
-			},
+			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
-			deviceValues: { meter: {}, vehicle: {}, charger: {} } as Record<
-				string,
-				Record<string, any>
-			>,
+			deviceValues: {
+				meter: {},
+				vehicle: {},
+				charger: {},
+				loadpoint: {},
+			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
 		};
@@ -702,7 +701,7 @@ export default defineComponent({
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {
-				validateStatus: (status) => status < 500,
+				validateStatus: (status: number) => status < 500,
 			});
 			if (response.status === 200) {
 				this.site = response.data;
@@ -748,7 +747,7 @@ export default defineComponent({
 				document.getElementById("chargerModal") as HTMLElement
 			);
 		},
-		editLoadpointCharger(name: string, loadpointType: string) {
+		editLoadpointCharger(name: string, loadpointType?: LoadpointType) {
 			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
 			if (charger && charger.id === undefined) {
@@ -792,7 +791,7 @@ export default defineComponent({
 			this.selectedMeterTypeChoices = ["aux", "ext"];
 			this.$nextTick(() => this.meterModal().show());
 		},
-		editCharger(id?: number, loadpointType: string) {
+		editCharger(id?: number, loadpointType?: LoadpointType) {
 			this.selectedChargerId = id;
 			this.selectedLoadpointType = loadpointType;
 			this.$nextTick(() => this.chargerModal().show());
@@ -843,7 +842,7 @@ export default defineComponent({
 		yamlChanged() {
 			this.loadDirty();
 		},
-		meterAdded(type: string, name: string) {
+		meterAdded(type: SelectedMeterType, name: string) {
 			if (type === "charge") {
 				// update loadpoint
 				(
@@ -854,19 +853,35 @@ export default defineComponent({
 				this.site.grid = name;
 				this.saveSite(type);
 			} else {
-				// update site pv, battery, aux
-				if (!this.site[type]) {
-					this.site[type] = [];
+				// update site pv, battery, aux, ext with type-safe approach
+				switch (type) {
+					case "pv":
+						if (!this.site.pv) this.site.pv = [];
+						this.site.pv.push(name);
+						break;
+					case "battery":
+						if (!this.site.battery) this.site.battery = [];
+						this.site.battery.push(name);
+						break;
+					case "aux":
+						if (!this.site.aux) this.site.aux = [];
+						this.site.aux.push(name);
+						break;
+					case "ext":
+						if (!this.site.ext) this.site.ext = [];
+						this.site.ext.push(name);
+						break;
 				}
-				this.site[type].push(name);
 				this.saveSite(type);
 			}
 			this.meterChanged();
 		},
-		meterRemoved(type: string) {
+		meterRemoved(type: SelectedMeterType) {
 			if (type === "charge") {
 				// update loadpoint
-				this.$refs.loadpointModal?.setMeter("");
+				(
+					this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
+				)?.setMeter("");
 			} else {
 				// update site grid, pv, battery, aux, ext
 				this.loadSite();
@@ -881,7 +896,9 @@ export default defineComponent({
 			)?.setCharger(name);
 		},
 		chargerRemoved() {
-			this.$refs.loadpointModal?.setCharger("");
+			(
+				this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
+			)?.setCharger("");
 			this.chargerChanged();
 		},
 		meterModalClosed() {
@@ -894,8 +911,8 @@ export default defineComponent({
 			// reopen loadpoint modal
 			this.loadpointModal().show();
 		},
-		async saveSite(key: string) {
-			const body = key ? { [key]: this.site[key as keyof typeof this.site] } : this.site;
+		async saveSite(key: keyof SiteConfig) {
+			const body = key ? { [key]: this.site[key] } : this.site;
 			await api.put("/config/site", body);
 			await this.loadSite();
 			await this.loadDirty();
@@ -907,14 +924,13 @@ export default defineComponent({
 		async restart() {
 			await performRestart();
 		},
-		async updateDeviceValue(type: string, name: string) {
+		async updateDeviceValue(type: DeviceType, name: string) {
 			try {
 				const response = await api.get(`/config/devices/${type}/${name}/status`);
 				if (!this.deviceValues[type]) this.deviceValues[type] = {};
 				this.deviceValues[type][name] = response.data;
 			} catch (error) {
 				console.error("Error fetching device values for", type, name, error);
-				return null;
 			}
 		},
 		async updateValues() {
@@ -926,11 +942,11 @@ export default defineComponent({
 					meter: this.meters,
 					vehicle: this.vehicles,
 					charger: this.chargers,
-				};
+				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
-					for (const device of devices[type as keyof typeof devices]) {
+					for (const device of devices[type as DeviceType]) {
 						if (this.isComponentMounted && this.isPageVisible) {
-							await this.updateDeviceValue(type, device.name);
+							await this.updateDeviceValue(type as DeviceType, device.name);
 						}
 					}
 				}
@@ -941,8 +957,8 @@ export default defineComponent({
 				this.deviceValueTimeout = setTimeout(this.updateValues, interval);
 			}
 		},
-		deviceTags(type: string, id: string) {
-			return this.deviceValues[type]?.[id] || {};
+		deviceTags(type: DeviceType, id: string) {
+			return this.deviceValues[type][id] || {};
 		},
 		loadpointTags(loadpoint: Loadpoint) {
 			const { charger, meter } = loadpoint;
@@ -958,7 +974,7 @@ export default defineComponent({
 				console.error(`modal ${id} not found`);
 			}
 		},
-		circuitTags(circuit: Circuit) {
+		circuitTags(circuit: ConfigCircuit) {
 			const circuits = store.state?.circuits || {};
 			const data = circuits[circuit.name] || {};
 			const result: Record<string, object> = {};
@@ -979,7 +995,7 @@ export default defineComponent({
 			}
 			return result;
 		},
-		deviceError(type: string, name: string) {
+		hasDeviceError(type: DeviceType, name: string) {
 			const fatals = store.state?.fatal || [];
 			return fatals.some((fatal) => fatal.class === type && fatal.device === name);
 		},
@@ -990,7 +1006,7 @@ export default defineComponent({
 		chargerIcon(chargerName: string) {
 			const charger = this.chargers.find((c) => c.name === chargerName);
 
-			return charger?.config?.icon || this.deviceValues?.charger?.[chargerName]?.icon?.value;
+			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
 		},
 	},
 });
