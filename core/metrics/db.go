@@ -29,7 +29,7 @@ func Persist(ts time.Time, value float64) error {
 }
 
 // Profile returns a 15min average meter profile in Wh
-func Profile() (*[96]float64, error) {
+func Profile(from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
@@ -37,9 +37,10 @@ func Profile() (*[96]float64, error) {
 
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
 		FROM meters
-		WHERE meter = ?
+		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts)
-		ORDER BY ts`, 1)
+		ORDER BY strftime("%H:%M", ts) ASC`, 1, from,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -48,21 +49,22 @@ func Profile() (*[96]float64, error) {
 	res := make([]float64, 0, 96)
 
 	for rows.Next() {
-		var (
-			ts  time.Time
-			val float64
-		)
+		var ts SqlTime
+		var val float64
+
 		if err := rows.Scan(&ts, &val); err != nil {
 			return nil, err
 		}
 
-		hour := ts.Hour()
-		minute := ts.Minute() / 15
-		if len(res) != hour*4+minute {
+		if slotNum(time.Time(ts)) != len(res) {
 			return nil, ErrIncomplete
 		}
 
 		res = append(res, val)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if len(res) != 96 {
@@ -70,4 +72,9 @@ func Profile() (*[96]float64, error) {
 	}
 
 	return (*[96]float64)(res), nil
+}
+
+func slotNum(ts time.Time) int {
+	ts = ts.Local()
+	return ts.Hour()*4 + ts.Minute()/15
 }

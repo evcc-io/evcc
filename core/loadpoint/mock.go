@@ -562,6 +562,20 @@ func (mr *MockAPIMockRecorder) GetSmartFeedInPriorityLimit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartFeedInPriorityLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartFeedInPriorityLimit))
 }
 
+// GetSoc mocks base method.
+func (m *MockAPI) GetSoc() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSoc")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetSoc indicates an expected call of GetSoc.
+func (mr *MockAPIMockRecorder) GetSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSoc", reflect.TypeOf((*MockAPI)(nil).GetSoc))
+}
+
 // GetSocConfig mocks base method.
 func (m *MockAPI) GetSocConfig() SocConfig {
 	m.ctrl.T.Helper()
