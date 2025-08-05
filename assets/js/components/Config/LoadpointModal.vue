@@ -576,6 +576,7 @@ import {
 	type ConfigCharger,
 	type ConfigMeter,
 	type ConfigCircuit,
+	type ConfigLoadpoint,
 } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
@@ -600,14 +601,12 @@ const defaultValues = {
 	charger: "",
 	circuit: "",
 	meter: "",
-};
+} as ConfigLoadpoint;
 
 const defaultThresholds = {
 	enable: { delay: 1 * nsPerMin, threshold: 0 },
 	disable: { delay: 3 * nsPerMin, threshold: 0 },
 };
-
-type LoadpointValues = typeof defaultValues;
 
 export default {
 	name: "LoadpointModal",
@@ -634,7 +633,7 @@ export default {
 			isModalVisible: false,
 			saving: false,
 			selectedType: null as LoadpointType | null,
-			values: deepClone(defaultValues) as LoadpointValues,
+			values: deepClone(defaultValues) as ConfigLoadpoint,
 			chargerPower: "11kw",
 			solarMode: "default",
 			tab: "solar",

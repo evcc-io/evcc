@@ -26,6 +26,21 @@ export interface Auth {
 
 export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
 
+export interface MqttConfig {
+  broker: string;
+  topic: string;
+}
+
+export interface InfluxConfig {
+  url: string;
+  database: any;
+  org: any;
+}
+
+export interface HemsConfig {
+  type: any;
+}
+
 export interface FatalError {
   error: string;
   class?: string;
@@ -46,18 +61,9 @@ export interface State {
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
-  mqtt?: {
-    broker: string;
-    topic: string;
-  };
-  influx?: {
-    url: string;
-    database: any;
-    org: any;
-  };
-  hems?: {
-    type: any;
-  };
+  mqtt?: MqttConfig;
+  influx?: InfluxConfig;
+  hems?: HemsConfig;
   sponsor?: Sponsor;
   eebus?: any;
   modbusproxy?: [];
@@ -122,9 +128,9 @@ export interface LoadpointThreshold {
   threshold: number;
 }
 
-export interface Loadpoint {
-  id: number;
-  name: string;
+export interface ConfigLoadpoint {
+  id?: number;
+  name?: string;
   charger: string;
   meter: string;
   vehicle: string;
@@ -135,11 +141,12 @@ export interface Loadpoint {
   minCurrent: number;
   maxCurrent: number;
   smartCostLimit: number | null;
-  planEnergy: number;
-  planTime: string;
-  planPrecondition: number;
-  limitEnergy: number;
-  limitSoc: number;
+  planEnergy?: number;
+  planTime?: string;
+  planPrecondition?: number;
+  limitEnergy?: number;
+  limitSoc?: number;
+  circuit?: string;
   thresholds: {
     enable: LoadpointThreshold;
     disable: LoadpointThreshold;

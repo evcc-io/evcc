@@ -426,7 +426,7 @@ import type {
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
-	Loadpoint,
+	ConfigLoadpoint,
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
@@ -487,7 +487,7 @@ export default defineComponent({
 		return {
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
-			loadpoints: [] as Loadpoint[],
+			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
 			selectedVehicleId: undefined as number | undefined,
@@ -806,7 +806,8 @@ export default defineComponent({
 			await this.loadDirty();
 			this.updateValues();
 		},
-		editLoadpoint(id: number) {
+		editLoadpoint(id?: number) {
+			if (!id) alert("missing loadpoint id");
 			this.selectedLoadpointId = id;
 			this.$nextTick(() => this.loadpointModal().show());
 		},
@@ -960,7 +961,7 @@ export default defineComponent({
 		deviceTags(type: DeviceType, id: string) {
 			return this.deviceValues[type][id] || {};
 		},
-		loadpointTags(loadpoint: Loadpoint) {
+		loadpointTags(loadpoint: ConfigLoadpoint) {
 			const { charger, meter } = loadpoint;
 			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
@@ -995,7 +996,8 @@ export default defineComponent({
 			}
 			return result;
 		},
-		hasDeviceError(type: DeviceType, name: string) {
+		hasDeviceError(type: DeviceType, name?: string) {
+			if (!name) return false;
 			const fatals = store.state?.fatal || [];
 			return fatals.some((fatal) => fatal.class === type && fatal.device === name);
 		},
