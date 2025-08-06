@@ -17,6 +17,7 @@ import (
 
 //go:embed openapi.json
 var spec []byte
+
 func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, error) {
 	log := util.NewLogger("mcp")
 	log.INFO.Printf("MCP listening at %s", baseUrl+basePath)
