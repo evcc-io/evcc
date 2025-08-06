@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/jinzhu/now"
@@ -41,8 +42,9 @@ const (
 
 type batteryDetail struct {
 	Type     batteryType `json:"type"`
-	Capacity float64     `json:"capacity,omitempty"`
 	Title    string      `json:"title,omitempty"`
+	Name     string      `json:"name,omitempty"`
+	Capacity float64     `json:"capacity,omitempty"`
 }
 
 type responseDetails struct {
@@ -106,6 +108,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	for _, lp := range site.Loadpoints() {
 		bat := evopt.BatteryConfig{
+			ChargeFromGrid: lo.ToPtr(true),
+
 			CMin: float32(lp.EffectiveMinPower()),
 			CMax: float32(lp.EffectiveMaxPower()),
 			DMax: 0,
@@ -124,8 +128,15 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
 
 			detail.Type = batteryTypeVehicle
-			detail.Capacity = v.Capacity()
 			detail.Title = v.GetTitle()
+			detail.Capacity = v.Capacity()
+
+			// find vehicle name/id
+			for _, dev := range config.Vehicles().Devices() {
+				if dev.Instance() == v {
+					detail.Name = dev.Config().Name
+				}
+			}
 		}
 
 		req.Batteries = append(req.Batteries, bat)
@@ -133,13 +144,14 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		details.BatteryDetails = append(details.BatteryDetails, detail)
 	}
 
-	for _, b := range battery {
-		// || !b.Controllable()
+	for i, b := range battery {
 		if b.Capacity == nil || b.Soc == nil {
 			continue
 		}
 
-		req.Batteries = append(req.Batteries, evopt.BatteryConfig{
+		dev := site.batteryMeters[i]
+
+		bat := evopt.BatteryConfig{
 			CMin:     0,
 			CMax:     batteryPower,
 			DMax:     batteryPower,
@@ -147,10 +159,18 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
-		})
+		}
+
+		// TODO atm we cannot cannot control charge from grid speed
+		if _, ok := (dev.Instance()).(api.BatteryController); ok {
+			bat.ChargeFromGrid = lo.ToPtr(true)
+		}
+
+		req.Batteries = append(req.Batteries, bat)
 
 		details.BatteryDetails = append(details.BatteryDetails, batteryDetail{
 			Type:     batteryTypeBattery,
+			Name:     dev.Config().Name,
 			Capacity: *b.Capacity,
 		})
 	}
