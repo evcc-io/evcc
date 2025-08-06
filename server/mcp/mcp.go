@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -79,13 +80,15 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 func nameFormat(log *util.Logger) func(name string) string {
 	return func(name string) string {
 		// move method to the end
-		parts := strings.Split(name, "_")
-		res := strings.Join(parts[:len(parts)-1], "-") + "-" + parts[len(parts)-1]
+		parts := strings.SplitN(name, "_", 2)
+		slices.Reverse(parts)
 
+		res := strings.Join(parts, "-")
 		res = strings.ReplaceAll(res, "/", "-")
 		res = strings.ReplaceAll(res, "{", "_")
 		res = strings.ReplaceAll(res, "}", "")
 		res = strings.ReplaceAll(res, "-_", "_")
+		res = strings.ReplaceAll(res, "--", "-")
 
 		res = strings.TrimLeft(res, "/-_")
 		res = strings.ToLower(res)
