@@ -50,7 +50,7 @@ export interface State {
   forecast?: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
-  providerAuth?: AuthProviders;
+  authProviders?: AuthProviders;
   version?: string;
   battery?: Battery[];
   tariffGrid?: number;

@@ -85,16 +85,10 @@ func (a *Handler) Publish(paramC chan<- util.Param) {
 		apMap[provider.DisplayName()] = ap
 	}
 
-	val := struct {
-		AuthProviders map[string]*AuthProvider `json:"authProviders,omitempty"`
-	}{
-		AuthProviders: apMap,
-	}
-
 	a.log.DEBUG.Printf("publishing %d auth providers", len(apMap))
 
 	// publish the updated auth providers
-	paramC <- util.Param{Key: keys.ProviderAuth, Val: val}
+	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
 // Register registers a specific AuthProvider. Returns login path as string.
