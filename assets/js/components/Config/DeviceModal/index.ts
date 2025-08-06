@@ -1,4 +1,5 @@
 import type { DeviceType } from "@/types/evcc";
+import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 
 export type Product = {
@@ -54,15 +55,6 @@ export function handleError(e: any, msg: string) {
 
 export const timeout = 15000;
 
-export enum ConfigType {
-  Template = "template",
-  Custom = "custom",
-  Heatpump = "heatpump",
-  SwitchSocket = "switchsocket",
-  SgReady = "sgready",
-  SgReadyBoost = "sgready-boost",
-}
-
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
   params
@@ -103,12 +95,12 @@ export function createDeviceUtils(deviceType: DeviceType) {
 
   async function load(id: number) {
     const response = await api.get(`config/devices/${deviceType}/${id}`);
-    return response.data.result;
+    return response.data;
   }
 
   async function create(data: any) {
     const response = await api.post(`config/devices/${deviceType}`, data);
-    return response.data.result;
+    return response.data;
   }
 
   async function loadProducts(lang?: string, usage?: string) {
@@ -117,7 +109,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
       params["usage"] = usage;
     }
     const response = await api.get(`config/products/${deviceType}`, { params });
-    return response.data.result;
+    return response.data;
   }
 
   async function loadTemplate(templateName: string, lang?: string) {
@@ -130,7 +122,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
       },
     };
     const response = await api.get(`config/templates/${deviceType}`, opts);
-    return response.data.result;
+    return response.data;
   }
 
   return {

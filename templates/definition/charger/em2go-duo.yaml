@@ -1,0 +1,16 @@
+template: em2go-duo
+products:
+  - brand: EM2GO
+    description:
+      generic: Duo Power
+capabilities: ["mA"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+  - name: connector
+    default: 1
+render: |
+  type: em2go-duo
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

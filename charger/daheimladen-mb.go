@@ -175,11 +175,11 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	case 3: // Start-up State (B2)
 		return api.StatusB, nil
 	case 4: // Charging (C)
-		enabled, err := wb.Enabled()
-		if !enabled {
+		power, err := wb.CurrentPower()
+		if power == 0 {
 			return api.StatusB, err
 		}
-		return api.StatusC, nil
+		return api.StatusC, err
 	case 5: // Start-UP Fail (B2)
 		return api.StatusB, nil
 	case 6: // Session Terminated by EVSE
@@ -202,6 +202,9 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 	if enable {
 		current = wb.curr
 	}
+
+	// break to avoid too fast commands
+	time.Sleep(2 * time.Second)
 
 	return wb.setCurrent(current)
 }

@@ -79,10 +79,6 @@ snapshot::
 release::
 	goreleaser --clean
 
-openapi::
-	go test github.com/evcc-io/evcc/server --run TestOpenAPI
-	go generate ./server/mcp/...
-
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .

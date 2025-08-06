@@ -52,13 +52,14 @@
 				id="networkPort"
 				:label="$t('config.network.labelPort')"
 				:help="$t('config.network.descriptionPort')"
+				example="7070"
 			>
 				<input
 					id="networkPort"
 					v-model="values.port"
 					class="form-control w-50 me-2 w-50"
 					type="number"
-					example="7070"
+					required
 				/>
 			</FormRow>
 		</template>

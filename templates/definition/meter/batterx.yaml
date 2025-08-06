@@ -1,0 +1,86 @@
+template: batterX
+products:
+  - brand: batterX
+    description:
+      generic: Home
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 80
+  - name: capacity
+    advanced: true
+  - name: externalpv
+    description:
+      de: |
+        Benötigt bei ein weiterer Solarwechselrichter.
+      en: |
+        Needed when a second solar inverter is connected.
+    help:
+      de: |
+        Dieser Parameter wird benötigt, wenn an die BatterX Station noch ein weiterer Wechselrichter angeschlossen ist.
+        Somit kann die gesamte Solar Leistung auf einmal zurückgespielt werden. 
+        Der weitere Wechselrichter muss so nicht extra in evcc konfiguriert werden.
+      en: |
+        This parameter is needed when the BatterX station is connected to another solar inverter.
+        The total produced solar power can so be reported through one system.
+        Further auxilary solar inverters do not need to be connected to evcc.
+    default: "false"
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api.php?get=currentstate
+    timeout: 1s
+  {{- if eq .usage "grid" }}
+    jq: .["2913"].["0"] # Grid meter (Power Total in W)
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  {{- if ne .externalpv "false" }}
+    jq: .["2913"].["3"] + .["1634"].["0"] # External Solar + BatterX Solar (Power Total in W)
+  {{- else }}
+    jq: .["1634"].["0"] # BatterX Solar (Power Total in W)
+  {{- end }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .["1121"].["1"]
+    scale: -1 # reverse direction: Positive = Charging; Negative = Discharging
+  soc:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/api.php?get=currentstate
+    timeout: 1s
+    jq: .["1074"].["1"]
+  {{- if ne .capacity "" }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=3&text2=0 # Battery Charge AC - OFF
+        - source: http
+          uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=1 # Battery Discharging - ON
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=3&text2=0 # Battery Charge AC - OFF
+        - source: http
+          uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=0 # Battery Discharging - OFF
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=3&text2=1 # Battery Charge AC - ON
+        - source: http
+          uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=0 # Battery Discharging - OFF
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

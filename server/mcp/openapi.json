@@ -715,7 +715,7 @@
     },
     "description": "Solar charging. Super simple.",
     "title": "evcc",
-    "version": "latest"
+    "version": "0.2.0"
   },
   "openapi": "3.0.3",
   "paths": {

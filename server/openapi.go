@@ -1,8 +1,3 @@
 package server
 
-import (
-	_ "embed"
-)
-
-//go:embed openapi.yaml
-var OpenAPI []byte
+//go:generate go tool openapi openapi.yaml mcp/openapi.json
