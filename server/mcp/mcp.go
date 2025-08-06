@@ -17,9 +17,6 @@ import (
 
 //go:embed openapi.json
 var spec []byte
-
-//go:generate go run github.com/evcc-io/evcc/server/mcp/openapi ../openapi.yaml
-
 func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, error) {
 	log := util.NewLogger("mcp")
 	log.INFO.Printf("MCP listening at %s", baseUrl+basePath)
