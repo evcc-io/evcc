@@ -191,7 +191,7 @@
       "labelInsecure": "Sertifikato patvirtinimas",
       "labelOrg": "Organizacija",
       "labelPassword": "Slaptažodis",
-      "labelToken": "API Token'as",
+      "labelToken": "API žetonas (token)",
       "labelUrl": "URL",
       "labelUser": "Vartotojo vardas",
       "title": "InfluxDB",
@@ -426,16 +426,17 @@
       "vehicles": "Automobiliai"
     },
     "sponsor": {
-      "addToken": "Įveskite tokeną",
-      "changeToken": "Pakeisti tokeną",
+      "addToken": "Įveskite žetoną",
+      "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs gaunate prieigą prie visų įkroviklių implementacijų.",
-      "descriptionToken": "Tokeną gaunate iš {url}. Taip pat siūlome bandomąjį tokeną testavimui.",
-      "error": "Sponsoriaus tokenas negalioja..",
-      "labelToken": "Sponsoriaus tokenas",
+      "descriptionToken": "Žetoną (token) gaunate iš {url}. Taip pat siūlome bandomąjį žetoną testavimui.",
+      "error": "Rėmėjo žetonas (token) negalioja.",
+      "labelToken": "Rėmėjo žetonas",
       "title": "Rėmimas",
-      "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo tokeną.",
+      "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo žetoną.",
       "tokenRequiredLearnMore": "Sužinoti daugiau.",
-      "trialToken": "Bandomasis token"
+      "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
+      "trialToken": "Bandomasis žetonas"
     },
     "system": {
       "backupRestore": {
@@ -458,7 +459,7 @@
           "sessions": "Įkrovimo sesijos",
           "sessionsDescription": "Ištrina įkrovimo sesijų istoriją.",
           "settings": "Konfigūracija ir nustatymai",
-          "settingsDescription": "Ištrina visus sukonfigūruotus įrenginius, paslaugas, planus ir kt.",
+          "settingsDescription": "Ištrina visus sukonfigūruotus įrenginius, paslaugas, planus, talpyklas ir kt.",
           "title": "Atstatyti"
         },
         "restore": {
@@ -569,9 +570,9 @@
       "titleNoSponsor": "Paremkite mus",
       "titleSponsor": "Remiate projektą",
       "titleTrial": "Bandomasis režimas",
-      "titleVictron": "Sponsorius - Victron Energy",
+      "titleVictron": "Rėmėjas - Victron Energy",
       "trial": "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą.",
-      "victron": "Naudojate evcc Victron Energy aparatinėje įrangoje ir turite prieigą prie visų funkcijų."
+      "victron": "Naudojate evcc Victron Energy aparatinę įrangą ir turite prieigą prie visų funkcijų."
     },
     "telemetry": {
       "optIn": "Noriu prisidėti savo duomenimis.",
@@ -620,6 +621,10 @@
   },
   "header": {
     "about": "Apie",
+    "authProviders": {
+      "confirmLogout": "Ar tikrai norite atjungti {title}?",
+      "title": "Autorizacijos būsena"
+    },
     "blog": "Tinklaraštis",
     "docs": "Dokumentacija (Vokiečių k.)",
     "github": "GitHub",
@@ -1016,7 +1021,7 @@
       "label": "Kalba"
     },
     "sponsorToken": {
-      "expires": "Jūsų rėmėjo tokenas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",
+      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",
       "getNew": "Gaukite naują",
       "hint": "Pastaba: ateityje šis procesas bus automatizuotas."
     },
