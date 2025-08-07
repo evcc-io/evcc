@@ -621,6 +621,10 @@
   },
   "header": {
     "about": "Про evcc",
+    "authProviders": {
+      "confirmLogout": "Ви впевнені, що хочете відключити {title}?",
+      "title": "Статус авторизації"
+    },
     "blog": "Блог",
     "docs": "Документація",
     "github": "GitHub",
