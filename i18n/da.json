@@ -435,6 +435,7 @@
       "title": "Sponsorat",
       "tokenRequired": "Du skal konfigurere et sponsortoken, før du kan oprette denne enhed.",
       "tokenRequiredLearnMore": "Lær mere.",
+      "tokenRequiredShort": "Der er ingen sponsor token konfiguret.",
       "trialToken": "Test token"
     },
     "system": {
@@ -458,7 +459,7 @@
           "sessions": "Opladningssessioner",
           "sessionsDescription": "Sletter din opladningshistorik.",
           "settings": "Konfiguration og indstillinger",
-          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester, abonnementer osv.",
+          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester og opladsningsplaner mm.",
           "title": "Nulstil"
         },
         "restore": {
@@ -620,6 +621,10 @@
   },
   "header": {
     "about": "Om",
+    "authProviders": {
+      "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
+      "title": "Autorisation status"
+    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
