@@ -233,7 +233,6 @@ func (v *HomeAssistant) status(sensor string) (api.ChargeStatus, error) {
 		"unknown":             api.StatusA,
 		"notreadyforcharging": api.StatusA,
 		"not_plugged":         api.StatusA,
-		"charging_error":      api.StatusA,
 	}
 
 	s, err := v.getState(sensor)
