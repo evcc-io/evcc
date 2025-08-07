@@ -37,7 +37,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import FormRow from "../FormRow.vue";
-import type { DeviceType } from "@/types/evcc";
+import { type DeviceType } from "@/types/evcc";
 
 export interface TemplateOption {
 	name: string;
