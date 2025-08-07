@@ -51,7 +51,6 @@ render: |
         address: 102 # PV Überschussleistung
         type: writemultiple # λ erwartet single value als FC16
         decode: int16
-      scale: 1
   power:
     source: modbus
     uri: {{ .host }}:{{ .port }}
