@@ -31,6 +31,8 @@ params:
     choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
   - name: phases
     deprecated: true
+  - name: excess
+    deprecated: true
   - name: watchdog
     type: duration
     default: 60s
