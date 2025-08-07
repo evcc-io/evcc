@@ -44,8 +44,21 @@
       "ocppLabel": "URL OCPP poslužitelja",
       "switchsockets": "Promijenjive utičnice",
       "template": "Proizvođač",
-      "titleAdd": "Dodati punjač",
-      "titleEdit": "Urediti punjač"
+      "titleAdd": {
+        "charging": "Dodati punjač",
+        "heating": "Dodati grijač"
+      },
+      "titleEdit": {
+        "charging": "Urediti punjač",
+        "heating": "Urediti grijač"
+      },
+      "type": {
+        "custom": {
+          "charging": "Korisnički definirani punjač",
+          "heating": "Korisnički definirani grijač"
+        },
+        "heatpump": "Korisnički definirana dizalica topline"
+      }
     },
     "circuits": {
       "description": "Osigurava da suma svih točaka punjenja povezanih na mrežu ne prelazi postavljene granice snage i struje. Krugovi mogu biti složeni hijerarhijski.",
@@ -79,8 +92,8 @@
       "currentRange": "Struja",
       "enabled": "Omogućeno",
       "energy": "Energija",
-      "feedinPrice": "Cijena za nabavu",
-      "gridPrice": "Cijena mreže",
+      "feedinPrice": "Cijena izvoza",
+      "gridPrice": "Cijena uvoza",
       "heaterTempLimit": "Ograničenje grijača",
       "hemsType": "Sustav",
       "identifier": "RFID-identifikator",
@@ -139,12 +152,15 @@
       "docsLink": "Vidjeti dokumentaciju.",
       "experimental": "Eksperimentalno",
       "hideAdvancedSettings": "Sakrij napredne postavke",
+      "invalidFileSelected": "Neispravna datoteka",
+      "noFileSelected": "Datoteka nije odabrana.",
       "off": "isključeno",
       "on": "uključeno",
       "password": "Lozinka",
       "readFromFile": "Učitati iz datoteke",
       "remove": "Ukloniti",
       "save": "Spremiti",
+      "selectFile": "Pretraži",
       "showAdvancedSettings": "Prikaži napredne postavke",
       "telemetry": "Telemetrija",
       "templateLoading": "Učitavanje…",
@@ -180,11 +196,18 @@
       "v2Support": "Natrag na InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Dodati punjač",
-      "addMeter": "Dodati zasebni strujomjer",
+      "addCharger": {
+        "charging": "Dodati punjač",
+        "heating": "Dodati grijač"
+      },
+      "addMeter": "Dodati zasebno brojilo energije",
       "cancel": "Odustati",
-      "chargerError": "Nužno je postaviti punjač.",
-      "chargerLabel": "Punjač",
+      "chargerError": {
+        "charging": "Nužno je postaviti punjač."
+      },
+      "chargerLabel": {
+        "charging": "Punjač"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Koristiti će raspon struje od 6 i 16A.",
       "chargerPower22kw": "22 kW",
@@ -196,7 +219,9 @@
       "circuitHelp": "Postavljanje upravljanja energijom kako bi se osiguralo da se ne prijeđu trenutna ograničenja.",
       "circuitLabel": "Strujni krug",
       "circuitUnassigned": "nepostavljen",
-      "defaultModeHelp": "Način punjenja kada se vozilo poveže.",
+      "defaultModeHelp": {
+        "charging": "Način punjenja kada se vozilo poveže."
+      },
       "defaultModeHelpKeep": "Zadržava posljednje korišteni način punjenja.",
       "defaultModeLabel": "Uobičajeni način",
       "delete": "Obrisati",

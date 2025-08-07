@@ -1,6 +1,6 @@
 export interface Provider {
   title: string;
-  loggedIn: boolean;
+  authenticated: boolean;
   loginPath: string;
   logoutPath: string;
 }

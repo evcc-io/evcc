@@ -3,7 +3,7 @@
 	<div class="form-check form-switch my-3">
 		<input
 			id="telemetryEnabled"
-			:checked="enabled"
+			:checked="telemetry"
 			class="form-check-input"
 			type="checkbox"
 			role="switch"
@@ -34,7 +34,6 @@
 import { defineComponent } from "vue";
 import api from "../api";
 import { docsPrefix } from "../i18n";
-import settings from "@/settings.ts";
 import type { AxiosError } from "axios";
 
 function parseMarkdown(markdownText: string) {
@@ -47,52 +46,27 @@ function parseMarkdown(markdownText: string) {
 
 export default defineComponent({
 	name: "TelemetrySettings",
-	props: { sponsorActive: Boolean },
+	props: { sponsorActive: Boolean, telemetry: Boolean },
 	data() {
 		return {
 			error: null as string | null,
 		};
 	},
 	computed: {
-		enabled() {
-			return settings.telemetry;
-		},
 		docsLink() {
 			return `${docsPrefix()}/docs/faq#telemetry`;
 		},
-	},
-	async mounted() {
-		await this.update();
 	},
 	methods: {
 		async change(e: Event) {
 			try {
 				this.error = null;
-				const response = await api.post(
-					`settings/telemetry/${(e.target as HTMLInputElement).checked}`
-				);
-				settings.telemetry = response.data.result;
+				await api.post(`settings/telemetry/${(e.target as HTMLInputElement).checked}`);
 			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				if (e.response) {
 					this.error = parseMarkdown("**Error:** " + e.response.data.error);
-					settings.telemetry = false;
 				}
-			}
-		},
-		async update() {
-			if (settings.telemetry !== null) {
-				return;
-			}
-			try {
-				const response = await api.get("settings/telemetry", {
-					validateStatus: () => true,
-				});
-				if (response.status === 200) {
-					settings.telemetry = response.data.result;
-				}
-			} catch (err) {
-				console.error(err);
 			}
 		},
 	},

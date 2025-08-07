@@ -185,9 +185,9 @@ import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSe
 import DeviceModalActions from "./DeviceModal/Actions.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
+import { ConfigType } from "@/types/evcc";
 import {
 	handleError,
-	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,

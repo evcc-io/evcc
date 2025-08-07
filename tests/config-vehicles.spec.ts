@@ -8,7 +8,6 @@ import {
   expectModalVisible,
 } from "./utils";
 
-const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
@@ -22,10 +21,10 @@ const GENERIC_VEHICLE = "Generic vehicle (without API)";
 
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -81,7 +80,7 @@ test.describe("vehicles", async () => {
   });
 
   test("config should survive restart", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -109,7 +108,7 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
@@ -121,7 +120,7 @@ test.describe("vehicles", async () => {
     await start(CONFIG_WITH_VEHICLE);
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -140,7 +139,7 @@ test.describe("vehicles", async () => {
   });
 
   test("advanced fields", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -179,7 +178,7 @@ test.describe("vehicles", async () => {
   });
 
   test("save and restore rfid identifiers", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
     await enableExperimental(page);
@@ -198,7 +197,7 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
@@ -212,10 +211,10 @@ test.describe("vehicles", async () => {
   });
 
   test("user-defined vehicle", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await page.getByTestId("add-vehicle").click();
     const modal = page.getByTestId("vehicle-modal");
@@ -250,7 +249,7 @@ soc:
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
@@ -291,7 +290,7 @@ soc:
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
 
     // restart evcc
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
