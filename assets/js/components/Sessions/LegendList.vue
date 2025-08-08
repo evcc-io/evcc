@@ -14,7 +14,11 @@
 			<div
 				v-if="legend.color"
 				class="legend-color align-self-center me-1"
-				:style="{ backgroundColor: legend.color }"
+				:class="colorClass(legend)"
+				:style="{
+					backgroundColor: legend.color,
+					borderColor: legend.color,
+				}"
 			></div>
 			<div class="legend-label text-nowrap">{{ legend.label }}</div>
 			<div
@@ -44,6 +48,22 @@ export default defineComponent({
 			if (!value) return [];
 			return Array.isArray(value) ? value : [value];
 		},
+		colorClass(legend: Legend) {
+			if (legend.type !== "line") {
+				return "legend-color--area";
+			}
+
+			switch (legend.lineStyle) {
+				case "solid":
+					return "legend-color--line legend-color--line-solid";
+				case "dashed":
+					return "legend-color--line legend-color--line-dashed";
+				case "dotted":
+					return "legend-color--line legend-color--line-dotted";
+				default:
+					return "legend-color--line";
+			}
+		},
 	},
 });
 </script>
@@ -56,7 +76,28 @@ export default defineComponent({
 	width: 1rem;
 	height: 1rem;
 	flex-shrink: 0;
+}
+
+.legend-color--area {
 	border-radius: 50%;
+}
+
+.legend-color--line {
+	height: 2px;
+	border-radius: 1px;
+	align-self: center;
+}
+
+/* .legend-color--line-solid uses default background color for solid lines */
+
+.legend-color--line-dashed {
+	background: transparent !important;
+	border-top: 2px dashed;
+}
+
+.legend-color--line-dotted {
+	background: transparent !important;
+	border-top: 2px dotted;
 }
 .legend-label {
 	flex-shrink: 0;
