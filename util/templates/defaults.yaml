@@ -594,6 +594,7 @@ presets:
     params:
       - name: stationid
         type: string
+        required: true
         description:
           generic: Station ID
         help:
