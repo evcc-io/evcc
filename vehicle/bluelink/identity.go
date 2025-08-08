@@ -369,7 +369,28 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	return accCode, err
 }
 
-func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
+func (v *Identity) exchangeCodeHyundaiEU(accCode string) (*oauth2.Token, error) {
+	headers := map[string]string{
+		"Authorization": "Basic " + v.config.BasicToken,
+		"Content-type":  "application/x-www-form-urlencoded",
+		"User-Agent":    "okhttp/3.10.0",
+	}
+
+	data := url.Values{
+		"grant_type":   {"authorization_code"},
+		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"code":         {accCode},
+	}
+
+	var token oauth2.Token
+
+	req, _ := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	err := v.DoJSON(req, &token)
+
+	return util.TokenWithExpiry(&token), err
+}
+
+func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
 	headers := map[string]string{
 		"Content-type": "application/x-www-form-urlencoded",
@@ -435,20 +456,25 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 		switch brand {
 		case "kia":
 			code, err = v.brandLoginKiaEU(cookieClient, user, password)
+			if err == nil {
+				var token *oauth2.Token
+				if token, err = v.exchangeCodeKiaEU(code); err == nil {
+					v.TokenSource = oauth.RefreshTokenSource(token, v)
+				}
+			}
 		case "hyundai":
 			// try new login first, then fallback
 			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
 				code, err = v.bluelinkLogin(cookieClient, user, password)
 			}
+			if err == nil {
+				var token *oauth2.Token
+				if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
+					v.TokenSource = oauth.RefreshTokenSource(token, v)
+				}
+			}
 		default:
 			err = fmt.Errorf("unknown brand (%s)", brand)
-		}
-	}
-
-	if err == nil {
-		var token *oauth2.Token
-		if token, err = v.exchangeCode(code); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource(token, v)
 		}
 	}
 
