@@ -195,7 +195,7 @@ func (wb *Em2Go) Enable(enable bool) error {
 		return err
 	}
 
-	//rro hack t avoud the 9.7A fast load hickup	
+	//rro hack to avoid the 9.7A fast load hickup	
 	if  enable {
 		//find a better way from decoration?
 		if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err != nil {
