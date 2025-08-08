@@ -106,7 +106,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/download";
 import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
@@ -114,6 +114,8 @@ import Record from "../components/MaterialIcon/Record.vue";
 import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
+import { defineComponent, type PropType } from "vue";
+import type { Timeout } from "@/types/evcc";
 
 const LEVELS = ["fatal", "error", "warn", "info", "debug", "trace"];
 const DEFAULT_LEVEL = "debug";
@@ -121,7 +123,7 @@ const DEFAULT_COUNT = 1000;
 
 const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.map((l) => l.toUpperCase()).join("|")})`);
 
-export default {
+export default defineComponent({
 	name: "Log",
 	components: {
 		TopHeader: Header,
@@ -130,15 +132,15 @@ export default {
 		MultiSelect,
 	},
 	props: {
-		areas: { type: Array, default: () => [] },
+		areas: { type: Array as PropType<string[]>, default: () => [] },
 		level: { type: String, default: DEFAULT_LEVEL },
 	},
 	data() {
 		return {
-			lines: [],
-			availableAreas: [],
+			lines: [] as string[],
+			availableAreas: [] as string[],
 			search: "",
-			timeout: null,
+			timeout: null as Timeout,
 			levels: LEVELS,
 			busy: false,
 		};
@@ -216,7 +218,7 @@ export default {
 		this.stopInterval();
 	},
 	methods: {
-		async updateLogs(showAll) {
+		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
 			if (this.busy) return;
 
@@ -263,20 +265,20 @@ export default {
 				console.error(e);
 			}
 		},
-		onScroll(e) {
+		onScroll(e: Event) {
+			const t = e.target as HTMLElement;
 			// disable follow when not at the bottom
-			if (
-				this.autoFollow &&
-				e.target.scrollTop + e.target.clientHeight < e.target.scrollHeight
-			) {
+			if (this.autoFollow && t && t.scrollTop + t.clientHeight < t.scrollHeight) {
 				this.stopInterval();
 			}
 		},
 		scrollToTop() {
-			this.$refs.log.scrollTop = 0;
+			const log = this.$refs["log"] as HTMLElement;
+			log.scrollTop = 0;
 		},
 		scrollToBottom() {
-			this.$refs.log.scrollTop = this.$refs.log.scrollHeight;
+			const log = this.$refs["log"] as HTMLElement;
+			log.scrollTop = log.scrollHeight;
 		},
 		toggleAutoFollow() {
 			if (this.autoFollow) {
@@ -286,29 +288,30 @@ export default {
 				this.startInterval();
 			}
 		},
-		updateQuery({ level, areas }) {
-			let newLevel = level || this.level;
-			let newAreas = areas || this.areas;
+		updateQuery({ level: l, areas: a }: { level?: string; areas?: string[] }) {
+			const newLevel = l || this.level;
+			const newAreas = a || this.areas;
+
 			// reset to default level
-			if (newLevel === DEFAULT_LEVEL) newLevel = undefined;
-			newAreas = newAreas.length ? newAreas.join(",") : undefined;
-			this.$router.push({
-				query: { level: newLevel, areas: newAreas },
-			});
+			const level = newLevel === DEFAULT_LEVEL ? undefined : newLevel;
+			const areas = newAreas.length ? newAreas.join(",") : undefined;
+
+			this.$router.push({ query: { level, areas } });
 		},
-		changeLevel(event) {
-			this.updateQuery({ level: event.target.value });
+		changeLevel(event: Event) {
+			this.updateQuery({ level: (event.target as HTMLSelectElement).value });
 		},
-		changeAreas(areas) {
+		changeAreas(areas: string[]) {
 			this.updateQuery({ areas });
 		},
-		onCopy(event) {
-			const selection = window.getSelection().toString();
-			event.clipboardData.setData("text/plain", "```\n" + selection + "\n```");
+		onCopy(e: Event) {
+			const selection = window.getSelection()?.toString();
+			const event = e as ClipboardEvent;
+			event.clipboardData?.setData("text/plain", "```\n" + selection + "\n```");
 			event.preventDefault();
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .logs {

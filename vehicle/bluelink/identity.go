@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -142,7 +143,111 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 	return err
 }
 
-func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) brandLoginHyundaiEU(cookieClient *request.Helper, user, password string) (string, error) {
+	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
+
+	var info struct {
+		UserId    string `json:"userId"`
+		ServiceId string `json:"serviceId"`
+	}
+
+	if err == nil {
+		err = cookieClient.DoJSON(req, &info)
+	}
+
+	var action string
+	var resp *http.Response
+
+	if err == nil {
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, "en", info.ServiceId, info.UserId)
+
+		req, err = request.New(http.MethodGet, uri, nil)
+		if err == nil {
+			if resp, err = cookieClient.Do(req); err == nil {
+				defer resp.Body.Close()
+
+				var doc *goquery.Document
+				if doc, err = goquery.NewDocumentFromReader(resp.Body); err == nil {
+					err = errors.New("form not found")
+
+					if form := doc.Find("form"); form != nil && form.Length() == 1 {
+						var ok bool
+						if action, ok = form.Attr("action"); ok {
+							err = nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if err == nil {
+		data := url.Values{
+			"username":     {user},
+			"password":     {password},
+			"credentialId": {""},
+			"rememberMe":   {"on"},
+		}
+
+		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
+		if err == nil {
+			cookieClient.CheckRedirect = request.DontFollow
+			if resp, err = cookieClient.Do(req); err == nil {
+				defer resp.Body.Close()
+
+				// need 302
+				if resp.StatusCode != http.StatusFound {
+					err = errors.New("missing redirect")
+
+					if doc, err2 := goquery.NewDocumentFromReader(resp.Body); err2 == nil {
+						if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
+							err = errors.New(span.Text())
+						}
+					}
+				}
+			}
+
+			cookieClient.CheckRedirect = nil
+		}
+	}
+
+	if err == nil {
+		resp, err = cookieClient.Get(resp.Header.Get("Location"))
+		if err == nil {
+			defer resp.Body.Close()
+		}
+	}
+
+	var code string
+	if err == nil {
+		data := map[string]string{
+			"intUserId": "",
+		}
+
+		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
+		if err == nil {
+			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
+			cookieClient.CheckRedirect = request.DontFollow
+
+			var res struct {
+				RedirectUrl string `json:"redirectUrl"`
+			}
+
+			if err = cookieClient.DoJSON(req, &res); err == nil {
+				var uri *url.URL
+				if uri, err = url.Parse(res.RedirectUrl); err == nil {
+					if code = uri.Query().Get("code"); len(code) == 0 {
+						err = errors.New("code not found")
+					}
+				}
+			}
+		}
+	}
+
+	return code, err
+}
+
+func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password string) (string, error) {
 	req, _ := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
@@ -264,7 +369,28 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	return accCode, err
 }
 
-func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
+func (v *Identity) exchangeCodeHyundaiEU(accCode string) (*oauth2.Token, error) {
+	headers := map[string]string{
+		"Authorization": "Basic " + v.config.BasicToken,
+		"Content-type":  "application/x-www-form-urlencoded",
+		"User-Agent":    "okhttp/3.10.0",
+	}
+
+	data := url.Values{
+		"grant_type":   {"authorization_code"},
+		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"code":         {accCode},
+	}
+
+	var token oauth2.Token
+
+	req, _ := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	err := v.DoJSON(req, &token)
+
+	return util.TokenWithExpiry(&token), err
+}
+
+func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
 	headers := map[string]string{
 		"Content-type": "application/x-www-form-urlencoded",
@@ -310,7 +436,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language string) (err error) {
+func (v *Identity) Login(user, password, language, brand string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -327,16 +453,28 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 	var code string
 	if err == nil {
-		// try new login first, then fallback
-		if code, err = v.brandLogin(cookieClient, user, password); err != nil {
-			code, err = v.bluelinkLogin(cookieClient, user, password)
-		}
-	}
-
-	if err == nil {
-		var token *oauth2.Token
-		if token, err = v.exchangeCode(code); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource(token, v)
+		switch brand {
+		case "kia":
+			code, err = v.brandLoginKiaEU(cookieClient, user, password)
+			if err == nil {
+				var token *oauth2.Token
+				if token, err = v.exchangeCodeKiaEU(code); err == nil {
+					v.TokenSource = oauth.RefreshTokenSource(token, v)
+				}
+			}
+		case "hyundai":
+			// try new login first, then fallback
+			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
+				code, err = v.bluelinkLogin(cookieClient, user, password)
+			}
+			if err == nil {
+				var token *oauth2.Token
+				if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
+					v.TokenSource = oauth.RefreshTokenSource(token, v)
+				}
+			}
+		default:
+			err = fmt.Errorf("unknown brand (%s)", brand)
 		}
 	}
 

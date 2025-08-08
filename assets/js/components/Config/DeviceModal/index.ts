@@ -1,4 +1,5 @@
 import type { DeviceType } from "@/types/evcc";
+import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 
 export type Product = {
@@ -53,15 +54,6 @@ export function handleError(e: any, msg: string) {
 }
 
 export const timeout = 15000;
-
-export enum ConfigType {
-  Template = "template",
-  Custom = "custom",
-  Heatpump = "heatpump",
-  SwitchSocket = "switchsocket",
-  SgReady = "sgready",
-  SgReadyBoost = "sgready-boost",
-}
 
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];

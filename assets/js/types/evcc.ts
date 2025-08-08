@@ -20,11 +20,22 @@ declare global {
   }
 }
 
-export interface Auth {
-  vehicles: VehicleLogins;
+export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
+
+export interface MqttConfig {
+  broker: string;
+  topic: string;
 }
 
-export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
+export interface InfluxConfig {
+  url: string;
+  database: any;
+  org: any;
+}
+
+export interface HemsConfig {
+  type: any;
+}
 
 export interface FatalError {
   error: string;
@@ -39,9 +50,111 @@ export interface State {
   forecast?: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
-  auth?: Auth;
-  vehicles: Vehicle[];
+  authProviders?: AuthProviders;
   evopt?: EvOpt;
+  version?: string;
+  battery?: Battery[];
+  tariffGrid?: number;
+  tariffFeedIn?: number;
+  tariffCo2?: number;
+  tariffSolar?: number;
+  mqtt?: MqttConfig;
+  influx?: InfluxConfig;
+  hems?: HemsConfig;
+  sponsor?: Sponsor;
+  eebus?: any;
+  modbusproxy?: [];
+  messaging?: any;
+  interval?: number;
+  circuits?: Record<string, Circuit>;
+  siteTitle?: string;
+  vehicles: Record<string, Vehicle>;
+  authDisabled?: boolean;
+}
+
+export interface Config {
+  template?: string;
+  title?: string;
+  icon?: string;
+  [key: string]: number | string | undefined;
+}
+
+export interface Circuit {
+  name: string;
+  maxPower: number;
+  power?: number;
+  maxCurrent: number;
+  current?: number;
+  config?: Config;
+}
+
+export interface Entity {
+  name: string;
+  type: string;
+  id: number;
+  config: Config;
+}
+
+export enum ConfigType {
+  Template = "template",
+  Custom = "custom",
+  Heatpump = "heatpump",
+  SwitchSocket = "switchsocket",
+  SgReady = "sgready",
+  SgReadyBoost = "sgready-boost",
+}
+
+export type ConfigVehicle = Entity;
+
+// Configuration-specific types for device setup/configuration contexts
+export interface ConfigCharger extends Omit<Entity, "type"> {
+  deviceProduct: string;
+  type: ConfigType;
+}
+
+export interface ConfigMeter extends Entity {
+  deviceProduct: string;
+  deviceTitle?: string;
+  deviceIcon?: string;
+}
+
+export type ConfigCircuit = Entity;
+
+export interface LoadpointThreshold {
+  delay: number;
+  threshold: number;
+}
+
+export interface ConfigLoadpoint {
+  id?: number;
+  name?: string;
+  charger: string;
+  meter: string;
+  vehicle: string;
+  title: string;
+  defaultMode: string;
+  priority: number;
+  phasesConfigured: number;
+  minCurrent: number;
+  maxCurrent: number;
+  smartCostLimit: number | null;
+  planEnergy?: number;
+  planTime?: string;
+  planPrecondition?: number;
+  limitEnergy?: number;
+  limitSoc?: number;
+  circuit?: string;
+  thresholds: {
+    enable: LoadpointThreshold;
+    disable: LoadpointThreshold;
+  };
+  soc: {
+    poll: {
+      mode: string;
+      interval: number;
+    };
+    estimate: boolean;
+  };
 }
 
 export enum SMART_COST_TYPE {
@@ -120,6 +233,8 @@ export enum LOADPOINT_TYPE {
   CHARGING = "charging",
   HEATING = "heating",
 }
+
+export type LoadpointType = ValueOf<typeof LOADPOINT_TYPE>;
 
 export type SessionInfoKey =
   | "remaining"
@@ -204,56 +319,96 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
+export interface SiteConfig {
+  grid: string;
+  pv: string[];
+  battery: string[];
+  title: string;
+  aux: string[] | null;
+  ext: string[] | null;
+}
+
 export type ValueOf<T> = T[keyof T];
 
-// EvOpt interfaces for optimization service
+// EvOpt interfaces matching OpenAPI spec exactly
 export interface EvOpt {
-  req: EvOptRequest;
-  res: EvOptResponse;
+  req: OptimizationInput;
+  res: OptimizationResult;
 }
 
-export interface EvOptRequest {
-  batteries: EvOptBattery[];
-  eta_c: number;
-  eta_d: number;
-  time_series: EvOptTimeSeries;
+// Request payload for /optimize/charge-schedule
+export interface OptimizationInput {
+  batteries: BatteryConfig[]; // Battery configurations
+  time_series: TimeSeries; // Time series data
+  eta_c?: number; // Charging efficiency (0-1), default 0.95
+  eta_d?: number; // Discharging efficiency (0-1), default 0.95
+  M?: number; // Big M value for MILP constraints
 }
 
-export interface EvOptBattery {
-  c_max: number; // Maximum charging power (W)
-  c_min: number; // Minimum charging power (W)
-  d_max: number; // Maximum discharging power (W)
-  p_a: number; // Auxiliary power consumption
+// Battery configuration
+export interface BatteryConfig {
+  s_min: number; // Min state of charge (Wh)
+  s_max: number; // Max state of charge (Wh)
   s_initial: number; // Initial state of charge (Wh)
-  s_max: number; // Maximum state of charge (Wh)
-  s_min: number; // Minimum state of charge (Wh)
+  c_min: number; // Min charge power (W)
+  c_max: number; // Max charge power (W)
+  d_max: number; // Max discharge power (W)
+  p_a: number; // Energy value per Wh at end
+  charge_from_grid?: boolean; // Can charge from grid
+  discharge_to_grid?: boolean; // Can discharge to grid
+  p_demand?: number[]; // Min charge demand per step (Wh)
+  s_goal?: number[]; // Goal state of charge per step (Wh)
 }
 
-export interface EvOptTimeSeries {
-  dt: number[]; // Delta time intervals (seconds)
-  ft: number[]; // Solar forecast (W)
-  gt: number[]; // Grid tariff
-  p_E: number[]; // Grid feedin price (€/Wh)
-  p_N: number[]; // Grid import price (€/Wh)
+// Time series data
+export interface TimeSeries {
+  dt: number[]; // Duration per time step (seconds)
+  gt: number[]; // Household demand per step (Wh)
+  ft: number[]; // Energy generation forecast per step (Wh)
+  p_N: number[]; // Grid import price per step (currency/Wh)
+  p_E: number[]; // Grid export price per step (currency/Wh)
 }
 
-export interface EvOptResponse {
-  batteries: EvOptBatteryResult[];
-  flow_direction: number[];
-  grid_export: number[];
-  grid_import: number[];
-  objective_value: number;
-  status: string;
+// Solver status enum
+export enum OptimizationStatus {
+  OPTIMAL = "Optimal",
+  INFEASIBLE = "Infeasible",
+  UNBOUNDED = "Unbounded",
+  UNDEFINED = "Undefined",
+  NOT_SOLVED = "Not Solved",
 }
 
-export interface EvOptBatteryResult {
-  charging_power: number[]; // Charging power per time slot (W)
-  discharging_power: number[]; // Discharging power per time slot (W)
-  state_of_charge: number[]; // State of charge per time slot (Wh)
+// Flow direction enum
+export enum FlowDirection {
+  IMPORT = 0, // Import from grid
+  EXPORT = 1, // Export to grid
+}
+
+// Response from /optimize/charge-schedule
+export interface OptimizationResult {
+  status: OptimizationStatus; // Solver status
+  objective_value: number | null; // Economic benefit (null if not optimal)
+  batteries: BatteryResult[]; // Results per battery
+  grid_import: number[]; // Grid import per step (Wh)
+  grid_export: number[]; // Grid export per step (Wh)
+  flow_direction: FlowDirection[]; // Flow direction per step (0=import, 1=export)
+}
+
+// Battery optimization results
+export interface BatteryResult {
+  charging_power: number[]; // Charging energy per step (Wh)
+  discharging_power: number[]; // Discharging energy per step (Wh)
+  state_of_charge: number[]; // State of charge per step (Wh)
+}
+
+// Error response
+export interface Error {
+  message: string; // Error description
 }

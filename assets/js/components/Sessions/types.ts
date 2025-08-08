@@ -20,6 +20,8 @@ export interface Legend {
   label: string;
   color: any;
   value: string | string[];
+  type?: "area" | "line";
+  lineStyle?: "solid" | "dashed" | "dotted";
 }
 
 export interface Column {

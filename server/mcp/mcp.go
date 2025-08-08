@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -45,11 +46,11 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
 		TagFilter: []string{
-			"General",
-			"Home Battery",
-			"Loadpoints",
-			"Tariffs",
-			"Vehicles",
+			"general",
+			"battery",
+			"loadpoints",
+			"tariffs",
+			"vehicles",
 		},
 		RequestHandler: requestHandler(host),
 	})
@@ -70,6 +71,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 
 	handler := server.NewStreamableHTTPServer(srv,
 		server.WithEndpointPath(basePath),
+		server.WithLogger(&logger{log}),
 	)
 
 	return handler, nil
@@ -78,14 +80,17 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 func nameFormat(log *util.Logger) func(name string) string {
 	return func(name string) string {
 		// move method to the end
-		parts := strings.Split(name, "_")
-		res := strings.Join(parts[:len(parts)-1], "-") + "-" + parts[len(parts)-1]
+		parts := strings.SplitN(name, "_", 2)
+		slices.Reverse(parts)
 
-		res = strings.TrimPrefix(res, "/")
+		res := strings.Join(parts, "-")
 		res = strings.ReplaceAll(res, "/", "-")
 		res = strings.ReplaceAll(res, "{", "_")
 		res = strings.ReplaceAll(res, "}", "")
 		res = strings.ReplaceAll(res, "-_", "_")
+		res = strings.ReplaceAll(res, "--", "-")
+
+		res = strings.TrimLeft(res, "/-_")
 		res = strings.ToLower(res)
 
 		// Claude Code has a 64 character limit for tool names
