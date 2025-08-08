@@ -65,14 +65,9 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 		},
 	}, promptHandler())
 
-	streamHandler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 		return srv
 	}, nil)
-
-	// Mount handler at the specified basePath
-	mux := http.NewServeMux()
-	mux.Handle(basePath, streamHandler)
-	handler := mux
 
 	return handler, nil
 }
