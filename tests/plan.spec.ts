@@ -599,6 +599,7 @@ test.describe("repeating", async () => {
     await plan.getByTestId("repeating-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
+    await page.waitForLoadState("networkidle");
 
     await restart(CONFIG);
     await page.goto("/");
