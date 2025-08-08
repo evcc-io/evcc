@@ -82,11 +82,11 @@
 				<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.maxCurrent.label") }}
 				</label>
-				<div class="col-sm-8 pe-0 d-flex align-items-center">
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
 					<select
 						:id="formId('maxcurrent')"
 						v-model.number="selectedMaxCurrent"
-						class="form-select form-select-sm w-75"
+						class="form-select form-select-sm"
 						@change="changeMaxCurrent"
 					>
 						<option
@@ -104,11 +104,11 @@
 				<label :for="formId('mincurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.minCurrent.label") }}
 				</label>
-				<div class="col-sm-8 pe-0 d-flex align-items-center">
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
 					<select
 						:id="formId('mincurrent')"
 						v-model.number="selectedMinCurrent"
-						class="form-select form-select-sm w-75"
+						class="form-select form-select-sm"
 						@change="changeMinCurrent"
 					>
 						<option
