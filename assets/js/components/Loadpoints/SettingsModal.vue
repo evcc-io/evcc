@@ -280,13 +280,13 @@ export default defineComponent({
 		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		currentOption(value: number, isDefault: boolean, isMax: boolean) {
-			const kw = this.fmtW((isMax ? this.maxPower : this.minPower) * value);
-			let name = `${this.fmtNumber(value, value <= 1 ? undefined : 0)} A (${kw})`;
+		currentOption(current: number, isDefault: boolean, isMax: boolean) {
+			const kw = this.fmtW((isMax ? this.maxPower : this.minPower) * current);
+			let name = `${this.fmtNumber(current, current <= 1 ? undefined : 0)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}
-			return { value, name };
+			return { value: current, name };
 		},
 		modalVisible() {
 			this.isModalVisible = true;
