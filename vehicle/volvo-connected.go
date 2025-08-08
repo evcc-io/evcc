@@ -44,7 +44,7 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	// create oauth2 config
 	config := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	authorizer, err := auth.NewOauth(ctx, *config)
+	authorizer, err := auth.NewOauth(ctx, *config, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}

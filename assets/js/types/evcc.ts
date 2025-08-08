@@ -20,11 +20,22 @@ declare global {
   }
 }
 
-export interface Auth {
-  vehicles: VehicleLogins;
+export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
+
+export interface MqttConfig {
+  broker: string;
+  topic: string;
 }
 
-export type VehicleLogins = Record<string, { authenticated: boolean; uri: string }>;
+export interface InfluxConfig {
+  url: string;
+  database: any;
+  org: any;
+}
+
+export interface HemsConfig {
+  type: any;
+}
 
 export interface FatalError {
   error: string;
@@ -39,8 +50,110 @@ export interface State {
   forecast?: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
-  auth?: Auth;
-  vehicles: Vehicle[];
+  authProviders?: AuthProviders;
+  version?: string;
+  battery?: Battery[];
+  tariffGrid?: number;
+  tariffFeedIn?: number;
+  tariffCo2?: number;
+  tariffSolar?: number;
+  mqtt?: MqttConfig;
+  influx?: InfluxConfig;
+  hems?: HemsConfig;
+  sponsor?: Sponsor;
+  eebus?: any;
+  modbusproxy?: [];
+  messaging?: any;
+  interval?: number;
+  circuits?: Record<string, Circuit>;
+  siteTitle?: string;
+  vehicles: Record<string, Vehicle>;
+  authDisabled?: boolean;
+}
+
+export interface Config {
+  template?: string;
+  title?: string;
+  icon?: string;
+  [key: string]: number | string | undefined;
+}
+
+export interface Circuit {
+  name: string;
+  maxPower: number;
+  power?: number;
+  maxCurrent: number;
+  current?: number;
+  config?: Config;
+}
+
+export interface Entity {
+  name: string;
+  type: string;
+  id: number;
+  config: Config;
+}
+
+export enum ConfigType {
+  Template = "template",
+  Custom = "custom",
+  Heatpump = "heatpump",
+  SwitchSocket = "switchsocket",
+  SgReady = "sgready",
+  SgReadyBoost = "sgready-boost",
+}
+
+export type ConfigVehicle = Entity;
+
+// Configuration-specific types for device setup/configuration contexts
+export interface ConfigCharger extends Omit<Entity, "type"> {
+  deviceProduct: string;
+  type: ConfigType;
+}
+
+export interface ConfigMeter extends Entity {
+  deviceProduct: string;
+  deviceTitle?: string;
+  deviceIcon?: string;
+}
+
+export type ConfigCircuit = Entity;
+
+export interface LoadpointThreshold {
+  delay: number;
+  threshold: number;
+}
+
+export interface ConfigLoadpoint {
+  id?: number;
+  name?: string;
+  charger: string;
+  meter: string;
+  vehicle: string;
+  title: string;
+  defaultMode: string;
+  priority: number;
+  phasesConfigured: number;
+  minCurrent: number;
+  maxCurrent: number;
+  smartCostLimit: number | null;
+  planEnergy?: number;
+  planTime?: string;
+  planPrecondition?: number;
+  limitEnergy?: number;
+  limitSoc?: number;
+  circuit?: string;
+  thresholds: {
+    enable: LoadpointThreshold;
+    disable: LoadpointThreshold;
+  };
+  soc: {
+    poll: {
+      mode: string;
+      interval: number;
+    };
+    estimate: boolean;
+  };
 }
 
 export enum SMART_COST_TYPE {
@@ -119,6 +232,8 @@ export enum LOADPOINT_TYPE {
   CHARGING = "charging",
   HEATING = "heating",
 }
+
+export type LoadpointType = ValueOf<typeof LOADPOINT_TYPE>;
 
 export type SessionInfoKey =
   | "remaining"
@@ -203,10 +318,20 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+export interface SiteConfig {
+  grid: string;
+  pv: string[];
+  battery: string[];
+  title: string;
+  aux: string[] | null;
+  ext: string[] | null;
+}
 
 export type ValueOf<T> = T[keyof T];

@@ -182,7 +182,11 @@ func (v *HomeAssistant) getIntSensor(entity string) (int64, error) {
 		return 0, err
 	}
 
-	return strconv.ParseInt(s, 10, 64)
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, err
+	}
+	return int64(f), nil // truncation
 }
 
 func (v *HomeAssistant) getBoolSensor(entity string) (bool, error) {
@@ -210,19 +214,25 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 // status returns evcc charge status (optional, private)
 func (v *HomeAssistant) status(sensor string) (api.ChargeStatus, error) {
 	var haStatusMap = map[string]api.ChargeStatus{
+		"c":                   api.StatusC,
 		"charging":            api.StatusC,
 		"on":                  api.StatusC,
 		"true":                api.StatusC,
 		"active":              api.StatusC,
+		"b":                   api.StatusB,
 		"connected":           api.StatusB,
 		"ready":               api.StatusB,
 		"plugged":             api.StatusB,
+		"charging_completed":  api.StatusB,
+		"initialising":        api.StatusB,
+		"a":                   api.StatusA,
 		"disconnected":        api.StatusA,
 		"off":                 api.StatusA,
 		"none":                api.StatusA,
 		"unavailable":         api.StatusA,
 		"unknown":             api.StatusA,
 		"notreadyforcharging": api.StatusA,
+		"not_plugged":         api.StatusA,
 	}
 
 	s, err := v.getState(sensor)

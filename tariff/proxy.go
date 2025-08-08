@@ -160,7 +160,7 @@ func for24hrs() time.Time {
 }
 
 func untilEndOfTomorrow() time.Time {
-	return now.With(time.Now()).EndOfDay().Add(time.Nanosecond).AddDate(0, 0, 1)
+	return now.BeginningOfDay().AddDate(0, 0, 2)
 }
 
 func ratesValid(rr api.Rates, until time.Time) bool {

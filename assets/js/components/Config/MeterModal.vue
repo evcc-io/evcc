@@ -137,9 +137,9 @@ import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSe
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 import { initialTestState, performTest } from "./utils/test";
+import { ConfigType, type SelectedMeterType } from "@/types/evcc";
 import {
 	handleError,
-	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,
@@ -197,7 +197,7 @@ export default defineComponent({
 		id: Number,
 		name: String,
 		type: {
-			type: String as () => "grid" | "pv" | "battery" | undefined,
+			type: String as () => SelectedMeterType | undefined,
 			default: undefined,
 		},
 		typeChoices: {
