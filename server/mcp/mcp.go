@@ -1,7 +1,6 @@
 package mcp
 
 import (
-	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -12,10 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/openapi-mcp/pkg/openapi2mcp"
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
-	mcpgo "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 //go:embed openapi.json
@@ -41,11 +37,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 
 	ops := openapi2mcp.ExtractOpenAPIOperations(doc)
 
-	srv := server.NewMCPServer("evcc", util.Version,
-		server.WithLogging(),
-	)
-
-	srv2 := mcpgo.NewServer(&mcpgo.Implementation{Name: "evcc", Version: util.Version}, nil)
+	srv := mcp.NewServer(&mcp.Implementation{Name: "evcc", Version: util.Version}, nil)
 
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
@@ -59,30 +51,28 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 		RequestHandler: requestHandler(host),
 	})
 
-	srv.AddTool(mcp.NewTool("docs",
-		mcp.WithDescription("Documentation"),
-	), docsTool)
+	mcp.AddTool(srv, &mcp.Tool{
+		Name:        "docs",
+		Description: "Documentation",
+	}, docsTool)
 
-	srv2.AddTool(&mcpgo.Tool{
-		Name:  "docs",
-		Title: "Documentation",
-	}, docsTool2)
+	srv.AddPrompt(&mcp.Prompt{
+		Name:        "create-charge-plan",
+		Description: "Create an optimized charge plan for a loadpoint or vehicle",
+		Arguments: []*mcp.PromptArgument{
+			{Name: "loadpoint", Description: "The loadpoint to create the charge plan for"},
+			{Name: "vehicle", Description: "The vehicle to create the charge plan for"},
+		},
+	}, promptHandler())
 
-	srv.AddPrompt(mcp.NewPrompt("create-charge-plan",
-		mcp.WithPromptDescription("Create an optimized charge plan for a loadpoint or vehicle"),
-		mcp.WithArgument("loadpoint",
-			mcp.ArgumentDescription("The loadpoint to create the charge plan for"),
-		),
-		mcp.WithArgument("vehicle",
-			mcp.ArgumentDescription("The vehicle to create the charge plan for"),
-		),
-	), promptHandler())
+	streamHandler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+		return srv
+	}, nil)
 
-	handler := server.NewStreamableHTTPServer(srv,
-		server.WithEndpointPath(basePath),
-	)
-
-	go srv2.Run(context.Background(), mcpgo.NewStdioTransport())
+	// Mount handler at the specified basePath
+	mux := http.NewServeMux()
+	mux.Handle(basePath, streamHandler)
+	handler := mux
 
 	return handler, nil
 }
