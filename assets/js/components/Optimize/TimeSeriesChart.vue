@@ -2,7 +2,13 @@
 	<div class="mb-5">
 		<h3 class="fw-normal mb-3">Time Series Visualization</h3>
 		<div class="chart-container my-3">
-			<Chart ref="chartRef" :data="chartData" :options="chartOptions" :height="600" />
+			<Chart
+				ref="chartRef"
+				type="bar"
+				:data="chartData"
+				:options="chartOptions"
+				:height="600"
+			/>
 		</div>
 		<LegendList :legends="legends" />
 	</div>
@@ -19,7 +25,7 @@ import {
 	PointElement,
 	Title,
 	Tooltip,
-	Legend,
+	Legend as ChartLegendPlugin,
 	type ChartOptions,
 	type ChartData,
 } from "chart.js";
@@ -29,14 +35,7 @@ import type { CURRENCY } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors, { darkenColor } from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
-
-interface ChartLegend {
-	label: string;
-	color: string;
-	value?: string | string[];
-	type?: "area" | "line";
-	lineStyle?: "solid" | "dashed" | "dotted";
-}
+import type { Legend } from "../Sessions/types";
 
 const tension = 0.1;
 
@@ -48,7 +47,7 @@ ChartJS.register(
 	PointElement,
 	Title,
 	Tooltip,
-	Legend
+	ChartLegendPlugin
 );
 
 export default defineComponent({
@@ -213,7 +212,7 @@ export default defineComponent({
 				},
 			};
 		},
-		legends(): ChartLegend[] {
+		legends(): Legend[] {
 			return this.chartData.datasets
 				.filter((dataset) => !dataset.hidden) // Show all datasets including battery power
 				.map((dataset) => {
@@ -242,6 +241,7 @@ export default defineComponent({
 					return {
 						label,
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
+						value: "", // Required by Legend type, but not used in this context
 						type: isLine ? "line" : "area",
 						lineStyle,
 					};

@@ -122,6 +122,7 @@ import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue"
 import store from "../store";
 import formatter from "../mixins/formatter";
 import colors from "../colors";
+import { CURRENCY } from "../types/evcc";
 
 export default defineComponent({
 	name: "Optimize",
@@ -140,7 +141,7 @@ export default defineComponent({
 			return store.state.evopt;
 		},
 		currency() {
-			return store.state.currency;
+			return store.state.currency || CURRENCY.EUR;
 		},
 		statusBadgeClass() {
 			if (!this.evopt?.res.status) return "bg-secondary";

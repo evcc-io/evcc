@@ -78,8 +78,8 @@ export interface BatteryConfig {
 	s_max: number;
 	s_initial: number;
 	p_a: number;
-	charge_from_grid: boolean;
-	discharge_to_grid: boolean;
+	charge_from_grid?: boolean;
+	discharge_to_grid?: boolean;
 	p_demand?: number[];
 	s_goal?: number[];
 }
