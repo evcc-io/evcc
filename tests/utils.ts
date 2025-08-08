@@ -43,8 +43,35 @@ export async function expectModalVisible(modal: Locator): Promise<void> {
 }
 
 export async function expectModalHidden(modal: Locator): Promise<void> {
-  await expect(modal).not.toBeVisible();
-  await expect(modal).toHaveAttribute("aria-hidden", "true");
+  // First wait for any potential API calls or operations to complete
+  await modal.page().waitForLoadState("networkidle", { timeout: 5000 });
+  
+  // Wait for Bootstrap modal to complete hiding animation with extended timeout
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+  
+  // Give additional time for aria-hidden attribute to be set
+  await expect(modal).toHaveAttribute("aria-hidden", "true", { timeout: 5000 });
+}
+
+export async function waitForModalToHide(modal: Locator): Promise<void> {
+  // More robust approach: wait for the modal to lose the 'show' class
+  // which indicates Bootstrap has finished the hiding animation
+  await modal.waitFor({ state: "hidden", timeout: 10000 });
+  
+  // Ensure the modal backdrop is also gone
+  const page = modal.page();
+  await expect(page.locator(".modal-backdrop")).not.toBeVisible({ timeout: 5000 });
+}
+
+export async function expectModalHiddenAfterSave(modal: Locator): Promise<void> {
+  // Wait for save operation to complete by checking for network idle
+  await modal.page().waitForLoadState("networkidle", { timeout: 10000 });
+  
+  // Wait for any loading states or spinners to disappear
+  await modal.page().waitForTimeout(500);
+  
+  // Now wait for the modal to hide
+  await expectModalHidden(modal);
 }
 
 export async function editorClear(editor: Locator, iterations = 10): Promise<void> {

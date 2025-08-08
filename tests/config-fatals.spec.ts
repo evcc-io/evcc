@@ -79,8 +79,11 @@ test.describe("fatal config handling", async () => {
     await expectModalHidden(meterModal);
 
     await lpModal.getByRole("button", { name: "Save" }).click();
+    // Wait for save operation and modal to close
+    await page.waitForLoadState("networkidle", { timeout: 5000 });
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Test Carport");
+    await page.waitForLoadState("networkidle");
 
     // break meter
     await stopSimulator();
@@ -106,6 +109,8 @@ test.describe("fatal config handling", async () => {
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
+    // Wait for save operation and modal to close
+    await page.waitForLoadState("networkidle", { timeout: 5000 });
     await expectModalHidden(lpModal);
 
     // restart and verify
