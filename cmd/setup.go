@@ -37,7 +37,7 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
-	"github.com/evcc-io/evcc/server/oauth2redirect"
+	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -1117,13 +1117,13 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(router *mux.Router) {
-	auth := router.PathPrefix("/oauth").Subrouter()
+func configureAuth(router *mux.Router, paramC chan<- util.Param) {
+	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
 	// wire the handler
-	oauth2redirect.SetupRouter(auth)
+	providerauth.Setup(auth, paramC)
 }
