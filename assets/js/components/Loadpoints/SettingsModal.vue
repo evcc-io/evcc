@@ -135,7 +135,7 @@ import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast } from "@/types/evcc";
 
-const V = 230;
+const V = 235;
 
 const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
@@ -256,7 +256,7 @@ export default defineComponent({
 	},
 	methods: {
 		fmtPhasePower(current: number, phases: PHASES) {
-			return this.fmtW(V * current * phases);
+			return this.fmtW(V * current * phases, POWER_UNIT.KW, true, 3);
 		},
 		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;
@@ -270,14 +270,9 @@ export default defineComponent({
 		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-<<<<<<< HEAD
-		currentOption(value: number, isDefault: boolean) {
-			let name = `${this.fmtNumber(value, value <= 11 ? 2 : 0)} A`;
-=======
 		currentOption(current: number, isDefault: boolean, phases: number) {
 			const kw = this.fmtPhasePower(current, phases);
-			let name = `${this.fmtNumber(current, current <= 1 ? undefined : 0)} A (${kw})`;
->>>>>>> upstream/master
+			let name = `${this.fmtNumber(current, current <= 11 ? 2 : 0)} A   (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}
