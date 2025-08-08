@@ -154,6 +154,8 @@ export default defineComponent({
 					borderColor: color,
 					fill: "start",
 					tension: 0.5,
+					borderJoinStyle: "round",
+					borderCapStyle: "round",
 					pointRadius: 0,
 					animation: {
 						y: { duration: this.animations ? 500 : 0 },
@@ -207,6 +209,8 @@ export default defineComponent({
 					backgroundColor: color,
 					borderColor: color,
 					tension: 0.25,
+					borderJoinStyle: "round",
+					borderCapStyle: "round",
 					pointRadius: 0,
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,

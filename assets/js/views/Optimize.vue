@@ -78,11 +78,13 @@
 						:currency="currency"
 					/>
 
-					<TimeSeriesChart
+					<ChargeChart
 						:evopt="evopt"
 						:currency="currency"
 						:battery-colors="batteryColors"
 					/>
+					<SocChart :evopt="evopt" :currency="currency" :battery-colors="batteryColors" />
+					<PriceChart :evopt="evopt" :currency="currency" />
 
 					<TimeSeriesDataTable
 						:evopt="evopt"
@@ -117,7 +119,9 @@
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
 import BatteryConfigurationTable from "../components/Optimize/BatteryConfigurationTable.vue";
-import TimeSeriesChart from "../components/Optimize/TimeSeriesChart.vue";
+import SocChart from "../components/Optimize/SocChart.vue";
+import ChargeChart from "../components/Optimize/ChargeChart.vue";
+import PriceChart from "../components/Optimize/PriceChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import store from "../store";
 import formatter from "../mixins/formatter";
@@ -129,7 +133,9 @@ export default defineComponent({
 	components: {
 		TopHeader: Header,
 		BatteryConfigurationTable,
-		TimeSeriesChart,
+		SocChart,
+		ChargeChart,
+		PriceChart,
 		TimeSeriesDataTable,
 	},
 	mixins: [formatter],

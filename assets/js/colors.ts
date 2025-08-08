@@ -54,31 +54,6 @@ export const dimColor = (color: string | null) => {
   return color?.toLowerCase().replace(/ff$/, "20");
 };
 
-export const darkenColor = (color: string | null) => {
-  if (!color) return color;
-
-  // Handle hex colors with alpha channel (e.g., #03C1EFFF)
-  const hex = color.toLowerCase().replace("#", "");
-
-  if (hex.length === 8) {
-    // Extract RGB components (ignore alpha)
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-
-    // Darken by reducing each component by 30%
-    const darkenedR = Math.floor(r * 0.7);
-    const darkenedG = Math.floor(g * 0.7);
-    const darkenedB = Math.floor(b * 0.7);
-
-    // Convert back to hex with full opacity
-    const toHex = (n: number) => n.toString(16).padStart(2, "0");
-    return `#${toHex(darkenedR)}${toHex(darkenedG)}${toHex(darkenedB)}ff`;
-  }
-
-  return color;
-};
-
 export const lighterColor = (color: string | null) => {
   return color?.toLowerCase().replace(/ff$/, "aa");
 };
