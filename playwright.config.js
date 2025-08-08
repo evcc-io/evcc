@@ -8,10 +8,6 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 4 : 0,
   timeout: 30000, // default 30s
-  expect: {
-    // Increase timeout for assertions to handle slow modal animations
-    timeout: 10000,
-  },
   reporter: [[process.env.CI ? "github" : "list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:7070",
