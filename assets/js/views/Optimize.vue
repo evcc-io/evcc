@@ -5,6 +5,74 @@
 		<div class="row">
 			<main class="col-12">
 				<div v-if="evopt">
+					<!-- Optimization Status -->
+					<div class="mb-4">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card border-0 bg-light">
+									<div class="card-body">
+										<h5 class="card-title">Optimization Status</h5>
+										<p class="card-text mb-1">
+											<span class="badge" :class="statusBadgeClass">
+												{{ evopt.res.status }}
+											</span>
+										</p>
+										<p
+											v-if="evopt.res.objective_value !== null"
+											class="card-text mb-0"
+										>
+											<small class="text-muted">
+												Economic Benefit:
+												{{
+													fmtMoney(
+														evopt.res.objective_value,
+														currency,
+														true,
+														true
+													)
+												}}
+											</small>
+										</p>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card border-0 bg-light">
+									<div class="card-body">
+										<h5 class="card-title">Optimization Parameters</h5>
+										<p class="card-text mb-1">
+											<small class="text-muted">
+												Charging Efficiency:
+												{{
+													fmtPercentage(
+														(evopt.req.eta_c || 0.95) * 100,
+														1
+													)
+												}}
+											</small>
+										</p>
+										<p class="card-text mb-1">
+											<small class="text-muted">
+												Discharging Efficiency:
+												{{
+													fmtPercentage(
+														(evopt.req.eta_d || 0.95) * 100,
+														1
+													)
+												}}
+											</small>
+										</p>
+										<p v-if="evopt.req.M" class="card-text mb-0">
+											<small class="text-muted">
+												MILP Big M: {{ fmtNumber(evopt.req.M, 0) }}
+											</small>
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<div class="mb-4">
 						<h3 class="fw-normal mb-3">Battery Configuration</h3>
 						<div class="table-responsive">
@@ -12,13 +80,14 @@
 								<thead>
 									<tr>
 										<th scope="col">#</th>
-										<th scope="col">Max Charge (W)</th>
-										<th scope="col">Min Charge (W)</th>
-										<th scope="col">Max Discharge (W)</th>
-										<th scope="col">Aux Power</th>
-										<th scope="col">Initial SoC (Wh)</th>
-										<th scope="col">Max SoC (Wh)</th>
-										<th scope="col">Min SoC (Wh)</th>
+										<th scope="col">Power Range (kW)</th>
+										<th scope="col">Max Discharge (kW)</th>
+										<th scope="col">SoC Range (kWh)</th>
+										<th scope="col">Initial SoC (kWh)</th>
+										<th scope="col">Energy Value (€/kWh)</th>
+										<th scope="col">Grid Interaction</th>
+										<th scope="col">Demand Profile</th>
+										<th scope="col">SoC Goals</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -27,13 +96,60 @@
 										:key="index"
 									>
 										<th scope="row">{{ index + 1 }}</th>
-										<td>{{ formatPower(battery.c_max) }}</td>
-										<td>{{ formatPower(battery.c_min) }}</td>
+										<td>
+											{{ formatPowerRange(battery.c_min, battery.c_max) }}
+										</td>
 										<td>{{ formatPower(battery.d_max) }}</td>
-										<td>{{ battery.p_a }}</td>
+										<td>
+											{{ formatEnergyRange(battery.s_min, battery.s_max) }}
+										</td>
 										<td>{{ formatEnergy(battery.s_initial) }}</td>
-										<td>{{ formatEnergy(battery.s_max) }}</td>
-										<td>{{ formatEnergy(battery.s_min) }}</td>
+										<td>
+											{{ fmtMoney(battery.p_a * 1000, currency, true, true) }}
+										</td>
+										<td>
+											<div class="d-flex flex-column gap-1">
+												<span
+													v-if="battery.charge_from_grid"
+													class="badge bg-primary"
+												>
+													Grid Charge
+												</span>
+												<span
+													v-if="battery.discharge_to_grid"
+													class="badge bg-success"
+												>
+													Grid Discharge
+												</span>
+												<span
+													v-if="
+														!battery.charge_from_grid &&
+														!battery.discharge_to_grid
+													"
+													class="text-muted"
+												>
+													No Grid Interaction
+												</span>
+											</div>
+										</td>
+										<td>
+											<span
+												v-if="battery.p_demand?.length"
+												class="badge bg-info"
+											>
+												{{ battery.p_demand.length }} steps
+											</span>
+											<span v-else class="text-muted">None</span>
+										</td>
+										<td>
+											<span
+												v-if="battery.s_goal?.length"
+												class="badge bg-warning"
+											>
+												{{ battery.s_goal.length }} goals
+											</span>
+											<span v-else class="text-muted">None</span>
+										</td>
 									</tr>
 								</tbody>
 							</table>
@@ -105,6 +221,30 @@
 											}}
 										</td>
 									</tr>
+									<tr>
+										<td class="fw-medium text-nowrap text-start">
+											Household Demand (kW)
+										</td>
+										<td
+											v-for="(value, index) in evopt.req.time_series.gt"
+											:key="index"
+											:class="['text-end', { 'text-muted': value === 0 }]"
+										>
+											{{ formatPower(value) }}
+										</td>
+									</tr>
+									<tr>
+										<td class="fw-medium text-nowrap text-start">
+											Time Step Duration (h)
+										</td>
+										<td
+											v-for="(value, index) in evopt.req.time_series.dt"
+											:key="index"
+											:class="['text-end']"
+										>
+											{{ formatDuration(value) }}
+										</td>
+									</tr>
 
 									<!-- Response Data -->
 									<tr class="table-success">
@@ -138,14 +278,22 @@
 									</tr>
 									<tr>
 										<td class="fw-medium text-nowrap text-start">
-											Flow Direction
+											⬇ Import / ⬆ Export
 										</td>
 										<td
 											v-for="(value, index) in evopt.res.flow_direction"
 											:key="index"
-											:class="['text-end', { 'text-muted': value === 0 }]"
+											:class="['text-end']"
 										>
-											{{ value }}
+											<span
+												:title="
+													value === 1
+														? 'Export to Grid'
+														: 'Import from Grid'
+												"
+											>
+												{{ value === 1 ? "⬆" : "⬇" }}
+											</span>
 										</td>
 									</tr>
 
@@ -255,6 +403,20 @@ export default defineComponent({
 		gridImportPriceLabel() {
 			return `Grid Import (${this.pricePerKWhUnit(this.currency)})`;
 		},
+		statusBadgeClass() {
+			if (!this.evopt?.res.status) return "bg-secondary";
+
+			switch (this.evopt.res.status) {
+				case "Optimal":
+					return "bg-success";
+				case "Infeasible":
+					return "bg-danger";
+				case "Unbounded":
+					return "bg-warning";
+				default:
+					return "bg-secondary";
+			}
+		},
 	},
 	methods: {
 		formatPower(watts: number): string {
@@ -262,6 +424,16 @@ export default defineComponent({
 		},
 		formatEnergy(wh: number): string {
 			return (wh / 1000).toFixed(1);
+		},
+		formatPowerRange(min: number, max: number): string {
+			return `${this.formatPower(min)} - ${this.formatPower(max)}`;
+		},
+		formatEnergyRange(min: number, max: number): string {
+			return `${this.formatEnergy(min)} - ${this.formatEnergy(max)}`;
+		},
+
+		formatDuration(seconds: number): string {
+			return (seconds / 3600).toFixed(1);
 		},
 		formatHour(index: number): string {
 			const hour = index % 24;

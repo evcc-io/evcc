@@ -578,6 +578,12 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	font-weight: normal;
 }
 
+.badge-sm {
+	--bs-badge-font-size: 0.7rem;
+	--bs-badge-padding-x: 0.5em;
+	--bs-badge-padding-y: 0.4em;
+}
+
 /* larger check switch */
 .form-switch .form-check-input {
 	height: 1.1rem;
