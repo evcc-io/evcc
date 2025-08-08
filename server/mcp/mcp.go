@@ -42,11 +42,11 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		NameFormat: nameFormat(log),
 		TagFilter: []string{
-			"General",
-			"Home Battery",
-			"Loadpoints",
-			"Tariffs",
-			"Vehicles",
+			"general",
+			"battery",
+			"loadpoints",
+			"tariffs",
+			"vehicles",
 		},
 		RequestHandler: requestHandler(host),
 	})

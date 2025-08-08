@@ -84,7 +84,7 @@ import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	Auth,
+	AuthProviders,
 	Battery,
 	CURRENCY,
 	Forecast,
@@ -133,10 +133,8 @@ export default defineComponent({
 		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Object,
-
-		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
-
-		currency: { type: String as PropType<CURRENCY>, required: true },
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY> },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -195,7 +193,7 @@ export default defineComponent({
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
+			return this.collectProps(Navigation);
 		},
 		showParkingLot() {
 			// work in progess
