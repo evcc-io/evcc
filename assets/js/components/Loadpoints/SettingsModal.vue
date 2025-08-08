@@ -67,8 +67,8 @@
 									$t(
 										`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`,
 										{
-											min: fmtW(V() * phases * minCurrent),
-											max: fmtW(V() * phases * maxCurrent),
+											min: fmtPhasePower(minCurrent, phases),
+											max: fmtPhasePower(maxCurrent, phases),
 										}
 									)
 								}}
@@ -134,6 +134,8 @@ import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast } from "@/types/evcc";
+
+const V = 230;
 
 const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
@@ -250,8 +252,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		V() {
-			return 230;
+		fmtPhasePower(current: number, phases: PHASES) {
+			return this.fmtW(V * current * phases);
 		},
 		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;
@@ -266,7 +268,7 @@ export default defineComponent({
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
 		currentOption(current: number, isDefault: boolean, phases: number) {
-			const kw = this.fmtW(this.V() * phases * current);
+			const kw = this.fmtPhasePower(current, phases);
 			let name = `${this.fmtNumber(current, current <= 1 ? undefined : 0)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
