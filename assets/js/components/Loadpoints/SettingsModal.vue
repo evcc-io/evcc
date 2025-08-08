@@ -67,8 +67,8 @@
 									$t(
 										`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`,
 										{
-											min: fmtW(minPowerPhases(phases) * minCurrent),
-											max: fmtW(maxPowerPhases(phases) * maxCurrent),
+											min: fmtW(V() * phases * minCurrent),
+											max: fmtW(V() * phases * maxCurrent),
 										}
 									)
 								}}
@@ -134,8 +134,6 @@ import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast } from "@/types/evcc";
-
-const V = 230;
 
 const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
@@ -211,39 +209,29 @@ export default defineComponent({
 		batteryBoostProps() {
 			return this.collectProps(SettingsBatteryBoost);
 		},
-		maxPower(): number {
-			if (this.chargerPhases1p3p) {
-				if (this.phasesConfigured === AUTO) {
-					return this.maxPowerPhases(THREE_PHASES);
-				}
-				if ([THREE_PHASES, ONE_PHASE].includes(this.phasesConfigured)) {
-					return this.maxPowerPhases(this.phasesConfigured);
-				}
+		maxPhases(): number {
+			if (this.chargerPhases1p3p && this.phasesConfigured === AUTO) {
+				return THREE_PHASES;
 			}
-			return V * this.phasesConfigured;
+			return this.phasesConfigured;
 		},
-		minPower(): number {
-			if (this.chargerPhases1p3p) {
-				if (this.phasesConfigured === AUTO) {
-					return this.minPowerPhases(ONE_PHASE);
-				}
-				if ([THREE_PHASES, ONE_PHASE].includes(this.phasesConfigured)) {
-					return this.minPowerPhases(this.phasesConfigured);
-				}
+		minPhases(): number {
+			if (this.chargerPhases1p3p && this.phasesConfigured === AUTO) {
+				return ONE_PHASE;
 			}
-			return V * this.phasesConfigured;
+			return this.phasesConfigured;
 		},
 		minCurrentOptions() {
 			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.minCurrent);
-			return opt2.map((value) => this.currentOption(value, value === 6, false));
+			return opt2.map((value) => this.currentOption(value, value === 6, this.minPhases));
 		},
 		maxCurrentOptions() {
 			const opt1 = range(MAX_CURRENT, Math.ceil(this.minCurrent));
 			// ensure that current value is always included
 			const opt2 = insertSorted(opt1, this.maxCurrent);
-			return opt2.map((value) => this.currentOption(value, value === 16, true));
+			return opt2.map((value) => this.currentOption(value, value === 16, this.maxPhases));
 		},
 
 		loadpointId() {
@@ -262,11 +250,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		maxPowerPhases(phases: PHASES) {
-			return V * phases;
-		},
-		minPowerPhases(phases: PHASES) {
-			return V * phases;
+		V() {
+			return 230;
 		},
 		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;
@@ -280,8 +265,8 @@ export default defineComponent({
 		changePhasesConfigured() {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		currentOption(current: number, isDefault: boolean, isMax: boolean) {
-			const kw = this.fmtW((isMax ? this.maxPower : this.minPower) * current);
+		currentOption(current: number, isDefault: boolean, phases: number) {
+			const kw = this.fmtW(this.V() * phases * current);
 			let name = `${this.fmtNumber(current, current <= 1 ? undefined : 0)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
