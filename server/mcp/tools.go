@@ -3,13 +3,13 @@ package mcp
 import (
 	"context"
 
-	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func docsTool(_ context.Context, _ *mcpsdk.ServerSession, _ *mcpsdk.CallToolParams) (*mcpsdk.CallToolResult, error) {
-	return &mcpsdk.CallToolResult{
-		Content: []mcpsdk.Content{
-			&mcpsdk.ResourceLink{
+func docsTool(_ context.Context, _ *mcp.ServerSession, _ *mcp.CallToolParams) (*mcp.CallToolResult, error) {
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.ResourceLink{
 				URI:      "https://docs.evcc.io",
 				Name:     "evcc-docs",
 				Title:    "evcc documentation",
