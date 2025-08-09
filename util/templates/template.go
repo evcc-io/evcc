@@ -58,6 +58,10 @@ func (t *Template) Validate() error {
 	}
 
 	for _, p := range t.Params {
+		if p.IsDeprecated() {
+			continue
+		}
+
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
 			return fmt.Errorf("description for param %s cant be empty in template %s", p.Name, t.Template)
 		}

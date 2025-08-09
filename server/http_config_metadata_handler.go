@@ -35,7 +35,7 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 	// filter deprecated properties
 	filterParams := func(t templates.Template) templates.Template {
 		t.Params = slices.DeleteFunc(t.Params, func(p templates.Param) bool {
-			return p.Deprecated != nil && *p.Deprecated
+			return p.IsDeprecated()
 		})
 		return t
 	}

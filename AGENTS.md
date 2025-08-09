@@ -208,6 +208,7 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use `expectModalVisible()` and `expectModalHidden()` helpers
 - Test configuration persistence across application restarts
 - Standard structure: import `{ start, stop, baseUrl }` from `./evcc`, use `test.afterEach(stop)`
+- Never use fixed timeouts, use existance of elements or wait for network idle
 
 ## Device Integration & Configuration
 
