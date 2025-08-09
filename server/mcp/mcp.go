@@ -44,10 +44,10 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		TagFilter: []string{
 			"general",
-			"battery",
-			"loadpoints",
 			"tariffs",
+			"loadpoints",
 			"vehicles",
+			"battery",
 		},
 		RequestHandler: requestHandler(host),
 	})

@@ -717,7 +717,7 @@
     "title": "evcc",
     "version": "0.2.0"
   },
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "paths": {
     "/auth/login": {
       "post": {
@@ -1918,13 +1918,13 @@
         },
         "summary": "Remove smart charging cost limit for all loadpoints.",
         "tags": [
-          "loadpoints"
+          "general"
         ]
       }
     },
     "/smartcostlimit/{cost}": {
       "post": {
-        "description": "Conveniance method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "description": "Convenience method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint.",
         "operationId": "setGlobalSmartCostLimit",
         "parameters": [
           {
@@ -1938,7 +1938,7 @@
         },
         "summary": "Set smart charging cost limit for all loadpoints",
         "tags": [
-          "loadpoints"
+          "general"
         ]
       }
     },

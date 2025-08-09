@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: evcc
   description: Solar charging. Super simple.
@@ -741,7 +741,7 @@ paths:
       summary: Remove smart charging cost limit for all loadpoints.
       description: "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint."
       tags:
-        - loadpoints
+        - general
       responses:
         200:
           $ref: "#/components/responses/NullResult"
@@ -749,9 +749,9 @@ paths:
     post:
       operationId: setGlobalSmartCostLimit
       summary: Set smart charging cost limit for all loadpoints
-      description: "Conveniance method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint."
+      description: "Convenience method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint."
       tags:
-        - loadpoints
+        - general
       parameters:
         - $ref: "#/components/parameters/costLimit"
       responses:
