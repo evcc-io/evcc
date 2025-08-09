@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/openapi-mcp/pkg/openapi2mcp"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -54,6 +55,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "docs",
 		Description: "Documentation",
+		InputSchema: emptySchema(),
 	}, docsTool)
 
 	srv.AddPrompt(&mcp.Prompt{
@@ -101,5 +103,12 @@ func requestHandler(handler http.Handler) func(req *http.Request) (*http.Respons
 		handler.ServeHTTP(w, req)
 		resp := w.Result()
 		return resp, nil
+	}
+}
+
+func emptySchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: map[string]*jsonschema.Schema{},
 	}
 }
