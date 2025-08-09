@@ -20,6 +20,7 @@ type Bluelink struct {
 func init() {
 	registry.Add("kia", NewKiaFromConfig)
 	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.Add("genesis", NewGenesisFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
@@ -59,29 +60,63 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return newBluelinkFromConfig("kia", other, settings)
 }
 
+// NewKiaGenesisConfig creates a new vehicle
+func NewGenesisFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	settings := bluelink.Config{
+		URI:               "https://prd.eu-ccapi.genesis.com:443",
+		BasicToken:        "MzAyMGFmYTItMzBmZi00MTJhLWFhNTEtZDI4ZmJlOTAxZTEwOkZLRGRsZWYyZmZkbGVGRXdlRUxGS0VSaUxFUjJGRUQyMXNEZHdkZ1F6NmhGRVNFMw==",
+		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		CCSPApplicationID: bluelink.GenesisAppID,
+		AuthClientID:      "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
+		PushType:          "GCM",
+		Cfb:               "RFtoRq/vDXJmRndoZaZQyYo3/qFLtVReW8P7utRPcc0ZxOzOELm9mexvviBk/qqIp4A=",
+		LoginFormHost:     "https://accounts-eu.genesis.com",
+	}
+
+	return newBluelinkFromConfig("kia", other, settings)
+}
+
 // newBluelinkFromConfig creates a new Vehicle
 func newBluelinkFromConfig(brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
+	// TODO: investigate why mapping of `template` suddenly fails.
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
 		Language       string
+		Region         string
+		Brand          string `mapstructure:"template"`
 		Expiry         time.Duration
 		Cache          time.Duration
 	}{
 		Language: "en",
-		Expiry:   expiry,
-		Cache:    interval,
+		// default for now, remove once there are more supported regions?
+		// might also work as fallback for vehicles created when there was
+		// no region differentiation
+		Region: bluelink.RegionEurope,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
+	// sru_250808: seems like we're suddenly missing `template` from `other`
+	// 	 but for now I'd like to carry the brand with the config
+	if cc.Brand == "" {
+		cc.Brand = brand
+	}
+
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	// sru_250808: debug only, remove or TRACE for production
+	log.INFO.Printf("Other: %v", other)
+	log.INFO.Printf("CC: %v\n", cc)
+
 	identity := bluelink.NewIdentity(log, settings)
 
-	if err := identity.Login(cc.User, cc.Password, cc.Language, brand); err != nil {
+	if err := identity.Login(cc.User, cc.Password, cc.Language, cc.Region, cc.Brand); err != nil {
 		return nil, err
 	}
 

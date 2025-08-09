@@ -10,6 +10,14 @@ requirements:
 params:
   - preset: vehicle-base
   - preset: vehicle-language
+  - name: region
+    description:
+      de: Region
+      en: Region
+    type: choice
+    choice: ["EU"]
+    default: EU
+    required: true
 render: |
   type: kia
   {{ include "vehicle-base" . }}

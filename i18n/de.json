@@ -401,6 +401,15 @@
         "heating": "Heizen",
         "standby": "Standby"
       },
+      "region": {
+        "AU": "Australien",
+        "CA": "Kanada",
+        "CN": "China",
+        "EU": "Europa",
+        "IN": "Indien",
+        "NZ": "Neuseeland",
+        "US": "USA"
+      },
       "schema": {
         "http": "HTTP (unverschlüsselt)",
         "https": "HTTPS (verschlüsselt)"
