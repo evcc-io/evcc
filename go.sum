@@ -189,8 +189,8 @@ github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea h1:F6eyC8V8wvc3ranl
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0 h1:Qz34Pm1Wr05jjJia5g2On3zRqdZh+BLTwqHgJGsiIh4=
 github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
-github.com/evcc-io/openapi-mcp v0.3.1-0.20250702152714-5af774c51f55 h1:baokU1QbbfUSJ5esFqShKj2M2j/COBRXK0eHkS7kxyU=
-github.com/evcc-io/openapi-mcp v0.3.1-0.20250702152714-5af774c51f55/go.mod h1:4KTo8DTLU2BswZLX0hknHRZBavDrLOikKNzIKaq0Z40=
+github.com/evcc-io/openapi-mcp v0.3.2-0.20250809122236-1b32010ab140 h1:FAgxB6pHmO1MvZSgVkrz4t1IgI3+F3i3yyuqLtapNKs=
+github.com/evcc-io/openapi-mcp v0.3.2-0.20250809122236-1b32010ab140/go.mod h1:4KTo8DTLU2BswZLX0hknHRZBavDrLOikKNzIKaq0Z40=
 github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785 h1:OWCBVMcPsVTffdiZN3VYaq9p4fsWlzd490J6pekaKLA=
 github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
