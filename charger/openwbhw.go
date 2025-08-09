@@ -21,6 +21,7 @@ type OpenWbHw struct {
 	log         *util.Logger
 	rfIdChannel chan string
 	rfId        string
+	cpWait      float64
 }
 
 const (
@@ -42,6 +43,7 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 		Phases1p3p      bool
 		RfId            bool
 		MilliAmps       bool
+		CpWait          float64
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
@@ -54,11 +56,11 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	return NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.MilliAmps)
+	return NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.MilliAmps, cc.CpWait)
 }
 
 // NewOpenWbHw creates OpenWbHw charger
-func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool) (api.Charger, error) {
+func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool, cpWait float64) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -129,6 +131,8 @@ func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, 
 
 		identify = wb.identify
 	}
+
+	wb.cpWait = cpWait
 
 	return decorateOpenWbHw(wb, maxCurrentMillis, phases1p3p, identify), nil
 }
@@ -220,11 +224,11 @@ func (wb *OpenWbHw) phases1p3p(phases int) error {
 
 	time.Sleep(time.Second)
 	pinGpioCP.High() // enable phases switch relay (NO), disconnect CP
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * time.Duration(wb.cpWait/2.0))
 	pinGpioPhases.High() // move latching relay to desired position
 	time.Sleep(time.Second)
 	pinGpioPhases.Low() // lock latching relay
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * time.Duration(wb.cpWait/2.0))
 	pinGpioCP.Low() // disable phase switching, reconnect CP
 	time.Sleep(time.Second)
 
@@ -252,7 +256,7 @@ func (wb *OpenWbHw) WakeUp() error {
 	gpioPinCP.Output()
 
 	gpioPinCP.High()
-	time.Sleep(time.Second * time.Duration(3))
+	time.Sleep(time.Second * time.Duration(wb.cpWait))
 	gpioPinCP.Low()
 
 	if err := wb.Enable(true); err != nil {

@@ -114,9 +114,20 @@ params:
       en: RFID card reader is present?
       de: RFID-Kartenleser ist vorhanden?
     default: false
+  - name: cpwait
+    type: float
+    description:
+      en: Duration of CP interruption in seconds
+      de: Dauer der CP Unterbrechnung in Sekunden
+    help:
+      en: when phase-switching and waking up car.
+      de: bei der Phasenumschaltung und Aufwecken des Autos.
+    default: 10
+    advanced: true
 render: |
   type: openwbhw
   milliamps: {{ .milliamps }}
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
+  cpwait: {{ .cpwait }}
   {{- include "modbus" . }}
