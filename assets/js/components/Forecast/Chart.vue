@@ -482,9 +482,9 @@ export default defineComponent({
 			// Sort by start time
 			aggregatedSlots.sort(
 				(a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-		    );
-			
-			return aggregatedSlots
+			);
+
+			return aggregatedSlots;
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
 			// include 1 hour before and after
