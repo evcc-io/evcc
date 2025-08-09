@@ -95,7 +95,7 @@
       "currentRange": "Proud",
       "enabled": "Zapnuto",
       "energy": "Energie",
-      "feedinPrice": "Výkupní cena",
+      "feedinPrice": "Cena za výkup energie",
       "gridPrice": "Cena ze sítě",
       "heaterTempLimit": "Limit topení",
       "hemsType": "System",
@@ -435,25 +435,26 @@
       "title": "Sponzorství",
       "tokenRequired": "Před vytvořením tohoto zařízení musíte nakonfigurovat sponzorský token.",
       "tokenRequiredLearnMore": "Zjistit více.",
+      "tokenRequiredShort": "Nebyl přidán sponzorský token.",
       "trialToken": "Zkušební token"
     },
     "system": {
       "backupRestore": {
         "backup": {
-          "action": "Stahování zálohy...",
+          "action": "Stáhnout zálohu...",
           "confirmationButton": "Stáhnout zálohu",
           "confirmationText": "Prosím, zadejte své heslo pro stažení databázového souboru.",
           "description": "Zálohuje vaši konfiguraci do souboru. Tento soubor může být později použit pro obnovu, např. v případě selhání systému.",
-          "title": "Zálohování"
+          "title": "Záloha"
         },
         "cancel": "Zrušit",
         "description": "Umožňuje zálohu a obnovení dat či provedení kompletního smazání a resetu systému. Může se hodit, když chcete svá data přesunout do jiného systému.",
         "note": "Poznámka: Všechny akce uvedené výše ovlivní jen data v databázi. Data v evcc.yaml souboru zůstanou nedotčena.",
         "reset": {
-          "action": "Provádím reset systému...",
+          "action": "Resetovat systém...",
           "confirmationButton": "Resetovat a restartovat",
           "confirmationText": "Dočasně smaže Vámi vybraná data. Ujistěte se, že jste prvně provedli zálohu dat.",
-          "description": "Máte problémy s konfigurací a chcete začít znovu? Smažte všechna svá data a začněte znovu.",
+          "description": "Máte problémy a chcete začít znovu? Můžete smazat data a pustit se znovu do nastavování.",
           "sessions": "Nabíjecí relace",
           "sessionsDescription": "Smaže veškerou historii nabíjení.",
           "settings": "Konfigurace a nastavení",
@@ -461,7 +462,7 @@
           "title": "Reset"
         },
         "restore": {
-          "action": "Obnovování ze zálohy...",
+          "action": "Obnovit zálohu...",
           "confirmationButton": "Obnovit a restartovat",
           "confirmationText": "Přepíše celou vaši databázi. Ujistěte se, že jste prvně provedli zálohu dat.",
           "description": "Obnoví vaše data ze zálohy. Vaše současná data budou přepsána.",
@@ -619,6 +620,10 @@
   },
   "header": {
     "about": "O",
+    "authProviders": {
+      "confirmLogout": "Opravdu chcete odpojit {title}?",
+      "title": "Stav autorizace"
+    },
     "blog": "Blog",
     "docs": "Dokumentace",
     "github": "GitHub",
@@ -684,11 +689,11 @@
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
       "planNumber": "Plán {number}",
-      "preconditionDescription": "Před odjezdem nabijte {duration} pro stabilizaci baterie.",
-      "preconditionLong": "Pozdní Nabíjení",
+      "preconditionDescription": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
+      "preconditionLong": "Odložené nabíjení",
       "preconditionOptionAll": "všechen",
       "preconditionOptionNo": "ne",
-      "preconditionShort": "Pozdní",
+      "preconditionShort": "Odložené nabíjení",
       "remove": "Odebrat",
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",
@@ -845,7 +850,7 @@
       "temp": "Teplota",
       "tempLimit": "Cílová teplota",
       "unknown": "Vozidlo hosta",
-      "vehicleSoc": "Úroveň nabití"
+      "vehicleSoc": "Aktuální stav baterie"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Čeká se na autorizaci.",
@@ -861,8 +866,8 @@
       "connected": "Připojeno.",
       "disconnectRequired": "Relace byla ukončena. Prosím, připojte se znovu.",
       "disconnected": "Odpojeno.",
-      "feedinPriorityNextStart": "Vysoký tarif začne za {duration}.",
-      "feedinPriorityPausing": "Nabíjení z FVE pozastaveno pro maximální využití distribuční sítě.",
+      "feedinPriorityNextStart": "Vysoká cena výkupu začne za {duration}.",
+      "feedinPriorityPausing": "Nabíjení z FVE pozastaveno pro maximální dodávku do distribuční sítě.",
       "finished": "Dokončeno.",
       "minCharge": "Okamžité nabíjení na {soc}.",
       "pvDisable": "Nedostatečný přebytek. Nabíjení bude brzy pozastaveno.",
@@ -1060,11 +1065,11 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pozastaveno",
-    "description": "Pozastaví nabíjení během vysokých cen pro efektivní výhodné použití distribuční sítě.",
-    "priceLabel": "Cena dodávky energie",
-    "priceLimit": "Cenový strop pro dodávku energie",
-    "resetWarning": "Nenastavili jste žádný dynamický tarif dodávky energie. Přesto je nastavení limit {limit}. Zkontrolujte konfiguraci.",
-    "title": "Priorita dodávky energie"
+    "description": "Pozastaví nabíjení pro maximalizaci výdělečné dodávky do distribuční sítě.",
+    "priceLabel": "Cena výkupu energie",
+    "priceLimit": "Cenový strop pro výkup energie",
+    "resetWarning": "Nenastavili jste žádný dynamický tarif výkupu energie. Přesto je nastavení limit {limit}. Zkontrolujte konfiguraci.",
+    "title": "Priorita výkupu energie"
   },
   "startupError": {
     "configFile": "Konfigurační soubor užívá:",

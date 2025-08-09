@@ -435,6 +435,7 @@
       "title": "Спонсорство",
       "tokenRequired": "Перш ніж створити цей пристрій, потрібно налаштувати маркер спонсора.",
       "tokenRequiredLearnMore": "Дізнайтесь більше.",
+      "tokenRequiredShort": "Токен спонсора не налаштовано.",
       "trialToken": "Пробний жетон"
     },
     "system": {
@@ -620,6 +621,10 @@
   },
   "header": {
     "about": "Про evcc",
+    "authProviders": {
+      "confirmLogout": "Ви впевнені, що хочете відключити {title}?",
+      "title": "Статус авторизації"
+    },
     "blog": "Блог",
     "docs": "Документація",
     "github": "GitHub",
