@@ -93,10 +93,8 @@ export default defineComponent({
 		},
 		gridSlots() {
 			return this.aggregateSlotsByHour(this.filterSlots(this.grid));
-			return this.aggregateSlotsByHour(this.filterSlots(this.grid));
 		},
 		co2Slots() {
-			return this.aggregateSlotsByHour(this.filterSlots(this.co2));
 			return this.aggregateSlotsByHour(this.filterSlots(this.co2));
 		},
 		maxPriceIndex() {
