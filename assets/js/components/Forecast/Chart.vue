@@ -427,72 +427,11 @@ export default defineComponent({
 			now.setMilliseconds(0);
 			this.startDate = now;
 		},
-		aggregateSlotsByHour(slots: ForecastSlot[] = []) {
-			if (slots.length === 0) return [];
-
-			// Group slots by hour
-			const hourlyGroups = new Map();
-
-			for (const slot of slots) {
-				const slotStart = new Date(slot.start);
-				// Create hour key (YYYY-MM-DD HH:00)
-				const hourKey = new Date(
-					slotStart.getFullYear(),
-					slotStart.getMonth(),
-					slotStart.getDate(),
-					slotStart.getHours()
-				).getTime();
-
-				if (!hourlyGroups.has(hourKey)) {
-					hourlyGroups.set(hourKey, []);
-				}
-				hourlyGroups.get(hourKey).push(slot);
-			}
-
-			// Create aggregated slots (one per hour)
-			const aggregatedSlots = [];
-			for (const [hourKey, groupSlots] of hourlyGroups) {
-				const hourDate = new Date(hourKey);
-				const hourEnd = new Date(hourDate);
-				hourEnd.setHours(hourEnd.getHours() + 1);
-
-				// Calculate weighted average value for the hour
-				let totalValue = 0;
-				let totalDuration = 0;
-
-				for (const slot of groupSlots) {
-					const slotStart = new Date(slot.start);
-					const slotEnd = new Date(slot.end);
-					const duration = slotEnd.getTime() - slotStart.getTime();
-					totalValue += slot.value * duration;
-					totalDuration += duration;
-				}
-
-				aggregatedSlots.push({
-					start: hourDate.toISOString(),
-					end: hourEnd.toISOString(),
-					value: totalDuration > 0 ? totalValue / totalDuration : 0,
-				});
-			}
-
-			// Sort by start time
-			aggregatedSlots.sort(
-				(a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-			);
-
-			return aggregatedSlots;
-		},
-		// Add duration filtering to prevent zero-duration entries from creating empty graph positions
 		filterSlots(slots: ForecastSlot[] = []) {
-			return slots.filter((slot) => {
-				const slotStart = new Date(slot.start);
-				const slotEnd = new Date(slot.end);
-				// Filter out zero-duration entries (where start equals end or duration is less than 1 minute)
-				const duration = slotEnd.getTime() - slotStart.getTime();
-				const hasValidDuration = duration >= 60000; // At least 1 minute
-				const isInRange = slotEnd >= this.startDate && slotStart <= this.endDate;
-				return hasValidDuration && isInRange;
-			});
+			return slots.filter(
+				(slot) =>
+					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
+			);
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
 			// include 1 hour before and after
