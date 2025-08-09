@@ -33,10 +33,6 @@ params:
     deprecated: true
   - name: excess
     deprecated: true
-    default: "plus"
-    description:
-      de: E-Eintrag
-      en: Energy-Input
   - name: watchdog
     type: duration
     default: 60s
