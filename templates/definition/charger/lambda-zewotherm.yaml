@@ -16,12 +16,12 @@ requirements:
       Energiemanagementeinstellungen am Gerät:
 
       - E-Meter Kommunikationsart: "ModBus Client"
-      - E-Meter Messpunkt: "Pos. E-Überschuss" oder "Neg. E-Überschuss"
+      - E-Meter Messpunkt: "E-Eintrag"
     en: |
       Energy management settings of the device:
 
       - E-Meter communication type: "ModBus Client"
-      - E-Meter measuring point: "Pos. Excess Energy" or "Neg. Excess Energy"
+      - E-Meter measuring point: "Energy-Input"
 params:
   - name: host
   - name: port
@@ -29,14 +29,9 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
-  - name: excess
-    type: choice
-    choice: ["plus", "minus"]
-    default: "plus"
-    description:
-      de: E-Überschuss ("plus" oder "minus")
-      en: Excess Energy ("plus" or "minus")
   - name: phases
+    deprecated: true
+  - name: excess
     deprecated: true
   - name: watchdog
     type: duration
@@ -56,7 +51,6 @@ render: |
         address: 102 # PV Überschussleistung
         type: writemultiple # λ erwartet single value als FC16
         decode: int16
-      scale: {{ if eq .excess "plus" }}1{{ else }}-1{{ end }}
   power:
     source: modbus
     uri: {{ .host }}:{{ .port }}
