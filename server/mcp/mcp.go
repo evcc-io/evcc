@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/openapi-mcp/pkg/openapi2mcp"
+	openapi2mcp "github.com/evcc-io/openapi-mcp"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/modelcontextprotocol/go-sdk/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
