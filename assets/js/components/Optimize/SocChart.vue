@@ -1,6 +1,5 @@
 <template>
 	<div class="mb-5">
-		<h4 class="fw-normal mb-3">Battery SoC</h4>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"
@@ -123,7 +122,9 @@ export default defineComponent({
 						title: {
 							display: false,
 						},
-						stacked: true,
+						grid: {
+							display: false,
+						},
 					},
 					y: {
 						type: "linear",
@@ -132,7 +133,6 @@ export default defineComponent({
 							display: true,
 							text: "SoC (%)",
 						},
-						stacked: true,
 						grid: {
 							drawOnChartArea: true,
 							color: (context: any) => {
@@ -180,7 +180,7 @@ export default defineComponent({
 
 					// SoC as bars (full color)
 					datasets.push({
-						label: `${this.getBatteryTitle(index)} SoC`,
+						label: this.getBatteryTitle(index),
 						data: battery.state_of_charge.map((socWh) =>
 							this.convertWhToPercentage(socWh, index)
 						),
@@ -188,7 +188,6 @@ export default defineComponent({
 						borderWidth: 0,
 						yAxisID: "y",
 						type: "bar" as const,
-						stack: "soc",
 					});
 				});
 			}

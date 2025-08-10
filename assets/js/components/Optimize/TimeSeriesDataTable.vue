@@ -1,6 +1,5 @@
 <template>
 	<div class="mb-4">
-		<h3 class="fw-normal mb-3">Time Series Data</h3>
 		<div class="table-responsive">
 			<table class="table table-sm">
 				<thead>

@@ -1,6 +1,5 @@
 <template>
 	<div class="mb-5">
-		<h4 class="fw-normal mb-3">Grid Prices</h4>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"
@@ -130,6 +129,9 @@ export default defineComponent({
 				scales: {
 					x: {
 						title: {
+							display: false,
+						},
+						grid: {
 							display: false,
 						},
 					},

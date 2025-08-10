@@ -1,13 +1,12 @@
 <template>
 	<div class="mb-5">
-		<h4 class="fw-normal mb-3">Forecast & Charging</h4>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"
 				type="bar"
 				:data="chartData"
 				:options="chartOptions"
-				:height="350"
+				:height="300"
 			/>
 		</div>
 		<LegendList :legends="legends" />
@@ -149,6 +148,9 @@ export default defineComponent({
 							display: false,
 						},
 						stacked: true,
+						grid: {
+							display: false,
+						},
 					},
 					y: {
 						type: "linear",
@@ -291,7 +293,7 @@ export default defineComponent({
 <style scoped>
 .chart-container {
 	position: relative;
-	height: 350px;
+	height: 300px;
 	width: 100%;
 }
 </style>

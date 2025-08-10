@@ -1,6 +1,5 @@
 <template>
 	<div class="mb-4">
-		<h3 class="fw-normal mb-3">Battery Configuration</h3>
 		<div class="table-responsive">
 			<table class="table">
 				<thead>
