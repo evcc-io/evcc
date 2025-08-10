@@ -29,6 +29,7 @@ type Handler struct {
 	providers map[string]api.AuthProvider
 	states    map[string]string
 	log       *util.Logger
+	ch        chan<- util.Param
 }
 
 type AuthProvider struct {
@@ -55,6 +56,8 @@ func init() {
 
 // Setup connects the redirect handler to the router and registers the callback channel
 func Setup(router *mux.Router, paramC chan<- util.Param) {
+	instance.ch = paramC
+
 	// callback?code=...&state=...
 	router.Methods(http.MethodGet).Path("/callback").HandlerFunc(instance.handleCallback)
 	// login?id=...
@@ -62,16 +65,10 @@ func Setup(router *mux.Router, paramC chan<- util.Param) {
 	// logout?id=...
 	router.Methods(http.MethodGet).Path("/logout").HandlerFunc(instance.handleLogout)
 
-	ticker := time.NewTicker(10 * time.Second)
-
-	go func() {
-		for range ticker.C {
-			instance.Publish(paramC)
-		}
-	}()
+	instance.Publish()
 }
 
-func (a *Handler) Publish(paramC chan<- util.Param) {
+func (a *Handler) Publish() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -88,7 +85,7 @@ func (a *Handler) Publish(paramC chan<- util.Param) {
 	a.log.DEBUG.Printf("publishing %d auth providers", len(apMap))
 
 	// publish the updated auth providers
-	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
+	a.ch <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
 // Register registers a specific AuthProvider. Returns login path as string.
@@ -110,6 +107,8 @@ func (a *Handler) register(handler api.AuthProvider, name string) error {
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	defer a.Publish()
+
 	// Find corresponding provider
 	q := r.URL.Query()
 	id := q.Get("id")
@@ -159,6 +158,8 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
+	defer a.Publish()
+
 	// Find corresponding provider
 	q := r.URL.Query()
 	id := q.Get("id")
@@ -187,6 +188,8 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
+	defer a.Publish()
+
 	q := r.URL.Query()
 
 	if q.Has("error") {
