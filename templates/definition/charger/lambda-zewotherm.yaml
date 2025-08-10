@@ -32,7 +32,13 @@ params:
   - name: phases
     deprecated: true
   - name: excess
-    deprecated: true
+    advanced: true
+    type: choice
+    choice: ["plus", "minus"]
+    default: "plus"
+    description:
+      de: veraltet, bei neg. E-Überschuss auf minus
+      en: deprecated, set for neg. e-excess to minus
   - name: watchdog
     type: duration
     default: 60s
@@ -51,6 +57,7 @@ render: |
         address: 102 # PV Überschussleistung
         type: writemultiple # λ erwartet single value als FC16
         decode: int16
+      scale: {{ if eq .excess "plus" }}1{{ else }}-1{{ end }}
   power:
     source: modbus
     uri: {{ .host }}:{{ .port }}
