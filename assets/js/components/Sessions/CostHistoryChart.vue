@@ -179,10 +179,7 @@ export default defineComponent({
 						: this.$t("sessions.co2"),
 				data: Object.values(result).map((index) => index.avgCost),
 				yAxisID: "y1",
-				tension: 0,
-				stepped: true,
-				borderJoinStyle: "round",
-				borderCapStyle: "round",
+				tension: 0.25,
 				pointRadius: 0,
 				pointHoverRadius: 6,
 				borderColor: costColor,
@@ -199,6 +196,7 @@ export default defineComponent({
 		legends() {
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
+				let type = "area";
 
 				// line chart handling
 				if ((dataset as any).type === "line") {
@@ -213,6 +211,7 @@ export default defineComponent({
 								: this.fmtGrams(value, false);
 					};
 					value = `${format(min, false)} – ${format(max, true)}`;
+					type = "line";
 				} else {
 					const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 					value =
@@ -224,6 +223,7 @@ export default defineComponent({
 					label: dataset.label || "",
 					color: dataset.backgroundColor,
 					value,
+					type,
 				};
 			});
 		},

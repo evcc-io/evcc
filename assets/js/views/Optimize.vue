@@ -1,111 +1,100 @@
 <template>
 	<div class="container px-4 safe-area-inset">
 		<TopHeader title="Optimize" />
-		<div class="alert alert-light mb-4">This page is work in progress.</div>
+		<div class="alert alert-light mb-5">
+			This page is for development purposes only. Gives insights into the upcoming
+			optimization algorithm.
+		</div>
 		<div class="row">
 			<main class="col-12">
 				<div v-if="evopt">
-					<!-- Optimization Status -->
-					<div class="mb-4">
-						<div class="row">
-							<div class="col-md-6">
-								<div class="card border-0 bg-light">
-									<div class="card-body">
-										<h5 class="card-title">Optimization Status</h5>
-										<p class="card-text mb-1">
-											<span class="badge" :class="statusBadgeClass">
-												{{ evopt.res.status }}
-											</span>
-										</p>
-										<p
-											v-if="evopt.res.objective_value !== null"
-											class="card-text mb-0"
-										>
-											<small class="text-muted">
-												Economic Benefit:
-												{{
-													fmtMoney(
-														evopt.res.objective_value,
-														currency,
-														true,
-														true
-													)
-												}}
-											</small>
-										</p>
-									</div>
-								</div>
+					<!-- Optimizer Plan -->
+					<section class="mb-5">
+						<h3
+							class="fw-normal d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden mb-4"
+						>
+							<span class="d-block no-wrap text-truncate">Result: Charging Plan</span>
+							<small class="d-block no-wrap text-truncate">
+								{{ evopt.res.status }} ・
+								{{ fmtMoney(evopt.res.objective_value || 0, currency, true, true) }}
+								saved
+							</small>
+						</h3>
+						<ChargeChart
+							:evopt="evopt"
+							:battery-details="evopt.details.batteryDetails"
+							:timestamp="evopt.details.timestamp[0]"
+							:currency="currency"
+							:battery-colors="batteryColors"
+						/>
+
+						<h3 class="fw-normal mb-4">Result: SoC Projection</h3>
+						<SocChart
+							:evopt="evopt"
+							:battery-details="evopt.details.batteryDetails"
+							:timestamp="evopt.details.timestamp[0]"
+							:currency="currency"
+							:battery-colors="batteryColors"
+						/>
+					</section>
+
+					<!-- Input Parameters -->
+					<section class="mb-5">
+						<h3 class="fw-normal mb-4">Input: Grid Prices</h3>
+						<PriceChart
+							:evopt="evopt"
+							:timestamp="evopt.details.timestamp[0]"
+							:currency="currency"
+						/>
+
+						<h3
+							class="fw-normal d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden mb-4"
+						>
+							<span class="d-block no-wrap text-truncate"> Input: Battery </span>
+							<small class="d-block no-wrap text-truncate">
+								{{ fmtPercentage((evopt.req.eta_c || 1) * 100, 1) }} charge
+								efficiency ・
+								{{ fmtPercentage((evopt.req.eta_d || 1) * 100, 1) }} discharge
+								efficiency
+							</small>
+						</h3>
+
+						<BatteryConfigurationTable
+							:batteries="evopt.req.batteries"
+							:battery-details="evopt.details.batteryDetails"
+							:currency="currency"
+						/>
+					</section>
+
+					<hr class="my-5" />
+
+					<!-- Debugging -->
+					<section class="mb-5">
+						<h3 class="fw-normal mb-4">Time Series</h3>
+
+						<TimeSeriesDataTable
+							:evopt="evopt"
+							:battery-details="evopt.details.batteryDetails"
+							:timestamp="evopt.details.timestamp[0]"
+							:currency="currency"
+							:battery-colors="batteryColors"
+							:dimmed-battery-colors="dimmedBatteryColors"
+						/>
+
+						<details class="mb-4">
+							<summary class="btn btn-link text-decoration-none p-0 mb-3">
+								<h3 class="fw-normal text-muted text-decoration-underline">
+									Show Raw Data
+								</h3>
+							</summary>
+							<div>
+								<p>Request:</p>
+								<pre>{{ JSON.stringify(evopt.req, null, 2) }}</pre>
+								<p>Response:</p>
+								<pre>{{ JSON.stringify(evopt.res, null, 2) }}</pre>
 							</div>
-							<div class="col-md-6">
-								<div class="card border-0 bg-light">
-									<div class="card-body">
-										<h5 class="card-title">Optimization Parameters</h5>
-										<p class="card-text mb-1">
-											<small class="text-muted">
-												Charging Efficiency:
-												{{
-													fmtPercentage(
-														(evopt.req.eta_c || 0.95) * 100,
-														1
-													)
-												}}
-											</small>
-										</p>
-										<p class="card-text mb-1">
-											<small class="text-muted">
-												Discharging Efficiency:
-												{{
-													fmtPercentage(
-														(evopt.req.eta_d || 0.95) * 100,
-														1
-													)
-												}}
-											</small>
-										</p>
-										<p v-if="evopt.req.M" class="card-text mb-0">
-											<small class="text-muted">
-												MILP Big M: {{ fmtNumber(evopt.req.M, 0) }}
-											</small>
-										</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<BatteryConfigurationTable
-						:batteries="evopt.req.batteries"
-						:currency="currency"
-					/>
-
-					<ChargeChart
-						:evopt="evopt"
-						:currency="currency"
-						:battery-colors="batteryColors"
-					/>
-					<SocChart :evopt="evopt" :currency="currency" :battery-colors="batteryColors" />
-					<PriceChart :evopt="evopt" :currency="currency" />
-
-					<TimeSeriesDataTable
-						:evopt="evopt"
-						:currency="currency"
-						:battery-colors="batteryColors"
-						:dimmed-battery-colors="dimmedBatteryColors"
-					/>
-
-					<details class="mb-4">
-						<summary class="btn btn-link text-decoration-none p-0 mb-3">
-							<h3 class="fw-normal d-inline text-muted text-decoration-underline">
-								Raw Data
-							</h3>
-						</summary>
-						<div>
-							<p>Request:</p>
-							<pre>{{ JSON.stringify(evopt.req, null, 2) }}</pre>
-							<p>Response:</p>
-							<pre>{{ JSON.stringify(evopt.res, null, 2) }}</pre>
-						</div>
-					</details>
+						</details>
+					</section>
 				</div>
 				<div v-else>
 					<p>nothing to see here</p>

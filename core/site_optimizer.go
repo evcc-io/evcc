@@ -28,10 +28,6 @@ var (
 	updated time.Time
 )
 
-// func init() {
-// 	os.Setenv("EVOPT_URI", "http://localhost:7050")
-// }
-
 type batteryType string
 
 const (
@@ -90,6 +86,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	gt := site.homeProfile(minLen)
 
+	solarEnergy, err := ratesToEnergy(log, solarRates, firstSlotDuration)
+	if err != nil {
+		return err
+	}
+
 	req := evopt.OptimizationInput{
 		EtaC: &eta,
 		EtaD: &eta,
@@ -98,7 +99,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Gt: asFloat32(gt),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
-			Ft: maxValues(ratesToEnergy(solarRates, firstSlotDuration), 1, minLen),
+			Ft: maxValues(solarEnergy, 1, minLen),
 		},
 	}
 
@@ -180,9 +181,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return nil
 	}
 
-	apiClient, err := evopt.NewClientWithResponses(uri, evopt.WithHTTPClient(
-		request.NewClient(log),
-	))
+	httpClient := request.NewClient(log)
+	httpClient.Timeout = 30 * time.Second
+
+	apiClient, err := evopt.NewClientWithResponses(uri, evopt.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
 	}
@@ -191,6 +193,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		if token := sponsor.Token; token != "" {
 			req.Header.Set("Authorization", "Bearer "+token)
 		}
+		// command, _ := http2curl.GetCurlCommand(req)
+		// log.TRACE.Println("\n" + command.String())
 		return nil
 	})
 	if err != nil {
@@ -338,24 +342,33 @@ func slotsToHours(now time.Time, profile *[96]float64) []float64 {
 	return result
 }
 
-func ratesToEnergy(rr []api.Rate, firstSlot time.Duration) []api.Rate {
-	res := make([]api.Rate, 0, len(rr))
+func ratesToEnergy(log *util.Logger, rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
+	res := make(api.Rates, 0, len(rr))
 
 	for _, r := range rr {
 		from := r.Start
 
 		if len(res) == 0 {
-			from = endOfHour(r.End).Add(-firstSlot)
+			from = endOfHour(r.Start).Add(-firstSlot)
+		}
+
+		if _, err := rr.At(from); err != nil {
+			return nil, fmt.Errorf("missing solar data for: %v", from)
+		}
+
+		energy := solarEnergy(rr, from, r.End)
+		if energy < 0 {
+			return nil, fmt.Errorf("negative solar energy from %v to %v: %.3f", from, r.End, energy)
 		}
 
 		res = append(res, api.Rate{
 			Start: from,
 			End:   r.End,
-			Value: solarEnergy(rr, from, r.End),
+			Value: energy,
 		})
 	}
 
-	return res
+	return res, nil
 }
 
 func asFloat32(gt []float64) []float32 {

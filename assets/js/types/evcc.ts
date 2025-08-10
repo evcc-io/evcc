@@ -341,6 +341,7 @@ export type ValueOf<T> = T[keyof T];
 export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
+  details: OptimizationDetails;
 }
 
 // Request payload for /optimize/charge-schedule
@@ -406,6 +407,20 @@ export interface BatteryResult {
   charging_power: number[]; // Charging energy per step (Wh)
   discharging_power: number[]; // Discharging energy per step (Wh)
   state_of_charge: number[]; // State of charge per step (Wh)
+}
+
+// Battery detail information for optimization
+export interface BatteryDetail {
+  type: "vehicle" | "battery"; // Type of battery
+  title: string; // Display title
+  name: string; // Internal name/identifier
+  capacity: number; // Battery capacity (kWh)
+}
+
+// Optimization details with timestamps and battery information
+export interface OptimizationDetails {
+  timestamp: string[]; // Array of ISO timestamp strings
+  batteryDetails: BatteryDetail[]; // Array of battery detail objects
 }
 
 // Error response

@@ -17,7 +17,6 @@ func TestSqliteTimestamp(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Add(time.Hour)
 
-	// require.NoError(t, db.NewInstance("sqlite", "/users/a25058/htdocs/evcc/test.db"))
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, metrics.Init())
 
@@ -52,7 +51,7 @@ func TestSqliteTimestamp(t *testing.T) {
 func TestUpdateHouseholdProfile(t *testing.T) {
 	clock := clock.NewMock()
 
-	require.NoError(t, db.NewInstance("sqlite", "/users/a25058/htdocs/evcc/test.db"))
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	metrics.Init()
 
 	// 2 days of data

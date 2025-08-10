@@ -1,6 +1,5 @@
 <template>
 	<div class="mb-5">
-		<h4 class="fw-normal mb-3">Grid Prices</h4>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"
@@ -60,6 +59,10 @@ export default defineComponent({
 			type: Object as PropType<EvoptData>,
 			required: true,
 		},
+		timestamp: {
+			type: String,
+			required: true,
+		},
 		currency: {
 			type: String as PropType<CURRENCY>,
 			required: true,
@@ -67,9 +70,10 @@ export default defineComponent({
 	},
 	computed: {
 		timeLabels(): string[] {
+			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
-				const hour = index % 24;
-				return `${hour}`;
+				const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
+				return currentTime.getHours().toString();
 			});
 		},
 		chartData(): ChartData {
@@ -127,6 +131,9 @@ export default defineComponent({
 						title: {
 							display: false,
 						},
+						grid: {
+							display: false,
+						},
 					},
 					y: {
 						type: "linear",
@@ -154,7 +161,6 @@ export default defineComponent({
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
 						value: "", // Required by Legend type, but not used in this context
 						type: "line",
-						lineStyle: "solid",
 					};
 				});
 		},

@@ -1,13 +1,12 @@
 <template>
 	<div class="mb-5">
-		<h4 class="fw-normal mb-3">Forecast & Charging</h4>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"
 				type="bar"
 				:data="chartData"
 				:options="chartOptions"
-				:height="350"
+				:height="300"
 			/>
 		</div>
 		<LegendList :legends="legends" />
@@ -32,7 +31,7 @@ import {
 } from "chart.js";
 import { Chart } from "vue-chartjs";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
-import type { CURRENCY } from "@/types/evcc";
+import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
@@ -62,6 +61,14 @@ export default defineComponent({
 			type: Object as PropType<EvoptData>,
 			required: true,
 		},
+		batteryDetails: {
+			type: Array as PropType<BatteryDetail[]>,
+			required: true,
+		},
+		timestamp: {
+			type: String,
+			required: true,
+		},
 		currency: {
 			type: String as PropType<CURRENCY>,
 			required: true,
@@ -73,19 +80,20 @@ export default defineComponent({
 	},
 	computed: {
 		timeLabels(): string[] {
+			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
-				const hour = index % 24;
-				return `${hour}`;
+				const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
+				return currentTime.getHours().toString();
 			});
 		},
 		chartData(): ChartData {
 			const datasets: any[] = [];
 
-			// 1. Battery power data
-			datasets.push(...this.getBatteryPowerDatasets());
-
-			// 2. Solar Forecast
+			// 1. Solar Forecast (first, with increased tension)
 			datasets.push(...this.getSolarDatasets());
+
+			// 2. Battery power data
+			datasets.push(...this.getBatteryPowerDatasets());
 
 			// 3. Household Demand (power)
 			datasets.push(...this.getHouseholdDatasets());
@@ -139,6 +147,10 @@ export default defineComponent({
 						title: {
 							display: false,
 						},
+						stacked: true,
+						grid: {
+							display: false,
+						},
 					},
 					y: {
 						type: "linear",
@@ -147,6 +159,7 @@ export default defineComponent({
 							display: true,
 							text: "Power (kW)",
 						},
+						stacked: true,
 						grid: {
 							drawOnChartArea: true,
 							color: (context: any) => {
@@ -181,7 +194,6 @@ export default defineComponent({
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
 						value: "", // Required by Legend type, but not used in this context
 						type: isLine ? "line" : "area",
-						lineStyle: isLine ? "solid" : undefined,
 					};
 				});
 		},
@@ -195,12 +207,12 @@ export default defineComponent({
 					borderColor: colors.self,
 					backgroundColor: colors.self,
 					fill: false,
-					tension: 0.1,
+					tension: 0.25,
 					borderJoinStyle: "round",
 					borderCapStyle: "round",
 					pointRadius: 0,
 					pointHoverRadius: 6,
-					borderWidth: 2,
+					borderWidth: 3,
 					yAxisID: "y",
 					type: "line" as const,
 				},
@@ -227,12 +239,13 @@ export default defineComponent({
 					});
 
 					datasets.push({
-						label: `Battery ${index + 1} Power`,
+						label: `${this.getBatteryTitle(index)} Power`,
 						data: combinedPower,
 						backgroundColor: baseColor,
 						borderWidth: 0,
 						yAxisID: "y",
 						type: "bar" as const,
+						stack: "power",
 					});
 				});
 			}
@@ -251,18 +264,11 @@ export default defineComponent({
 				{
 					label: "Household Demand",
 					data: householdPower,
-					borderColor: householdColor,
 					backgroundColor: householdColor,
-					fill: false,
-					tension: 0,
-					stepped: true,
-					borderJoinStyle: "round",
-					borderCapStyle: "round",
-					pointRadius: 0,
-					pointHoverRadius: 6,
-					borderWidth: 2,
+					borderWidth: 0,
 					yAxisID: "y",
-					type: "line" as const,
+					type: "bar" as const,
+					stack: "power",
 				},
 			];
 		},
@@ -274,6 +280,11 @@ export default defineComponent({
 		formatValue: (value: number): string => {
 			return value.toFixed(2);
 		},
+
+		getBatteryTitle(index: number): string {
+			const detail = this.batteryDetails[index];
+			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
+		},
 	},
 });
 </script>
@@ -281,7 +292,7 @@ export default defineComponent({
 <style scoped>
 .chart-container {
 	position: relative;
-	height: 350px;
+	height: 300px;
 	width: 100%;
 }
 </style>
