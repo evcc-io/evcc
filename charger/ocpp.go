@@ -20,6 +20,7 @@ package charger
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -146,6 +147,10 @@ func NewOCPP(ctx context.Context,
 	forcePowerCtrl, stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
+	if id == "" {
+		return nil, errors.New("missing station id")
+	}
+
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
 	cp, err := ocpp.Instance().RegisterChargepoint(id,
