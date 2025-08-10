@@ -378,11 +378,11 @@ Simulate repeating charging plan and return the result. Does not alter the actua
 
 | Name | Type | Description |
 |------|------|-------------|
+| hourMinuteTime | string | Time in `HOURS:MINUTES` format |
+| id | integer | Loadpoint index starting at 1 |
 | soc | number | SOC in % |
 | timezone | string | Timezone in IANA format |
 | weekdays | array | The Weekdays |
-| hourMinuteTime | string | Time in `HOURS:MINUTES` format |
-| id | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -672,8 +672,8 @@ Updates the allowed phases of the loadpoint. Selects the desired phase mode for 
 
 | Name | Type | Description |
 |------|------|-------------|
-| phases | string | Number of phases. (0: auto, 1: 1-phase, 3: 3-phase) |
 | id | integer | Loadpoint index starting at 1 |
+| phases | string | Number of phases. (0: auto, 1: 1-phase, 3: 3-phase) |
 
 **Example call:**
 
@@ -716,8 +716,8 @@ Set cost or emission limit for fast-charging with grid energy.
 
 | Name | Type | Description |
 |------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
 | cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+| id | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -800,10 +800,10 @@ Returns a list of charging sessions.
 
 | Name | Type | Description |
 |------|------|-------------|
-| year | integer | Year filter |
 | format | string | Response format (default json) |
 | lang | string | Language (defaults to accept header) |
 | month | integer | Month filter |
+| year | integer | Year filter |
 
 **Example call:**
 
@@ -854,10 +854,10 @@ Returns the latest log lines.
 
 | Name | Type | Description |
 |------|------|-------------|
-| level | string | Log level |
 | areas | array | Comma-separated list of log areas |
 | count | integer | Number of log lines to return |
 | format | string | File type |
+| level | string | Log level |
 
 **Example call:**
 
