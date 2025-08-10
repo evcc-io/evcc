@@ -127,6 +127,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 		return
 	}
 
+	cs.log.WARN.Printf("unknown charge point connected: %s", chargePoint.ID())
+
 	// check for configured anonymous charge point
 	reg, ok = cs.regs[""]
 	if ok && reg.cp != nil {
@@ -142,8 +144,6 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		return
 	}
-
-	cs.log.WARN.Printf("unknown charge point connected: %s", chargePoint.ID())
 
 	// register unknown charge point
 	// when charge point setup is complete, it will eventually be associated with the connected id
