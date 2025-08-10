@@ -38,6 +38,10 @@ func interpolate(rr api.Rates, i int, ts time.Time) float64 {
 func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 	var energy float64
 
+	if !from.Before(to) {
+		panic("from must be before to")
+	}
+
 	idx, ok := search(rr, from)
 	if !ok {
 		switch {
