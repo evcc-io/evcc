@@ -185,8 +185,6 @@ github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea h1:F6eyC8V8wvc3ranl
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0 h1:Qz34Pm1Wr05jjJia5g2On3zRqdZh+BLTwqHgJGsiIh4=
 github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
-github.com/evcc-io/openapi-mcp v0.3.2-0.20250810085124-11eaedf32359 h1:VrNkGZmSfBDKuAeFbg/Vz3oDN9z1Q3XQ4vS415Jr6Jw=
-github.com/evcc-io/openapi-mcp v0.3.2-0.20250810085124-11eaedf32359/go.mod h1:87GSlXX1DP8ne5ELpm18vst5yiMmDFeSRG8xYL1BfzQ=
 github.com/evcc-io/openapi-mcp v0.4.0 h1:tgzGsuBWj1aInD6hBbaShHHYUlul61QgGUeBC/nxNk0=
 github.com/evcc-io/openapi-mcp v0.4.0/go.mod h1:87GSlXX1DP8ne5ELpm18vst5yiMmDFeSRG8xYL1BfzQ=
 github.com/evcc-io/rct v0.1.2-0.20250315164247-d2f41b161785 h1:OWCBVMcPsVTffdiZN3VYaq9p4fsWlzd490J6pekaKLA=
