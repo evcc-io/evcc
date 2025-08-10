@@ -741,7 +741,7 @@ func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 func (lp *Loadpoint) GetRemainingEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.chargeRemainingEnergy / 1e3
+	return lp.chargeRemainingEnergy
 }
 
 // SetRemainingEnergy sets the remaining charge energy in kWh
