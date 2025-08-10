@@ -75,19 +75,34 @@
 
 					<BatteryConfigurationTable
 						:batteries="evopt.req.batteries"
+						:battery-details="evopt.details.batteryDetails"
 						:currency="currency"
 					/>
 
 					<ChargeChart
 						:evopt="evopt"
+						:battery-details="evopt.details.batteryDetails"
+						:timestamp="evopt.details.timestamp[0]"
 						:currency="currency"
 						:battery-colors="batteryColors"
 					/>
-					<SocChart :evopt="evopt" :currency="currency" :battery-colors="batteryColors" />
-					<PriceChart :evopt="evopt" :currency="currency" />
+					<SocChart
+						:evopt="evopt"
+						:battery-details="evopt.details.batteryDetails"
+						:timestamp="evopt.details.timestamp[0]"
+						:currency="currency"
+						:battery-colors="batteryColors"
+					/>
+					<PriceChart
+						:evopt="evopt"
+						:timestamp="evopt.details.timestamp[0]"
+						:currency="currency"
+					/>
 
 					<TimeSeriesDataTable
 						:evopt="evopt"
+						:battery-details="evopt.details.batteryDetails"
+						:timestamp="evopt.details.timestamp[0]"
 						:currency="currency"
 						:battery-colors="batteryColors"
 						:dimmed-battery-colors="dimmedBatteryColors"

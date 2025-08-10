@@ -119,9 +119,15 @@
 						v-for="(battery, batteryIndex) in evopt.res.batteries"
 						:key="batteryIndex"
 					>
-						<tr :style="{ backgroundColor: dimmedBatteryColors[batteryIndex] }">
+						<tr>
 							<td colspan="100%" class="fw-bold text-start">
-								Battery {{ batteryIndex + 1 }} Response
+								<div class="d-flex align-items-center">
+									<span
+										class="battery-indicator me-2"
+										:style="{ backgroundColor: batteryColors[batteryIndex] }"
+									></span>
+									{{ getBatteryTitle(batteryIndex) }} Response
+								</div>
 							</td>
 						</tr>
 						<tr>
@@ -154,6 +160,16 @@
 								{{ formatEnergy(value) }}
 							</td>
 						</tr>
+						<tr>
+							<td class="fw-medium text-nowrap text-start">State of Charge (%)</td>
+							<td
+								v-for="(value, index) in battery.state_of_charge"
+								:key="index"
+								:class="['text-end', { 'text-muted': value === 0 }]"
+							>
+								{{ formatSocPercentage(value, batteryIndex) }}
+							</td>
+						</tr>
 					</template>
 				</tbody>
 			</table>
@@ -164,7 +180,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { CURRENCY } from "@/types/evcc";
+import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 
 export interface EvoptData {
 	req: {
@@ -194,6 +210,14 @@ export default defineComponent({
 	props: {
 		evopt: {
 			type: Object as PropType<EvoptData>,
+			required: true,
+		},
+		batteryDetails: {
+			type: Array as PropType<BatteryDetail[]>,
+			required: true,
+		},
+		timestamp: {
+			type: String,
 			required: true,
 		},
 		currency: {
@@ -231,9 +255,22 @@ export default defineComponent({
 		formatDuration: (seconds: number): string => {
 			return (seconds / 3600).toFixed(1);
 		},
-		formatHour: (index: number): string => {
-			const hour = index % 24;
-			return hour.toString();
+		formatHour(index: number): string {
+			const startTime = new Date(this.timestamp);
+			const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
+			return currentTime.getHours().toString();
+		},
+		getBatteryTitle(index: number): string {
+			const detail = this.batteryDetails[index];
+			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
+		},
+		formatSocPercentage(socWh: number, batteryIndex: number): string {
+			const detail = this.batteryDetails[batteryIndex];
+			if (detail?.capacity && detail.capacity > 0) {
+				const percentage = (socWh / 1000 / detail.capacity) * 100;
+				return this.fmtNumber(percentage, 0);
+			}
+			return "-";
 		},
 	},
 });
@@ -247,5 +284,12 @@ export default defineComponent({
 
 .table td:not(:first-child) {
 	padding-left: 1rem;
+}
+
+.battery-indicator {
+	width: 1rem;
+	height: 1rem;
+	border-radius: 50%;
+	flex-shrink: 0;
 }
 </style>

@@ -29,7 +29,7 @@ import {
 } from "chart.js";
 import { Chart } from "vue-chartjs";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
-import type { CURRENCY } from "@/types/evcc";
+import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
@@ -49,6 +49,14 @@ export default defineComponent({
 			type: Object as PropType<EvoptData>,
 			required: true,
 		},
+		batteryDetails: {
+			type: Array as PropType<BatteryDetail[]>,
+			required: true,
+		},
+		timestamp: {
+			type: String,
+			required: true,
+		},
 		currency: {
 			type: String as PropType<CURRENCY>,
 			required: true,
@@ -60,9 +68,10 @@ export default defineComponent({
 	},
 	computed: {
 		timeLabels(): string[] {
+			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
-				const hour = index % 24;
-				return `${hour}`;
+				const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
+				return currentTime.getHours().toString();
 			});
 		},
 		chartData(): ChartData {
@@ -100,8 +109,8 @@ export default defineComponent({
 							label: (context) => {
 								const label = context.dataset.label || "";
 								const value = context.parsed.y;
-								// Energy axis (kWh)
-								return `${label}: ${this.formatValue(value)} kWh`;
+								// Percentage axis (%)
+								return `${label}: ${this.formatValue(value)}%`;
 							},
 						},
 					},
@@ -114,18 +123,34 @@ export default defineComponent({
 						title: {
 							display: false,
 						},
+						stacked: true,
 					},
 					y: {
 						type: "linear",
 						position: "left",
 						title: {
 							display: true,
-							text: "SoC (kWh)",
+							text: "SoC (%)",
 						},
+						stacked: true,
 						grid: {
 							drawOnChartArea: true,
+							color: (context: any) => {
+								// Make zero axis black to highlight
+								if (context.tick?.value === 0) {
+									return "#000000";
+								}
+								return colors.border || "#e0e0e0";
+							},
+							lineWidth: (context: any) => {
+								// Make zero axis slightly thicker
+								if (context.tick?.value === 0) {
+									return 2;
+								}
+								return 1;
+							},
 						},
-						min: 0, // Set minimum to zero as requested
+						// Remove fixed minimum to allow negative values
 					},
 				},
 			};
@@ -155,27 +180,34 @@ export default defineComponent({
 
 					// SoC as bars (full color)
 					datasets.push({
-						label: `Battery ${index + 1} SoC`,
-						data: battery.state_of_charge.map(this.convertWhToKWh),
+						label: `${this.getBatteryTitle(index)} SoC`,
+						data: battery.state_of_charge.map((socWh) =>
+							this.convertWhToPercentage(socWh, index)
+						),
 						backgroundColor: baseColor,
 						borderWidth: 0,
 						yAxisID: "y",
 						type: "bar" as const,
-						borderRadius: {
-							topLeft: 10,
-							topRight: 10,
-						},
+						stack: "soc",
 					});
 				});
 			}
 
 			return datasets;
 		},
-		convertWhToKWh: (wh: number): number => {
-			return wh / 1000;
+		convertWhToPercentage(wh: number, batteryIndex: number): number {
+			const detail = this.batteryDetails[batteryIndex];
+			if (detail?.capacity && detail.capacity > 0) {
+				return (wh / 1000 / detail.capacity) * 100;
+			}
+			return 0;
 		},
 		formatValue: (value: number): string => {
 			return value.toFixed(2);
+		},
+		getBatteryTitle(index: number): string {
+			const detail = this.batteryDetails[index];
+			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
 		},
 	},
 });

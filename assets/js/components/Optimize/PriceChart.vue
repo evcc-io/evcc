@@ -60,6 +60,10 @@ export default defineComponent({
 			type: Object as PropType<EvoptData>,
 			required: true,
 		},
+		timestamp: {
+			type: String,
+			required: true,
+		},
 		currency: {
 			type: String as PropType<CURRENCY>,
 			required: true,
@@ -67,9 +71,10 @@ export default defineComponent({
 	},
 	computed: {
 		timeLabels(): string[] {
+			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
-				const hour = index % 24;
-				return `${hour}`;
+				const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
+				return currentTime.getHours().toString();
 			});
 		},
 		chartData(): ChartData {
