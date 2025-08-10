@@ -29,11 +29,14 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: bluelink.HyundaiAppID,
-		AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
+		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
+		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 		PushType:          "GCM",
 		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
-		LoginFormHost:     "https://idpconnect-eu.hyundai.com",
+		// for oauth2??
+		// LoginFormHost:     "https://idpconnect-eu.hyundai.com",
+		// AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
+		// BrandAuthUrl:  "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
@@ -78,7 +81,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bluelink.NewIdentity(log, settings)
 
-	if err := identity.Login(cc.User, cc.Password, cc.Language); err != nil {
+	if err := identity.Login(cc.User, cc.Password, cc.Language, brand); err != nil {
 		return nil, err
 	}
 
