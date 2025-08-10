@@ -749,8 +749,10 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20250608084036-9a13257a4991 h1:npxXCU/0iZi+XNr43nFVP8wujaUQ6fspgtR4B45EJR4=
-github.com/volkszaehler/mbmd v0.0.0-20250608084036-9a13257a4991/go.mod h1:egeAZti78O7U6QcdDPze5NHiiLdPSviw6YA7rsNYSMQ=
+github.com/volkszaehler/mbmd v0.0.0-20250808161051-499ae856f44e h1:I70valHO57SjmIBUDH94MzbJfevj2rZ2fN2YrZ8IwB4=
+github.com/volkszaehler/mbmd v0.0.0-20250808161051-499ae856f44e/go.mod h1:egeAZti78O7U6QcdDPze5NHiiLdPSviw6YA7rsNYSMQ=
+github.com/wk8/go-ordered-map/v2 v2.1.8 h1:5h/BUHu93oj4gIdvHHHGsScSTMijfx5PeYkE/fJgbpc=
+github.com/wk8/go-ordered-map/v2 v2.1.8/go.mod h1:5nJHM5DyteebpVlHnWMV0rPz6Zp7+xBAnxjb1X5vnTw=
 github.com/writeas/go-strip-markdown/v2 v2.1.1 h1:hAxUM21Uhznf/FnbVGiJciqzska6iLei22Ijc3q2e28=
 github.com/writeas/go-strip-markdown/v2 v2.1.1/go.mod h1:UvvgPJgn1vvN8nWuE5e7v/+qmDu3BSVnKAB6Gl7hFzA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
