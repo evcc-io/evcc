@@ -590,11 +590,13 @@ func (site *Site) updatePvMeters() {
 		// use stored devices, not ui-updated instances!
 		name := dev.Config().Name
 
+		prev := site.pvEnergy[name].AccumulatedEnergy()
 		if mm[i].Energy > 0 {
 			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
 		} else {
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
+		site.log.DEBUG.Printf("accumulated solar yield: %s moved from %.3f to %.3f", name, prev, site.pvEnergy[name].AccumulatedEnergy())
 	}
 
 	// store
