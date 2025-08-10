@@ -21,7 +21,6 @@ export interface Legend {
   color: any;
   value: string | string[];
   type?: "area" | "line";
-  lineStyle?: "solid" | "dashed" | "dotted";
 }
 
 export interface Column {

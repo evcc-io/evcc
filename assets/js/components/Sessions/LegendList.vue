@@ -49,20 +49,7 @@ export default defineComponent({
 			return Array.isArray(value) ? value : [value];
 		},
 		colorClass(legend: Legend) {
-			if (legend.type !== "line") {
-				return "legend-color--area";
-			}
-
-			switch (legend.lineStyle) {
-				case "solid":
-					return "legend-color--line legend-color--line-solid";
-				case "dashed":
-					return "legend-color--line legend-color--line-dashed";
-				case "dotted":
-					return "legend-color--line legend-color--line-dotted";
-				default:
-					return "legend-color--line";
-			}
+			return legend.type === "line" ? "legend-color--line" : "legend-color--area";
 		},
 	},
 });
@@ -88,17 +75,6 @@ export default defineComponent({
 	align-self: center;
 }
 
-/* .legend-color--line-solid uses default background color for solid lines */
-
-.legend-color--line-dashed {
-	background: transparent !important;
-	border-top: 2px dashed;
-}
-
-.legend-color--line-dotted {
-	background: transparent !important;
-	border-top: 2px dotted;
-}
 .legend-label {
 	flex-shrink: 0;
 	flex-grow: 0;

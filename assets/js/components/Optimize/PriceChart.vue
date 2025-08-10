@@ -161,7 +161,6 @@ export default defineComponent({
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
 						value: "", // Required by Legend type, but not used in this context
 						type: "line",
-						lineStyle: "solid",
 					};
 				});
 		},
