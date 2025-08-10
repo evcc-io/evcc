@@ -1,6 +1,6 @@
-# Agent Rules for evcc Project
+# CLAUDE.md
 
-This file provides guidance to AI coding agents when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -10,17 +10,28 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Essential Commands
 
+### Build & Development
 - `make` - build full application (UI + Go binary)
 - `make build` - build Go binary only
 - `make ui` - build UI assets only
 - `make install` - install Go tools and dependencies
 - `make install-ui` - install Node.js dependencies (`npm ci`)
+
+### Testing
 - `make test` - run Go tests
-- `make test-ui` - run frontend tests
-- `make lint` - run Go linting (golangci-lint)
-- `make lint-ui` - run frontend linting
-- `npm run dev` - start Vue dev server (http://127.0.0.1:7071)
+- `make test-ui` - run frontend tests (Vitest)
 - `npm run playwright` - run integration tests
+- `npx playwright test tests/config-loadpoint.spec.ts` - run specific test
+
+### Code Quality
+- `make lint` - run Go linting (golangci-lint)
+- `make lint-ui` - run frontend linting (ESLint + Prettier)
+- `go generate ./...` - regenerate code (enums, decorators, mocks)
+
+### Development Tools
+- `npm run dev` - start Vue dev server (http://127.0.0.1:7071, proxies to :7070)
+- `npm run simulator` - run device simulator (http://127.0.0.1:7072)
+- `npm run storybook` - component development environment
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
@@ -226,6 +237,27 @@ This file provides guidance to AI coding agents when working with code in this r
 - Provide clear validation and error messages for invalid configurations
 - Support template-based device configurations with meaningful defaults
 - Use SQLite as default database (default: `evcc.db`, or specify with `--database`) with proper migrations and data integrity
+
+## Common Development Workflows
+
+### Adding a New Device Integration
+1. Create template file in `templates/definition/[type]/[brand]-[model].yaml`
+2. Test with `evcc --template-type [type] --template [file]`
+3. Update documentation with `make docs`
+4. Add integration tests if complex logic
+
+### Modifying Frontend Components
+1. Run `npm run dev` for live reload development
+2. Use TypeScript for all new code
+3. Follow Vue 3 Options API pattern
+4. Update both `i18n/en.json` and `i18n/de.json` for new strings
+5. Test with `npm run playwright` after building (`make ui build`)
+
+### Database Schema Changes
+1. Add migration in appropriate location
+2. Test migration with existing databases
+3. Ensure backward compatibility when possible
+4. Update related API types
 
 ## Security & Performance Guidelines
 
