@@ -8,35 +8,35 @@ import (
 	"html/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 //go:embed prompt.tpl
 var prompt string
 
-func promptHandler() server.PromptHandlerFunc {
+func promptHandler() mcp.PromptHandler {
 	tmpl := template.Must(template.New("out").Funcs(sprig.FuncMap()).Parse(prompt))
 
-	return func(ctx context.Context, req mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
-		// tmpl, err := template.New("out").Funcs(sprig.FuncMap()).Parse(prompt)
-		// if err != nil {
-		// 	return nil, fmt.Errorf("error parsing template: %v", err)
-		// }
-
+	return func(ctx context.Context, ss *mcp.ServerSession, params *mcp.GetPromptParams) (*mcp.GetPromptResult, error) {
 		out := new(bytes.Buffer)
-		if err := tmpl.Execute(out, req.Params.Arguments); err != nil {
-			return nil, fmt.Errorf("failed executing template: %v", err)
+		if err := tmpl.Execute(out, params.Arguments); err != nil {
+			return &mcp.GetPromptResult{
+				Messages: []*mcp.PromptMessage{
+					{
+						Role: "assistant",
+						Content: &mcp.TextContent{
+							Text: fmt.Sprintf("The was an error parsing the request: %v", err),
+						},
+					},
+				},
+			}, nil
 		}
 
 		return &mcp.GetPromptResult{
-			Messages: []mcp.PromptMessage{
+			Messages: []*mcp.PromptMessage{
 				{
-					Role: mcp.RoleAssistant,
-					Content: mcp.TextContent{
-						Type: "text",
-						Text: out.String(),
-					},
+					Role:    "assistant",
+					Content: &mcp.TextContent{Text: out.String()},
 				},
 			},
 		}, nil
