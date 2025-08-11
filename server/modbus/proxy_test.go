@@ -30,7 +30,7 @@ func TestConcurrentRead(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= 10; i++ {
+	for id := 1; id <= 10; id++ {
 		wg.Go(func() {
 			// client
 			conn, err := modbus.NewConnection(context.TODO(), l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
