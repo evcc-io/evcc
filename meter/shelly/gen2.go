@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -67,19 +68,24 @@ type Gen2EM1Data struct {
 	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
 }
 
+type Gen2ProAddOnGetPeripherals struct {
+	DigitalOut map[string]interface{} `json:"digital_out"`
+}
+
 var _ Generation = (*gen2)(nil)
 
 type gen2 struct {
 	*request.Helper
-	uri          string
-	channel      int
-	model        string
-	methods      []string
-	switchstatus util.Cacheable[Gen2SwitchStatus]
-	em1status    func() (Gen2EM1Status, error)
-	em1data      func() (Gen2EM1Data, error)
-	emstatus     func() (Gen2EMStatus, error)
-	emdata       func() (Gen2EMData, error)
+	uri           string
+	channel       int
+	switchchannel int
+	model         string
+	methods       []string
+	switchstatus  util.Cacheable[Gen2SwitchStatus]
+	em1status     func() (Gen2EM1Status, error)
+	em1data       func() (Gen2EM1Data, error)
+	emstatus      func() (Gen2EMStatus, error)
+	emdata        func() (Gen2EMData, error)
 }
 
 func apiCall[T any](c *gen2, api string) func() (T, error) {
@@ -116,6 +122,12 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 	c.methods = res.Methods
 
+	if c.hasMethod("ProOutputAddon.GetPeripherals") {
+		c.switchchannel, _ = c.getAddOnSwitchId()
+	} else {
+		c.switchchannel = c.channel
+	}
+
 	if c.hasMethod("PM1.GetStatus") {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "PM1.GetStatus"), cache)
 	} else {
@@ -131,8 +143,15 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
+	var id int
+	if method == "Switch.GetStatus" {
+		id = c.switchchannel
+	} else {
+		id = c.channel
+	}
+
 	data := &Gen2RpcPost{
-		Id:     c.channel,
+		Id:     id,
 		On:     enable,
 		Src:    "evcc",
 		Method: method,
@@ -281,4 +300,22 @@ func (c *gen2) hasEMEndpoint() bool {
 // https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1Data#em1datagetstatus-example
 func (c *gen2) hasMethod(method string) bool {
 	return slices.Contains(c.methods, method)
+}
+
+func (c *gen2) getAddOnSwitchId() (int, error) {
+	var res Gen2ProAddOnGetPeripherals
+	if err := c.execCmd("ProOutputAddon.GetPeripherals", false, &res); err != nil {
+		return c.channel, err
+	}
+	for key := range res.DigitalOut {
+		if strings.HasPrefix(key, "switch:") {
+			var id int
+			_, err := fmt.Sscanf(key, "switch:%d", &id)
+			if err != nil {
+				return c.channel, nil
+			}
+			return id, nil
+		}
+	}
+	return c.channel, nil
 }
