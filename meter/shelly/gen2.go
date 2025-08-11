@@ -69,7 +69,7 @@ type Gen2EM1Data struct {
 }
 
 type Gen2ProAddOnGetPeripherals struct {
-	DigitalOut map[string]interface{} `json:"digital_out"`
+	DigitalOut map[string]any `json:"digital_out"`
 }
 
 var _ Generation = (*gen2)(nil)
@@ -103,10 +103,11 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
-		Helper:  helper,
-		uri:     fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
-		channel: channel,
-		model:   model,
+		Helper:        helper,
+		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
+		channel:       channel,
+		switchchannel: channel,
+		model:         model,
 	}
 
 	// Shelly gen 2 rfc7616 authentication
@@ -122,14 +123,13 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 	c.methods = res.Methods
 
+	// Shelly 3EM Pro with peripherals
 	if c.hasMethod("ProOutputAddon.GetPeripherals") {
 		var err error
 		c.switchchannel, err = c.getAddOnSwitchId()
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		c.switchchannel = c.channel
 	}
 
 	if c.hasMethod("PM1.GetStatus") {
@@ -147,8 +147,13 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
+	id := c.channel
+	if method == "Switch.GetStatus" {
+		id = c.switchchannel
+	}
+
 	data := &Gen2RpcPost{
-		Id:     c.selectId(method),
+		Id:     id,
 		On:     enable,
 		Src:    "evcc",
 		Method: method,
@@ -304,23 +309,16 @@ func (c *gen2) getAddOnSwitchId() (int, error) {
 	if err := c.execCmd("ProOutputAddon.GetPeripherals", false, &res); err != nil {
 		return c.channel, err
 	}
+
 	for key := range res.DigitalOut {
 		if strings.HasPrefix(key, "switch:") {
 			var id int
-			_, err := fmt.Sscanf(key, "switch:%d", &id)
-			if err != nil {
-				return c.channel, fmt.Errorf("failed to get add-on switch id: %w", err)
+			if _, err := fmt.Sscanf(key, "switch:%d", &id); err != nil {
+				return 0, fmt.Errorf("failed to get add-on switch id: %w", err)
 			}
 			return id, nil
 		}
 	}
-	return c.channel, nil
-}
 
-func (c *gen2) selectId(method string) int {
-	if method == "Switch.GetStatus" {
-		return c.switchchannel
-	} else {
-		return c.channel
-	}
+	return c.channel, nil
 }
