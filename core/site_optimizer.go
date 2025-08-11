@@ -49,13 +49,18 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
+	uri := os.Getenv("EVOPT_URI")
+	if uri == "" {
+		return nil
+	}
+
+	if time.Since(updated) < time.Minute {
+		return nil
+	}
+
 	defer func() {
 		updated = time.Now()
 	}()
-
-	if time.Since(updated) < 5*time.Minute {
-		return nil
-	}
 
 	log := util.NewLogger("evopt")
 
@@ -174,11 +179,6 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Name:     dev.Config().Name,
 			Capacity: *b.Capacity,
 		})
-	}
-
-	uri := os.Getenv("EVOPT_URI")
-	if uri == "" {
-		return nil
 	}
 
 	httpClient := request.NewClient(log)
