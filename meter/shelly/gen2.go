@@ -152,20 +152,27 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
-	var data any
-	if method == "Switch.Set" {
-		data = &Gen2SetRpcPost{
-			Id:     c.selectChannelId(method),
-			Src:    "evcc",
-			Method: method,
-			On:     enable,
-		}
-	} else {
-		data = &Gen2GetRpcPost{
-			Id:     c.selectChannelId(method),
-			Src:    "evcc",
-			Method: method,
-		}
+	data := &Gen2GetRpcPost{
+		Id:     c.selectChannelId(method),
+		Src:    "evcc",
+		Method: method,
+	}
+
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	return c.DoJSON(req, &res)
+}
+
+// execCmd executes a shelly api gen2+ command and provides the response
+func (c *gen2) execEnableCmd(method string, enable bool, res any) error {
+	data := &Gen2SetRpcPost{
+		Id:     c.selectChannelId(method),
+		Src:    "evcc",
+		Method: method,
+		On:     enable,
 	}
 
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
@@ -210,7 +217,7 @@ func (c *gen2) Enabled() (bool, error) {
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
-	return c.execCmd("Switch.Set", enable, &res)
+	return c.execEnableCmd("Switch.Set", enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface

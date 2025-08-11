@@ -66,6 +66,5 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 		id, err = c.parseAddOnSwitchID(res)
 		require.NoError(t, err)
 		assert.Equal(t, 100, id)
-
 	}
 }
