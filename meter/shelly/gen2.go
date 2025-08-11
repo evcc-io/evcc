@@ -199,7 +199,7 @@ func (c *gen2) Enabled() (bool, error) {
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
-	return c.execCmd("Switch.Set?id="+strconv.Itoa(c.channel), enable, &res)
+	return c.execCmd("Switch.Set?id="+strconv.Itoa(c.switchchannel), enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface
