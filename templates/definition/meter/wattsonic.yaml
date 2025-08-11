@@ -124,6 +124,6 @@ render: |
     register:
       address: 52503    # MinSOC setting
       type: writemultiple
-      decode: uint16
+      encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}
