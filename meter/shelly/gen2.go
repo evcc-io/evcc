@@ -1,6 +1,8 @@
 package shelly
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -21,10 +23,8 @@ type Gen2GetRpcPost struct {
 }
 
 type Gen2SetRpcPost struct {
-	Id     int    `json:"id"`
-	Src    string `json:"src"`
-	Method string `json:"method"`
-	On     bool   `json:"on"`
+	Gen2GetRpcPost
+	On bool `json:"on"`
 }
 
 type Gen2Methods struct {
@@ -169,13 +169,19 @@ func (c *gen2) execCmd(method string, enable bool, res any) error {
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execEnableCmd(method string, enable bool, res any) error {
 	data := &Gen2SetRpcPost{
-		Id:     c.selectChannelId(method),
-		Src:    "evcc",
-		Method: method,
-		On:     enable,
+		Gen2GetRpcPost: Gen2GetRpcPost{
+			Id:     c.selectChannelId(method),
+			Src:    "evcc",
+			Method: method,
+		},
+		On: enable,
+	}
+	reformattedData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), bytes.NewReader(reformattedData), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
