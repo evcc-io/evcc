@@ -13,20 +13,17 @@ import (
 
 func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
 	var wg sync.WaitGroup
+
 	for range num {
 		wg.Go(func() {
-			workunit(log, tasks, hits)
+			for ip := range tasks {
+				res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
+				hits <- res
+			}
 		})
 	}
 
 	return &wg
-}
-
-func workunit(log *util.Logger, ips <-chan string, hits chan<- []tasks.Result) {
-	for ip := range ips {
-		res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
-		hits <- res
-	}
 }
 
 func Work(log *util.Logger, num int, hosts []string) []tasks.Result {
