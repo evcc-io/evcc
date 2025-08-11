@@ -48,7 +48,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	if res.ChargingStatus.Status == "CHARGING" {
+	if res.ChargingStatus.Value == "CHARGING" {
 		status = api.StatusC
 	}
 
