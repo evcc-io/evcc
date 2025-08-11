@@ -123,7 +123,11 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	c.methods = res.Methods
 
 	if c.hasMethod("ProOutputAddon.GetPeripherals") {
-		c.switchchannel, _ = c.getAddOnSwitchId()
+		var err error
+		c.switchchannel, err = c.getAddOnSwitchId()
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		c.switchchannel = c.channel
 	}
@@ -143,15 +147,8 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
-	var id int
-	if method == "Switch.GetStatus" {
-		id = c.switchchannel
-	} else {
-		id = c.channel
-	}
-
 	data := &Gen2RpcPost{
-		Id:     id,
+		Id:     c.selectId(method),
 		On:     enable,
 		Src:    "evcc",
 		Method: method,
@@ -312,10 +309,18 @@ func (c *gen2) getAddOnSwitchId() (int, error) {
 			var id int
 			_, err := fmt.Sscanf(key, "switch:%d", &id)
 			if err != nil {
-				return c.channel, nil
+				return c.channel, fmt.Errorf("failed to get add-on switch id: %w", err)
 			}
 			return id, nil
 		}
 	}
 	return c.channel, nil
+}
+
+func (c *gen2) selectId(method string) int {
+	if method == "Switch.GetStatus" {
+		return c.switchchannel
+	} else {
+		return c.channel
+	}
 }
