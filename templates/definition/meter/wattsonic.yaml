@@ -122,8 +122,8 @@ render: |
     {{- include "modbus" . | indent 2 }}
     delay: {{ .delay }}
     register:
-      address: 52503    # MinSOC setting
-      type: writemultiple
+      address: 52503 # min soc
+      type: writeholding
       encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}
