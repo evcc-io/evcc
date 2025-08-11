@@ -310,6 +310,10 @@ func (c *gen2) getAddOnSwitchId() (int, error) {
 		return c.channel, err
 	}
 
+	return c.parseAddOnSwitchID(res)
+}
+
+func (c *gen2) parseAddOnSwitchID(res Gen2ProAddOnGetPeripherals) (int, error) {
 	for key := range res.DigitalOut {
 		if strings.HasPrefix(key, "switch:") {
 			var id int
