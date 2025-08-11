@@ -14,11 +14,17 @@ import (
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
 
-type Gen2RpcPost struct {
+type Gen2GetRpcPost struct {
 	Id     int    `json:"id"`
-	On     bool   `json:"on"`
 	Src    string `json:"src"`
 	Method string `json:"method"`
+}
+
+type Gen2SetRpcPost struct {
+	Id     int    `json:"id"`
+	Src    string `json:"src"`
+	Method string `json:"method"`
+	On     bool   `json:"on"`
 }
 
 type Gen2Methods struct {
@@ -146,11 +152,20 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
-	data := &Gen2RpcPost{
-		Id:     c.selectId(method),
-		On:     enable,
-		Src:    "evcc",
-		Method: method,
+	var data any
+	if method == "Switch.Set" {
+		data = &Gen2SetRpcPost{
+			Id:     c.selectChannelId(method),
+			Src:    "evcc",
+			Method: method,
+			On:     enable,
+		}
+	} else {
+		data = &Gen2GetRpcPost{
+			Id:     c.selectChannelId(method),
+			Src:    "evcc",
+			Method: method,
+		}
 	}
 
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
@@ -321,8 +336,8 @@ func (c *gen2) parseAddOnSwitchID(res Gen2ProAddOnGetPeripherals) (int, error) {
 	return c.channel, nil
 }
 
-func (c *gen2) selectId(method string) int {
-	if method == "Switch.GetStatus" {
+func (c *gen2) selectChannelId(method string) int {
+	if strings.HasPrefix(method, "Switch.") {
 		return c.switchchannel
 	} else {
 		return c.channel
