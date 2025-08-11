@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -91,7 +90,7 @@ type gen2 struct {
 func apiCall[T any](c *gen2, api string) func() (T, error) {
 	return func() (T, error) {
 		var res T
-		if err := c.execCmd(fmt.Sprintf("%s?id=%d", api, c.channel), false, &res); err != nil {
+		if err := c.execCmd(api, false, &res); err != nil {
 			return res, err
 		}
 		return res, nil
@@ -147,13 +146,8 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
-	id := c.channel
-	if method == "Switch.GetStatus" {
-		id = c.switchchannel
-	}
-
 	data := &Gen2RpcPost{
-		Id:     id,
+		Id:     c.selectId(method),
 		On:     enable,
 		Src:    "evcc",
 		Method: method,
@@ -201,7 +195,7 @@ func (c *gen2) Enabled() (bool, error) {
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
-	return c.execCmd("Switch.Set?id="+strconv.Itoa(c.switchchannel), enable, &res)
+	return c.execCmd("Switch.Set", enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface
@@ -323,6 +317,14 @@ func (c *gen2) parseAddOnSwitchID(res Gen2ProAddOnGetPeripherals) (int, error) {
 			return id, nil
 		}
 	}
-
+	// If no switch ID is found, return the channel as default
 	return c.channel, nil
+}
+
+func (c *gen2) selectId(method string) int {
+	if method == "Switch.GetStatus" {
+		return c.switchchannel
+	} else {
+		return c.channel
+	}
 }
