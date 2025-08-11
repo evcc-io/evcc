@@ -41,6 +41,7 @@ type Identity struct {
 func NewIdentity(log *util.Logger, ctx context.Context, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
+		ctx:      ctx,
 		user:     user,
 		password: password,
 	}
