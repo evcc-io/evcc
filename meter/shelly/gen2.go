@@ -77,6 +77,8 @@ type Gen2ProAddOnGetPeripherals struct {
 
 var _ Generation = (*gen2)(nil)
 
+const apisrc string = "evcc"
+
 type gen2 struct {
 	*request.Helper
 	uri           string
@@ -91,16 +93,9 @@ type gen2 struct {
 	emdata        func() (Gen2EMData, error)
 }
 
-func apiCall[T any](c *gen2, method string) func() (T, error) {
+func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
 	return func() (T, error) {
 		var res T
-		var id int
-		if strings.HasPrefix(method, "Switch.") {
-			id = c.switchchannel
-		} else {
-			id = c.channel
-		}
-
 		if err := c.execCmd(id, method, &res); err != nil {
 			return res, err
 		}
@@ -143,14 +138,14 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	if c.hasMethod("PM1.GetStatus") {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "PM1.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.channel, "PM1.GetStatus"), cache)
 	} else {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
 	}
-	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
-	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
-	c.emdata = util.Cached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
+	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, c.channel, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, c.channel, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, c.channel, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(apiCall[Gen2EMData](c, c.channel, "EMData.GetStatus"), cache)
 
 	return c, nil
 }
@@ -159,7 +154,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 func (c *gen2) execCmd(id int, method string, res any) error {
 	data := &Gen2GetRpcPost{
 		Id:     id,
-		Src:    "evcc",
+		Src:    apisrc,
 		Method: method,
 	}
 
@@ -176,7 +171,7 @@ func (c *gen2) execEnableCmd(id int, method string, enable bool, res any) error 
 	data := &Gen2SetRpcPost{
 		Gen2GetRpcPost: Gen2GetRpcPost{
 			Id:     id,
-			Src:    "evcc",
+			Src:    apisrc,
 			Method: method,
 		},
 		On: enable,
