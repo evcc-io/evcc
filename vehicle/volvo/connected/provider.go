@@ -1,7 +1,6 @@
 package connected
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -35,25 +34,25 @@ func (v *Provider) Soc() (float64, error) {
 
 // Range implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	res, err := v.statusG()
-	if err != nil {
-		return api.StatusNone, err
-	}
-
 	status := api.StatusA // disconnected
 
+	res, err := v.statusG()
+	if err != nil {
+		return status, nil
+	}
+
 	switch res.ChargingConnectionStatus.Value {
-	case "CONNECTED":
+	case "DISCONNECTED":
+		status = api.StatusA
+	case "CONNECTED", "FAULT":
 		status = api.StatusB
-	case "FAULT":
-		return status, fmt.Errorf("invalid status: %s", res.ChargingConnectionStatus.Value)
 	}
 
 	if res.ChargingStatus.Value == "CHARGING" {
 		status = api.StatusC
 	}
 
-	return status, nil
+	return status, err
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
