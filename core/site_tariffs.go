@@ -150,7 +150,9 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 
 	// accumulate forecasted energy since last update
 	energy := solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3
-	site.log.DEBUG.Printf("solar forecast: accumulated %.3f from %v to %v", energy, site.fcstEnergy.updated, time.Now())
+	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
+		energy, site.fcstEnergy.updated.Truncate(time.Second), time.Now().Truncate(time.Second),
+	)
 
 	site.fcstEnergy.AddEnergy(energy)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)

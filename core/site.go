@@ -592,10 +592,10 @@ func (site *Site) updatePvMeters() {
 
 		prev := site.pvEnergy[name].AccumulatedEnergy()
 		if mm[i].Energy > 0 {
-			site.log.DEBUG.Printf("!! accumulated solar production: %s set %.3fkWh meter total (was: %+v)", name, mm[i].Energy, site.pvEnergy[name])
+			site.log.DEBUG.Printf("!! accumulated solar production: %s set %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
 		} else {
-			site.log.DEBUG.Printf("!! accumulated solar production: %s add %.3fW power (was: %+v)", name, mm[i].Energy, site.pvEnergy[name])
+			site.log.DEBUG.Printf("!! accumulated solar production: %s add %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
 		site.log.DEBUG.Printf("!! accumulated solar production: %s moved from %.3f to %.3f (is: %+v)", name, prev, site.pvEnergy[name].AccumulatedEnergy(), site.pvEnergy[name])
