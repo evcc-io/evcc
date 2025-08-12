@@ -91,10 +91,17 @@ type gen2 struct {
 	emdata        func() (Gen2EMData, error)
 }
 
-func apiCall[T any](c *gen2, api string) func() (T, error) {
+func apiCall[T any](c *gen2, method string) func() (T, error) {
 	return func() (T, error) {
 		var res T
-		if err := c.execCmd(api, false, &res); err != nil {
+		var id int
+		if strings.HasPrefix(method, "Switch.") {
+			id = c.switchchannel
+		} else {
+			id = c.channel
+		}
+
+		if err := c.execCmd(id, method, &res); err != nil {
 			return res, err
 		}
 		return res, nil
@@ -120,7 +127,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	var res Gen2Methods
-	if err := c.execCmd("Shelly.ListMethods", false, &res); err != nil {
+	if err := c.execCmd(c.channel, "Shelly.ListMethods", &res); err != nil {
 		return nil, err
 	}
 
@@ -149,13 +156,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 }
 
 // execCmd executes a shelly api gen2+ command and provides the response
-func (c *gen2) execCmd(method string, enable bool, res any) error {
-	var id int
-	if strings.HasPrefix(method, "Switch.") {
-		id = c.switchchannel
-	} else {
-		id = c.channel
-	}
+func (c *gen2) execCmd(id int, method string, res any) error {
 	data := &Gen2GetRpcPost{
 		Id:     id,
 		Src:    "evcc",
@@ -171,10 +172,10 @@ func (c *gen2) execCmd(method string, enable bool, res any) error {
 }
 
 // execCmd executes a shelly api gen2+ command and provides the response
-func (c *gen2) execEnableCmd(method string, enable bool, res any) error {
+func (c *gen2) execEnableCmd(id int, method string, enable bool, res any) error {
 	data := &Gen2SetRpcPost{
 		Gen2GetRpcPost: Gen2GetRpcPost{
-			Id:     c.switchchannel,
+			Id:     id,
 			Src:    "evcc",
 			Method: method,
 		},
@@ -223,7 +224,7 @@ func (c *gen2) Enabled() (bool, error) {
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
-	return c.execEnableCmd("Switch.Set", enable, &res)
+	return c.execEnableCmd(c.switchchannel, "Switch.Set", enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface
@@ -328,7 +329,7 @@ func (c *gen2) hasMethod(method string) bool {
 
 func (c *gen2) getAddOnSwitchId() (int, error) {
 	var res Gen2ProAddOnGetPeripherals
-	if err := c.execCmd("ProOutputAddon.GetPeripherals", false, &res); err != nil {
+	if err := c.execCmd(c.channel, "ProOutputAddon.GetPeripherals", &res); err != nil {
 		return c.channel, err
 	}
 
