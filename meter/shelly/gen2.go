@@ -1,8 +1,6 @@
 package shelly
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -128,7 +126,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 	c.methods = res.Methods
 
-	// Shelly 3EM Pro with peripherals
+	// Optional change of switchchannel for Pro shellies with peripherals
 	if c.hasMethod("ProOutputAddon.GetPeripherals") {
 		var err error
 		c.switchchannel, err = c.getAddOnSwitchId()
@@ -152,8 +150,14 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(method string, enable bool, res any) error {
+	var id int
+	if strings.HasPrefix(method, "Switch.") {
+		id = c.switchchannel
+	} else {
+		id = c.channel
+	}
 	data := &Gen2GetRpcPost{
-		Id:     c.selectChannelId(method),
+		Id:     id,
 		Src:    "evcc",
 		Method: method,
 	}
@@ -170,18 +174,14 @@ func (c *gen2) execCmd(method string, enable bool, res any) error {
 func (c *gen2) execEnableCmd(method string, enable bool, res any) error {
 	data := &Gen2SetRpcPost{
 		Gen2GetRpcPost: Gen2GetRpcPost{
-			Id:     c.selectChannelId(method),
+			Id:     c.switchchannel,
 			Src:    "evcc",
 			Method: method,
 		},
 		On: enable,
 	}
-	reformattedData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		return err
-	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), bytes.NewReader(reformattedData), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -347,12 +347,4 @@ func (c *gen2) parseAddOnSwitchID(res Gen2ProAddOnGetPeripherals) (int, error) {
 	}
 	// If no switch ID is found, return the channel as default
 	return c.channel, nil
-}
-
-func (c *gen2) selectChannelId(method string) int {
-	if strings.HasPrefix(method, "Switch.") {
-		return c.switchchannel
-	} else {
-		return c.channel
-	}
 }
