@@ -16,9 +16,9 @@
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
     "legendMiddleSubline": "als de thuisaccu {soc} bereikt heeft.",
-    "legendTopAutostart": "Laden vanuit de thuisbatterij eens de batterij",
+    "legendTopAutostart": "Laden vanuit de thuisbatterij",
     "legendTopName": "Opladen met energie uit de thuisaccu",
-    "legendTopSubline": "stoppen wanneer de thuisaccu {soc} bereikt.",
+    "legendTopSubline": "eens de thuisaccu {soc} bereikt heeft.",
     "modalTitle": "Thuisaccu",
     "usageTab": "Batterijgebruik"
   },
@@ -289,7 +289,7 @@
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische detectie",
       "vehicleHelpAutoDetection": "Selecteert automatisch het meest aannemelijke voertuig. Handmatige aanpassen is mogelijk.",
-      "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier aan het opladen is. Automatische detectie uitgeschakeld. Handmatige aanpassen is mogelijk.",
+      "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier laadt. Automatische detectie uitgeschakeld. Handmatig aanpassen is mogelijk.",
       "vehicleLabel": "Standaard voertuig",
       "vehiclesTitle": "Voertuigen"
     },
