@@ -41,7 +41,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, nil
 	}
 
-	switch res.ChargingConnectionStatus.Value {
+	switch res.ChargerConnectionStatus.Value {
 	case "DISCONNECTED":
 		status = api.StatusA
 	case "CONNECTED", "FAULT":
