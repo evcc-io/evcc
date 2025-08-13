@@ -139,7 +139,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
+			return nil, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID
