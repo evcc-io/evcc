@@ -89,26 +89,6 @@ params:
     example: 50
     type: float
     usages: ["vehicle", "battery"]
-  - name: maxchargepower
-    unit: W
-    description:
-      de: Maximale Lade-Leistung der Batterie
-      en: Maximum charge power of the battery
-    default: 0
-    example: 5000
-    type: float
-    usages: ["battery"]
-    advanced: true
-  - name: maxdischargepower
-    unit: W
-    description:
-      de: Maximale Entlade-Leistung der Batterie (experimentell)
-      en: Maximum discharge power of the battery (experimental)
-    default: 0
-    example: 5000
-    type: float
-    usages: ["battery"]
-    advanced: true
   - name: maxacpower
     unit: W
     description:
