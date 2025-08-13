@@ -122,7 +122,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
 	// replace client transport with authenticated transport
@@ -135,7 +135,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	if charger == "" {
 		chargers, err := c.chargers()
 		if err != nil {
-			return c, err
+			return nil, err
 		}
 
 		if len(chargers) != 1 {
