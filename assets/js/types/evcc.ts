@@ -248,6 +248,8 @@ export interface Sponsor {
   name: string;
   expiresAt: string;
   expiresSoon: boolean;
+  token?: string;
+  fromYaml: boolean;
 }
 
 export interface Notification {

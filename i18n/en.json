@@ -431,6 +431,7 @@
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
       "descriptionToken": "You get the token from {url}. We also offer a trial token for testing.",
       "error": "The sponsor token is not valid.",
+      "invalid": "invalid",
       "labelToken": "Sponsor token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
