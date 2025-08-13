@@ -110,11 +110,11 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	} else {
 		go t.run(done)
 	}
-	err = <-done
 
-	if err != nil {
+	if err := <-done; err != nil {
 		return nil, err
 	}
+
 	return t, nil
 }
 

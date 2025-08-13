@@ -66,7 +66,6 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		basic:  basic,
 		Helper: request.NewHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
-		prices: make(map[string]float64),
 	}
 
 	prices := structs.Map(cc.Prices)

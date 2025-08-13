@@ -78,8 +78,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	if forecastG != nil {
 		done := make(chan error)
 		go t.run(forecastG, done, cc.Interval)
-		err = <-done
-		if err != nil {
+		if err := <-done; err != nil {
 			return nil, err
 		}
 	}
