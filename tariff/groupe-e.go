@@ -32,11 +32,11 @@ func NewGroupeEFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	done := make(chan error)
 	go t.run(done)
-	err := <-done
 
-	if err != nil {
+	if err := <-done; err != nil {
 		return nil, err
 	}
+
 	return t, nil
 }
 
