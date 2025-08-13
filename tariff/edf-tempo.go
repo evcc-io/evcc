@@ -82,7 +82,7 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Source: oauth.RefreshTokenSource(new(oauth2.Token), t),
 	}
 
-	return doneOrError(t)
+	return runOrError(t)
 }
 
 func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {

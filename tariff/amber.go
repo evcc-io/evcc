@@ -73,7 +73,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}),
 	}
 
-	return doneOrError(t)
+	return runOrError(t)
 }
 
 func (t *Amber) run(done chan error) {

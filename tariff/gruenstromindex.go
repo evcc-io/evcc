@@ -52,7 +52,7 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 		Source: corrently.TokenSource(log, &oauth2.Token{AccessToken: cc.Token}),
 	}
 
-	return doneOrError(t)
+	return runOrError(t)
 }
 
 func (t *GrünStromIndex) run(done chan error) {

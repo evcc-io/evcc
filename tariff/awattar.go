@@ -50,7 +50,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	return doneOrError(t)
+	return runOrError(t)
 }
 
 func (t *Awattar) run(done chan error) {

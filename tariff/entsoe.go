@@ -79,7 +79,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}),
 	}
 
-	return doneOrError(t)
+	return runOrError(t)
 }
 
 func (t *Entsoe) run(done chan error) {

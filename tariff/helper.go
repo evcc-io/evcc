@@ -77,8 +77,8 @@ type runnable interface {
 }
 
 // https://groups.google.com/g/golang-nuts/c/1cl9v_hPYHk
-// doneOrError invokes t.run(chan error) and waits for the channel to return
-func doneOrError[T any, I interface {
+// runOrError invokes t.run(chan error) and waits for the channel to return
+func runOrError[T any, I interface {
 	*T
 	runnable
 }](t *T) (*T, error) {
