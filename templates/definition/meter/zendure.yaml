@@ -27,6 +27,10 @@ params:
   - name: capacity
     default: 2
     advanced: true
+  - name: maxchargepower
+    default: 1200
+  - name: maxdischargepower
+    default: 800
   - name: timeout
 render: |
   type: zendure
@@ -34,4 +38,8 @@ render: |
   region: {{ .region }}
   account: {{ .account }}
   serial: {{ .serial }}
+  {{- if eq .usage "battery" }}
+  maxchargepower: {{ .maxchargepower }}
+  maxdischargepower: {{ .maxdischargepower }}
+  {{- end }}
   timeout: {{ .timeout }}
