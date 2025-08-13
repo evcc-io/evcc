@@ -56,9 +56,12 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	done := make(chan error)
 	go t.run(done)
-	err := <-done
 
-	return t, err
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return t, nil
 }
 
 func (t *Elering) run(done chan error) {

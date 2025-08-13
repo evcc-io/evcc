@@ -112,7 +112,10 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 	err = <-done
 
-	return t, err
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 func (t *Ostrom) getContracts() ([]ostrom.Contract, error) {

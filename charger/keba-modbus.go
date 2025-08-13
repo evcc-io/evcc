@@ -190,7 +190,7 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 		energyFactor: 1e4,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *Keba) heartbeat(ctx context.Context, u uint32) {

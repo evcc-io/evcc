@@ -70,7 +70,10 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	go t.run(done)
 	err := <-done
 
-	return t, err
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 func (t *Tibber) run(done chan error) {

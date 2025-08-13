@@ -56,7 +56,10 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 	go t.run(done)
 	err := <-done
 
-	return t, err
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 func (t *GrünStromIndex) run(done chan error) {

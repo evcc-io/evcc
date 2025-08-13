@@ -79,9 +79,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		done := make(chan error)
 		go t.run(forecastG, done, cc.Interval)
 		err = <-done
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return t, err
+	return t, nil
 }
 
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {

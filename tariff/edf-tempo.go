@@ -66,6 +66,7 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		basic:  basic,
 		Helper: request.NewHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		prices: make(map[string]float64),
 	}
 
 	prices := structs.Map(cc.Prices)
@@ -84,9 +85,12 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	done := make(chan error)
 	go t.run(done)
-	err := <-done
 
-	return t, err
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return t, nil
 }
 
 func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
