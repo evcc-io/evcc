@@ -66,7 +66,7 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]interface{}
 		voltages = wb.voltages
 	}
 
-	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents, voltages), err
+	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents, voltages), nil
 }
 
 // NewPhoenixEMEth creates a Phoenix charger

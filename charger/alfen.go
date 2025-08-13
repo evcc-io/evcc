@@ -93,6 +93,9 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	go wb.heartbeat(ctx)
 
 	_, v2, v3, err := wb.Voltages()
+	if err != nil {
+		return nil, err
+	}
 
 	var (
 		phasesS func(int) error
@@ -106,7 +109,7 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		wb.log.DEBUG.Println("detected 1p alfen")
 	}
 
-	return decorateAlfen(wb, phasesS, phasesG), err
+	return decorateAlfen(wb, phasesS, phasesG), nil
 }
 
 func (wb *Alfen) heartbeat(ctx context.Context) {

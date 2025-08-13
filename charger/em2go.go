@@ -148,7 +148,7 @@ func (wb *Em2Go) initialize() (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
-	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), err
+	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), nil
 }
 
 // Status implements the api.Charger interface
