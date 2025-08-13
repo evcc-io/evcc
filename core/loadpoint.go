@@ -313,15 +313,6 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 
 	// deprecated yaml properties
-	if lp.Phases_ > 0 {
-		lp.log.WARN.Printf("ignoring deprecated phases: %d. please configure via UI", lp.Phases_)
-	}
-	if lp.MinCurrent_ > 0 {
-		lp.log.WARN.Printf("ignoring deprecated minCurrent: %f. please configure via UI", lp.MinCurrent_)
-	}
-	if lp.MaxCurrent_ > 0 {
-		lp.log.WARN.Printf("ignoring deprecated maxCurrent: %f. please configure via UI", lp.MaxCurrent_)
-	}
 	if lp.GuardDuration_ > 0 {
 		lp.log.WARN.Printf("ignoring deprecated guardduration: %s. please configure via UI", lp.GuardDuration_)
 	}
@@ -333,13 +324,23 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Int(keys.Priority); err == nil {
 		lp.setPriority(int(v))
 	}
-	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
+	_deprecatedMsgTemplate := "setting '%s' via yaml is deprecated. A possible existing configuration done vie the GUI will be ignored during the restart."
+	if lp.Phases_ > 0 {
+		lp.log.WARN.Printf(_deprecatedMsgTemplate, "phases")
+		lp.setPhasesConfigured(lp.Phases_)
+	} else if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setPhasesConfigured(int(v))
 	}
-	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
+	if lp.MinCurrent_ > 0 {
+		lp.log.WARN.Printf(_deprecatedMsgTemplate, "minCurrent")
+		lp.setMinCurrent(lp.MinCurrent_)
+	} else if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
 	}
-	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
+	if lp.MaxCurrent_ > 0 {
+		lp.log.WARN.Printf(_deprecatedMsgTemplate, "maxCurrent")
+		lp.setMaxCurrent(lp.MaxCurrent_)
+	} else if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
 		lp.setMaxCurrent(v)
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
