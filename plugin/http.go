@@ -170,6 +170,12 @@ var _ Getters = (*HTTP)(nil)
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
+		if p.method == http.MethodGet {
+			mu := muForKey(p.url)
+			mu.Lock()
+			defer mu.Unlock()
+		}
+
 		url, err := setFormattedValue(p.url, "", "")
 		if err != nil {
 			return "", err
