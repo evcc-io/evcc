@@ -102,8 +102,8 @@ params:
   - name: maxdischargepower
     unit: W
     description:
-      de: Maximale Entlade-Leistung der Batterie
-      en: Maximum discharge power of the battery
+      de: Maximale Entlade-Leistung der Batterie (experimentell)
+      en: Maximum discharge power of the battery (experimental)
     default: 0
     example: 5000
     type: float
