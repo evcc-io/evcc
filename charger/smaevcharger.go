@@ -132,6 +132,10 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 		)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return wb, nil
 }
 
