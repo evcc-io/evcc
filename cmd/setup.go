@@ -113,20 +113,20 @@ func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 			if !isWritable(serviceDB) {
 				sudo = "sudo "
 			}
-			log.FATAL.Fatal(`
-Found systemd service database at "` + serviceDB + `", evcc has been invoked with no explicit database path.
+			return fmt.Errorf(`
+Found systemd service database at "%s", evcc has been invoked with no explicit database path.
 Running the same config with multiple databases can lead to expiring vehicle tokens.
 
 If you want to use the existing service database run the following command:
 
-` + sudo + `evcc --database ` + serviceDB + `
+%sevcc --database %s
 
 If you want to create a new user-space database run the following command:
 
 evcc --database ~/.evcc/evcc.db
 
 If you know what you're doing, you can skip the database check with the --ignore-db flag.
-			`)
+			`, serviceDB, sudo, serviceDB)
 		}
 	}
 
