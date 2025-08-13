@@ -324,21 +324,20 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Int(keys.Priority); err == nil {
 		lp.setPriority(int(v))
 	}
-	_deprecatedMsgTemplate := "setting '%s' via yaml is deprecated. A possible existing configuration done vie the GUI will be ignored during the restart."
 	if lp.Phases_ > 0 {
-		lp.log.WARN.Printf(_deprecatedMsgTemplate, "phases")
+		lp.log.WARN.Printf("setting '%s' via yaml is deprecated. A possible existing configuration done via the GUI will be ignored during the restart.", "phases")
 		lp.setPhasesConfigured(lp.Phases_)
 	} else if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setPhasesConfigured(int(v))
 	}
 	if lp.MinCurrent_ > 0 {
-		lp.log.WARN.Printf(_deprecatedMsgTemplate, "minCurrent")
+		lp.log.WARN.Printf("setting '%s' via yaml is deprecated. A possible existing configuration done via the GUI will be ignored during the restart.", "minCurrent")
 		lp.setMinCurrent(lp.MinCurrent_)
 	} else if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
 	}
 	if lp.MaxCurrent_ > 0 {
-		lp.log.WARN.Printf(_deprecatedMsgTemplate, "maxCurrent")
+		lp.log.WARN.Printf("setting '%s' via yaml is deprecated. A possible existing configuration done via the GUI will be ignored during the restart.", "maxCurrent")
 		lp.setMaxCurrent(lp.MaxCurrent_)
 	} else if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
 		lp.setMaxCurrent(v)
