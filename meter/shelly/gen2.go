@@ -14,14 +14,14 @@ import (
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
 
-type Gen2GetRpcPost struct {
+type Gen2RpcRequest struct {
 	Id     int    `json:"id"`
 	Src    string `json:"src"`
 	Method string `json:"method"`
 }
 
 type Gen2SetRpcPost struct {
-	Gen2GetRpcPost
+	Gen2RpcRequest
 	On bool `json:"on"`
 }
 
@@ -150,7 +150,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(id int, method string, res any) error {
-	data := &Gen2GetRpcPost{
+	data := &Gen2RpcRequest{
 		Id:     id,
 		Src:    apisrc,
 		Method: method,
@@ -167,7 +167,7 @@ func (c *gen2) execCmd(id int, method string, res any) error {
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execEnableCmd(id int, method string, enable bool, res any) error {
 	data := &Gen2SetRpcPost{
-		Gen2GetRpcPost: Gen2GetRpcPost{
+		Gen2RpcRequest: Gen2RpcRequest{
 			Id:     id,
 			Src:    apisrc,
 			Method: method,
