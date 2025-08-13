@@ -42,7 +42,7 @@ params:
     usages: ["battery"]
     advanced: true
   - name: maxchargepower
-    default: 4200	
+    default: 4200
   - name: maxacpower
   - name: capacity
     advanced: true
