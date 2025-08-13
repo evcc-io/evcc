@@ -22,11 +22,12 @@ import (
 )
 
 const (
-	typeCustom       = "custom"       // typeCustom is the custom configuration type
-	typeTemplate     = "template"     // typeTemplate is the updatable configuration type
-	typeHeatpump     = "heatpump"     // typeHeatpump is the heatpump configuration type
-	typeSwitchSocket = "switchsocket" // typeSwitchSocket is the switch socket configuration type
-	typeSgReady      = "sgready"      // typeSgReady is the SG-Ready configuration type
+	typeCustom       = "custom"        // typeCustom is the custom configuration type
+	typeTemplate     = "template"      // typeTemplate is the updatable configuration type
+	typeHeatpump     = "heatpump"      // typeHeatpump is the heatpump configuration type
+	typeSwitchSocket = "switchsocket"  // typeSwitchSocket is the switch socket configuration type
+	typeSgReady      = "sgready"       // typeSgReady is the SG-Ready configuration type
+	typeSgReadyBoost = "sgready-boost" // typeSgReadyBoost is the SG-Ready (Boost) configuration type
 
 	// masked indicates a masked config parameter value
 	masked = "***"
@@ -356,8 +357,9 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	if !(strings.EqualFold(res.Type, typeCustom) ||
 		strings.EqualFold(res.Type, typeHeatpump) ||
 		strings.EqualFold(res.Type, typeSwitchSocket) ||
-		strings.EqualFold(res.Type, typeSgReady)) {
-		return configReq{}, errors.New("invalid config: yaml only allowed for custom, heatpump, switchsocket, and sgready types")
+		strings.EqualFold(res.Type, typeSgReady) ||
+		strings.EqualFold(res.Type, typeSgReadyBoost)) {
+		return configReq{}, errors.New("invalid config: yaml only allowed for custom, heatpump, switchsocket, sgready, and sgready-boost types")
 	}
 
 	if len(res.Other) != 0 {
