@@ -71,3 +71,23 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 func beginningOfDay() time.Time {
 	return now.With(time.Now()).BeginningOfDay()
 }
+
+type runnable interface {
+	run(done chan error)
+}
+
+// https://groups.google.com/g/golang-nuts/c/1cl9v_hPYHk
+// doneOrError invokes t.run(chan error) and waits for the channel to return
+func doneOrError[T any, I interface {
+	*T
+	runnable
+}](t *T) (*T, error) {
+	done := make(chan error)
+	go I(t).run(done)
+
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return t, nil
+}

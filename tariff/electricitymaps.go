@@ -70,14 +70,7 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 		}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-
-	if err := <-done; err != nil {
-		return nil, err
-	}
-
-	return t, nil
+	return doneOrError(t)
 }
 
 func (t *ElectricityMaps) run(done chan error) {

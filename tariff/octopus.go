@@ -84,14 +84,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:          util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-
-	if err := <-done; err != nil {
-		return nil, err
-	}
-
-	return t, nil
+	return doneOrError(t)
 }
 
 func (t *Octopus) run(done chan error) {
