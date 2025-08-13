@@ -40,44 +40,42 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 
 	{
 		// ProOutputAddon.GetPeripherals Endpoint
-		c := &gen2{
-			channel: 0,
-		}
 		var res Gen2ProAddOnGetPeripherals
+		channel := 0
 
 		// Test with a valid switch ID
 		jsonstr := `{"digital_out":{"switch:100":{}}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
 		assert.NotEmpty(t, res.DigitalOut)
-		id, err := c.parseAddOnSwitchID(res)
+		id, err := parseAddOnSwitchID(channel, res)
 		require.NoError(t, err)
 		assert.Equal(t, 100, id)
 		// Test with no AddOn installed
 		res = Gen2ProAddOnGetPeripherals{}
 		jsonstr = `{"code":404,"message":"No handler for ProOutputAddon.GetPeripherals"}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-		id, err = c.parseAddOnSwitchID(res)
+		id, err = parseAddOnSwitchID(channel, res)
 		require.NoError(t, err)
 		assert.Equal(t, 0, id)
 		// Test for empty digital_out map in AddOn response
 		res = Gen2ProAddOnGetPeripherals{}
 		jsonstr = `{"digital_out":{}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-		id, err = c.parseAddOnSwitchID(res)
+		id, err = parseAddOnSwitchID(channel, res)
 		require.NoError(t, err)
 		assert.Equal(t, 0, id)
 		// Test with multiple AddOns installed (only the first ID will be returned)
 		res = Gen2ProAddOnGetPeripherals{}
 		jsonstr = `{"digital_out":{"switch:100":{},"switch:101":{}}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-		id, err = c.parseAddOnSwitchID(res)
+		id, err = parseAddOnSwitchID(channel, res)
 		require.NoError(t, err)
 		assert.Equal(t, 100, id)
 		// Test for malformed switch keys
 		res = Gen2ProAddOnGetPeripherals{}
 		jsonstr = `{"digital_out":{"switch:abc":{}}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-		id, err = c.parseAddOnSwitchID(res)
+		id, err = parseAddOnSwitchID(channel, res)
 		require.ErrorContains(t, err, "failed to get add-on switch id:")
 		assert.Equal(t, 0, id)
 	}

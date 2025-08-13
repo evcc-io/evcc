@@ -82,7 +82,6 @@ const apisrc string = "evcc"
 type gen2 struct {
 	*request.Helper
 	uri           string
-	channel       int
 	switchchannel int
 	model         string
 	methods       []string
@@ -110,7 +109,6 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	c := &gen2{
 		Helper:        helper,
 		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
-		channel:       channel,
 		switchchannel: channel,
 		model:         model,
 	}
@@ -122,7 +120,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	var res Gen2Methods
-	if err := c.execCmd(c.channel, "Shelly.ListMethods", &res); err != nil {
+	if err := c.execCmd(channel, "Shelly.ListMethods", &res); err != nil {
 		return nil, err
 	}
 
@@ -131,21 +129,21 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	// Optional change of switchchannel for Pro shellies with peripherals
 	if c.hasMethod("ProOutputAddon.GetPeripherals") {
 		var err error
-		c.switchchannel, err = c.getAddOnSwitchId()
+		c.switchchannel, err = c.getAddOnSwitchId(channel)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if c.hasMethod("PM1.GetStatus") {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.channel, "PM1.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, channel, "PM1.GetStatus"), cache)
 	} else {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
 	}
-	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, c.channel, "EM1.GetStatus"), cache)
-	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, c.channel, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, c.channel, "EM.GetStatus"), cache)
-	c.emdata = util.Cached(apiCall[Gen2EMData](c, c.channel, "EMData.GetStatus"), cache)
+	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, channel, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, channel, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(apiCall[Gen2EMData](c, channel, "EMData.GetStatus"), cache)
 
 	return c, nil
 }
@@ -322,16 +320,16 @@ func (c *gen2) hasMethod(method string) bool {
 	return slices.Contains(c.methods, method)
 }
 
-func (c *gen2) getAddOnSwitchId() (int, error) {
+func (c *gen2) getAddOnSwitchId(channel int) (int, error) {
 	var res Gen2ProAddOnGetPeripherals
-	if err := c.execCmd(c.channel, "ProOutputAddon.GetPeripherals", &res); err != nil {
-		return c.channel, err
+	if err := c.execCmd(channel, "ProOutputAddon.GetPeripherals", &res); err != nil {
+		return channel, err
 	}
 
-	return c.parseAddOnSwitchID(res)
+	return parseAddOnSwitchID(channel, res)
 }
 
-func (c *gen2) parseAddOnSwitchID(res Gen2ProAddOnGetPeripherals) (int, error) {
+func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) (int, error) {
 	for key := range res.DigitalOut {
 		if strings.HasPrefix(key, "switch:") {
 			var id int
@@ -341,6 +339,7 @@ func (c *gen2) parseAddOnSwitchID(res Gen2ProAddOnGetPeripherals) (int, error) {
 			return id, nil
 		}
 	}
-	// If no switch ID is found, return the channel as default
-	return c.channel, nil
+
+	// if no switch ID is found, return the channel as default
+	return channel, nil
 }
