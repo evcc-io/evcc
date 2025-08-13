@@ -16,6 +16,7 @@ features:
 
 ## optional attributes (read-only)
 
+#icon: generic # icon for UI purpose only
 #energy: # meter reading in kWh
 #  source: const
 #  value: 42.5
