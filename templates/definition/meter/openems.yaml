@@ -41,6 +41,8 @@ params:
       en: selected channel for controlling the device
     usages: ["battery"]
     advanced: true
+  - name: maxchargepower
+    default: 4200	
   - name: maxacpower
   - name: capacity
     advanced: true
@@ -117,7 +119,7 @@ render: |
           method: POST
           headers:
           - content-type: application/json
-          body: '{"value":-4200}'
+          body: '{"value": {{ printf "-%d" .maxchargepower }}}'
   {{- end }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
