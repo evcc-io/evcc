@@ -122,7 +122,7 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
-	return decoratePeblar(wb, phasesS, phasesG), err
+	return decoratePeblar(wb, phasesS, phasesG), nil
 }
 
 // Status implements the api.Charger interface

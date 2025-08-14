@@ -121,7 +121,7 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	// failsafe
 	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
 
-	return decorateMennekesCompact(wb, phasesS), err
+	return decorateMennekesCompact(wb, phasesS), nil
 }
 
 func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {

@@ -66,11 +66,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		t.homeID = home.ID
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Tibber) run(done chan error) {
