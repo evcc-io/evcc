@@ -81,9 +81,9 @@ type runnable interface {
 func runOrError[T any, I interface {
 	*T
 	runnable
-}](t *T) (*T, error) {
+}](t I) (*T, error) {
 	done := make(chan error)
-	go I(t).run(done)
+	go t.run(done)
 
 	if err := <-done; err != nil {
 		return nil, err
