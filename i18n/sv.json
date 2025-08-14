@@ -435,6 +435,7 @@
       "title": "Sponsor",
       "tokenRequired": "Du måste ange en sponsortoken innan du kan lägga till detta fordon.",
       "tokenRequiredLearnMore": "Läs mer.",
+      "tokenRequiredShort": "Ingen sponsor-token konfigurerad.",
       "trialToken": "Testtoken"
     },
     "system": {
@@ -464,8 +465,12 @@
         "restore": {
           "action": "Återställ...",
           "confirmationButton": "Återställ & starta om",
-          "confirmationText": "Detta kommer att radera hela databasen. Se till att säkerhetskopiera först."
-        }
+          "confirmationText": "Detta kommer att radera hela databasen. Se till att säkerhetskopiera först.",
+          "description": "Återställ data från en backup-fil. Detta raderar dina nuvarande data.",
+          "labelFile": "Säkerhetskopia",
+          "title": "Återställ"
+        },
+        "title": "Säkerhetskopiera & återställ"
       },
       "logs": "Loggar",
       "restart": "Omstart",
@@ -616,6 +621,10 @@
   },
   "header": {
     "about": "Om",
+    "authProviders": {
+      "confirmLogout": "Är du säker på att du vill bryta anslutningen {title}?",
+      "title": "Auktoriseringsstatus"
+    },
     "blog": "Blogg",
     "docs": "Dokumentation",
     "github": "GitHub",

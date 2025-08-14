@@ -17,6 +17,8 @@ features:
   - heating # treat as a heating device
   - integrateddevice # no charging sessions, no connected vehicles
 
+icon: heater # icon for UI purpose only
+
 ## optional attributes (read-only)
 
 #power: # heating power in W

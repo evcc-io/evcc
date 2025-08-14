@@ -3,6 +3,10 @@ products:
   - brand: DaheimLaden
     description:
       generic: Smart/Touch Pro
+requirements:
+  description:
+    de: Für die Phasenumschaltung ist eine aktualisierte Firmware notwendig. Dazu bitte DaheimLaden Support kontaktieren.
+    en: Phase switching requires updated firmware. Please contact DaheimLaden Support for this.
 capabilities: ["1p3p", "mA"]
 params:
   - name: host

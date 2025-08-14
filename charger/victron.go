@@ -119,7 +119,7 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, errors.New("charger must be in manual mode")
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

@@ -45,10 +45,22 @@
       "switchsockets": "“Açılıp kapanabilen prizler”",
       "template": "Üretici",
       "titleAdd": {
-        "charging": "Doldurma Cihazı Ekle"
+        "charging": "Doldurma Cihazı Ekle",
+        "heating": "Isıtıcı Ekle"
       },
       "titleEdit": {
-        "charging": "Doldurma Cihazını Düzenle"
+        "charging": "Doldurma Cihazını Düzenle",
+        "heating": "Isıtıcıyı Düzenle"
+      },
+      "type": {
+        "custom": {
+          "charging": "Kullanıcı tanımlı doldurma cihazı",
+          "heating": "Kullanıcı tanımlı ısıtıcı"
+        },
+        "heatpump": "Kullanıcı tanımlı ısı pompası",
+        "sgready": "Kullanıcı tanımlı ısı pompası (sg-ready, tamamı)",
+        "sgready-boost": "Kullanıcı tanımlı ısı pompası (sg-ready, takviye)",
+        "switchsocket": "Kullanıcı tanımlı şalterli priz"
       }
     },
     "circuits": {
@@ -71,7 +83,7 @@
       "chargeStatus": "Durum",
       "chargeStatusA": "bağlı değil",
       "chargeStatusB": "bağlı",
-      "chargeStatusC": "şarj oluyor",
+      "chargeStatusC": "doluyor",
       "chargeStatusE": "elektrik yok",
       "chargeStatusF": "hata",
       "chargedEnergy": "Doldu",
@@ -143,12 +155,15 @@
       "docsLink": "Belgelere bak.",
       "experimental": "Deneysel",
       "hideAdvancedSettings": "“Gelişmiş ayarları gizle”",
+      "invalidFileSelected": "Geçersiz dosya seçildi",
+      "noFileSelected": "Seçili dosya yok.",
       "off": "kapalı",
       "on": "açık",
       "password": "Şifre",
       "readFromFile": "Dosyadan oku",
       "remove": "Kaldır",
       "save": "Kaydet",
+      "selectFile": "Gözat",
       "showAdvancedSettings": "“Gelişmiş ayarları göster”",
       "telemetry": "Uzölçüm",
       "templateLoading": "Dolduruyorum...",
@@ -185,15 +200,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "“Doldurma cihazı ekle”"
+        "charging": "“Doldurma cihazı ekle”",
+        "heating": "Isıtıcı ekle"
       },
-      "addMeter": "“Ek doldurma sayacı ekle”",
+      "addMeter": "İlave enerji sayacı ekle",
       "cancel": "“İptal”",
       "chargerError": {
-        "charging": "Bir şarj cihazının yapılandırılması gereklidir."
+        "charging": "Doldurma cihazı yapılandırılmalı.",
+        "heating": "Bir ısıtıcının yapılandırılması gerekli."
       },
       "chargerLabel": {
-        "charging": "“Doldurma cihazı”"
+        "charging": "“Doldurma cihazı”",
+        "heating": "Isıtıcı"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "6 ila 16 A akım aralığını kullanır.",
@@ -202,14 +220,15 @@
       "chargerPowerCustom": "diğer",
       "chargerPowerCustomHelp": "Kendine özgü bir akım aralığı tanımla.",
       "chargerTypeLabel": "“Doldurma gücü”",
-      "chargingTitle": "“Dolduruyor”",
+      "chargingTitle": "Davranış",
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitLabel": "“Devre”",
       "circuitUnassigned": "“atanmamış”",
       "defaultModeHelp": {
-        "charging": "Araç bağlandığında doldurma şekli."
+        "charging": "Araç bağlandığında doldurma şekli.",
+        "heating": "Sistem başlatıldığında ayarlanır."
       },
-      "defaultModeHelpKeep": "Son seçilen doldurma şeklini korur.",
+      "defaultModeHelpKeep": "Son seçilen modu korur.",
       "defaultModeLabel": "“Varsayılan şekil”",
       "delete": "“Sil”",
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
@@ -222,11 +241,15 @@
       "minCurrentHelp": "Sadece ne yaptığını biliyorsan 6 A altına in.",
       "minCurrentLabel": "“Asgari akım”",
       "noVehicles": "Hiç araç yapılandırılmamış.",
+      "option": {
+        "charging": "Doldurma noktası ekle",
+        "heating": "Isıtma cihazı ekle"
+      },
       "phases1p": "“1 aşamalı”",
       "phases3p": "“3 aşamalı”",
       "phasesAutomatic": "“Otomatik aşamalar”",
       "phasesAutomaticHelp": "Doldurma cihazın 1 ve 3 aşamalı doldurma arasında otomatik geçişi destekliyor. Ana görüntüde doldurma sırasında aşama davranışını ayarlayabilirsin.",
-      "phasesHelp": "Doldurma cihazına bağlı aşama sayısı.",
+      "phasesHelp": "Bağlı olan aşama sayısı.",
       "phasesLabel": "“Aşamalar”",
       "pollIntervalDanger": "Aracın sürekli sorgulanması araç bataryasını boşaltabilir. Bazı araç üreticileri bu durumda doldurma işlemini etkin bir şekilde engelleyebilir. Tavsiye etmiyoruz! Bunu yalnızca risklerin farkındaysan kullan.",
       "pollIntervalHelp": "Araç API güncellemeleri arasındaki süre. Kısa aralıklar aracın bataryasını tüketebilir.",
@@ -238,28 +261,39 @@
       "pollModeConnected": "“bağlıyken”",
       "pollModeConnectedHelp": "Bağlıyken araç durumunu düzenli aralıklarla güncelle.",
       "pollModeLabel": "“Güncelleme davranışı”",
-      "priorityHelp": "Yüksek öncelikli doldurma noktaları güneş enerjisi fazlasına öncelikli erişim sağlar.",
+      "priorityHelp": "Öncelikli olanlar güneş enerjisi fazlasına öncelikli erişir.",
       "priorityLabel": "“Öncelik”",
       "save": "“Kaydet”",
       "showAllSettings": "“Tüm ayarları göster”",
       "solarBehaviorCustomHelp": "Kendi açma, kapama eşiklerini ve gecikmeleri tanımla.",
-      "solarBehaviorDefaultHelp": "Sadece güneş enerjisi fazlası ile doldur. Fazlalık {enableDelay} üzerinde ise başla. {disableDelay} için yeterli fazlalık olmadığında dur.",
-      "solarBehaviorLabel": "“GES davranışları”",
+      "solarBehaviorDefaultHelp": "Yeterli fazlalığın {enableDelay} ardından başla. {disableDelay} için yeterli fazlalık olmadığında dur.",
+      "solarBehaviorLabel": "Güneş enerjisi fazlalığı",
       "solarModeCustom": "“özel”",
       "solarModeMaximum": "“sadece güneş”",
       "thresholdDisableDelayLabel": "“Kapatma gecikmesi”",
       "thresholdDisableHelpInvalid": "Lütfen pozitif bir değer kullan.",
-      "thresholdDisableHelpPositive": "Şebekeden {delay} için {power}'ten daha fazlası kullanıldığında doldurmayı durdur.",
-      "thresholdDisableHelpZero": "{delay} için asgari doldurma gücüne ulaşılamazsa durdur.",
+      "thresholdDisableHelpPositive": "{delay} süresince şebekeden {power} değerinden fazla güç kullanıldığında durdur.",
+      "thresholdDisableHelpZero": "{delay} süresince asgari gerekli güç karşılanamadığında durdur.",
       "thresholdDisableLabel": "“Şebeke elektriğini kapat”",
       "thresholdEnableDelayLabel": "“Açma gecikmesi”",
       "thresholdEnableHelpInvalid": "Lütfen negatif bir değer kullan.",
       "thresholdEnableHelpNegative": "{delay} için {surplus} fazlalık varsa doldurmaya başla.",
       "thresholdEnableHelpZero": "{delay} için asgari doldurma gücü fazlası mevcut olduğunda başlat.",
       "thresholdEnableLabel": "“Şebeke gücünü aç”",
-      "titleAdd": "“ Doldurma Noktası Ekle”",
-      "titleEdit": "“Doldurma Noktasını Düzenle“",
-      "titleExample": "“Garaj, Otopark, vs.",
+      "titleAdd": {
+        "charging": "Doldurma Noktası Ekle",
+        "heating": "Isıtma Cihazı Ekle",
+        "unknown": "Doldurma Cihazı veya Isıtıcı Ekle"
+      },
+      "titleEdit": {
+        "charging": "Doldurma Noktasını Düzenle",
+        "heating": "Isıtma Cihazını Düzenle",
+        "unknown": "Doldurma Cihazını veya Isıtıcıyı Düzenle"
+      },
+      "titleExample": {
+        "charging": "Garaj, Carport, vb.",
+        "heating": "Isı pompası, Isıtıcı, vb."
+      },
       "titleLabel": "“Başlık”",
       "vehicleAutoDetection": "“otomatik algılama”",
       "vehicleHelpAutoDetection": "Otomatik olarak en makul aracı seçer. Elden değiştirme mümkündür.",
@@ -270,7 +304,7 @@
     "main": {
       "addAdditional": "Ek sayaç ekle",
       "addGrid": "“Elektrik sayacı ekle”",
-      "addLoadpoint": "Doldurma noktası ekle",
+      "addLoadpoint": "Doldurma cihazı veya ısıtıcı ekle",
       "addPvBattery": "Güneş enerjisi veya enerji deposu ekle",
       "addTariffs": "“Tarife ekle”",
       "addVehicle": "Araç ekle",
@@ -363,6 +397,10 @@
         "big": "büyük uçlu",
         "little": "küçük uçlu"
       },
+      "operationMode": {
+        "heating": "Isıtma",
+        "standby": "Bekleme"
+      },
       "schema": {
         "http": "HTTP (şifrelenmemiş)",
         "https": "HTTPS (şifrelenmiş)"
@@ -382,7 +420,7 @@
       "general": "Genel",
       "grid": "Şebeke",
       "integrations": "Bütünleştirmeler",
-      "loadpoints": "Dolum noktaları",
+      "loadpoints": "Doldurma ve Isıtma",
       "meter": "GES ve Batarya",
       "system": "Sistem",
       "vehicles": "Araçlar"
@@ -397,9 +435,42 @@
       "title": "Destekçilik",
       "tokenRequired": "Bu cihazı oluşturabilmen için önce bir destekçi jetonu yapılandırmalısın.",
       "tokenRequiredLearnMore": "Daha fazla bilgi edin.",
+      "tokenRequiredShort": "Sponsor jetonu yapılandırılmadı.",
       "trialToken": "Deneme jetonu"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Yedeklemeyi indir...",
+          "confirmationButton": "Yedeklemeyi indir",
+          "confirmationText": "Veritabanı dosyasını indirmek için lütfen şifreni gir.",
+          "description": "Verilerini bir dosyaya yedekle. Bu dosya, bir sistem arızası durumunda verilerini geri yüklemek için kullanılabilir.",
+          "title": "Yedekle"
+        },
+        "cancel": "İptal",
+        "description": "Verilerini yedekle, geri yükle ve sıfırla. Verilerini başka bir sisteme taşımak istiyorsan kullanışlıdır.",
+        "note": "Not: Yukarıdaki tüm eylemler yalnızca veritabanı verilerini etkiler. evcc.yaml yapılandırma dosyası değişmeden kalır.",
+        "reset": {
+          "action": "Sıfırla...",
+          "confirmationButton": "Sıfırla ve yeniden başlat",
+          "confirmationText": "Bu, seçtiğin verileri kalıcı olarak siler. Önce bir yedek indirdiğinden emin ol.",
+          "description": "Yapılandırma ile ilgili sorun mu yaşıyorsun ve baştan mı başlamak istiyorsun? Tüm verileri sil ve yeni bir başlangıç yap.",
+          "sessions": "Doldurma oturumları",
+          "sessionsDescription": "Doldurma oturumları geçmişini siler.",
+          "settings": "Yapılandırma ve ayarlar",
+          "settingsDescription": "Yapılandırılmış tüm cihazları, hizmetleri, planları, önbellekleri vb. siler.",
+          "title": "Sıfırla"
+        },
+        "restore": {
+          "action": "Geri Yükle...",
+          "confirmationButton": "Geri yükle ve yeniden başlat",
+          "confirmationText": "Bu, tüm veritabanının üzerine yazar. Önce bir yedek indirdiğinden emin ol.",
+          "description": "Verilerini bir yedekleme dosyasından geri yükle. Bu, mevcut tüm verilerinin üzerine yazar.",
+          "labelFile": "Yedekleme dosyası",
+          "title": "Geri Yükleme"
+        },
+        "title": "Yedekleme ve Geri Yükleme"
+      },
       "logs": "Loglar",
       "restart": "Yeniden Başlat",
       "restartRequiredDescription": "Değişikliklerin yansıması için yeniden başlatma gereklidir.",
@@ -432,7 +503,7 @@
       "delete": "Aracı sil",
       "generic": "Diğer bütünleştirmeler",
       "identifiers": "“RFID tanımlayıcıları”",
-      "identifiersHelp": "Aracı tanımlamak için RFID dizelerinin listesi. Satır başına bir giriş. Güncel tanımlayıcı, genel bakış sayfasındaki ilgili doldurma noktasında bulunabilir.",
+      "identifiersHelp": "Aracı tanımlamak için RFID dizelerinin listesi. Satır başına bir giriş. Güncel tanımlayıcıyı, genel bakış sayfasındaki ilgili doldurma noktasında bulabilirsin.",
       "maximumCurrent": "“Azami akım”",
       "maximumCurrentHelp": "Asgari akımdan büyük olmalıdır.",
       "maximumPhases": "“Azami aşamalar”",
@@ -599,7 +670,7 @@
     "iframeIssue": "Parolan doğru, ancak tarayıcın kimlik doğrulama çerezini reddetti. Bu, evcc'yi HTTP üzerinden bir iframe içinde çalıştırırsan meydana gelebilir.",
     "invalid": "Şifre geçersiz.",
     "login": "Giriş yap",
-    "password": "Şifre",
+    "password": "Yönetici Şifresi",
     "reset": "Şifreyi sıfırla?",
     "title": "Kimlik Doğrulama"
   },
@@ -614,8 +685,8 @@
       "modalTitle": "Doldurma Planı",
       "none": "yok",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Batarya ön ısıtması için kalkıştan önce {duration} şarj edin.",
-      "preconditionLong": "Gecikmeli Şarj",
+      "preconditionDescription": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
+      "preconditionLong": "Geç doldurma",
       "preconditionOptionAll": "hepsi",
       "preconditionOptionNo": "hayır",
       "preconditionShort": "Geç",
@@ -791,6 +862,8 @@
       "connected": "Bağlı.",
       "disconnectRequired": "Oturum sonlandırıldı. Tekrar bağlan.",
       "disconnected": "Bağlantı kesildi.",
+      "feedinPriorityNextStart": "Yüksek besleme fiyatları {duration} içinde başlar.",
+      "feedinPriorityPausing": "Beslemeyi azamiye çıkarmak için güneşden doldurma duraklatıldı.",
       "finished": "Tamamlandı.",
       "minCharge": "{soc} kadar asgari dolum.",
       "pvDisable": "Yeterli fazlalık yok. Birazdan duraklatılacak.",
@@ -985,6 +1058,14 @@
     "resetAction": "“Sınırlamayı kaldır“",
     "resetWarning": "Dinamik şebeke fiyatı veya yapılandırılmış CO₂ kaynağı yok. Ancak, hala {limit} sınırlaması var. Yapılandırmayı toparlayayım mı?",
     "saved": "Kaydedildi."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Duraklatılmış saatler",
+    "description": "Kârlı şebeke beslemesine öncelik vermek için yüksek fiyatlar sırasında doldurmayı durdurur.",
+    "priceLabel": "Besleme fiyatı",
+    "priceLimit": "Besleme sınırı",
+    "resetWarning": "Dinamik besleme fiyatı yapılandırılmadı. Ancak, hâlâ {limit} sınırı var. Yapılandırmanı temizlemek ister misin?",
+    "title": "Beslemeyi Önceliklendir"
   },
   "startupError": {
     "configFile": "Kullanılan yapılandırma dosyası:",
