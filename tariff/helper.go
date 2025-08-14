@@ -72,16 +72,14 @@ func beginningOfDay() time.Time {
 	return now.With(time.Now()).BeginningOfDay()
 }
 
-type runnable interface {
+type runnable[T any] interface {
+	*T
 	run(done chan error)
 }
 
 // https://groups.google.com/g/golang-nuts/c/1cl9v_hPYHk
 // runOrError invokes t.run(chan error) and waits for the channel to return
-func runOrError[T any, I interface {
-	*T
-	runnable
-}](t I) (*T, error) {
+func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	done := make(chan error)
 	go t.run(done)
 
