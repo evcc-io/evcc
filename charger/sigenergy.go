@@ -14,10 +14,9 @@ import (
 // Based on https://github.com/TypQxQ/Sigenergy-Local-Modbus/tree/main/custom_components/sigen
 type Sigenergy struct {
 	*embed
-	log         *util.Logger
-	conn        *modbus.Connection
-	current     uint16
-	minCurrent  uint16
+	log     *util.Logger
+	conn    *modbus.Connection
+	current uint16
 }
 
 const (
@@ -80,9 +79,9 @@ func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8) (
 	conn.Logger(log.TRACE)
 
 	wb := &Sigenergy{
-		embed:      &embed,
-		log:        log,
-		conn:       conn,
+		embed: &embed,
+		log:   log,
+		conn:  conn,
 	}
 
 	return wb, nil
@@ -128,9 +127,9 @@ func (wb *Sigenergy) Enabled() (bool, error) {
 		return false, err
 	}
 
-	// U32 register with gain 100, so divide by 100 to get amperes
-	current := float64(binary.BigEndian.Uint32(b)) / 100
-	return current >= float64(wb.minCurrent), nil
+	// U32 register with gain 100, check if != 0
+	current := binary.BigEndian.Uint32(b)
+	return current != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -138,9 +137,6 @@ func (wb *Sigenergy) Enable(enable bool) error {
 	var u uint32
 	if enable {
 		u = uint32(wb.current) * 100 // Apply gain 100
-		if u < uint32(wb.minCurrent)*100 {
-			u = uint32(wb.minCurrent) * 100
-		}
 	} else {
 		u = 0
 	}
@@ -153,10 +149,6 @@ func (wb *Sigenergy) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Sigenergy) MaxCurrent(current int64) error {
-	if current < int64(wb.minCurrent) {
-		return fmt.Errorf("current %d below minimum %d", current, wb.minCurrent)
-	}
-
 	curr := uint16(current)
 	u := uint32(curr) * 100 // Apply gain 100
 	
