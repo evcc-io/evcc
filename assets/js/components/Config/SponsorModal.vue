@@ -8,8 +8,8 @@
 		:transform-read-values="transformReadValues"
 		data-testid="sponsor-modal"
 		size="lg"
-		:no-buttons="!showForm && false"
-		:disable-remove="!showForm"
+		:no-buttons="notUiEditable"
+		:disable-remove="!hasUiToken"
 		disable-cancel
 		@changed="$emit('changed')"
 		@open="showForm = false"
@@ -19,13 +19,17 @@
 				<Sponsor v-bind="sponsor" />
 			</div>
 			<hr class="my-4" />
-			<div v-if="showForm || !token">
+			<div v-if="showTokenForm">
 				<div class="d-flex justify-content-between align-items-center">
-					<p class="fw-bold my-2">Enter your token</p>
+					<p class="fw-bold my-2">{{ $t("config.sponsor.enterYourToken") }}</p>
 					<button
+						v-if="hasUiToken"
 						type="button"
 						class="btn btn-link btn-sm text-nowrap text-muted"
-						@click="showForm = false"
+						@click="
+							editMode = false;
+							values.token = '';
+						"
 					>
 						{{ $t("config.general.cancel") }}
 					</button>
@@ -40,8 +44,8 @@
 					@paste="(event) => handlePaste(event, values)"
 				/>
 			</div>
-			<div v-if="token">
-				<p class="fw-bold my-2">Your token</p>
+			<div v-else-if="token">
+				<p class="fw-bold my-2">{{ $t("config.sponsor.yourToken") }}</p>
 				<div class="d-flex align-items-start gap-2 text-muted">
 					<input
 						:value="token"
@@ -50,12 +54,15 @@
 						class="form-control"
 						:class="{ 'is-invalid': error }"
 					/>
+					<span v-if="fromYaml" class="text-muted text-nowrap align-self-center ms-2">
+						{{ $t("config.sponsor.viaYaml") }}
+					</span>
 					<button
-						v-if="!fromYaml"
+						v-else
 						type="button"
 						class="btn btn-link text-nowrap"
 						:class="error ? 'text-danger' : 'text-muted'"
-						@click="showForm = true"
+						@click="editMode = true"
 					>
 						{{ $t("config.sponsor.changeToken") }}
 					</button>
@@ -68,21 +75,20 @@
 
 <script>
 import JsonModal from "./JsonModal.vue";
-import FormRow from "./FormRow.vue";
-import Sponsor, { VICTRON_DEVICE } from "../Savings/Sponsor.vue";
+import Sponsor from "../Savings/Sponsor.vue";
 import SponsorTokenExpires from "../Savings/SponsorTokenExpires.vue";
 import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import { cleanYaml } from "@/utils/cleanYaml";
 export default {
 	name: "SponsorModal",
-	components: { FormRow, JsonModal, Sponsor, SponsorTokenExpires },
+	components: { JsonModal, Sponsor, SponsorTokenExpires },
 	props: {
 		error: Boolean,
 	},
 	emits: ["changed"],
 	data: () => ({
-		showForm: false,
+		editMode: false,
 	}),
 	computed: {
 		sponsor() {
@@ -94,14 +100,17 @@ export default {
 		fromYaml() {
 			return this.sponsor?.fromYaml;
 		},
-		hasToken() {
-			const name = this.sponsor?.name || "";
-			return name !== "" && name !== VICTRON_DEVICE;
+		name() {
+			return this.sponsor?.name || "";
 		},
-		sponsorTokenLabel() {
-			return this.hasToken
-				? this.$t("config.sponsor.changeToken")
-				: this.$t("config.sponsor.addToken");
+		showTokenForm() {
+			return this.editMode || !this.token;
+		},
+		notUiEditable() {
+			return !!this.name && this.fromYaml;
+		},
+		hasUiToken() {
+			return this.token && !this.fromYaml;
 		},
 		trialTokenLink() {
 			return `${docsPrefix()}/docs/sponsorship#trial`;

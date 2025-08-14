@@ -118,7 +118,7 @@ export default {
 					badgeClass = "bg-primary";
 				}
 			} else {
-				title = "";
+				title = "---";
 			}
 
 			if (this.sponsorError) {

@@ -256,7 +256,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		return lp, fmt.Errorf("charger: %w", err)
 	}
 	lp.charger = dev.Instance()
-	if lp.charger == nil {
+	if lp.charger == nil || reflect.ValueOf(lp.charger).IsNil() {
 		return lp, errors.New("missing charger instance")
 	}
 
