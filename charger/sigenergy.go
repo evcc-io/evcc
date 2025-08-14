@@ -111,9 +111,20 @@ func (wb *Sigenergy) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Sigenergy) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*Sigenergy)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *Sigenergy) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.1f", current)
+	}
+
 	b := make([]byte, 4)
 
-	curr := uint32(current) * 100
+	curr := uint32(current * 100)
 	binary.BigEndian.PutUint32(b, curr)
 
 	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
@@ -123,6 +134,8 @@ func (wb *Sigenergy) MaxCurrent(current int64) error {
 
 	return err
 }
+
+var _ api.Meter = (*Sigenergy)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Sigenergy) CurrentPower() (float64, error) {
@@ -135,6 +148,8 @@ func (wb *Sigenergy) CurrentPower() (float64, error) {
 	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
+var _ api.MeterEnergy = (*Sigenergy)(nil)
+
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Sigenergy) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerTotalEnergyConsumed, 2)
@@ -146,8 +161,6 @@ func (wb *Sigenergy) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 100, nil
 }
 
-var _ api.Meter = (*Sigenergy)(nil)
-var _ api.MeterEnergy = (*Sigenergy)(nil)
 var _ api.Diagnosis = (*Sigenergy)(nil)
 
 // Diagnose implements the api.Diagnosis interface
