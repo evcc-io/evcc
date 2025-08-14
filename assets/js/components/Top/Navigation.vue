@@ -73,6 +73,12 @@
 					{{ $t("log.title") }}
 				</router-link>
 			</li>
+
+			<li v-if="optimizeAvailable">
+				<router-link class="dropdown-item" to="/optimize" active-class="active">
+					Optimize 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
 				<li>
@@ -134,7 +140,7 @@ import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, EvOpt } from "@/types/evcc";
 import type { Provider as Provider } from "./types";
 
 export default defineComponent({
@@ -145,6 +151,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
 		battery: Array,
+		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
@@ -187,6 +194,9 @@ export default defineComponent({
 		forecastAvailable() {
 			const { grid, solar, co2 } = this.forecast || {};
 			return grid || solar || co2;
+		},
+		optimizeAvailable() {
+			return !!this.evopt && this.$hiddenFeatures();
 		},
 		showLogout() {
 			return isLoggedIn();

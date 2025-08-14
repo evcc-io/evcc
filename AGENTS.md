@@ -186,7 +186,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ### Essential Commands
 
-- Must build before testing: `make ui build`
+- Must build before testing executing playwright `make ui build` since it uses the binary. For manual testing assets are build and reloaded automatically (vite dev).
 - Run tests: `npm run playwright` or `npx playwright test`
 - Debug: `npx playwright test --debug`
 - Specific test: `npx playwright test tests/config-loadpoint.spec.ts`
