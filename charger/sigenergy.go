@@ -41,19 +41,17 @@ func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (
 	cc := struct {
 		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
-		MinCurrent         uint16
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
 		},
-		MinCurrent: 6, // Default minimum current as per register description
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewSigenergy(ctx, cc.embed, cc.URI, cc.ID, cc.MinCurrent)
+	wb, err := NewSigenergy(ctx, cc.embed, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +70,7 @@ func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (
 }
 
 // NewSigenergy creates a new charger
-func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8, minCurrent uint16) (*Sigenergy, error) {
+func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8) (*Sigenergy, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -85,7 +83,6 @@ func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8, m
 		embed:      &embed,
 		log:        log,
 		conn:       conn,
-		minCurrent: minCurrent,
 	}
 
 	return wb, nil
