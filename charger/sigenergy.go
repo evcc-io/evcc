@@ -33,7 +33,6 @@ func init() {
 	registry.AddCtx("sigenergy", NewSigenergyFromConfig)
 }
 
-//go:generate go tool decorate -f decorateSigenergy -b *Sigenergy -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewSigenergyFromConfig creates a new Sigenergy ModbusTCP charger
 func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -50,22 +49,7 @@ func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (
 		return nil, err
 	}
 
-	wb, err := NewSigenergy(ctx, cc.embed, cc.URI, cc.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	// optional features
-	var (
-		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
-	)
-
-	// Enable power and energy measurement
-	currentPower = wb.currentPower
-	totalEnergy = wb.totalEnergy
-
-	return decorateSigenergy(wb, currentPower, totalEnergy), nil
+	return NewSigenergy(ctx, cc.embed, cc.URI, cc.ID)
 }
 
 // NewSigenergy creates a new charger
@@ -164,8 +148,8 @@ func (wb *Sigenergy) MaxCurrent(current int64) error {
 	return err
 }
 
-// currentPower implements the api.Meter interface
-func (wb *Sigenergy) currentPower() (float64, error) {
+// CurrentPower implements the api.Meter interface
+func (wb *Sigenergy) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerChargingPower, 2)
 	if err != nil {
 		return 0, err
@@ -175,8 +159,8 @@ func (wb *Sigenergy) currentPower() (float64, error) {
 	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface  
-func (wb *Sigenergy) totalEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface  
+func (wb *Sigenergy) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerTotalEnergyConsumed, 2)
 	if err != nil {
 		return 0, err
@@ -186,6 +170,8 @@ func (wb *Sigenergy) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 100, nil
 }
 
+var _ api.Meter = (*Sigenergy)(nil)
+var _ api.MeterEnergy = (*Sigenergy)(nil)
 var _ api.Diagnosis = (*Sigenergy)(nil)
 
 // Diagnose implements the api.Diagnosis interface
