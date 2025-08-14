@@ -32,15 +32,15 @@ func init() {
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity   `mapstructure:",squash"`
-		batteryMaxACPower `mapstructure:",squash"`
-		Usage             templates.Usage
-		Uri               string
-		User              string
-		Password          string
-		Key               string
-		DischargeLimit    uint32
-		Timeout           time.Duration
+		batteryCapacity `mapstructure:",squash"`
+		pvMaxACPower    `mapstructure:",squash"`
+		Usage           templates.Usage
+		Uri             string
+		User            string
+		Password        string
+		Key             string
+		DischargeLimit  uint32
+		Timeout         time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -67,7 +67,7 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.batteryMaxACPower.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator())
 }
 
 var e3dcOnce sync.Once

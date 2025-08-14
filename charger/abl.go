@@ -129,7 +129,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *ABLeMH) set(reg, val uint16) error {

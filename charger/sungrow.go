@@ -100,7 +100,7 @@ func NewSungrow(ctx context.Context, uri, device, comset string, baudrate int, p
 		curr: 60,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 // getPhaseValues returns 3 non-sequential register values
@@ -212,7 +212,7 @@ func (wb *Sungrow) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b), err
+	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
 var _ api.PhaseCurrents = (*Sungrow)(nil)
@@ -238,7 +238,7 @@ func (wb *Sungrow) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
+	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, nil
 }
 
 var _ api.PhaseSwitcher = (*Sungrow)(nil)
