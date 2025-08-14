@@ -15,7 +15,7 @@ params:
       de: Region
       en: Region
     type: choice
-    choice: ["EU"]
+    choice: ["EU", "AU"]
     default: EU
     required: true
 render: |

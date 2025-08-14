@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -18,6 +19,14 @@ type Bluelink struct {
 }
 
 func init() {
+	// sru_250814: this was good enough for when we only had to consider EU
+	//	but needs refactoring if other regions are to be supported. The general
+	//	question here is: let the `NewIdentity` decide about the values by using
+	//  the region information or use the region information first to call
+	//	call different identity providers per region?
+	//  Gut feeling is to go with the second approach. But we have to keep the
+	//	different pseudo inits to be able to inject the brand into the config
+	//	struct.
 	registry.Add("kia", NewKiaFromConfig)
 	registry.Add("hyundai", NewHyundaiFromConfig)
 	registry.Add("genesis", NewGenesisFromConfig)
@@ -25,60 +34,21 @@ func init() {
 
 // NewHyundaiFromConfig creates a new vehicle
 func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
-		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
-		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		CCSPApplicationID: bluelink.HyundaiAppID,
-		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
-		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
-		PushType:          "GCM",
-		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
-		// for oauth2??
-		// LoginFormHost:     "https://idpconnect-eu.hyundai.com",
-		// AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		// BrandAuthUrl:  "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
-	}
-
-	return newBluelinkFromConfig("hyundai", other, settings)
+	return newBluelinkFromConfig("hyundai", other)
 }
 
 // NewKiaFromConfig creates a new vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.kia.com:8080",
-		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
-		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
-		CCSPApplicationID: bluelink.KiaAppID,
-		AuthClientID:      "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
-		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
-		PushType:          "APNS",
-		Cfb:               "wLTVxwidmH8CfJYBWSnHD6E0huk0ozdiuygB4hLkM5XCgzAL1Dk5sE36d/bx5PFMbZs=",
-		LoginFormHost:     "https://idpconnect-eu.kia.com",
-	}
-
-	return newBluelinkFromConfig("kia", other, settings)
+	return newBluelinkFromConfig("kia", other)
 }
 
-// NewKiaGenesisConfig creates a new vehicle
+// NewGenesisConfig creates a new vehicle
 func NewGenesisFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.genesis.com:443",
-		BasicToken:        "MzAyMGFmYTItMzBmZi00MTJhLWFhNTEtZDI4ZmJlOTAxZTEwOkZLRGRsZWYyZmZkbGVGRXdlRUxGS0VSaUxFUjJGRUQyMXNEZHdkZ1F6NmhGRVNFMw==",
-		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
-		CCSPApplicationID: bluelink.GenesisAppID,
-		AuthClientID:      "3020afa2-30ff-412a-aa51-d28fbe901e10",
-		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
-		PushType:          "GCM",
-		Cfb:               "RFtoRq/vDXJmRndoZaZQyYo3/qFLtVReW8P7utRPcc0ZxOzOELm9mexvviBk/qqIp4A=",
-		LoginFormHost:     "https://accounts-eu.genesis.com",
-	}
-
-	return newBluelinkFromConfig("kia", other, settings)
+	return newBluelinkFromConfig("kia", other)
 }
 
 // newBluelinkFromConfig creates a new Vehicle
-func newBluelinkFromConfig(brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
+func newBluelinkFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	// TODO: investigate why mapping of `template` suddenly fails.
 	cc := struct {
 		embed          `mapstructure:",squash"`
@@ -109,33 +79,76 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		cc.Brand = brand
 	}
 
+	// check whether we have a base config for given region/brand
+	if bluelink.ConfigMap[cc.Region][brand] == nil {
+		return nil, fmt.Errorf("no config map for brand %s in region %s", brand, cc.Region)
+	}
+
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	// sru_250808: debug only, remove or TRACE for production
 	log.INFO.Printf("Other: %v", other)
 	log.INFO.Printf("CC: %v\n", cc)
 
-	identity := bluelink.NewIdentity(log, settings)
+	// Decide what region to create the API for
+	switch cc.Region {
+	case bluelink.RegionAustralia:
+		settings, err := bluelink.PopulateSettingsAU(cc.Brand, cc.Region)
+		if err != nil {
+			return nil, err
+		}
+		log.INFO.Printf("Got %s/%s settings:\n%v", cc.Brand, cc.Region, settings)
 
-	if err := identity.Login(cc.User, cc.Password, cc.Language, cc.Region, cc.Brand); err != nil {
-		return nil, err
+		identity := bluelink.NewIdentity(log, settings)
+		if err := identity.LoginAU(cc.User, cc.Password); err != nil {
+			return nil, err
+		}
+
+		api := bluelink.NewAPI(log, settings.URI, identity.Request)
+
+		vehicle, err := ensureVehicleEx(
+			cc.VIN, api.Vehicles,
+			func(v bluelink.Vehicle) (string, error) {
+				return v.VIN, nil
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		v := &Bluelink{
+			embed:    &cc.embed,
+			Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
+		}
+		return v, nil
+	case bluelink.RegionEurope:
+		settings, err := bluelink.PopulateSettingsEU(cc.Brand, cc.Region)
+		if err != nil {
+			return nil, err
+		}
+
+		identity := bluelink.NewIdentity(log, settings)
+		if err := identity.LoginEU(cc.User, cc.Password, cc.Language, cc.Brand); err != nil {
+			return nil, err
+		}
+
+		api := bluelink.NewAPI(log, settings.URI, identity.Request)
+
+		vehicle, err := ensureVehicleEx(
+			cc.VIN, api.Vehicles,
+			func(v bluelink.Vehicle) (string, error) {
+				return v.VIN, nil
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		v := &Bluelink{
+			embed:    &cc.embed,
+			Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
+		}
+		return v, nil
 	}
 
-	api := bluelink.NewAPI(log, settings.URI, identity.Request)
-
-	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
-		func(v bluelink.Vehicle) (string, error) {
-			return v.VIN, nil
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	v := &Bluelink{
-		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
-	}
-
-	return v, nil
+	return nil, fmt.Errorf("unsupported region: %s", cc.Region)
 }
