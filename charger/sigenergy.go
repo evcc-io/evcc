@@ -16,23 +16,19 @@ type Sigenergy struct {
 	*embed
 	log     *util.Logger
 	conn    *modbus.Connection
-	current uint16
+	current uint32
 }
 
 const (
-	// AC Charger Running Info Registers
 	sigenACChargerSystemState         = 32000 // System states according to IEC61851-1 definition
 	sigenACChargerTotalEnergyConsumed = 32001 // kWh, total energy consumed during charging
 	sigenACChargerChargingPower       = 32003 // kW, instantaneous charging power
-	
-	// AC Charger Parameter Registers
 	sigenACChargerOutputCurrent       = 42001 // Amperes, R/W, charger output current ([6, X] X is the smaller value between the rated current and the AC-Charger input breaker rated current.)
 )
 
 func init() {
 	registry.AddCtx("sigenergy", NewSigenergyFromConfig)
 }
-
 
 // NewSigenergyFromConfig creates a new Sigenergy ModbusTCP charger
 func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
@@ -78,29 +74,15 @@ func (wb *Sigenergy) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	state := binary.BigEndian.Uint16(b)
-
-	// System states according to IEC61851-1 definition:
-	// 0: Initializing
-	// 1: Not Connected
-	// 2: Reserving  
-	// 3: Preparing
-	// 4: EV Ready
-	// 5: Charging
-	// 6: Fault
-	// 7: Error
-
-	switch state {
-	case 5: // Charging
-		return api.StatusC, nil
-	case 4: // EV Ready
-		return api.StatusB, nil
+	switch state := binary.BigEndian.Uint16(b); state {
 	case 1: // Not Connected
 		return api.StatusA, nil
-	case 6, 7: // Fault, Error
-		return api.StatusF, nil
-	default: // Initializing, Reserving, Preparing
+	case 2, 3, 4: // Reserving, Preparing, EV Ready
 		return api.StatusB, nil
+	case 5: // Charging
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %d", state)
 	}
 }
 
@@ -111,35 +93,29 @@ func (wb *Sigenergy) Enabled() (bool, error) {
 		return false, err
 	}
 
-	// U32 register with gain 100, check if != 0
-	current := binary.BigEndian.Uint32(b)
-	return current != 0, nil
+	return binary.BigEndian.Uint32(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Sigenergy) Enable(enable bool) error {
-	var u uint32
+	var curr uint32
 	if enable {
-		u = uint32(wb.current) * 100 // Apply gain 100
-	} else {
-		u = 0
+		curr = wb.current
 	}
 
-	// Write U32 value to register (2 registers)
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, u)
+	binary.BigEndian.PutUint32(b, curr)
 	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Sigenergy) MaxCurrent(current int64) error {
-	curr := uint16(current)
-	u := uint32(curr) * 100 // Apply gain 100
-	
-	// Write U32 value to register (2 registers)
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, u)
+
+	curr := uint32(current) * 100
+	binary.BigEndian.PutUint32(b, curr)
+
 	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
 	if err == nil {
 		wb.current = curr
@@ -159,7 +135,7 @@ func (wb *Sigenergy) CurrentPower() (float64, error) {
 	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
-// TotalEnergy implements the api.MeterEnergy interface  
+// TotalEnergy implements the api.MeterEnergy interface
 func (wb *Sigenergy) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerTotalEnergyConsumed, 2)
 	if err != nil {
@@ -185,17 +161,17 @@ func (wb *Sigenergy) Diagnose() {
 		}
 		fmt.Printf("\tSystem State:\t%d (%s)\n", state, stateName)
 	}
-	
+
 	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerOutputCurrent, 2); err == nil {
 		current := float64(binary.BigEndian.Uint32(b)) / 100
 		fmt.Printf("\tOutput Current:\t%.1fA\n", current)
 	}
-	
+
 	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerChargingPower, 2); err == nil {
 		powerKW := float64(int32(binary.BigEndian.Uint32(b))) / 1000
 		fmt.Printf("\tCharging Power:\t%.1fkW\n", powerKW)
 	}
-	
+
 	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerTotalEnergyConsumed, 2); err == nil {
 		energy := float64(binary.BigEndian.Uint32(b)) / 100
 		fmt.Printf("\tTotal Energy:\t%.1fkWh\n", energy)
