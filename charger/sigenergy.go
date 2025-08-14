@@ -142,8 +142,9 @@ func (wb *Sigenergy) Enable(enable bool) error {
 	}
 
 	// Write U32 value to register (2 registers)
-	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, 
-		[]byte{byte(u >> 24), byte(u >> 16), byte(u >> 8), byte(u)})
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, u)
+	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
 	return err
 }
 
@@ -153,8 +154,9 @@ func (wb *Sigenergy) MaxCurrent(current int64) error {
 	u := uint32(curr) * 100 // Apply gain 100
 	
 	// Write U32 value to register (2 registers)
-	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2,
-		[]byte{byte(u >> 24), byte(u >> 16), byte(u >> 8), byte(u)})
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, u)
+	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
 	if err == nil {
 		wb.current = curr
 	}
