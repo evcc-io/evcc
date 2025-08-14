@@ -15,7 +15,7 @@ import (
 var (
 	mu             sync.RWMutex
 	Subject, Token string
-	FromYaml       bool = true
+	fromYaml       bool = true
 	ExpiresAt      time.Time
 )
 
@@ -37,10 +37,10 @@ func IsAuthorizedForApi() bool {
 }
 
 // SetFromYaml sets whether the token comes from YAML config or database
-func SetFromYaml(fromYaml bool) {
+func SetFromYaml(val bool) {
 	mu.Lock()
 	defer mu.Unlock()
-	FromYaml = fromYaml
+	fromYaml = val
 }
 
 // check and set sponsorship token
@@ -121,6 +121,6 @@ func Status() sponsorStatus {
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
 		Token:       redactToken(Token),
-		FromYaml:    FromYaml,
+		FromYaml:    fromYaml,
 	}
 }
