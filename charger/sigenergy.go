@@ -21,10 +21,10 @@ type Sigenergy struct {
 }
 
 const (
-	sigenACChargerSystemState         = 32000 // System states according to IEC61851-1 definition
-	sigenACChargerTotalEnergyConsumed = 32001 // kWh, total energy consumed during charging
-	sigenACChargerChargingPower       = 32003 // kW, instantaneous charging power
-	sigenACChargerOutputCurrent       = 42001 // Amperes, R/W, charger output current ([6, X] X is the smaller value between the rated current and the AC-Charger input breaker rated current.)
+	regSigSystemState         = 32000 // System states according to IEC61851-1 definition
+	regSigTotalEnergyConsumed = 32001 // kWh, total energy consumed during charging
+	regSigChargingPower       = 32003 // kW, instantaneous charging power
+	regSigOutputCurrent       = 42001 // Amperes, R/W, charger output current ([6, X] X is the smaller value between the rated current and the AC-Charger input breaker rated current.)
 )
 
 func init() {
@@ -74,7 +74,7 @@ func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8) (
 
 // Status implements the api.Charger interface
 func (wb *Sigenergy) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerSystemState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(regSigSystemState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -93,7 +93,7 @@ func (wb *Sigenergy) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Sigenergy) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerOutputCurrent, 2)
+	b, err := wb.conn.ReadHoldingRegisters(regSigOutputCurrent, 2)
 	if err != nil {
 		return false, err
 	}
@@ -110,7 +110,7 @@ func (wb *Sigenergy) Enable(enable bool) error {
 
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, curr)
-	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(regSigOutputCurrent, 2, b)
 	return err
 }
 
@@ -132,7 +132,7 @@ func (wb *Sigenergy) MaxCurrentMillis(current float64) error {
 	curr := uint32(current * 100)
 	binary.BigEndian.PutUint32(b, curr)
 
-	_, err := wb.conn.WriteMultipleRegisters(sigenACChargerOutputCurrent, 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(regSigOutputCurrent, 2, b)
 	if err == nil {
 		wb.current = curr
 	}
@@ -144,7 +144,7 @@ var _ api.Meter = (*Sigenergy)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Sigenergy) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerChargingPower, 2)
+	b, err := wb.conn.ReadHoldingRegisters(regSigChargingPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -157,7 +157,7 @@ var _ api.MeterEnergy = (*Sigenergy)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Sigenergy) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(sigenACChargerTotalEnergyConsumed, 2)
+	b, err := wb.conn.ReadHoldingRegisters(regSigTotalEnergyConsumed, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -170,7 +170,7 @@ var _ api.Diagnosis = (*Sigenergy)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Sigenergy) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerSystemState, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(regSigSystemState, 1); err == nil {
 		state := binary.BigEndian.Uint16(b)
 		stateNames := []string{"Initializing", "Not Connected", "Reserving", "Preparing", "EV Ready", "Charging", "Fault", "Error"}
 		stateName := "Unknown"
@@ -180,17 +180,17 @@ func (wb *Sigenergy) Diagnose() {
 		fmt.Printf("\tSystem State:\t%d (%s)\n", state, stateName)
 	}
 
-	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerOutputCurrent, 2); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(regSigOutputCurrent, 2); err == nil {
 		current := float64(binary.BigEndian.Uint32(b)) / 100
 		fmt.Printf("\tOutput Current:\t%.1fA\n", current)
 	}
 
-	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerChargingPower, 2); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(regSigChargingPower, 2); err == nil {
 		powerKW := float64(int32(binary.BigEndian.Uint32(b))) / 1000
 		fmt.Printf("\tCharging Power:\t%.1fkW\n", powerKW)
 	}
 
-	if b, err := wb.conn.ReadHoldingRegisters(sigenACChargerTotalEnergyConsumed, 2); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(regSigTotalEnergyConsumed, 2); err == nil {
 		energy := float64(binary.BigEndian.Uint32(b)) / 100
 		fmt.Printf("\tTotal Energy:\t%.1fkWh\n", energy)
 	}
