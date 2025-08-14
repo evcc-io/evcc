@@ -22,16 +22,11 @@ import (
 )
 
 const (
-	typeCustom       = "custom"        // typeCustom is the custom configuration type
-	typeTemplate     = "template"      // typeTemplate is the updatable configuration type
-	typeHeatpump     = "heatpump"      // typeHeatpump is the heatpump configuration type
-	typeSwitchSocket = "switchsocket"  // typeSwitchSocket is the switch socket configuration type
-	typeSgReady      = "sgready"       // typeSgReady is the SG-Ready configuration type
-	typeSgReadyBoost = "sgready-boost" // typeSgReadyBoost is the SG-Ready (Boost) configuration type
-
-	// masked indicates a masked config parameter value
-	masked = "***"
+	typeTemplate = "template" // typeTemplate is the updatable configuration type
+	masked       = "***"      // masked indicates a masked config parameter value
 )
+
+var customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
@@ -354,12 +349,10 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return res, nil
 	}
 
-	if !(strings.EqualFold(res.Type, typeCustom) ||
-		strings.EqualFold(res.Type, typeHeatpump) ||
-		strings.EqualFold(res.Type, typeSwitchSocket) ||
-		strings.EqualFold(res.Type, typeSgReady) ||
-		strings.EqualFold(res.Type, typeSgReadyBoost)) {
-		return configReq{}, errors.New("invalid config: yaml only allowed for custom, heatpump, switchsocket, sgready, and sgready-boost types")
+	if !slices.ContainsFunc(customTypes, func(s string) bool {
+		return strings.EqualFold(res.Type, s)
+	}) {
+		return configReq{}, errors.New("invalid config: yaml only allowed for types " + strings.Join(customTypes, ", "))
 	}
 
 	if len(res.Other) != 0 {
