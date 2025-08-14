@@ -171,9 +171,8 @@ func (wb *Sigenergy) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	// S32 register with gain 1000, divide by 1000 to get kW, then convert to W
-	powerKW := float64(int32(binary.BigEndian.Uint32(b))) / 1000
-	return powerKW * 1000, nil
+	// S32 register with gain 1000, convert directly to W
+	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface  
