@@ -13,6 +13,7 @@ params:
   - name: host
   - name: schema
     default: http
+    advanced: true
   - name: token
     help:
       en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
