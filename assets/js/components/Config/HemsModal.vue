@@ -1,27 +1,81 @@
 <template>
-	<YamlModal
+	<JsonModal
 		id="hemsModal"
 		:title="$t('config.hems.title')"
 		:description="$t('config.hems.description')"
 		docs="/docs/reference/configuration/hems"
-		:defaultYaml="defaultYaml"
 		endpoint="/config/hems"
-		removeKey="hems"
-		size="md"
+		state-key="hems"
+		:offerSaveWithoutModifications="true"
+		:initalValues="{ Other: {} }"
+		data-testid="hems-modal"
 		@changed="$emit('changed')"
-	/>
+	>
+		<template #default="{ values }">
+			<TemplateSelector
+				device-type="hems"
+				:is-new="false"
+				product-name="Sunny Home Manager 2.0"
+			/>
+			<FormRow id="hemsControl" :label="$t('config.hems.labelControl')" optional>
+				<div class="d-flex">
+					<input
+						id="hemsControl"
+						v-model="values.Other.allowcontrol"
+						class="form-check-input"
+						type="checkbox"
+					/>
+					<label class="form-check-label ms-2" for="hemsControl">
+						{{ $t("config.hems.labelAllowControl") }}
+					</label>
+				</div>
+			</FormRow>
+			<PropertyCollapsible>
+				<template #advanced>
+					<FormRow
+						id="hemsVendorid"
+						:label="$t('config.hems.labelVendorid')"
+						:help="$t('config.hems.descriptionVendorid')"
+						example="12312312"
+						optional
+					>
+						<input
+							id="hemsVendorid"
+							v-model="values.Other.vendorId"
+							class="form-control"
+							minlength="8"
+							maxlength="8"
+						/>
+					</FormRow>
+					<FormRow
+						id="hemsDeviceid"
+						:label="$t('config.hems.labelDeviceid')"
+						:help="$t('config.hems.descriptionDeviceid')"
+						example="BBBBBBBBBBBB"
+						optional
+					>
+						<input
+							id="hemsDeviceid"
+							v-model="values.Other.deviceId"
+							class="form-control"
+							minlength="10"
+							maxlength="10"
+						/> </FormRow
+				></template>
+			</PropertyCollapsible>
+		</template>
+	</JsonModal>
 </template>
 
-<script>
-import YamlModal from "./YamlModal.vue";
-import defaultYaml from "./defaultYaml/hems.yaml?raw";
+<script lang="ts">
+import TemplateSelector from "./DeviceModal/TemplateSelector.vue";
+import FormRow from "./FormRow.vue";
+import JsonModal from "./JsonModal.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 
 export default {
 	name: "HemsModal",
-	components: { YamlModal },
+	components: { JsonModal, TemplateSelector, FormRow, PropertyCollapsible },
 	emits: ["changed"],
-	data() {
-		return { defaultYaml: defaultYaml.trim() };
-	},
 };
 </script>

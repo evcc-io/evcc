@@ -292,7 +292,6 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
 			keys.EEBus:       func() (any, any) { return map[string]any{}, eebus.Config{} },
-			keys.Hems:        func() (any, any) { return map[string]any{}, config.Typed{} },
 			keys.Tariffs:     func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
 			keys.Messaging:   func() (any, any) { return map[string]any{}, globalconfig.Messaging{} },       // has default
 			keys.ModbusProxy: func() (any, any) { return []map[string]any{}, []globalconfig.ModbusProxy{} }, // slice
@@ -306,6 +305,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// json handlers
 		for key, fun := range map[string]func() any{
+			keys.Hems:    func() any { return new(globalconfig.Hems) },
 			keys.Network: func() any { return new(globalconfig.Network) }, // has default
 			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
 			keys.Influx:  func() any { return new(globalconfig.Influx) },

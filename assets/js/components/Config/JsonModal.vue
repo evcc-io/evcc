@@ -47,7 +47,7 @@
 				<button
 					type="submit"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
-					:disabled="saving || nothingChanged"
+					:disabled="!offerSaveWithoutModifications && (saving || nothingChanged)"
 				>
 					<span
 						v-if="saving"
@@ -67,6 +67,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import store from "@/store";
+import deepClone from "@/utils/deepClone";
 
 export default {
 	name: "JsonModal",
@@ -82,6 +83,8 @@ export default {
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
+		offerSaveWithoutModifications: Boolean,
+		initalValues: { type: Object, default: () => {} },
 	},
 	emits: ["changed", "open"],
 	data() {
@@ -89,7 +92,7 @@ export default {
 			saving: false,
 			removing: false,
 			error: "",
-			values: {},
+			values: this.initalValues,
 			serverValues: {},
 		};
 	},
@@ -119,7 +122,8 @@ export default {
 			if (this.transformReadValues) {
 				this.serverValues = this.transformReadValues(this.serverValues);
 			}
-			this.values = { ...this.serverValues };
+
+			this.values = deepClone(this.serverValues);
 		},
 		async save() {
 			this.saving = true;

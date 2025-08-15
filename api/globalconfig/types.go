@@ -64,11 +64,23 @@ var _ api.Redactor = (*Hems)(nil)
 type Hems config.Typed
 
 func (c Hems) Redacted() any {
-	return struct {
-		Type string `json:"type,omitempty"`
-	}{
-		Type: c.Type,
+	var allowControl bool
+	if v, ok := c.Other["allowcontrol"]; ok && v != nil {
+		allowControl, _ = v.(bool)
 	}
+	var vendorId string
+	if v, ok := c.Other["vendorid"]; ok && v != nil {
+		vendorId, _ = v.(string)
+	}
+	var deviceId string
+	if v, ok := c.Other["deviceid"]; ok && v != nil {
+		deviceId, _ = v.(string)
+	}
+	return Hems{Type: c.Type, Other: map[string]any{
+		"allowcontrol": allowControl,
+		"vendorId":     vendorId,
+		"deviceId":     deviceId,
+	}}
 }
 
 var _ api.Redactor = (*Mqtt)(nil)

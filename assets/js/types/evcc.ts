@@ -318,7 +318,7 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "hems";
 export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 
 // see https://stackoverflow.com/a/54178819
