@@ -66,6 +66,12 @@ params:
       en: Network interface
     advanced: true
     example: eth0
+  - name: schema
+    description:
+      generic: Schema
+    type: choice
+    choice: ["https", "http"]
+    default: https
   - name: user
     description:
       de: Benutzerkonto
