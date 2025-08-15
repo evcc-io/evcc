@@ -1629,6 +1629,10 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
 			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
+			if added > 0 {
+				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
+			}
+
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
 			}
