@@ -155,12 +155,15 @@
       "docsLink": "Katso dokumentaatio.",
       "experimental": "Kokeellinen",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
+      "invalidFileSelected": "Valittu virheellinen tiedosto",
+      "noFileSelected": "Ei valittua tiedostoa.",
       "off": "pois",
       "on": "päällä",
       "password": "Salasana",
       "readFromFile": "Lue tiedostosta",
       "remove": "Poista",
       "save": "Tallenna",
+      "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
       "telemetry": "Telemetria",
       "templateLoading": "Ladataan...",
@@ -432,9 +435,42 @@
       "title": "Sponsorointi",
       "tokenRequired": "Sinun on määritettävä sponsoritunnus ennen kuin voit luoda tämän laitteen.",
       "tokenRequiredLearnMore": "Lisätietoja.",
+      "tokenRequiredShort": "Sponsorointi-tokenia ei ole määritelty.",
       "trialToken": "Kokeilutunnus"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Ladataan varmuuskopiota...",
+          "confirmationButton": "Lataa varmuuskopio",
+          "confirmationText": "Syötä salasanasi ladataksesi tietokantatiedoston.",
+          "description": "Varmuuskopioi tietosi. Tätä tiedostoa voidaan käyttää palauttamaan tietosi järjestelmävirheen jälkeen.",
+          "title": "Varmuuskopio"
+        },
+        "cancel": "Peruuta",
+        "description": "Varmuuskopioi, palauta ja nollaa tietosi. Hyödyllinen jos haluat siirtää tietosi toiseen järjestelmään.",
+        "note": "Huomioi: Kaikki ylläolevat toiminnut vaikuttavat vain tietokannassa oleviin tietoihin. evcc.yaml-tiedoston määrittelyt pysyvät muuttumattomina.",
+        "reset": {
+          "action": "Nollaa...",
+          "confirmationButton": "Nollaa ja käynnistä uudelleen",
+          "confirmationText": "Tämä poistaa pysyvästä valitut tiedot. Varmista, että olet ensin ladannut varmuuskopion.",
+          "description": "Onko ongelmia määrittelyn kanssa ja haluat aloittaa alusta? Poista kaikki tiedot ja aloita puhtaalta pöydältä.",
+          "sessions": "Lataustapahtumat",
+          "sessionsDescription": "Poistaa lataustapahtumahistorian.",
+          "settings": "Määrittelyt ja asetukset",
+          "settingsDescription": "Poistaa kaikki määritellyt laitteet, palvelut, välimuistitiedon jne.",
+          "title": "Nollaa"
+        },
+        "restore": {
+          "action": "Palauta...",
+          "confirmationButton": "Palauta ja uudelleenkäynnistä",
+          "confirmationText": "Tämä ylikirjoittaa kaikki tietokannassa olevat tiedot. Varmista, että olet ensin ladannut tietojen varmuuskopion.",
+          "description": "Palauta tietosi varmuuskopiotiedostosta. Tämä ylikirjoittaa kaikki tietosi.",
+          "labelFile": "Varmuuskopiotiedosto",
+          "title": "Palauta"
+        },
+        "title": "Varmuuskopiointi ja palautus"
+      },
       "logs": "Logi",
       "restart": "Käynnistä uudelleen",
       "restartRequiredDescription": "Ole hyvä ja käynnistä uudelleen, jotta näet muutoksen.",
@@ -584,6 +620,10 @@
   },
   "header": {
     "about": "Tietoa",
+    "authProviders": {
+      "confirmLogout": "Oletko varma, että haluat poistaa yhteyden {title}?",
+      "title": "Autentikointivaltuutuksen tila"
+    },
     "blog": "Blogi",
     "docs": "Dokumentaatio",
     "github": "GitHub",
@@ -634,7 +674,7 @@
     "iframeIssue": "Salasanasi on oikea, mutta selaimesi näyttää pudonneen todennusevästeen. Näin voi käydä, jos suoritat evcc:n iframe-kehyksessä HTTP:n kautta.",
     "invalid": "Salasana ei kelpaa.",
     "login": "Kirjaudu",
-    "password": "Salasana",
+    "password": "Hallintasalasana",
     "reset": "Määritä salasana uudelleen?",
     "title": "Vahvistus"
   },

@@ -45,10 +45,22 @@
       "switchsockets": "Tomadas comandadas",
       "template": "Fabricante",
       "titleAdd": {
-        "charging": "Adicionar Carregador"
+        "charging": "Adicionar Carregador",
+        "heating": "Adicionar aquecedor"
       },
       "titleEdit": {
-        "charging": "Editar Carregador"
+        "charging": "Editar Carregador",
+        "heating": "Editar o aquecimento"
+      },
+      "type": {
+        "custom": {
+          "charging": "Carregador personalizado",
+          "heating": "Aquecimento personalizado"
+        },
+        "heatpump": "Bomba de calor personalizada",
+        "sgready": "Bomba de calor personalizada (sg-ready, tout)",
+        "sgready-boost": "Bomba de calor personalizada (sg-ready, boost)",
+        "switchsocket": "Tomada de interrutor definida pelo utilizador"
       }
     },
     "circuits": {
@@ -143,12 +155,15 @@
       "docsLink": "Ver documentação.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Ocultar definições avançadas",
+      "invalidFileSelected": "Ficheiro selecionado inválido",
+      "noFileSelected": "Nenhum ficheiro selecionado.",
       "off": "desligado",
       "on": "ligado",
       "password": "Palavra-passe",
       "readFromFile": "Ler ficheiro",
       "remove": "Apagar",
       "save": "Guardar",
+      "selectFile": "Explorar",
       "showAdvancedSettings": "Mostrar definições avançadas",
       "telemetry": "Telemetria",
       "templateLoading": "Carregando...",
@@ -185,15 +200,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Adicionar Carregador"
+        "charging": "Adicionar Carregador",
+        "heating": "Adicionar aquecedor"
       },
-      "addMeter": "Adicionar um Contador de Carregador dedicado",
+      "addMeter": "Adicionar contador de energia dedicado",
       "cancel": "Cancelar",
       "chargerError": {
-        "charging": "É necessário configurar um Carregador EV."
+        "charging": "É necessário configurar um Carregador EV.",
+        "heating": "A configuração do aquecimento é necessária."
       },
       "chargerLabel": {
-        "charging": "Carregador"
+        "charging": "Carregador",
+        "heating": "Aquecedor"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilização de uma gama de correntes de 6 a 16 A.",
@@ -202,14 +220,15 @@
       "chargerPowerCustom": "outro",
       "chargerPowerCustomHelp": "Definir um intervalo de Correntes personalizado.",
       "chargerTypeLabel": "Tipo de Carregador",
-      "chargingTitle": "A Carregar",
+      "chargingTitle": "Comportamento",
       "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "não atribuído",
       "defaultModeHelp": {
-        "charging": "Modo de carregamento ao ligar o veículo."
+        "charging": "Modo de carregamento ao ligar o veículo.",
+        "heating": "É definido no arranque do sistema."
       },
-      "defaultModeHelpKeep": "Mantém o último modo de carregamento selecionado.",
+      "defaultModeHelpKeep": "Mantém o último modo selecionado.",
       "defaultModeLabel": "Modo predefinido",
       "delete": "Apagar",
       "electricalSubtitle": "Em caso de dúvida, pergunte ao seu eletricista.",
@@ -222,11 +241,15 @@
       "minCurrentHelp": "Defina apenas abaixo dos 6 A, se souber o que está a fazer.",
       "minCurrentLabel": "Corrente mínima",
       "noVehicles": "Nenhum veículo configurado.",
+      "option": {
+        "charging": "Adicionar um ponto de carga",
+        "heating": "Adicionar dispositivo de aquecimento"
+      },
       "phases1p": "Monofásico",
       "phases3p": "Trifásico",
       "phasesAutomatic": "Fases automáticas",
       "phasesAutomaticHelp": "Se o seu carregador suporta a comutação automática entre o carregamento de 1 e 3 fases. No menu principal, pode ajustar o comportamento das fases durante o carregamento.",
-      "phasesHelp": "Número de fases ligadas ao carregador.",
+      "phasesHelp": "Número de fases ligadas.",
       "phasesLabel": "Fases",
       "pollIntervalDanger": "Intervalos curtos de actualização das leituras podem descarregar a bateria do veículo. Alguns fabricantes podem impedir a carga nestes casos. Não recomendável! Apenas utilize esta opção se está consciente dos riscos.",
       "pollIntervalHelp": "Tempo entre as actualizações da API do veículo. Intervalos curtos podem descarregar a bateria do veículo.",
@@ -238,28 +261,39 @@
       "pollModeConnected": "ligado",
       "pollModeConnectedHelp": "Atualizar o estado do veículo em intervalos regulares quando ligado.",
       "pollModeLabel": "Comportamento das atualizações",
-      "priorityHelp": "Os Postos de Carregamento com maior prioridade têm acesso prioritário ao excedente solar.",
+      "priorityHelp": "Maior prioridade têm acesso prioritário ao excedente solar.",
       "priorityLabel": "Prioridade",
       "save": "Guardar",
       "showAllSettings": "Mostrar todas as definições",
       "solarBehaviorCustomHelp": "Defina os seus próprios limites e latências de ativação e desativação.",
-      "solarBehaviorDefaultHelp": "Apenas carregar com excedente solar. Iniciar após {enableDelay} de excedente. Parar quando não houver excedente suficiente para {disableDelay}.",
-      "solarBehaviorLabel": "Comportamento solar",
+      "solarBehaviorDefaultHelp": "Iniciar após {enableDelay} de excedente suficiente. Parar quando não houver excedente suficiente para {disableDelay}.",
+      "solarBehaviorLabel": "Solar",
       "solarModeCustom": "personalizado",
       "solarModeMaximum": "máximo solar",
       "thresholdDisableDelayLabel": "Desativar atraso",
       "thresholdDisableHelpInvalid": "Por favor utilize um valor positivo.",
-      "thresholdDisableHelpPositive": "Interromper o carregamento, quando for utilizada mais de {power} da Rede durante {delay}.",
-      "thresholdDisableHelpZero": "Interromper quando a potência de carga mínima não for atingida durante {delay}.",
+      "thresholdDisableHelpPositive": "Interromper, quando for utilizada mais de {power} da Rede durante {delay}.",
+      "thresholdDisableHelpZero": "Interromper quando a potência mínima não for atingida durante {delay}.",
       "thresholdDisableLabel": "Desativar a energia da Rede",
       "thresholdEnableDelayLabel": "Ativar atraso",
       "thresholdEnableHelpInvalid": "Por favor utilize um valor negativo.",
-      "thresholdEnableHelpNegative": "Iniciar o carregamento, quando {surplus} excedente estiver disponível durante {delay}.",
-      "thresholdEnableHelpZero": "Iniciar quando o excedente de energia de carga mínima estiver disponível durante {delay}.",
+      "thresholdEnableHelpNegative": "Iniciar, quando {surplus} excedente estiver disponível durante {delay}.",
+      "thresholdEnableHelpZero": "Arrancar quando a potência mínima requerida puder ser satisfeita para {delay}.",
       "thresholdEnableLabel": "Ativar a energia da Rede",
-      "titleAdd": "Adicionar Posto de Carregamento",
-      "titleEdit": "Editar Posto de Carregamento",
-      "titleExample": "Garagem, Carport, etc.",
+      "titleAdd": {
+        "charging": "Adicionar ponto de carregamento",
+        "heating": "Adicionar dispositivo de aquecimento",
+        "unknown": "Adicionar carregador ou aquecedor"
+      },
+      "titleEdit": {
+        "charging": "Editar ponto de carregamento",
+        "heating": "Editar dispositivo de aquecimento",
+        "unknown": "Editar carregador ou aquecedor"
+      },
+      "titleExample": {
+        "charging": "Garagem, Carport, etc.",
+        "heating": "Bomba de calor, aquecedor, etc."
+      },
       "titleLabel": "Nome",
       "vehicleAutoDetection": "detecção automática",
       "vehicleHelpAutoDetection": "Seleciona automaticamente o veículo mais provável. É possível cancelar manualmente.",
@@ -270,7 +304,7 @@
     "main": {
       "addAdditional": "Adicionar Contador adicional",
       "addGrid": "Adicionar Contador de Rede",
-      "addLoadpoint": "Adicionar Posto de Carregamento",
+      "addLoadpoint": "Adicionar carregador ou aquecedor",
       "addPvBattery": "Adicionar solar ou bateria",
       "addTariffs": "Adicionar tarifário(s)",
       "addVehicle": "Adicionar veículo",
@@ -363,6 +397,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Aquecimento",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (não encriptado)",
         "https": "HTTPS (encriptado)"
@@ -382,7 +420,7 @@
       "general": "Geral",
       "grid": "Rede",
       "integrations": "Integrações",
-      "loadpoints": "Postos de Carregamento",
+      "loadpoints": "Carregamento e aquecimento",
       "meter": "Solar e Bateria",
       "system": "Sistema",
       "vehicles": "Veículos"
@@ -397,9 +435,42 @@
       "title": "Patrocínio",
       "tokenRequired": "Tem de configurar um token de Patrocínio (Sponsor) antes de poder criar este dispositivo.",
       "tokenRequiredLearnMore": "Mais informações.",
+      "tokenRequiredShort": "Nenhum token de patrocínio configurado.",
       "trialToken": "Token de teste"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Descarregar cópia de segurança...",
+          "confirmationButton": "Descarregar cópia de segurança",
+          "confirmationText": "Introduza a sua palavra-passe para descarregar o ficheiro da base de dados.",
+          "description": "Faça uma cópia de segurança dos seus dados para um ficheiro. Este ficheiro pode ser utilizado para restaurar os seus dados em caso de falha do sistema.",
+          "title": "Cópia de segurança"
+        },
+        "cancel": "Cancelar",
+        "description": "Efetuar cópias de segurança, restaurar e repor os seus dados. Útil se pretender transferir os seus dados para outro sistema.",
+        "note": "Nota: Todas as ações acima afetam apenas os dados da sua base de dados. O ficheiro de configuração evcc.yaml permanece inalterado.",
+        "reset": {
+          "action": "Reiniciar...",
+          "confirmationButton": "Reset e reiniciar",
+          "confirmationText": "Isto irá apagar permanentemente os dados selecionados. Certifique-se de que descarregou primeiro uma cópia de segurança.",
+          "description": "Está a ter problemas com a configuração e pretende começar de novo? Elimine todos os dados e comece de novo.",
+          "sessions": "Sessões de carregamento",
+          "sessionsDescription": "Apaga o histórico da sessão de carregamento.",
+          "settings": "Configuração e parâmetros",
+          "settingsDescription": "Apaga todos os dispositivos, serviços, planos, caches, etc. configurados.",
+          "title": "Reinicializar"
+        },
+        "restore": {
+          "action": "Restaurar...",
+          "confirmationButton": "Restaurar e reiniciar",
+          "confirmationText": "Isto irá substituir toda a sua base de dados. Certifique-se de que descarregou primeiro uma cópia de segurança.",
+          "description": "Restaurar os seus dados a partir de um ficheiro de cópia de segurança. Isto irá substituir todos os seus dados actuais.",
+          "labelFile": "Ficheiro de cópia de segurança",
+          "title": "Restaurar"
+        },
+        "title": "Cópia de segurança e restaurar"
+      },
       "logs": "Registos",
       "restart": "Reiniciar",
       "restartRequiredDescription": "Por favor reinicie para aplicar as alterações.",
@@ -549,6 +620,10 @@
   },
   "header": {
     "about": "Sobre",
+    "authProviders": {
+      "confirmLogout": "Tem a certeza de que pretende desligar {title}?",
+      "title": "Estado da autorização"
+    },
     "blog": "Blog",
     "docs": "Documentação",
     "github": "GitHub",
@@ -599,7 +674,7 @@
     "iframeIssue": "A sua Palavra-passe está correta, mas o navegador parece ter perdido o cookie de autenticação. Isso pode acontecer se executar evcc num iframe via HTTP.",
     "invalid": "A Palavra-passe é inválida.",
     "login": "Entrar no sistema",
-    "password": "Palavra-passe",
+    "password": "Palavra-passe de administrador",
     "reset": "Repor Palavra-passe?",
     "title": "Autenticação"
   },
@@ -791,6 +866,8 @@
       "connected": "Ligado.",
       "disconnectRequired": "Sessão terminada. Por favor, volte a ligar-se.",
       "disconnected": "Desligado.",
+      "feedinPriorityNextStart": "As taxas de alimentação elevadas começam em {duração}.",
+      "feedinPriorityPausing": "Carregamento solar pausado para maximizar a alimentação.",
       "finished": "Concluído.",
       "minCharge": "Recarga mínima até {soc}.",
       "pvDisable": "Excedente insuficiente. Pausa em breve.",
@@ -985,6 +1062,14 @@
     "resetAction": "Remover limite",
     "resetWarning": "Não estão configurados o preço dinâmico da rede ou a fonte de CO₂. No entanto, ainda existe um limite de {limite}. Limpar a sua configuração?",
     "saved": "Guardado."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Horas de pausa",
+    "description": "Faz uma pausa no carregamento quando os preços são elevados para dar prioridade à alimentação rentável da rede.",
+    "priceLabel": "Taxa de alimentação",
+    "priceLimit": "Limite de alimentação",
+    "resetWarning": "Não está configurada uma tarifa de aquisição dinâmica. No entanto, existe ainda um limite de {limit}. Limpar a sua configuração?",
+    "title": "Prioridade de alimentação"
   },
   "startupError": {
     "configFile": "Ficheiro de configuração em uso:",
