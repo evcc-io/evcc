@@ -21,7 +21,7 @@ type E3dc struct {
 	dischargeLimit uint32
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
-	retry          func(err error) error
+	retry          func() error
 }
 
 func init() {
@@ -90,10 +90,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		dischargeLimit: dischargeLimit,
 	}
 
-	m.retry = func(err error) error {
-		if err == nil {
-			return nil
-		}
+	m.retry = func() (err error) {
 		m.conn.Disconnect()
 		m.conn, err = rscp.NewClient(cfg)
 		return err
@@ -118,27 +115,29 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 // retryMessage executes a single message request with retry
 func (m *E3dc) retryMessage(msg rscp.Message) (*rscp.Message, error) {
 	result, err := m.conn.Send(msg)
-	if err != nil {
-		if retryErr := m.retry(err); retryErr != nil {
-			return nil, retryErr
-		}
-		// retry the request after successful reconnection
-		return m.conn.Send(msg)
+	if err == nil {
+		return result, nil
 	}
-	return result, nil
+
+	if err := m.retry(); err != nil {
+		return nil, err
+	}
+
+	return m.conn.Send(msg)
 }
 
 // retryMessages executes a multiple message request with retry
 func (m *E3dc) retryMessages(msgs []rscp.Message) ([]rscp.Message, error) {
 	result, err := m.conn.SendMultiple(msgs)
-	if err != nil {
-		if retryErr := m.retry(err); retryErr != nil {
-			return nil, retryErr
-		}
-		// retry the request after successful reconnection
-		return m.conn.SendMultiple(msgs)
+	if err == nil {
+		return result, nil
 	}
-	return result, nil
+
+	if err := m.retry(); err != nil {
+		return nil, err
+	}
+
+	return m.conn.SendMultiple(msgs)
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
