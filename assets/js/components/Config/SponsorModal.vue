@@ -21,7 +21,9 @@
 			<hr class="my-4" />
 			<div v-if="showTokenForm">
 				<div class="d-flex justify-content-between align-items-center">
-					<p class="fw-bold my-2">{{ $t("config.sponsor.enterYourToken") }}</p>
+					<label for="sponsorToken" class="fw-bold my-2">{{
+						$t("config.sponsor.enterYourToken")
+					}}</label>
 					<button
 						v-if="hasUiToken"
 						type="button"
@@ -37,17 +39,26 @@
 				<textarea
 					id="sponsorToken"
 					v-model="values.token"
+					class="form-control mb-1"
 					required
 					rows="5"
 					spellcheck="false"
-					class="form-control"
 					@paste="(event) => handlePaste(event, values)"
 				/>
+				<small
+					>{{ $t("config.sponsor.descriptionToken", { url: "sponsor.evcc.io" }) }}
+					<a :href="trialTokenLink" target="_blank">
+						{{ $t("config.sponsor.trialToken") }}.</a
+					>
+				</small>
 			</div>
 			<div v-else-if="token">
-				<p class="fw-bold my-2">{{ $t("config.sponsor.yourToken") }}</p>
+				<label for="existingToken" class="fw-bold my-2">{{
+					$t("config.sponsor.yourToken")
+				}}</label>
 				<div class="d-flex align-items-start gap-2 text-muted">
 					<input
+						id="existingToken"
 						:value="token"
 						disabled
 						rows="1"

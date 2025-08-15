@@ -29,6 +29,7 @@ export default defineComponent({
 		expiresSoon: Boolean,
 		expiresAt: String,
 		name: String,
+		fromYaml: Boolean,
 	},
 	computed: {
 		inXDays() {
