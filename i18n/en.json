@@ -429,14 +429,18 @@
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
-      "descriptionToken": "You get the token from {url}. We also offer a trial token for testing.",
+      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a ",
+      "enterYourToken": "Enter your token",
       "error": "The sponsor token is not valid.",
+      "invalid": "invalid",
       "labelToken": "Sponsor token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredLearnMore": "Learn more.",
       "tokenRequiredShort": "No sponsor token configured.",
-      "trialToken": "Trial token"
+      "trialToken": "Trial token",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Your token"
     },
     "system": {
       "backupRestore": {

@@ -491,6 +491,7 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
+		sponsor.SetFromYaml(false) // from database
 	}
 
 	// TODO migrate settings
