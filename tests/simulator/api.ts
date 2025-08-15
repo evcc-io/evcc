@@ -100,7 +100,7 @@ const shellyMiddleware = (
     res.end(JSON.stringify({ gen: 2 }));
   } else if (req.originalUrl === "/rpc/Shelly.ListMethods") {
     res.end(JSON.stringify({ methods: ["Switch.GetStatus"] }));
-  } else if (req.originalUrl === "/rpc/Switch.GetStatus?id=0") {
+  } else if (req.originalUrl === "/rpc/Switch.GetStatus") {
     res.end(
       JSON.stringify({
         apower: state.site.pv.power,

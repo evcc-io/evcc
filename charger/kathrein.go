@@ -193,7 +193,7 @@ func NewKathrein(ctx context.Context, uri string, id uint8) (*Kathrein, error) {
 		curr: 6000,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 // getPhaseValues returns 3 sequential register values

@@ -483,7 +483,6 @@ func (site *Site) publish(key string, val interface{}) {
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
-	var wg sync.WaitGroup
 	mm := make([]measurement, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
@@ -525,13 +524,14 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Power:  power,
 			Energy: energy,
 		}
-
-		wg.Done()
 	}
 
-	wg.Add(len(meters))
+	var wg sync.WaitGroup
+
 	for i, meter := range meters {
-		go fun(i, meter)
+		wg.Go(func() {
+			fun(i, meter)
+		})
 	}
 	wg.Wait()
 
@@ -592,13 +592,13 @@ func (site *Site) updatePvMeters() {
 
 		prev := site.pvEnergy[name].AccumulatedEnergy()
 		if mm[i].Energy > 0 {
-			site.log.DEBUG.Printf("!! accumulated solar production: %s set %.3fkWh meter total (was: %+v)", name, mm[i].Energy, site.pvEnergy[name])
+			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
 		} else {
-			site.log.DEBUG.Printf("!! accumulated solar production: %s add %.3fW power (was: %+v)", name, mm[i].Energy, site.pvEnergy[name])
+			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
-		site.log.DEBUG.Printf("!! accumulated solar production: %s moved from %.3f to %.3f (is: %+v)", name, prev, site.pvEnergy[name].AccumulatedEnergy(), site.pvEnergy[name])
+		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].AccumulatedEnergy())
 	}
 
 	// store
@@ -887,18 +887,15 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	wg.Add(len(site.loadpoints))
 	for _, lp := range site.loadpoints {
-		go func() {
+		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
 			mu.Lock()
 			sum += power
 			mu.Unlock()
-
-			wg.Done()
-		}()
+		})
 	}
 	wg.Wait()
 
