@@ -21,12 +21,8 @@ params:
   - name: capacity
     advanced: true
   - name: minsoc
-    default: 20
-    type: int
     advanced: true
   - name: maxsoc
-    default: 95
-    type: int
     advanced: true
   - name: maxacpower
 render: |

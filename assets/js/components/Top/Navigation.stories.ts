@@ -8,7 +8,7 @@ export default {
     layout: "centered",
   },
   argTypes: {
-    vehicleLogins: { control: "object" },
+    authProviders: { control: "object" },
     sponsor: { control: "object" },
   },
 } as Meta<typeof Navigation>;
@@ -24,30 +24,30 @@ const Template: StoryFn<typeof Navigation> = (args) => ({
 export const Standard = Template.bind({});
 Standard.args = {};
 
-export const VehicleLogins = Template.bind({});
-VehicleLogins.args = {
-  vehicleLogins: {
+export const OAuthStatus = Template.bind({});
+OAuthStatus.args = {
+  authProviders: {
     "Mercedes EQS": {
       authenticated: true,
-      uri: "https://login-provider-a.test/",
+      id: "mercedes-eqs-9oqwjdf9oqwjd",
     },
     "Nissan Leaf Pro": {
       authenticated: true,
-      uri: "https://login-provider-b.test/",
+      id: "nissan-leaf-pro-9oqwjdf9oqwjd",
     },
   },
 };
 
-export const PendingVehicleLogins = Template.bind({});
-PendingVehicleLogins.args = {
-  vehicleLogins: {
+export const PendingOAuthStatus = Template.bind({});
+PendingOAuthStatus.args = {
+  authProviders: {
     "Mercedes EQS": {
       authenticated: true,
-      uri: "https://login-provider-a.test/",
+      id: "mercedes-eqs-9oqwjdf9oqwjd",
     },
     "Nissan Leaf Pro": {
       authenticated: false,
-      uri: "https://login-provider-b.test/",
+      id: "nissan-leaf-pro-9oqwjdf9oqwjd",
     },
   },
 };
@@ -58,5 +58,6 @@ TokenExpires.args = {
     name: "Sponsor",
     expiresAt: new Date().toISOString(),
     expiresSoon: true,
+    fromYaml: false,
   },
 };

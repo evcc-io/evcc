@@ -16,9 +16,9 @@
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
     "legendMiddleSubline": "als de thuisaccu {soc} bereikt heeft.",
-    "legendTopAutostart": "Laden vanuit de thuisbatterij eens de batterij",
+    "legendTopAutostart": "Laden vanuit de thuisbatterij",
     "legendTopName": "Opladen met energie uit de thuisaccu",
-    "legendTopSubline": "stoppen wanneer de thuisaccu {soc} bereikt.",
+    "legendTopSubline": "eens de thuisaccu {soc} bereikt heeft.",
     "modalTitle": "Thuisaccu",
     "usageTab": "Batterijgebruik"
   },
@@ -45,10 +45,22 @@
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
       "titleAdd": {
-        "charging": "Voeg Lader toe"
+        "charging": "Voeg Lader toe",
+        "heating": "Voeg verwarmer toe"
       },
       "titleEdit": {
-        "charging": "Editeer Lader"
+        "charging": "Editeer Lader",
+        "heating": "Pas verwarmer aan"
+      },
+      "type": {
+        "custom": {
+          "charging": "Gebruikersgedefinieerde lader",
+          "heating": "Gebruikersgedefinieerde verwarmer"
+        },
+        "heatpump": "Gebruikersgedefinieerde warmtepomp",
+        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
+        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },
     "circuits": {
@@ -143,12 +155,15 @@
       "docsLink": "Zie documentatie.",
       "experimental": "Experimenteel",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
+      "invalidFileSelected": "Ongeldig bestand geselecteerd",
+      "noFileSelected": "Geen bestand geselecteerd.",
       "off": "uit",
       "on": "aan",
       "password": "Wachtwoord",
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
       "save": "Opslaan",
+      "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
       "telemetry": "Telemetrie",
       "templateLoading": "Laden...",
@@ -185,15 +200,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Laadpunt toevoegen"
+        "charging": "Laadpunt toevoegen",
+        "heating": "Verwarmer toevoegen"
       },
-      "addMeter": "Toevoegen van een toegewijde laadmeter",
+      "addMeter": "Toevoegen van een toegewijde energiemeter",
       "cancel": "Annuleren",
       "chargerError": {
-        "charging": "Het configureren van een oplader is vereist."
+        "charging": "Het configureren van een oplader is vereist.",
+        "heating": "Een verwarmer instellen is vereist."
       },
       "chargerLabel": {
-        "charging": "Oplader"
+        "charging": "Oplader",
+        "heating": "Verwarmingstoestel"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Zal een stroom van 6 tot 16 A gebruiken.",
@@ -202,14 +220,15 @@
       "chargerPowerCustom": "andere",
       "chargerPowerCustomHelp": "Definieer een aangepast stroombereik.",
       "chargerTypeLabel": "Type laadpunt",
-      "chargingTitle": "Opladen",
+      "chargingTitle": "Gedrag",
       "circuitHelp": "Toewijzing van Load management om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "niet toegewezen",
       "defaultModeHelp": {
-        "charging": "Laadmodus bij het aansluiten van een voertuig."
+        "charging": "Laadmodus bij het aansluiten van een voertuig.",
+        "heating": "Wordt ingesteld bij opstarten van het systeem."
       },
-      "defaultModeHelpKeep": "Behoud de laatst-geselecteerde laadmodus.",
+      "defaultModeHelpKeep": "Behoud de laatst-geselecteerde modus.",
       "defaultModeLabel": "Standaard mode",
       "delete": "Wissen",
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
@@ -222,11 +241,15 @@
       "minCurrentHelp": "Kies 6 A enkel wanneer je weet wat je aan het doen bent.",
       "minCurrentLabel": "“Minimale stroom”",
       "noVehicles": "Geen voertuigen ingesteld.",
+      "option": {
+        "charging": "Laadpunt toevoegen",
+        "heating": "Verwarmingstoestel toevoegen"
+      },
       "phases1p": "“1-fase”",
       "phases3p": "“3-fase”",
       "phasesAutomatic": "“Automatische fasen”",
       "phasesAutomaticHelp": "Uw laadstation ondersteunt automatisch wisselen tussen laden op 1 of 3-fasen. U kunt dit aanpassen van op het startscherm tijdens de laadsessie.",
-      "phasesHelp": "Aantal aangesloten fasen op het laadstation.",
+      "phasesHelp": "Aantal aangesloten fasen.",
       "phasesLabel": "“Fasen”",
       "pollIntervalDanger": "Het voertuig vaak bevragen kan de accu sneller ontladen. Sommige autofabrikanten kunnen mogelijk actief het laden voorkomen in dit geval. Niet aangeraden! Gebruik dit alleen wanneer je je bewust bent van de risico's.",
       "pollIntervalHelp": "Tijd tussen API-updates van voertuigen. Korte intervallen kunnen de accu van het voertuig leegmaken.",
@@ -257,13 +280,16 @@
       "thresholdEnableHelpNegative": "Begin met opladen wanneer het overschot van {surplus} beschikbaar is voor {delay}.",
       "thresholdEnableHelpZero": "Begin wanneer het minimale overschot aan laadvermogen beschikbaar is voor {delay}.",
       "thresholdEnableLabel": "Netstroom inschakelen",
-      "titleAdd": "Oplaadpunt toevoegen",
+      "titleAdd": {
+        "charging": "Laadpunt Toevoegen",
+        "heating": "Verwarmingstoestel Toevoegen"
+      },
       "titleEdit": "Laadpunt bewerken",
       "titleExample": "Garage, carport, enz.",
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische detectie",
       "vehicleHelpAutoDetection": "Selecteert automatisch het meest aannemelijke voertuig. Handmatige aanpassen is mogelijk.",
-      "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier aan het opladen is. Automatische detectie uitgeschakeld. Handmatige aanpassen is mogelijk.",
+      "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier laadt. Automatische detectie uitgeschakeld. Handmatig aanpassen is mogelijk.",
       "vehicleLabel": "Standaard voertuig",
       "vehiclesTitle": "Voertuigen"
     },
@@ -793,7 +819,7 @@
       "disconnected": "Niet verbonden.",
       "feedinPriorityNextStart": "Hoge energieprijs start over {duration}.",
       "feedinPriorityPausing": "Zonne opladen gepauzeerd om grid import te maximaliseren.",
-      "finished": "Geëindigd.",
+      "finished": "Beëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt gepauzeerd.",
       "pvEnable": "Voldoende PV overschot beschikbaar. Laden wordt gestart.",
@@ -955,7 +981,7 @@
     "theme": {
       "auto": "systeem",
       "dark": "donker",
-      "label": "Ontwerp",
+      "label": "Thema",
       "light": "licht"
     },
     "time": {

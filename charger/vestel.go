@@ -150,7 +150,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 	go wb.heartbeat(ctx, timeout)
 
-	return decorateVestel(wb, phasesS, phasesG, identify), err
+	return decorateVestel(wb, phasesS, phasesG, identify), nil
 }
 
 func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {

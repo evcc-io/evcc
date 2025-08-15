@@ -78,6 +78,7 @@ export default defineComponent({
 		name: String,
 		expiresAt: String,
 		expiresSoon: Boolean,
+		fromYaml: Boolean,
 	},
 	computed: {
 		isTrial() {

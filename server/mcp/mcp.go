@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/openapi-mcp/pkg/openapi2mcp"
+	openapi2mcp "github.com/evcc-io/openapi-mcp"
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 //go:embed openapi.json
@@ -38,63 +37,39 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 
 	ops := openapi2mcp.ExtractOpenAPIOperations(doc)
 
-	srv := server.NewMCPServer("evcc", util.Version,
-		server.WithLogging(),
-	)
+	srv := mcp.NewServer(&mcp.Implementation{Name: "evcc", Version: util.Version}, nil)
 
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
-		NameFormat: nameFormat(log),
 		TagFilter: []string{
-			"General",
-			"Home Battery",
-			"Loadpoints",
-			"Tariffs",
-			"Vehicles",
+			"general",
+			"tariffs",
+			"loadpoints",
+			"vehicles",
+			"battery",
 		},
 		RequestHandler: requestHandler(host),
 	})
 
-	srv.AddTool(mcp.NewTool("evcc-docs",
-		mcp.WithDescription("evcc documentation"),
-	), docsTool)
+	mcp.AddTool(srv, &mcp.Tool{
+		Name:        "docs",
+		Description: "Documentation",
+		InputSchema: emptySchema(),
+	}, docsTool)
 
-	srv.AddPrompt(mcp.NewPrompt("create-charge-plan",
-		mcp.WithPromptDescription("Create an optimized charge plan for a loadpoint or vehicle"),
-		mcp.WithArgument("loadpoint",
-			mcp.ArgumentDescription("The loadpoint to create the charge plan for"),
-		),
-		mcp.WithArgument("vehicle",
-			mcp.ArgumentDescription("The vehicle to create the charge plan for"),
-		),
-	), promptHandler())
+	srv.AddPrompt(&mcp.Prompt{
+		Name:        "create-charge-plan",
+		Description: "Create an optimized charge plan for a loadpoint or vehicle",
+		Arguments: []*mcp.PromptArgument{
+			{Name: "loadpoint", Description: "The loadpoint to create the charge plan for"},
+			{Name: "vehicle", Description: "The vehicle to create the charge plan for"},
+		},
+	}, promptHandler())
 
-	handler := server.NewStreamableHTTPServer(srv,
-		server.WithEndpointPath(basePath),
-	)
+	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+		return srv
+	}, nil)
 
 	return handler, nil
-}
-
-func nameFormat(log *util.Logger) func(name string) string {
-	return func(name string) string {
-		res := name
-		res = strings.ReplaceAll(res, "_/", "/")
-		res = strings.ReplaceAll(res, "/", "-")
-		res = strings.ReplaceAll(res, "{", "with_")
-		res = strings.ReplaceAll(res, "}", "")
-		res = strings.ToLower(res)
-
-		// Claude Code has a 64 character limit for tool names
-		if len(res) > 64 {
-			res = strings.ReplaceAll(res, "with_", "w_")
-			if len(res) > 64 {
-				res = res[:64]
-			}
-		}
-
-		log.TRACE.Println("adding tool:", res)
-		return res
-	}
 }
 
 func requestHandler(handler http.Handler) func(req *http.Request) (*http.Response, error) {
@@ -103,5 +78,12 @@ func requestHandler(handler http.Handler) func(req *http.Request) (*http.Respons
 		handler.ServeHTTP(w, req)
 		resp := w.Result()
 		return resp, nil
+	}
+}
+
+func emptySchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: map[string]*jsonschema.Schema{},
 	}
 }

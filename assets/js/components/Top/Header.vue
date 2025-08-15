@@ -43,9 +43,8 @@ export default defineComponent({
 		title: String,
 	},
 	computed: {
-		topNavigation() {
-			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation, store.state) };
+		topNavigation(): any {
+			return this.collectProps(Navigation, store.state);
 		},
 	},
 });

@@ -90,7 +90,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyEntry from "./PropertyEntry.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
@@ -102,9 +102,9 @@ import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
+import { ConfigType } from "@/types/evcc";
 import {
 	handleError,
-	ConfigType,
 	type DeviceValues,
 	type Template,
 	type Product,
@@ -121,7 +121,7 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyBoostYaml from "./defaultYaml/sgreadyBoost.yaml?raw";
-import { LOADPOINT_TYPE } from "@/types/evcc";
+import { LOADPOINT_TYPE, type LoadpointType } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template };
 const device = createDeviceUtils("charger");
@@ -165,7 +165,7 @@ export default defineComponent({
 	props: {
 		id: Number,
 		name: String,
-		loadpointType: { type: String as () => LOADPOINT_TYPE | null, default: null },
+		loadpointType: { type: String as PropType<LoadpointType>, default: null },
 		fade: String,
 		isSponsor: Boolean,
 	},
@@ -241,6 +241,10 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
+			// HACK: soft-require stationid. Can be removed once https://github.com/evcc-io/evcc/pull/22115 is merged
+			params.forEach((p) => {
+				if (p.Name === "stationid") p.Required = true;
+			});
 			return params.filter(
 				(p) =>
 					!CUSTOM_FIELDS.includes(p.Name) &&
@@ -248,10 +252,10 @@ export default defineComponent({
 			);
 		},
 		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
+			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
 		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
+			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
 		modbus() {
 			const params = this.template?.Params || [];
@@ -299,6 +303,10 @@ export default defineComponent({
 			};
 			if (this.values.type === ConfigType.Template) {
 				data["template"] = this.templateName;
+			}
+			if (this.showYamlInput) {
+				// Icon is extracted from yaml on GET for UI purpose only. Don't write it back.
+				delete data["icon"];
 			}
 			return data;
 		},

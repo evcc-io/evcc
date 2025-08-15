@@ -24,6 +24,11 @@ type ChargeRater struct {
 	chargedEnergy float64
 }
 
+// ChargeResetter resets the charging session
+type ChargeResetter interface {
+	ResetCharge()
+}
+
 // NewChargeRater creates charge rater and initializes realtime clock
 func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 	return &ChargeRater{
@@ -76,6 +81,29 @@ func (cr *ChargeRater) StopCharge() {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
+}
+
+var _ ChargeResetter = (*ChargeRater)(nil)
+
+// ChargeResetter resets the charging session
+func (cr *ChargeRater) ResetCharge() {
+	cr.Lock()
+	defer cr.Unlock()
+
+	// get end energy amount
+	if m, ok := cr.meter.(api.MeterEnergy); ok {
+		if f, err := m.TotalEnergy(); err == nil {
+			cr.chargedEnergy += f - cr.startEnergy
+			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
+
+			cr.startEnergy = f
+		} else {
+			cr.log.ERROR.Printf("charge total import: %v", err)
+		}
+	}
+
+	cr.chargedEnergy = 0
+	cr.start = cr.clck.Now()
 }
 
 // SetChargePower increments consumed energy by amount in kWh since last update
