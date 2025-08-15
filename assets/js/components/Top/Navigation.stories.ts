@@ -58,5 +58,6 @@ TokenExpires.args = {
     name: "Sponsor",
     expiresAt: new Date().toISOString(),
     expiresSoon: true,
+    fromYaml: false,
   },
 };
