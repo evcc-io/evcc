@@ -115,25 +115,55 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, maxacpower), nil
 }
 
+// retryMessage executes a single message request with retry
+func (m *E3dc) retryMessage(requestFunc func() (*rscp.Message, error)) (*rscp.Message, error) {
+	result, err := requestFunc()
+	if err != nil {
+		if retryErr := m.retry(err); retryErr != nil {
+			return nil, retryErr
+		}
+		// retry the request after successful reconnection
+		return requestFunc()
+	}
+	return result, nil
+}
+
+// retryMessages executes a multiple message request with retry
+func (m *E3dc) retryMessages(requestFunc func() ([]rscp.Message, error)) ([]rscp.Message, error) {
+	result, err := requestFunc()
+	if err != nil {
+		if retryErr := m.retry(err); retryErr != nil {
+			return nil, retryErr
+		}
+		// retry the request after successful reconnection
+		return requestFunc()
+	}
+	return result, nil
+}
+
 func (m *E3dc) CurrentPower() (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	switch m.usage {
 	case templates.UsageGrid:
-		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
-		if e := m.retry(err); e != nil {
-			return 0, e
+		res, err := m.retryMessage(func() (*rscp.Message, error) {
+			return m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
+		})
+		if err != nil {
+			return 0, err
 		}
 		return rscpValue(*res, cast.ToFloat64E)
 
 	case templates.UsagePV:
-		res, err := m.conn.SendMultiple([]rscp.Message{
-			*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil),
-			*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
+		res, err := m.retryMessages(func() ([]rscp.Message, error) {
+			return m.conn.SendMultiple([]rscp.Message{
+				*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil),
+				*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
+			})
 		})
-		if e := m.retry(err); e != nil {
-			return 0, e
+		if err != nil {
+			return 0, err
 		}
 
 		values, err := rscpValues(res, cast.ToFloat64E)
@@ -144,9 +174,11 @@ func (m *E3dc) CurrentPower() (float64, error) {
 		return values[0] - values[1], nil
 
 	case templates.UsageBattery:
-		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
-		if e := m.retry(err); e != nil {
-			return 0, e
+		res, err := m.retryMessage(func() (*rscp.Message, error) {
+			return m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
+		})
+		if err != nil {
+			return 0, err
 		}
 		pwr, err := rscpValue(*res, cast.ToFloat64E)
 		if err != nil {
@@ -164,9 +196,11 @@ func (m *E3dc) batterySoc() (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
-	if e := m.retry(err); e != nil {
-		return 0, e
+	res, err := m.retryMessage(func() (*rscp.Message, error) {
+		return m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
+	})
+	if err != nil {
+		return 0, err
 	}
 
 	return rscpValue(*res, cast.ToFloat64E)
@@ -176,36 +210,32 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var (
-		res []rscp.Message
-		err error
-	)
-
+	var messages []rscp.Message
 	switch mode {
 	case api.BatteryNormal:
-		res, err = m.conn.SendMultiple([]rscp.Message{
+		messages = []rscp.Message{
 			e3dcDischargeBatteryLimit(false, 0),
 			e3dcBatteryCharge(0),
-		})
-
+		}
 	case api.BatteryHold:
-		res, err = m.conn.SendMultiple([]rscp.Message{
+		messages = []rscp.Message{
 			e3dcDischargeBatteryLimit(true, m.dischargeLimit),
 			e3dcBatteryCharge(0),
-		})
-
+		}
 	case api.BatteryCharge:
-		res, err = m.conn.SendMultiple([]rscp.Message{
+		messages = []rscp.Message{
 			e3dcDischargeBatteryLimit(false, 0),
 			e3dcBatteryCharge(50000), // max. 50kWh
-		})
-
+		}
 	default:
 		return api.ErrNotAvailable
 	}
 
-	if e := m.retry(err); e != nil {
-		return e
+	res, err := m.retryMessages(func() ([]rscp.Message, error) {
+		return m.conn.SendMultiple(messages)
+	})
+	if err != nil {
+		return err
 	}
 
 	return rscpError(res...)
