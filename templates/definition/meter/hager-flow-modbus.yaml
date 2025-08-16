@@ -1,0 +1,93 @@
+template: hager-flow
+products:
+  - brand:
+    description:
+      de: |
+        Hager XEM mit EMC flow R2
+      en: |
+        Hager XEM with EMC flow R2
+requirements:
+  description:
+    de: |
+      "Modbus TCP server" muss aktiviert sein
+
+      (Hager Flow UI > Konfiguration > Übersicht/EMC)
+    en: |
+      "Modbus TCP server" has to be enabled
+
+      (Hager Flow UI > Configuration > Overview/EMC)
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 502
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  currents:
+  - source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 4099 # Netz Ampere L1 | Grid amps L1
+      type: holding
+      decode: uint16
+  - source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 4100 # Netz Ampere L2 | Grid amps L2
+      type: holding
+      decode: uint16
+  - source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 4101 # Netz Ampere L3 | Grid amps L3
+      type: holding
+      decode: uint16
+  power:
+    source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      type: holding
+      decode: int32
+      address: 4102 # Netz Bezug bzw. Einspeisung in Watt | Grid coverage resp. feed-in (Watts)
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      id: 0
+      uri: {{ .host }}:{{ .port }}
+      register:
+        type: holding
+        decode: uint32
+        address: 4126 # Photovoltaikleistung in Watt | Photovoltaics power (Watts)
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      type: holding
+      decode: int32
+      address: 4138 # Batterie Ladung bzw. Entladung in Watt | Battery charge resp. discharge (Watts)
+    scale: -1 # Vorzeichen umkehren | reverse direction
+  soc:
+    source: modbus
+    id: 0
+    uri: {{ .host }}:{{ .port }}
+    register:
+      address: 4146 # Batterie-SOC in %
+      type: holding
+      decode: uint16
+  capacity: {{ .capacity }} # Nutzbare Kapazität in kWh | Net capacity (kWh)
+  {{- end }}
