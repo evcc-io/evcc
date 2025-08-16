@@ -21,12 +21,15 @@ params:
   - name: password
   - name: passive
     type: bool
+    description:
+      de: "Passivmodus: Setze keine max/min Ströme"
+      en: "Passive mode: Do not set max/min currents."
     help:
-      de: Setze keine max/min Ströme an der Wallbox. evcc aktiviert/deaktiviert lediglich den Ladevorgang. Verwende diese Option, wenn die Wallbox Teil eines Lastmanagement Systems ist und Stromänderungen ablehnt (HTTP 403).
-      en: Do not set max/min currents on the charger. evcc will only (re)enable/disable charging. Use this if the charger is part of a load distribution system and rejects current changes (HTTP 403).
+      de: "evcc startet/stoppt lediglich den Ladevorgang. Verwende diese Option, wenn die Wallbox Teil eines Lastmanagement Systems ist und Stromänderungen ablehnt (HTTP 403)."
+      en: "evcc will only (re)enable/disable charging. Use this if the charger is part of a load distribution system and rejects current changes (HTTP 403)."
 render: |
   type: zaptec
   id: {{ .id }}
   user: {{ .user }}
   password: '{{ .password }}'
-  passive: '{{ .passive }}'
+  passive: {{ .passive }}
