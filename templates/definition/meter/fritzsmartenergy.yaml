@@ -1,0 +1,31 @@
+template: fritzsmartenergy
+products:
+  - brand: AVM
+    description:
+      generic: FRITZ!Smart Energy 250
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: uri
+    default: https://fritz.box
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: ain
+    required: true
+    description:
+      de: Aktoridentifikationsnummer (AIN) ohne Leerzeichen (Ist auf dem Typenschild auf der Geräterückseite aufgedruckt).
+      en: Identification number without blanks (see AIN number on sensor sticker).
+    help:
+      de: Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Use quotations in case of leading zeros.
+    example: "000XXXXXXXXX-1"
+render: |
+  type: fritzdect
+  usage: {{ .usage }}
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  ain: {{ .ain }}
