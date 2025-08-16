@@ -337,11 +337,6 @@ params:
       en: For forced charging of the battery.
       de: Für erzwungenes Laden des Speichers.
     advanced: true
-  - name: chargepower
-    description:
-      en: Maximum charge power
-      de: Maximale Ladeleistung
-    deprecated: true
   - name: maxchargerate
     unit: "%"
     type: int

@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64, maxACPowerGetter func() float64, batteryController func(api.BatteryMode) error) api.Meter {
+func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64, batteryMaxPowerGetter func() (float64, float64), batteryController func(api.BatteryMode) error, maxACPowerGetter func() float64) api.Meter {
 	switch {
 	case battery == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return base
@@ -184,7 +184,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -195,7 +195,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -210,7 +210,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -225,7 +225,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -244,7 +244,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -259,7 +259,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -278,7 +278,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -297,7 +297,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -320,7 +320,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -339,7 +339,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -362,7 +362,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -385,7 +385,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -412,7 +412,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -427,7 +427,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -446,7 +446,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -465,7 +465,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -488,7 +488,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -507,7 +507,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -530,7 +530,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -553,7 +553,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -580,7 +580,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -603,7 +603,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -630,7 +630,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -657,7 +657,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -673,6 +673,1902 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -916,7 +2812,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -931,7 +2827,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -950,7 +2846,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -969,7 +2865,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -992,7 +2888,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1011,7 +2907,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1034,7 +2930,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1057,7 +2953,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1084,7 +2980,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1107,7 +3003,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1134,7 +3030,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1161,7 +3057,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1192,7 +3088,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1211,7 +3107,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1234,7 +3130,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1257,7 +3153,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1284,7 +3180,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1307,7 +3203,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1334,7 +3230,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1361,7 +3257,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1392,7 +3288,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1419,7 +3315,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1450,7 +3346,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1481,7 +3377,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -1516,630 +3412,30 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.PhaseCurrents
-			api.PhasePowers
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.PhaseCurrents
-			api.PhasePowers
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.MeterEnergy
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.PhaseCurrents
-			api.PhasePowers
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.PhaseCurrents
-			api.PhasePowers
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhasePowers
-			api.PhaseVoltages
-		}{
-			Meter: base,
-			Battery: &decorateMeterBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhasePowers: &decorateMeterPhasePowersImpl{
-				phasePowers: phasePowers,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -2147,8 +3443,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2158,11 +3454,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -2170,8 +3466,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2181,11 +3477,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -2194,8 +3490,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2208,11 +3504,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -2220,8 +3516,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2231,11 +3527,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -2244,8 +3540,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2258,11 +3554,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -2271,8 +3567,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2285,11 +3581,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -2299,8 +3595,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2316,11 +3612,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -2329,8 +3625,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2343,11 +3639,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -2357,8 +3653,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2374,11 +3670,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -2388,8 +3684,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2405,11 +3701,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
-			api.BatteryController
+			api.BatteryMaxPowerGetter
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -2420,8 +3716,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2440,7 +3736,703 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2463,7 +4455,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2490,7 +4482,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2517,7 +4509,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2548,7 +4540,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2575,7 +4567,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2606,7 +4598,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2637,7 +4629,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2672,7 +4664,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2703,7 +4695,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2738,7 +4730,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2773,7 +4765,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter == nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -2794,6 +4786,798 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
+			},
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryMaxPowerGetter != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryMaxPowerGetter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			Battery: &decorateMeterBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateMeterBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
+				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
@@ -2838,6 +5622,14 @@ type decorateMeterBatteryControllerImpl struct {
 
 func (impl *decorateMeterBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
 	return impl.batteryController(p0)
+}
+
+type decorateMeterBatteryMaxPowerGetterImpl struct {
+	batteryMaxPowerGetter func() (float64, float64)
+}
+
+func (impl *decorateMeterBatteryMaxPowerGetterImpl) GetMaxChargeDischargePower() (float64, float64) {
+	return impl.batteryMaxPowerGetter()
 }
 
 type decorateMeterMaxACPowerGetterImpl struct {

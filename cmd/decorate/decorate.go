@@ -49,6 +49,7 @@ var a struct {
 	api.BatteryCapacity
 	api.BatteryController
 	api.SocLimiter
+	api.BatteryMaxPowerGetter
 }
 
 func typ(i any) string {
@@ -59,7 +60,7 @@ var dependents = map[string][]string{
 	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPowerGetter)},
 	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
-	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController), typ(&a.SocLimiter)},
+	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController), typ(&a.SocLimiter), typ(&a.BatteryMaxPowerGetter)},
 }
 
 // hasIntersection returns if the slices intersect
