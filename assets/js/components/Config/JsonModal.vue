@@ -83,7 +83,12 @@ export default {
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
-		initalValues: { type: Object, default: () => {} },
+		initalValues: {
+			type: Object,
+			default: () => {
+				return {};
+			},
+		},
 	},
 	emits: ["changed", "open"],
 	data() {
