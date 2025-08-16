@@ -122,5 +122,6 @@ render: |
       address: 52503 # min soc
       type: writeholding
       encoding: uint16
+    scale: 10
   capacity: {{ .capacity }} # kWh
   {{- end }}
