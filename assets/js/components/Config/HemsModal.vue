@@ -6,7 +6,6 @@
 		docs="/docs/reference/configuration/hems"
 		endpoint="/config/hems"
 		state-key="hems"
-		:offerSaveWithoutModifications="true"
 		:initalValues="{ Other: {} }"
 		data-testid="hems-modal"
 		@changed="$emit('changed')"

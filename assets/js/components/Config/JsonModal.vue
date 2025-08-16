@@ -47,7 +47,7 @@
 				<button
 					type="submit"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
-					:disabled="!offerSaveWithoutModifications && (saving || nothingChanged)"
+					:disabled="saving || nothingChanged"
 				>
 					<span
 						v-if="saving"
@@ -83,7 +83,6 @@ export default {
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
-		offerSaveWithoutModifications: Boolean,
 		initalValues: { type: Object, default: () => {} },
 	},
 	emits: ["changed", "open"],
