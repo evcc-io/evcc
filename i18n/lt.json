@@ -429,14 +429,18 @@
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs gaunate prieigą prie visų įkroviklių implementacijų.",
-      "descriptionToken": "Žetoną (token) gaunate iš {url}. Taip pat siūlome bandomąjį žetoną testavimui.",
+      "descriptionToken": "Rėmėjai žetoną (token) gauna iš {url}. Taip pat siūlome bandomąjį žetoną testavimui. ",
+      "enterYourToken": "Įrašykite savo žetoną",
       "error": "Rėmėjo žetonas (token) negalioja.",
+      "invalid": "negalioja",
       "labelToken": "Rėmėjo žetonas",
       "title": "Rėmimas",
       "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo žetoną.",
       "tokenRequiredLearnMore": "Sužinoti daugiau.",
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
-      "trialToken": "Bandomasis žetonas"
+      "trialToken": "Bandomasis žetonas",
+      "viaYaml": "per evcc.yaml",
+      "yourToken": "Jūsų žetonas"
     },
     "system": {
       "backupRestore": {
