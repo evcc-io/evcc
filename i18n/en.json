@@ -183,6 +183,7 @@
       "labelControl": "Control",
       "labelDeviceid": "Device ID",
       "labelVendorid": "Vendor ID",
+      "noSystem": "none",
       "template": "System",
       "title": "HEMS"
     },
