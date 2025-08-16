@@ -13,9 +13,9 @@
 	>
 		<template #default="{ values }">
 			<div class="mb-4">
-				<label for="hemsSystemSelect" class="form-label">{{
-					$t("config.hems.template")
-				}}</label>
+				<label for="hemsSystemSelect" class="form-label">
+					{{ $t("config.hems.template") }}
+				</label>
 				<select
 					name="hemsSystem"
 					id="hemsSystemSelect"
