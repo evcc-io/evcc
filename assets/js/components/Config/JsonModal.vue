@@ -68,6 +68,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import store from "@/store";
+import deepClone from "@/utils/deepClone";
 
 export default {
 	name: "JsonModal",
@@ -84,6 +85,12 @@ export default {
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
+		initalValues: {
+			type: Object,
+			default: () => {
+				return {};
+			},
+		},
 	},
 	emits: ["changed", "open"],
 	data() {
@@ -91,7 +98,7 @@ export default {
 			saving: false,
 			removing: false,
 			error: "",
-			values: {},
+			values: this.initalValues,
 			serverValues: {},
 		};
 	},
@@ -121,7 +128,8 @@ export default {
 			if (this.transformReadValues) {
 				this.serverValues = this.transformReadValues(this.serverValues);
 			}
-			this.values = { ...this.serverValues };
+
+			this.values = deepClone(this.serverValues);
 		},
 		async save() {
 			this.saving = true;

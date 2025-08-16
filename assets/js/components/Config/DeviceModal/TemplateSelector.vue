@@ -51,7 +51,7 @@ export interface PrimaryOption {
 
 export interface TemplateGroup {
 	label: string;
-	options: TemplateOption[];
+	options?: TemplateOption[];
 }
 
 export default defineComponent({

@@ -177,6 +177,14 @@
     },
     "hems": {
       "description": "Connect evcc to another home energy management system.",
+      "descriptionDeviceid": "TODO",
+      "descriptionVendorid": "TODO",
+      "labelAllowControl": "System should take over the charging control of evcc",
+      "labelControl": "Control",
+      "labelDeviceid": "Device ID",
+      "labelVendorid": "Vendor ID",
+      "noSystem": "none",
+      "template": "System",
       "title": "HEMS"
     },
     "icon": {
