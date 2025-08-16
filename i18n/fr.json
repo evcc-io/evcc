@@ -429,14 +429,18 @@
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
       "description": "Le modèle de parrainage nous aide à maintenir le projet et à construire de manière durable de nouvelles fonctionnalités passionnantes. En tant que sponsor, vous avez accès à toutes les implémentations de chargeurs.",
-      "descriptionToken": "Vous pouvez obtenir un jeton via {url}. Nous offrons également un jeton d’essai pour les tests.",
+      "descriptionToken": "Les sponsors obtiennent leur jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests. ",
+      "enterYourToken": "Entrer votre jeton",
       "error": "Le jeton de sponsor n’est pas valide.",
+      "invalid": "invalide",
       "labelToken": "Jeton de sponsor",
       "title": "Sponsoring",
       "tokenRequired": "Vous devez configurer un jeton de sponsor avant de pouvoir créer cet appareil.",
       "tokenRequiredLearnMore": "Plus d’information.",
       "tokenRequiredShort": "Aucun jeton de parrainage n'est configuré.",
-      "trialToken": "Jeton d’essai"
+      "trialToken": "Jeton d’essai",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Votre jeton"
     },
     "system": {
       "backupRestore": {
