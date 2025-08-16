@@ -133,8 +133,8 @@ params:
       de: Cache
       en: Cache
     help:
-      de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
-      en: Time interval with when data should be reloaded from the vehicle
+      de: Zeitintervall für erneute Datenabfrage
+      en: Time interval for data refresh
     advanced: true
     type: duration
     example: 5m
