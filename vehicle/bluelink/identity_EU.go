@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -22,40 +21,26 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	DeviceIdURL        = "/api/v1/spa/notifications/register"
-	IntegrationInfoURL = "/api/v1/user/integrationinfo"
-	SilentSigninURL    = "/api/v1/user/silentsignin"
-	LanguageURL        = "/api/v1/user/language"
-	LoginURL           = "/api/v1/user/signin"
-	TokenURL           = "/api/v1/user/oauth2/token"
-)
-
-// Config is the bluelink API configuration
-type Config struct {
-	URI               string
-	AuthClientID      string // v2
-	BrandAuthUrl      string // v2
-	BasicToken        string
-	CCSPServiceID     string
-	CCSPApplicationID string
-	PushType          string
-	Cfb               string
-	LoginFormHost     string
+// PopulateSettingsEU populates the settings necessary for EU region
+func PopulateSettingsEU(brand, region string) (BluelinkConfig, error) {
+	// sru_250814: I know this looks weird but right now it is unclear whether all
+	// 	regional bluelink version use at least a roughly similar structure so I use
+	//	a map for now.
+	return BluelinkConfig{
+		URI:               ConfigMap[region][brand]["URI"],
+		BasicToken:        ConfigMap[region][brand]["BasicToken"],
+		CCSPServiceID:     ConfigMap[region][brand]["ServiceId"],
+		CCSPApplicationID: ConfigMap[region][brand]["AppId"],
+		AuthClientID:      ConfigMap[region][brand]["AuthClientId"],
+		BrandAuthUrl:      ConfigMap[region][brand]["BrandAuthUrl"],
+		PushType:          ConfigMap[region][brand]["PushType"],
+		Cfb:               ConfigMap[region][brand]["Cfb"],
+		LoginFormHost:     ConfigMap[region][brand]["LoginFormHost"],
+	}, nil
 }
 
-// Identity implements the Kia/Hyundai bluelink identity.
-// Based on https://github.com/Hacksore/bluelinky.
-type Identity struct {
-	*request.Helper
-	log      *util.Logger
-	config   Config
-	deviceID string
-	oauth2.TokenSource
-}
-
-// NewIdentity creates BlueLink Identity
-func NewIdentity(log *util.Logger, config Config) *Identity {
+// NewIdentityEU creates BlueLink Identity for EU region
+func NewIdentity(log *util.Logger, config BluelinkConfig) *Identity {
 	v := &Identity{
 		log:    log,
 		Helper: request.NewHelper(log),
@@ -143,7 +128,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 	return err
 }
 
-func (v *Identity) brandLoginHyundaiEU(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) brandLoginHyundai(cookieClient *request.Helper, user, password string) (string, error) {
 	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
@@ -247,7 +232,7 @@ func (v *Identity) brandLoginHyundaiEU(cookieClient *request.Helper, user, passw
 	return code, err
 }
 
-func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) brandLoginKia(cookieClient *request.Helper, user, password string) (string, error) {
 	req, _ := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
@@ -340,6 +325,7 @@ func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password 
 	return code, nil
 }
 
+/* no longer used atm, probably doesn't work anymore anyway
 func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
 	data := map[string]interface{}{
 		"email":    user,
@@ -368,8 +354,9 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 
 	return accCode, err
 }
+*/
 
-func (v *Identity) exchangeCodeHyundaiEU(accCode string) (*oauth2.Token, error) {
+func (v *Identity) exchangeCodeHyundai(accCode string) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
@@ -390,7 +377,7 @@ func (v *Identity) exchangeCodeHyundaiEU(accCode string) (*oauth2.Token, error) 
 	return util.TokenWithExpiry(&token), err
 }
 
-func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
+func (v *Identity) exchangeCodeKia(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
 	headers := map[string]string{
 		"Content-type": "application/x-www-form-urlencoded",
@@ -436,52 +423,43 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language, brand string) (err error) {
-	if user == "" || password == "" {
-		return api.ErrMissingCredentials
-	}
+func (v *Identity) LoginEU(user, password, language, brand string) (err error) {
 	v.deviceID, err = v.getDeviceID()
-
-	var cookieClient *request.Helper
-	if err == nil {
-		cookieClient, err = v.getCookies()
-	}
-
-	if err == nil {
-		err = v.setLanguage(cookieClient, language)
-	}
-
-	var code string
-	if err == nil {
-		switch brand {
-		case "kia":
-			code, err = v.brandLoginKiaEU(cookieClient, user, password)
-			if err == nil {
-				var token *oauth2.Token
-				if token, err = v.exchangeCodeKiaEU(code); err == nil {
-					v.TokenSource = oauth.RefreshTokenSource(token, v)
-				}
-			}
-		case "hyundai":
-			// try new login first, then fallback
-			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
-				code, err = v.bluelinkLogin(cookieClient, user, password)
-			}
-			if err == nil {
-				var token *oauth2.Token
-				if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
-					v.TokenSource = oauth.RefreshTokenSource(token, v)
-				}
-			}
-		default:
-			err = fmt.Errorf("unknown brand (%s)", brand)
-		}
-	}
-
 	if err != nil {
-		err = fmt.Errorf("login failed: %w", err)
+		return err
+	}
+	cookieClient, err := v.getCookies()
+	if err != nil {
+		return err
+	}
+	err = v.setLanguage(cookieClient, language)
+	if err != nil {
+		return err
 	}
 
+	switch brand {
+	case "kia":
+		code, err := v.brandLoginKia(cookieClient, user, password)
+		if err != nil {
+			return err
+		}
+		token, err := v.exchangeCodeKia(code)
+		if err != nil {
+			return err
+		}
+		v.TokenSource = oauth.RefreshTokenSource(token, v)
+	case "hyundai":
+		// try new login first, then fallback
+		code, err := v.brandLoginHyundai(cookieClient, user, password)
+		if err == nil {
+			var token *oauth2.Token
+			if token, err = v.exchangeCodeHyundai(code); err == nil {
+				v.TokenSource = oauth.RefreshTokenSource(token, v)
+			}
+		}
+	default:
+		err = fmt.Errorf("unknown brand (%s)", brand)
+	}
 	return err
 }
 
