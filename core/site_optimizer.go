@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
+	"moul.io/http2curl"
 )
 
 var (
@@ -206,8 +207,6 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		if sponsor.IsAuthorized() {
 			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
 		}
-		// command, _ := http2curl.GetCurlCommand(req)
-		// log.TRACE.Println("\n" + command.String())
 		return nil
 	})
 	if err != nil {
@@ -226,13 +225,17 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return fmt.Errorf("invalid status: %d", resp.StatusCode())
 	}
 
+	curl, _ := http2curl.GetCurlCommand(req)
+
 	site.publish("evopt", struct {
 		Req     evopt.OptimizationInput  `json:"req"`
 		Res     evopt.OptimizationResult `json:"res"`
+		Curl    string                   `json:"curl"`
 		Details responseDetails          `json:"details"`
 	}{
 		Req:     req,
 		Res:     *resp.JSON200,
+		Curl:    curl,
 		Details: details,
 	})
 
