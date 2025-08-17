@@ -197,7 +197,7 @@ type API interface {
 	IsFastChargingActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
-	// GetRemainingEnergy is the remaining charge energy in Wh
+	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
 
 	//
@@ -210,4 +210,6 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
+	// GetSoc returns the last vehicle or charger soc in %
+	GetSoc() float64
 }

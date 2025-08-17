@@ -161,11 +161,11 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64       // Vehicle Soc
+	vehicleSoc              float64       // Vehicle or charger soc
 	chargeDuration          time.Duration // Charge duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
 	chargeRemainingDuration time.Duration // Remaining charge duration
-	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	chargeRemainingEnergy   float64       // Remaining charge energy in kWh
 	progress                *Progress     // Step-wise progress indicator
 
 	// session log
@@ -1738,7 +1738,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 		lp.SetRemainingDuration(d)
 
-		lp.SetRemainingEnergy(1e3 * socEstimator.RemainingChargeEnergy(limitSoc))
+		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
 
 		// range
 		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {

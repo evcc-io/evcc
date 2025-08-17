@@ -51,6 +51,7 @@ export interface State {
   currency?: CURRENCY;
   fatal?: FatalError[];
   authProviders?: AuthProviders;
+  evopt?: EvOpt;
   version?: string;
   battery?: Battery[];
   tariffGrid?: number;
@@ -337,3 +338,94 @@ export interface SiteConfig {
 }
 
 export type ValueOf<T> = T[keyof T];
+
+// EvOpt interfaces matching OpenAPI spec exactly
+export interface EvOpt {
+  req: OptimizationInput;
+  res: OptimizationResult;
+  details: OptimizationDetails;
+}
+
+// Request payload for /optimize/charge-schedule
+export interface OptimizationInput {
+  batteries: BatteryConfig[]; // Battery configurations
+  time_series: TimeSeries; // Time series data
+  eta_c?: number; // Charging efficiency (0-1), default 0.95
+  eta_d?: number; // Discharging efficiency (0-1), default 0.95
+  M?: number; // Big M value for MILP constraints
+}
+
+// Battery configuration
+export interface BatteryConfig {
+  s_min: number; // Min state of charge (Wh)
+  s_max: number; // Max state of charge (Wh)
+  s_initial: number; // Initial state of charge (Wh)
+  c_min: number; // Min charge power (W)
+  c_max: number; // Max charge power (W)
+  d_max: number; // Max discharge power (W)
+  p_a: number; // Energy value per Wh at end
+  charge_from_grid?: boolean; // Can charge from grid
+  discharge_to_grid?: boolean; // Can discharge to grid
+  p_demand?: number[]; // Min charge demand per step (Wh)
+  s_goal?: number[]; // Goal state of charge per step (Wh)
+}
+
+// Time series data
+export interface TimeSeries {
+  dt: number[]; // Duration per time step (seconds)
+  gt: number[]; // Household demand per step (Wh)
+  ft: number[]; // Energy generation forecast per step (Wh)
+  p_N: number[]; // Grid import price per step (currency/Wh)
+  p_E: number[]; // Grid export price per step (currency/Wh)
+}
+
+// Solver status enum
+export enum OptimizationStatus {
+  OPTIMAL = "Optimal",
+  INFEASIBLE = "Infeasible",
+  UNBOUNDED = "Unbounded",
+  UNDEFINED = "Undefined",
+  NOT_SOLVED = "Not Solved",
+}
+
+// Flow direction enum
+export enum FlowDirection {
+  IMPORT = 0, // Import from grid
+  EXPORT = 1, // Export to grid
+}
+
+// Response from /optimize/charge-schedule
+export interface OptimizationResult {
+  status: OptimizationStatus; // Solver status
+  objective_value: number | null; // Economic benefit (null if not optimal)
+  batteries: BatteryResult[]; // Results per battery
+  grid_import: number[]; // Grid import per step (Wh)
+  grid_export: number[]; // Grid export per step (Wh)
+  flow_direction: FlowDirection[]; // Flow direction per step (0=import, 1=export)
+}
+
+// Battery optimization results
+export interface BatteryResult {
+  charging_power: number[]; // Charging energy per step (Wh)
+  discharging_power: number[]; // Discharging energy per step (Wh)
+  state_of_charge: number[]; // State of charge per step (Wh)
+}
+
+// Battery detail information for optimization
+export interface BatteryDetail {
+  type: "vehicle" | "battery"; // Type of battery
+  title: string; // Display title
+  name: string; // Internal name/identifier
+  capacity: number; // Battery capacity (kWh)
+}
+
+// Optimization details with timestamps and battery information
+export interface OptimizationDetails {
+  timestamp: string[]; // Array of ISO timestamp strings
+  batteryDetails: BatteryDetail[]; // Array of battery detail objects
+}
+
+// Error response
+export interface Error {
+  message: string; // Error description
+}
