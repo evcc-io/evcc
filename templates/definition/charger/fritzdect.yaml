@@ -1,8 +1,8 @@
 template: fritzdect
 products:
-  - brand: AVM
+  - brand: FRITZ!
     description:
-      generic: FritzDECT
+      generic: FRITZ!Smart Energy 200+210 / FRITZ!DECT 200+210
 group: switchsockets
 params:
   - name: uri
@@ -13,6 +13,12 @@ params:
     required: true
   - name: ain
     required: true
+    description:
+      de: AIN auf dem Typenschild des Geräts.
+      en: AIN on device type plate.
+    help:
+      de: Bei führenden Nullen bitte in doppelte Hochkommata setzen (bspw. "000XXXXXXXXX-1").
+      en: Use quotations in case of leading zeros (e.g. "000XXXXXXXXX-1").
   - preset: switchsocket
 render: |
   type: fritzdect

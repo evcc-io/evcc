@@ -1,12 +1,11 @@
-template: fritzdect
+template: fritzgrid
 products:
   - brand: FRITZ!
     description:
-      generic: FRITZ!Smart Energy 200+210 / FRITZ!DECT 200+210
-group: switchsockets
+      generic: FRITZ!Smart Energy 250
 params:
   - name: usage
-    choice: ["pv", "charge"]
+    choice: ["grid"]
   - name: uri
     default: https://fritz.box
   - name: user
@@ -20,7 +19,7 @@ params:
       en: AIN on device type plate.
     help:
       de: Bei führenden Nullen bitte in doppelte Hochkommata setzen (bspw. "000XXXXXXXXX-1").
-      en: Use quotations in case of leading zeros (e.g."000XXXXXXXXX-1").
+      en: Use quotations in case of leading zeros (e.g. "000XXXXXXXXX-1").
 render: |
   type: fritzdect
   uri: {{ .uri }}
