@@ -1,8 +1,14 @@
 template: fritzdect
 products:
-  - brand: FRITZ!
+  - brand: "FRITZ!"
     description:
-      generic: FRITZ!Smart Energy 200+210 / FRITZ!DECT 200+210
+      generic: "FRITZ!Smart Energy 200 / FRITZ!DECT 200"
+  - brand: "FRITZ!"
+    description:
+      generic: "FRITZ!Smart Energy 210 / FRITZ!DECT 210"
+  - brand: "FRITZ!"
+    description:
+      generic: "FRITZ!Powerline 546E"
 group: switchsockets
 params:
   - name: usage
