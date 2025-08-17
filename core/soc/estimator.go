@@ -200,7 +200,3 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 
 	return s.vehicleSoc, nil
 }
-
-func (s *Estimator) EstimatedSoc() float64 {
-	return s.vehicleSoc
-}

@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -21,9 +20,8 @@ import (
 )
 
 var (
-	eta          = float32(0.9)       // efficiency of the battery charging/discharging
-	batteryPower = float32(6000)      // power of the battery in W
-	pa           = float32(0.3 / 1e3) // Value per Wh at end of time horizon
+	eta          = float32(0.9)  // efficiency of the battery charging/discharging
+	batteryPower = float32(6000) // power of the battery in W
 
 	updated time.Time
 )
@@ -48,6 +46,10 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
+func (site *Site) optimizerUpdateAsync(battery []measurement) {
+	site.log.ERROR.Println("optimizer:", site.optimizerUpdate(battery))
+}
+
 func (site *Site) optimizerUpdate(battery []measurement) error {
 	uri := os.Getenv("EVOPT_URI")
 	if uri == "" {
@@ -61,8 +63,6 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	defer func() {
 		updated = time.Now()
 	}()
-
-	log := util.NewLogger("evopt")
 
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solarRates, err := solarTariff.Rates()
@@ -82,7 +82,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	dt := timeSteps(minLen)
 	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
-	log.DEBUG.Printf("optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
+	site.log.DEBUG.Printf("optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
 		minLen,
 		grid[minLen-1].End.Local(),
 		len(grid), len(feedIn), len(solar),
@@ -91,7 +91,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	gt := site.homeProfile(minLen)
 
-	solarEnergy, err := ratesToEnergy(log, solarRates, firstSlotDuration)
+	solarEnergy, err := ratesToEnergy(solarRates, firstSlotDuration)
 	if err != nil {
 		return err
 	}
@@ -107,6 +107,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Ft: maxValues(solarEnergy, 1, minLen),
 		},
 	}
+
+	// end of horizon Wh value
+	pa := req.TimeSeries.PN[len(req.TimeSeries.PN)-1]
 
 	details := responseDetails{
 		Timestamps: asTimestamps(dt),
@@ -181,7 +184,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		})
 	}
 
-	httpClient := request.NewClient(log)
+	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
 	apiClient, err := evopt.NewClientWithResponses(uri, evopt.WithHTTPClient(httpClient))
@@ -190,8 +193,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
-		if token := sponsor.Token; token != "" {
-			req.Header.Set("Authorization", "Bearer "+token)
+		if sponsor.IsAuthorized() {
+			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
 		}
 		// command, _ := http2curl.GetCurlCommand(req)
 		// log.TRACE.Println("\n" + command.String())
@@ -342,7 +345,7 @@ func slotsToHours(now time.Time, profile *[96]float64) []float64 {
 	return result
 }
 
-func ratesToEnergy(log *util.Logger, rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
+func ratesToEnergy(rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
 	res := make(api.Rates, 0, len(rr))
 
 	for _, r := range rr {

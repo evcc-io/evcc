@@ -21,6 +21,7 @@
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
 				>
 					<button
+						v-if="!disableCancel"
 						type="button"
 						class="btn btn-link text-muted btn-cancel"
 						data-bs-dismiss="modal"
@@ -77,6 +78,7 @@ export default {
 		errorMessage: String,
 		docs: String,
 		endpoint: String,
+		disableCancel: Boolean,
 		disableRemove: Boolean,
 		noButtons: Boolean,
 		transformReadValues: Function,

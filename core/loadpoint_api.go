@@ -783,11 +783,7 @@ func (lp *Loadpoint) GetSoc() float64 {
 	lp.vmu.RLock()
 	defer lp.vmu.RUnlock()
 
-	if lp.socEstimator == nil {
-		return 0
-	}
-
-	return lp.socEstimator.EstimatedSoc()
+	return lp.vehicleSoc
 }
 
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes

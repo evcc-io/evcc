@@ -161,7 +161,7 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64       // Vehicle Soc
+	vehicleSoc              float64       // Vehicle or charger soc
 	chargeDuration          time.Duration // Charge duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
 	chargeRemainingDuration time.Duration // Remaining charge duration
@@ -1629,6 +1629,10 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
 			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
+			if added > 0 {
+				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
+			}
+
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
 			}
