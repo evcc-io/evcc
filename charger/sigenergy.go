@@ -33,7 +33,6 @@ type Sigenergy struct {
 	*embed
 	log     *util.Logger
 	conn    *modbus.Connection
-	current uint32
 	enabled bool
 }
 
@@ -152,9 +151,6 @@ func (wb *Sigenergy) MaxCurrentMillis(current float64) error {
 	binary.BigEndian.PutUint32(b, curr)
 
 	_, err := wb.conn.WriteMultipleRegisters(regSigOutputCurrent, 2, b)
-	if err == nil {
-		wb.current = curr
-	}
 
 	return err
 }
