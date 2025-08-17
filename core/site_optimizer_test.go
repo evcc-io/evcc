@@ -77,7 +77,7 @@ func TestUpdateHouseholdProfile(t *testing.T) {
 			expected[i] = float64(96 - 48 + i)
 		}
 
-		require.Equal(t, expected, *prof, "expected %v, got %v", expected, *prof)
+		require.Equal(t, expected, *prof, "partial profile: expected %v, got %v", expected, *prof)
 	}
 
 	{
@@ -88,14 +88,10 @@ func TestUpdateHouseholdProfile(t *testing.T) {
 
 		var expected [96]float64
 		for i := range expected {
-			if i < 48 {
-				expected[i] = float64(48+i+144+i) / 2
-				continue
-			}
-			expected[i] = float64(0+i-48+96+i-48) / 2
+			expected[i] = float64(0+96+2*i) / 2
 		}
 
-		require.Equal(t, expected, *prof, "expected %v, got %v", expected, *prof)
+		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
 	}
 }
 

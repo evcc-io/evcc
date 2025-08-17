@@ -28,7 +28,8 @@ func Persist(ts time.Time, value float64) error {
 	}).Error
 }
 
-// Profile returns a 15min average meter profile in Wh
+// Profile returns a 15min average meter profile in Wh.
+// Profile is sorted by timestamp starting at 00:00
 func Profile(from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
@@ -56,10 +57,6 @@ func Profile(from time.Time) (*[96]float64, error) {
 			return nil, err
 		}
 
-		if slotNum(time.Time(ts)) != len(res) {
-			return nil, ErrIncomplete
-		}
-
 		res = append(res, val)
 	}
 
@@ -74,7 +71,7 @@ func Profile(from time.Time) (*[96]float64, error) {
 	return (*[96]float64)(res), nil
 }
 
-func slotNum(ts time.Time) int {
+func SlotNum(ts time.Time) int {
 	ts = ts.Local()
 	return ts.Hour()*4 + ts.Minute()/15
 }
