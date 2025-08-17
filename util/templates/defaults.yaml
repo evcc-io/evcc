@@ -425,6 +425,12 @@ params:
     description:
       en: Delay
       de: Verzögerung
+    help:
+      en: Communication delay between requests
+      de: Kommunikationsverzögerung zwischen Anfragen
+    example: 100ms
+    type: duration
+    advanced: true
   - name: id
     description:
       generic: ID
@@ -717,6 +723,8 @@ modbus:
         - reference: true
           referencename: modbuscomset
           name: comset
+        - reference: true
+          name: delay
     rs485tcpip:
       description:
         generic: Serial (Ethernet-RS485 Adapter)
@@ -729,6 +737,8 @@ modbus:
         - reference: true
           name: port
           default: 502
+        - reference: true
+          name: delay
     tcpip:
       description:
         generic: TCP/IP
@@ -741,6 +751,8 @@ modbus:
         - reference: true
           name: port
           default: 502
+        - reference: true
+          name: delay
     udp:
       description:
         generic: UDP
@@ -753,6 +765,8 @@ modbus:
         - reference: true
           name: port
           default: 502
+        - reference: true
+          name: delay
 
 devicegroups:
   generic:
