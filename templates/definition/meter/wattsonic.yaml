@@ -13,7 +13,9 @@ params:
   - name: modbus
     choice: ["rs485"]
     id: 247
-    delay: 100ms
+  - name: delay
+    default: 100ms
+    advanced: true
   - name: capacity
     advanced: true
   - name: minsoc
