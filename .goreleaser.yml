@@ -73,6 +73,15 @@ changelog:
       - "^test:"
       - "^build"
       - "^Translations"
+  groups:
+    - title: "Breaking Changes 🚨"
+      regexp: '\(BC\)'
+      order: 1
+    - title: "Bug Fixes 🐞"
+      regexp: '\bifx\b'
+      order: 3
+    - title: "New Features 💫"
+      order: 2
 
 nfpms:
   - id: default
