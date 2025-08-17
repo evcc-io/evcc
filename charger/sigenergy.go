@@ -30,7 +30,6 @@ import (
 
 // Sigenergy charger implementation
 type Sigenergy struct {
-	*embed
 	log     *util.Logger
 	conn    *modbus.Connection
 	enabled bool
@@ -38,8 +37,8 @@ type Sigenergy struct {
 
 const (
 	regSigSystemState         = 32000 // System states according to IEC61851-1 definition
-	regSigTotalEnergyConsumed = 32001 // kWh, total energy consumed during charging
-	regSigChargingPower       = 32003 // kW, instantaneous charging power
+	regSigTotalEnergyConsumed = 32001 // kWh*100, total energy consumed during charging
+	regSigChargingPower       = 32003 // W, instantaneous charging power
 	regSigStartStop           = 42000 // Start/Stop charger (0: Start 1: Stop), WO
 	regSigOutputCurrent       = 42001 // Amperes, R/W, charger output current ([6, X] X is the smaller value between the rated current and the AC-Charger input breaker rated current.)
 )
@@ -51,7 +50,6 @@ func init() {
 // NewSigenergyFromConfig creates a new Sigenergy ModbusTCP charger
 func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		TcpSettings: modbus.TcpSettings{
@@ -63,11 +61,11 @@ func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (
 		return nil, err
 	}
 
-	return NewSigenergy(ctx, cc.embed, cc.URI, cc.ID)
+	return NewSigenergy(ctx, cc.URI, cc.ID)
 }
 
 // NewSigenergy creates a new charger
-func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8) (*Sigenergy, error) {
+func NewSigenergy(ctx context.Context, uri string, slaveID uint8) (*Sigenergy, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -81,9 +79,8 @@ func NewSigenergy(ctx context.Context, embed embed, uri string, slaveID uint8) (
 	conn.Logger(log.TRACE)
 
 	wb := &Sigenergy{
-		embed: &embed,
-		log:   log,
-		conn:  conn,
+		log:  log,
+		conn: conn,
 	}
 
 	return wb, nil
@@ -196,15 +193,5 @@ func (wb *Sigenergy) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(regSigOutputCurrent, 2); err == nil {
 		current := float64(binary.BigEndian.Uint32(b)) / 100
 		fmt.Printf("\tOutput Current:\t%.2f A\n", current)
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(regSigChargingPower, 2); err == nil {
-		powerKW := float64(int32(binary.BigEndian.Uint32(b))) / 1000
-		fmt.Printf("\tCharging Power:\t%.3f kW\n", powerKW)
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(regSigTotalEnergyConsumed, 2); err == nil {
-		energy := float64(binary.BigEndian.Uint32(b)) / 100
-		fmt.Printf("\tTotal Energy:\t%.2f kWh\n", energy)
 	}
 }
