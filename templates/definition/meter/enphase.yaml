@@ -128,7 +128,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: {{ .schema }}://{{ .host }}/production.json?details=1
+    uri: {{ .schema }}://{{ .host }}/ivp/livedata/status
     {{- if .token }}
     auth:
       type: bearer
@@ -136,10 +136,10 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
-    jq: .storage[] | .wNow
+    jq: ((.meters.storage.agg_p_mw // 0) / 1000 | round)
   soc:
     source: http
-    uri: {{ .schema }}://{{ .host }}/ivp/ensemble/inventory
+    uri: {{ .schema }}://{{ .host }}/ivp/livedata/status
     {{- if .token }}
     auth:
       type: bearer
@@ -147,6 +147,6 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
-    jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
+    jq: (.meters.soc // 0)
   capacity: {{ .capacity }} # kWh
   {{- end }}
