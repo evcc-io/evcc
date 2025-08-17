@@ -52,9 +52,19 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 		return
 	}
 
-	if err := site.optimizerUpdate(battery); err != nil {
-		site.log.ERROR.Println("optimizer:", err)
-	}
+	var err error
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic %v", r)
+		}
+
+		if err != nil {
+			site.log.ERROR.Println("optimizer:", err)
+		}
+	}()
+
+	err = site.optimizerUpdate(battery)
 
 	updated = time.Now()
 }
@@ -294,7 +304,7 @@ func (site *Site) homeProfile(minLen int) []float64 {
 	hours := make([]float64, 0, minLen+1)
 
 	combined := combineSlots(profile[:])
-	for len(hours) <= minLen {
+	for len(hours) <= minLen+24 { // allow for prorating first day
 		hours = append(hours, combined...)
 	}
 
