@@ -229,6 +229,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	return nil
 }
 
+// loadpointProfile returns the loadpoint's charging profile in Wh
 // TODO consider charging efficiency
 func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen int) []float64 {
 	mode := lp.GetMode()
@@ -265,9 +266,11 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 	return res
 }
 
+// homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) []float64 {
 	now := time.Now().Truncate(time.Hour)
 
+	// kWh
 	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
 	if err != nil {
 		site.log.ERROR.Printf("household metrics profile: %v", err)
@@ -284,7 +287,10 @@ func (site *Site) homeProfile(minLen int) []float64 {
 		res = res[:minLen]
 	}
 
-	return res
+	// convert to Wh
+	return lo.Map(res, func(v float64, i int) float64 {
+		return v * 1e3
+	})
 }
 
 // slotsToHours converts a daily consumption profile consisting of 96 15min slots
