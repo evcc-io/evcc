@@ -16,11 +16,11 @@ params:
   - name: ain
     required: true
     description:
-      de: Aktoridentifikationsnummer (AIN) ohne Leerzeichen (Ist auf dem Typenschild auf der Geräterückseite aufgedruckt).
-      en: Identification number without blanks (see AIN number on sensor sticker).
+      de: Aktoridentifikationsnummer (AIN) ohne Leerzeichen
+      en: Identification (ain) number without blanks
     help:
-      de: Bei führenden Nullen bitte in doppelte Hochkommata setzen.
-      en: Use quotations in case of leading zeros.
+      de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: See AIN number on sensor sticker. Use quotations in case of leading zeros.
     example: "000XXXXXXXXX-1"
 render: |
   type: fritzdect
