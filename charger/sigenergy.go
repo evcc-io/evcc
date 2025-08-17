@@ -160,7 +160,7 @@ func (wb *Sigenergy) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(int32(binary.BigEndian.Uint32(b))), nil
+	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.MeterEnergy = (*Sigenergy)(nil)
