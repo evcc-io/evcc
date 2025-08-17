@@ -49,9 +49,15 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
+	if time.Since(updated) < 5*time.Minute {
+		return
+	}
+
 	if err := site.optimizerUpdate(battery); err != nil {
 		site.log.ERROR.Println("optimizer:", err)
 	}
+
+	updated = time.Now()
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
@@ -59,14 +65,6 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	if uri == "" {
 		return nil
 	}
-
-	if time.Since(updated) < time.Minute {
-		return nil
-	}
-
-	defer func() {
-		updated = time.Now()
-	}()
 
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solarRates, err := solarTariff.Rates()
@@ -283,7 +281,7 @@ func (site *Site) homeProfile(minLen int) []float64 {
 
 	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
 	if err != nil {
-		site.log.ERROR.Println("optimizer:", err)
+		site.log.WARN.Println("optimizer:", err)
 		return lo.RepeatBy(minLen, func(_ int) float64 {
 			return 0
 		})
