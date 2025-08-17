@@ -203,10 +203,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
+	var curl *http2curl.CurlCommand
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
 		if sponsor.IsAuthorized() {
 			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
 		}
+		curl, _ = http2curl.GetCurlCommand(req)
 		return nil
 	})
 	if err != nil {
@@ -225,8 +227,6 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return fmt.Errorf("invalid status: %d", resp.StatusCode())
 	}
 
-	curl, _ := http2curl.GetCurlCommand(req)
-
 	site.publish("evopt", struct {
 		Req     evopt.OptimizationInput  `json:"req"`
 		Res     evopt.OptimizationResult `json:"res"`
@@ -235,7 +235,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}{
 		Req:     req,
 		Res:     *resp.JSON200,
-		Curl:    curl,
+		Curl:    curl.String(),
 		Details: details,
 	})
 
