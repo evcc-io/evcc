@@ -90,6 +90,10 @@ func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
 				if modbusParam.Comset != "" {
 					defaultValue = modbusParam.Comset
 				}
+			case ModbusParamNameDelay:
+				if modbusParam.Delay != "" {
+					defaultValue = modbusParam.Delay
+				}
 			}
 
 			if defaultValue != "" {
