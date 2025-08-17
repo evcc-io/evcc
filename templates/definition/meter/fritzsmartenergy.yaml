@@ -24,7 +24,6 @@ params:
     example: "000XXXXXXXXX-1"
 render: |
   type: fritzdect
-  usage: {{ .usage }}
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
