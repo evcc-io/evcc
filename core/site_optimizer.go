@@ -281,10 +281,8 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) []float64 {
-	now := time.Now().Truncate(time.Hour)
-
-	// kWh
-	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
+	// kWh over last 30 days
+	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		site.log.WARN.Println("optimizer:", err)
 		return lo.RepeatBy(minLen, func(_ int) float64 {
@@ -292,9 +290,17 @@ func (site *Site) homeProfile(minLen int) []float64 {
 		})
 	}
 
-	res := slotsToHours(now, profile[:])
-	for len(res) < minLen {
-		res = append(res, profile[:]...)
+	// max 4 days
+	hours := make([]float64, 0, minLen+1)
+
+	combined := combineSlots(profile[:])
+	for len(hours) <= minLen {
+		hours = append(hours, combined...)
+	}
+
+	res := prorateFirstHour(time.Now(), hours)
+	if len(res) < minLen {
+		panic("minimum home profile length failed")
 	}
 	if len(res) > minLen {
 		res = res[:minLen]
@@ -306,62 +312,40 @@ func (site *Site) homeProfile(minLen int) []float64 {
 	})
 }
 
-// slotsToHours converts a daily consumption profile consisting of 96 15min slots
-// to an hourly profile by totaling the values per hour and returning the first minLen values.
-// the first value is fractional part of the the current hour, prorated.
-func slotsToHours(now time.Time, profile []float64) []float64 {
+// combineSlots combines 15-minute slots into hourly values
+func combineSlots(profile []float64) []float64 {
 	if profile == nil {
 		return []float64{}
 	}
 
-	// Calculate current 15-minute slot within the day (0-95)
-	currentMinute := now.Hour()*60 + now.Minute()
-	currentSlot := currentMinute / 15
+	result := make([]float64, 0, 24)
 
-	// Calculate remaining minutes in current hour for prorating
-	minutesIntoHour := now.Minute()
-	remainingMinutesInHour := 60 - minutesIntoHour
-
-	var result []float64
-
-	// Handle the partial current hour first
-	if remainingMinutesInHour > 0 && currentSlot < 96 {
-		var partialHourValue float64
-		slotsInCurrentHour := remainingMinutesInHour / 15
-		if remainingMinutesInHour%15 != 0 {
-			slotsInCurrentHour++
+	// Process complete hours starting from the start slot
+	for hour := range 24 {
+		var sum float64
+		for i := range 4 {
+			sum += profile[4*hour+i]
 		}
 
-		// Sum the remaining slots in the current hour
-		for i := 0; i < slotsInCurrentHour && currentSlot+i < 96; i++ {
-			if currentSlot+i >= 0 {
-				partialHourValue += profile[currentSlot+i]
-			}
-		}
-
-		// Prorate based on the fraction of the hour remaining
-		fractionOfHour := float64(remainingMinutesInHour) / 60.0
-		partialHourValue *= fractionOfHour
-
-		result = append(result, float64(partialHourValue))
-	}
-
-	// Process complete hours starting from the next hour
-	nextHourSlot := (currentSlot/4 + 1) * 4
-
-	// Don't wrap around at end of day - only process remaining hours
-	for hourSlot := nextHourSlot; len(result) < 24 && hourSlot < 96; hourSlot += 4 {
-		var hourValue float64
-
-		// Sum 4 slots (4 × 15min = 60min = 1 hour)
-		for i := 0; i < 4 && hourSlot+i < 96; i++ {
-			hourValue += profile[hourSlot+i]
-		}
-
-		result = append(result, float64(hourValue))
+		result = append(result, sum)
 	}
 
 	return result
+}
+
+// prorateFirstHour strips away any slots before "now" and prorates the first remaining hour
+// based on remaining time in current hour. The profile contains hourly slots (0-23) that repeat for multiple days.
+func prorateFirstHour(now time.Time, profile []float64) []float64 {
+	// Take only slots from current hour onwards
+	res := profile[now.Hour():]
+
+	// Prorate the first hour based on remaining time in current hour
+	if minutesIntoHour := now.Minute(); minutesIntoHour > 0 {
+		fractionOfHour := float64(60-minutesIntoHour) / 60.0
+		res[0] *= fractionOfHour
+	}
+
+	return res
 }
 
 func ratesToEnergy(rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
