@@ -283,7 +283,7 @@ func (site *Site) homeProfile(minLen int) []float64 {
 
 	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
 	if err != nil {
-		site.log.ERROR.Printf("household metrics profile: %v", err)
+		site.log.ERROR.Println("optimizer:", err)
 		return lo.RepeatBy(minLen, func(_ int) float64 {
 			return 0
 		})
