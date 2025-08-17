@@ -429,14 +429,18 @@
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
       "description": "Sponzorský model nám pomáhá udržovat projekt a udržitelně vyvíjet nové a vzrušující funkce. Jako sponzor získáte přístup ke všem implementacím nabíječek.",
-      "descriptionToken": "Token získáte na {url}. Nabízíme také zkušební token pro testování.",
+      "descriptionToken": "Sponzorský token získáte na {url}. Pro začátek nabízíme také zkušební token. ",
+      "enterYourToken": "Vložte svůj sponzorský token",
       "error": "Sponzorský token není platný.",
+      "invalid": "Neplatný sponzorský token",
       "labelToken": "Sponzorský token",
       "title": "Sponzorství",
       "tokenRequired": "Před vytvořením tohoto zařízení musíte nakonfigurovat sponzorský token.",
       "tokenRequiredLearnMore": "Zjistit více.",
       "tokenRequiredShort": "Nebyl přidán sponzorský token.",
-      "trialToken": "Zkušební token"
+      "trialToken": "Zkušební token",
+      "viaYaml": "skrze evcc.yaml",
+      "yourToken": "Váš sponzorský token"
     },
     "system": {
       "backupRestore": {
