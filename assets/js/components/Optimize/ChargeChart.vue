@@ -92,11 +92,11 @@ export default defineComponent({
 			// 1. Solar Forecast (first, with increased tension)
 			datasets.push(...this.getSolarDatasets());
 
-			// 2. Battery power data
-			datasets.push(...this.getBatteryPowerDatasets());
-
-			// 3. Household Demand (power)
+			// 2. Household Demand (power)
 			datasets.push(...this.getHouseholdDatasets());
+
+			// 3. Battery power data
+			datasets.push(...this.getBatteryPowerDatasets());
 
 			return {
 				labels: this.timeLabels,
