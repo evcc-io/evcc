@@ -29,7 +29,7 @@ func Persist(ts time.Time, value float64) error {
 }
 
 // Profile returns a 15min average meter profile in Wh.
-// Profile is sorted by timestamp starting at 00:00
+// Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func Profile(from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
