@@ -196,7 +196,7 @@ export default defineComponent({
 		legends() {
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
-				let type = "area";
+				let type: "area" | "line" = "area";
 
 				// line chart handling
 				if ((dataset as any).type === "line") {
