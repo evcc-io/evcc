@@ -81,6 +81,7 @@ changelog:
       regexp: '\bifx\b'
       order: 3
     - title: "New Features 💫"
+      regexp: '^feat:|\bfeature\b'
       order: 2
 
 nfpms:
