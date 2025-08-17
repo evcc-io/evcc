@@ -292,7 +292,7 @@ func (site *Site) homeProfile(minLen int) []float64 {
 		})
 	}
 
-	res := slotsToHours(now, profile)
+	res := slotsToHours(now, profile[:])
 	for len(res) < minLen {
 		res = append(res, profile[:]...)
 	}
@@ -309,7 +309,7 @@ func (site *Site) homeProfile(minLen int) []float64 {
 // slotsToHours converts a daily consumption profile consisting of 96 15min slots
 // to an hourly profile by totaling the values per hour and returning the first minLen values.
 // the first value is fractional part of the the current hour, prorated.
-func slotsToHours(now time.Time, profile *[96]float64) []float64 {
+func slotsToHours(now time.Time, profile []float64) []float64 {
 	if profile == nil {
 		return []float64{}
 	}

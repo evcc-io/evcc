@@ -100,7 +100,7 @@ func TestSlotsToHours(t *testing.T) {
 	// Slots 0-3: hour 0 (00:00-01:00), values 1,2,3,4 -> sum = 10
 	// Slots 4-7: hour 1 (01:00-02:00), values 5,6,7,8 -> sum = 26
 	// etc.
-	var profile [96]float64
+	profile := make([]float64, 96)
 	for i := range 96 {
 		profile[i] = float64(i + 1)
 	}
@@ -159,7 +159,7 @@ func TestSlotsToHours(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := slotsToHours(tt.now, &profile)
+			result := slotsToHours(tt.now, profile)
 			require.GreaterOrEqual(t, len(result), len(tt.expected), "insufficient result length")
 
 			for i, expected := range tt.expected {
@@ -170,7 +170,7 @@ func TestSlotsToHours(t *testing.T) {
 }
 
 func TestSlotsToHoursEdgeCases(t *testing.T) {
-	var profile [96]float64
+	profile := make([]float64, 96)
 	for i := range 96 {
 		profile[i] = float64(i + 1)
 	}
@@ -182,7 +182,7 @@ func TestSlotsToHoursEdgeCases(t *testing.T) {
 
 	t.Run("end of day", func(t *testing.T) {
 		now := time.Date(2024, 1, 1, 23, 45, 0, 0, time.UTC) // 23:45
-		result := slotsToHours(now, &profile)
+		result := slotsToHours(now, profile)
 
 		// Should only return the remaining 15min of the current hour
 		expected := []float32{24} // slot 95 (value 96) * 0.25 (15min/60min)
@@ -192,7 +192,7 @@ func TestSlotsToHoursEdgeCases(t *testing.T) {
 
 	t.Run("exact hour boundary", func(t *testing.T) {
 		now := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC) // 01:00
-		result := slotsToHours(now, &profile)
+		result := slotsToHours(now, profile)
 
 		// Should start from hour 1 (slots 4-7)
 		require.GreaterOrEqual(t, len(result), 1)
