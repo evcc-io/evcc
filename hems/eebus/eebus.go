@@ -10,6 +10,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems"
+	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -32,6 +34,15 @@ type EEBus struct {
 	failsafeDuration time.Duration
 
 	heartbeat *util.Value[struct{}]
+}
+
+func init() {
+	hems.Add("eebus", NewFromConfig)
+}
+
+// NewFromConfig creates an EEBus HEMS from config
+func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API, httpd *server.HTTPd) (hems.HEMS, error) {
+	return New(ctx, other, site)
 }
 
 type Limits struct {

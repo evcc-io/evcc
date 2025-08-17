@@ -8,7 +8,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -19,6 +21,15 @@ type Relay struct {
 	root     api.Circuit
 	limit    func() (bool, error)
 	maxPower float64
+}
+
+func init() {
+	hems.Add("relay", NewFromConfig)
+}
+
+// NewFromConfig creates a Relay HEMS from config
+func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API, httpd *server.HTTPd) (hems.HEMS, error) {
+	return New(ctx, other, site)
 }
 
 // New creates an Relay HEMS from generic config
