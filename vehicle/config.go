@@ -46,8 +46,8 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 
 	v, err := factory(ctx, cc.Other)
 	if err != nil {
-		err = fmt.Errorf("cannot create vehicle type '%s': %w", typ, err)
+		return nil, fmt.Errorf("cannot create vehicle type '%s': %w", typ, err)
 	}
 
-	return v, err
+	return v, nil
 }

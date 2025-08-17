@@ -162,7 +162,14 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	var batModeS func(api.BatteryMode) error
 	if batteryControl {
 		batModeS = batterySocLimits.LimitController(m.socG, func(limit float64) error {
-			return m.energySite.SetBatteryReserve(uint64(limit))
+			// Handle Tesla firmware 25.18.4 restrictions:
+			// Values between 81-99% are not allowed, only ≤80% or exactly 100%
+			limitUint := uint64(limit)
+			if limitUint > 80 && limitUint < 100 {
+				// Adjust to maximum allowed (80%)
+				limitUint = 80
+			}
+			return m.energySite.SetBatteryReserve(limitUint)
 		})
 	}
 
@@ -220,6 +227,8 @@ func (m *PowerWall) socG() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	currentSoc := math.Round(ess.PercentageCharged + 0.5) // .5 ensures we round up
-	return currentSoc, nil
+	// Fix for Tesla firmware 25.18.4: Remove the problematic +0.5 rounding logic
+	// that was interfering with exact 100% reserve settings. Simply return the
+	// actual current SOC rounded to nearest integer.
+	return math.Round(ess.PercentageCharged), nil
 }

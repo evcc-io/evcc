@@ -15,7 +15,7 @@ type EnergyState struct {
 		Unit      string
 		Timestamp time.Time
 	}
-	ChargingConnectionStatus struct {
+	ChargerConnectionStatus struct {
 		Status    string
 		Value     string
 		Timestamp time.Time

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
+import { expectModalVisible, expectModalHidden } from "./utils";
 import {
   startSimulator,
   stopSimulator,
@@ -36,11 +37,16 @@ test.describe("minSoc", async () => {
     await page.goto("/");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    await expectModalVisible(modal);
+    await modal.getByRole("link", { name: "Arrival" }).click();
 
-    await expect(page.getByText("charged to x in solar mode")).toBeVisible();
-    await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
-    await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
+    await expect(modal).toContainText("charged to x in solar mode");
+    await modal.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
+    await expect(modal).toContainText("charged to 20% in solar mode");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await page.waitForLoadState("networkidle");
 
     await restart(simulatorConfig());
     await page.reload();
@@ -75,10 +81,13 @@ test.describe("limitSoc", async () => {
     await page.goto("/");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    await expectModalVisible(modal);
+    await modal.getByRole("link", { name: "Arrival" }).click();
 
-    await page.getByRole("combobox", { name: "Default limit" }).selectOption("80%");
-    await page.getByRole("button", { name: "Close" }).click();
+    await modal.getByRole("combobox", { name: "Default limit" }).selectOption("80%");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
     await page.waitForLoadState("networkidle");
 

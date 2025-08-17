@@ -105,7 +105,7 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *PhoenixCharx) controllers() (uint16, error) {

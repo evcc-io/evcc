@@ -304,6 +304,10 @@ export default defineComponent({
 			if (this.values.type === ConfigType.Template) {
 				data["template"] = this.templateName;
 			}
+			if (this.showYamlInput) {
+				// Icon is extracted from yaml on GET for UI purpose only. Don't write it back.
+				delete data["icon"];
+			}
 			return data;
 		},
 		isNew() {

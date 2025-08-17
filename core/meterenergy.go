@@ -1,6 +1,8 @@
 package core
 
 import (
+	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -12,6 +14,15 @@ type meterEnergy struct {
 	updated     time.Time
 	meter       *float64 // kWh
 	Accumulated float64  `json:"accumulated"` // kWh
+}
+
+func (m *meterEnergy) String() string {
+	b := new(bytes.Buffer)
+	fmt.Fprintf(b, "Accumulated: %.3fkWh updated: %v", m.Accumulated, m.updated.Truncate(time.Second))
+	if m.meter != nil {
+		fmt.Fprintf(b, " meter: %.3fkWh", *m.meter)
+	}
+	return b.String()
 }
 
 // AccumulatedEnergy returns the accumulated energy in kWh

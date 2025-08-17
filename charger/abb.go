@@ -97,7 +97,7 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 		}
 	}()
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *ABB) status() (byte, error) {
@@ -202,7 +202,7 @@ func (wb *ABB) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)), err
+	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.ChargeRater = (*ABB)(nil)
@@ -214,7 +214,7 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
 // getPhaseValues returns 3 sequential register values
