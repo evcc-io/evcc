@@ -108,6 +108,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		},
 	}
 
+	// end of horizon Wh value
 	pa := req.TimeSeries.PN[len(req.TimeSeries.PN)-1]
 
 	details := responseDetails{
