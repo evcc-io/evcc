@@ -24,6 +24,7 @@ const (
 	regSigSystemState         = 32000 // System states according to IEC61851-1 definition
 	regSigTotalEnergyConsumed = 32001 // kWh, total energy consumed during charging
 	regSigChargingPower       = 32003 // kW, instantaneous charging power
+	regSigStartStop           = 42000 // Start/Stop charger (0: Start 1: Stop), WO
 	regSigOutputCurrent       = 42001 // Amperes, R/W, charger output current ([6, X] X is the smaller value between the rated current and the AC-Charger input breaker rated current.)
 )
 
