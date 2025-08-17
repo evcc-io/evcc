@@ -47,7 +47,9 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
-	site.log.ERROR.Println("optimizer:", site.optimizerUpdate(battery))
+	if err := site.optimizerUpdate(battery); err != nil {
+		site.log.ERROR.Println("optimizer:", err)
+	}
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
@@ -130,15 +132,24 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			bat.PDemand = lo.ToPtr(asFloat32(profile))
 		}
 
-		detail := batteryDetail{Type: batteryTypeLoadpoint}
+		detail := batteryDetail{
+			Type:  batteryTypeLoadpoint,
+			Title: lp.GetTitle(),
+		}
 
 		if v := lp.GetVehicle(); v != nil {
 			bat.SMax = float32(v.Capacity() * 1e3)                  // Wh
 			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
 
 			detail.Type = batteryTypeVehicle
-			detail.Title = v.GetTitle()
 			detail.Capacity = v.Capacity()
+
+			if vt := v.GetTitle(); vt != "" {
+				if detail.Title != "" {
+					detail.Title += " – "
+				}
+				detail.Title += vt
+			}
 
 			// find vehicle name/id
 			for _, dev := range config.Vehicles().Devices() {
@@ -180,6 +191,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		details.BatteryDetails = append(details.BatteryDetails, batteryDetail{
 			Type:     batteryTypeBattery,
 			Name:     dev.Config().Name,
+			Title:    deviceProperties(dev).Title,
 			Capacity: *b.Capacity,
 		})
 	}

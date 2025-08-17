@@ -239,7 +239,7 @@ export default defineComponent({
 					});
 
 					datasets.push({
-						label: `${this.getBatteryTitle(index)} Power`,
+						label: this.getBatteryTitle(index),
 						data: combinedPower,
 						backgroundColor: baseColor,
 						borderWidth: 0,
