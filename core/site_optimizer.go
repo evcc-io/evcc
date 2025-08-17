@@ -21,9 +21,8 @@ import (
 )
 
 var (
-	eta          = float32(0.9)       // efficiency of the battery charging/discharging
-	batteryPower = float32(6000)      // power of the battery in W
-	pa           = float32(0.3 / 1e3) // Value per Wh at end of time horizon
+	eta          = float32(0.9)  // efficiency of the battery charging/discharging
+	batteryPower = float32(6000) // power of the battery in W
 
 	updated time.Time
 )
@@ -109,6 +108,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Ft: maxValues(solarEnergy, 1, minLen),
 		},
 	}
+
+	// end of horizon Wh value
+	pa := req.TimeSeries.PN[len(req.TimeSeries.PN)-1]
 
 	details := responseDetails{
 		Timestamps: asTimestamps(dt),
