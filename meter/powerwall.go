@@ -169,16 +169,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 				// Adjust to maximum allowed (80%)
 				limitUint = 80
 			}
-			
-			err := m.energySite.SetBatteryReserve(limitUint)
-			
-			// Handle Tesla API/library issue: "Backup reserve updated" is actually a success message
-			// but the Tesla Go library incorrectly interprets it as an error
-			if err != nil && strings.Contains(err.Error(), "Backup reserve updated") {
-				return nil // Treat as success
-			}
-			
-			return err
+			return m.energySite.SetBatteryReserve(limitUint)
 		})
 	}
 
