@@ -18,6 +18,7 @@ type Sigenergy struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint32
+	enabled bool
 }
 
 const (
@@ -81,11 +82,19 @@ func (wb *Sigenergy) Status() (api.ChargeStatus, error) {
 	}
 
 	switch state := binary.BigEndian.Uint16(b); state {
-	case 1: // Not Connected
+	case 0x01: // A1/A2
 		return api.StatusA, nil
-	case 2, 3, 4: // Reserving, Preparing, EV Ready
+	case 0x02: // B1
+		wb.enabled = false // B1 indicates the charger is not enabled
 		return api.StatusB, nil
-	case 5: // Charging
+	case 0x03: // B2
+		wb.enabled = true // B2 indicates the charger is enabled
+		return api.StatusB, nil
+	case 0x04: // C1
+		wb.enabled = false // C1 indicates the charger is not enabled
+		return api.StatusC, nil
+	case 0x05: // C2
+		wb.enabled = true // C2 indicates the charger is enabled
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", state)
@@ -94,24 +103,17 @@ func (wb *Sigenergy) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Sigenergy) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(regSigOutputCurrent, 2)
-	if err != nil {
-		return false, err
-	}
-
-	return binary.BigEndian.Uint32(b) != 0, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Sigenergy) Enable(enable bool) error {
-	var curr uint32
-	if enable {
-		curr = wb.current
+	var s uint16
+	if !enable {
+		s = 1
 	}
 
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, curr)
-	_, err := wb.conn.WriteMultipleRegisters(regSigOutputCurrent, 2, b)
+	_, err := wb.conn.WriteSingleRegister(regSigStartStop, s)
 	return err
 }
 
