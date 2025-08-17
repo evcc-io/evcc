@@ -147,8 +147,7 @@ func (wb *Sigenergy) MaxCurrentMillis(current float64) error {
 
 	b := make([]byte, 4)
 
-	curr := uint32(current * 100)
-	binary.BigEndian.PutUint32(b, curr)
+	binary.BigEndian.PutUint32(b, uint32(current*100)) // Convert to mA (100x for 0.01 A resolution)
 
 	_, err := wb.conn.WriteMultipleRegisters(regSigOutputCurrent, 2, b)
 
@@ -164,7 +163,6 @@ func (wb *Sigenergy) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// S32 register with gain 1000, convert directly to W
 	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
