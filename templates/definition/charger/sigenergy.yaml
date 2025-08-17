@@ -2,7 +2,7 @@ template: sigenergy
 products:
   - brand: Sigenergy
     description:
-      generic: EV Charger
+      generic: EVAC series
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
