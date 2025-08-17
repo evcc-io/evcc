@@ -187,7 +187,7 @@ var _ api.Diagnosis = (*Sigenergy)(nil)
 func (wb *Sigenergy) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(regSigSystemState, 1); err == nil {
 		state := binary.BigEndian.Uint16(b)
-		stateNames := []string{"Initializing", "Not Connected", "Reserving", "Preparing", "EV Ready", "Charging", "Fault", "Error"}
+		stateNames := []string{"System init", "A1/A2", "B1", "B2", "C1", "C2", "F", "E"}
 		stateName := "Unknown"
 		if int(state) < len(stateNames) {
 			stateName = stateNames[state]
@@ -197,16 +197,16 @@ func (wb *Sigenergy) Diagnose() {
 
 	if b, err := wb.conn.ReadHoldingRegisters(regSigOutputCurrent, 2); err == nil {
 		current := float64(binary.BigEndian.Uint32(b)) / 100
-		fmt.Printf("\tOutput Current:\t%.1fA\n", current)
+		fmt.Printf("\tOutput Current:\t%.2f A\n", current)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(regSigChargingPower, 2); err == nil {
 		powerKW := float64(int32(binary.BigEndian.Uint32(b))) / 1000
-		fmt.Printf("\tCharging Power:\t%.1fkW\n", powerKW)
+		fmt.Printf("\tCharging Power:\t%.3f kW\n", powerKW)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(regSigTotalEnergyConsumed, 2); err == nil {
 		energy := float64(binary.BigEndian.Uint32(b)) / 100
-		fmt.Printf("\tTotal Energy:\t%.1fkWh\n", energy)
+		fmt.Printf("\tTotal Energy:\t%.2f kWh\n", energy)
 	}
 }
