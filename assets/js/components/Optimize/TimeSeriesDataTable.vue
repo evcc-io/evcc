@@ -125,7 +125,7 @@
 										class="battery-indicator me-2"
 										:style="{ backgroundColor: batteryColors[batteryIndex] }"
 									></span>
-									{{ getBatteryTitle(batteryIndex) }} Response
+									{{ getBatteryTitle(batteryIndex) }}
 								</div>
 							</td>
 						</tr>
