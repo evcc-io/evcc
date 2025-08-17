@@ -78,7 +78,7 @@ changelog:
       regexp: '\(BC\)'
       order: 1
     - title: "Bug Fixes 🐞"
-      regexp: '\bifx\b'
+      regexp: '^fix:|\bfix\b'
       order: 3
     - title: "New Features 💫"
       regexp: '^feat:|\bfeature\b'
