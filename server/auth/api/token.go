@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"bytes"
@@ -12,16 +12,10 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const prefix = "evcc_"
-
-var secretKey = make([]byte, 32)
-
-func init() {
-	rand.Read(secretKey)
-}
+const Prefix = "evcc_"
 
 // New generates a secure token with expiry
-func New(ttl time.Duration) (string, error) {
+func New(secret []byte, ttl time.Duration) (string, error) {
 	// Generate random payload
 	nonce := make([]byte, 16, 16+8)
 	_, _ = rand.Read(nonce)
@@ -35,23 +29,23 @@ func New(ttl time.Duration) (string, error) {
 	payload := append(nonce, expiryBytes...)
 
 	// Hash with BLAKE2b
-	hasher, _ := blake2b.New256(secretKey)
+	hasher, _ := blake2b.New256(secret)
 	hasher.Write(payload)
 	hash := hasher.Sum(nil)
 
 	// Combine nonce + expiry + hash
 	token := append(payload, hash...)
 
-	return prefix + base58.Encode(token), nil
+	return Prefix + base58.Encode(token), nil
 }
 
 // Validate verifies token validity
-func Validate(token string) error {
-	if !strings.HasPrefix(token, prefix) {
+func Validate(token string, secret []byte) error {
+	if !strings.HasPrefix(token, Prefix) {
 		return errors.New("invalid token format")
 	}
 
-	decoded, err := base58.Decode(token[len(prefix):])
+	decoded, err := base58.Decode(token[len(Prefix):])
 	if err != nil {
 		return errors.New("invalid token character")
 	}
@@ -71,7 +65,7 @@ func Validate(token string) error {
 
 	// Verify hash
 	payload := append(nonce, expiryBytes...)
-	hasher, _ := blake2b.New256(secretKey)
+	hasher, _ := blake2b.New256(secret)
 	hasher.Write(payload)
 	expectedHash := hasher.Sum(nil)
 

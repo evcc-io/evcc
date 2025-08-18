@@ -4,11 +4,15 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/server/auth/api"
+	"github.com/evcc-io/evcc/server/auth/jwt"
 	"github.com/evcc-io/evcc/server/auth/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
-	"github.com/golang-jwt/jwt/v5"
+
+	// "github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,7 +33,7 @@ type Auth interface {
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
 	GenerateJwtToken(time.Duration) (string, error)
-	ValidateJwtToken(string) error
+	ValidateToken(string) error
 	IsAdminPasswordConfigured() bool
 	SetAuthMode(AuthMode)
 	GetAuthMode() AuthMode
@@ -104,8 +108,8 @@ func (a *auth) generateRandomKey(length int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-// getJwtSecret returns the JWT secret from the settings or generates a new one
-func (a *auth) getJwtSecret() ([]byte, error) {
+// tokenSecret returns the token secret from the settings or generates a new one
+func (a *auth) tokenSecret() ([]byte, error) {
 	jwtSecret, err := a.settings.String(keys.JwtSecret)
 
 	// generate new secret if it doesn't exist yet -> new installation
@@ -122,36 +126,26 @@ func (a *auth) getJwtSecret() ([]byte, error) {
 
 // GenerateJwtToken generates an admin user JWT token with the given time to live
 func (a *auth) GenerateJwtToken(ttl time.Duration) (string, error) {
-	claims := &jwt.RegisteredClaims{
-		Subject:   admin,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
-	}
-
-	jwtSecret, err := a.getJwtSecret()
+	secret, err := a.tokenSecret()
 	if err != nil {
 		return "", err
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return jwt.New(admin, secret, ttl)
 }
 
-// ValidateJwtToken validates the given JWT token
-func (a *auth) ValidateJwtToken(tokenString string) error {
-	jwtSecret, err := a.getJwtSecret()
+// ValidateToken validates the given JWT token
+func (a *auth) ValidateToken(token string) error {
+	secret, err := a.tokenSecret()
 	if err != nil {
 		return err
 	}
 
-	// read token
-	var claims jwt.RegisteredClaims
-	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
-	}, jwt.WithSubject(admin)); err != nil {
-		return err
+	if strings.HasPrefix(token, api.Prefix) {
+		return api.Validate(token, secret)
 	}
 
-	return nil
+	return jwt.Validate(token, admin, secret)
 }
 
 func (a *auth) SetAuthMode(authMode AuthMode) {

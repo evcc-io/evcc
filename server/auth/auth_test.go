@@ -73,5 +73,5 @@ func TestJwtToken(t *testing.T) {
 	assert.NoError(t, err, "token generation failed")
 	assert.NotEmpty(t, tokenString, "token is empty")
 
-	assert.NoError(t, auth.ValidateJwtToken(tokenString), "token is invalid")
+	assert.NoError(t, auth.ValidateToken(tokenString), "token is invalid")
 }

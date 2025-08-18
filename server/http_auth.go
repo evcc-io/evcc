@@ -96,7 +96,7 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, strconv.FormatBool(authObject.ValidateJwtToken(tokenFromRequest(r)) == nil))
+		fmt.Fprint(w, strconv.FormatBool(authObject.ValidateToken(tokenFromRequest(r)) == nil))
 	}
 }
 
@@ -158,7 +158,7 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 			}
 
 			// check jwt token
-			if authObject.ValidateJwtToken(tokenFromRequest(r)) != nil {
+			if authObject.ValidateToken(tokenFromRequest(r)) != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
