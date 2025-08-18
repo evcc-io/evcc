@@ -2,7 +2,7 @@ template: fritzgrid
 products:
   - brand: "FRITZ!"
     description:
-      generic: "FRITZ!Smart Energy 250"
+      generic: "FRITZ!Smart Energy 250 (aka AVM)"
 params:
   - name: usage
     choice: ["grid"]
