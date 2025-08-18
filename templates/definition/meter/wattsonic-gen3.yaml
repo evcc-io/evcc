@@ -1,7 +1,8 @@
 template: wattsonic-gen3
 products:
   - brand: Wattsonic
-    product: Wattsonic GEN3
+    description:
+      generic: Wattsonic GEN3
 capabilities: ["battery-control"]
 params:
   - name: usage
