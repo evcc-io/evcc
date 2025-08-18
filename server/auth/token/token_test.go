@@ -8,7 +8,7 @@ import (
 )
 
 func TestTokenCreateValidateRoundtrip(t *testing.T) {
-	token, err := CreateToken(time.Hour)
+	token, err := New(time.Hour)
 	require.NoError(t, err)
-	require.NoError(t, ValidateToken(token))
+	require.NoError(t, Validate(token))
 }

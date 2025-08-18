@@ -20,8 +20,8 @@ func init() {
 	rand.Read(secretKey)
 }
 
-// CreateToken generates a secure token with expiry
-func CreateToken(ttl time.Duration) (string, error) {
+// New generates a secure token with expiry
+func New(ttl time.Duration) (string, error) {
 	// Generate random payload
 	nonce := make([]byte, 16, 16+8)
 	_, _ = rand.Read(nonce)
@@ -45,8 +45,8 @@ func CreateToken(ttl time.Duration) (string, error) {
 	return prefix + base58.Encode(token), nil
 }
 
-// ValidateToken verifies token validity
-func ValidateToken(token string) error {
+// Validate verifies token validity
+func Validate(token string) error {
 	if !strings.HasPrefix(token, prefix) {
 		return errors.New("invalid token format")
 	}

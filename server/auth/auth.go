@@ -29,7 +29,7 @@ type Auth interface {
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
 	GenerateJwtToken(time.Duration) (string, error)
-	ValidateJwtToken(string) (bool, error)
+	ValidateJwtToken(string) error
 	IsAdminPasswordConfigured() bool
 	SetAuthMode(AuthMode)
 	GetAuthMode() AuthMode
@@ -136,10 +136,10 @@ func (a *auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
 }
 
 // ValidateJwtToken validates the given JWT token
-func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
+func (a *auth) ValidateJwtToken(tokenString string) error {
 	jwtSecret, err := a.getJwtSecret()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// read token
@@ -147,10 +147,10 @@ func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
 	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	}, jwt.WithSubject(admin)); err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
 func (a *auth) SetAuthMode(authMode AuthMode) {

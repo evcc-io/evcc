@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/server/auth"
 	"github.com/gorilla/mux"
 )
 
@@ -94,8 +94,7 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		ok, err := authObject.ValidateJwtToken(jwtFromRequest(r))
-		if err != nil || !ok {
+		if authObject.ValidateJwtToken(jwtFromRequest(r)) != nil {
 			w.Write([]byte("false"))
 			return
 		}
@@ -161,8 +160,7 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 			}
 
 			// check jwt token
-			ok, err := authObject.ValidateJwtToken(jwtFromRequest(r))
-			if !ok || err != nil {
+			if authObject.ValidateJwtToken(jwtFromRequest(r)) != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
