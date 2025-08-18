@@ -65,7 +65,7 @@
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
-      "title": "Belastingbeheer"
+      "title": "Electriciteitsnetwerk beheer"
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
@@ -288,7 +288,7 @@
       "titleExample": "Garage, carport, enz.",
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische detectie",
-      "vehicleHelpAutoDetection": "Selecteert automatisch het meest aannemelijke voertuig. Handmatige aanpassen is mogelijk.",
+      "vehicleHelpAutoDetection": "Selecteert automatisch het meest aannemelijke voertuig. Handmatig aanpassen is mogelijk.",
       "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier laadt. Automatische detectie uitgeschakeld. Handmatig aanpassen is mogelijk.",
       "vehicleLabel": "Standaard voertuig",
       "vehiclesTitle": "Voertuigen"
@@ -307,7 +307,7 @@
       "title": "Configuratie",
       "unconfigured": "Niet geconfigureerd",
       "vehicles": "Mijn voertuigen",
-      "yaml": "Apparaat van evcc.yaml kan niet worden bewerkt."
+      "yaml": "Apparaten geconfigureerd in evcc.yaml kunnen niet worden bewerkt."
     },
     "messaging": {
       "description": "Ontvang berichten over je oplaadsessies.",
@@ -386,8 +386,8 @@
         "yes": "ja"
       },
       "endianness": {
-        "big": "groot-endian",
-        "little": "klein-endian"
+        "big": "Big-endian (BE)",
+        "little": "Little-endian (LE)"
       },
       "schema": {
         "http": "HTTP (niet-versleuteld)",
@@ -428,7 +428,7 @@
     "system": {
       "logs": "Logboeken",
       "restart": "Herstart",
-      "restartRequiredDescription": "Herstart om het effect te zien.",
+      "restartRequiredDescription": "Herstart evcc om de wijzigingen toe te passen.",
       "restartRequiredMessage": "Configuratie gewijzigd.",
       "restartingDescription": "Even geduld aub…",
       "restartingMessage": "Evcc wordt herstart."
@@ -493,7 +493,7 @@
     "savings": {
       "co2Saved": "{value} bespaard",
       "co2Title": "CO₂-uitstoot",
-      "configurePriceCo2": "Meer informatie rond het configureren van prijs en CO₂ gegevens.",
+      "configurePriceCo2": "Meer informatie over het configureren van prijs en CO₂ gegevens.",
       "footerLong": "{percent} zonne-energie",
       "footerShort": "{percent} zon",
       "modalTitle": "Oplaadenergie-overzicht",
@@ -592,23 +592,23 @@
     "logsButton": "Bekijk logboeken",
     "logsDescription": "Kijk in de logboeken voor foutmeldingen.",
     "modalTitle": "Hulp nodig?",
-    "primaryActions": "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp te krijgen.",
+    "primaryActions": "Werkt iets niet naar behoren? Hier zijn goede plaatsen om hulp te krijgen.",
     "restart": {
       "cancel": "Annuleren",
       "confirm": "Ja, herstarten!",
       "description": "Herstarten niet nodig onder normale omstandigheden. Overweeg een bug in te dienen als je evcc geregeld moet herstarten.",
-      "disclaimer": "Nota: evcc zal afsluiten en rekenen op het besturingssysteem om de service te herstarten.",
-      "modalTitle": "Ben je zeker dat je wil herstarten?"
+      "disclaimer": "Notabene: evcc zal afsluiten en rekenen op het besturingssysteem om de service te herstarten.",
+      "modalTitle": "Weet je zeker dat je wil herstarten?"
     },
     "restartButton": "Herstart",
     "restartDescription": "Geprobeerd het uit en weer aan te zetten?",
-    "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
+    "secondaryActions": "Is het nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
   },
   "log": {
-    "areaLabel": "Filter op domain",
-    "areas": "Alle domainen",
+    "areaLabel": "Filter op domein",
+    "areas": "Alle domeinen",
     "download": "Volledig logboek downloaden",
-    "levelLabel": "Filter op log level",
+    "levelLabel": "Filter op log niveau",
     "nAreas": "{count} gebieden",
     "noResults": "Geen overeenkomende log regels.",
     "search": "Zoeken",
@@ -796,7 +796,7 @@
       "fallbackName": "Voertuig",
       "moreActions": "Meer acties",
       "none": "Geen voertuig",
-      "notReachable": "Wagengegevens niet beschikbaar. Herstart EVCC.",
+      "notReachable": "Voertuiggegevens niet beschikbaar. Herstart EVCC.",
       "targetSoc": "Limiet",
       "temp": "Temp.",
       "tempLimit": "Temperatuur limiet",
@@ -818,7 +818,7 @@
       "disconnectRequired": "Sessie beëindigd. Maak opnieuw verbinding.",
       "disconnected": "Niet verbonden.",
       "feedinPriorityNextStart": "Hoge energieprijs start over {duration}.",
-      "feedinPriorityPausing": "Zonne opladen gepauzeerd om grid import te maximaliseren.",
+      "feedinPriorityPausing": "Zonne opladen gepauzeerd om grid invoeding te maximaliseren.",
       "finished": "Beëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt gepauzeerd.",
@@ -833,13 +833,13 @@
       "waitForVehicle": "Klaar. Wachten op voertuig…",
       "welcome": "Verkort initiële lading om de verbinding te bevestigen."
     },
-    "vehicles": "Parking",
+    "vehicles": "Parkeerplaats",
     "welcome": "Welkom aan boord!"
   },
   "notifications": {
-    "dismissAll": "Alles verwijderen",
+    "dismissAll": "Alles meldingen verwijderen",
     "logs": "Volledige logboeken bekijken",
-    "modalTitle": "Notificaties"
+    "modalTitle": "Meldingen"
   },
   "offline": {
     "configurationError": "Fout tijdens opstarten. Controleer de configuratie en start opnieuw.",
@@ -973,7 +973,7 @@
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
       "getNew": "Vraag een nieuwe aan",
-      "hint": "Nota: We zullen dit in de toekomst automatiseren."
+      "hint": "Notabene: We zullen dit in de toekomst automatiseren."
     },
     "telemetry": {
       "label": "Telemetrie"
@@ -1011,7 +1011,7 @@
     "priceLabel": "Energieprijs",
     "priceLimit": "Prijslimiet",
     "resetAction": "Limiet verwijderen",
-    "resetWarning": "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opruimen?",
+    "resetWarning": "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opschonen?",
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
@@ -1024,10 +1024,10 @@
   "startupError": {
     "configFile": "Gebruikt configuratiebestand:",
     "configuration": "Configuratie",
-    "description": "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}.",
+    "description": "Controleer uw configuratiebestand. Als de foutmelding geen duidelijkheid geeft, bekijk dan de {0}.",
     "discussions": "GitHub Discussies",
     "fixAndRestart": "Los het probleem op en herstart de server.",
-    "hint": "Let op: het kan ook zijn dat u een defect toestel heeft (omvormer, meter, …). Controleer uw netwerkverbindingen.",
+    "hint": "Let op: het kan ook zijn dat u een defect apparaat heeft (omvormer, meter, …). Controleer uw netwerkverbindingen.",
     "lineError": "Fout in {0}.",
     "lineErrorLink": "lijn {0}",
     "restartButton": "Herstart",
