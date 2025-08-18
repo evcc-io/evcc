@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -94,11 +96,7 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if authObject.ValidateJwtToken(jwtFromRequest(r)) != nil {
-			w.Write([]byte("false"))
-			return
-		}
-		w.Write([]byte("true"))
+		fmt.Fprint(w, strconv.FormatBool(authObject.ValidateJwtToken(jwtFromRequest(r)) == nil))
 	}
 }
 

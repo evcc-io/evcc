@@ -19,7 +19,7 @@ func TestSetAdminPassword(t *testing.T) {
 	password := "testpassword"
 
 	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq("")))
-	assert.Nil(t, auth.SetAdminPassword(password)) // success
+	assert.NoError(t, auth.SetAdminPassword(password)) // success
 }
 
 func TestRemoveAdminPassword(t *testing.T) {
@@ -70,7 +70,7 @@ func TestJwtToken(t *testing.T) {
 
 	lifetime := time.Hour
 	tokenString, err := auth.GenerateJwtToken(lifetime)
-	assert.Nil(t, err, "token generation failed")
+	assert.NoError(t, err, "token generation failed")
 	assert.NotEmpty(t, tokenString, "token is empty")
 
 	assert.NoError(t, auth.ValidateJwtToken(tokenString), "token is invalid")
