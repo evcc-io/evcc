@@ -5,16 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/akamensky/base58"
 	"golang.org/x/crypto/blake2b"
 )
 
-const (
-	prefix    = "evcc_"
-	prefixLen = len(prefix)
-)
+const prefix = "evcc_"
 
 var secretKey = make([]byte, 32)
 
@@ -49,11 +47,11 @@ func CreateToken(ttl time.Duration) (string, error) {
 
 // ValidateToken verifies token validity
 func ValidateToken(token string) error {
-	if len(token) < prefixLen || token[:prefixLen] != prefix {
+	if !strings.HasPrefix(token, prefix) {
 		return errors.New("invalid token format")
 	}
 
-	decoded, err := base58.Decode(token[prefixLen:])
+	decoded, err := base58.Decode(token[len(prefix):])
 	if err != nil {
 		return errors.New("invalid token character")
 	}
