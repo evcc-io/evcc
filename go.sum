@@ -7,8 +7,6 @@ github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1r
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/toml v1.5.0 h1:W5quZX/G/csjUnuI8SUYlsHs9M38FC7znL0lIO+DvMg=
 github.com/BurntSushi/toml v1.5.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
-github.com/GrimmiMeloni/tesla v0.0.0-20250817183155-955245ad1a68 h1:Ftt/yB1ansngMnWl0DsiEzzuCbzYTxnDa3VnU6y4mc4=
-github.com/GrimmiMeloni/tesla v0.0.0-20250817183155-955245ad1a68/go.mod h1:nQrPioMhF8Yf36iCtta01SUbsnGN25VhBYLN4DIMBPU=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
@@ -104,6 +102,8 @@ github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kB
 github.com/bitly/go-simplejson v0.5.0 h1:6IH+V8/tVMab511d5bn4M7EwGXZf9Hj6i2xSwkNEM+Y=
 github.com/bitly/go-simplejson v0.5.0/go.mod h1:cXHtHw4XUPsvGaxgjIAn8PhEWG9NfngEKAMDJEczWVA=
 github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvFv1sNto9p6w=
+github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9 h1:vAEi0OtVQbyRmnKXz8k350VfyoWYljOrlMDDuU1d/Ug=
+github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9/go.mod h1:nQrPioMhF8Yf36iCtta01SUbsnGN25VhBYLN4DIMBPU=
 github.com/breml/rootcerts v0.2.21 h1:A1LU8pJgdkAfBwPKF0GkPNSyW7stGh80K90LbEiQqY8=
 github.com/breml/rootcerts v0.2.21/go.mod h1:S/PKh+4d1HUn4HQovEB8hPJZO6pUZYrIhmXBhsegfXw=
 github.com/caarlos0/env/v11 v11.3.1 h1:cArPWC15hWmEt+gWk7YBi7lEXTXCvpaSdCiZE2X5mCA=

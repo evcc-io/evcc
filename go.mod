@@ -21,7 +21,7 @@ require (
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
-	github.com/bogosj/tesla v1.3.1
+	github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
@@ -257,5 +257,3 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0
-
-replace github.com/bogosj/tesla => github.com/GrimmiMeloni/tesla v0.0.0-20250817183155-955245ad1a68
