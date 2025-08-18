@@ -157,7 +157,7 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 				return
 			}
 
-			// check jwt token
+			// check token
 			if authObject.ValidateToken(tokenFromRequest(r)) != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
