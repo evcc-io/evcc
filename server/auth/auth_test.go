@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/auth/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

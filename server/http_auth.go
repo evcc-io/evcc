@@ -61,8 +61,8 @@ func updatePasswordHandler(authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
-// read jwt from header and cookie
-func jwtFromRequest(r *http.Request) string {
+// read token from header and cookie
+func tokenFromRequest(r *http.Request) string {
 	// read from header
 	authHeader := r.Header.Get("Authorization")
 	if token, ok := strings.CutPrefix(authHeader, "Bearer "); ok {
@@ -81,7 +81,7 @@ func jwtFromRequest(r *http.Request) string {
 func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if authObject.GetAuthMode() == auth.Disabled {
-			w.Write([]byte("true"))
+			fmt.Fprint(w, "true")
 			return
 		}
 
@@ -96,7 +96,7 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, strconv.FormatBool(authObject.ValidateJwtToken(jwtFromRequest(r)) == nil))
+		fmt.Fprint(w, strconv.FormatBool(authObject.ValidateJwtToken(tokenFromRequest(r)) == nil))
 	}
 }
 
@@ -158,7 +158,7 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 			}
 
 			// check jwt token
-			if authObject.ValidateJwtToken(jwtFromRequest(r)) != nil {
+			if authObject.ValidateJwtToken(tokenFromRequest(r)) != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

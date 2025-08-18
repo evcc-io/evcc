@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/auth/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -120,19 +120,20 @@ func (a *auth) getJwtSecret() ([]byte, error) {
 	return []byte(jwtSecret), nil
 }
 
-// GenerateJwtToken generates an admin user JWT token with the given lifetime
-func (a *auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
+// GenerateJwtToken generates an admin user JWT token with the given time to live
+func (a *auth) GenerateJwtToken(ttl time.Duration) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		Subject:   admin,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(lifetime)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 	}
 
-	if jwtSecret, err := a.getJwtSecret(); err != nil {
+	jwtSecret, err := a.getJwtSecret()
+	if err != nil {
 		return "", err
-	} else {
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		return token.SignedString(jwtSecret)
 	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
 }
 
 // ValidateJwtToken validates the given JWT token
