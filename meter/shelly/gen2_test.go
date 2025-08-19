@@ -75,7 +75,7 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 100, id)
 
-		// Test for malformed switch keys
+		// Test for switch key <> 100
 		res = Gen2ProAddOnGetPeripherals{}
 		jsonstr = `{"digital_out":{"switch:abc":{}}}`
 		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
