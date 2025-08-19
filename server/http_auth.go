@@ -127,7 +127,7 @@ func loginHandler(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		lifetime := time.Hour * 24 * 90 // 90 day valid
+		lifetime := 90 * 24 * time.Hour // 90 day valid
 		token, err := authObject.GenerateToken(auth.JwtToken, lifetime)
 		if err != nil {
 			http.Error(w, "Failed to generate token", http.StatusInternalServerError)
