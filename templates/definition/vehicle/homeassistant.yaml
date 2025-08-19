@@ -91,13 +91,13 @@ render: |
   token: {{ .token }}
   sensors:
     soc: {{ .soc }}
-    {{ if .range }}range: {{ .range }}{{ end }}
-    {{ if .status }}status: {{ .status }}{{ end }}
-    {{ if .limitSoc }}limitSoc: {{ .limitSoc }}{{ end }}
-    {{ if .odometer }}odometer: {{ .odometer }}{{ end }}
-    {{ if .climater }}climater: {{ .climater }}{{ end }}
-    {{ if .finishTime }}finishTime: {{ .finishTime }}{{ end }}
-  {{ if or .start_charging .stop_charging .wakeup }}services:
-    {{ if .start_charging }}start_charging: {{ .start_charging }}{{ end }}
-    {{ if .stop_charging }}stop_charging: {{ .stop_charging }}{{ end }}
-    {{ if .wakeup }}wakeup: {{ .wakeup }}{{ end }}{{ end }}
+    range: {{ .range }}
+    status: {{ .status }}
+    limitSoc: {{ .limitSoc }}
+    odometer: {{ .odometer }}
+    climater: {{ .climater }}
+    finishTime: {{ .finishTime }}
+  services:
+    start_charging: {{ .start_charging }}
+    stop_charging: {{ .stop_charging }}
+    wakeup: {{ .wakeup }}

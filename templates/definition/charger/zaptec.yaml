@@ -19,8 +19,18 @@ params:
       en: Charger ID
   - name: user
   - name: password
+  - name: passive
+    type: bool
+    description:
+      de: "Passivmodus"
+      en: "Passive mode"
+    help:
+      de: "evcc erteilt nur Ladefreigaben/Ladesperren (keine Stromregelung). Aktiviere diese Option nur, wenn die Wallbox Teil eines externen Lastmanagement Systems ist und Stromänderungen ablehnt (HTTP 403)."
+      en: "evcc only grants charging authorisations/blocks (no current control). Only activate this option if the wallbox is part of an external load management system and rejects current changes (HTTP 403)."
+    advanced: true
 render: |
   type: zaptec
   id: {{ .id }}
   user: {{ .user }}
   password: '{{ .password }}'
+  passive: {{ .passive }}
