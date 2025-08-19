@@ -7,9 +7,18 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-const wakeupTimeout = 30 * time.Second
+const (
+	wakeupTimeout  = 30 * time.Second
+	wakeupAttempts = 6
+)
 
-const wakeupAttempts = 6 // wakeupAttempts is the count of wakeup attempts
+type WakeUpEvent int
+
+const (
+	WakeUpTimerInactive WakeUpEvent = iota
+	WakeUpTimerElapsed
+	WakeUpTimerFinished
+)
 
 // Timer measures active time between start and stop events
 type Timer struct {
@@ -49,22 +58,22 @@ func (m *Timer) Stop() {
 }
 
 // Elapsed checks if the timer has elapsed and if resets its status
-// Return final attempt, elapsed
-func (m *Timer) Elapsed() (bool, bool) {
+// Return final attempt completed, timer elapsed
+func (m *Timer) Elapsed() WakeUpEvent {
 	m.Lock()
 	defer m.Unlock()
 
 	if m.started.IsZero() || m.clck.Since(m.started) < wakeupTimeout {
-		return false, false
+		return WakeUpTimerInactive
 	}
 
 	if m.wakeupAttemptsLeft == 0 {
 		m.started = time.Time{}
-		return true, false
+		return WakeUpTimerFinished
 	}
 
 	m.wakeupAttemptsLeft--
 
 	m.started = m.clck.Now()
-	return false, true
+	return WakeUpTimerElapsed
 }

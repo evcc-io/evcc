@@ -1974,10 +1974,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	if lp.enabled && lp.status == api.StatusB &&
 		// TODO take vehicle api limits into account
 		!lp.chargerHasFeature(api.IntegratedDevice) && int(lp.vehicleSoc) < lp.EffectiveLimitSoc() {
-		if final, elapsed := lp.wakeUpTimer.Elapsed(); final {
-			lp.pushEvent(evVehicleAsleep)
-		} else if elapsed {
+		switch lp.wakeUpTimer.Elapsed() {
+		case WakeUpTimerElapsed:
 			lp.wakeUpVehicle()
+		case WakeUpTimerFinished:
+			lp.pushEvent(evVehicleAsleep)
 		}
 	}
 
