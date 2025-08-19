@@ -37,7 +37,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 
 	var embed struct {
 		Features []api.Feature  `mapstructure:"features"`
-		other    map[string]any `mapstructure:",remain"`
+		Other    map[string]any `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(other, &embed); err != nil {
@@ -51,7 +51,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	p := &CachingProxy{
 		ctx:    ctx,
 		typ:    typ,
-		config: embed.other,
+		config: embed.Other,
 		key:    tariffType + "-" + cacheKey(typ, other),
 	}
 
