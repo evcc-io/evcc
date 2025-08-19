@@ -58,7 +58,6 @@ func (m *Timer) Stop() {
 }
 
 // Elapsed checks if the timer has elapsed and if resets its status
-// Return final attempt completed, timer elapsed
 func (m *Timer) Elapsed() WakeUpEvent {
 	m.Lock()
 	defer m.Unlock()
