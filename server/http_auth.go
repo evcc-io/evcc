@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -77,7 +78,7 @@ func tokenFromRequest(r *http.Request) string {
 	return ""
 }
 
-// authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
+// authStatusHandler login status (true/false) based on token. Errors if admin password is not configured
 func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if authObject.GetAuthMode() == auth.Disabled {
@@ -96,7 +97,8 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, strconv.FormatBool(authObject.ValidateToken(tokenFromRequest(r)) == nil))
+		_, err := authObject.ValidateToken(tokenFromRequest(r))
+		fmt.Fprint(w, strconv.FormatBool(err == nil))
 	}
 }
 
@@ -158,13 +160,15 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 			}
 
 			// check token
-			if authObject.ValidateToken(tokenFromRequest(r)) != nil {
+			typ, err := authObject.ValidateToken(tokenFromRequest(r))
+			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
 			// all clear, continue
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), auth.ContextAuthType, typ)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

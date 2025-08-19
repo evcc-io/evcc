@@ -18,13 +18,23 @@ import (
 
 const admin = "admin"
 
-// Possible authentication modes
-type AuthMode int
+type (
+	AuthMode int // Authentication mode
+	AuthType int // Authentication type
+
+	ContextKey string
+)
 
 const (
 	Enabled  AuthMode = iota // normal operation
 	Disabled                 // auth checks are skipped (free for all)
 	Locked                   // auth features are blocked (demo mode)
+
+	None AuthType = iota
+	ApiToken
+	BearerToken
+
+	ContextAuthType ContextKey = "authType"
 )
 
 // Auth is the Auth api
@@ -33,7 +43,7 @@ type Auth interface {
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
 	GenerateJwtToken(time.Duration) (string, error)
-	ValidateToken(string) error
+	ValidateToken(string) (AuthType, error)
 	IsAdminPasswordConfigured() bool
 	SetAuthMode(AuthMode)
 	GetAuthMode() AuthMode
@@ -135,17 +145,17 @@ func (a *auth) GenerateJwtToken(ttl time.Duration) (string, error) {
 }
 
 // ValidateToken validates the given JWT token
-func (a *auth) ValidateToken(token string) error {
+func (a *auth) ValidateToken(token string) (AuthType, error) {
 	secret, err := a.tokenSecret()
 	if err != nil {
-		return err
+		return None, err
 	}
 
 	if strings.HasPrefix(token, api.Prefix) {
-		return api.Validate(token, secret)
+		return ApiToken, api.Validate(token, secret)
 	}
 
-	return jwt.Validate(token, admin, secret)
+	return BearerToken, jwt.Validate(token, admin, secret)
 }
 
 func (a *auth) SetAuthMode(authMode AuthMode) {

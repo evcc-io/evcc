@@ -357,15 +357,17 @@ func adminPasswordValid(authObject auth.Auth, password string) bool {
 
 func getBackup(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		if r.Context().Value(auth.ContextAuthType).(auth.AuthType) != auth.ApiToken {
+			var req loginRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
+			if !adminPasswordValid(authObject, req.Password) {
+				http.Error(w, "Invalid password", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		settings.Persist()
@@ -430,9 +432,11 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if !adminPasswordValid(authObject, r.FormValue("password")) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
+		if r.Context().Value(auth.ContextAuthType).(auth.AuthType) != auth.ApiToken {
+			if !adminPasswordValid(authObject, r.FormValue("password")) {
+				http.Error(w, "Invalid password", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		file, _, err := r.FormFile("file")
@@ -487,9 +491,11 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
+		if r.Context().Value(auth.ContextAuthType).(auth.AuthType) != auth.ApiToken {
+			if !adminPasswordValid(authObject, req.Password) {
+				http.Error(w, "Invalid password", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		settings.Persist()
