@@ -11,8 +11,6 @@ import (
 	"github.com/evcc-io/evcc/server/auth/jwt"
 	"github.com/evcc-io/evcc/server/auth/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
-
-	// "github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,7 +30,7 @@ const (
 
 	None AuthType = iota
 	ApiToken
-	BearerToken
+	JwtToken
 
 	ContextAuthType ContextKey = "authType"
 )
@@ -42,7 +40,7 @@ type Auth interface {
 	RemoveAdminPassword()
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
-	GenerateJwtToken(time.Duration) (string, error)
+	GenerateToken(AuthType, time.Duration) (string, error)
 	ValidateToken(string) (AuthType, error)
 	IsAdminPasswordConfigured() bool
 	SetAuthMode(AuthMode)
@@ -134,14 +132,21 @@ func (a *auth) tokenSecret() ([]byte, error) {
 	return []byte(jwtSecret), nil
 }
 
-// GenerateJwtToken generates an admin user JWT token with the given time to live
-func (a *auth) GenerateJwtToken(ttl time.Duration) (string, error) {
+// GenerateToken generates a token with the given type and time to live
+func (a *auth) GenerateToken(typ AuthType, ttl time.Duration) (string, error) {
 	secret, err := a.tokenSecret()
 	if err != nil {
 		return "", err
 	}
 
-	return jwt.New(admin, secret, ttl)
+	switch typ {
+	case ApiToken:
+		return api.New(secret, ttl)
+	case JwtToken:
+		return jwt.New(admin, secret, ttl)
+	default:
+		return "", errors.New("invalid token type")
+	}
 }
 
 // ValidateToken validates the given JWT token
@@ -155,7 +160,7 @@ func (a *auth) ValidateToken(token string) (AuthType, error) {
 		return ApiToken, api.Validate(token, secret)
 	}
 
-	return BearerToken, jwt.Validate(token, admin, secret)
+	return JwtToken, jwt.Validate(token, admin, secret)
 }
 
 func (a *auth) SetAuthMode(authMode AuthMode) {

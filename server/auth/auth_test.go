@@ -69,7 +69,7 @@ func TestJwtToken(t *testing.T) {
 	mock.EXPECT().String(keys.JwtSecret).Return("somesecret", nil).AnyTimes()
 
 	lifetime := time.Hour
-	tokenString, err := auth.GenerateJwtToken(lifetime)
+	tokenString, err := auth.GenerateToken(JwtToken, lifetime)
 	assert.NoError(t, err, "token generation failed")
 	assert.NotEmpty(t, tokenString, "token is empty")
 

@@ -121,20 +121,49 @@ func loginHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		lifetime := time.Hour * 24 * 90 // 90 day valid
-		tokenString, err := authObject.GenerateJwtToken(lifetime)
+		token, err := authObject.GenerateToken(auth.JwtToken, lifetime)
 		if err != nil {
-			http.Error(w, "Failed to generate JWT token.", http.StatusInternalServerError)
+			http.Error(w, "Failed to generate JWT token", http.StatusInternalServerError)
 			return
 		}
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     authCookieName,
-			Value:    tokenString,
+			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
 			Expires:  time.Now().Add(lifetime),
 			SameSite: http.SameSiteStrictMode,
 		})
+	}
+}
+
+func tokenHandler(authObject auth.Auth) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if authObject.GetAuthMode() == auth.Locked {
+			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
+			return
+		}
+
+		var req loginRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !authObject.IsAdminPasswordValid(req.Password) {
+			http.Error(w, "Invalid password", http.StatusUnauthorized)
+			return
+		}
+
+		lifetime := 365 * 24 * time.Hour
+		token, err := authObject.GenerateToken(auth.ApiToken, lifetime)
+		if err != nil {
+			http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+			return
+		}
+
+		jsonWrite(w, token)
 	}
 }
 

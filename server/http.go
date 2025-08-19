@@ -260,6 +260,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"password": {"PUT", "/password", updatePasswordHandler(auth)},
 			"auth":     {"GET", "/status", authStatusHandler(auth)},
 			"login":    {"POST", "/login", loginHandler(auth)},
+			"token":    {"POST", "/token", tokenHandler(auth)},
 			"logout":   {"POST", "/logout", logoutHandler},
 		}
 
