@@ -325,14 +325,14 @@ func (c *gen2) getAddOnSwitchId(channel int) (int, error) {
 		return channel, err
 	}
 
-	return parseAddOnSwitchID(channel, res)
+	return parseAddOnSwitchID(channel, res), nil
 }
 
-func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) (int, error) {
+func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) int {
 	if _, ok := res.DigitalOut["switch:100"]; ok {
-		return 100, nil
+		return 100
 	}
 
 	// if no switch ID is found, return the channel as default
-	return channel, nil
+	return channel
 }
