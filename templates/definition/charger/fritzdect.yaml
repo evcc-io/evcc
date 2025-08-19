@@ -28,9 +28,6 @@ params:
     description:
       de: AIN auf dem Typenschild des Geräts.
       en: AIN on device type plate.
-    help:
-      de: Bei führenden Nullen bitte in doppelte Hochkommata setzen (bspw. "000XXXXXXXXX-1").
-      en: Use quotations in case of leading zeros (e.g. "000XXXXXXXXX-1").
   - preset: switchsocket
 render: |
   type: fritzdect
