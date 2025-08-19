@@ -18,9 +18,9 @@ import (
 	"golang.org/x/text/encoding/unicode"
 )
 
-// AVM FritzBox AHA interface and authentication specifications:
-// https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
-// https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
+// FRITZ! FritzBox AHA interface and authentication specifications:
+// https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
+// https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
 // FritzDECT settings
 type Settings struct {
@@ -35,7 +35,7 @@ type Connection struct {
 	updated time.Time
 }
 
-// https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID_english_2021-05-03.pdf
+// https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID_english_2021-05-03.pdf
 const sessionTimeout = 15 * time.Minute
 
 // Devicestats structures getbasicdevicesstats command response (AHA-HTTP-Interface)
