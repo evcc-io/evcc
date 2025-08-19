@@ -40,6 +40,7 @@ const (
 	evVehicleDisconnect   = "disconnect" // vehicle disconnected
 	evVehicleSoc          = "soc"        // vehicle soc progress
 	evVehicleUnidentified = "guest"      // vehicle unidentified
+	evVehicleAsleep       = "asleep"     // vehicle doesn't charge
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -1972,8 +1973,12 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
 		// TODO take vehicle api limits into account
-		int(lp.vehicleSoc) < lp.EffectiveLimitSoc() && lp.wakeUpTimer.Expired() {
-		lp.wakeUpVehicle()
+		!lp.chargerHasFeature(api.IntegratedDevice) && int(lp.vehicleSoc) < lp.EffectiveLimitSoc() {
+		if final, elapsed := lp.wakeUpTimer.Elapsed(); final {
+			lp.pushEvent(evVehicleAsleep)
+		} else if elapsed {
+			lp.wakeUpVehicle()
+		}
 	}
 
 	// effective disabled status

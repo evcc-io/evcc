@@ -48,20 +48,23 @@ func (m *Timer) Stop() {
 	m.started = time.Time{}
 }
 
-// Expired checks if the timer has elapsed and if resets its status
-func (m *Timer) Expired() bool {
+// Elapsed checks if the timer has elapsed and if resets its status
+// Return final attempt, elapsed
+func (m *Timer) Elapsed() (bool, bool) {
 	m.Lock()
 	defer m.Unlock()
 
-	res := !m.started.IsZero() && (m.clck.Since(m.started) >= wakeupTimeout)
-	if res {
-		m.wakeupAttemptsLeft--
-		if m.wakeupAttemptsLeft == 0 {
-			m.started = time.Time{}
-		} else {
-			m.started = m.clck.Now()
-		}
+	if m.started.IsZero() || m.clck.Since(m.started) < wakeupTimeout {
+		return false, false
 	}
 
-	return res
+	if m.wakeupAttemptsLeft == 0 {
+		m.started = time.Time{}
+		return true, false
+	}
+
+	m.wakeupAttemptsLeft--
+
+	m.started = m.clck.Now()
+	return false, true
 }
