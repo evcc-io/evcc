@@ -14,9 +14,6 @@ params:
     required: true
   - name: ain
     required: true
-    description:
-      de: AIN auf dem Typenschild des Geräts.
-      en: AIN on device type plate.
 render: |
   type: fritzdect
   uri: {{ .uri }}
