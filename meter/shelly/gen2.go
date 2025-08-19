@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -330,14 +329,8 @@ func (c *gen2) getAddOnSwitchId(channel int) (int, error) {
 }
 
 func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) (int, error) {
-	for key := range res.DigitalOut {
-		if strings.HasPrefix(key, "switch:") {
-			var id int
-			if _, err := fmt.Sscanf(key, "switch:%d", &id); err != nil {
-				return 0, fmt.Errorf("failed to get add-on switch id: %w", err)
-			}
-			return id, nil
-		}
+	if _, ok := res.DigitalOut["switch:100"]; ok {
+		return 100, nil
 	}
 
 	// if no switch ID is found, return the channel as default
