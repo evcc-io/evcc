@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -102,28 +103,34 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
+func loginRequired(authObject auth.Auth, r *http.Request) error {
+	if authObject.GetAuthMode() == auth.Locked {
+		return errors.New("forbidden in demo mode")
+	}
+
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	if !authObject.IsAdminPasswordValid(req.Password) {
+		return errors.New("invalid password")
+	}
+
+	return nil
+}
+
 func loginHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if authObject.GetAuthMode() == auth.Locked {
-			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
-			return
-		}
-
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := loginRequired(authObject, r); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if !authObject.IsAdminPasswordValid(req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 
 		lifetime := time.Hour * 24 * 90 // 90 day valid
 		token, err := authObject.GenerateToken(auth.JwtToken, lifetime)
 		if err != nil {
-			http.Error(w, "Failed to generate JWT token", http.StatusInternalServerError)
+			http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 			return
 		}
 
@@ -140,19 +147,8 @@ func loginHandler(authObject auth.Auth) http.HandlerFunc {
 
 func tokenHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if authObject.GetAuthMode() == auth.Locked {
-			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
-			return
-		}
-
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := loginRequired(authObject, r); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if !authObject.IsAdminPasswordValid(req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 
