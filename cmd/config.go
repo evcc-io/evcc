@@ -27,11 +27,6 @@ func runConfig(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup environment
-	if err := configureEnvironment(cmd, &conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
 	cc := templates.ClassValues()
 	if c := cmd.Flag("class").Value.String(); c != "" {
 		class, err := templates.ClassString(c)
