@@ -559,6 +559,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
 	}
 
+	// setup modbus proxy
+	if err == nil {
+		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
+	}
+
 	return err
 }
 

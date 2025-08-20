@@ -195,11 +195,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// setup modbus proxy
-	if err == nil {
-		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
-	}
-
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
