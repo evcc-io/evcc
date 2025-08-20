@@ -593,6 +593,10 @@ func configureDatabase(conf globalconfig.DB) error {
 		return err
 	}
 
+	if err := config.Init(); err != nil {
+		return err
+	}
+
 	persistSettings := func() {
 		if err := settings.Persist(); err != nil {
 			log.ERROR.Println("cannot save settings:", err)
