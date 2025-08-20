@@ -447,7 +447,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	}
 
 	// remaining max energy demand in Wh
-	chargeRemainingEnergy := lp.GetRemainingEnergy()
+	chargeRemainingEnergy := lp.GetRemainingEnergy() * 1e3
 	maxEnergy := int(chargeRemainingEnergy)
 
 	// add 1kWh in case we're charging but battery claims full

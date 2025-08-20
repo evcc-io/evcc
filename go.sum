@@ -33,6 +33,8 @@ github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
+github.com/andig/evopt v0.0.0-20250806061439-fc50d99582e9 h1:tWGkO2RipG162BGfxuLj3TbxA2BiI/oHH7ftQGUJ/VI=
+github.com/andig/evopt v0.0.0-20250806061439-fc50d99582e9/go.mod h1:TE4sjD3Fxu4Jn49ecE6H6EdHliJA5KnkRfY6WGdHBu0=
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140 h1:C93T8vg7CN4Q4BBDbBMOvBoTYBA+CaBEvlY2SZF8aa0=
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrRay7YDUZazY8M1u/JHkzwcFEjiilQ=
@@ -100,8 +102,8 @@ github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kB
 github.com/bitly/go-simplejson v0.5.0 h1:6IH+V8/tVMab511d5bn4M7EwGXZf9Hj6i2xSwkNEM+Y=
 github.com/bitly/go-simplejson v0.5.0/go.mod h1:cXHtHw4XUPsvGaxgjIAn8PhEWG9NfngEKAMDJEczWVA=
 github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvFv1sNto9p6w=
-github.com/bogosj/tesla v1.3.1 h1:2iTieXh8jqG8FGWs63aQfRWbD7toLUm6fQ7677eevIE=
-github.com/bogosj/tesla v1.3.1/go.mod h1:JvkjZAswd288BeRYd37fKqyYKLcDj3E5oY/OuLzndaI=
+github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9 h1:vAEi0OtVQbyRmnKXz8k350VfyoWYljOrlMDDuU1d/Ug=
+github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9/go.mod h1:nQrPioMhF8Yf36iCtta01SUbsnGN25VhBYLN4DIMBPU=
 github.com/breml/rootcerts v0.2.21 h1:A1LU8pJgdkAfBwPKF0GkPNSyW7stGh80K90LbEiQqY8=
 github.com/breml/rootcerts v0.2.21/go.mod h1:S/PKh+4d1HUn4HQovEB8hPJZO6pUZYrIhmXBhsegfXw=
 github.com/caarlos0/env/v11 v11.3.1 h1:cArPWC15hWmEt+gWk7YBi7lEXTXCvpaSdCiZE2X5mCA=

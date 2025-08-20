@@ -429,14 +429,18 @@
       "addToken": "Jetonu gir",
       "changeToken": "Jetonu değiştir",
       "description": "Destek modeli, projeyi sürdürmemize ve sürdürülebilir bir şekilde yeni ve heyecan verici özellikler geliştirmemize yardımcı oluyor. Destekçi olarak tüm doldurma cihazı uygulamalarına erişimin oluyor.",
-      "descriptionToken": "Jetonu {url} adresinden alabilirsiniz. Denemek için bir deneme jetonu da sunuyoruz.",
+      "descriptionToken": "Sponsorlar, jetonlarını {url} adresinde bulabilirler. Denemek için bir ",
+      "enterYourToken": "Jetonunu gir",
       "error": "Destekçi jetonu geçerli değil.",
+      "invalid": "geçersiz",
       "labelToken": "Destekçi jetonu",
       "title": "Destekçilik",
       "tokenRequired": "Bu cihazı oluşturabilmen için önce bir destekçi jetonu yapılandırmalısın.",
       "tokenRequiredLearnMore": "Daha fazla bilgi edin.",
       "tokenRequiredShort": "Sponsor jetonu yapılandırılmadı.",
-      "trialToken": "Deneme jetonu"
+      "trialToken": "Deneme jetonu",
+      "viaYaml": "evcc.yaml üzerinden",
+      "yourToken": "Jetonun"
     },
     "system": {
       "backupRestore": {
@@ -620,6 +624,10 @@
   },
   "header": {
     "about": "evcc hakkında",
+    "authProviders": {
+      "confirmLogout": "{title} kesmek istediğine emin misin?",
+      "title": "Onay Durumu"
+    },
     "blog": "Blog",
     "docs": "Belgeler",
     "github": "GitHub",
