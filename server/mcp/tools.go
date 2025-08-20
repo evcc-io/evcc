@@ -6,7 +6,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func docsTool(_ context.Context, req *mcp.ServerRequest[*mcp.CallToolParams]) (*mcp.CallToolResult, error) {
+func docsTool(_ context.Context, _ *mcp.ServerRequest[*mcp.CallToolParams]) (*mcp.CallToolResult, error) {
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.ResourceLink{
