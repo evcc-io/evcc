@@ -275,7 +275,7 @@ export default defineComponent({
 
 			return [
 				{
-					label: "Household Demand",
+					label: "Household",
 					data: householdPower,
 					backgroundColor: householdColor,
 					borderWidth: 0,
