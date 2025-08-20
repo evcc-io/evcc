@@ -89,13 +89,16 @@ export default defineComponent({
 		chartData(): ChartData {
 			const datasets: any[] = [];
 
-			// 1. Solar Forecast (first, with increased tension)
+			// 1. Grid power data (import/export) - first so it appears on top
+			datasets.push(...this.getGridPowerDatasets());
+
+			// 2. Solar Forecast
 			datasets.push(...this.getSolarDatasets());
 
-			// 2. Household Demand (power)
+			// 3. Household Demand (power)
 			datasets.push(...this.getHouseholdDatasets());
 
-			// 3. Battery power data
+			// 4. Battery power data
 			datasets.push(...this.getBatteryPowerDatasets());
 
 			return {
@@ -133,6 +136,16 @@ export default defineComponent({
 							label: (context) => {
 								const label = context.dataset.label || "";
 								const value = context.parsed.y;
+								// Special handling for Grid Power
+								if (label === "Grid Power") {
+									if (value > 0) {
+										return `Grid Import: ${this.formatValue(Math.abs(value))} kW`;
+									} else if (value < 0) {
+										return `Grid Export: ${this.formatValue(Math.abs(value))} kW`;
+									} else {
+										return `Grid: 0 kW`;
+									}
+								}
 								// Power axis (kW)
 								return `${label}: ${this.formatValue(value)} kW`;
 							},
@@ -271,6 +284,40 @@ export default defineComponent({
 					stack: "power",
 				},
 			];
+		},
+
+		getGridPowerDatasets() {
+			const datasets: any[] = [];
+
+			// Get grid import and export data
+			const gridImport = this.evopt.res.grid_import || [];
+			const gridExport = this.evopt.res.grid_export || [];
+
+			// Combine grid import and export into a single line
+			// Grid import is positive, grid export is negative (one is always zero)
+			const gridPower = gridImport.map((importValue, index) => {
+				const exportValue = gridExport[index] || 0;
+				const importKW = this.convertWToKW(importValue);
+				const exportKW = this.convertWToKW(exportValue);
+				// Return import as positive, export as negative
+				return importKW > 0 ? importKW : -exportKW;
+			});
+
+			datasets.push({
+				label: "Grid Power",
+				data: gridPower,
+				borderColor: "#666666", // Dark gray
+				backgroundColor: "#666666", // Dark gray
+				fill: false,
+				stepped: "middle", // Step in the middle
+				borderWidth: 2, // Same thickness as price chart lines
+				pointRadius: 0,
+				pointHoverRadius: 6,
+				yAxisID: "y",
+				type: "line" as const,
+			});
+
+			return datasets;
 		},
 
 		convertWToKW: (watts: number): number => {
