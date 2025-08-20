@@ -31,6 +31,16 @@
 						</td>
 					</tr>
 					<tr>
+						<td class="fw-medium text-nowrap text-start">Household Demand (kW)</td>
+						<td
+							v-for="(value, index) in evopt.req.time_series.gt"
+							:key="index"
+							:class="['text-end', { 'text-muted': value === 0 }]"
+						>
+							{{ formatPower(value) }}
+						</td>
+					</tr>
+					<tr>
 						<td class="fw-medium text-nowrap text-start">
 							{{ gridFeedinPriceLabel }}
 						</td>
@@ -40,16 +50,6 @@
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
 							{{ fmtPricePerKWh(value * 1000, currency, false, false) }}
-						</td>
-					</tr>
-					<tr>
-						<td class="fw-medium text-nowrap text-start">Household Demand (kW)</td>
-						<td
-							v-for="(value, index) in evopt.req.time_series.gt"
-							:key="index"
-							:class="['text-end', { 'text-muted': value === 0 }]"
-						>
-							{{ formatPower(value) }}
 						</td>
 					</tr>
 					<tr>
