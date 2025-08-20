@@ -21,7 +21,7 @@ require (
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
-	github.com/bogosj/tesla v1.3.1
+	github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
