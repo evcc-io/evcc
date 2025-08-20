@@ -29,7 +29,7 @@
 	--evcc-darkest-green: #076f20ff;
 	--evcc-darkest-green-rgb: 7, 111, 32;
 	--evcc-yellow: #faf000;
-	--evcc-dark-yellow: #bbb400;
+	--evcc-dark-yellow: #e6b800;
 	--evcc-orange: #ff9000;
 	--evcc-orange-rgb: 255, 144, 0;
 	--evcc-red: #fc440f;
@@ -46,7 +46,8 @@
 	--evcc-self: var(--evcc-dark-green);
 	--evcc-pv: var(--evcc-dark-green);
 	--evcc-battery: var(--evcc-darker-green);
-	--evcc-export: var(--evcc-yellow);
+	--evcc-export: var(--evcc-dark-yellow);
+	--evcc-export-bg: var(--evcc-yellow);
 	--evcc-price: #ff912fff;
 	--evcc-co2: #00916eff;
 	--evcc-background: var(--bs-gray-bright);
@@ -92,6 +93,7 @@
 
 :root.dark {
 	--evcc-grid: var(--bs-gray-medium);
+	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-deep);
 	--evcc-box: var(--bs-gray-dark);
 	--evcc-box-border: var(--bs-gray-darker);
@@ -170,6 +172,10 @@ h5 {
 
 .text-price {
 	color: var(--evcc-price) !important;
+}
+
+.text-export {
+	color: var(--evcc-export) !important;
 }
 
 .text-co2 {
@@ -681,4 +687,8 @@ input::-webkit-date-and-time-value {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+}
+
+.custom-select-inline {
+	display: inline-block !important;
 }

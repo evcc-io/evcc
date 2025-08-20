@@ -599,13 +599,18 @@
   "forecast": {
     "co2": {
       "average": "Durchschnitt",
-      "lowestHour": "Sauberste Stunde",
+      "highlightedHour": "Sauberste Stunde",
+      "range": "Bereich"
+    },
+    "feedin": {
+      "average": "Durchschnitt",
+      "highlightedHour": "Beste Stunde",
       "range": "Bereich"
     },
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",
-      "lowestHour": "Günstigste Stunde",
+      "highlightedHour": "Günstigste Stunde",
       "range": "Bereich"
     },
     "solar": {
@@ -618,7 +623,8 @@
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
     "type": {
       "co2": "CO₂",
-      "price": "Preis",
+      "feedin": "Einspeisung",
+      "price": "Bezug",
       "solar": "Solar"
     }
   },

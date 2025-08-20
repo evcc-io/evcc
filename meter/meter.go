@@ -14,7 +14,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.MaxACPowerGetter,MaxACPower,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
+//go:generate go tool decorate -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.MaxACPowerGetter,MaxACPower,func() float64" -t "api.FeedinDisableController,FeedinDisableLimitEnable,func(bool) error" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
@@ -23,7 +23,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		measurement.Phases `mapstructure:",squash"` // optional
 
 		// pv
-		pvMaxACPower `mapstructure:",squash"`
+		pvMaxACPower             `mapstructure:",squash"`
+		FeedinDisableLimitEnable *plugin.Config // optional
 
 		// battery
 		batteryCapacity  `mapstructure:",squash"`
@@ -61,6 +62,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	var batModeS func(api.BatteryMode) error
+	var feedinDisableLimitEnableS func(bool) error
 
 	switch {
 	case cc.Soc != nil && cc.LimitSoc != nil:
@@ -82,7 +84,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		}
 	}
 
-	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), batModeS)
+	// decorate feedin disable limit enable
+	if cc.FeedinDisableLimitEnable != nil {
+		feedinS, err := cc.FeedinDisableLimitEnable.BoolSetter(ctx, "feedinDisableLimitEnable")
+		if err != nil {
+			return nil, fmt.Errorf("feedin disable limit enable: %w", err)
+		}
+		feedinDisableLimitEnableS = feedinS
+	}
+
+	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), feedinDisableLimitEnableS, batModeS)
 
 	return res, nil
 }
@@ -107,9 +118,10 @@ func (m *Meter) Decorate(
 	batterySoc func() (float64, error),
 	batteryCapacity func() float64,
 	maxACPower func() float64,
+	setFeedinDisableLimitEnable func(bool) error,
 	setBatteryMode func(api.BatteryMode) error,
 ) api.Meter {
-	return decorateMeter(m, totalEnergy, currents, voltages, powers, batterySoc, batteryCapacity, maxACPower, setBatteryMode)
+	return decorateMeter(m, totalEnergy, currents, voltages, powers, batterySoc, batteryCapacity, maxACPower, setFeedinDisableLimitEnable, setBatteryMode)
 }
 
 // CurrentPower implements the api.Meter interface

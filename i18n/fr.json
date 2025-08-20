@@ -599,13 +599,13 @@
   "forecast": {
     "co2": {
       "average": "Moyenne",
-      "lowestHour": "Heure la plus propre",
+      "highlightedHour": "Heure la plus propre",
       "range": "Amplitude"
     },
     "modalTitle": "Prévisions",
     "price": {
       "average": "Moyenne",
-      "lowestHour": "Heure la moins chère",
+      "highlightedHour": "Heure la moins chère",
       "range": "Amplitude"
     },
     "solar": {

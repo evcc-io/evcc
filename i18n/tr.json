@@ -599,13 +599,13 @@
   "forecast": {
     "co2": {
       "average": "“Ortalama”",
-      "lowestHour": "“En temiz saat”",
+      "highlightedHour": "“En temiz saat”",
       "range": "“Aralık”"
     },
     "modalTitle": "“Öngörü”",
     "price": {
       "average": "“Ortalama”",
-      "lowestHour": "“En ucuz saat”",
+      "highlightedHour": "“En ucuz saat”",
       "range": "“Aralık”"
     },
     "solar": {

@@ -54,9 +54,9 @@
 		<div
 			class="col-12 col-sm-6 col-lg-4 mb-3 d-flex flex-column align-items-sm-start align-items-lg-end"
 		>
-			<div class="label">{{ label("lowestHour") }}</div>
+			<div class="label">{{ label("highlightedHour") }}</div>
 			<div class="value text-price text-nowrap" :class="highlightColor">
-				{{ lowestPriceHour }}
+				{{ highlightedHour }}
 			</div>
 		</div>
 	</div>
@@ -92,6 +92,7 @@ export default defineComponent({
 		type: { type: String as () => ForecastType, required: true },
 		grid: { type: Array as PropType<ForecastSlot[]> },
 		co2: { type: Array as PropType<ForecastSlot[]> },
+		feedin: { type: Array as PropType<ForecastSlot[]> },
 		solar: { type: Object as PropType<SolarDetails> },
 		currency: { type: String as PropType<CURRENCY> },
 	},
@@ -108,9 +109,19 @@ export default defineComponent({
 		isPrice() {
 			return this.type === ForecastType.Price;
 		},
+		isFeedIn() {
+			return this.type === ForecastType.FeedIn;
+		},
 		upcomingSlots(): ForecastSlot[] {
 			const now = this.now;
-			const slots = this.isPrice ? this.grid || [] : this.co2 || [];
+			let slots: ForecastSlot[] = [];
+			if (this.isPrice) {
+				slots = this.grid || [];
+			} else if (this.isFeedIn) {
+				slots = this.feedin || [];
+			} else {
+				slots = this.co2 || [];
+			}
 			return slots.filter((slot) => new Date(slot.end) > now).slice(0, 48);
 		},
 		averagePrice() {
@@ -126,11 +137,14 @@ export default defineComponent({
 			const max = Math.max(...slots.map((slot) => slot.value));
 			return `${this.fmtValue(min, false)} – ${this.fmtValue(max, true)}`;
 		},
-		lowestPriceHour() {
+		highlightedHour() {
 			if (this.isSolar) return "";
 			const slots = this.upcomingSlots;
-			const min = Math.min(...slots.map((slot) => slot.value));
-			const slot = slots.find((slot) => slot.value === min);
+			// For feedin, we want the highest value (best earning), for others lowest (cheapest/cleanest)
+			const targetValue = this.isFeedIn
+				? Math.max(...slots.map((slot) => slot.value))
+				: Math.min(...slots.map((slot) => slot.value));
+			const slot = slots.find((slot) => slot.value === targetValue);
 			if (!slot) return "";
 			const start = new Date(slot.start);
 			const end = new Date(slot.end);
@@ -142,6 +156,8 @@ export default defineComponent({
 					return "text-price";
 				case ForecastType.Co2:
 					return "text-co2";
+				case ForecastType.FeedIn:
+					return "text-export";
 				default:
 					return "";
 			}
@@ -173,7 +189,7 @@ export default defineComponent({
 			return this.$t(`forecast.${this.type}.${key}`);
 		},
 		fmtValue(value: number, withUnit = true) {
-			if (this.type === ForecastType.Price) {
+			if (this.type === ForecastType.Price || this.type === ForecastType.FeedIn) {
 				return this.fmtPricePerKWh(value, this.currency, false, withUnit);
 			}
 			return withUnit ? this.fmtCo2Medium(value) : this.fmtNumber(value, 0);

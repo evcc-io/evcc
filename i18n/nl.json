@@ -550,13 +550,13 @@
   "forecast": {
     "co2": {
       "average": "Gemiddeld",
-      "lowestHour": "Schoonste uur",
+      "highlightedHour": "Schoonste uur",
       "range": "Bereik"
     },
     "modalTitle": "Voorspelling",
     "price": {
       "average": "Gemiddeld",
-      "lowestHour": "Goedkoopste uur",
+      "highlightedHour": "Goedkoopste uur",
       "range": "Bereik"
     },
     "solar": {

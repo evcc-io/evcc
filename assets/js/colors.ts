@@ -17,6 +17,7 @@ const colors: {
   pricePerKWh: string | null;
   price: string | null;
   co2: string | null;
+  export: string | null;
   background: string | null;
   light: string | null;
   selfPalette: string[];
@@ -31,6 +32,7 @@ const colors: {
   pricePerKWh: null,
   price: null,
   co2: null,
+  export: null,
   background: null,
   light: null,
   selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
@@ -71,6 +73,7 @@ function updateCssColors() {
   colors.grid = style.getPropertyValue("--evcc-grid");
   colors.price = style.getPropertyValue("--evcc-price");
   colors.co2 = style.getPropertyValue("--evcc-co2");
+  colors.export = style.getPropertyValue("--evcc-export");
   colors.background = style.getPropertyValue("--evcc-background");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");

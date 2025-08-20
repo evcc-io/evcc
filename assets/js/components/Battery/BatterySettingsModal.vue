@@ -602,7 +602,4 @@ export default defineComponent({
 	z-index: 1;
 	border-radius: 0.5rem;
 }
-.custom-select-inline {
-	display: inline-block !important;
-}
 </style>
