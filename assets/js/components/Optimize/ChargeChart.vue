@@ -89,7 +89,7 @@ export default defineComponent({
 		chartData(): ChartData {
 			const datasets: any[] = [];
 
-			// 1. Grid power data (import/export) - first so it appears on top
+			// 1. Grid power data (import/export)
 			datasets.push(...this.getGridPowerDatasets());
 
 			// 2. Solar Forecast
@@ -172,23 +172,11 @@ export default defineComponent({
 							display: true,
 							text: "Power (kW)",
 						},
-						stacked: true,
+						stacked: false,
 						grid: {
 							drawOnChartArea: true,
-							color: (context: any) => {
-								// Make zero axis black to highlight
-								if (context.tick?.value === 0) {
-									return "#000000";
-								}
-								return colors.border || "#e0e0e0";
-							},
-							lineWidth: (context: any) => {
-								// Make zero axis slightly thicker
-								if (context.tick?.value === 0) {
-									return 2;
-								}
-								return 1;
-							},
+							color: colors.border || "",
+							lineWidth: 1,
 						},
 						// Keep scales purely based on values, no fixed boundaries
 					},
@@ -220,7 +208,7 @@ export default defineComponent({
 					borderColor: colors.self,
 					backgroundColor: colors.self,
 					fill: false,
-					tension: 0.25,
+					tension: 0.2,
 					borderJoinStyle: "round",
 					borderCapStyle: "round",
 					pointRadius: 0,
@@ -228,6 +216,7 @@ export default defineComponent({
 					borderWidth: 3,
 					yAxisID: "y",
 					type: "line" as const,
+					stack: false,
 				},
 			];
 		},
@@ -266,7 +255,6 @@ export default defineComponent({
 			return datasets;
 		},
 		getHouseholdDatasets() {
-			// Household Demand (as power, not energy like in SocChart)
 			const householdPower = this.evopt.req.time_series.gt.map(this.convertWToKW);
 
 			// Use the next color in the palette after all battery colors
@@ -309,12 +297,13 @@ export default defineComponent({
 				borderColor: "#666666", // Dark gray
 				backgroundColor: "#666666", // Dark gray
 				fill: false,
-				stepped: "middle", // Step in the middle
+				tension: 0.2,
 				borderWidth: 2, // Same thickness as price chart lines
 				pointRadius: 0,
 				pointHoverRadius: 6,
 				yAxisID: "y",
 				type: "line" as const,
+				stack: false,
 			});
 
 			return datasets;
