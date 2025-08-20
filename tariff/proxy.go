@@ -45,7 +45,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	}
 
 	if !slices.Contains(embed.Features, api.Cacheable) {
-		return NewFromConfig(ctx, typ, other)
+		return NewFromConfig(ctx, typ, embed.Other)
 	}
 
 	p := &CachingProxy{
@@ -59,7 +59,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	data, err := p.cacheGet(untilEndOfTomorrow())
 	if err != nil {
 		// attempt to create a new instance
-		tariff, err := NewFromConfig(ctx, typ, other)
+		tariff, err := NewFromConfig(ctx, typ, embed.Other)
 		if err != nil {
 			// check if we have at least data for the next 24 hours
 			atLeast2hrs, err2 := p.cacheGet(for24hrs())
