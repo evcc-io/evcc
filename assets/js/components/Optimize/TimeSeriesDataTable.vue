@@ -41,15 +41,13 @@
 						</td>
 					</tr>
 					<tr>
-						<td class="fw-medium text-nowrap text-start">
-							{{ gridFeedinPriceLabel }}
-						</td>
+						<td class="fw-medium text-nowrap text-start">Time Step Duration (h)</td>
 						<td
-							v-for="(value, index) in evopt.req.time_series.p_E"
+							v-for="(value, index) in evopt.req.time_series.dt"
 							:key="index"
-							:class="['text-end', { 'text-muted': value === 0 }]"
+							:class="['text-end']"
 						>
-							{{ fmtPricePerKWh(value * 1000, currency, false, false) }}
+							{{ formatDuration(value) }}
 						</td>
 					</tr>
 					<tr>
@@ -65,13 +63,15 @@
 						</td>
 					</tr>
 					<tr>
-						<td class="fw-medium text-nowrap text-start">Time Step Duration (h)</td>
+						<td class="fw-medium text-nowrap text-start">
+							{{ gridFeedinPriceLabel }}
+						</td>
 						<td
-							v-for="(value, index) in evopt.req.time_series.dt"
+							v-for="(value, index) in evopt.req.time_series.p_E"
 							:key="index"
-							:class="['text-end']"
+							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatDuration(value) }}
+							{{ fmtPricePerKWh(value * 1000, currency, false, false) }}
 						</td>
 					</tr>
 
