@@ -108,6 +108,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	req := evopt.OptimizationInput{
+		Strategy: &evopt.OptimizerStrategy{
+			ChargingStrategy: lo.ToPtr(evopt.ChargeBeforeExport),
+		},
 		EtaC: &eta,
 		EtaD: &eta,
 		TimeSeries: evopt.TimeSeries{
