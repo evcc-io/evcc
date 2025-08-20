@@ -506,8 +506,8 @@ github.com/mitchellh/mapstructure v0.0.0-20160808181253-ca63d7c062ee/go.mod h1:F
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/modelcontextprotocol/go-sdk v0.2.1-0.20250812214950-6e03217c831b h1:UY+mamH9fcvW4D7X2DcNnTUNSFagNNr85evEF1xAdqs=
-github.com/modelcontextprotocol/go-sdk v0.2.1-0.20250812214950-6e03217c831b/go.mod h1:71VUZVa8LL6WARvSgLJ7DMpDWSeomT4uBv8g97mGBvo=
+github.com/modelcontextprotocol/go-sdk v0.2.1-0.20250820190144-3f10c19b45f6 h1:4O1UGTDexZlpeMJa+xGpyz624j1jLs/2tig46NTHH7g=
+github.com/modelcontextprotocol/go-sdk v0.2.1-0.20250820190144-3f10c19b45f6/go.mod h1:71VUZVa8LL6WARvSgLJ7DMpDWSeomT4uBv8g97mGBvo=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=

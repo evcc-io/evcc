@@ -74,7 +74,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/modelcontextprotocol/go-sdk v0.2.1-0.20250812214950-6e03217c831b
+	github.com/modelcontextprotocol/go-sdk v0.2.1-0.20250820190144-3f10c19b45f6
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
