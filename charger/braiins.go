@@ -51,27 +51,27 @@ type BraiinsOS struct {
 	password       string
 	configMaxPower int
 	voltage        float64 // Configurable grid voltage
-	
+
 	// Configurable rate limiting and stepping parameters
 	powerTargetInterval time.Duration // Minimum interval between power target updates
 	powerTargetStep     int           // Power target stepping in watts
-	
+
 	// Hardware constraints discovered from miner
 	minWatts     int
 	defaultWatts int
 	maxWatts     int
-	
+
 	// Power target capability and warning state
 	powerTargetEnabled bool
 	powerTargetWarned  bool // To avoid spam warnings
-	
+
 	// Thread-safe fields protected by mutex
 	mu              sync.Mutex
 	token           string
 	tokenExpiry     time.Time
 	lastPowerUpdate time.Time // Last power target update timestamp
 	lastPowerTarget int       // Last set power target for comparison
-	
+
 	log *util.Logger
 }
 
