@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/WulfgarW/sensonet v0.0.4
-	github.com/andig/evopt v0.0.0-20250806061439-fc50d99582e9
+	github.com/andig/evopt v0.0.0-20250820184747-c28617953a3c
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -114,6 +114,7 @@ require (
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.6
 	gorm.io/gorm v1.30.1
+	moul.io/http2curl v1.0.0
 )
 
 require (

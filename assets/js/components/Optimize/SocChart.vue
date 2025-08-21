@@ -135,22 +135,9 @@ export default defineComponent({
 						},
 						grid: {
 							drawOnChartArea: true,
-							color: (context: any) => {
-								// Make zero axis black to highlight
-								if (context.tick?.value === 0) {
-									return "#000000";
-								}
-								return colors.border || "#e0e0e0";
-							},
-							lineWidth: (context: any) => {
-								// Make zero axis slightly thicker
-								if (context.tick?.value === 0) {
-									return 2;
-								}
-								return 1;
-							},
+							color: colors.border || "",
+							lineWidth: 1,
 						},
-						// Remove fixed minimum to allow negative values
 					},
 				},
 			};
