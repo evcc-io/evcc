@@ -5,7 +5,7 @@
 // - For dynamic power control: Enable "Power Target" mode in Braiins OS tuner settings
 // - Without Power Target: Only on/off control available
 //
-// Version: 1.3.9 (extracted HTTP helpers + improved power target validation)
+// Version: 1.4.0 (Critical fixes: HTTP status, power detection, race conditions, enable order)
 // Tested with real API v1.0.0
 // https://developer.braiins-os.com/latest/openapi.html
 
@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -27,6 +28,12 @@ import (
 const (
 	MinerStatusMining = 2 // Mining active
 	MinerStatusPaused = 3 // Mining paused
+)
+
+// Rate limiting and stepping constants
+const (
+	PowerTargetMinInterval = 30 * time.Second // Minimum interval between power target updates
+	PowerTargetStep        = 100              // Power target stepping in watts
 )
 
 // API endpoints
@@ -41,31 +48,33 @@ const (
 	apiPathPowerTarget  = "/api/v1/performance/power-target"
 )
 
-// Rate limiting and stepping constants
-const (
-	PowerTargetMinInterval = 30 * time.Second // Minimum interval between power target updates
-	PowerTargetStep        = 100              // Power target stepping in watts
-)
-
 // BraiinsOS charger implementation
 type BraiinsOS struct {
 	*request.Helper
 	*embed
-	uri                string
-	user               string
-	password           string
-	token              string
-	tokenExpiry        time.Time
-	minWatts           int
-	defaultWatts       int
-	maxWatts           int
-	configMaxPower     int
-	voltage            float64 // Configurable grid voltage
+	uri            string
+	user           string
+	password       string
+	configMaxPower int
+	voltage        float64 // Configurable grid voltage
+	
+	// Hardware constraints
+	minWatts     int
+	defaultWatts int
+	maxWatts     int
+	
+	// Power target capability
 	powerTargetEnabled bool
-	powerTargetWarned  bool      // To avoid spam warnings
-	lastPowerUpdate    time.Time // Last power target update timestamp
-	lastPowerTarget    int       // Last set power target for comparison
-	log                *util.Logger
+	powerTargetWarned  bool // To avoid spam warnings
+	
+	// Thread-safe fields (protected by mu)
+	mu              sync.Mutex
+	token           string
+	tokenExpiry     time.Time
+	lastPowerUpdate time.Time // Last power target update timestamp
+	lastPowerTarget int       // Last set power target for comparison
+	
+	log *util.Logger
 }
 
 // BraiinsConfig is the configuration struct
@@ -108,18 +117,7 @@ type PowerTarget struct {
 	Watt int `json:"watt"`
 }
 
-// PerformanceMode structures
-type PerformanceMode struct {
-	TunerMode struct {
-		Target struct {
-			PowerTarget struct {
-				PowerTarget struct {
-					Watt int `json:"watt"`
-				} `json:"power_target"`
-			} `json:"powertarget"`
-		} `json:"target"`
-	} `json:"tunermode"`
-}
+// PerformanceMode struct removed - no longer needed since we detect power target via constraints
 
 // ConfigConstraints for power limits discovery
 type ConfigConstraints struct {
@@ -190,16 +188,10 @@ func NewBraiins(uri, user, password string, timeout time.Duration, maxPower int,
 		return nil, fmt.Errorf("connection test failed: %w", err)
 	}
 
-	// Discover miner constraints - REQUIRED for power control
+	// Discover miner constraints and power target capability - REQUIRED for power control
 	if err := c.discoverConstraints(); err != nil {
 		c.log.ERROR.Printf("Failed to get miner constraints: %v", err)
 		return nil, fmt.Errorf("failed to get miner constraints: %w", err)
-	}
-
-	// Check if miner supports power target mode
-	if err := c.detectPowerTargetMode(); err != nil {
-		c.log.WARN.Printf("Power target mode detection failed - using on/off control")
-		c.powerTargetEnabled = false
 	}
 
 	// Log configuration summary with complete hardware range information
@@ -221,8 +213,11 @@ func NewBraiins(uri, user, password string, timeout time.Duration, maxPower int,
 	return c, nil
 }
 
-// login gets a new authentication token
+// login gets a new authentication token (thread-safe)
 func (c *BraiinsOS) login() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if time.Now().Before(c.tokenExpiry) && c.token != "" {
 		return nil // Token still valid
 	}
@@ -280,9 +275,11 @@ func (c *BraiinsOS) makeAuthRequest(method, path string, body any) (*http.Respon
 		// Close the first response
 		resp.Body.Close()
 
-		// Invalidate current token to force new login
+		// Invalidate current token to force new login (thread-safe)
+		c.mu.Lock()
 		c.token = ""
 		c.tokenExpiry = time.Time{}
+		c.mu.Unlock()
 
 		// Retry with fresh token
 		return c.doRequestWithCurrentToken(method, path, body)
@@ -310,7 +307,12 @@ func (c *BraiinsOS) doRequestWithCurrentToken(method, path string, body any) (*h
 		return nil, fmt.Errorf("failed to create authenticated request: %w", err)
 	}
 
-	req.Header.Set("Authorization", c.token)
+	// Get token (thread-safe)
+	c.mu.Lock()
+	token := c.token
+	c.mu.Unlock()
+
+	req.Header.Set("Authorization", token)
 	return c.Do(req)
 }
 
@@ -325,11 +327,12 @@ func (c *BraiinsOS) authRequestWithBody(method, path string, body any) (*http.Re
 }
 
 // handleHTTPResponse checks status codes and provides consistent error handling
+// FIX #1: Accept all 2xx status codes, not just 200
 func (c *BraiinsOS) handleHTTPResponse(resp *http.Response, operation string) error {
 	if resp.StatusCode == http.StatusUnauthorized {
 		return fmt.Errorf("authentication failed after retry, token invalid: %s (HTTP %d)", resp.Status, resp.StatusCode)
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("%s failed: %s (HTTP %d)", operation, resp.Status, resp.StatusCode)
 	}
 	return nil
@@ -342,7 +345,8 @@ func (c *BraiinsOS) closeResponseBody(resp *http.Response) {
 	}
 }
 
-// discoverConstraints gets miner power limits from API
+// discoverConstraints gets miner power limits from API and detects power target capability
+// FIX #2: Detect power target support via constraints instead of unreliable panic check
 func (c *BraiinsOS) discoverConstraints() error {
 	resp, err := c.authRequest(http.MethodGet, apiPathConstraints)
 	if err != nil {
@@ -363,43 +367,12 @@ func (c *BraiinsOS) discoverConstraints() error {
 	c.defaultWatts = constraints.TunerConstraints.PowerTarget.Default.Watt
 	c.maxWatts = constraints.TunerConstraints.PowerTarget.Max.Watt
 
-	c.log.DEBUG.Printf("Discovered power constraints: min=%dW, default=%dW, max=%dW",
-		c.minWatts, c.defaultWatts, c.maxWatts)
+	// FIX #2: Reliable power target detection via constraints
+	c.powerTargetEnabled = c.minWatts > 0 && c.defaultWatts > 0 && c.maxWatts > 0
 
-	return nil
-}
+	c.log.DEBUG.Printf("Discovered power constraints: min=%dW, default=%dW, max=%dW, powerTargetEnabled=%v",
+		c.minWatts, c.defaultWatts, c.maxWatts, c.powerTargetEnabled)
 
-// detectPowerTargetMode checks if miner supports power target mode
-func (c *BraiinsOS) detectPowerTargetMode() error {
-	resp, err := c.authRequest(http.MethodGet, apiPathPerformance)
-	if err != nil {
-		return fmt.Errorf("performance mode request failed: %w", err)
-	}
-	defer c.closeResponseBody(resp)
-
-	if err := c.handleHTTPResponse(resp, "performance mode request"); err != nil {
-		return err
-	}
-
-	var mode PerformanceMode
-	if err := json.NewDecoder(resp.Body).Decode(&mode); err != nil {
-		return fmt.Errorf("failed to decode performance mode: %w", err)
-	}
-
-	// Validate that power target structure is actually accessible
-	c.powerTargetEnabled = false
-	defer func() {
-		if r := recover(); r != nil {
-			c.log.DEBUG.Printf("Power target structure not accessible: %v", r)
-			c.powerTargetEnabled = false
-		}
-	}()
-
-	// Try to access the power target structure - if it panics, it's not available
-	_ = mode.TunerMode.Target.PowerTarget.PowerTarget
-	c.powerTargetEnabled = true
-
-	c.log.DEBUG.Printf("Power target mode enabled: %v", c.powerTargetEnabled)
 	return nil
 }
 
@@ -440,7 +413,8 @@ func (c *BraiinsOS) getMinerStatus() (int, error) {
 	return details.Status, nil
 }
 
-// setPowerTarget sets the miner power target
+// setPowerTarget sets the miner power target (thread-safe)
+// FIX #3: Thread-safe access to power tracking variables
 func (c *BraiinsOS) setPowerTarget(targetWatts int) error {
 	resp, err := c.authRequestWithBody(http.MethodPut, apiPathPowerTarget, PowerTarget{Watt: targetWatts})
 	if err != nil {
@@ -452,9 +426,11 @@ func (c *BraiinsOS) setPowerTarget(targetWatts int) error {
 		return err
 	}
 
-	// Update tracking variables
+	// Update tracking variables (thread-safe)
+	c.mu.Lock()
 	c.lastPowerTarget = targetWatts
 	c.lastPowerUpdate = time.Now()
+	c.mu.Unlock()
 
 	c.log.DEBUG.Printf("Power target set to %dW", targetWatts)
 	return nil
@@ -491,10 +467,10 @@ func (c *BraiinsOS) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *BraiinsOS) Enable(enable bool) error {
 	endpoint := apiPathPause
-	action := "paused"
+	operation := "pause"
 	if enable {
 		endpoint = apiPathResume
-		action = "resumed"
+		operation = "resume"
 	}
 
 	resp, err := c.authRequest(http.MethodPut, endpoint)
@@ -503,16 +479,17 @@ func (c *BraiinsOS) Enable(enable bool) error {
 	}
 	defer c.closeResponseBody(resp)
 
-	if err := c.handleHTTPResponse(resp, "enable/disable"); err != nil {
+	if err := c.handleHTTPResponse(resp, operation); err != nil {
 		return err
 	}
 
-	c.log.DEBUG.Printf("Miner %s", action)
+	c.log.DEBUG.Printf("Miner %s successful", operation)
 
 	return nil
 }
 
 // MaxCurrent implements the api.Charger interface with configurable voltage
+// FIX #4: Set power target before enabling to avoid power spikes
 func (c *BraiinsOS) MaxCurrent(current int64) error {
 	if current == 0 {
 		return c.Enable(false) // Pause mining
@@ -528,13 +505,12 @@ func (c *BraiinsOS) MaxCurrent(current int64) error {
 		return c.Enable(false) // Pause - insufficient PV surplus for hardware minimum
 	}
 
-	// Enough PV surplus available - start miner
-	if err := c.Enable(true); err != nil {
-		return err
-	}
-
 	// Graceful fallback for miners not in power target mode
 	if !c.powerTargetEnabled {
+		// Simply enable without power control
+		if err := c.Enable(true); err != nil {
+			return err
+		}
 		// Only warn once to avoid spam
 		if !c.powerTargetWarned {
 			c.log.WARN.Printf("Enable Power Target in Braiins OS for dynamic power control")
@@ -546,7 +522,11 @@ func (c *BraiinsOS) MaxCurrent(current int64) error {
 	effectiveMax := c.getEffectiveMaxPower()
 	if effectiveMax <= c.minWatts {
 		c.log.WARN.Printf("Effective max power (%dW) too low for dynamic control - using minimum (%dW)", effectiveMax, c.minWatts)
-		return c.setPowerTarget(c.minWatts)
+		// FIX #4: Set power target first, then enable
+		if err := c.setPowerTarget(c.minWatts); err != nil {
+			return err
+		}
+		return c.Enable(true)
 	}
 
 	// Apply power limits with explicit rounding
@@ -557,25 +537,34 @@ func (c *BraiinsOS) MaxCurrent(current int64) error {
 	targetPower = math.Floor(targetPower/PowerTargetStep) * PowerTargetStep
 	targetPowerInt := int(targetPower)
 
-	// Rate limiting: only update if enough time has passed or significant change
+	// Rate limiting: only update if significant change or enough time passed (thread-safe)
+	c.mu.Lock()
 	timeSinceLastUpdate := time.Since(c.lastPowerUpdate)
 	powerChange := targetPowerInt != c.lastPowerTarget
-
-	if timeSinceLastUpdate < PowerTargetMinInterval && !powerChange {
-		c.log.DEBUG.Printf("Rate limiting: %.0fs since last update, target unchanged (%dW)",
-			timeSinceLastUpdate.Seconds(), c.lastPowerTarget)
-		return nil
-	}
+	lastTarget := c.lastPowerTarget
+	c.mu.Unlock()
 
 	if !powerChange {
-		c.log.DEBUG.Printf("Power target unchanged at %dW, skipping update", c.lastPowerTarget)
+		c.log.DEBUG.Printf("Power target unchanged at %dW, skipping update", lastTarget)
 		return nil
 	}
 
-	c.log.DEBUG.Printf("Requested %.1fA at %.0fV, setting power target to %dW (rounded from %.0fW)",
+	if timeSinceLastUpdate < PowerTargetMinInterval {
+		c.log.DEBUG.Printf("Rate limiting: %.0fs since last update, delaying power change to %dW",
+			timeSinceLastUpdate.Seconds(), targetPowerInt)
+		return nil
+	}
+
+	c.log.DEBUG.Printf("Requested %.1fA at %.0fV, setting power target to %dW (rounded down from %.0fW)",
 		float64(current), c.voltage, targetPowerInt, powerRequest)
 
-	return c.setPowerTarget(targetPowerInt)
+	// FIX #4: Critical fix - set power target BEFORE enabling to avoid power spikes
+	if err := c.setPowerTarget(targetPowerInt); err != nil {
+		return err
+	}
+
+	// Then enable the miner at the desired power level
+	return c.Enable(true)
 }
 
 // CurrentPower implements the api.Meter interface
