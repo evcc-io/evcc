@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/auth/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -19,7 +19,7 @@ func TestSetAdminPassword(t *testing.T) {
 	password := "testpassword"
 
 	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq("")))
-	assert.Nil(t, auth.SetAdminPassword(password)) // success
+	assert.NoError(t, auth.SetAdminPassword(password)) // success
 }
 
 func TestRemoveAdminPassword(t *testing.T) {
@@ -69,10 +69,10 @@ func TestJwtToken(t *testing.T) {
 	mock.EXPECT().String(keys.JwtSecret).Return("somesecret", nil).AnyTimes()
 
 	lifetime := time.Hour
-	tokenString, err := auth.GenerateJwtToken(lifetime)
-	assert.Nil(t, err, "token generation failed")
+	tokenString, err := auth.GenerateToken(JwtToken, lifetime)
+	assert.NoError(t, err, "token generation failed")
 	assert.NotEmpty(t, tokenString, "token is empty")
 
-	ok, err := auth.ValidateJwtToken(tokenString)
-	assert.True(t, ok && err == nil, "token is invalid")
+	_, err = auth.ValidateToken(tokenString)
+	assert.NoError(t, err, "token is invalid")
 }

@@ -1,12 +1,16 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/server/auth"
 	"github.com/gorilla/mux"
 )
 
@@ -59,8 +63,8 @@ func updatePasswordHandler(authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
-// read jwt from header and cookie
-func jwtFromRequest(r *http.Request) string {
+// read token from header and cookie
+func tokenFromRequest(r *http.Request) string {
 	// read from header
 	authHeader := r.Header.Get("Authorization")
 	if token, ok := strings.CutPrefix(authHeader, "Bearer "); ok {
@@ -75,11 +79,11 @@ func jwtFromRequest(r *http.Request) string {
 	return ""
 }
 
-// authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
+// authStatusHandler login status (true/false) based on token. Errors if admin password is not configured
 func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if authObject.GetAuthMode() == auth.Disabled {
-			w.Write([]byte("true"))
+			fmt.Fprint(w, "true")
 			return
 		}
 
@@ -94,48 +98,68 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		ok, err := authObject.ValidateJwtToken(jwtFromRequest(r))
-		if err != nil || !ok {
-			w.Write([]byte("false"))
-			return
-		}
-		w.Write([]byte("true"))
+		_, err := authObject.ValidateToken(tokenFromRequest(r))
+		fmt.Fprint(w, strconv.FormatBool(err == nil))
 	}
+}
+
+func loginRequired(authObject auth.Auth, r *http.Request) error {
+	if authObject.GetAuthMode() == auth.Locked {
+		return errors.New("forbidden in demo mode")
+	}
+
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+
+	if !authObject.IsAdminPasswordValid(req.Password) {
+		return errors.New("invalid password")
+	}
+
+	return nil
 }
 
 func loginHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if authObject.GetAuthMode() == auth.Locked {
-			http.Error(w, "Forbidden in demo mode", http.StatusForbidden)
-			return
-		}
-
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := loginRequired(authObject, r); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !authObject.IsAdminPasswordValid(req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
-		}
-
-		lifetime := time.Hour * 24 * 90 // 90 day valid
-		tokenString, err := authObject.GenerateJwtToken(lifetime)
+		lifetime := 90 * 24 * time.Hour // 90 day valid
+		token, err := authObject.GenerateToken(auth.JwtToken, lifetime)
 		if err != nil {
-			http.Error(w, "Failed to generate JWT token.", http.StatusInternalServerError)
+			http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 			return
 		}
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     authCookieName,
-			Value:    tokenString,
+			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
 			Expires:  time.Now().Add(lifetime),
 			SameSite: http.SameSiteStrictMode,
 		})
+	}
+}
+
+func tokenHandler(authObject auth.Auth) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := loginRequired(authObject, r); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		lifetime := 365 * 24 * time.Hour
+		token, err := authObject.GenerateToken(auth.ApiToken, lifetime)
+		if err != nil {
+			http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+			return
+		}
+
+		jsonWrite(w, token)
 	}
 }
 
@@ -160,15 +184,16 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 				return
 			}
 
-			// check jwt token
-			ok, err := authObject.ValidateJwtToken(jwtFromRequest(r))
-			if !ok || err != nil {
+			// check token
+			typ, err := authObject.ValidateToken(tokenFromRequest(r))
+			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
 			// all clear, continue
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), auth.ContextAuthType, typ)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

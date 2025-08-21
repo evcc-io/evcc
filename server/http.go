@@ -13,9 +13,9 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
+	"github.com/evcc-io/evcc/server/auth"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-http-utils/etag"
@@ -260,6 +260,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"password": {"PUT", "/password", updatePasswordHandler(auth)},
 			"auth":     {"GET", "/status", authStatusHandler(auth)},
 			"login":    {"POST", "/login", loginHandler(auth)},
+			"token":    {"POST", "/token", tokenHandler(auth)},
 			"logout":   {"POST", "/logout", logoutHandler},
 		}
 

@@ -4,23 +4,35 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/auth/api"
+	"github.com/evcc-io/evcc/server/auth/jwt"
+	"github.com/evcc-io/evcc/server/auth/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const admin = "admin"
 
-// Possible authentication modes
-type AuthMode int
+type (
+	AuthMode int // Authentication mode
+	AuthType int // Authentication type
+
+	ContextKey string
+)
 
 const (
 	Enabled  AuthMode = iota // normal operation
 	Disabled                 // auth checks are skipped (free for all)
 	Locked                   // auth features are blocked (demo mode)
+
+	None AuthType = iota
+	ApiToken
+	JwtToken
+
+	ContextAuthType ContextKey = "authType"
 )
 
 // Auth is the Auth api
@@ -28,8 +40,8 @@ type Auth interface {
 	RemoveAdminPassword()
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
-	GenerateJwtToken(time.Duration) (string, error)
-	ValidateJwtToken(string) (bool, error)
+	GenerateToken(AuthType, time.Duration) (string, error)
+	ValidateToken(string) (AuthType, error)
 	IsAdminPasswordConfigured() bool
 	SetAuthMode(AuthMode)
 	GetAuthMode() AuthMode
@@ -104,8 +116,8 @@ func (a *auth) generateRandomKey(length int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-// getJwtSecret returns the JWT secret from the settings or generates a new one
-func (a *auth) getJwtSecret() ([]byte, error) {
+// tokenSecret returns the token secret from the settings or generates a new one
+func (a *auth) tokenSecret() ([]byte, error) {
 	jwtSecret, err := a.settings.String(keys.JwtSecret)
 
 	// generate new secret if it doesn't exist yet -> new installation
@@ -120,37 +132,35 @@ func (a *auth) getJwtSecret() ([]byte, error) {
 	return []byte(jwtSecret), nil
 }
 
-// GenerateJwtToken generates an admin user JWT token with the given lifetime
-func (a *auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
-	claims := &jwt.RegisteredClaims{
-		Subject:   admin,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(lifetime)),
+// GenerateToken generates a token with the given type and time to live
+func (a *auth) GenerateToken(typ AuthType, ttl time.Duration) (string, error) {
+	secret, err := a.tokenSecret()
+	if err != nil {
+		return "", err
 	}
 
-	if jwtSecret, err := a.getJwtSecret(); err != nil {
-		return "", err
-	} else {
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		return token.SignedString(jwtSecret)
+	switch typ {
+	case ApiToken:
+		return api.New(secret, ttl)
+	case JwtToken:
+		return jwt.New(admin, secret, ttl)
+	default:
+		return "", errors.New("invalid token type")
 	}
 }
 
-// ValidateJwtToken validates the given JWT token
-func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
-	jwtSecret, err := a.getJwtSecret()
+// ValidateToken validates the given JWT token
+func (a *auth) ValidateToken(token string) (AuthType, error) {
+	secret, err := a.tokenSecret()
 	if err != nil {
-		return false, err
+		return None, err
 	}
 
-	// read token
-	var claims jwt.RegisteredClaims
-	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
-	}, jwt.WithSubject(admin)); err != nil {
-		return false, err
+	if strings.HasPrefix(token, api.Prefix) {
+		return ApiToken, api.Validate(token, secret)
 	}
 
-	return true, nil
+	return JwtToken, jwt.Validate(token, admin, secret)
 }
 
 func (a *auth) SetAuthMode(authMode AuthMode) {
