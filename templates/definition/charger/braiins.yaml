@@ -1,46 +1,46 @@
 template: braiins
 products:
-- brand: Braiins
-  description:
-    generic: Bitcoin Miner
+  - brand: Braiins
+    description:
+      generic: Bitcoin Miner
 params:
-- name: uri
-  description:
-    de: IP-Adresse oder Hostname
-    en: IP address or hostname
-  required: true
-  example: 192.168.1.40
-- name: user
-  description:
-    de: Benutzername
-    en: Username
-  default: root
-- name: password
-  description:
-    de: Passwort
-    en: Password
-  required: true
-  mask: true
-- name: voltage
-  description:
-    de: Netzspannung in Volt
-    en: Grid voltage in volts
-  help:
-    de: Standard-Spannungen - Europa/Australien/Asien=230V, USA/Kanada=120V, Japan=100V
-    en: Common voltages - Europe/Australia/Asia=230V, USA/Canada=120V, Japan=100V
-  type: float
-  default: 230
-  advanced: true
-- name: maxPower
-  description:
-    de: Maximale Leistung für evcc-Steuerung in Watt
-    en: Maximum power for evcc control in watts
-  help:
-    de: 0 = automatisch, nutzt Miner-Standard
-    en: 0 = automatic, uses miner default
-  type: int
-  default: 0
-  advanced: true
+  - name: uri
+    description:
+      de: IP-Adresse oder Hostname
+      en: IP address or hostname
+    required: true
+    example: 192.168.1.40
+  - name: user
+    description:
+      de: Benutzername
+      en: Username
+    default: root
+  - name: password
+    description:
+      de: Passwort
+      en: Password
+    required: true
+    mask: true
+  - name: voltage
+    description:
+      de: Netzspannung in Volt
+      en: Grid voltage in volts
+    help:
+      de: Standard-Spannungen - Europa/Australien/Asien=230V, USA/Kanada=120V, Japan=100V
+      en: Common voltages - Europe/Australia/Asia=230V, USA/Canada=120V, Japan=100V
+    type: float
+    default: 230
+    advanced: true
+  - name: maxPower
+    description:
+      de: Maximale Leistung für evcc-Steuerung in Watt
+      en: Maximum power for evcc control in watts
+    help:
+      de: 0 = automatisch, nutzt Miner-Standard
+      en: 0 = automatic, uses miner default
+    type: int
+    default: 0
+    advanced: true
 render: |
   type: braiins
   uri: {{ .uri }}
