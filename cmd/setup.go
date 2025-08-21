@@ -549,6 +549,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
+	// setup modbus proxy
+	if err == nil {
+		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
+	}
+
 	// setup javascript VMs
 	if err == nil {
 		err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
@@ -557,12 +562,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// setup go VMs
 	if err == nil {
 		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
-	}
-
-	// setup config database
-	if err == nil {
-		// TODO decide wrapping
-		err = config.Init(db.Instance)
 	}
 
 	return err
@@ -591,6 +590,10 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := cache.Init(); err != nil {
+		return err
+	}
+
+	if err := config.Init(); err != nil {
 		return err
 	}
 
@@ -903,7 +906,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	if err := eg.Wait(); err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		return &tariffs, &ClassError{ClassTariff, err}
 	}
 
 	return &tariffs, nil

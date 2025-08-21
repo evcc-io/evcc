@@ -108,6 +108,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	req := evopt.OptimizationInput{
+		Strategy: &evopt.OptimizerStrategy{
+			ChargingStrategy: lo.ToPtr(evopt.ChargeBeforeExport),
+		},
 		EtaC: &eta,
 		EtaD: &eta,
 		TimeSeries: evopt.TimeSeries{
@@ -120,7 +123,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	// end of horizon Wh value
-	pa := req.TimeSeries.PN[len(req.TimeSeries.PN)-1]
+	pa := lo.Min(req.TimeSeries.PN)
 
 	details := responseDetails{
 		Timestamps: asTimestamps(dt),

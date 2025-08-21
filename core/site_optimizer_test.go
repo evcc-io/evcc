@@ -139,8 +139,8 @@ func TestProrateFirstHour(t *testing.T) {
 			name:              "start of hour 0 - no proration",
 			now:               time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 			expectedFirstHour: 10.0, // full hour: no proration applied
-			expectedLength:    24,    // all 24 hours remain
-			expectedSecond:    20.0,  // hour 1 value
+			expectedLength:    24,   // all 24 hours remain
+			expectedSecond:    20.0, // hour 1 value
 		},
 		{
 			name:              "30 minutes into hour 0",
