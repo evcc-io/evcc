@@ -6,19 +6,19 @@ products:
 params:
   - name: uri
     description:
-      de: IP-Adresse oder Hostname
-      en: IP address or hostname
+      de: IP-Adresse oder Hostname des Miners
+      en: IP address or hostname of the miner
     required: true
     example: 192.168.1.40
   - name: user
     description:
-      de: Benutzername
-      en: Username
+      de: Benutzername für die API-Authentifizierung
+      en: Username for API authentication
     default: root
   - name: password
     description:
-      de: Passwort
-      en: Password
+      de: Passwort des API-Benutzers
+      en: Password of the API user
     required: true
     mask: true
   - name: voltage
@@ -26,29 +26,55 @@ params:
       de: Netzspannung in Volt
       en: Grid voltage in volts
     help:
-      de: Standard-Spannungen - Europa/Australien/Asien=230V, USA/Kanada=120V, Japan=100V
+      de: Übliche Spannungen - Europa/Asien/Australien=230V, USA/Kanada=120V, Japan=100V
       en: Common voltages - Europe/Australia/Asia=230V, USA/Canada=120V, Japan=100V
     type: float
     default: 230
     advanced: true
   - name: maxPower
     description:
-      de: Maximale Leistung für evcc-Steuerung in Watt
+      de: Maximale Leistung für die evcc-Regelung in Watt
       en: Maximum power for evcc control in watts
     help:
-      de: 0 = automatisch, nutzt Miner-Standard
-      en: 0 = automatic, uses miner default
+      de: '0 = automatisch: Die Leistung wird auf den vom Miner gemeldeten Standardwert begrenzt.'
+      en: '0 = automatic: The power is limited to the default value reported by the miner.'
     type: int
     default: 0
+    advanced: true
+  - name: powerTargetInterval
+    description:
+      de: Intervall zwischen Leistungsänderungen
+      en: Interval between power target updates
+    help:
+      de: 'Stabilisiert die Leistung und reduziert API-Aufrufe. 30s = max. 2 Anpassungen/Min.'
+      en: 'Stabilizes performance and reduces API calls. Example: 30s = max. 2 adjustments/min.'
+    type: duration
+    default: 30s
+    advanced: true
+  - name: powerTargetStep
+    description:
+      de: Leistungsschritte für die Abrundung in Watt
+      en: Power stepping for rounding in watts
+    help:
+      de: 'Rundet Leistung nach unten ab, um Netzbezug zu verhindern. 980W mit 100W-Schritt wird zu 900W.'
+      en: 'Rounds down power to prevent grid import. Example: 980W with 100W step becomes 900W.'
+    type: int
+    default: 100
     advanced: true
 render: |
   type: braiins
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
-  {{- if ne (atoi .voltage) 230 }}
+  {{- if ne (atof .voltage) 230.0 }}
   voltage: {{ .voltage }}
   {{- end }}
   {{- if .maxPower }}
   maxPower: {{ .maxPower }}
+  {{- end }}
+  {{- if ne .powerTargetInterval "30s" }}
+  powerTargetInterval: {{ .powerTargetInterval }}
+  {{- end }}
+  {{- if ne (atoi .powerTargetStep) 100 }}
+  powerTargetStep: {{ .powerTargetStep }}
   {{- end }}
