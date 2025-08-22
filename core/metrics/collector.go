@@ -31,7 +31,7 @@ func (c *Collector) process(fun func()) error {
 	if slotStart := now.Truncate(SlotDuration); slotStart.After(c.started) {
 		// full slot completed
 		if slotStart.Sub(c.started) == SlotDuration {
-			if err := Persist(c.started, c.accu.AccumulatedEnergy()); err != nil {
+			if err := persist(c.started, c.accu.AccumulatedEnergy()); err != nil {
 				return err
 			}
 		}

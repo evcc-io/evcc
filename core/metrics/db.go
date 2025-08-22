@@ -13,14 +13,19 @@ type meter struct {
 	Value     float64   `json:"val" gorm:"column:val"`
 }
 
+// type meter struct {
+// 	Id   int `gorm:"primarykey"`
+// 	Name string
+// }
+
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func Init() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// Persist stores 15min consumption in Wh
-func Persist(ts time.Time, value float64) error {
+// persist stores 15min consumption in Wh
+func persist(ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
 		Meter:     1,
 		Timestamp: ts.Truncate(15 * time.Minute),
