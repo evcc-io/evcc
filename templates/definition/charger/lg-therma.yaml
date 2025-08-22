@@ -17,7 +17,9 @@ requirements:
       Uses SG Ready energy states for intelligent control.
       Set the indoor unit in the advanced setting > Connectivty > Energystates > Singal Type > to "Modbus".
       Since the internal power measurement shows to high values, an external power measurement is suggested.
-      Factory setting Modbus (HEX) = 21 (33)
+      Factory setting Modbus (HEX) = 21 (33).
+      Modbus registers can be found within the installation manual (address without the leading number and -1).
+      Information on the energy state can be found within the installation manual. 
 params:
   - name: modbus
     choice: ["rs485"]
