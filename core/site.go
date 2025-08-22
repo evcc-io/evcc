@@ -791,12 +791,6 @@ func (site *Site) updateMeters() error {
 	return nil
 }
 
-func (site *Site) updateHomeConsumption(power float64) {
-	if err := site.homeEnergy.AddPower(power); err != nil {
-		site.log.ERROR.Printf("persist household consumption: %v", err)
-	}
-}
-
 // sitePower returns
 //   - the net power exported by the site minus a residual margin
 //     (negative values mean grid: export, battery: charging
