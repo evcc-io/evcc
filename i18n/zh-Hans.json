@@ -391,7 +391,7 @@
       "addToken": "输入令牌",
       "changeToken": "更改令牌",
       "description": "赞助模式帮助我们维护项目并可持续地构建新的、令人兴奋的功能。作为赞助者，您可以访问所有充电桩的实现。",
-      "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。",
+      "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。 {trialToken}.",
       "error": "赞助令牌无效。",
       "labelToken": "赞助令牌",
       "title": "赞助",
