@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
-      "title": "Load Management"
+      "title": "Load Management",
+      "usableMeters": "Usable meter references"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
