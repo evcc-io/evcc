@@ -429,7 +429,7 @@
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs gaunate prieigą prie visų įkroviklių implementacijų.",
-      "descriptionToken": "Rėmėjai žetoną (token) gauna iš {url}. Taip pat siūlome bandomąjį žetoną testavimui. ",
+      "descriptionToken": "Rėmėjai žetoną (token) gauna iš {url}. Taip pat siūlome bandomąjį žetoną testavimui.",
       "enterYourToken": "Įrašykite savo žetoną",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
