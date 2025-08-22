@@ -349,7 +349,7 @@
       "addToken": "Vnesite žeton",
       "changeToken": "Spremeni žeton",
       "description": "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov.",
-      "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje.",
+      "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje {trialToken}.",
       "error": "Sponzorski žeton ni veljaven.",
       "labelToken": "Sponzorski žeton",
       "title": "Sponzorstvo",
