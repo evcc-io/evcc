@@ -100,11 +100,10 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
-	fcstEnergy  *meterEnergy
-	pvEnergy    map[string]*meterEnergy
+	fcstEnergy  *metrics.Accumulator
+	pvEnergy    map[string]*metrics.Accumulator
 
-	householdEnergy    *meterEnergy
-	householdSlotStart time.Time
+	homeEnergy *metrics.Collector
 
 	// cached state
 	gridPower                float64         // Grid power
@@ -212,7 +211,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// accumulator
-		site.pvEnergy[ref] = &meterEnergy{clock: clock.New()}
+		site.pvEnergy[ref] = metrics.NewAccumulator(clock.New())
 	}
 
 	// multiple batteries
@@ -256,12 +255,14 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
+	clock := clock.New()
+
 	site := &Site{
-		log:             util.NewLogger("site"),
-		Voltage:         230, // V
-		pvEnergy:        make(map[string]*meterEnergy),
-		fcstEnergy:      &meterEnergy{clock: clock.New()},
-		householdEnergy: &meterEnergy{clock: clock.New()},
+		log:        util.NewLogger("site"),
+		Voltage:    230, // V
+		pvEnergy:   make(map[string]*metrics.Accumulator),
+		fcstEnergy: metrics.NewAccumulator(clock),
+		homeEnergy: metrics.NewCollector(clock),
 	}
 
 	return site
@@ -328,7 +329,7 @@ func (site *Site) restoreSettings() error {
 	}
 
 	// restore accumulated energy
-	pvEnergy := make(map[string]meterEnergy)
+	pvEnergy := make(map[string]metrics.Accumulator)
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
@@ -790,30 +791,9 @@ func (site *Site) updateMeters() error {
 	return nil
 }
 
-func (site *Site) updateHomeConsumption(homePower float64) {
-	site.householdEnergy.AddPower(homePower)
-
-	now := site.householdEnergy.clock.Now()
-	if site.householdSlotStart.IsZero() {
-		site.householdSlotStart = now
-		return
-	}
-
-	slotDuration := 15 * time.Minute
-	slotStart := now.Truncate(slotDuration)
-
-	if slotStart.After(site.householdSlotStart) {
-		// next slot has started
-		if slotStart.Sub(site.householdSlotStart) >= slotDuration {
-			// more or less full slot
-			site.log.DEBUG.Printf("15min household consumption: %.0fWh", site.householdEnergy.Accumulated)
-			if err := metrics.Persist(site.householdSlotStart, site.householdEnergy.Accumulated); err != nil {
-				site.log.ERROR.Printf("persist household consumption: %v", err)
-			}
-		}
-
-		site.householdSlotStart = slotStart
-		site.householdEnergy.Accumulated = 0
+func (site *Site) updateHomeConsumption(power float64) {
+	if err := site.homeEnergy.AddPower(power); err != nil {
+		site.log.ERROR.Printf("persist household consumption: %v", err)
 	}
 }
 
@@ -963,7 +943,9 @@ func (site *Site) update(lp updater) {
 		site.publish(keys.HomePower, homePower)
 
 		if homePower > 0 {
-			site.updateHomeConsumption(homePower)
+			if err := site.homeEnergy.AddPower(homePower); err != nil {
+				site.log.ERROR.Printf("persist home consumption: %v", err)
+			}
 		}
 
 		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints

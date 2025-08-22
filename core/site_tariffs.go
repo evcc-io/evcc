@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
@@ -149,15 +150,16 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	}
 
 	// accumulate forecasted energy since last update
-	energy := solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3
+	fcstUpdated := site.fcstEnergy.Updated()
+	energy := solarEnergy(solar, fcstUpdated, time.Now()) / 1e3
 	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
-		energy, site.fcstEnergy.updated.Truncate(time.Second), time.Now().Truncate(time.Second),
+		energy, fcstUpdated.Truncate(time.Second), time.Now().Truncate(time.Second),
 	)
 
 	site.fcstEnergy.AddEnergy(energy)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
 
-	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
+	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *metrics.Accumulator) float64 {
 		return v.AccumulatedEnergy()
 	})
 	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
