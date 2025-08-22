@@ -87,7 +87,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	minLen := lo.Min([]int{len(grid), len(feedIn), len(solar)})
 	if minLen < 8 {
-		return fmt.Errorf("not enough slots for optimization: %d", minLen)
+		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
 	}
 
 	dt := timeSteps(minLen)
@@ -365,6 +365,10 @@ func ratesToEnergy(rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
 	res := make(api.Rates, 0, len(rr))
 
 	for _, r := range rr {
+		if !r.End.After(time.Now()) {
+			continue
+		}
+
 		from := r.Start
 
 		if len(res) == 0 {
