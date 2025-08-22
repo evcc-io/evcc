@@ -429,7 +429,7 @@
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
-      "descriptionToken": "Du kriss den Token vun {url}. Mir bidden och ee Test-Token un fir ze testen.",
+      "descriptionToken": "Du kriss den Token vun {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
       "error": "De Sponsortoken ass ongülteg.",
       "labelToken": "Sponsor-Token",
       "title": "Sponsoring",

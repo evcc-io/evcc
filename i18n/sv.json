@@ -203,7 +203,7 @@
         "charging": "Lägg till laddare",
         "heating": "Lägg till värmare"
       },
-      "addMeter": "Lägg till dedikerad laddmätare",
+      "addMeter": "Lägg till dedikerad energimätare",
       "cancel": "Avbryt",
       "chargerError": {
         "charging": "Konfigurering av laddare krävs.",
@@ -220,7 +220,7 @@
       "chargerPowerCustom": "annan",
       "chargerPowerCustomHelp": "Ange strömintervall.",
       "chargerTypeLabel": "Typ av laddare",
-      "chargingTitle": "Laddar",
+      "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
@@ -228,7 +228,7 @@
         "charging": "Laddningsläge vid anslutning till fordon.",
         "heating": "Ställs in vid systemstart."
       },
-      "defaultModeHelpKeep": "Använder senast valda laddningsläge.",
+      "defaultModeHelpKeep": "Använder senast valda läge.",
       "defaultModeLabel": "Standardinställning",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
@@ -249,7 +249,7 @@
       "phases3p": "3-fas",
       "phasesAutomatic": "Automatisk fasväljare",
       "phasesAutomaticHelp": "Din laddare kan automatiskt byta mellan 1- och 3-fasladdning. På huvudskärmen kan du ändra fasinställningarna under laddning.",
-      "phasesHelp": "Antalet faser som är anslutna till laddaren.",
+      "phasesHelp": "Antalet faser som är anslutna.",
       "phasesLabel": "Faser",
       "pollIntervalDanger": "Att anropa fordonet ofta kan tömma batteriet. En del fordonstillverkare kan aktivt förhindra att fordonet laddas i så fall. Rekommenderas inte! Använd enbart om du är medveten om risken.",
       "pollIntervalHelp": "Tid mellan fordons API uppdateringar. Korta intervaller kan minska fordonets batterinivå.",
@@ -261,7 +261,7 @@
       "pollModeConnected": "ansluten",
       "pollModeConnectedHelp": "Uppdatera fordonsstatus med jämna mellanrum vid anslutning till laddaren.",
       "pollModeLabel": "Uppdatera tillvägagångsätt",
-      "priorityHelp": "Högre prioriterade laddare får snabbare tillgång till solenergiöverskott.",
+      "priorityHelp": "Högre prioritet får snabbare tillgång till solenergiöverskott.",
       "priorityLabel": "Prioritet",
       "save": "Spara",
       "showAllSettings": "Visa alla inställningar",
@@ -429,14 +429,18 @@
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Du får token från {url}. Vi erbjuder också en prov-token för testning.",
+      "descriptionToken": "Du får token från {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
+      "invalid": "ogiltig",
       "labelToken": "Sponsor-token",
       "title": "Sponsor",
       "tokenRequired": "Du måste ange en sponsortoken innan du kan lägga till detta fordon.",
       "tokenRequiredLearnMore": "Läs mer.",
       "tokenRequiredShort": "Ingen sponsor-token konfigurerad.",
-      "trialToken": "Testtoken"
+      "trialToken": "Testtoken",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Din sponsor-token"
     },
     "system": {
       "backupRestore": {

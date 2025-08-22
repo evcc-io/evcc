@@ -1,6 +1,6 @@
 <template>
 	<div class="container px-4 safe-area-inset">
-		<TopHeader title="Optimize" />
+		<TopHeader title="Optimize Debug" />
 		<div class="alert alert-light mb-5">
 			This page is for development purposes only. Gives insights into the upcoming
 			optimization algorithm.
@@ -81,19 +81,44 @@
 							:dimmed-battery-colors="dimmedBatteryColors"
 						/>
 
-						<details class="mb-4">
-							<summary class="btn btn-link text-decoration-none p-0 mb-3">
-								<h3 class="fw-normal text-muted text-decoration-underline">
-									Show Raw Data
-								</h3>
-							</summary>
-							<div>
-								<p>Request:</p>
-								<pre>{{ JSON.stringify(evopt.req, null, 2) }}</pre>
-								<p>Response:</p>
-								<pre>{{ JSON.stringify(evopt.res, null, 2) }}</pre>
+						<h3 class="fw-normal mb-4">Raw Data</h3>
+
+						<div class="mb-4">
+							<p class="mb-2">Curl Command:</p>
+							<div class="position-relative">
+								<div
+									class="p-3 rounded border overflow-auto"
+									style="background-color: var(--evcc-box)"
+								>
+									<code class="text-nowrap d-block">{{ evopt.curl }}</code>
+								</div>
+								<CopyButton :content="evopt.curl" />
 							</div>
-						</details>
+						</div>
+
+						<div class="mb-4">
+							<p class="mb-2">Request:</p>
+							<div class="position-relative">
+								<pre
+									class="p-3 rounded border overflow-auto"
+									style="background-color: var(--evcc-box)"
+									>{{ formattedRequest }}</pre
+								>
+								<CopyButton :content="formattedRequest" />
+							</div>
+						</div>
+
+						<div class="mb-4">
+							<p class="mb-2">Response:</p>
+							<div class="position-relative">
+								<pre
+									class="p-3 rounded border overflow-auto"
+									style="background-color: var(--evcc-box)"
+									>{{ formattedResponse }}</pre
+								>
+								<CopyButton :content="formattedResponse" />
+							</div>
+						</div>
 					</section>
 				</div>
 				<div v-else>
@@ -112,6 +137,8 @@ import SocChart from "../components/Optimize/SocChart.vue";
 import ChargeChart from "../components/Optimize/ChargeChart.vue";
 import PriceChart from "../components/Optimize/PriceChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
+import CopyButton from "../components/Optimize/CopyButton.vue";
+import { formatCompactJson } from "../components/Optimize/compactJson";
 import store from "../store";
 import formatter from "../mixins/formatter";
 import colors from "../colors";
@@ -126,10 +153,11 @@ export default defineComponent({
 		ChargeChart,
 		PriceChart,
 		TimeSeriesDataTable,
+		CopyButton,
 	},
 	mixins: [formatter],
 	head() {
-		return { title: this.$t("energy.title") };
+		return { title: "Optimize Debug" };
 	},
 	computed: {
 		evopt() {
@@ -161,6 +189,12 @@ export default defineComponent({
 		},
 		dimmedBatteryColors() {
 			return this.batteryColors.map((color) => this.dimColorBy25Percent(color));
+		},
+		formattedRequest() {
+			return this.evopt?.req ? formatCompactJson(this.evopt.req) : "";
+		},
+		formattedResponse() {
+			return this.evopt?.res ? formatCompactJson(this.evopt.res) : "";
 		},
 	},
 	methods: {

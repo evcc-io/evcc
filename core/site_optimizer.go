@@ -17,12 +17,12 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
+	"moul.io/http2curl"
 )
 
 var (
-	eta          = float32(0.9)       // efficiency of the battery charging/discharging
-	batteryPower = float32(6000)      // power of the battery in W
-	pa           = float32(0.3 / 1e3) // Value per Wh at end of time horizon
+	eta          = float32(0.9)  // efficiency of the battery charging/discharging
+	batteryPower = float32(6000) // power of the battery in W
 
 	updated time.Time
 )
@@ -48,9 +48,25 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
-	if err := site.optimizerUpdate(battery); err != nil {
-		site.log.ERROR.Println("optimizer:", err)
+	if time.Since(updated) < 5*time.Minute {
+		return
 	}
+
+	var err error
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic %v", r)
+		}
+
+		if err != nil {
+			site.log.ERROR.Println("optimizer:", err)
+		}
+	}()
+
+	err = site.optimizerUpdate(battery)
+
+	updated = time.Now()
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
@@ -59,27 +75,13 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return nil
 	}
 
-	if time.Since(updated) < time.Minute {
-		return nil
-	}
-
-	defer func() {
-		updated = time.Now()
-	}()
-
-	solarTariff := site.GetTariff(api.TariffUsageSolar)
-	solarRates, err := solarTariff.Rates()
-	if err != nil {
-		return err
-	}
-
-	solar := currentSlots(solarTariff)
-	grid := currentSlots(site.GetTariff(api.TariffUsageGrid))
-	feedIn := currentSlots(site.GetTariff(api.TariffUsageFeedIn))
+	solar := currentRates(site.GetTariff(api.TariffUsageSolar))
+	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
+	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn), len(solar)})
 	if minLen < 8 {
-		return fmt.Errorf("not enough slots for optimization: %d", minLen)
+		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
 	}
 
 	dt := timeSteps(minLen)
@@ -94,12 +96,15 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	gt := site.homeProfile(minLen)
 
-	solarEnergy, err := ratesToEnergy(solarRates, firstSlotDuration)
+	solarEnergy, err := ratesToEnergy(solar, firstSlotDuration)
 	if err != nil {
 		return err
 	}
 
 	req := evopt.OptimizationInput{
+		Strategy: &evopt.OptimizerStrategy{
+			ChargingStrategy: lo.ToPtr(evopt.ChargeBeforeExport),
+		},
 		EtaC: &eta,
 		EtaD: &eta,
 		TimeSeries: evopt.TimeSeries{
@@ -110,6 +115,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Ft: maxValues(solarEnergy, 1, minLen),
 		},
 	}
+
+	// end of horizon Wh value
+	pa := lo.Min(req.TimeSeries.PN)
 
 	details := responseDetails{
 		Timestamps: asTimestamps(dt),
@@ -202,12 +210,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
+	var curl *http2curl.CurlCommand
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
 		if sponsor.IsAuthorized() {
 			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
 		}
-		// command, _ := http2curl.GetCurlCommand(req)
-		// log.TRACE.Println("\n" + command.String())
+		curl, _ = http2curl.GetCurlCommand(req)
 		return nil
 	})
 	if err != nil {
@@ -229,16 +237,19 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	site.publish("evopt", struct {
 		Req     evopt.OptimizationInput  `json:"req"`
 		Res     evopt.OptimizationResult `json:"res"`
+		Curl    string                   `json:"curl"`
 		Details responseDetails          `json:"details"`
 	}{
 		Req:     req,
 		Res:     *resp.JSON200,
+		Curl:    curl.String(),
 		Details: details,
 	})
 
 	return nil
 }
 
+// loadpointProfile returns the loadpoint's charging profile in Wh
 // TODO consider charging efficiency
 func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen int) []float64 {
 	mode := lp.GetMode()
@@ -275,84 +286,73 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 	return res
 }
 
+// homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) []float64 {
-	now := time.Now().Truncate(time.Hour)
-
-	profile, err := metrics.Profile(now.AddDate(0, 0, -30))
+	// kWh over last 30 days
+	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
-		site.log.ERROR.Printf("household metrics profile: %v", err)
+		site.log.WARN.Println("optimizer:", err)
 		return lo.RepeatBy(minLen, func(_ int) float64 {
 			return 0
 		})
 	}
 
-	res := slotsToHours(now, profile)
-	for len(res) < minLen {
-		res = append(res, profile[:]...)
+	// max 4 days
+	hours := make([]float64, 0, minLen+1)
+
+	combined := combineSlots(profile[:])
+	for len(hours) <= minLen+24 { // allow for prorating first day
+		hours = append(hours, combined...)
+	}
+
+	res := prorateFirstHour(time.Now(), hours)
+	if len(res) < minLen {
+		panic("minimum home profile length failed")
 	}
 	if len(res) > minLen {
 		res = res[:minLen]
 	}
 
-	return res
+	// convert to Wh
+	return lo.Map(res, func(v float64, i int) float64 {
+		return v * 1e3
+	})
 }
 
-// slotsToHours converts a daily consumption profile consisting of 96 15min slots
-// to an hourly profile by totaling the values per hour and returning the first minLen values.
-// the first value is fractional part of the the current hour, prorated.
-func slotsToHours(now time.Time, profile *[96]float64) []float64 {
+// combineSlots combines 15-minute slots into hourly values
+func combineSlots(profile []float64) []float64 {
 	if profile == nil {
 		return []float64{}
 	}
 
-	// Calculate current 15-minute slot within the day (0-95)
-	currentMinute := now.Hour()*60 + now.Minute()
-	currentSlot := currentMinute / 15
+	result := make([]float64, 0, 24)
 
-	// Calculate remaining minutes in current hour for prorating
-	minutesIntoHour := now.Minute()
-	remainingMinutesInHour := 60 - minutesIntoHour
-
-	var result []float64
-
-	// Handle the partial current hour first
-	if remainingMinutesInHour > 0 && currentSlot < 96 {
-		var partialHourValue float64
-		slotsInCurrentHour := remainingMinutesInHour / 15
-		if remainingMinutesInHour%15 != 0 {
-			slotsInCurrentHour++
+	// Process complete hours starting from the start slot
+	for hour := range 24 {
+		var sum float64
+		for i := range 4 {
+			sum += profile[4*hour+i]
 		}
 
-		// Sum the remaining slots in the current hour
-		for i := 0; i < slotsInCurrentHour && currentSlot+i < 96; i++ {
-			if currentSlot+i >= 0 {
-				partialHourValue += profile[currentSlot+i]
-			}
-		}
-
-		// Prorate based on the fraction of the hour remaining
-		fractionOfHour := float64(remainingMinutesInHour) / 60.0
-		partialHourValue *= fractionOfHour
-
-		result = append(result, float64(partialHourValue))
-	}
-
-	// Process complete hours starting from the next hour
-	nextHourSlot := (currentSlot/4 + 1) * 4
-
-	// Don't wrap around at end of day - only process remaining hours
-	for hourSlot := nextHourSlot; len(result) < 24 && hourSlot < 96; hourSlot += 4 {
-		var hourValue float64
-
-		// Sum 4 slots (4 × 15min = 60min = 1 hour)
-		for i := 0; i < 4 && hourSlot+i < 96; i++ {
-			hourValue += profile[hourSlot+i]
-		}
-
-		result = append(result, float64(hourValue))
+		result = append(result, sum)
 	}
 
 	return result
+}
+
+// prorateFirstHour strips away any slots before "now" and prorates the first remaining hour
+// based on remaining time in current hour. The profile contains hourly slots (0-23) that repeat for multiple days.
+func prorateFirstHour(now time.Time, profile []float64) []float64 {
+	// Take only slots from current hour onwards
+	res := profile[now.Hour():]
+
+	// Prorate the first hour based on remaining time in current hour
+	if minutesIntoHour := now.Minute(); minutesIntoHour > 0 {
+		fractionOfHour := float64(60-minutesIntoHour) / 60.0
+		res[0] *= fractionOfHour
+	}
+
+	return res
 }
 
 func ratesToEnergy(rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
@@ -394,7 +394,7 @@ func endOfHour(ts time.Time) time.Time {
 	return ts.Truncate(time.Hour).Add(time.Hour)
 }
 
-func currentSlots(tariff api.Tariff) []api.Rate {
+func currentRates(tariff api.Tariff) api.Rates {
 	if tariff == nil {
 		return nil
 	}
@@ -404,9 +404,10 @@ func currentSlots(tariff api.Tariff) []api.Rate {
 		return nil
 	}
 
-	now := now.BeginningOfHour()
+	// filter past slots
+	now := time.Now()
 	return lo.Filter(rates, func(slot api.Rate, _ int) bool {
-		return !slot.End.Before(now) // filter past slots
+		return slot.End.After(now)
 	})
 }
 

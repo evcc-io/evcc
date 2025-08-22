@@ -89,14 +89,17 @@ export default defineComponent({
 		chartData(): ChartData {
 			const datasets: any[] = [];
 
-			// 1. Solar Forecast (first, with increased tension)
-			datasets.push(...this.getSolarDatasets());
+			// 1. Grid power data (import/export)
+			datasets.push(...this.getGridPowerDatasets());
 
-			// 2. Battery power data
-			datasets.push(...this.getBatteryPowerDatasets());
+			// 2. Solar Forecast
+			datasets.push(...this.getSolarDatasets());
 
 			// 3. Household Demand (power)
 			datasets.push(...this.getHouseholdDatasets());
+
+			// 4. Battery power data
+			datasets.push(...this.getBatteryPowerDatasets());
 
 			return {
 				labels: this.timeLabels,
@@ -133,6 +136,16 @@ export default defineComponent({
 							label: (context) => {
 								const label = context.dataset.label || "";
 								const value = context.parsed.y;
+								// Special handling for Grid Power
+								if (label === "Grid Power") {
+									if (value > 0) {
+										return `Grid Import: ${this.formatValue(Math.abs(value))} kW`;
+									} else if (value < 0) {
+										return `Grid Export: ${this.formatValue(Math.abs(value))} kW`;
+									} else {
+										return `Grid: 0 kW`;
+									}
+								}
 								// Power axis (kW)
 								return `${label}: ${this.formatValue(value)} kW`;
 							},
@@ -162,20 +175,8 @@ export default defineComponent({
 						stacked: true,
 						grid: {
 							drawOnChartArea: true,
-							color: (context: any) => {
-								// Make zero axis black to highlight
-								if (context.tick?.value === 0) {
-									return "#000000";
-								}
-								return colors.border || "#e0e0e0";
-							},
-							lineWidth: (context: any) => {
-								// Make zero axis slightly thicker
-								if (context.tick?.value === 0) {
-									return 2;
-								}
-								return 1;
-							},
+							color: colors.border || "",
+							lineWidth: 1,
 						},
 						// Keep scales purely based on values, no fixed boundaries
 					},
@@ -207,7 +208,7 @@ export default defineComponent({
 					borderColor: colors.self,
 					backgroundColor: colors.self,
 					fill: false,
-					tension: 0.25,
+					tension: 0.2,
 					borderJoinStyle: "round",
 					borderCapStyle: "round",
 					pointRadius: 0,
@@ -215,6 +216,7 @@ export default defineComponent({
 					borderWidth: 3,
 					yAxisID: "y",
 					type: "line" as const,
+					stack: "solar",
 				},
 			];
 		},
@@ -245,7 +247,7 @@ export default defineComponent({
 						borderWidth: 0,
 						yAxisID: "y",
 						type: "bar" as const,
-						stack: "power",
+						stack: "charge",
 					});
 				});
 			}
@@ -253,7 +255,6 @@ export default defineComponent({
 			return datasets;
 		},
 		getHouseholdDatasets() {
-			// Household Demand (as power, not energy like in SocChart)
 			const householdPower = this.evopt.req.time_series.gt.map(this.convertWToKW);
 
 			// Use the next color in the palette after all battery colors
@@ -262,15 +263,50 @@ export default defineComponent({
 
 			return [
 				{
-					label: "Household Demand",
+					label: "Household",
 					data: householdPower,
 					backgroundColor: householdColor,
 					borderWidth: 0,
 					yAxisID: "y",
 					type: "bar" as const,
-					stack: "power",
+					stack: "charge",
 				},
 			];
+		},
+
+		getGridPowerDatasets() {
+			const datasets: any[] = [];
+
+			// Get grid import and export data
+			const gridImport = this.evopt.res.grid_import || [];
+			const gridExport = this.evopt.res.grid_export || [];
+
+			// Combine grid import and export into a single line
+			// Grid import is positive, grid export is negative (one is always zero)
+			const gridPower = gridImport.map((importValue, index) => {
+				const exportValue = gridExport[index] || 0;
+				const importKW = this.convertWToKW(importValue);
+				const exportKW = this.convertWToKW(exportValue);
+				// Return import as positive, export as negative
+				return importKW > 0 ? importKW : -exportKW;
+			});
+
+			datasets.push({
+				label: "Grid Power",
+				data: gridPower,
+				borderColor: "#666666", // Dark gray
+				backgroundColor: "#666666", // Dark gray
+				fill: false,
+				tension: 0.2,
+				borderWidth: 2, // Same thickness as price chart lines
+				pointRadius: 0,
+				pointHoverRadius: 6,
+				yAxisID: "y",
+				type: "line" as const,
+				stack: "grid",
+			});
+
+			return datasets;
 		},
 
 		convertWToKW: (watts: number): number => {

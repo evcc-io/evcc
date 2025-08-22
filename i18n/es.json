@@ -235,7 +235,7 @@
       "addToken": "Ingresa el token del patrocinador",
       "changeToken": "Cambiar el token de patrocinador",
       "description": "El modelo de patrocinio nos ayuda a mantener el proyecto y a desarrollar de forma sostenible nuevas y emocionantes funciones. Como patrocinador, obtienes acceso a todas las implementaciones de cargadores",
-      "descriptionToken": "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar",
+      "descriptionToken": "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar {trialToken}.",
       "error": "El token de patrocinador no es válido",
       "labelToken": "Token del patrocinador",
       "title": "Patrocinio"
