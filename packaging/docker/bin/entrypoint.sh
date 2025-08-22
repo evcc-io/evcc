@@ -7,7 +7,7 @@ HASSIO_OPTIONSFILE=/data/options.json
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
 	CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
 	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
-    EVOPT_URI=$(grep -o '"evopt_uri": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
+	EVOPT_URI=$(grep -o '"evopt_uri": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
 
 	# Config File Migration
 	# If there is no config file found in '/config' we copy it from '/homeassistant' and rename the old config file to .migrated
@@ -37,11 +37,21 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 		echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
 	else
 		if [ "${SQLITE_FILE}" ]; then
-			echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
-			exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
+			if [ -n "${EVOPT_URI}" ]; then
+				echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} EVOPT_URI=${EVOPT_URI} evcc --config ${CONFIG}'"
+				exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" EVOPT_URI="${EVOPT_URI}" evcc --config "${CONFIG}"
+			else
+				echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
+				exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
+			fi
 		else
-			echo "starting evcc: 'evcc --config ${CONFIG}'"
-			exec evcc --config "${CONFIG}"
+			if [ -n "${EVOPT_URI}" ]; then
+				echo "starting evcc: 'EVOPT_URI=${EVOPT_URI} evcc --config ${CONFIG}'"
+				exec env EVOPT_URI="${EVOPT_URI}" evcc --config "${CONFIG}"
+			else
+				echo "starting evcc: 'evcc --config ${CONFIG}'"
+				exec evcc --config "${CONFIG}"
+			fi
 		fi
 	fi
 else
