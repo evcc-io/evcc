@@ -167,7 +167,10 @@ func (wb *PhoenixCharx) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *PhoenixCharx) MaxCurrent(current int64) error {
-	if current < 6 {
+	// Allow 0A to stop charging - according to CHARX Modbus documentation,
+	// "The charging release is withdrawn if the value is exceeded or fallen below" the 6-80A range.
+	// This is required for "release by OCPP" mode where register 300 (Enable) is read-only.
+	if current != 0 && current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
