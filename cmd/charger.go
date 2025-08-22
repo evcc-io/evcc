@@ -131,7 +131,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		for _, dev := range chargers {
 			v := dev.Instance()
 
-			d.DumpWithHeader(dev.Config().Name, v)
+			d.DumpWithHeader(deviceHeader(dev), v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}
