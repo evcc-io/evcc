@@ -1,0 +1,63 @@
+template: lg-therma
+products:
+  - brand: LG
+    description:
+      generic: Therma V R290 Monobloc (SG Ready)
+group: heating
+requirements:
+  description:
+    de: |
+      Modbus TCP Verbindung zur LG Therma V Wärmepumpe.
+      Funktioniert über SG Ready Energiezustände für intelligente Steuerung.
+    en: |
+      Modbus TCP connection to LG Therma V heat pump.
+      Uses SG Ready energy states for intelligent control.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 33
+  - name: tempsource
+    choice: ["warmwater", "flow_temperature"]
+render: |
+  type: sgready
+  setmode:
+    source: map
+    values:
+      1: 7 # Energiesparen
+      2: 2 # Normalbetrieb
+      3: 6 # Boost
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9
+        type: writeholdings
+        encoding: uint16
+  getmode:
+    source: map
+    values:
+      7: 1 # Energiesparen
+      2: 2 # Normalbetrieb
+      6: 3 # Boost
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9
+        type: holding
+        encoding: uint16        
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    scale: 0.1
+    register:
+      address:  {{ if eq .tempsource "warmwater" -}} 5 {{ else }} 2 {{- end }} # 5 Trinkwasser, 2 Wassereinlasstemperatur
+      type: input
+      decode: uint16
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35
+      type: input
+      decode: uint16
