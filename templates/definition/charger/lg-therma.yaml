@@ -7,14 +7,20 @@ group: heating
 requirements:
   description:
     de: |
-      Modbus TCP Verbindung zur LG Therma V Wärmepumpe.
+      Modbus Verbindung zur LG Therma V Wärmepumpe.
       Funktioniert über SG Ready Energiezustände für intelligente Steuerung.
+      Inneneinheit/Fernbedienung in den erweiterten Einstellungen > Konnektivität > Energiezustand > Signaltyp > auf "Modbus" einstellen.
+      Da die interne Energiemessung zu hohe Werte anzeigt ist eine externe Energiemessung empfohlen.
+      Werkseinstellung Modbus Addresse(HEX) = 21 (33)
     en: |
-      Modbus TCP connection to LG Therma V heat pump.
+      Modbus connection to LG Therma V heat pump.
       Uses SG Ready energy states for intelligent control.
+      Set the indoor unit in the advanced setting > Connectivty > Energystates > Singal Type > to "Modbus".
+      Since the internal power measurement shows to high values, an external power measurement is suggested.
+      Factory setting Modbus (HEX) = 21 (33)
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485"]
     id: 33
   - name: tempsource
     choice: ["warmwater", "flow_temperature"]
