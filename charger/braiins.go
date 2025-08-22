@@ -5,7 +5,7 @@
 // - For dynamic power control: Enable "Power Target" mode in Braiins OS tuner settings
 // - Without Power Target: Only on/off control available
 //
-// Version: 1.4.1 (Fixed: API constants, embed import, consolidated auth, proper resource management)
+// Version: 1.4.2 (Fixed: negative current validation, resource leak prevention, bot suggestions)
 // Tested with real API v1.0.0
 // https://developer.braiins-os.com/latest/openapi.html
 
@@ -30,7 +30,7 @@ const (
 	MinerStatusPaused = 3 // Mining paused
 )
 
-// API endpoints - Fixed: removed non-breaking spaces
+// API endpoints
 const (
 	apiPathLogin        = "/api/v1/auth/login"
 	apiPathMinerDetails = "/api/v1/miner/details"
@@ -287,8 +287,19 @@ func (c *BraiinsOS) authRequest(method, path string, body any) (*http.Response, 
 		c.tokenExpiry = time.Time{}
 		c.mu.Unlock()
 
-		// Retry with fresh token
-		return c.doAuthenticatedRequest(method, path, body)
+		// Retry with fresh token - handle potential second 401 to prevent resource leak
+		retryResp, retryErr := c.doAuthenticatedRequest(method, path, body)
+		if retryErr != nil {
+			return nil, retryErr
+		}
+
+		// Ensure response body is closed if second attempt also fails auth
+		if retryResp.StatusCode == http.StatusUnauthorized {
+			retryResp.Body.Close()
+			return nil, fmt.Errorf("authentication failed after retry, token refresh unsuccessful")
+		}
+
+		return retryResp, nil
 	}
 
 	return resp, nil
@@ -485,6 +496,12 @@ func (c *BraiinsOS) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface with configurable voltage and power control
 func (c *BraiinsOS) MaxCurrent(current int64) error {
+	// Validate input - reject negative current values
+	if current < 0 {
+		c.log.WARN.Printf("Received invalid negative current value: %dA - rejecting request", current)
+		return fmt.Errorf("invalid negative current value: %d", current)
+	}
+
 	if current == 0 {
 		return c.Enable(false) // Pause mining
 	}
