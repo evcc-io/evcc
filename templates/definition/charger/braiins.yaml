@@ -26,20 +26,40 @@ params:
       de: Netzspannung in Volt
       en: Grid voltage in volts
     help:
-      de: Standard-Spannungen - Europa/Australien/Asien=230V, USA/Kanada=120V, Japan=100V
+      de: Europa/Australien/Asien=230V, USA/Kanada=120V, Japan=100V
       en: Common voltages - Europe/Australia/Asia=230V, USA/Canada=120V, Japan=100V
     type: float
     default: 230
     advanced: true
   - name: maxPower
     description:
-      de: Maximale Leistung für evcc-Steuerung in Watt
+      de: Maximale Leistung des Miners in Watt
       en: Maximum power for evcc control in watts
     help:
-      de: 0 = automatisch, nutzt Miner-Standard
-      en: 0 = automatic, uses miner default
+      de: "0 = automatisch"
+      en: "0 = automatic, uses miner default"
     type: int
     default: 0
+    advanced: true
+  - name: powerTargetInterval
+    description:
+      de: Intervall zwischen Leistungsänderungen
+      en: Minimum interval between power target updates
+    help:
+      de: "Format: 30s, 1m, 2m30s"
+      en: "Reduces API calls and stabilizes mining. Format - 30s, 1m, 2m30s"
+    type: duration
+    default: 30s
+    advanced: true
+  - name: powerTargetStep
+    description:
+      de: Leistungsschritte in Watt
+      en: Power target stepping in watts
+    help:
+      de: "Schrittweite für Rundung"
+      en: "Rounds to multiples of this value. Larger steps = less fluctuation"
+    type: int
+    default: 100
     advanced: true
 render: |
   type: braiins
@@ -51,4 +71,10 @@ render: |
   {{- end }}
   {{- if .maxPower }}
   maxPower: {{ .maxPower }}
+  {{- end }}
+  {{- if ne .powerTargetInterval "30s" }}
+  powerTargetInterval: {{ .powerTargetInterval }}
+  {{- end }}
+  {{- if ne (atoi .powerTargetStep) 100 }}
+  powerTargetStep: {{ .powerTargetStep }}
   {{- end }}
