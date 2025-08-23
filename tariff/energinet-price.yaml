@@ -1,0 +1,31 @@
+template: energinet-price
+products:
+  - brand: EnergiDataService.dk
+requirements:
+  description:
+    en: Spot price forecast from EnergiDataService.dk Elspotprices API
+    de: Spotpreis-Prognose von EnergiDataService.dk Elspotprices API
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: pricearea
+    description:
+      en: Price Area (e.g. DK1 or DK2)
+      de: Preiszone (z.B. DK1 oder DK2)
+    example: DK1
+    required: true
+render: |
+  type: custom
+  forecast:
+    source: http
+    uri: https://api.energidataservice.dk/dataset/Elspotprices?offset=0&start=StartOfDay&end=now%2BP2D&filter={"PriceArea":["{{ .pricearea }}"]}
+    jq: |
+      .records
+      | sort_by(.HourUTC)
+      | map({
+            start: (.HourUTC + "Z"),
+            end: ((.HourUTC + "Z") | fromdateiso8601 + 3600 | strftime("%Y-%m-%dT%H:%M:%SZ")),
+            value: .SpotPriceDKK / 1000
+        })
+      | tostring
+  interval: 1h
