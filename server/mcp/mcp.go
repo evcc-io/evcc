@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	openapi2mcp "github.com/evcc-io/openapi-mcp"
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/modelcontextprotocol/go-sdk/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -53,17 +52,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	mcp.AddTool(srv, &mcp.Tool{
 		Name:        "docs",
 		Description: "Documentation",
-		InputSchema: emptySchema(),
 	}, docsTool)
-
-	srv.AddPrompt(&mcp.Prompt{
-		Name:        "create-charge-plan",
-		Description: "Create an optimized charge plan for a loadpoint or vehicle",
-		Arguments: []*mcp.PromptArgument{
-			{Name: "loadpoint", Description: "The loadpoint to create the charge plan for"},
-			{Name: "vehicle", Description: "The vehicle to create the charge plan for"},
-		},
-	}, promptHandler())
 
 	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 		return srv
@@ -78,12 +67,5 @@ func requestHandler(handler http.Handler) func(req *http.Request) (*http.Respons
 		handler.ServeHTTP(w, req)
 		resp := w.Result()
 		return resp, nil
-	}
-}
-
-func emptySchema() *jsonschema.Schema {
-	return &jsonschema.Schema{
-		Type:       "object",
-		Properties: map[string]*jsonschema.Schema{},
 	}
 }
