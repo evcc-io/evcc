@@ -7,9 +7,46 @@ capabilities: ["1p3p", "rfid", "mA"]
 requirements:
   description:
     de: |
-      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft
+      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft.
+
+      Installation ohne Display:
+      - RaspberryPi Image installieren und konfigurieren.
+      - Folgendes am Ende von `/boot/firmware/config.txt` hinzufügen:
+        ```
+        [all]
+        gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+        gpio=6,8,9,10,12,13,16,21=ip,pu
+        ```
+      - evcc nach Anleitung installieren und konfigurieren.
+
+      Zusätzlich für die Anzeige von EVCC im Display:
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox`
+      - Datei `.config/labwc/autostart` mit folgendem Inhalt anlegen:
+        ```bash
+        /usr/bin/firefox --kiosk http://localhost:7070/ &
+        /usr/bin/swayidle -w timeout 600 'wlopm --off \*' resume 'wlopm --on \*' &
+        ```
+      - Als root: Auto login aktivieren: `loginctl enable-linger pi`
     en: |
       Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware
+      Installation without display:
+      - Install and configure RaspberryPi Image.
+      - Add the following at then end of `/boot/firmware/config.txt`:
+        ```
+        [all]
+        gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+        gpio=6,8,9,10,12,13,16,21=ip,pu
+        ```
+      - Install and configure evcc according to the manual.
+
+      Additional steps for showing evcc on the display:
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox`
+      - Create the file `.config/labwc/autostart` with the following contents:
+        ```bash
+        /usr/bin/firefox --kiosk http://localhost:7070/ &
+        /usr/bin/swayidle -w timeout 600 'wlopm --off \*' resume 'wlopm --on \*' &
+        ```
+      - As root: Enable auto login: `loginctl enable-linger pi`
 params:
   - name: milliamps
     type: bool
