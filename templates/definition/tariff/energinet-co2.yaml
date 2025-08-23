@@ -33,6 +33,6 @@ render: |
       | map({
           start: .[0].start,
           end: .[0].end,
-          value: (map(.value) | add / length | floor)
+          value: (map(.value) | add / length)
         })
       | tostring
