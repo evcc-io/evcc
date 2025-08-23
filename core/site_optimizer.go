@@ -75,6 +75,20 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return nil
 	}
 
+	for _, t := range []struct {
+		usage api.TariffUsage
+		name  string
+	}{
+		{api.TariffUsageSolar, "solar"},
+		{api.TariffUsageGrid, "grid"},
+		{api.TariffUsageFeedIn, "feedin"},
+	} {
+		if site.GetTariff(t.usage) == nil {
+			site.log.WARN.Printf("optimizer: Configuration missing: No '%s' tariff configured - Optimizer will not be available", t.name)
+			return nil
+		}
+	}
+
 	solar := currentRates(site.GetTariff(api.TariffUsageSolar))
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
