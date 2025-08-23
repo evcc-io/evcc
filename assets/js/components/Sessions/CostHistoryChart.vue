@@ -327,7 +327,7 @@ export default defineComponent({
 						ticks: {
 							callback: (value: number) => {
 								if (this.costType === TYPES.PRICE) {
-									const showDecimals = this.suggestedMaxCost < 5;
+									const showDecimals = this.suggestedMaxCost < 4;
 									return this.fmtMoney(value, this.currency, showDecimals, true);
 								} else {
 									return this.fmtNumber(value / 1e3, 0);
