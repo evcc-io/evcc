@@ -57,6 +57,7 @@ require (
 	github.com/grid-x/modbus v0.0.0-20250804090520-c9ca708272cb
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hasura/go-graphql-client v0.14.4
+	github.com/holoplot/go-evdev v0.0.0-20240306072622-217e18f17db1
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
@@ -94,6 +95,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.20.1
+	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.0
 	github.com/traefik/yaegi v0.16.1
@@ -173,7 +175,6 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
-	github.com/holoplot/go-evdev v0.0.0-20240306072622-217e18f17db1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
@@ -224,7 +225,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
-	github.com/stianeikeland/go-rpio/v4 v4.6.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
