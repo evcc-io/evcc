@@ -582,7 +582,7 @@ test.describe("repeating", async () => {
       .selectOption("Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    let modal = await page.getByTestId("charging-plan-modal");
+    const modal = await page.getByTestId("charging-plan-modal").first();
 
     await modal.getByRole("button", { name: "Add repeating plan" }).click();
     const plan = modal.getByTestId("plan-entry").nth(1);
@@ -599,7 +599,10 @@ test.describe("repeating", async () => {
     await plan.getByTestId("repeating-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
-    await page.waitForLoadState("networkidle");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expect(
+      lp1.getByTestId("charging-plan").getByRole("button", { name: "tomorrow 09:20" })
+    ).toBeVisible();
 
     await restart(CONFIG);
     await page.goto("/");
@@ -611,7 +614,6 @@ test.describe("repeating", async () => {
       .selectOption("Vehicle with SoC with Capacity");
 
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "tomorrow 09:20" }).click();
-    modal = await page.getByTestId("charging-plan-modal");
     await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
