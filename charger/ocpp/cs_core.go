@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/security"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -104,4 +105,83 @@ func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest)
 	}
 
 	return res, nil
+}
+
+func (cs *CS) OnSecurityEventNotification(id string, request *security.SecurityEventNotificationRequest) (*security.SecurityEventNotificationResponse, error) {
+	eventType := request.Type
+	timestamp := request.Timestamp
+	techInfo := request.TechInfo
+
+	// Map event types to severity levels based on common OCPP security practices
+	severity := getSecurityEventSeverity(eventType)
+
+	// Log the security event with appropriate level
+	switch severity {
+	case "CRITICAL":
+		cs.log.ERROR.Printf("charge point %s: CRITICAL security event %s at %s (tech: %s)",
+			id, eventType, timestamp, techInfo)
+	case "HIGH":
+		cs.log.WARN.Printf("charge point %s: HIGH security event %s at %s (tech: %s)",
+			id, eventType, timestamp, techInfo)
+	case "MEDIUM":
+		cs.log.WARN.Printf("charge point %s: MEDIUM security event %s at %s (tech: %s)",
+			id, eventType, timestamp, techInfo)
+	case "LOW":
+		cs.log.INFO.Printf("charge point %s: LOW security event %s at %s (tech: %s)",
+			id, eventType, timestamp, techInfo)
+	default:
+		cs.log.INFO.Printf("charge point %s: security event %s at %s (tech: %s)",
+			id, eventType, timestamp, techInfo)
+	}
+
+	// Acknowledge the security event
+	return &security.SecurityEventNotificationResponse{}, nil
+}
+
+// getSecurityEventSeverity maps security event types to severity levels
+func getSecurityEventSeverity(eventType string) string {
+	switch eventType {
+	// Critical events that require immediate attention
+	case "InvalidFirmwareSignature", "InvalidFirmwareSigningCertificate",
+		 "InvalidCentralSystemCertificate", "InvalidChargePointCertificate",
+		 "MemoryExhaustion":
+		return "CRITICAL"
+
+	// High severity events indicating potential security issues
+	case "FirmwareMismatch", "InvalidMessages", "SecurityLogWasCleared",
+		 "ReconfigurationOfSecurityParameters":
+		return "HIGH"
+
+	// Medium severity events for monitoring
+	case "StartupOfTheDevice", "ResetOrReboot":
+		return "MEDIUM"
+
+	// Low severity informational events
+	case "SettingSystemTime":
+		return "LOW"
+
+	// Default to critical for unknown event types
+	default:
+		return "CRITICAL"
+	}
+}
+
+// Security extension handlers for OCPP 1.6j
+
+func (cs *CS) OnSignCertificate(id string, request *security.SignCertificateRequest) (*security.SignCertificateResponse, error) {
+	cs.log.INFO.Printf("charge point %s: certificate signing request received", id)
+
+	// For now, reject certificate signing requests as evcc doesn't implement PKI
+	return &security.SignCertificateResponse{
+		Status: types.GenericStatusRejected,
+	}, nil
+}
+
+func (cs *CS) OnCertificateSigned(id string, request *security.CertificateSignedRequest) (*security.CertificateSignedResponse, error) {
+	cs.log.INFO.Printf("charge point %s: signed certificate received", id)
+
+	// Accept the certificate notification
+	return &security.CertificateSignedResponse{
+		Status: security.CertificateSignedStatusAccepted,
+	}, nil
 }
