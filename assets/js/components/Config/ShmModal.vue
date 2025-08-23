@@ -16,8 +16,8 @@
 					{{ $t("config.hems.shm.template") }}
 				</label>
 				<select
-					name="shmSystem"
 					id="shmSystemSelect"
+					name="shmSystem"
 					class="form-select w-100"
 					:value="values.type"
 					@input="(e) => (values.type = (e.target as HTMLInputElement).value)"
