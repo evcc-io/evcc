@@ -28,6 +28,8 @@ params:
     choice: ["rs485"]
     id: 33
   - name: tempsource
+    required: true
+    type: choice
     choice: ["warmwater", "flow_temperature"]
 render: |
   type: sgready
