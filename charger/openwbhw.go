@@ -148,6 +148,8 @@ func (wb *OpenWbHw) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // charging
 		return api.StatusC, nil
+	case 4: // charging with ventilation
+		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
