@@ -201,5 +201,6 @@ export default defineComponent({
 .app {
 	min-height: 100vh;
 	min-height: 100dvh;
+	overflow-x: hidden;
 }
 </style>
