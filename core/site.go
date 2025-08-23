@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
@@ -483,7 +484,6 @@ func (site *Site) publish(key string, val interface{}) {
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
-	var wg sync.WaitGroup
 	mm := make([]measurement, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
@@ -525,13 +525,14 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Power:  power,
 			Energy: energy,
 		}
-
-		wg.Done()
 	}
 
-	wg.Add(len(meters))
+	var wg sync.WaitGroup
+
 	for i, meter := range meters {
-		go fun(i, meter)
+		wg.Go(func() {
+			fun(i, meter)
+		})
 	}
 	wg.Wait()
 
@@ -611,9 +612,9 @@ func (site *Site) updatePvMeters() {
 }
 
 // updateBatteryMeters updates battery meters
-func (site *Site) updateBatteryMeters() {
+func (site *Site) updateBatteryMeters() []measurement {
 	if len(site.batteryMeters) == 0 {
-		return
+		return nil
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
@@ -681,6 +682,8 @@ func (site *Site) updateBatteryMeters() {
 	site.publish(keys.BatteryPower, site.batteryPower)
 	site.publish(keys.BatteryEnergy, totalEnergy)
 	site.publish(keys.Battery, mm)
+
+	return mm
 }
 
 // updateAuxMeters updates aux meters
@@ -767,26 +770,30 @@ func (site *Site) updateGridMeter() error {
 func (site *Site) updateMeters() error {
 	var eg errgroup.Group
 
+	var battery []measurement
+
 	eg.Go(func() error { site.updatePvMeters(); return nil })
-	eg.Go(func() error { site.updateBatteryMeters(); return nil })
+	eg.Go(func() error { battery = site.updateBatteryMeters(); return nil })
 	eg.Go(func() error { site.updateAuxMeters(); return nil })
 	eg.Go(func() error { site.updateExtMeters(); return nil })
 
 	eg.Go(site.updateGridMeter)
 
-	return eg.Wait()
-}
-
-func (site *Site) updateHouseholdConsumption(totalChargePower float64) {
-	householdPower := site.gridPower + site.pvPower + site.batteryPower - totalChargePower
-	if householdPower <= 0 {
-		return
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
-	site.householdEnergy.AddPower(householdPower)
+	if sponsor.IsAuthorized() {
+		go site.optimizerUpdateAsync(battery)
+	}
+
+	return nil
+}
+
+func (site *Site) updateHomeConsumption(homePower float64) {
+	site.householdEnergy.AddPower(homePower)
 
 	now := site.householdEnergy.clock.Now()
-
 	if site.householdSlotStart.IsZero() {
 		site.householdSlotStart = now
 		return
@@ -885,18 +892,15 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	wg.Add(len(site.loadpoints))
 	for _, lp := range site.loadpoints {
-		go func() {
+		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
 			mu.Lock()
 			sum += power
 			mu.Unlock()
-
-			wg.Done()
-		}()
+		})
 	}
 	wg.Wait()
 
@@ -958,6 +962,10 @@ func (site *Site) update(lp updater) {
 		homePower = max(homePower, 0)
 		site.publish(keys.HomePower, homePower)
 
+		if homePower > 0 {
+			site.updateHomeConsumption(homePower)
+		}
+
 		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 		// fix for: https://github.com/evcc-io/evcc/issues/11032
 		nonChargePower := homePower + max(0, -site.batteryPower)
@@ -980,8 +988,6 @@ func (site *Site) update(lp updater) {
 	} else {
 		site.log.ERROR.Println(err)
 	}
-
-	site.updateHouseholdConsumption(totalChargePower)
 
 	site.stats.Update(site)
 }

@@ -14,7 +14,11 @@
 			<div
 				v-if="legend.color"
 				class="legend-color align-self-center me-1"
-				:style="{ backgroundColor: legend.color }"
+				:class="colorClass(legend)"
+				:style="{
+					backgroundColor: legend.color,
+					borderColor: legend.color,
+				}"
 			></div>
 			<div class="legend-label text-nowrap">{{ legend.label }}</div>
 			<div
@@ -44,6 +48,9 @@ export default defineComponent({
 			if (!value) return [];
 			return Array.isArray(value) ? value : [value];
 		},
+		colorClass(legend: Legend) {
+			return legend.type === "line" ? "legend-color--line" : "legend-color--area";
+		},
 	},
 });
 </script>
@@ -56,8 +63,18 @@ export default defineComponent({
 	width: 1rem;
 	height: 1rem;
 	flex-shrink: 0;
+}
+
+.legend-color--area {
 	border-radius: 50%;
 }
+
+.legend-color--line {
+	height: 2px;
+	border-radius: 1px;
+	align-self: center;
+}
+
 .legend-label {
 	flex-shrink: 0;
 	flex-grow: 0;

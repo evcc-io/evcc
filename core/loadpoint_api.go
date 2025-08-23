@@ -737,25 +737,25 @@ func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 	}
 }
 
-// GetRemainingEnergy is the remaining charge energy in Wh
+// GetRemainingEnergy is the remaining charge energy in kWh
 func (lp *Loadpoint) GetRemainingEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.chargeRemainingEnergy
 }
 
-// SetRemainingEnergy sets the remaining charge energy in Wh
+// SetRemainingEnergy sets the remaining charge energy in kWh
 func (lp *Loadpoint) SetRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setRemainingEnergy(chargeRemainingEnergy)
 }
 
-// setRemainingEnergy sets the remaining charge energy in Wh (no mutex)
+// setRemainingEnergy sets the remaining charge energy in kWh (no mutex)
 func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
-		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy)
+		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy*1e3)
 	}
 }
 
@@ -776,6 +776,14 @@ func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
 
 	// disable auto-detect
 	lp.stopVehicleDetection()
+}
+
+// GetSoc returns the estimated vehicle soc in %
+func (lp *Loadpoint) GetSoc() float64 {
+	lp.vmu.RLock()
+	defer lp.vmu.RUnlock()
+
+	return lp.vehicleSoc
 }
 
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes

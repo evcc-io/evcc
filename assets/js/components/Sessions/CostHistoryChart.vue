@@ -196,6 +196,7 @@ export default defineComponent({
 		legends() {
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
+				let type: "area" | "line" = "area";
 
 				// line chart handling
 				if ((dataset as any).type === "line") {
@@ -210,6 +211,7 @@ export default defineComponent({
 								: this.fmtGrams(value, false);
 					};
 					value = `${format(min, false)} – ${format(max, true)}`;
+					type = "line";
 				} else {
 					const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 					value =
@@ -221,6 +223,7 @@ export default defineComponent({
 					label: dataset.label || "",
 					color: dataset.backgroundColor,
 					value,
+					type,
 				};
 			});
 		},

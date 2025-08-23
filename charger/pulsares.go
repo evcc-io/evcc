@@ -124,7 +124,7 @@ func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, 
 		go wb.heartbeat(ctx, t/2)
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *Pulsares) heartbeat(ctx context.Context, timeout time.Duration) {

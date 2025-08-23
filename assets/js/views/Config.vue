@@ -7,7 +7,10 @@
 				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
-				<GeneralConfig @site-changed="siteChanged" />
+				<GeneralConfig
+					:sponsor-error="hasClassError('sponsorship')"
+					@site-changed="siteChanged"
+				/>
 
 				<div v-if="$hiddenFeatures()">
 					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
@@ -367,7 +370,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<SponsorModal @changed="loadDirty" />
+				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 				<HemsModal @changed="yamlChanged" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
