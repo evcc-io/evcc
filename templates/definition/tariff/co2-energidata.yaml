@@ -1,0 +1,37 @@
+template: co2-energidata
+products:
+  - brand: EnergiDataService.dk
+requirements:
+  description:
+    en: CO2 forecast from EnergiDataService.dk CO2Emis API
+    de: CO2-Prognose von EnergiDataService.dk CO2Emis API
+  evcc: ["skiptest"]
+group: co2
+params:
+  - name: pricearea
+    description:
+      en: Price Area (e.g. DK1 or DK2)
+      de: Preiszone (z.B. DK1 oder DK2)
+    example: DK1
+    required: true
+render: |
+  type: custom
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?start=now&end=now%2BP1D&columns=Minutes5UTC,CO2Emission&filter={"PriceArea":["{{ .pricearea }}"]}&sort=Minutes5UTC 
+    jq: |
+      .records
+      | map({
+          "datetime": (.Minutes5UTC + "Z" | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime),
+          "value": .CO2Emission
+        })
+      | sort_by(.datetime)
+      | group_by(.datetime - (.datetime % 3600))
+      | map({
+          start: (.[0].datetime | strftime("%Y-%m-%dT%H:00:00Z")),
+          end: (.[0].datetime + 3600 | strftime("%Y-%m-%dT%H:00:00Z")),
+          value: (map(.value) | add / length | floor)
+        })
+      | tostring
+  interval: 1h
