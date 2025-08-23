@@ -39,21 +39,27 @@ func init() {
 // NewOpenWbHwFromConfig creates an OpenWbHw DIN charger from generic config
 func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Phases1p3p bool
-		RfId       bool
-		MilliAmps  bool
-	}{}
+		Phases1p3p      bool
+		RfId            bool
+		MilliAmps       bool
+		modbus.Settings `mapstructure:",squash"`
+	}{
+		Settings: modbus.Settings{
+			Baudrate: 9600,
+			Comset:   "8N1",
+			ID:       1},
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOpenWbHw(ctx, cc.Phases1p3p, cc.RfId, cc.MilliAmps)
+	return NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.MilliAmps)
 }
 
 // NewOpenWbHw creates OpenWbHw charger
-func NewOpenWbHw(ctx context.Context, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, "", "/dev/ttyUSB0", "8N1", 9600, modbus.Rtu, 1)
+func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}

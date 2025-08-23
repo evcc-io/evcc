@@ -48,6 +48,10 @@ requirements:
         ```
       - As root: Enable auto login: `loginctl enable-linger pi`
 params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
   - name: milliamps
     type: bool
     description:
@@ -80,3 +84,4 @@ render: |
   milliamps: {{ .milliamps }}
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
+  {{- include "modbus" . }}
