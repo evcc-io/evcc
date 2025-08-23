@@ -177,18 +177,40 @@ func getSecurityEventSeverity(eventType string) string {
 // Security extension handlers for OCPP 1.6j
 
 func (cs *CS) OnSignCertificate(id string, request *security.SignCertificateRequest) (*security.SignCertificateResponse, error) {
-	cs.log.INFO.Printf("charge point %s: certificate signing request received", id)
+	cs.log.INFO.Printf("charge point %s: certificate signing request received (CSR length: %d bytes)", id, len(request.CSR))
 
-	// For now, reject certificate signing requests as evcc doesn't implement PKI
+	// SECURITY: Rejecting certificate signing requests as evcc doesn't implement PKI infrastructure
+	// To implement certificate signing, you would need:
+	// - CA certificate and private key management
+	// - CSR validation (format, key strength, subject verification)
+	// - Certificate generation with proper extensions and validity periods
+	// - Certificate storage and lifecycle management
+	cs.log.WARN.Printf("charge point %s: rejecting certificate signing request - no PKI implementation", id)
+
 	return &security.SignCertificateResponse{
 		Status: types.GenericStatusRejected,
 	}, nil
 }
 
 func (cs *CS) OnCertificateSigned(id string, request *security.CertificateSignedRequest) (*security.CertificateSignedResponse, error) {
-	cs.log.INFO.Printf("charge point %s: signed certificate received", id)
+	cs.log.INFO.Printf("charge point %s: signed certificate received (length: %d bytes)", id, len(request.CertificateChain))
 
-	// Accept the certificate notification
+	// TODO: SECURITY RISK - No certificate validation is currently performed
+	// This implementation accepts all certificates without verification, which poses security risks:
+	// - Certificate chain validation (CA verification)
+	// - Certificate expiry validation
+	// - Certificate revocation status checking (CRL/OCSP)
+	// - Subject/issuer validation against expected values
+	// - Key usage and extended key usage validation
+	//
+	// For production use, implement proper certificate validation or consider rejecting
+	// certificates until validation is implemented.
+
+	// TEMPORARY: Accept certificates without validation
+	// In a production environment, this should validate the certificate chain
+	// against trusted CAs and check expiration, revocation status, etc.
+	cs.log.WARN.Printf("charge point %s: accepting certificate WITHOUT validation - security risk", id)
+
 	return &security.CertificateSignedResponse{
 		Status: security.CertificateSignedStatusAccepted,
 	}, nil
