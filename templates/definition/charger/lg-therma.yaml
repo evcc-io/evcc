@@ -11,7 +11,10 @@ requirements:
       Funktioniert über SG Ready Energiezustände für intelligente Steuerung.
       Inneneinheit/Fernbedienung in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Signaltyp" > auf "Modbus" einstellen.
       Da die interne Energiemessung zu hohe Werte anzeigt ist eine externe Energiemessung empfohlen.
-      Werkseinstellung Modbus Addresse(HEX) = 21 (33)
+      Werkseinstellung Modbus Addresse(HEX) = 21 (33).
+      Modbus Register sind im Installationshandbuch zu finden (Adresse jeweils ohne die führende Ziffer und -1).
+      Informationen zu den Energiezuständen finden sich auch im Installationshandbuch.
+      Die Energiezustände 6 und 7 können an der Inneneinheit in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Definition der Energiezustände" angepasst werden.
     en: |
       Modbus connection to LG Therma V heat pump.
       Uses SG Ready energy states for intelligent control.
