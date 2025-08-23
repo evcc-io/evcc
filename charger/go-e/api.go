@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-const CloudURI = "https://api.go-e.co"
+const CloudURI = "https://%s.api.go-e.co"
 
 // Response is the v1 and v2 api response interface
 type Response interface {
@@ -116,6 +116,7 @@ func (c *LocalAPI) Update(payload string) error {
 
 type cloud struct {
 	*request.Helper
+	serial  string
 	token   string
 	cache   time.Duration
 	updated time.Time
@@ -124,9 +125,10 @@ type cloud struct {
 
 var _ API = (*cloud)(nil)
 
-func NewCloud(log *util.Logger, token string, cache time.Duration) API {
+func NewCloud(log *util.Logger, serial, token string, cache time.Duration) API {
 	return &cloud{
 		Helper: request.NewHelper(log),
+		serial: serial,
 		token:  token,
 		cache:  cache,
 	}
@@ -139,7 +141,7 @@ func (c *cloud) IsV2() bool {
 func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 	var status CloudResponse
 
-	url := fmt.Sprintf("%s/%s?token=%s", CloudURI, function, c.token)
+	url := fmt.Sprintf(CloudURI, c.serial) + fmt.Sprintf("/%s?token=%s", function, c.token)
 	if payload != "" {
 		url += "&payload=" + payload
 	}
