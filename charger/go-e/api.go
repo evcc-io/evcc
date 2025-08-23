@@ -10,8 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-const CloudURI = "https://%s.api.go-e.co"
-
 // Response is the v1 and v2 api response interface
 type Response interface {
 	Status() int
@@ -141,7 +139,7 @@ func (c *cloud) IsV2() bool {
 func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 	var status CloudResponse
 
-	url := fmt.Sprintf(CloudURI, c.serial) + fmt.Sprintf("/%s?token=%s", function, c.token)
+	url := fmt.Sprintf("https://%s.api.go-e.co/%s?token=%s", c.serial, function, c.token)
 	if payload != "" {
 		url += "&payload=" + payload
 	}
