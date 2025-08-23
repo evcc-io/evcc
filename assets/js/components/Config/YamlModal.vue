@@ -16,6 +16,7 @@
 					:hidden="!modalVisible"
 				/>
 			</div>
+			<slot name="extra" />
 
 			<div class="mt-4 d-flex justify-content-between">
 				<button
