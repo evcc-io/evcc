@@ -151,13 +151,13 @@ func getSecurityEventSeverity(eventType string) string {
 	switch eventType {
 	// Critical events that require immediate attention
 	case "InvalidFirmwareSignature", "InvalidFirmwareSigningCertificate",
-		 "InvalidCentralSystemCertificate", "InvalidChargePointCertificate",
-		 "MemoryExhaustion":
+		"InvalidCentralSystemCertificate", "InvalidChargePointCertificate",
+		"MemoryExhaustion":
 		return SecuritySeverityCritical
 
 	// High severity events indicating potential security issues
 	case "FirmwareMismatch", "InvalidMessages", "SecurityLogWasCleared",
-		 "ReconfigurationOfSecurityParameters":
+		"ReconfigurationOfSecurityParameters":
 		return SecuritySeverityHigh
 
 	// Medium severity events for monitoring
