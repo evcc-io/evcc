@@ -9,7 +9,7 @@ requirements:
     de: |
       Modbus Verbindung zur LG Therma V Wärmepumpe.
       Funktioniert über SG Ready Energiezustände für intelligente Steuerung.
-      Inneneinheit/Fernbedienung in den erweiterten Einstellungen > Konnektivität > Energiezustand > Signaltyp > auf "Modbus" einstellen.
+      Inneneinheit/Fernbedienung in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Signaltyp" > auf "Modbus" einstellen.
       Da die interne Energiemessung zu hohe Werte anzeigt ist eine externe Energiemessung empfohlen.
       Werkseinstellung Modbus Addresse(HEX) = 21 (33)
     en: |
