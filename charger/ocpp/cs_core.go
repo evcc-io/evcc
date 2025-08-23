@@ -6,6 +6,14 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
+// Security event severity levels
+const (
+	SecuritySeverityCritical = "CRITICAL"
+	SecuritySeverityHigh     = "HIGH"
+	SecuritySeverityMedium   = "MEDIUM"
+	SecuritySeverityLow      = "LOW"
+)
+
 // cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
@@ -117,18 +125,18 @@ func (cs *CS) OnSecurityEventNotification(id string, request *security.SecurityE
 
 	// Log the security event with appropriate level
 	switch severity {
-	case "CRITICAL":
-		cs.log.ERROR.Printf("charge point %s: CRITICAL security event %s at %s (tech: %s)",
-			id, eventType, timestamp, techInfo)
-	case "HIGH":
-		cs.log.WARN.Printf("charge point %s: HIGH security event %s at %s (tech: %s)",
-			id, eventType, timestamp, techInfo)
-	case "MEDIUM":
-		cs.log.WARN.Printf("charge point %s: MEDIUM security event %s at %s (tech: %s)",
-			id, eventType, timestamp, techInfo)
-	case "LOW":
-		cs.log.INFO.Printf("charge point %s: LOW security event %s at %s (tech: %s)",
-			id, eventType, timestamp, techInfo)
+	case SecuritySeverityCritical:
+		cs.log.ERROR.Printf("charge point %s: %s security event %s at %s (tech: %s)",
+			id, SecuritySeverityCritical, eventType, timestamp, techInfo)
+	case SecuritySeverityHigh:
+		cs.log.WARN.Printf("charge point %s: %s security event %s at %s (tech: %s)",
+			id, SecuritySeverityHigh, eventType, timestamp, techInfo)
+	case SecuritySeverityMedium:
+		cs.log.WARN.Printf("charge point %s: %s security event %s at %s (tech: %s)",
+			id, SecuritySeverityMedium, eventType, timestamp, techInfo)
+	case SecuritySeverityLow:
+		cs.log.INFO.Printf("charge point %s: %s security event %s at %s (tech: %s)",
+			id, SecuritySeverityLow, eventType, timestamp, techInfo)
 	default:
 		cs.log.INFO.Printf("charge point %s: security event %s at %s (tech: %s)",
 			id, eventType, timestamp, techInfo)
@@ -145,24 +153,24 @@ func getSecurityEventSeverity(eventType string) string {
 	case "InvalidFirmwareSignature", "InvalidFirmwareSigningCertificate",
 		 "InvalidCentralSystemCertificate", "InvalidChargePointCertificate",
 		 "MemoryExhaustion":
-		return "CRITICAL"
+		return SecuritySeverityCritical
 
 	// High severity events indicating potential security issues
 	case "FirmwareMismatch", "InvalidMessages", "SecurityLogWasCleared",
 		 "ReconfigurationOfSecurityParameters":
-		return "HIGH"
+		return SecuritySeverityHigh
 
 	// Medium severity events for monitoring
 	case "StartupOfTheDevice", "ResetOrReboot":
-		return "MEDIUM"
+		return SecuritySeverityMedium
 
 	// Low severity informational events
 	case "SettingSystemTime":
-		return "LOW"
+		return SecuritySeverityLow
 
 	// Default to critical for unknown event types
 	default:
-		return "CRITICAL"
+		return SecuritySeverityCritical
 	}
 }
 
