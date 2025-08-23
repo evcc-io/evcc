@@ -327,7 +327,9 @@ export default defineComponent({
 						ticks: {
 							callback: (value: number) =>
 								this.costType === TYPES.PRICE
-									? this.fmtMoney(value, this.currency, false, true)
+									? this.suggestedMaxCost < 5
+										? this.fmtMoney(value, this.currency, true, true)
+										:this.fmtMoney(value, this.currency, false, true)
 									: this.fmtNumber(value / 1e3, 0),
 							color: colors.muted,
 							maxTicksLimit: 6,
