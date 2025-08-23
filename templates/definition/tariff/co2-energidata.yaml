@@ -19,7 +19,7 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?start=now&end=now%2BP1D&columns=Minutes5UTC,CO2Emission&filter={"PriceArea":["{{ .pricearea }}"]}&sort=Minutes5UTC 
+    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?start=now&end=now%2BP1D&columns=Minutes5UTC,CO2Emission&filter={"PriceArea":["{{ .pricearea }}"]}&sort=Minutes5UTC
     jq: |
       .records
       | map({
