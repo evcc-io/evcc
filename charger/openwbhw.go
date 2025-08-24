@@ -22,6 +22,7 @@ type OpenWbHw struct {
 	rfIdChannel chan string
 	rfId        string
 	cpWait      float64
+	chargePoint int
 }
 
 const (
@@ -44,6 +45,7 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 		RfId            bool
 		MilliAmps       bool
 		CpWait          float64
+		ChargePoint     int
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
@@ -56,11 +58,11 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	return NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.MilliAmps, cc.CpWait)
+	return NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.MilliAmps, cc.CpWait, cc.ChargePoint)
 }
 
 // NewOpenWbHw creates OpenWbHw charger
-func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool, cpWait float64) (api.Charger, error) {
+func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool, cpWait float64, chargePoint int) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -133,6 +135,11 @@ func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, 
 	}
 
 	wb.cpWait = cpWait
+
+	if (chargePoint < 0) || (chargePoint > 1) {
+		return nil, fmt.Errorf("invalid chargepoint value: %d", chargePoint)
+	}
+	wb.chargePoint = chargePoint
 
 	return decorateOpenWbHw(wb, maxCurrentMillis, phases1p3p, identify), nil
 }
@@ -214,10 +221,10 @@ func (wb *OpenWbHw) phases1p3p(phases int) error {
 	}
 	defer rpio.Close()
 
-	pinGpioCP := rpio.Pin(hw.GPIO_CP)
-	pinGpioPhases := rpio.Pin(hw.GPIO_3P)
+	pinGpioCP := rpio.Pin(hw.GPIO_CP[wb.chargePoint])
+	pinGpioPhases := rpio.Pin(hw.GPIO_3P[wb.chargePoint])
 	if phases == 1 {
-		pinGpioPhases = rpio.Pin(hw.GPIO_1P)
+		pinGpioPhases = rpio.Pin(hw.GPIO_1P[wb.chargePoint])
 	}
 	pinGpioCP.Output()
 	pinGpioPhases.Output()
@@ -252,7 +259,7 @@ func (wb *OpenWbHw) WakeUp() error {
 	}
 	defer rpio.Close()
 
-	gpioPinCP := rpio.Pin(hw.GPIO_CP)
+	gpioPinCP := rpio.Pin(hw.GPIO_CP[wb.chargePoint])
 	gpioPinCP.Output()
 
 	gpioPinCP.High()

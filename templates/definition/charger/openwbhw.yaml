@@ -8,7 +8,6 @@ requirements:
   description:
     de: |
       Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2
-      (Duo momentan nur mit dem ersten Ladepunkt.)
 
       Installation ohne Display:
       - Raspberry Pi OS Lite (64bit) Image installieren und konfigurieren.
@@ -46,7 +45,6 @@ requirements:
       - Als root: Starten von systemd user units ohne login des Users aktivieren: `loginctl enable-linger pi`
     en: |
       Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2
-      (Duo currently with just the first chargepoint.)
 
       Installation without display:
       - Install and configure Raspberry Pi OS Lite (64bit) image.
@@ -123,6 +121,16 @@ params:
       en: when phase-switching and waking up car.
       de: bei der Phasenumschaltung und Aufwecken des Autos.
     default: 10
+    advanced: true
+  - name: chargePoint
+    type: int
+    description:
+      en: Chargepoint id
+      de: Ladepunkt id
+    help:
+      en: 0 or 1, usually 0, except for Duo
+      de: 0 oder 1, normalerweise 0, ausser bei Duo
+    default: 0
     advanced: true
 render: |
   type: openwbhw
