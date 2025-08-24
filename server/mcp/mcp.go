@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
 
 	"github.com/evcc-io/evcc/util"
 	openapi2mcp "github.com/evcc-io/openapi-mcp"
@@ -16,9 +17,8 @@ import (
 //go:embed openapi.json
 var spec []byte
 
-func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, error) {
+func NewHandler(host http.Handler) (http.Handler, error) {
 	log := util.NewLogger("mcp")
-	log.INFO.Printf("MCP listening at %s", baseUrl+basePath)
 
 	var doc *openapi3.T
 	if err := json.Unmarshal(spec, &doc); err != nil {
@@ -29,6 +29,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 		return nil, fmt.Errorf("failed resolving OpenAPI spec references: %v", err)
 	}
 
+	// required for the /api path
 	doc.Servers = []*openapi3.Server{{
 		URL:         "http://localhost:7070/api",
 		Description: "evcc api",
@@ -46,7 +47,7 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 			"vehicles",
 			"battery",
 		},
-		RequestHandler: requestHandler(host),
+		RequestHandler: requestHandler(log, host),
 	})
 
 	mcp.AddTool(srv, &mcp.Tool{
@@ -61,11 +62,20 @@ func NewHandler(host http.Handler, baseUrl, basePath string) (http.Handler, erro
 	return handler, nil
 }
 
-func requestHandler(handler http.Handler) func(req *http.Request) (*http.Response, error) {
+func requestHandler(log *util.Logger, handler http.Handler) func(req *http.Request) (*http.Response, error) {
 	return func(req *http.Request) (*http.Response, error) {
+		if r, err := httputil.DumpRequest(req, true); err == nil {
+			log.TRACE.Println(string(r))
+		}
+
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 		resp := w.Result()
+
+		if r, err := httputil.DumpResponse(resp, true); err == nil {
+			log.TRACE.Println(string(r))
+		}
+
 		return resp, nil
 	}
 }
