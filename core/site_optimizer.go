@@ -117,7 +117,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	// end of horizon Wh value
-	pa := lo.Min(req.TimeSeries.PN)
+	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
 	details := responseDetails{
 		Timestamps: asTimestamps(dt),
