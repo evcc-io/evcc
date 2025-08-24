@@ -53,6 +53,28 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 107 # 0x006B GridCurrent_R
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 111 # 0x006F GridCurrent_S
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 115 # 0x0073 GridCurrent_T
+        type: input
+        decode: uint16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -86,6 +108,23 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 5 # 0x0005 PvCurrent1
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6 # 0x0006 PvCurrent2
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: const
+      value: 0 # PV3 current - only if MPPT3 is available
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -112,6 +151,22 @@ render: |
       {{- end }}
       type: input
       decode: uint16
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        {{- if eq .storageunit "1" }}
+        address: 21 # 0x0015 BatCurrent_Charge1
+        {{- else }}
+        address: 296 # 0x0128 BatCurrent_Charge2
+        {{- end }}
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: const
+      value: 0 # Phase 2 - single phase battery
+    - source: const
+      value: 0 # Phase 3 - single phase battery
   # energy:
   #   source: modbus
   #   register:
