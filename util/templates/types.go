@@ -67,7 +67,7 @@ var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementS
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
-	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
+	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU, ModbusParamNameDelay,
 	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
