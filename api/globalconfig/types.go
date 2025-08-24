@@ -80,15 +80,6 @@ type Shm struct {
 	DeviceId     string `json:"deviceid"`
 }
 
-func (s Shm) Redacted() any {
-	return Shm{
-		Type:         s.Type,
-		AllowControl: s.AllowControl,
-		VendorId:     s.VendorId,
-		DeviceId:     s.DeviceId,
-	}
-}
-
 var _ api.Redactor = (*Mqtt)(nil)
 
 func masked(s any) string {
