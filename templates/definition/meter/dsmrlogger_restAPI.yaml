@@ -1,0 +1,110 @@
+template: DSMRlogger
+products:
+    - brand: Willem Aandewiel
+      description: null
+      generic: DSMR logger
+requirements:
+    description:
+        de: null
+        en: null
+params:
+    - name: usage
+      choice:
+    - grid
+    - name: host
+render: |
+    {{- define "uri" -}}
+    http://{{ .host }}/api/v1/sm/actual
+    {{- end }}
+    type: custom
+
+    power:
+        source: calc
+        add:
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_returned") | .value
+                scale: 1000
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_delivered") | .value
+                scale: -1000     
+    voltages: # phase voltages in V
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "voltage_l1") | .value
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+               jq: .actual[] | select(.name == "voltage_l2") | .value
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "voltage_l3") | .value
+    currents: # phase currents in A
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "current_l1") | .value
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "current_l2") | .value
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "current_l3") | .value
+    powers:
+        - source: calc
+        add:
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_delivered_l1") | .value
+                scale: -1000
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_returned_l1") | .value
+                scale: -1000
+        - source: calc
+        add:
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_delivered_l2") | .value
+                scale: -1000
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_returned_l2") | .value
+                scale: -1000
+        - source: calc
+        add:
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_delivered_l2") | .value
+                scale: -1000
+        - source: http
+            uri: http://{{ .host }}/api/v1/sm/actual
+            headers:
+            - content-type: application/json
+                jq: .actual[] | select(.name == "power_returned_l2") | .value
+                scale: -1000 
