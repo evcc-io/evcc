@@ -6,14 +6,6 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-// Security event severity levels
-const (
-	SecuritySeverityCritical = "CRITICAL"
-	SecuritySeverityHigh     = "HIGH"
-	SecuritySeverityMedium   = "MEDIUM"
-	SecuritySeverityLow      = "LOW"
-)
-
 // cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
@@ -116,101 +108,19 @@ func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest)
 }
 
 func (cs *CS) OnSecurityEventNotification(id string, request *security.SecurityEventNotificationRequest) (*security.SecurityEventNotificationResponse, error) {
-	eventType := request.Type
-	timestamp := request.Timestamp
-	techInfo := request.TechInfo
-
-	// Map event types to severity levels based on common OCPP security practices
-	severity := getSecurityEventSeverity(eventType)
-
-	// Log the security event with appropriate level
-	switch severity {
-	case SecuritySeverityCritical:
-		cs.log.ERROR.Printf("charge point %s: %s security event %s at %s (tech: %s)",
-			id, SecuritySeverityCritical, eventType, timestamp, techInfo)
-	case SecuritySeverityHigh:
-		cs.log.WARN.Printf("charge point %s: %s security event %s at %s (tech: %s)",
-			id, SecuritySeverityHigh, eventType, timestamp, techInfo)
-	case SecuritySeverityMedium:
-		cs.log.WARN.Printf("charge point %s: %s security event %s at %s (tech: %s)",
-			id, SecuritySeverityMedium, eventType, timestamp, techInfo)
-	case SecuritySeverityLow:
-		cs.log.INFO.Printf("charge point %s: %s security event %s at %s (tech: %s)",
-			id, SecuritySeverityLow, eventType, timestamp, techInfo)
-	default:
-		cs.log.INFO.Printf("charge point %s: security event %s at %s (tech: %s)",
-			id, eventType, timestamp, techInfo)
-	}
-
-	// Acknowledge the security event
+	// Acknowledge any security event
 	return &security.SecurityEventNotificationResponse{}, nil
 }
 
-// getSecurityEventSeverity maps security event types to severity levels
-func getSecurityEventSeverity(eventType string) string {
-	switch eventType {
-	// Critical events that require immediate attention
-	case "InvalidFirmwareSignature", "InvalidFirmwareSigningCertificate",
-		"InvalidCentralSystemCertificate", "InvalidChargePointCertificate",
-		"MemoryExhaustion":
-		return SecuritySeverityCritical
-
-	// High severity events indicating potential security issues
-	case "FirmwareMismatch", "InvalidMessages", "SecurityLogWasCleared",
-		"ReconfigurationOfSecurityParameters":
-		return SecuritySeverityHigh
-
-	// Medium severity events for monitoring
-	case "StartupOfTheDevice", "ResetOrReboot":
-		return SecuritySeverityMedium
-
-	// Low severity informational events
-	case "SettingSystemTime":
-		return SecuritySeverityLow
-
-	// Default to critical for unknown event types
-	default:
-		return SecuritySeverityCritical
-	}
-}
-
-// Security extension handlers for OCPP 1.6j
-
 func (cs *CS) OnSignCertificate(id string, request *security.SignCertificateRequest) (*security.SignCertificateResponse, error) {
-	cs.log.INFO.Printf("charge point %s: certificate signing request received (CSR length: %d bytes)", id, len(request.CSR))
-
-	// SECURITY: Rejecting certificate signing requests as evcc doesn't implement PKI infrastructure
-	// To implement certificate signing, you would need:
-	// - CA certificate and private key management
-	// - CSR validation (format, key strength, subject verification)
-	// - Certificate generation with proper extensions and validity periods
-	// - Certificate storage and lifecycle management
-	cs.log.WARN.Printf("charge point %s: rejecting certificate signing request - no PKI implementation", id)
-
+	// Reject any certificate signing request
 	return &security.SignCertificateResponse{
 		Status: types.GenericStatusRejected,
 	}, nil
 }
 
 func (cs *CS) OnCertificateSigned(id string, request *security.CertificateSignedRequest) (*security.CertificateSignedResponse, error) {
-	cs.log.INFO.Printf("charge point %s: signed certificate received (length: %d bytes)", id, len(request.CertificateChain))
-
-	// TODO: SECURITY RISK - No certificate validation is currently performed
-	// This implementation accepts all certificates without verification, which poses security risks:
-	// - Certificate chain validation (CA verification)
-	// - Certificate expiry validation
-	// - Certificate revocation status checking (CRL/OCSP)
-	// - Subject/issuer validation against expected values
-	// - Key usage and extended key usage validation
-	//
-	// For production use, implement proper certificate validation or consider rejecting
-	// certificates until validation is implemented.
-
-	// TEMPORARY: Accept certificates without validation
-	// In a production environment, this should validate the certificate chain
-	// against trusted CAs and check expiration, revocation status, etc.
-	cs.log.WARN.Printf("charge point %s: accepting certificate WITHOUT validation - security risk", id)
-
+	// Acknowledge any certificate
 	return &security.CertificateSignedResponse{
 		Status: security.CertificateSignedStatusAccepted,
 	}, nil
