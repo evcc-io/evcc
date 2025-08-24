@@ -1,4 +1,4 @@
-package semp
+package shm
 
 import (
 	"encoding/binary"
@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/google/uuid"
@@ -50,13 +49,15 @@ type SEMP struct {
 	site         site.API
 }
 
-// New generates SEMP Gateway listening at /semp endpoint
-func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP, error) {
-	cc := struct {
-		VendorID     string
-		DeviceID     string
-		AllowControl bool
-	}{
+type Config = struct {
+	VendorID     string
+	DeviceID     string
+	AllowControl bool
+}
+
+// NewFromConfig generates SHM SEMP Gateway listening at /semp endpoint
+func NewFromConfig(conf map[string]interface{}, site site.API, addr string, router *mux.Router) (*SEMP, error) {
+	cc := Config{
 		VendorID: "28081973",
 	}
 
@@ -64,13 +65,17 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 		return nil, err
 	}
 
+	return New(cc, site, addr, router)
+}
+
+func New(cc Config, site site.API, addr string, router *mux.Router) (*SEMP, error) {
+	if len(cc.VendorID) != 8 {
+		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
+	}
+
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
-	}
-
-	if len(cc.VendorID) != 8 {
-		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
 	}
 
 	var did []byte
@@ -99,14 +104,15 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 	}
 
 	// find external port
-	_, port, err := net.SplitHostPort(httpd.Addr)
+	// TODO refactor network config
+	_, port, err := net.SplitHostPort(addr)
 	if err == nil {
 		s.port, err = strconv.Atoi(port)
 	}
 
 	s.hostURI = s.callbackURI()
 
-	s.handlers(httpd.Router())
+	s.handlers(router)
 
 	return s, err
 }

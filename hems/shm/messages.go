@@ -1,4 +1,4 @@
-package semp
+package shm
 
 import "encoding/xml"
 
