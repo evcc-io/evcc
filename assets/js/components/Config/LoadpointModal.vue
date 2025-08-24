@@ -713,8 +713,8 @@ export default {
 		},
 		phasesOptions() {
 			return [
-				{ value: "1", name: this.$t("config.loadpoint.phases1p") },
-				{ value: "3", name: this.$t("config.loadpoint.phases3p") },
+				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
+				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
 			];
 		},
 		showCircuit() {

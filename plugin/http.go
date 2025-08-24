@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/plugin/pipeline"
@@ -24,6 +25,7 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	pipeline    *pipeline.Pipeline
+	mu          *sync.Mutex
 }
 
 func init() {
@@ -113,6 +115,11 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 			}),
 			Base: p.Client.Transport,
 		}
+
+		// for cached requests enforce single inflight GET
+		if method == http.MethodGet {
+			p.mu = muForKey(p.url)
+		}
 	}
 
 	// ignore the self signed certificate
@@ -170,6 +177,11 @@ var _ Getters = (*HTTP)(nil)
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
+		if p.mu != nil {
+			p.mu.Lock()
+			defer p.mu.Unlock()
+		}
+
 		url, err := setFormattedValue(p.url, "", "")
 		if err != nil {
 			return "", err

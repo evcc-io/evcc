@@ -80,7 +80,7 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 
 	go wb.heartbeat(ctx)
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *EProWallbox) heartbeat(ctx context.Context) {

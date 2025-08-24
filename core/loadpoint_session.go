@@ -36,8 +36,8 @@ func (lp *Loadpoint) createSession() {
 
 	lp.session = lp.db.New(lp.chargeMeterTotal())
 
-	if vehicle := lp.GetVehicle(); vehicle != nil {
-		lp.session.Vehicle = vehicle.GetTitle()
+	if v := lp.GetVehicle(); v != nil {
+		lp.session.Vehicle = v.GetTitle()
 	} else if lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.session.Vehicle = lp.GetTitle()
 	}
@@ -126,7 +126,7 @@ func (lp *Loadpoint) resetHeatingSession() {
 	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
 		cr.ResetCharge()
 	}
-	if ct, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
+	if ct, ok := lp.chargeTimer.(wrapper.ChargeResetter); ok {
 		ct.ResetCharge()
 	}
 

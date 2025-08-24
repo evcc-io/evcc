@@ -8,12 +8,12 @@
     },
     "capacity": "{energy} de {total}",
     "control": "Control de la batería",
-    "discharge": "Evitar la descarga en modo rápido y la carga planificada",
+    "discharge": "Evitar la descarga en modo rápido y carga planificada.",
     "disclaimerHint": "Nota:",
     "disclaimerText": "Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente.",
     "gridChargeTab": "Carga de red",
     "legendBottomName": "Priorizar la batería de casa",
-    "legendBottomSubline": "hasta alcanzar {soc}",
+    "legendBottomSubline": "hasta alcanzar {soc}.",
     "legendMiddleName": "Priorizar la carga de vehículos",
     "legendMiddleSubline": "cuando la batería de casa sobrepasa {soc}.",
     "legendTopAutostart": "Inicio automático",
@@ -27,12 +27,38 @@
       "titleAdd": "Añadir batería",
       "titleEdit": "Editar batería"
     },
+    "charger": {
+      "generic": "Integraciones genéricas",
+      "heatingdevices": "Dispositivos de calefacción",
+      "ocppHelp": "Copia esta dirección en la configuración de cargadores.",
+      "ocppLabel": "URL del servidor OCPP",
+      "switchsockets": "Tomas conmutables",
+      "template": "Fabricante",
+      "titleAdd": {
+        "charging": "Añadir Cargador",
+        "heating": "Añadir Calefactor"
+      },
+      "titleEdit": {
+        "charging": "Editar Cargador",
+        "heating": "Editar Calefactor"
+      },
+      "type": {
+        "custom": {
+          "charging": "Cargador definido por el usuario",
+          "heating": "Calefactor definido por el usuario"
+        },
+        "heatpump": "Bomba de calor definida por el usuario",
+        "sgready": "Bomba de calor definida por el usuario (sg-ready, todas)",
+        "sgready-boost": "Bomba de calor definida por el usuario (sg-ready, boost)",
+        "switchsocket": "Enchufe conmutable definido por el usuario"
+      }
+    },
     "circuits": {
-      "description": "Se asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites actuales. Los circuitos pueden ser anidados para construir una jerarquía",
-      "title": "Gestión de carga"
+      "description": "Asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites de corriente. Los circuitos pueden ser anidados para construir una jerarquía.",
+      "title": "Gestión de Carga"
     },
     "control": {
-      "description": "Usualmente los valores predeterminados están bien. Solo cámbialos si sabes lo que estás haciendo.",
+      "description": "Los valores predeterminados son razonables. Cámbialos solo si sabes lo que estás haciendo.",
       "descriptionInterval": "Ciclo de actualización del bucle de control en segundos. Define la frecuencia con la que evcc lee los datos del contador, ajusta la potencia de carga y actualiza la interfaz de usuario. Los intervalos cortos (< 30s) pueden causar oscilaciones y comportamientos no deseados.",
       "descriptionResidualPower": "Cambia el punto de funcionamiento del circuito de control. Si tienes una batería doméstica, se recomienda establecer un valor de 100 W. De esta manera, la batería tendrá una ligera prioridad sobre el uso de la red eléctrica",
       "labelInterval": "Intervalo de actualización",
@@ -209,7 +235,7 @@
       "addToken": "Ingresa el token del patrocinador",
       "changeToken": "Cambiar el token de patrocinador",
       "description": "El modelo de patrocinio nos ayuda a mantener el proyecto y a desarrollar de forma sostenible nuevas y emocionantes funciones. Como patrocinador, obtienes acceso a todas las implementaciones de cargadores",
-      "descriptionToken": "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar",
+      "descriptionToken": "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar {trialToken}.",
       "error": "El token de patrocinador no es válido",
       "labelToken": "Token del patrocinador",
       "title": "Patrocinio"

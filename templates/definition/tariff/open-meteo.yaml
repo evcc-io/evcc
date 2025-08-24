@@ -70,6 +70,7 @@ params:
 render: |
   type: custom
   tariff: solar
+  features: ["cacheable"]
   forecast:
     source: http
     uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=GMT&timeformat=unixtime
