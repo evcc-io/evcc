@@ -24,7 +24,7 @@ requirements:
         - SDM630/SDM72 (template: eastron) mit ID 105
         - ABB B23 (template: abb-ab) mit ID 201
 
-      Zusätzlich für die Anzeige von evcc im Display:
+      Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox`
       - Datei `/home/pi/.config/labwc/autostart` mit folgendem Inhalt anlegen:
         ```bash
@@ -61,7 +61,7 @@ requirements:
         - SDM630/SDM72 (template: eastron) with ID 105
         - ABB B23 (template: abb-ab) with ID 201
 
-      Additional steps for showing evcc on the display:
+      Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox`
       - Create the file `/home/pi/.config/labwc/autostart` with the following contents:
         ```bash
