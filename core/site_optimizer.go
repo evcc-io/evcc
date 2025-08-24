@@ -124,6 +124,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for _, lp := range site.Loadpoints() {
+		// ignore disconnected loadpoints
+		if lp.GetStatus() == api.StatusA {
+			continue
+		}
+
 		bat := evopt.BatteryConfig{
 			ChargeFromGrid: lo.ToPtr(true),
 
