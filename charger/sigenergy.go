@@ -49,12 +49,8 @@ func init() {
 
 // NewSigenergyFromConfig creates a new Sigenergy ModbusTCP charger
 func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{
-			ID: 1,
-		},
+	cc := modbus.TcpSettings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
