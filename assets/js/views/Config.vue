@@ -295,13 +295,13 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:title="$t('config.hems.shm.title')"
+							:title="$t('config.hems.shm.cardTitle')"
 							editable
 							:error="hasClassError('shm')"
 							data-testid="shm"
 							@edit="openModal('shmModal')"
 						>
-							<template #icon><HemsIcon /></template>
+							<template #icon><ShmIcon /></template>
 							<template #tags>
 								<DeviceTags :tags="shmTags" />
 							</template>
@@ -417,6 +417,7 @@ import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
+import ShmIcon from "../components/MaterialIcon/Shm.vue";
 import ShmModal from "@/components/Config/ShmModal.vue";
 import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
@@ -476,6 +477,7 @@ export default defineComponent({
 		HemsIcon,
 		HemsModal,
 		ShmModal,
+		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
 		MessagingModal,
