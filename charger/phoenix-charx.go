@@ -107,6 +107,13 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
+	// Initialize current with the actual register value
+	if b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegMaxCurrent), 1); err == nil {
+		if current := encoding.Uint16(b); current >= wb.current {
+			wb.current = current
+		}
+	}
+
 	return wb, nil
 }
 
