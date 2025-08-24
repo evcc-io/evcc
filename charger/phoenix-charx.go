@@ -2,7 +2,6 @@ package charger
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -123,7 +122,7 @@ func (wb *PhoenixCharx) controllers() (uint16, error) {
 		return 0, err
 	}
 
-	return binary.BigEndian.Uint16(b), nil
+	return encoding.Uint16(b), nil
 }
 
 func (wb *PhoenixCharx) register(reg uint16) uint16 {
@@ -166,7 +165,7 @@ func (wb *PhoenixCharx) Enabled() (bool, error) {
 func (wb *PhoenixCharx) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		binary.BigEndian.PutUint16(b, wb.current)
+		encoding.PutUint16(b, wb.current)
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegMaxCurrent), 1, b)
@@ -181,7 +180,7 @@ func (wb *PhoenixCharx) MaxCurrent(current int64) error {
 	}
 
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	encoding.PutUint16(b, uint16(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegMaxCurrent), 1, b)
 	if err == nil {
