@@ -1221,6 +1221,9 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// update setting and reset timer
 		lp.SetPhases(phases)
+
+		// some vehicles may hang on phase switch
+		lp.startWakeUpTimer()
 	}
 
 	return nil
