@@ -33,15 +33,15 @@ params:
     type: choice
     choice: ["water_tank", "water_inlet"]
     default: water_tank
-    description: 
+    description:
       de: DHW Warmwassertank- oder Wassereinlasstemperatur
-      en: DHW warm water tank or inlet flow temperature   
+      en: DHW warm water tank or inlet flow temperature
   - name: energystate
     required: true
     type: choice
     choice: ["SGReady", "IndividualEnergystate"]
     default: SGReady
-    description: 
+    description:
       de: SGReady oder anpassbare Energiezustände 6 und 7
       en: SGReady states or modifyable energy state 6 and 7
 render: |
