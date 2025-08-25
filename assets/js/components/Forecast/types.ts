@@ -25,3 +25,8 @@ export interface SolarDetails {
   dayAfterTomorrow?: EnergyByDay;
   timeseries?: TimeseriesEntry[];
 }
+
+export interface ForecastZone {
+  start: string;
+  end: string;
+}

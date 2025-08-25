@@ -21,6 +21,7 @@
 				:feedin="forecast.feedin"
 				:currency="currency"
 				:selected="selectedType"
+				:feedInDisabledZones="feedInDisabledZones"
 				@selected="updateSlot"
 			/>
 			<ForecastDetails
@@ -60,7 +61,7 @@
 						<i18n-t
 							keypath="forecast.smartFeedInDisable"
 							tag="small"
-							class="d-block"
+							class="d-inline"
 							scope="global"
 						>
 							<template #limit>
@@ -82,6 +83,11 @@
 								<span v-else>{{ $t("forecast.smartFeedInDisableLow") }}</span>
 							</template>
 						</i18n-t>
+						<FeedInPatternIndicator
+							v-if="smartFeedInDisableLimit !== null"
+							class="ms-2"
+							:title="$t('forecast.smartFeedInDisabledZones')"
+						/>
 					</label>
 				</div>
 			</div>
@@ -100,12 +106,13 @@ import TypeSelect from "./TypeSelect.vue";
 import Details from "./Details.vue";
 import ActiveSlot from "./ActiveSlot.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
+import FeedInPatternIndicator from "./FeedInPatternIndicator.vue";
 
 import formatter from "@/mixins/formatter";
 import settings from "@/settings";
 import type { CURRENCY, Forecast } from "@/types/evcc";
 import { ForecastType, adjustedSolar } from "@/utils/forecast";
-import type { ForecastSlot, TimeseriesEntry } from "./types";
+import type { ForecastSlot, TimeseriesEntry, ForecastZone } from "./types";
 import api from "@/api";
 export default defineComponent({
 	name: "ForecastModal",
@@ -116,6 +123,7 @@ export default defineComponent({
 		ForecastDetails: Details,
 		ForecastActiveSlot: ActiveSlot,
 		CustomSelect,
+		FeedInPatternIndicator,
 	},
 	mixins: [formatter],
 	props: {
@@ -160,6 +168,46 @@ export default defineComponent({
 			return this.showSolarAdjust && this.solarAdjusted
 				? adjustedSolar(this.forecast.solar)
 				: this.forecast.solar;
+		},
+		feedInDisabledZones(): ForecastZone[] {
+			const zones: ForecastZone[] = [];
+
+			// Only calculate zones if limit is set and feedin data exists
+			if (
+				this.smartFeedInDisableLimit === null ||
+				!this.forecast.feedin ||
+				this.forecast.feedin.length === 0
+			) {
+				return zones;
+			}
+
+			// Group consecutive slots that are below the limit
+			let currentZone: ForecastZone | null = null;
+
+			this.forecast.feedin.forEach((slot) => {
+				if (
+					this.smartFeedInDisableLimit !== null &&
+					slot.value <= this.smartFeedInDisableLimit
+				) {
+					if (!currentZone) {
+						currentZone = { start: slot.start, end: slot.end };
+					} else {
+						currentZone.end = slot.end;
+					}
+				} else {
+					if (currentZone) {
+						zones.push(currentZone);
+						currentZone = null;
+					}
+				}
+			});
+
+			// Don't forget the last zone if it exists
+			if (currentZone) {
+				zones.push(currentZone);
+			}
+
+			return zones;
 		},
 		solarAdjustText() {
 			let percent = "";

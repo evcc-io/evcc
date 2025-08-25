@@ -31,13 +31,14 @@ import {
 	Chart,
 } from "chart.js";
 import ChartDataLabels, { type Context } from "chartjs-plugin-datalabels";
+import ChartAnnotation from "chartjs-plugin-annotation";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import colors, { lighterColor } from "@/colors";
+import colors, { lighterColor, createFeedInDisabledPattern } from "@/colors";
 import type { CURRENCY } from "@/types/evcc";
 import { ForecastType, highestSlotIndexByDay } from "@/utils/forecast";
-import type { ForecastSlot, SolarDetails, TimeseriesEntry } from "./types";
+import type { ForecastSlot, SolarDetails, TimeseriesEntry, ForecastZone } from "./types";
 
 registerChartComponents([
 	BarController,
@@ -51,6 +52,7 @@ registerChartComponents([
 	Tooltip,
 	PointElement,
 	ChartDataLabels,
+	ChartAnnotation,
 ]);
 
 export default defineComponent({
@@ -64,6 +66,10 @@ export default defineComponent({
 		feedin: { type: Array as PropType<ForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		selected: { type: String as PropType<ForecastType> },
+		feedInDisabledZones: {
+			type: Array as PropType<ForecastZone[]>,
+			default: () => [],
+		},
 	},
 	emits: ["selected"],
 	data(): {
@@ -283,6 +289,9 @@ export default defineComponent({
 				},
 				plugins: {
 					...commonOptions.plugins,
+					annotation: {
+						annotations: vThis.getFeedInLimitAnnotations(),
+					},
 					datalabels: {
 						backgroundColor(context: Context) {
 							return context.dataset.borderColor;
@@ -437,6 +446,12 @@ export default defineComponent({
 		selectedSlot(slot) {
 			this.$emit("selected", slot);
 		},
+		feedInDisabledZones() {
+			this.updateChart();
+		},
+		selected() {
+			this.updateChart();
+		},
 	},
 	mounted() {
 		this.interval = setTimeout(() => {
@@ -453,6 +468,73 @@ export default defineComponent({
 		}
 	},
 	methods: {
+		updateChart() {
+			// Force chart update
+			this.$nextTick(() => {
+				// @ts-expect-error unknown chart type
+				this.$refs.chart?.chart?.update();
+			});
+		},
+		getFeedInLimitAnnotations() {
+			const annotations: Record<string, any> = {};
+
+			// Only show annotations if zones exist
+			if (!this.feedInDisabledZones || this.feedInDisabledZones.length === 0) {
+				return annotations;
+			}
+
+			// Determine color based on whether feedin is selected
+			const isActive = this.selected === ForecastType.FeedIn;
+			const patternColor = isActive ? colors.export : colors.border;
+			const patternOpacity = isActive ? 0.6 : 0.4;
+
+			// Create annotations for each disabled zone
+			this.feedInDisabledZones.forEach((zone, zoneIndex) => {
+				// Bar charts center bars on their time value
+				// We need to extend from half slot before start to the end
+				const startTime = new Date(zone.start);
+				const endTime = new Date(zone.end);
+
+				// Calculate slot duration (typically 1 hour for feedin slots)
+				const firstSlot = this.feedinSlots[0];
+				const slotDuration = firstSlot
+					? new Date(firstSlot.end).getTime() - new Date(firstSlot.start).getTime()
+					: 3600000; // Default to 1 hour
+
+				// Bars are centered on their time value
+				// Extend start by half slot to left, reduce end by half slot to right
+				const halfSlot = slotDuration / 2;
+				startTime.setTime(startTime.getTime() - halfSlot);
+				endTime.setTime(endTime.getTime() - halfSlot);
+
+				annotations[`feedinDisabledZone${zoneIndex}`] = {
+					type: "box",
+					drawTime: "beforeDatasetsDraw",
+					xMin: startTime,
+					xMax: endTime,
+					yMin: "min",
+					yMax: "max",
+					backgroundColor: (context: any) => {
+						const pattern = createFeedInDisabledPattern(
+							context.chart.ctx,
+							patternColor || "",
+							patternOpacity
+						);
+						if (pattern) {
+							// Anchor pattern to the adjusted start of the zone
+							const chart = context.chart;
+							const xScale = chart.scales.x;
+							const pixelX = xScale.getPixelForValue(startTime);
+							pattern.setTransform(new DOMMatrix().translateSelf(pixelX, 0));
+						}
+						return pattern || "transparent";
+					},
+					borderWidth: 0,
+				};
+			});
+
+			return annotations;
+		},
 		updateStartDate() {
 			const now = new Date();
 			now.setMinutes(0);
