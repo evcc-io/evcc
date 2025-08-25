@@ -51,9 +51,10 @@ func init() {
 // newGoEFromConfig creates a go-e charger from generic config
 func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Token string
-		URI   string
-		Cache time.Duration
+		Serial string
+		Token  string
+		URI    string
+		Cache  time.Duration
 	}{
 		Cache: time.Second,
 	}
@@ -62,11 +63,11 @@ func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	if (cc.URI != "") == (cc.Token != "") {
-		return nil, errors.New("must have either uri or token")
+	if (cc.URI != "") == (cc.Serial != "" && cc.Token != "") {
+		return nil, errors.New("must have either uri or serial and token")
 	}
 
-	c, err := NewGoE(cc.URI, cc.Token, cc.Cache)
+	c, err := NewGoE(cc.URI, cc.Serial, cc.Token, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -85,13 +86,13 @@ func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
+func NewGoE(uri, serial, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{}
 
 	log := util.NewLogger("go-e").Redact(token)
 
 	if token != "" {
-		c.api = goe.NewCloud(log, token, cache)
+		c.api = goe.NewCloud(log, serial, token, cache)
 	} else {
 		c.api = goe.NewLocal(log, util.DefaultScheme(uri, "http"), cache)
 	}
