@@ -579,7 +579,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	// only consider this an error, if the last limit update is older than 15 seconds
 	// this covers the case where this function may be called shortly after setting a limit
 	// but too short for a measurement can even be received
-	if d := time.Now().Sub(ts); d > 15*time.Second && !ts.IsZero() {
+	if d := time.Since(ts); d > 15*time.Second && !ts.IsZero() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
