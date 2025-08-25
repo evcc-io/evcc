@@ -56,7 +56,7 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
-  {{- if ne .usage "battery" }} # only for pv and grid meters
+  {{- if or (eq .usage "grid") (eq .usage "pv") }} 
   energy:
     source: http
     {{- if eq .usage "grid" }}
