@@ -56,6 +56,21 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
+  {{- if ne .usage "battery" }} # only for pv and grid meters
+  energy:
+    source: http
+    {{- if eq .usage "grid" }}
+    uri: http://{{ .host }}/rest/channel/_sum/GridBuyActiveEnergy
+    {{- end }}
+    {{- if eq .usage "pv" }}
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
+    {{- end }}
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value / 1000 // 0) # convert Wh to kWh
+  {{- end }}
   {{- if eq .usage "pv" }}
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
