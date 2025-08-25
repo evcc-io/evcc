@@ -748,7 +748,7 @@ export default defineComponent({
 
 @media (min-width: 576px) {
 	.header-outer {
-		--vertical-shift: calc((100vw - 540px) / 2);
+		--vertical-shift: calc((100vw - 560px) / 2);
 	}
 }
 
