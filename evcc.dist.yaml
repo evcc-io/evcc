@@ -214,6 +214,9 @@ messaging:
     guest: # vehicle could not be identified
       title: Unknown vehicle
       msg: Unknown vehicle, guest connected?
+    asleep: # vehicle doesn't start charging
+      title: Vehicle asleep
+      msg: Charge release, vehicle {{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}not charging.
   services:
   # - type: pushover
   #   app: # app id
