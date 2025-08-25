@@ -607,13 +607,13 @@ export default defineComponent({
 	color: var(--evcc-grid);
 }
 .color-export {
-	color: var(--evcc-export);
+	color: var(--evcc-export-bg);
 }
 .legend-grid {
 	color: var(--evcc-grid);
 }
 .legend-export {
-	color: var(--evcc-export);
+	color: var(--evcc-export-bg);
 }
 .legend-pv {
 	color: var(--evcc-pv);

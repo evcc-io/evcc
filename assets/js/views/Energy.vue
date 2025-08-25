@@ -28,6 +28,7 @@
 						:grid="forecast.grid"
 						:solar="forecast.solar"
 						:co2="forecast.co2"
+						:feedin="forecast.feedin"
 						:currency="currency"
 						:selected="selectedType"
 					/>
@@ -56,6 +57,7 @@ interface Forecast {
 	grid?: ForecastSlot[];
 	solar?: SolarDetails;
 	co2?: ForecastSlot[];
+	feedin?: ForecastSlot[];
 }
 
 export default defineComponent({
@@ -82,11 +84,12 @@ export default defineComponent({
 				[ForecastType.Solar]: "shopicon-regular-sun",
 				[ForecastType.Price]: DynamicPriceIcon,
 				[ForecastType.Co2]: "shopicon-regular-eco1",
+				[ForecastType.FeedIn]: DynamicPriceIcon,
 			};
 		},
 		forecastAvailable() {
-			const { grid, solar, co2 } = this.forecast;
-			return grid || solar || co2;
+			const { grid, solar, co2, feedin } = this.forecast;
+			return grid || solar || co2 || feedin;
 		},
 		forecast(): Forecast {
 			return store.state?.forecast || {};

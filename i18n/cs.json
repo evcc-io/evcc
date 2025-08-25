@@ -599,13 +599,13 @@
   "forecast": {
     "co2": {
       "average": "Průměr",
-      "lowestHour": "Nejčistší hodina",
+      "highlightedHour": "Nejčistší hodina",
       "range": "Rozsah"
     },
     "modalTitle": "Předpověď",
     "price": {
       "average": "Průměr",
-      "lowestHour": "Nejlevnější hodina",
+      "highlightedHour": "Nejlevnější hodina",
       "range": "Rozsah"
     },
     "solar": {

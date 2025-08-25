@@ -216,6 +216,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 				lp.SetSmartFeedInPriorityLimit(limit)
 			}
 		}))},
+		{"smartFeedInDisableLimit", floatPtrSetter(pass(site.SetSmartFeedInDisableLimit))},
 		{"batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
 		{"batteryMode", ptrSetter(api.BatteryModeString, pass(func(m *api.BatteryMode) {
 			if m == nil {

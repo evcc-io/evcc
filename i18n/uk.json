@@ -600,13 +600,13 @@
   "forecast": {
     "co2": {
       "average": "Середній",
-      "lowestHour": "Найчистіша година",
+      "highlightedHour": "Найчистіша година",
       "range": "Діапазон"
     },
     "modalTitle": "Прогноз",
     "price": {
       "average": "Середній",
-      "lowestHour": "Найдешевша година",
+      "highlightedHour": "Найдешевша година",
       "range": "Діапазон"
     },
     "solar": {
