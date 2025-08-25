@@ -44,7 +44,7 @@ const app = createApp(
               count: 1,
               time: now,
             },
-            ...this.notifications,
+            ...this.notifications.slice(0, 9),
           ];
         }
       },
