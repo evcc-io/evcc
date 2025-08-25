@@ -4,7 +4,7 @@
 		<div class="row">
 			<main class="col-12">
 				<div class="header-outer sticky-top">
-					<div class="px-4">
+					<div class="container px-4">
 						<div
 							class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2"
 						>
@@ -735,14 +735,44 @@ export default defineComponent({
 
 <style scoped>
 .header-outer {
+	--vertical-shift: 0rem;
 	left: 0;
 	right: 0;
 	top: max(0rem, env(safe-area-inset-top)) !important;
-	margin: 0 -1.5rem;
+	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
 	-webkit-backdrop-filter: blur(35px);
 	backdrop-filter: blur(35px);
 	background-color: #0000;
 	box-shadow: 0 1px 8px 0px var(--evcc-background);
 }
 
+@media (min-width: 576px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 540px) / 2);
+	}
+}
+
+@media (min-width: 768px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 740px) / 2);
+	}
+}
+
+@media (min-width: 992px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 980px) / 2);
+	}
+}
+
+@media (min-width: 1200px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 1160px) / 2);
+	}
+}
+
+@media (min-width: 1400px) {
+	.header-outer {
+		--vertical-shift: calc((100vw - 1340px) / 2);
+	}
+}
 </style>
