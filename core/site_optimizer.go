@@ -197,9 +197,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if m, ok := instance.(api.BatteryMaxPowerGetter); ok {
-			min, max := m.GetMaxChargeDischargePower()
-			bat.CMin = float32(min)
-			bat.CMax = float32(max)
+			charge, discharge := m.GetMaxChargeDischargePower()
+			bat.CMax = float32(charge)
+			bat.DMax = float32(discharge)
 		}
 
 		req.Batteries = append(req.Batteries, bat)
