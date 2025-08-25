@@ -1,0 +1,71 @@
+template: eebus
+group: generic
+products:
+  - description:
+      de: EEBUS-kompatibles Home Energy Management System
+      en: EEBUS-compatible Home Energy Management System
+requirements:
+  description:
+    en: EEBUS-compatible HEMS for load management using Load Profile Control (LPC). Requires a configured root circuit for load management.
+    de: EEBUS-kompatibles HEMS für Lastmanagement mittels Load Profile Control (LPC). Benötigt einen konfigurierten Stammkreis für Lastmanagement.
+params:
+  - name: ski
+    description:
+      de: SKI (Subject Key Identifier) des EEBUS-Geräts
+      en: SKI (Subject Key Identifier) of the EEBUS device
+    type: string
+    required: true
+    help:
+      de: Eindeutige Kennung des EEBUS-Geräts
+      en: Unique identifier of the EEBUS device
+  - name: contractualConsumptionNominalMax
+    description:
+      de: Vertragliche maximale Nennleistung
+      en: Contractual consumption nominal maximum
+    type: number
+    unit: W
+    default: 24800
+    advanced: true
+    help:
+      de: Maximale vertragliche Leistung in Watt
+      en: Maximum contractual power in watts
+  - name: consumptionLimit
+    description:
+      de: Verbrauchsgrenze
+      en: Consumption limit
+    type: number
+    unit: W
+    default: 0
+    advanced: true
+    help:
+      de: Aktuelle Verbrauchsgrenze in Watt (0 = unbegrenzt)
+      en: Current consumption limit in watts (0 = unlimited)
+  - name: failsafeConsumptionActivePowerLimit
+    description:
+      de: Ausfallsichere Verbrauchsgrenze
+      en: Failsafe consumption active power limit
+    type: number
+    unit: W
+    default: 4200
+    advanced: true
+    help:
+      de: Ausfallsichere Verbrauchsgrenze bei Kommunikationsstörungen
+      en: Failsafe consumption limit during communication failures
+  - name: failsafeDurationMinimum
+    description:
+      de: Minimale Ausfallsicherheitsdauer
+      en: Failsafe duration minimum
+    type: duration
+    default: 2h
+    advanced: true
+    help:
+      de: Mindestdauer des Ausfallsicherheitsmodus
+      en: Minimum duration of failsafe mode
+
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  contractualConsumptionNominalMax: {{ .contractualConsumptionNominalMax }}
+  consumptionLimit: {{ .consumptionLimit }}
+  failsafeConsumptionActivePowerLimit: {{ .failsafeConsumptionActivePowerLimit }}
+  failsafeDurationMinimum: {{ .failsafeDurationMinimum }}
