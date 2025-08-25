@@ -296,31 +296,6 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 		return "", errors.New("empty redirect url on connector session key request")
 	}
 
-	/* nextVal, err := url.Parse(nextUri)
-	if err != nil {
-		return "", err
-	}
-
-	connectorSessionKey := nextVal.Query().Get("connector_session_key")
-	if connectorSessionKey == "" {
-		return "", errors.New("empty or non-existing connector session key")
-	}
-
-	// if we have the connectorSessionKey, go on and find the login code
-	// build new request uri
-	uri = "https://idpconnect-eu.kia.com/auth/api/v2/user/oauth2/authorize"
-	data = url.Values{
-		"client_id":             {v.config.CCSPServiceID},
-		"redirect_uri":          {"https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/redirect"},
-		"response_type":         {"code"},
-		"scope":                 {""},
-		"state":                 {"ccsp"},
-		"connector_client_id":   {"hmgid1.0-" + v.config.CCSPServiceID},
-		"ui_locales":            {"de"},
-		"connector_scope":       {""},
-		"connector_session_key": {connectorSessionKey},
-	} */
-
 	// create a client that doesn't honor redirects so we receive the original response
 	// no idea how to do that with the internal request.New(...) function
 	sc := http.Client{
