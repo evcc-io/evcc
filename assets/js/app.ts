@@ -39,19 +39,15 @@ const app = createApp(
         if (existingMsg) {
           existingMsg.count++;
           existingMsg.time = now;
-          // Move to front
+          // move to front
           this.notifications = [
             existingMsg,
             ...this.notifications.filter((n) => n !== existingMsg),
           ];
         } else {
           this.notifications = [
-            {
-              ...msg,
-              count: 1,
-              time: now,
-            },
-            ...this.notifications,
+            { ...msg, count: 1, time: now },
+            ...this.notifications.slice(0, 14), // keep only last 15
           ];
         }
       },
