@@ -429,7 +429,7 @@
       "addToken": "Insira token",
       "changeToken": "Alterar token",
       "description": "O modelo de apoio (sponsoring) ajuda-nos a manter o projeto e a desenvolver, de forma sustentável, novas funcionalidades. Como apoiante (sponsor), terá acesso às integrações de todos os Carregadores.",
-      "descriptionToken": "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste.",
+      "descriptionToken": "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste {trialToken}.",
       "error": "O token de Apoiante (Sponsor) não é válido.",
       "labelToken": "Token de Apoiante (Sponsor)",
       "title": "Patrocínio",

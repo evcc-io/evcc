@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/evcc-io/evcc/api"
@@ -117,7 +118,12 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		for _, dev := range vehicles {
 			v := dev.Instance()
 
-			d.DumpWithHeader(dev.Config().Name, v)
+			header := dev.Config().Name
+			if title := v.GetTitle(); title != "" {
+				header = fmt.Sprintf("%s (%s)", title, header)
+			}
+
+			d.DumpWithHeader(header, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}

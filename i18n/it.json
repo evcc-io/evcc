@@ -380,7 +380,7 @@
       "addToken": "Inserisci il token",
       "changeToken": "Modifica il token",
       "description": "Il modello di sponsorizzazione ci aiuta a mantenere il progetto e a introdurre in modo sostenibile nuove ed entusiasmanti funzionalità. Come sponsor hai accesso a tutte le implementazioni del caricabatterie.",
-      "descriptionToken": "Ricevi il token da {url}. Offriamo anche un token di prova per i test.",
+      "descriptionToken": "Ricevi il token da {url}. Offriamo anche un token di prova per i test {trialToken}.",
       "error": "Il token sponsor non è valido.",
       "labelToken": "Token sponsor",
       "title": "Sponsorizzazione",

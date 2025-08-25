@@ -429,7 +429,7 @@
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
       "description": "Sponzorský model nám pomáhá udržovat projekt a udržitelně vyvíjet nové a vzrušující funkce. Jako sponzor získáte přístup ke všem implementacím nabíječek.",
-      "descriptionToken": "Sponzorský token získáte na {url}. Pro začátek nabízíme také zkušební token. ",
+      "descriptionToken": "Sponzorský token získáte na {url}. Pro začátek nabízíme také zkušební token {trialToken}.",
       "enterYourToken": "Vložte svůj sponzorský token",
       "error": "Sponzorský token není platný.",
       "invalid": "Neplatný sponzorský token",
