@@ -22,7 +22,7 @@ import (
 
 var (
 	eta          = float32(0.9)  // efficiency of the battery charging/discharging
-	batteryPower = float32(6000) // power of the battery in W
+	batteryPower = float32(6000) // default power of the battery in W
 
 	updated time.Time
 )
@@ -183,18 +183,23 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		dev := site.batteryMeters[i]
 
 		bat := evopt.BatteryConfig{
-			CMin:     0,
 			CMax:     batteryPower,
 			DMax:     batteryPower,
-			SMin:     0,
 			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
 		}
 
-		// TODO atm we cannot cannot control charge from grid speed
-		if _, ok := (dev.Instance()).(api.BatteryController); ok {
+		instance := dev.Instance()
+
+		if _, ok := instance.(api.BatteryController); ok {
 			bat.ChargeFromGrid = lo.ToPtr(true)
+		}
+
+		if m, ok := instance.(api.BatteryMaxPowerGetter); ok {
+			min, max := m.GetMaxChargeDischargePower()
+			bat.CMin = float32(min)
+			bat.CMax = float32(max)
 		}
 
 		req.Batteries = append(req.Batteries, bat)
