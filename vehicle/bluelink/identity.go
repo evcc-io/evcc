@@ -247,22 +247,43 @@ func (v *Identity) brandLoginHyundaiEU(cookieClient *request.Helper, user, passw
 	return code, err
 }
 
-func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password string) (string, error) {
-	req, _ := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
+func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
+	cookieClient := request.NewHelper(v.log)
+	cookieClient.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
 
-	var info struct {
-		UserId    string `json:"userId"`
-		ServiceId string `json:"serviceId"`
+	headers := map[string]string{
+		"content-type": "application/x-www-form-urlencoded",
+		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
 	}
 
-	if err := cookieClient.DoJSON(req, &info); err != nil {
+	data := url.Values{
+		"client_id":         {"peukiaidm-online-sales"},
+		"encryptedPassword": {"false"},
+		"password":          {password},
+		"redirect_uri":      {"https://www.kia.com/api/bin/oneid/login"},
+		"state":             {"aHR0cHM6Ly93d3cua2lhLmNvbTo0NDMvZGUvP3ZlZD0yYWhVS0V3akI2ZFc3dDQtUEF4WFBSZkVESGNDQ0J4UVFnVTk2QkFnY0VBZyZfdG09MTc1NTg1NTY2ODE2Mg==_default"},
+		"username":          {user},
+		"remember_me":       {"false"},
+	}
+
+	req, _ := request.New(http.MethodPost, "https://idpconnect-eu.kia.com/auth/account/signin", strings.NewReader(data.Encode()), headers)
+
+	if _, err := cookieClient.Do(req); err != nil {
 		return "", err
 	}
 
-	var resp *http.Response
+	v.deviceID, _ = v.getDeviceID()
 
 	// get the connector_session_key
-	uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.AuthClientID, v.config.URI, "en")
+	uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.CCSPServiceID, v.config.URI, "en")
+	req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
+		"ccsp-application-id": v.config.CCSPApplicationID,
+		"ccsp-device-id":      v.deviceID,
+		"ccsp-service-id":     v.config.CCSPServiceID,
+		"User-Agent":          "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+	})
 	resp, err := cookieClient.Get(uri)
 	if err != nil {
 		return "", err
@@ -275,7 +296,7 @@ func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password 
 		return "", errors.New("empty redirect url on connector session key request")
 	}
 
-	nextVal, err := url.Parse(nextUri)
+	/* nextVal, err := url.Parse(nextUri)
 	if err != nil {
 		return "", err
 	}
@@ -287,31 +308,34 @@ func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password 
 
 	// if we have the connectorSessionKey, go on and find the login code
 	// build new request uri
-	uri = fmt.Sprintf("%s%s", v.config.LoginFormHost, "/auth/account/signin")
-	data := url.Values{
+	uri = "https://idpconnect-eu.kia.com/auth/api/v2/user/oauth2/authorize"
+	data = url.Values{
 		"client_id":             {v.config.CCSPServiceID},
-		"encryptedPassword":     {"false"},
-		"orgHmgSid":             {""},
-		"password":              {password},
-		"redirect_uri":          {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"redirect_uri":          {"https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/redirect"},
+		"response_type":         {"code"},
+		"scope":                 {""},
 		"state":                 {"ccsp"},
-		"username":              {user},
-		"remember_me":           {"false"},
+		"connector_client_id":   {"hmgid1.0-" + v.config.CCSPServiceID},
+		"ui_locales":            {"de"},
+		"connector_scope":       {""},
 		"connector_session_key": {connectorSessionKey},
-		"_csrf":                 {""},
-	}
+	} */
 
 	// create a client that doesn't honor redirects so we receive the original response
 	// no idea how to do that with the internal request.New(...) function
 	sc := http.Client{
+		Jar:       cookieClient.Client.Jar,
+		Transport: request.NewTripper(v.log, http.DefaultTransport),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
 
-	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Origin":       v.config.LoginFormHost,
+	req, err = request.New(http.MethodGet, nextUri, nil, map[string]string{
+		"ccsp-application-id": v.config.CCSPApplicationID,
+		"ccsp-device-id":      v.deviceID,
+		"ccsp-service-id":     v.config.CCSPServiceID,
+		"User-Agent":          "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
 	})
 	if err != nil {
 		return "", err
@@ -323,6 +347,8 @@ func (v *Identity) brandLoginKiaEU(cookieClient *request.Helper, user, password 
 	}
 
 	location := resp.Header.Get("Location")
+	v.log.ERROR.Print("Location: ", location)
+	v.log.INFO.Print(location)
 	if location == "" {
 		return "", errors.New("missing location header")
 	}
@@ -440,42 +466,39 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
-	v.deviceID, err = v.getDeviceID()
-
-	var cookieClient *request.Helper
-	if err == nil {
-		cookieClient, err = v.getCookies()
-	}
-
-	if err == nil {
-		err = v.setLanguage(cookieClient, language)
-	}
-
 	var code string
-	if err == nil {
-		switch brand {
-		case "kia":
-			code, err = v.brandLoginKiaEU(cookieClient, user, password)
-			if err == nil {
-				var token *oauth2.Token
-				if token, err = v.exchangeCodeKiaEU(code); err == nil {
-					v.TokenSource = oauth.RefreshTokenSource(token, v)
-				}
+	switch brand {
+	case "kia":
+		code, err = v.brandLoginKiaEU(user, password)
+		if err == nil {
+			var token *oauth2.Token
+			if token, err = v.exchangeCodeKiaEU(code); err == nil {
+				v.TokenSource = oauth.RefreshTokenSource(token, v)
 			}
-		case "hyundai":
-			// try new login first, then fallback
-			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
-				code, err = v.bluelinkLogin(cookieClient, user, password)
-			}
-			if err == nil {
-				var token *oauth2.Token
-				if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
-					v.TokenSource = oauth.RefreshTokenSource(token, v)
-				}
-			}
-		default:
-			err = fmt.Errorf("unknown brand (%s)", brand)
 		}
+	case "hyundai":
+		v.deviceID, err = v.getDeviceID()
+
+		var cookieClient *request.Helper
+		if err == nil {
+			cookieClient, err = v.getCookies()
+		}
+
+		if err == nil {
+			err = v.setLanguage(cookieClient, language)
+		}
+		// try new login first, then fallback
+		if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
+			code, err = v.bluelinkLogin(cookieClient, user, password)
+		}
+		if err == nil {
+			var token *oauth2.Token
+			if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
+				v.TokenSource = oauth.RefreshTokenSource(token, v)
+			}
+		}
+	default:
+		err = fmt.Errorf("unknown brand (%s)", brand)
 	}
 
 	if err != nil {
