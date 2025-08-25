@@ -1,4 +1,4 @@
-package core
+package metrics
 
 import (
 	"testing"
@@ -13,7 +13,7 @@ func TestMeterEnergyMeterTotal(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
 
-	me := &meterEnergy{clock: clock}
+	me := &Accumulator{clock: clock}
 
 	me.AddMeterTotal(10)
 	assert.Equal(t, 0.0, me.AccumulatedEnergy())
@@ -27,7 +27,7 @@ func TestMeterEnergyAddPower(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
 
-	me := &meterEnergy{clock: clock}
+	me := &Accumulator{clock: clock}
 
 	clock.Add(60 * time.Minute)
 	me.AddPower(1e3)

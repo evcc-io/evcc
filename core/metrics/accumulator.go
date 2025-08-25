@@ -1,4 +1,4 @@
-package core
+package metrics
 
 import (
 	"bytes"
@@ -9,14 +9,22 @@ import (
 	"github.com/samber/lo"
 )
 
-type meterEnergy struct {
+type Accumulator struct {
 	clock       clock.Clock
 	updated     time.Time
 	meter       *float64 // kWh
 	Accumulated float64  `json:"accumulated"` // kWh
 }
 
-func (m *meterEnergy) String() string {
+func NewAccumulator(clock clock.Clock) *Accumulator {
+	return &Accumulator{clock: clock}
+}
+
+func (m *Accumulator) Updated() time.Time {
+	return m.updated
+}
+
+func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
 	fmt.Fprintf(b, "Accumulated: %.3fkWh updated: %v", m.Accumulated, m.updated.Truncate(time.Second))
 	if m.meter != nil {
@@ -26,12 +34,12 @@ func (m *meterEnergy) String() string {
 }
 
 // AccumulatedEnergy returns the accumulated energy in kWh
-func (m *meterEnergy) AccumulatedEnergy() float64 {
+func (m *Accumulator) AccumulatedEnergy() float64 {
 	return m.Accumulated
 }
 
 // AddMeterTotal adds the difference to the last total meter value in kWh
-func (m *meterEnergy) AddMeterTotal(v float64) {
+func (m *Accumulator) AddMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
 		m.meter = lo.ToPtr(v)
@@ -45,7 +53,7 @@ func (m *meterEnergy) AddMeterTotal(v float64) {
 }
 
 // AddEnergy adds the given energy in kWh
-func (m *meterEnergy) AddEnergy(v float64) {
+func (m *Accumulator) AddEnergy(v float64) {
 	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
@@ -56,6 +64,6 @@ func (m *meterEnergy) AddEnergy(v float64) {
 }
 
 // AddPower adds the given power in W, calculating the energy based on the time since the last update
-func (m *meterEnergy) AddPower(v float64) {
+func (m *Accumulator) AddPower(v float64) {
 	m.AddEnergy(v * m.clock.Since(m.updated).Hours() / 1e3)
 }
