@@ -295,6 +295,18 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
+							:title="$t('config.hems.shm.cardTitle')"
+							editable
+							:error="hasClassError('shm')"
+							data-testid="shm"
+							@edit="openModal('shmModal')"
+						>
+							<template #icon><ShmIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="shmTags" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
 							:title="$t('config.hems.title')"
 							editable
 							:error="hasClassError('hems')"
@@ -372,6 +384,7 @@
 				<ControlModal @changed="loadDirty" />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 				<HemsModal @changed="yamlChanged" />
+				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<ModbusProxyModal @changed="yamlChanged" />
@@ -408,6 +421,8 @@ import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
+import ShmIcon from "../components/MaterialIcon/Shm.vue";
+import ShmModal from "@/components/Config/ShmModal.vue";
 import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
@@ -465,6 +480,8 @@ export default defineComponent({
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
+		ShmModal,
+		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
 		MessagingModal,
@@ -612,6 +629,9 @@ export default defineComponent({
 		},
 		vehicleOptions() {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
+		},
+		shmTags() {
+			return { configured: { value: store.state?.shm?.type !== "" } };
 		},
 		hemsTags() {
 			const result = { configured: { value: false }, hemsType: {} };

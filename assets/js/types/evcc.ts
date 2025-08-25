@@ -37,6 +37,13 @@ export interface HemsConfig {
   type: any;
 }
 
+export interface ShmConfig {
+  type: string;
+  allowcontrol: boolean;
+  vendorid: string;
+  deviceid: string;
+}
+
 export interface FatalError {
   error: string;
   class?: string;
@@ -61,6 +68,7 @@ export interface State {
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
   hems?: HemsConfig;
+  shm?: ShmConfig;
   sponsor?: Sponsor;
   eebus?: any;
   modbusproxy?: [];
