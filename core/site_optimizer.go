@@ -170,6 +170,35 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 		}
 
+		switch lp.GetMode() {
+		case api.ModeOff:
+			// disable charging
+			bat.CMax = 0
+
+		case api.ModeNow, api.ModeMinPV:
+			// forced min/max charging
+			bat.PDemand = continuousDemand(lp, minLen)
+
+		case api.ModePV:
+			// add plan goal
+			goal, socBased := lp.GetPlanGoal()
+			if goal > 0 {
+				if v := lp.GetVehicle(); socBased && v != nil {
+					goal *= v.Capacity()
+				}
+			}
+
+			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
+				// TODO precise slot placement
+				if slot := int(time.Until(ts) / time.Hour); slot < minLen {
+					bat.SGoal = lo.ToPtr(lo.RepeatBy(minLen, func(_ int) float32 { return 0 }))
+					(*bat.SGoal)[slot] = float32(goal)
+				} else {
+					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+				}
+			}
+		}
+
 		req.Batteries = append(req.Batteries, bat)
 
 		details.BatteryDetails = append(details.BatteryDetails, detail)
@@ -257,6 +286,22 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	})
 
 	return nil
+}
+
+// continuousDemand creates a slice of power demands depending on loadpoint mode
+func continuousDemand(lp loadpoint.API, minLen int) *[]float32 {
+	if lp.GetStatus() != api.StatusC {
+		return nil
+	}
+
+	pwr := lp.EffectiveMaxPower()
+	if lp.GetMode() == api.ModeMinPV {
+		pwr = lp.EffectiveMinPower()
+	}
+
+	return lo.ToPtr(lo.RepeatBy(minLen, func(_ int) float32 {
+		return float32(pwr)
+	}))
 }
 
 // loadpointProfile returns the loadpoint's charging profile in Wh
