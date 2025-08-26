@@ -278,13 +278,14 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 
 	// get the connector_session_key
 	uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.CCSPServiceID, v.config.URI, "en")
-	req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
+	headers = map[string]string{
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-service-id":     v.config.CCSPServiceID,
 		"User-Agent":          "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
-	})
-	resp, err := cookieClient.Get(uri)
+	}
+	req, _ = request.New(http.MethodGet, uri, nil, headers)
+	resp, err := cookieClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -306,12 +307,7 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 		},
 	}
 
-	req, err = request.New(http.MethodGet, nextUri, nil, map[string]string{
-		"ccsp-application-id": v.config.CCSPApplicationID,
-		"ccsp-device-id":      v.deviceID,
-		"ccsp-service-id":     v.config.CCSPServiceID,
-		"User-Agent":          "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
-	})
+	req, err = request.New(http.MethodGet, nextUri, nil, headers)
 	if err != nil {
 		return "", err
 	}
@@ -322,8 +318,6 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 	}
 
 	location := resp.Header.Get("Location")
-	v.log.ERROR.Print("Location: ", location)
-	v.log.INFO.Print(location)
 	if location == "" {
 		return "", errors.New("missing location header")
 	}
@@ -462,14 +456,17 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 		if err == nil {
 			err = v.setLanguage(cookieClient, language)
 		}
-		// try new login first, then fallback
-		if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
-			code, err = v.bluelinkLogin(cookieClient, user, password)
-		}
-		if err == nil {
-			var token *oauth2.Token
-			if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource(token, v)
+
+		if err != nil {
+			// try new login first, then fallback
+			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
+				code, err = v.bluelinkLogin(cookieClient, user, password)
+			}
+			if err == nil {
+				var token *oauth2.Token
+				if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
+					v.TokenSource = oauth.RefreshTokenSource(token, v)
+				}
 			}
 		}
 	default:
