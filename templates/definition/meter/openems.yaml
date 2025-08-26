@@ -56,15 +56,10 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
-  {{- if or (eq .usage "grid") (eq .usage "pv") }} 
+  {{- if eq .usage "grid" }} 
   energy:
     source: http
-    {{- if eq .usage "grid" }}
     uri: http://{{ .host }}/rest/channel/_sum/GridBuyActiveEnergy
-    {{- end }}
-    {{- if eq .usage "pv" }}
-    uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
-    {{- end }}
     auth:
       type: basic
       user: x
@@ -72,6 +67,14 @@ render: |
     jq: (.value / 1000 // 0) # convert Wh to kWh
   {{- end }}
   {{- if eq .usage "pv" }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value / 1000 // 0) # convert Wh to kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
