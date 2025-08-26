@@ -154,11 +154,13 @@ func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 
 func (c *cloud) Status() (status Response, err error) {
 	if time.Since(c.updated) >= c.cache {
-		status, err = c.response("api/status", "")
-		if err == nil {
-			c.updated = time.Now()
-			c.status = status
+		status, err := c.response("api/status", "")
+		if err != nil {
+			return c.status, err
 		}
+
+		c.updated = time.Now()
+		c.status = status
 	}
 
 	return c.status, err
