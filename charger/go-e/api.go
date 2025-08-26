@@ -139,7 +139,7 @@ func (c *cloud) IsV2() bool {
 func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 	var status CloudResponse
 
-	url := fmt.Sprintf("https://%s.api.go-e.co/%s?token=%s", c.serial, function, c.token)
+	url := fmt.Sprintf("https://%s.api.v3.go-e.co/%s?token=%s", c.serial, function, c.token)
 	if payload != "" {
 		url += "&payload=" + payload
 	}
@@ -154,7 +154,7 @@ func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 
 func (c *cloud) Status() (status Response, err error) {
 	if time.Since(c.updated) >= c.cache {
-		status, err = c.response("api_status", "")
+		status, err = c.response("api/status", "")
 		if err == nil {
 			c.updated = time.Now()
 			c.status = status
