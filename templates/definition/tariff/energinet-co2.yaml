@@ -1,6 +1,8 @@
 template: energinet-co2
 products:
   - brand: Energinet
+    description:
+      generic: CO₂
 requirements:
   evcc: ["skiptest"]
 group: co2
