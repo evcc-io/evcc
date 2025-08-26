@@ -129,6 +129,13 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use early returns for readability
 - Use configured Axios instance for HTTP communication
 
+### Code Comments
+
+- Keep code comments as brief as possible
+- Start comments with lowercase letters
+- Avoid JSDoc comments - prefer clear code and TypeScript types
+- Use inline comments sparingly, only when the code intent isn't clear from context
+
 ### State Management
 
 - Use `reactive()` from Vue for simple global state
@@ -166,6 +173,25 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use Storybook for component development and visual testing
 - Use semantic selectors (roles, labels, button text); `data-testid` only when necessary
 - Test error states and loading states
+
+### JavaScript Unit Testing (Vitest)
+
+- **Concrete Assertions**: Use specific expected values instead of calculations in tests
+  - Good: `expect(values.slice(0, 3)).toEqual([-0.05, -0.045, -0.04])`
+  - Bad: `expect(values).toContain(Math.min(...inputValues) - stepSize)`
+- **Minimal Logic**: Avoid complex logic in tests; verify exact outputs
+  - Use helper functions for test setup, not for expected value calculations
+  - Check actual function output against known correct values
+- **Test Naming**: Use descriptive names that reflect the feature being tested
+  - Pattern: `featureName: describes what is being tested`
+  - Examples: `extraLow: extends range below minimum`, `formatValue: converts euro to cents`
+- **Edge Cases**: Always test boundary conditions
+  - Empty inputs, single values, extreme ranges
+  - Different step sizes, negative values, zero handling
+- **Programmatic Execution**:
+  - Run all tests: `npm run test` (watch mode) or `npx vitest run` (single run)
+  - Run specific test file: `npx vitest run filename`
+  - Run tests matching pattern: `npx vitest run --grep "pattern"`
 
 ## Playwright Integration Testing
 

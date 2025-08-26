@@ -49,7 +49,7 @@
 			</div>
 			<div v-if="showSmartFeedIn" class="form-check form-switch mt-4">
 				<input
-					id="solarForecastAdjust"
+					id="smartFeedInDisableLimitEnabled"
 					:checked="smartFeedInDisableLimit !== null"
 					class="form-check-input"
 					type="checkbox"
@@ -57,7 +57,7 @@
 					@change="toggleSmartFeedInDisableLimit"
 				/>
 				<div class="form-check-label">
-					<label for="smartFeedInDisableLimit">
+					<label for="smartFeedInDisableLimitEnabled">
 						<i18n-t
 							keypath="forecast.smartFeedInDisable"
 							tag="small"
@@ -114,6 +114,7 @@ import type { CURRENCY, Forecast } from "@/types/evcc";
 import { ForecastType, adjustedSolar } from "@/utils/forecast";
 import type { ForecastSlot, TimeseriesEntry, ForecastZone } from "./types";
 import api from "@/api";
+import { generateTariffLimitOptions } from "@/utils/tariffOptions";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {
@@ -221,14 +222,17 @@ export default defineComponent({
 			return this.$t("forecast.solarAdjust", { percent });
 		},
 		smartFeedInDisableLimitOptions() {
-			const options = [];
-			for (let i = 0; i < 100; i++) {
-				options.push({
-					value: (i - 50) / 100,
-					name: this.fmtPricePerKWh(i, this.currency, true),
-				});
+			if (!this.forecast.feedin?.length) {
+				return [];
 			}
-			return options;
+
+			const values = this.forecast.feedin.map((slot) => slot.value);
+
+			return generateTariffLimitOptions(values, {
+				selectedValue: this.smartFeedInDisableLimit,
+				extraLow: true, // Include extra low values for very negative feed-in prices
+				formatValue: (value: number) => this.fmtPricePerKWh(value, this.currency, true),
+			});
 		},
 	},
 	watch: {

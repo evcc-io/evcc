@@ -1,6 +1,8 @@
 import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
+export type LimitDirection = "above" | "below";
+
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
