@@ -457,7 +457,7 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 			err = v.setLanguage(cookieClient, language)
 		}
 
-		if err != nil {
+		if err == nil {
 			// try new login first, then fallback
 			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
 				code, err = v.bluelinkLogin(cookieClient, user, password)
