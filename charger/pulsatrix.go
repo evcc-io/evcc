@@ -3,7 +3,7 @@ package charger
 /*
 MIT License
 
-Copyright (c) 2023-2024 pulsatrix gmbh
+Copyright (c) 2023-2025 pulsatrix gmbh
 Copyright (c) 2019-2024 andig
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -97,75 +97,100 @@ func NewPulsatrix(hostname string) (*Pulsatrix, error) {
 	return &wb, nil
 }
 
-// ConnectWs connects to a pulsatrix SECC websocket
+// ConnectWs connects to a pulsatrix SECC via websocket
 func (c *Pulsatrix) connectWs() error {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
-	c.log.TRACE.Printf("connecting to %s", c.uri)
+	c.log.DEBUG.Printf("connecting to pulsatrix SECC %s", c.uri)
 	conn, _, err := websocket.Dial(ctx, c.uri, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("websocket dial to pulsatrix SECC %sfailed: %w", c.uri, err)
 	}
 
+	c.mu.Lock()
 	c.conn = conn
+	c.mu.Unlock()
 
-	// ensure evcc and SECC are in sync
-	if err := c.Enable(false); err != nil {
-		c.log.ERROR.Println(err)
+	// sync with pulsatrix SECC with retries
+	for i := 0; i < 3; i++ {
+		if err := c.Enable(false); err == nil {
+			break
+		}
+		if i == 2 {
+			c.log.WARN.Printf("sync with pulsatrix SECC %s failed after 3 attempts", c.uri)
+		}
+		time.Sleep(time.Second)
 	}
 
+	// start reader and heartbeat
 	go c.wsReader()
-	go c.heartbeat(ctx)
+	go c.heartbeat()
 
+	c.log.INFO.Println("connected to pulsatrix SECC", c.uri)
 	return nil
 }
 
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnectWs() {
 	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(time.Second),
-		backoff.WithMaxInterval(time.Minute),
-		backoff.WithMaxElapsedTime(0)) // retry forever; default is 15 min
+		backoff.WithInitialInterval(2 * time.Second),
+		backoff.WithMaxInterval(30 * time.Second),
+		backoff.WithMultiplier(1.5),
+		backoff.WithMaxElapsedTime(5 * time.Minute))
+
 	if err := backoff.Retry(c.connectWs, bo); err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Printf("reconnect to pulsatrix SECC %s failed after 5min: %v", c.uri, err)
 	}
 }
 
 // WsReader runs a loop that reads messages from the websocket
 func (c *Pulsatrix) wsReader() {
+	defer func() {
+		c.mu.Lock()
+		if c.conn != nil {
+			c.conn.Close(websocket.StatusNormalClosure, "websocket reader to pulsatrix SECC exiting")
+			c.conn = nil
+		}
+		c.mu.Unlock()
+
+ 		// exponential backoff reconnect after disconnect
+		time.Sleep(time.Second) // short pause before reconnecting
+		go c.reconnectWs()
+	}()
+
 	for {
+		// context just for this read
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-		defer cancel()
 
 		messageType, message, err := c.conn.Read(ctx)
+		cancel() //  free immediately after read
+
 		if err != nil {
-			c.log.ERROR.Println("read message:", err)
-			break
-		} else {
-			c.parseWsMessage(messageType, message)
+			c.log.WARN.Printf("websocket read on pulsatrix SECC %s error: %v", c.uri, err)
+			return // Trigger defer reconnect
 		}
+
+		c.parseWsMessage(messageType, message)
 	}
-
-	c.mu.Lock()
-	c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
-	c.conn = nil
-	c.mu.Unlock()
-
-	c.reconnectWs()
 }
 
 // wsWrite writes a message to the websocket
 func (c *Pulsatrix) write(message string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.conn != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-		defer cancel()
 
-		if err := c.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
-			return err
-		}
+	if c.conn == nil {
+		return fmt.Errorf("websocket not connected to pulsatrix SECC %s", c.uri)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	defer cancel()
+
+	if err := c.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
+		c.log.WARN.Printf("write to pulsatrix SECC %s failed: %v - triggering reconnect", c.uri, err)
+		go c.reconnectWs() // Async reconnect
+		return err
 	}
 	return nil
 }
@@ -179,13 +204,13 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 		}
 
 		if err := json.Unmarshal(b, &parsedMessage); err != nil {
-			c.log.ERROR.Println(err)
+			c.log.WARN.Println(err)
 			return
 		}
 
 		val, _ := c.data.Get()
 		if err := json.Unmarshal(parsedMessage.Message, &val); err != nil {
-			c.log.ERROR.Println(err)
+			c.log.WARN.Println(err)
 		} else {
 			c.data.Set(val)
 		}
@@ -193,16 +218,13 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 }
 
 // Heartbeat sends a heartbeat to the pulsatrix SECC
-func (c *Pulsatrix) heartbeat(ctx context.Context) {
-	for tick := time.Tick(3 * time.Minute); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
+func (c *Pulsatrix) heartbeat() {
+	ticker := time.NewTicker(3 * time.Minute)
+	defer ticker.Stop()
 
+	for range ticker.C {
 		if err := c.Enable(c.enabled); err != nil {
-			c.log.ERROR.Println(err)
+			c.log.WARN.Println("heartbeat with pulsatrix SECC %s failed: %v", c.uri, err)
 		}
 	}
 }
