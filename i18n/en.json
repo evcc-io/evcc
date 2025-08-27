@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
-      "title": "Load Management"
+      "title": "Load Management",
+      "usableMeters": "Usable meter references"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
@@ -429,13 +430,18 @@
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
-      "descriptionToken": "You get the token from {url}. We also offer a trial token for testing.",
+      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a {trialToken}.",
+      "enterYourToken": "Enter your token",
       "error": "The sponsor token is not valid.",
+      "invalid": "invalid",
       "labelToken": "Sponsor token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredLearnMore": "Learn more.",
-      "trialToken": "Trial token"
+      "tokenRequiredShort": "No sponsor token configured.",
+      "trialToken": "trial token",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Your token"
     },
     "system": {
       "backupRestore": {
@@ -457,7 +463,7 @@
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",
           "settings": "Configuration & settings",
-          "settingsDescription": "Deletes all configured devices, services, plans, etc.",
+          "settingsDescription": "Deletes all configured devices, services, plans, caches, etc.",
           "title": "Reset"
         },
         "restore": {
@@ -619,10 +625,13 @@
   },
   "header": {
     "about": "About",
+    "authProviders": {
+      "confirmLogout": "Are you sure you want to disconnect {title}?",
+      "title": "Authorization Status"
+    },
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",
-    "login": "Vehicle Logins",
     "logout": "Logout",
     "nativeSettings": "Change Server",
     "needHelp": "Need Help?",

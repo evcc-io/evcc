@@ -99,7 +99,7 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {
-		return wb, err
+		return nil, err
 	}
 
 	// replace client transport with authenticated transport
@@ -132,7 +132,11 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 		)
 	}
 
-	return wb, err
+	if err != nil {
+		return nil, err
+	}
+
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

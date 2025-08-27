@@ -22,7 +22,10 @@
 			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
-			<div v-if="fatal" class="flex-grow-1 align-items-center d-flex justify-content-center">
+			<div
+				v-if="hasFatalError"
+				class="flex-grow-1 align-items-center d-flex justify-content-center"
+			>
 				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
 			</div>
 			<div
@@ -81,7 +84,7 @@ import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	Auth,
+	AuthProviders,
 	Battery,
 	CURRENCY,
 	Forecast,
@@ -89,6 +92,8 @@ import type {
 	Notification,
 	SMART_COST_TYPE,
 	Sponsor,
+	FatalError,
+	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
 
@@ -129,10 +134,8 @@ export default defineComponent({
 		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Object,
-
-		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
-
-		currency: { type: String as PropType<CURRENCY>, required: true },
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY> },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -151,8 +154,10 @@ export default defineComponent({
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
-		fatal: Object,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
+		telemetry: Boolean,
+		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
 		batteryConfigured() {
@@ -190,7 +195,7 @@ export default defineComponent({
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
+			return this.collectProps(Navigation);
 		},
 		showParkingLot() {
 			// work in progess
@@ -216,8 +221,12 @@ export default defineComponent({
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
+					telemetry: this.telemetry,
 				},
 			};
+		},
+		hasFatalError() {
+			return this.fatal.length > 0;
 		},
 	},
 	methods: {

@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
-      "title": "Lastmanagement"
+      "title": "Lastmanagement",
+      "usableMeters": "Verwendbare Zählerreferenzen"
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
@@ -163,7 +164,7 @@
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "save": "Speichern",
-      "selectFile": "Durchsuchen...",
+      "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
@@ -249,7 +250,7 @@
       "phases3p": "3-phasig",
       "phasesAutomatic": "Automatische Phasen",
       "phasesAutomaticHelp": "Deine Wallbox unterstützt automatisches Umschalten zwischen 1- und 3-phasigem Laden. In der Hauptansicht kannst du das Phasenverhalten während des Ladens anpassen.",
-      "phasesHelp": "Anzahl der an die Wallbox angeschlossenen Phasen.",
+      "phasesHelp": "Anzahl der angeschlossenen Phasen.",
       "phasesLabel": "Phasen",
       "pollIntervalDanger": "Regelmäßiges Abfragen des Fahrzeuges kann dazu führen, dass die Fahrzeugbatterie entleert wird. Einige Fahrzeughersteller sperren das Laden in solchen Fällen auch aktiv. Nicht empfohlen! Verwende diese Einstellung nur, wenn du dir der Risiken bewusst bist.",
       "pollIntervalHelp": "Zeit zwischen Fahrzeug-API-Updates. Kurze Intervalle können die Fahrzeugbatterie belasten.",
@@ -261,24 +262,24 @@
       "pollModeConnected": "wenn verbunden",
       "pollModeConnectedHelp": "Fahrzeugstatus in regelmäßigen Abständen abfragen, wenn verbunden.",
       "pollModeLabel": "Update-Verhalten",
-      "priorityHelp": "Ladepunkte mit höherer Priorität haben Vorrang beim PV-Überschuss.",
+      "priorityHelp": "Höherer Prioritäten haben Vorrang beim PV-Überschuss.",
       "priorityLabel": "Priorität",
       "save": "Speichern",
       "showAllSettings": "Alle Einstellungen anzeigen",
       "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
-      "solarBehaviorDefaultHelp": "Nur mit PV-Überschuss laden. Start nach {enableDelay} Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
+      "solarBehaviorDefaultHelp": "Start nach {enableDelay} ausreichend vorhandenem Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
       "solarBehaviorLabel": "PV-Überschuss",
       "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
       "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
-      "thresholdDisableHelpZero": "Stoppen, wenn minimale Ladeleistung für {delay} nicht erreicht werden kann.",
+      "thresholdDisableHelpZero": "Stoppen, wenn minimale Mindestleistung für {delay} nicht erreicht werden kann.",
       "thresholdDisableLabel": "Netzleistung ausschalten",
       "thresholdEnableDelayLabel": "Einschaltverzögerung",
       "thresholdEnableHelpInvalid": "Bitte verwende einen negativen Wert.",
-      "thresholdEnableHelpNegative": "Laden starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
-      "thresholdEnableHelpZero": "Starten, wenn minimale Ladeleistung für {delay} als Überschuss verfügbar ist.",
+      "thresholdEnableHelpNegative": "Starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
+      "thresholdEnableHelpZero": "Starten, wenn erforderliche Mindestleistung für {delay} als Überschuss verfügbar ist.",
       "thresholdEnableLabel": "Netzleistung einschalten",
       "titleAdd": {
         "charging": "Ladepunkt hinzufügen",
@@ -429,13 +430,18 @@
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
-      "descriptionToken": "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an.",
+      "descriptionToken": "Als Sponsor erhältst du dein Token auf {url}. Zum Ausprobieren gibts ein {trialToken}.",
+      "enterYourToken": "Token eingeben",
       "error": "Das Sponsortoken ist ungültig.",
+      "invalid": "ungültig",
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
-      "trialToken": "Testtoken"
+      "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
+      "trialToken": "Testtoken",
+      "viaYaml": "über evcc.yaml",
+      "yourToken": "Dein Token"
     },
     "system": {
       "backupRestore": {
@@ -457,7 +463,7 @@
           "sessions": "Ladevorgänge",
           "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
           "settings": "Konfiguration & Einstellungen",
-          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, usw.",
+          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, Caches, usw.",
           "title": "Zurücksetzen"
         },
         "restore": {
@@ -619,10 +625,13 @@
   },
   "header": {
     "about": "Über",
+    "authProviders": {
+      "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+      "title": "Autorisierungsstatus"
+    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
-    "login": "Fahrzeug-Logins",
     "logout": "Abmelden",
     "nativeSettings": "Server ändern",
     "needHelp": "Hilfe benötigt?",

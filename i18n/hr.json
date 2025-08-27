@@ -45,10 +45,19 @@
       "switchsockets": "Promijenjive utičnice",
       "template": "Proizvođač",
       "titleAdd": {
-        "charging": "Dodati punjač"
+        "charging": "Dodati punjač",
+        "heating": "Dodati grijač"
       },
       "titleEdit": {
-        "charging": "Urediti punjač"
+        "charging": "Urediti punjač",
+        "heating": "Urediti grijač"
+      },
+      "type": {
+        "custom": {
+          "charging": "Korisnički definirani punjač",
+          "heating": "Korisnički definirani grijač"
+        },
+        "heatpump": "Korisnički definirana dizalica topline"
       }
     },
     "circuits": {
@@ -83,8 +92,8 @@
       "currentRange": "Struja",
       "enabled": "Omogućeno",
       "energy": "Energija",
-      "feedinPrice": "Cijena za nabavu",
-      "gridPrice": "Cijena mreže",
+      "feedinPrice": "Cijena izvoza",
+      "gridPrice": "Cijena uvoza",
       "heaterTempLimit": "Ograničenje grijača",
       "hemsType": "Sustav",
       "identifier": "RFID-identifikator",
@@ -143,12 +152,15 @@
       "docsLink": "Vidjeti dokumentaciju.",
       "experimental": "Eksperimentalno",
       "hideAdvancedSettings": "Sakrij napredne postavke",
+      "invalidFileSelected": "Neispravna datoteka",
+      "noFileSelected": "Datoteka nije odabrana.",
       "off": "isključeno",
       "on": "uključeno",
       "password": "Lozinka",
       "readFromFile": "Učitati iz datoteke",
       "remove": "Ukloniti",
       "save": "Spremiti",
+      "selectFile": "Pretraži",
       "showAdvancedSettings": "Prikaži napredne postavke",
       "telemetry": "Telemetrija",
       "templateLoading": "Učitavanje…",
@@ -185,9 +197,10 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Dodati punjač"
+        "charging": "Dodati punjač",
+        "heating": "Dodati grijač"
       },
-      "addMeter": "Dodati zasebni strujomjer",
+      "addMeter": "Dodati zasebno brojilo energije",
       "cancel": "Odustati",
       "chargerError": {
         "charging": "Nužno je postaviti punjač."
@@ -202,7 +215,7 @@
       "chargerPowerCustom": "drugo",
       "chargerPowerCustomHelp": "Postaviti zaseban raspon struje.",
       "chargerTypeLabel": "Tip punjača",
-      "chargingTitle": "Punjenje",
+      "chargingTitle": "Ponašanje",
       "circuitHelp": "Postavljanje upravljanja energijom kako bi se osiguralo da se ne prijeđu trenutna ograničenja.",
       "circuitLabel": "Strujni krug",
       "circuitUnassigned": "nepostavljen",
@@ -226,7 +239,7 @@
       "phases3p": "3 faze",
       "phasesAutomatic": "Automatske faze",
       "phasesAutomaticHelp": "Vaš punjač podržava prebacivanje između 1 i 3 faze. Na glavom zaslonu možete postaviti željeno ponašanje prilikom punjenja.",
-      "phasesHelp": "Broj faza povezanih s punjačem.",
+      "phasesHelp": "Broj povezanih faza.",
       "phasesLabel": "Faze",
       "pollIntervalDanger": "Često slanje upita vozilo može isprazniti bateriju. Neki proizvođači vozila mogu aktivno spriječiti punjenje u takvim situacijama. Nije preporučljivo! Koristite ovo samo ako ste svjesni rizika.",
       "pollIntervalHelp": "Vrijeme između API očitavanja. Kratki intervali mogu isprazniti bateriju vozila.",
@@ -391,7 +404,7 @@
       "addToken": "Unesite token",
       "changeToken": "Promijenite token",
       "description": "Sponzorski model nam omogućava održavanje projekta i razvoj novih mogućnosti. Sponzori imaju pristup svim implementacijama za punjače.",
-      "descriptionToken": "Token možete dobiti na {url}. Moguće je zatražiti i probni token za testiranje.",
+      "descriptionToken": "Token možete dobiti na {url}. Moguće je zatražiti i probni token za testiranje {trialToken}.",
       "error": "Sponzorski token nije ispravan.",
       "labelToken": "Sponzorski token",
       "title": "Sponzorstvo",

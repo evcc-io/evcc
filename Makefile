@@ -13,9 +13,9 @@ LD_FLAGS := -X github.com/evcc-io/evcc/util.Version=$(VERSION) -X github.com/evc
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
-DOCKER_IMAGE := evcc/evcc
-DOCKER_TAG := testing
-PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
+DOCKER_IMAGE ?= evcc/evcc
+DOCKER_TAG ?= testing
+PLATFORM ?= linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 GOK_DIR := packaging/gokrazy
@@ -78,9 +78,6 @@ snapshot::
 
 release::
 	goreleaser --clean
-
-openapi::
-	cd server/mcp && go run github.com/evcc-io/evcc/server/mcp/openapi https://raw.githubusercontent.com/evcc-io/docs/refs/heads/main/static/rest-api.yaml
 
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)

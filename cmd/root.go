@@ -189,15 +189,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup telemetry
 	if err == nil {
-		telemetry.Create(conf.Plant)
+		telemetry.Create(conf.Plant, valueChan)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
 		}
-	}
-
-	// setup modbus proxy
-	if err == nil {
-		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
 	}
 
 	// setup site and loadpoints
@@ -259,13 +254,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup MCP
 	if viper.GetBool("mcp") {
-		const path = "/mcp"
-		local := conf.Network.URI()
 		router := httpd.Router()
 
 		var handler http.Handler
-		if handler, err = mcp.NewHandler(router, local, path); err == nil {
-			router.PathPrefix(path).Handler(handler)
+		if handler, err = mcp.NewHandler(router); err == nil {
+			router.PathPrefix("/mcp").Handler(handler)
 		}
 	}
 
@@ -314,7 +307,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}()
 
 	// allow web access for vehicles
-	configureAuth(httpd.Router())
+	configureAuth(httpd.Router(), valueChan)
 
 	authObject := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
@@ -355,9 +348,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		// improve error message
-		err = wrapFatalError(err)
-		valueChan <- util.Param{Key: keys.Fatal, Val: err}
+		if uw, ok := err.(interface{ Unwrap() []error }); ok {
+			valueChan <- util.Param{Key: keys.Fatal, Val: uw.Unwrap()}
+		} else {
+			valueChan <- util.Param{Key: keys.Fatal, Val: []error{wrapFatalError(err)}}
+		}
 
 		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)

@@ -1,15 +1,18 @@
-package oauth2redirect
+package providerauth
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
@@ -28,6 +31,11 @@ type Handler struct {
 	log       *util.Logger
 }
 
+type AuthProvider struct {
+	ID            string `json:"id"`
+	Authenticated bool   `json:"authenticated"`
+}
+
 func init() {
 	var secret [16]byte
 	_, err := io.ReadFull(rand.Reader, secret[:])
@@ -37,39 +45,68 @@ func init() {
 	}
 
 	instance = &Handler{
+		mu:        sync.Mutex{},
 		secret:    secret[:],
 		providers: make(map[string]api.AuthProvider),
 		states:    make(map[string]string),
-		log:       util.NewLogger("oauth2redirect"),
+		log:       util.NewLogger("providerauth"),
 	}
 }
 
-// SetupRouter connects the redirect handler to the router
-func SetupRouter(router *mux.Router) {
+// Setup connects the redirect handler to the router and registers the callback channel
+func Setup(router *mux.Router, paramC chan<- util.Param) {
 	// callback?code=...&state=...
 	router.Methods(http.MethodGet).Path("/callback").HandlerFunc(instance.handleCallback)
 	// login?id=...
 	router.Methods(http.MethodGet).Path("/login").HandlerFunc(instance.handleLogin)
 	// logout?id=...
 	router.Methods(http.MethodGet).Path("/logout").HandlerFunc(instance.handleLogout)
+
+	ticker := time.NewTicker(10 * time.Second)
+
+	go func() {
+		for range ticker.C {
+			instance.Publish(paramC)
+		}
+	}()
+}
+
+func (a *Handler) Publish(paramC chan<- util.Param) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	apMap := make(map[string]*AuthProvider)
+
+	for id, provider := range a.providers {
+		ap := &AuthProvider{
+			ID:            url.QueryEscape(id),
+			Authenticated: provider.Authenticated(),
+		}
+		apMap[provider.DisplayName()] = ap
+	}
+
+	a.log.TRACE.Printf("publishing %d auth providers", len(apMap))
+
+	// publish the updated auth providers
+	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
 // Register registers a specific AuthProvider. Returns login path as string.
-func Register(handler api.AuthProvider, name string) (string, error) {
+func Register(handler api.AuthProvider, name string) error {
 	return instance.register(handler, name)
 }
 
-func (a *Handler) register(handler api.AuthProvider, name string) (string, error) {
+func (a *Handler) register(handler api.AuthProvider, name string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.providers[name] != nil {
 		a.log.ERROR.Printf("provider with name %s already registered", name)
-		return "", errors.New("provider already registered")
+		return errors.New("provider already registered")
 	}
-	a.log.INFO.Printf("registering oauth provider at /oauth/login?id=%s", name)
+	a.log.INFO.Printf("registering oauth provider: %s", name)
 	a.providers[name] = handler
-	return "/oauth/login?id=" + name, nil
+	return nil
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +118,8 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "missing id")
 		return
 	}
+
+	a.log.DEBUG.Printf("login request for provider: %s", id)
 
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -106,14 +145,17 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}(encryptedState)
 
 	// Build authorization URL
-	loginURL := provider.AuthCodeURL(encryptedState)
-	if loginURL == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid login URL")
-		return
-	}
+	loginUri := provider.Login(encryptedState)
 
-	http.Redirect(w, r, loginURL, http.StatusFound)
+	responseVal := struct {
+		LoginUri string `json:"loginUri"`
+	}{
+		LoginUri: loginUri,
+	}
+	if err := json.NewEncoder(w).Encode(responseVal); err != nil {
+		a.log.ERROR.Printf("failed to encode login URI response: %v", err)
+	}
+	w.WriteHeader(http.StatusFound)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +179,9 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle logout
-	provider.HandleLogout(r)
+	if err := provider.Logout(); err != nil {
+		a.log.ERROR.Printf("logout for provider %s failed: %v", id, err)
+	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -187,7 +231,12 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	delete(a.states, encryptedState)
 
 	// Handle the callback
-	provider.HandleCallback(r)
+	if err := provider.HandleCallback(r.URL.Query()); err != nil {
+		a.log.ERROR.Printf("callback handling for provider %s failed: %v", id, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "callback handling failed")
+		return
+	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }

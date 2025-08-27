@@ -45,10 +45,22 @@
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
       "titleAdd": {
-        "charging": "Lägg till laddare"
+        "charging": "Lägg till laddare",
+        "heating": "Lägg till värmare"
       },
       "titleEdit": {
-        "charging": "Ändra laddare"
+        "charging": "Ändra laddare",
+        "heating": "Ändra värmare"
+      },
+      "type": {
+        "custom": {
+          "charging": "Egendefinierad laddare",
+          "heating": "Egendefinierad värmare"
+        },
+        "heatpump": "Egendefinierad värmepump",
+        "sgready": "Egendefinierad värmepump (sg-ready, alla)",
+        "sgready-boost": "Egendefinierad värmepump (sg-ready, boost)",
+        "switchsocket": "Egendefinierad strömbrytare"
       }
     },
     "circuits": {
@@ -143,12 +155,15 @@
       "docsLink": "Se dokumentation.",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
+      "invalidFileSelected": "Ogiltig fil vald",
+      "noFileSelected": "Ingen fil vald.",
       "off": "av",
       "on": "på",
       "password": "Lösenord",
       "readFromFile": "Läs från fil",
       "remove": "Ta bort",
       "save": "Spara",
+      "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
@@ -185,15 +200,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Lägg till laddare"
+        "charging": "Lägg till laddare",
+        "heating": "Lägg till värmare"
       },
-      "addMeter": "Lägg till dedikerad laddmätare",
+      "addMeter": "Lägg till dedikerad energimätare",
       "cancel": "Avbryt",
       "chargerError": {
-        "charging": "Konfigurering av laddare krävs."
+        "charging": "Konfigurering av laddare krävs.",
+        "heating": "En värmare måste konfigureras."
       },
       "chargerLabel": {
-        "charging": "Laddare"
+        "charging": "Laddare",
+        "heating": "Värmare"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
@@ -202,14 +220,15 @@
       "chargerPowerCustom": "annan",
       "chargerPowerCustomHelp": "Ange strömintervall.",
       "chargerTypeLabel": "Typ av laddare",
-      "chargingTitle": "Laddar",
+      "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
       "defaultModeHelp": {
-        "charging": "Laddningsläge vid anslutning till fordon."
+        "charging": "Laddningsläge vid anslutning till fordon.",
+        "heating": "Ställs in vid systemstart."
       },
-      "defaultModeHelpKeep": "Använder senast valda laddningsläge.",
+      "defaultModeHelpKeep": "Använder senast valda läge.",
       "defaultModeLabel": "Standardinställning",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
@@ -222,11 +241,15 @@
       "minCurrentHelp": "Ange endast under 6 A om du vet vad du gör.",
       "minCurrentLabel": "Minimum strömstyrka",
       "noVehicles": "Inga fordon är konfigurerade.",
+      "option": {
+        "charging": "Lägg till laddplats",
+        "heating": "Lägg till värmare"
+      },
       "phases1p": "1-fas",
       "phases3p": "3-fas",
       "phasesAutomatic": "Automatisk fasväljare",
       "phasesAutomaticHelp": "Din laddare kan automatiskt byta mellan 1- och 3-fasladdning. På huvudskärmen kan du ändra fasinställningarna under laddning.",
-      "phasesHelp": "Antalet faser som är anslutna till laddaren.",
+      "phasesHelp": "Antalet faser som är anslutna.",
       "phasesLabel": "Faser",
       "pollIntervalDanger": "Att anropa fordonet ofta kan tömma batteriet. En del fordonstillverkare kan aktivt förhindra att fordonet laddas i så fall. Rekommenderas inte! Använd enbart om du är medveten om risken.",
       "pollIntervalHelp": "Tid mellan fordons API uppdateringar. Korta intervaller kan minska fordonets batterinivå.",
@@ -238,7 +261,7 @@
       "pollModeConnected": "ansluten",
       "pollModeConnectedHelp": "Uppdatera fordonsstatus med jämna mellanrum vid anslutning till laddaren.",
       "pollModeLabel": "Uppdatera tillvägagångsätt",
-      "priorityHelp": "Högre prioriterade laddare får snabbare tillgång till solenergiöverskott.",
+      "priorityHelp": "Högre prioritet får snabbare tillgång till solenergiöverskott.",
       "priorityLabel": "Prioritet",
       "save": "Spara",
       "showAllSettings": "Visa alla inställningar",
@@ -258,12 +281,19 @@
       "thresholdEnableHelpZero": "Starta när minimum överskott av laddningseffekt finns i {delay}.",
       "thresholdEnableLabel": "Anslut elnätet",
       "titleAdd": {
-        "charging": "Lägg till laddare"
+        "charging": "Lägg till laddplats",
+        "heating": "Lägg till värmare",
+        "unknown": "Lägg till laddare eller värmare"
       },
       "titleEdit": {
-        "charging": "Redigera laddare"
+        "charging": "Redigera laddare",
+        "heating": "Ändra värmarenhet",
+        "unknown": "Ändra laddare eller värmare"
       },
-      "titleExample": "Garage, Carport, et cetera.",
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Värmepump, värmare etc."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatisk detektering",
       "vehicleHelpAutoDetection": "Väljer automatiskt det mest troliga fordonet. Manuell inställning är möjlig.",
@@ -367,6 +397,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Värmer",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (okrypterad)",
         "https": "HTTPS (krypterad)"
@@ -395,15 +429,53 @@
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Du får token från {url}. Vi erbjuder också en prov-token för testning.",
+      "descriptionToken": "Du får token från {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
+      "invalid": "ogiltig",
       "labelToken": "Sponsor-token",
       "title": "Sponsor",
       "tokenRequired": "Du måste ange en sponsortoken innan du kan lägga till detta fordon.",
       "tokenRequiredLearnMore": "Läs mer.",
-      "trialToken": "Testtoken"
+      "tokenRequiredShort": "Ingen sponsor-token konfigurerad.",
+      "trialToken": "Testtoken",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Din sponsor-token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download backup...",
+          "confirmationButton": "Download backup",
+          "confirmationText": "Ange ditt lösenord för att ladda hem databasfilen.",
+          "description": "Säkerhetskopiera dina data. Denna fil används för att återställa data i händelse av en systemkrasch.",
+          "title": "Säkerhetskopia"
+        },
+        "cancel": "Avbryt",
+        "confirmWithPassword": "Bekräfta",
+        "description": "Säkerhetskopiera, återställ och nollställ dina data. Användbart om vill flytta till ett annat system.",
+        "note": "Anmärkning: Alla ovanstående ändringar ändrar endast databasens data. Konfigurationsfilen evcc.yaml ändras inte.",
+        "reset": {
+          "action": "Nollställ...",
+          "confirmationButton": "Nollställ & starta om",
+          "confirmationText": "Denna åtgärd raderar dina data permanent. Säkerställ att du har sparat en backup först.",
+          "description": "Har du problem med konfigurationen och vill börja om? Radera all data och starta om.",
+          "sessions": "Laddningar",
+          "sessionsDescription": "Raderar din laddningshistorik.",
+          "settings": "Konfiguration & inställningar",
+          "settingsDescription": "Raderar alla konfigurerade enheter, tjänster, abonnemang etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Återställ...",
+          "confirmationButton": "Återställ & starta om",
+          "confirmationText": "Detta kommer att radera hela databasen. Se till att säkerhetskopiera först.",
+          "description": "Återställ data från en backup-fil. Detta raderar dina nuvarande data.",
+          "labelFile": "Säkerhetskopia",
+          "title": "Återställ"
+        },
+        "title": "Säkerhetskopiera & återställ"
+      },
       "logs": "Loggar",
       "restart": "Omstart",
       "restartRequiredDescription": "Starta om för att de nya inställningarna ska börja gälla.",
@@ -553,6 +625,10 @@
   },
   "header": {
     "about": "Om",
+    "authProviders": {
+      "confirmLogout": "Är du säker på att du vill bryta anslutningen {title}?",
+      "title": "Auktoriseringsstatus"
+    },
     "blog": "Blogg",
     "docs": "Dokumentation",
     "github": "GitHub",

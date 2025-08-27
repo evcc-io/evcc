@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
 
@@ -18,7 +19,7 @@ type solarDetails struct {
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Timeseries       []tsEntry    `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 }
 
 type dailyDetails struct {
@@ -112,27 +113,27 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	// calculate adjusted solar forecast
-	if solar := timestampSeries(tariff.Forecast(site.GetTariff(api.TariffUsageSolar))); len(solar) > 0 {
+	if solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
 	site.publish(keys.Forecast, fc)
 }
 
-func (site *Site) solarDetails(solar timeseries) solarDetails {
+func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
-		Timeseries: solar,
+		Timeseries: solarTimeseries(solar),
 	}
 
-	last := solar[len(solar)-1].Timestamp
+	last := solar[len(solar)-1].Start
 
-	bod := beginningOfDay(time.Now())
+	bod := now.BeginningOfDay()
 	eod := bod.AddDate(0, 0, 1)
 	eot := eod.AddDate(0, 0, 1)
 
-	remainingToday := solar.energy(time.Now(), eod)
-	tomorrow := solar.energy(eod, eot)
-	dayAfterTomorrow := solar.energy(eot, eot.AddDate(0, 0, 1))
+	remainingToday := solarEnergy(solar, time.Now(), eod)
+	tomorrow := solarEnergy(solar, eod, eot)
+	dayAfterTomorrow := solarEnergy(solar, eot, eot.AddDate(0, 0, 1))
 
 	res.Today = dailyDetails{
 		Yield:    remainingToday,
@@ -148,12 +149,18 @@ func (site *Site) solarDetails(solar timeseries) solarDetails {
 	}
 
 	// accumulate forecasted energy since last update
-	site.fcstEnergy.AddEnergy(solar.energy(site.fcstEnergy.updated, time.Now()) / 1e3)
+	energy := solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3
+	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
+		energy, site.fcstEnergy.updated.Truncate(time.Second), time.Now().Truncate(time.Second),
+	)
+
+	site.fcstEnergy.AddEnergy(energy)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
 
 	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
 		return v.AccumulatedEnergy()
 	})
+	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
 	if fcst := site.fcstEnergy.AccumulatedEnergy(); fcst > 0 {
 		scale := produced / fcst

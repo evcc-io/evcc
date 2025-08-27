@@ -196,6 +196,7 @@ export default defineComponent({
 		legends() {
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
+				let type: "area" | "line" = "area";
 
 				// line chart handling
 				if ((dataset as any).type === "line") {
@@ -210,6 +211,7 @@ export default defineComponent({
 								: this.fmtGrams(value, false);
 					};
 					value = `${format(min, false)} – ${format(max, true)}`;
+					type = "line";
 				} else {
 					const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 					value =
@@ -221,6 +223,7 @@ export default defineComponent({
 					label: dataset.label || "",
 					color: dataset.backgroundColor,
 					value,
+					type,
 				};
 			});
 		},
@@ -322,10 +325,14 @@ export default defineComponent({
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value: number) =>
-								this.costType === TYPES.PRICE
-									? this.fmtMoney(value, this.currency, false, true)
-									: this.fmtNumber(value / 1e3, 0),
+							callback: (value: number) => {
+								if (this.costType === TYPES.PRICE) {
+									const showDecimals = this.suggestedMaxCost < 4;
+									return this.fmtMoney(value, this.currency, showDecimals, true);
+								} else {
+									return this.fmtNumber(value / 1e3, 0);
+								}
+							},
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},

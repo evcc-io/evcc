@@ -18,19 +18,20 @@ func (m *batteryCapacity) Decorator() func() float64 {
 	}
 }
 
-type batteryMaxACPower struct {
-	MaxACPower float64
+type batteryChargeDischargePower struct {
+	MaxChargePower    float64
+	MaxDischargePower float64
 }
 
-// var _ api.MaxACPowerGetter = (*batteryMaxACPower)(nil)
+// var _ api.BatteryMaxPowerGetter = (*batteryChargeDischargePower)(nil)
 
-// Decorator returns the max AC power decorator
-func (m *batteryMaxACPower) Decorator() func() float64 {
-	if m.MaxACPower == 0 {
+// Decorator returns the max charge/discharge power decorator
+func (m *batteryChargeDischargePower) Decorator() func() (float64, float64) {
+	if m.MaxChargePower == 0 || m.MaxDischargePower == 0 {
 		return nil
 	}
-	return func() float64 {
-		return m.MaxACPower
+	return func() (float64, float64) {
+		return m.MaxChargePower, m.MaxDischargePower
 	}
 }
 

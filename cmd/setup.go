@@ -22,6 +22,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
@@ -32,10 +33,11 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
-	"github.com/evcc-io/evcc/server/oauth2redirect"
+	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -489,6 +491,7 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
+		sponsor.SetFromYaml(false) // from database
 	}
 
 	// TODO migrate settings
@@ -546,6 +549,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
+	// setup modbus proxy
+	if err == nil {
+		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
+	}
+
 	// setup javascript VMs
 	if err == nil {
 		err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
@@ -554,12 +562,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// setup go VMs
 	if err == nil {
 		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
-	}
-
-	// setup config database
-	if err == nil {
-		// TODO decide wrapping
-		err = config.Init(db.Instance)
 	}
 
 	return err
@@ -579,7 +581,19 @@ func configureDatabase(conf globalconfig.DB) error {
 		return err
 	}
 
+	if err := metrics.Init(); err != nil {
+		return err
+	}
+
 	if err := settings.Init(); err != nil {
+		return err
+	}
+
+	if err := cache.Init(); err != nil {
+		return err
+	}
+
+	if err := config.Init(); err != nil {
 		return err
 	}
 
@@ -805,7 +819,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewCachedFromConfig(ctx, conf.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
@@ -864,16 +878,16 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 }
 
 func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
+	tariffs := tariff.Tariffs{
+		Currency: currency.EUR,
+	}
+
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
 		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
-			return nil, err
+			return &tariffs, err
 		}
-	}
-
-	tariffs := tariff.Tariffs{
-		Currency: currency.EUR,
 	}
 
 	if conf.Currency != "" {
@@ -892,7 +906,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	if err := eg.Wait(); err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		return &tariffs, &ClassError{ClassTariff, err}
 	}
 
 	return &tariffs, nil
@@ -904,20 +918,26 @@ func configureDevices(conf globalconfig.All) error {
 		return err
 	}
 
-	// TODO: add name/identifier to error for better highlighting in UI
+	// make sure all devices are configured
+	var errs []error
+
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
-		return &ClassError{ClassMeter, err}
+		errs = append(errs, &ClassError{ClassMeter, err})
 	}
+
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
-		return &ClassError{ClassCharger, err}
+		errs = append(errs, &ClassError{ClassCharger, err})
 	}
+
 	if err := configureVehicles(conf.Vehicles); err != nil {
-		return &ClassError{ClassVehicle, err}
+		errs = append(errs, &ClassError{ClassVehicle, err})
 	}
+
 	if err := configureCircuits(&conf.Circuits); err != nil {
-		return &ClassError{ClassCircuit, err}
+		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
-	return nil
+
+	return joinErrors(errs...)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
@@ -952,38 +972,39 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 			return nil, err
 		}
 		conf.Interval = time.Duration(d)
-
-		// TODO remove yaml file
-		// } else if conf.Interval != 0 {
-		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
+	var errs []error
+
 	if err := configureDevices(*conf); err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	if err := configureLoadpoints(*conf); err != nil {
-		return nil, &ClassError{ClassLoadpoint, err}
+		errs = append(errs, &ClassError{ClassLoadpoint, err})
 	}
 
 	tariffs, err := configureTariffs(&conf.Tariffs)
 	if err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
 	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		lp := dev.Instance()
-		return lp.(*core.Loadpoint)
+		return dev.Instance().(*core.Loadpoint)
 	})
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return site, joinErrors(errs...)
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
 		if err := validateCircuits(loadpoints); err != nil {
-			return nil, &ClassError{ClassCircuit, err}
+			return site, &ClassError{ClassCircuit, err}
 		}
 	}
 
@@ -1027,11 +1048,11 @@ CONTINUE:
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
-		return nil, err
+		return site, err
 	}
 
 	if err := site.Boot(log, loadpoints, tariffs); err != nil {
-		return nil, fmt.Errorf("failed configuring site: %w", err)
+		return site, fmt.Errorf("failed booting site: %w", err)
 	}
 
 	return site, nil
@@ -1084,8 +1105,11 @@ func configureLoadpoints(conf globalconfig.All) error {
 			err = &DeviceError{cc.Name, e}
 		}
 
-		if e := dynamic.Apply(instance); e != nil && err == nil {
-			err = &DeviceError{cc.Name, e}
+		if instance != nil {
+			// ignore dynamic config in case of startup errors that will leave instance empty
+			if e := dynamic.Apply(instance); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
+			}
 		}
 
 		if err != nil {
@@ -1097,13 +1121,13 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(router *mux.Router) {
-	auth := router.PathPrefix("/oauth").Subrouter()
+func configureAuth(router *mux.Router, paramC chan<- util.Param) {
+	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
 	// wire the handler
-	oauth2redirect.SetupRouter(auth)
+	providerauth.Setup(auth, paramC)
 }

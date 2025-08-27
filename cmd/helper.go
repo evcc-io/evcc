@@ -12,7 +12,8 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"github.com/evcc-io/evcc/util/config"
+	"go.yaml.in/yaml/v4"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -94,6 +95,18 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
+// joinErrors is like errors.Join but does not wrap single errors (refs https://groups.google.com/g/golang-nuts/c/N0D1g5Ec_ZU)
+func joinErrors(errs ...error) error {
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.Join(errs...)
+	}
+}
+
 func wrapFatalError(err error) error {
 	if err == nil {
 		return nil
@@ -126,4 +139,16 @@ func customDevice(other map[string]any) (map[string]any, error) {
 	var res map[string]any
 	err := yaml.Unmarshal([]byte(customYaml), &res)
 	return res, err
+}
+
+func deviceHeader[T any](dev config.Device[T]) string {
+	name := dev.Config().Name
+
+	if cd, ok := dev.(config.ConfigurableDevice[T]); ok {
+		if title := cd.Properties().Title; title != "" {
+			return fmt.Sprintf("%s (%s)", title, name)
+		}
+	}
+
+	return name
 }

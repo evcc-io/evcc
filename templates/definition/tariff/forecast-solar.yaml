@@ -35,6 +35,7 @@ params:
 render: |
   type: custom
   tariff: solar
+  features: ["cacheable"]
   forecast:
     source: http
     uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ end }}

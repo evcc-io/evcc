@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"io"
-	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -47,6 +47,11 @@ type BatteryCapacity interface {
 // MaxACPowerGetter provides max AC power in W
 type MaxACPowerGetter interface {
 	MaxACPower() float64
+}
+
+// BatteryMaxPowerGetter provides max AC charge- and discharge power in W
+type BatteryMaxPowerGetter interface {
+	GetMaxChargeDischargePower() (float64, float64)
 }
 
 // ChargeState provides current charging status
@@ -193,9 +198,11 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	HandleCallback(r *http.Request)
-	HandleLogout(r *http.Request)
-	AuthCodeURL(state string) string
+	Login(state string) string
+	Logout() error
+	HandleCallback(responseValues url.Values) error
+	Authenticated() bool
+	DisplayName() string
 }
 
 // IconDescriber optionally provides an icon

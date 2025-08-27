@@ -20,7 +20,7 @@
         }
       },
       "current": {
-        "description": "Electric current in amps",
+        "description": "Electric current in A",
         "in": "path",
         "name": "current",
         "required": true,
@@ -29,7 +29,7 @@
         }
       },
       "delay": {
-        "description": "Time in seconds. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay)\n",
+        "description": "Duration in seconds.",
         "in": "path",
         "name": "delay",
         "required": true,
@@ -38,7 +38,7 @@
         }
       },
       "enable": {
-        "description": "Charging mode. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#mode)\n",
+        "description": "Charging mode.",
         "in": "path",
         "name": "enable",
         "required": true,
@@ -71,7 +71,7 @@
         }
       },
       "id": {
-        "description": "The index. Starts with 1.",
+        "description": "Loadpoint index starting at 1",
         "in": "path",
         "name": "id",
         "required": true,
@@ -80,7 +80,7 @@
         }
       },
       "logAreas": {
-        "description": "Timezone in IANA format - [See Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List)",
+        "description": "Comma-separated list of log areas",
         "explode": true,
         "in": "query",
         "name": "areas",
@@ -89,7 +89,7 @@
         }
       },
       "logLevel": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/log#log)",
+        "description": "Log level",
         "in": "query",
         "name": "level",
         "required": true,
@@ -106,7 +106,7 @@
         }
       },
       "phases": {
-        "description": "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase) [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases)\n",
+        "description": "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)",
         "in": "path",
         "name": "phases",
         "required": true,
@@ -159,7 +159,7 @@
         }
       },
       "vehicleName": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/vehicles#name)",
+        "description": "Vehicle name",
         "in": "path",
         "name": "name",
         "required": true,
@@ -168,7 +168,7 @@
         }
       },
       "weekdays": {
-        "description": "The Weekdays - [See documentation](https://docs.evcc.io/en/docs/features/plans#repeating-plans)",
+        "description": "The Weekdays",
         "in": "path",
         "name": "weekdays",
         "required": true,
@@ -184,7 +184,7 @@
             "schema": {
               "properties": {
                 "result": {
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge\n",
+                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge",
                   "maximum": 3,
                   "minimum": 0,
                   "type": "integer"
@@ -194,7 +194,7 @@
             }
           }
         },
-        "description": "Battery mode."
+        "description": "Battery mode"
       },
       "BlankResponse": {
         "description": "Success - Blank response"
@@ -337,7 +337,7 @@
     },
     "schemas": {
       "BatteryMode": {
-        "description": "TODO",
+        "description": "Battery mode",
         "enum": [
           "unknown",
           "normal",
@@ -422,13 +422,13 @@
         "type": "array"
       },
       "Current": {
-        "description": "Electric current in amps",
+        "description": "Electric current in A",
         "example": 16,
         "minimum": 0,
         "type": "number"
       },
       "Delay": {
-        "description": "Time in seconds. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay)\n",
+        "description": "Duration in seconds.",
         "example": 60,
         "type": "integer"
       },
@@ -439,46 +439,54 @@
         "type": "number"
       },
       "HourMinuteTime": {
-        "description": "Time in `HOURS:MINUTES` format",
+        "description": "Time in `HH:MM` format",
         "example": "12:30",
         "format": "HH:MM",
         "pattern": "[0-1][0-9]:[0-5][0-9]",
         "type": "string"
       },
       "IANATimeZone": {
-        "description": "Timezone in IANA format - [See Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List)",
+        "description": "Timezone in IANA format",
         "example": "Europe/Berlin",
+        "externalDocs": {
+          "url": "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List"
+        },
         "type": "string"
       },
       "Id": {
-        "description": "The index. Starts with 1.",
+        "description": "Loadpoint index starting at 1.",
         "example": 1,
         "minimum": 1,
         "type": "integer"
       },
       "LoadpointName": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#title)",
         "example": "Garage",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#title"
+        },
         "type": "string"
       },
       "LogArea": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/log#levels)",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#levels"
+        },
         "type": "string"
       },
       "LogAreas": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/log#levels)",
         "example": [
           "lp-1",
           "site",
           "db"
         ],
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#levels"
+        },
         "items": {
           "$ref": "#/components/schemas/LogArea"
         },
         "type": "array"
       },
       "LogLevel": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/log#log)",
         "enum": [
           "FATAL",
           "ERROR",
@@ -488,10 +496,13 @@
           "TRACE"
         ],
         "example": "DEBUG",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#log"
+        },
         "type": "string"
       },
       "Mode": {
-        "description": "Charging mode. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#mode)\n",
+        "description": "Charging mode.",
         "enum": [
           "off",
           "now",
@@ -502,23 +513,22 @@
       },
       "Password": {
         "description": "Admin password",
-        "example": "passWord1234!",
         "type": "string"
       },
       "Phases": {
-        "description": "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase) [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases)\n",
+        "description": "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)",
         "enum": [
-          0,
-          1,
-          3
+          "0",
+          "1",
+          "3"
         ],
-        "example": 3,
-        "type": "integer"
+        "example": "3",
+        "type": "string"
       },
       "PlanRates": {
         "properties": {
           "duration": {
-            "description": "Charging length",
+            "description": "Duration in s",
             "minimum": 0,
             "type": "integer"
           },
@@ -541,7 +551,7 @@
         "type": "number"
       },
       "Precondition": {
-        "description": "Late charging duration in seconds. [Read more.](https://docs.evcc.io/en/docs/features/plans#late-charging)",
+        "description": "Late charging duration in seconds.",
         "example": 3600,
         "minimum": 0,
         "type": "integer"
@@ -556,7 +566,7 @@
             "$ref": "#/components/schemas/Timestamp"
           },
           "value": {
-            "description": "Cost of charging interval",
+            "description": "Cost",
             "minimum": 0,
             "type": "number"
           }
@@ -570,10 +580,12 @@
         "type": "array"
       },
       "RepeatingPlan": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/features/plans#repeating-plans)",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans#repeating-plans"
+        },
         "properties": {
           "active": {
-            "description": "Whether evcc should take the plan into account. `false` means that evcc ignores the plan.",
+            "description": "Set plan active.",
             "type": "boolean"
           },
           "precondition": {
@@ -613,11 +625,13 @@
         "type": "number"
       },
       "State": {
-        "description": "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases.\n",
+        "description": "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases.",
         "type": "object"
       },
       "StaticEnergyPlan": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/features/plans#energy-amount-plan)",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans#energy-amount-plan"
+        },
         "properties": {
           "energy": {
             "$ref": "#/components/schemas/Energy"
@@ -632,7 +646,9 @@
         "type": "object"
       },
       "StaticSocPlan": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/features/plans#create-charging-plan)",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
+        },
         "properties": {
           "precondition": {
             "$ref": "#/components/schemas/Precondition"
@@ -648,31 +664,35 @@
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
-        "example": "2025-07-19T12:30:00.000Z",
+        "example": "2025-07-19T12:30:00Z",
         "format": "date-time",
         "type": "string"
       },
       "VehicleName": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/vehicles#name)",
         "example": "vehicle_1",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/vehicles#name"
+        },
         "minLength": 1,
         "pattern": "[a-zA-Z0-9_.:-]+",
         "type": "string"
       },
       "VehicleTitle": {
-        "description": "[See documentation](https://docs.evcc.io/en/docs/reference/configuration/vehicles#title)",
         "example": "blauer e-Golf",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/vehicles#title"
+        },
         "type": "string"
       },
       "Weekdays": {
-        "description": "The Weekdays - [See documentation](https://docs.evcc.io/en/docs/features/plans#repeating-plans)",
+        "description": "The Weekdays",
         "example": [
           1,
           3,
           4
         ],
         "items": {
-          "description": "0: Sunday\n1: Monday\n2: Tuesday\n3: Wednesday\n4: Thursday\n5: Friday\n6: Saturday\n",
+          "description": "0: Sunday, 1: Monday, 2: Tuesday, 3: Wednesday, 4: Thursday, 5: Friday, 6: Saturday",
           "maximum": 6,
           "minimum": 0,
           "type": "integer"
@@ -690,14 +710,19 @@
     }
   },
   "info": {
-    "title": "evcc REST-API",
-    "version": "latest"
+    "contact": {
+      "url": "https://github.com/evcc-io/evcc"
+    },
+    "description": "Solar charging. Super simple.",
+    "title": "evcc",
+    "version": "0.2.0"
   },
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "paths": {
     "/auth/login": {
       "post": {
-        "description": "Login returns an auth cookie required for all protected endpoints.\n",
+        "description": "Administrator login. Returns authorization cookie required for all protected endpoints.",
+        "operationId": "login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -732,13 +757,14 @@
         },
         "summary": "Login",
         "tags": [
-          "Auth"
+          "auth"
         ]
       }
     },
     "/auth/logout": {
       "post": {
-        "description": "Deletes the authorization cookie",
+        "description": "Logout and delete authorization cookie",
+        "operationId": "logout",
         "responses": {
           "200": {
             "description": "Success",
@@ -757,13 +783,14 @@
         },
         "summary": "Logout",
         "tags": [
-          "Auth"
+          "auth"
         ]
       }
     },
     "/auth/password": {
       "put": {
-        "description": "Changes the admin password.\n",
+        "description": "Changes the admin password.",
+        "operationId": "changePassword",
         "requestBody": {
           "content": {
             "application/json": {
@@ -784,13 +811,14 @@
         },
         "summary": "Change admin password",
         "tags": [
-          "Auth"
+          "auth"
         ]
       }
     },
     "/auth/status": {
       "get": {
         "description": "Whether the current user is logged in.",
+        "operationId": "getAuthStatus",
         "responses": {
           "200": {
             "content": {
@@ -809,13 +837,17 @@
         },
         "summary": "Authentication status",
         "tags": [
-          "Auth"
+          "auth"
         ]
       }
     },
     "/batterydischargecontrol/{enable}": {
       "post": {
-        "description": "Prevent home battery discharge during vehicle fast charging. [Read more.](https://docs.evcc.io/en/docs/features/battery)\n",
+        "description": "Prevent home battery discharge during vehicle fast charging.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBatteryDischargeControl",
         "parameters": [
           {
             "$ref": "#/components/parameters/enable"
@@ -828,13 +860,17 @@
         },
         "summary": "Control battery-discharge",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/batterygridchargelimit": {
       "delete": {
-        "description": "Remove battery grid charge limit. [Read more.](https://docs.evcc.io/en/docs/features/battery)\n",
+        "description": "Remove battery grid charge limit.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "removeBatteryGridChargeLimit",
         "responses": {
           "200": {
             "$ref": "#/components/responses/NullResult"
@@ -842,13 +878,17 @@
         },
         "summary": "Remove battery grid charge limit",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/batterygridchargelimit/{cost}": {
       "post": {
-        "description": "Charge home battery from grid when price or emissions are below the threshold.\nUses price if a dynamic tariff exists. Uses emissions if a CO₂-tariff is configured. Ignored otherwise.\n[Read more.](https://docs.evcc.io/en/docs/features/battery)\n",
+        "description": "Charge home battery from grid when price or emissions are below the threshold. Uses price if a dynamic tariff exists. Uses emissions if a CO₂-tariff is configured. Ignored otherwise.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBatteryGridChargeLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/costLimit"
@@ -861,13 +901,14 @@
         },
         "summary": "Set battery grid charge limit",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/batterymode": {
       "delete": {
         "description": "Default evcc control behavior is restored",
+        "operationId": "disableExternalBatteryControl",
         "responses": {
           "200": {
             "$ref": "#/components/responses/BatteryModeResult"
@@ -875,13 +916,14 @@
         },
         "summary": "Disable external battery control",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/batterymode/{batteryMode}": {
       "post": {
-        "description": "Directly controls the mode of all controllable batteries. evcc behavior like \"price limit\" or \"prevent discharge while fast charging\" is overruled. External mode resets after 60s. The external system has to call this endpoint regularly.",
+        "description": "Directly controls the mode of all controllable batteries. evcc behavior like 'price limit' or 'prevent discharge while fast charging' is overruled. External mode resets after 60s. The external system has to call this endpoint regularly.",
+        "operationId": "setExternalBatteryMode",
         "parameters": [
           {
             "$ref": "#/components/parameters/batteryMode"
@@ -894,13 +936,17 @@
         },
         "summary": "Set external battery mode",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/buffersoc/{soc}": {
       "post": {
-        "description": "Set battery buffer SoC. [Read more.](https://docs.evcc.io/en/docs/features/battery)\n",
+        "description": "Set battery buffer SoC.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBufferSoc",
         "parameters": [
           {
             "$ref": "#/components/parameters/soc"
@@ -913,13 +959,17 @@
         },
         "summary": "Set battery buffer SoC",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/bufferstartsoc/{soc}": {
       "post": {
-        "description": "Set battery buffer start SoC. [Read more.](https://docs.evcc.io/en/docs/features/battery)\n",
+        "description": "Set battery buffer start SoC.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBufferStartSoc",
         "parameters": [
           {
             "$ref": "#/components/parameters/soc"
@@ -932,13 +982,14 @@
         },
         "summary": "Set battery buffer start SoC",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/health": {
       "get": {
         "description": "Returns 200 if the evcc loop runs as expected.",
+        "operationId": "healthCheck",
         "responses": {
           "200": {
             "content": {
@@ -954,13 +1005,17 @@
         },
         "summary": "Health check",
         "tags": [
-          "General"
+          "general"
         ]
       }
     },
     "/loadpoints/{id}/batteryboost/{enable}": {
       "post": {
-        "description": "Enables or disables battery boost. [Read more.](https://docs.evcc.io/en/docs/features/battery#battery-boost)\n",
+        "description": "Enable or disable battery boost.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
+        },
+        "operationId": "setLoadpointBatteryBoost",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -976,13 +1031,17 @@
         },
         "summary": "Set battery boost",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/disable/delay/{delay}": {
       "post": {
-        "description": "Specifies the delay before charging stops in solar mode. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints)\n",
+        "description": "Delay before charging stops in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints"
+        },
+        "operationId": "setLoadpointDisableDelay",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -998,13 +1057,17 @@
         },
         "summary": "Disable threshold-delay",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/disable/threshold/{threshold}": {
       "post": {
-        "description": "Specifies the grid draw power to stop charging in solar mode. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold-1)\n",
+        "description": "Specifies the grid draw power to stop charging in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold-1"
+        },
+        "operationId": "setLoadpointDisableThreshold",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1020,13 +1083,17 @@
         },
         "summary": "Disable threshold",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/enable/delay/{delay}": {
       "post": {
-        "description": "Specifies the delay before charging starts in solar mode. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay)\n",
+        "description": "Delay before charging starts in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay"
+        },
+        "operationId": "setLoadpointEnableDelay",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1042,13 +1109,17 @@
         },
         "summary": "Enable threshold-delay",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/enable/threshold/{threshold}": {
       "post": {
-        "description": "Specifies the available surplus power to start charging in solar mode. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold)\n",
+        "description": "Specifies the available surplus power to start charging in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold"
+        },
+        "operationId": "setLoadpointEnableThreshold",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1064,13 +1135,17 @@
         },
         "summary": "Enable threshold",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/limitenergy/{energy}": {
       "post": {
-        "description": "Updates the energy limit of the loadpoint. Only available for guest vehicles and vehicles with unknown SoC. Limit is removed on vehicle disconnect. [Read more.](https://docs.evcc.io/en/docs/features/limit)\n",
+        "description": "Updates the energy limit of the loadpoint. Only available for guest vehicles and vehicles with unknown SoC. Limit is removed on vehicle disconnect.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointEnergyLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1086,13 +1161,17 @@
         },
         "summary": "Update energy limit",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/limitsoc/{soc}": {
       "post": {
-        "description": "Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions. [Read more.](https://docs.evcc.io/en/docs/features/limit)\n",
+        "description": "Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointSocLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1108,13 +1187,14 @@
         },
         "summary": "Update limit SoC",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/maxcurrent/{current}": {
       "post": {
-        "description": "Updates the maximum current of the loadpoint.\n",
+        "description": "Updates the maximum current of the loadpoint.",
+        "operationId": "setLoadpointMaxCurrent",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1130,13 +1210,14 @@
         },
         "summary": "Update maximum current",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/mincurrent/{current}": {
       "post": {
-        "description": "Updates the minimum current of the loadpoint.\n",
+        "description": "Updates the minimum current of the loadpoint.",
+        "operationId": "setLoadpointMinCurrent",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1152,13 +1233,17 @@
         },
         "summary": "Update minimum current",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/mode/{mode}": {
       "post": {
-        "description": "Changes the charging behavior of the loadpoint. [Read more.](https://docs.evcc.io/en/docs/features/solar-charging)\n",
+        "description": "Changes the charging behavior of the loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "setLoadpointMode",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1186,13 +1271,17 @@
         },
         "summary": "Update charge mode",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/phases/{phases}": {
       "post": {
-        "description": "Updates the allowed phases of the loadpoint. Selects the desired phase mode for chargers with automatic phase switching. For manual phase switching chargers (via cable or Lasttrennschalter) this value tells evcc the actual phases. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases)\n",
+        "description": "Updates the allowed phases of the loadpoint. Selects the desired phase mode for chargers with automatic phase switching. For manual phase switching chargers (via cable or Lasttrennschalter) this value tells evcc the actual phases.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases"
+        },
+        "operationId": "setLoadpointPhases",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1206,18 +1295,22 @@
             "$ref": "#/components/responses/NumberResult"
           },
           "400": {
-            "description": "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases)"
+            "description": "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
           }
         },
         "summary": "Update allowed phases",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/plan": {
       "get": {
-        "description": "Returns the current charging plan for this loadpoint. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Returns the current charging plan for this loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "getLoadpointPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1255,15 +1348,19 @@
             "description": "Success"
           }
         },
-        "summary": "Plan rates",
+        "summary": "Get charging plan",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/plan/energy": {
       "delete": {
-        "description": "Deletes the charging plan. Only available when a vehicle with unknown SoC is connected. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Delete charging plan. Only available when a vehicle without SoC is connected.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "deleteLoadpointEnergyPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1274,15 +1371,19 @@
             "$ref": "#/components/responses/EmptyResult"
           }
         },
-        "summary": "Deletes the energy-based charging plan",
+        "summary": "Delete energy-based charging plan",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/plan/energy/{energy}/{timestamp}": {
       "post": {
-        "description": "Creates a charging plan with fixed time and energy target. Only available when a vehicle with unknown SoC is connected. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Create charging plan with fixed time and energy target. Only available when a vehicle without SoC is connected.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setLoadpointEnergyPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1311,15 +1412,19 @@
             "description": "Success"
           }
         },
-        "summary": "Sets an energy-based charging plan",
+        "summary": "Set energy-based charging plan",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}": {
       "get": {
-        "description": "Simulates a repeating charging plan and returns the result. Does not alter the actual charging plan. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Simulate repeating charging plan and return the result. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointRepeatingPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1344,54 +1449,23 @@
         },
         "summary": "Repeating plan preview",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
-    "/loadpoints/{id}/plan/static/preview/{type}/{goal}/{timestamp}": {
+    "/loadpoints/{id}/plan/static/preview/energy/{energy}/{timestamp}": {
       "get": {
-        "description": "Simulates a charging plan and returns the result. Does not alter the actual charging plan. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Simulate charging plan based on energy goal. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointEnergyPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
           },
           {
-            "description": "Energy or SoC to reach.",
-            "examples": {
-              "socAvailable": {
-                "summary": "If SoC is available =\u003e specify SoC in %",
-                "value": 80
-              },
-              "socNotAvailable": {
-                "summary": "If SoC is not available =\u003e specify energy in kWh",
-                "value": 25.5
-              }
-            },
-            "in": "path",
-            "name": "goal",
-            "required": true,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/Soc"
-                },
-                {
-                  "$ref": "#/components/schemas/Energy"
-                }
-              ]
-            }
-          },
-          {
-            "in": "path",
-            "name": "type",
-            "required": true,
-            "schema": {
-              "enum": [
-                "soc",
-                "energy"
-              ],
-              "type": "string"
-            }
+            "$ref": "#/components/parameters/energy"
           },
           {
             "$ref": "#/components/parameters/timestamp"
@@ -1402,15 +1476,48 @@
             "$ref": "#/components/responses/PlanRatesResult"
           }
         },
-        "summary": "Preview of a charging plan",
+        "summary": "Simulate energy-based charging plan",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}": {
+      "get": {
+        "description": "Simulate charging plan based on SoC goal. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointSocPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          },
+          {
+            "$ref": "#/components/parameters/timestamp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PlanRatesResult"
+          }
+        },
+        "summary": "Simulate soc-based charging plan",
+        "tags": [
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/priority/{priority}": {
       "post": {
-        "description": "Sets the priority of the loadpoint. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority)\n",
+        "description": "Set loadpoint priority.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "operationId": "setLoadpointPriority",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1434,13 +1541,17 @@
         },
         "summary": "Set priority",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/smartcostlimit": {
       "delete": {
-        "description": "Removes the price or emission limit for fast-charging with grid energy. [Read more.](https://docs.evcc.io/en/docs/features/dynamic-prices)\n",
+        "description": "Delete cost or emission limit for fast-charging with grid energy.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/dynamic-prices"
+        },
+        "operationId": "deleteLoadpointSmartCostLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1451,15 +1562,19 @@
             "$ref": "#/components/responses/NullResult"
           }
         },
-        "summary": "Remove smart charging cost limit",
+        "summary": "Delete smart charging cost limit",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/smartcostlimit/{cost}": {
       "post": {
-        "description": "Sets the price or emission limit for fast-charging with grid energy. [Read more.](https://docs.evcc.io/en/docs/features/dynamic-prices)\n",
+        "description": "Set cost or emission limit for fast-charging with grid energy.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/dynamic-prices"
+        },
+        "operationId": "setLoadpointSmartCostLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1475,13 +1590,17 @@
         },
         "summary": "Set smart charging cost limit",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/vehicle": {
       "delete": {
-        "description": "Removes the association of a vehicle to the loadpoint. Connected vehicle is treated as guest vehicle. [Read more.](https://docs.evcc.io/en/docs/features/vehicle)\n",
+        "description": "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+        },
+        "operationId": "removeLoadpointVehicle",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1492,13 +1611,17 @@
             "$ref": "#/components/responses/EmptyResult"
           }
         },
-        "summary": "Delete vehicle",
+        "summary": "Remove vehicle",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       },
       "patch": {
-        "description": "Starts the automaticvehicle detection process. [Read more.](https://docs.evcc.io/en/docs/features/vehicle)\n",
+        "description": "Starts the automatic vehicle detection process.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+        },
+        "operationId": "startLoadpointVehicleDetection",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1511,13 +1634,17 @@
         },
         "summary": "Start vehicle detection",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/loadpoints/{id}/vehicle/{name}": {
       "post": {
-        "description": "Changes the association of a vehicle to the loadpoint. [Read more.](https://docs.evcc.io/en/docs/features/vehicle)\n",
+        "description": "Assigns vehicle to loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+        },
+        "operationId": "assignLoadpointVehicle",
         "parameters": [
           {
             "$ref": "#/components/parameters/id"
@@ -1550,13 +1677,17 @@
         },
         "summary": "Assign vehicle",
         "tags": [
-          "Loadpoints"
+          "loadpoints"
         ]
       }
     },
     "/prioritysoc/{soc}": {
       "post": {
-        "description": "Set battery priority SoC. [Read more.](https://docs.evcc.io/en/docs/features/battery)\n",
+        "description": "Set battery priority SoC.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setPrioritySoc",
         "parameters": [
           {
             "$ref": "#/components/parameters/soc"
@@ -1569,13 +1700,17 @@
         },
         "summary": "Set battery priority SoC",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/residualpower/{power}": {
       "post": {
-        "description": "Sets target operating point of the control loop. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/site#residualpower)\n",
+        "description": "Set grid connection operating point.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/site#residualpower"
+        },
+        "operationId": "setResidualPower",
         "parameters": [
           {
             "$ref": "#/components/parameters/power"
@@ -1588,13 +1723,17 @@
         },
         "summary": "Set grid residual power",
         "tags": [
-          "Home Battery"
+          "battery"
         ]
       }
     },
     "/session/{id}": {
       "delete": {
-        "description": "Delete charging session. [Read more.](https://docs.evcc.io/en/docs/features/sessions)\n",
+        "description": "Delete charging session.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/sessions"
+        },
+        "operationId": "deleteSession",
         "responses": {
           "200": {
             "$ref": "#/components/responses/NullResult"
@@ -1602,7 +1741,7 @@
         },
         "summary": "Delete charging session",
         "tags": [
-          "Sessions"
+          "sessions"
         ]
       },
       "parameters": [
@@ -1611,7 +1750,11 @@
         }
       ],
       "put": {
-        "description": "Update vehicle of charging session. [Read more.](https://docs.evcc.io/en/docs/features/sessions)\n",
+        "description": "Update vehicle of charging session.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/sessions"
+        },
+        "operationId": "updateSession",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1637,13 +1780,17 @@
         },
         "summary": "Update vehicle of charging session",
         "tags": [
-          "Sessions"
+          "sessions"
         ]
       }
     },
     "/sessions": {
       "get": {
-        "description": "Returns a list of charging sessions. [Read more.](https://docs.evcc.io/en/docs/features/sessions)\n",
+        "description": "Returns a list of charging sessions.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/sessions"
+        },
+        "operationId": "getSessions",
         "parameters": [
           {
             "description": "Response format (default json)",
@@ -1712,13 +1859,17 @@
         },
         "summary": "Charging sessions",
         "tags": [
-          "Sessions"
+          "sessions"
         ]
       }
     },
     "/settings/telemetry": {
       "get": {
-        "description": "Returns the current telemetry status. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/telemetry)\n",
+        "description": "Returns the current telemetry status.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
+        },
+        "operationId": "getTelemetryStatus",
         "responses": {
           "200": {
             "$ref": "#/components/responses/BooleanResult"
@@ -1726,13 +1877,17 @@
         },
         "summary": "Telemetry status",
         "tags": [
-          "System"
+          "system"
         ]
       }
     },
     "/settings/telemetry/{enable}": {
       "post": {
-        "description": "Enable or disable telemetry. Note: Telemetry requires [sponsorship](https://docs.evcc.io/en/docs/sponsorship). [Read more.](https://docs.evcc.io/en/docs/reference/configuration/telemetry)\n",
+        "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
+        },
+        "operationId": "setTelemetryStatus",
         "parameters": [
           {
             "$ref": "#/components/parameters/enable"
@@ -1748,13 +1903,14 @@
         },
         "summary": "Enable/disable telemetry",
         "tags": [
-          "System"
+          "system"
         ]
       }
     },
     "/smartcostlimit": {
       "delete": {
-        "description": "Conveniance method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.\n",
+        "description": "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "removeGlobalSmartCostLimit",
         "responses": {
           "200": {
             "$ref": "#/components/responses/NullResult"
@@ -1762,13 +1918,14 @@
         },
         "summary": "Remove smart charging cost limit for all loadpoints.",
         "tags": [
-          "Loadpoints"
+          "general"
         ]
       }
     },
     "/smartcostlimit/{cost}": {
       "post": {
-        "description": "Conveniance method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint.\n",
+        "description": "Convenience method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "setGlobalSmartCostLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/costLimit"
@@ -1781,13 +1938,17 @@
         },
         "summary": "Set smart charging cost limit for all loadpoints",
         "tags": [
-          "Loadpoints"
+          "general"
         ]
       }
     },
     "/state": {
       "get": {
-        "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by [JQ](https://jqlang.github.io/jq/) to only return a subset of the data. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/state)\n",
+        "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/state"
+        },
+        "operationId": "getState",
         "parameters": [
           {
             "description": "Filter the state with JQ",
@@ -1827,13 +1988,17 @@
         },
         "summary": "System state",
         "tags": [
-          "General"
+          "general"
         ]
       }
     },
     "/system/log": {
       "get": {
-        "description": "Returns the latest log lines. [Read more.](https://docs.evcc.io/en/docs/reference/configuration/log)\n",
+        "description": "Returns the latest log lines.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log"
+        },
+        "operationId": "getSystemLogs",
         "parameters": [
           {
             "$ref": "#/components/parameters/logAreas"
@@ -1899,13 +2064,14 @@
         ],
         "summary": "Logs",
         "tags": [
-          "System"
+          "system"
         ]
       }
     },
     "/system/log/areas": {
       "get": {
-        "description": "Returns a list of all log areas (e.g. `lp-1`, `site`, `db`).\n",
+        "description": "Returns a list of all log areas (e.g. `lp-1`, `site`, `db`).",
+        "operationId": "getLogAreas",
         "responses": {
           "200": {
             "content": {
@@ -1933,13 +2099,14 @@
         ],
         "summary": "List of all log areas",
         "tags": [
-          "System"
+          "system"
         ]
       }
     },
     "/system/shutdown": {
       "post": {
-        "description": "Shuts down the evcc instance.  There is no reboot command. We expect the underlying system (docker, systemd, etc.) to restart the evcc instance once it's terminated.\n",
+        "description": "Shut down instance. There is no reboot command. We expect the underlying system (docker, systemd, etc.) to restart the evcc instance once it's terminated.",
+        "operationId": "shutdownSystem",
         "responses": {
           "204": {
             "$ref": "#/components/responses/BlankResponse"
@@ -1955,13 +2122,17 @@
         ],
         "summary": "Shutdown evcc",
         "tags": [
-          "System"
+          "system"
         ]
       }
     },
     "/tariff/{type}": {
       "get": {
-        "description": "Returns the prices or emission values for the upcoming hours [Read more.](https://docs.evcc.io/en/docs/devices/tariffs)\n",
+        "description": "Returns the prices or emission values for the upcoming hours",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/devices/tariffs"
+        },
+        "operationId": "getTariffInfo",
         "parameters": [
           {
             "description": "Tariff type",
@@ -2007,13 +2178,17 @@
         },
         "summary": "Tariff information",
         "tags": [
-          "Tariffs"
+          "tariffs"
         ]
       }
     },
     "/vehicles/{name}/limitsoc/{soc}": {
       "post": {
-        "description": "Charging will stop when this SoC is reached. [Read more.](https://docs.evcc.io/en/docs/features/limits)\n",
+        "description": "Charging will stop when this SoC is reached.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limits"
+        },
+        "operationId": "setVehicleSocLimit",
         "parameters": [
           {
             "$ref": "#/components/parameters/vehicleName"
@@ -2029,13 +2204,17 @@
         },
         "summary": "Set SoC limit",
         "tags": [
-          "Vehicles"
+          "vehicles"
         ]
       }
     },
     "/vehicles/{name}/minsoc/{soc}": {
       "post": {
-        "description": "Vehicle will be fast-charged until this SoC is reached. [Read more.](https://docs.evcc.io/en/docs/features/limits)\n",
+        "description": "Vehicle will be fast-charged until this SoC is reached.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limits"
+        },
+        "operationId": "setVehicleMinSoc",
         "parameters": [
           {
             "$ref": "#/components/parameters/vehicleName"
@@ -2051,13 +2230,17 @@
         },
         "summary": "Set minimum SoC",
         "tags": [
-          "Vehicles"
+          "vehicles"
         ]
       }
     },
     "/vehicles/{name}/plan/repeating": {
       "post": {
-        "description": "Updates the repeating charging plan. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Updates the repeating charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "updateVehicleRepeatingPlans",
         "parameters": [
           {
             "$ref": "#/components/parameters/vehicleName"
@@ -2092,13 +2275,17 @@
         },
         "summary": "Update repeating plans",
         "tags": [
-          "Vehicles"
+          "vehicles"
         ]
       }
     },
     "/vehicles/{name}/plan/soc": {
       "delete": {
-        "description": "Deletes the charging plan [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Delete the charging plan",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "deleteVehicleSocPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/vehicleName"
@@ -2111,13 +2298,17 @@
         },
         "summary": "Delete a SoC-based charging plan",
         "tags": [
-          "Vehicles"
+          "vehicles"
         ]
       }
     },
     "/vehicles/{name}/plan/soc/{soc}/{timestamp}": {
       "post": {
-        "description": "Creates a charging plan with fixed time and SoC target. [Read more.](https://docs.evcc.io/en/docs/features/plans)\n",
+        "description": "Create charging plan with fixed time and SoC target.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setVehicleSocPlan",
         "parameters": [
           {
             "$ref": "#/components/parameters/vehicleName"
@@ -2155,35 +2346,35 @@
         },
         "summary": "Set a SoC-based charging plan",
         "tags": [
-          "Vehicles"
+          "vehicles"
         ]
       }
     }
   },
   "tags": [
     {
-      "name": "General"
+      "name": "auth"
     },
     {
-      "name": "Loadpoints"
+      "name": "battery"
     },
     {
-      "name": "Vehicles"
+      "name": "general"
     },
     {
-      "name": "Home Battery"
+      "name": "loadpoints"
     },
     {
-      "name": "Tariffs"
+      "name": "sessions"
     },
     {
-      "name": "Sessions"
+      "name": "system"
     },
     {
-      "name": "Auth"
+      "name": "tariffs"
     },
     {
-      "name": "System"
+      "name": "vehicles"
     }
   ]
 }

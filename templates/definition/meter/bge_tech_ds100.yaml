@@ -15,7 +15,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0428 # Total active power
+      address: 0x0420 # Total active power
       type: holding
       decode: int32
     {{- if eq .usage "pv" }}

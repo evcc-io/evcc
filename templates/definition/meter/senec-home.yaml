@@ -14,10 +14,6 @@ params:
     allinone: true
   - name: host
   - name: schema
-    description:
-      generic: Schema
-    type: choice
-    choice: ["https", "http"]
     default: https
   - name: capacity
     advanced: true

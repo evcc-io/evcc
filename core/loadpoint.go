@@ -40,6 +40,7 @@ const (
 	evVehicleDisconnect   = "disconnect" // vehicle disconnected
 	evVehicleSoc          = "soc"        // vehicle soc progress
 	evVehicleUnidentified = "guest"      // vehicle unidentified
+	evVehicleAsleep       = "asleep"     // vehicle doesn't charge
 
 	pvTimer   = "pv"
 	pvEnable  = "enable"
@@ -161,11 +162,11 @@ type Loadpoint struct {
 	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
 
 	// charge progress
-	vehicleSoc              float64       // Vehicle Soc
+	vehicleSoc              float64       // Vehicle or charger soc
 	chargeDuration          time.Duration // Charge duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
 	chargeRemainingDuration time.Duration // Remaining charge duration
-	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
+	chargeRemainingEnergy   float64       // Remaining charge energy in kWh
 	progress                *Progress     // Step-wise progress indicator
 
 	// session log
@@ -219,6 +220,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("circuit: %w", err)
 		}
 		lp.circuit = dev.Instance()
+		if lp.circuit == nil {
+			return lp, errors.New("missing circuit instance")
+		}
 	}
 
 	if lp.MeterRef != "" {
@@ -227,6 +231,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("meter: %w", err)
 		}
 		lp.chargeMeter = dev.Instance()
+		if lp.chargeMeter == nil {
+			return lp, errors.New("missing charge meter instance")
+		}
 	}
 
 	// default vehicle
@@ -236,6 +243,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 			return lp, fmt.Errorf("default vehicle: %w", err)
 		}
 		lp.defaultVehicle = dev.Instance()
+		if lp.defaultVehicle == nil {
+			return lp, errors.New("missing default vehicle instance")
+		}
 	}
 
 	if lp.ChargerRef == "" {
@@ -247,12 +257,21 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		return lp, fmt.Errorf("charger: %w", err)
 	}
 	lp.charger = dev.Instance()
+	if lp.charger == nil {
+		return lp, errors.New("missing charger instance")
+	}
+
 	lp.configureChargerType(lp.charger)
 
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
-		lp.phasesConfigured = 3
-		lp.phases = 3
+		phases := lp.getChargerPhysicalPhases()
+		if phases == 0 {
+			phases = 3 // default to 3p if no charger phases are known
+		}
+
+		lp.phasesConfigured = phases
+		lp.phases = phases
 	}
 
 	return lp, nil
@@ -1202,6 +1221,9 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// update setting and reset timer
 		lp.SetPhases(phases)
+
+		// some vehicles may hang on phase switch
+		lp.startWakeUpTimer()
 	}
 
 	return nil
@@ -1344,7 +1366,9 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		delta = lp.EffectiveMaxPower()
 
 		// expire timers
-		lp.phaseTimer = elapsed
+		if lp.hasPhaseSwitching() {
+			lp.phaseTimer = elapsed
+		}
 		lp.pvTimer = elapsed
 
 		if lp.charging() {
@@ -1397,7 +1421,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
-		if !lp.phaseTimer.IsZero() {
+		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
 			// calculate site power after a phase switch from activePhases phases -> 1 phase
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
@@ -1609,6 +1633,10 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
 			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
+			if added > 0 {
+				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
+			}
+
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
 			}
@@ -1714,7 +1742,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 		lp.SetRemainingDuration(d)
 
-		lp.SetRemainingEnergy(1e3 * socEstimator.RemainingChargeEnergy(limitSoc))
+		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
 
 		// range
 		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
@@ -1948,8 +1976,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
 		// TODO take vehicle api limits into account
-		int(lp.vehicleSoc) < lp.EffectiveLimitSoc() && lp.wakeUpTimer.Expired() {
-		lp.wakeUpVehicle()
+		!lp.chargerHasFeature(api.IntegratedDevice) && int(lp.vehicleSoc) < lp.EffectiveLimitSoc() {
+		switch lp.wakeUpTimer.Elapsed() {
+		case WakeUpTimerElapsed:
+			lp.wakeUpVehicle()
+		case WakeUpTimerFinished:
+			lp.pushEvent(evVehicleAsleep)
+		}
 	}
 
 	// effective disabled status

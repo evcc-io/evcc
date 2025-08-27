@@ -11,24 +11,19 @@ import (
 	"github.com/jeremywohl/flatten"
 )
 
-func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
+func workers(log *util.Logger, num int, ips <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
 	var wg sync.WaitGroup
+
 	for range num {
-		wg.Add(1)
-		go func() {
-			workunit(log, tasks, hits)
-			wg.Done()
-		}()
+		wg.Go(func() {
+			for ip := range ips {
+				res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
+				hits <- res
+			}
+		})
 	}
 
 	return &wg
-}
-
-func workunit(log *util.Logger, ips <-chan string, hits chan<- []tasks.Result) {
-	for ip := range ips {
-		res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
-		hits <- res
-	}
 }
 
 func Work(log *util.Logger, num int, hosts []string) []tasks.Result {

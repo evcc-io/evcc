@@ -103,9 +103,11 @@ func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (a
 
 	uri = fmt.Sprintf("%s/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
-	err := wb.post(uri, data)
+	if err := wb.post(uri, data); err != nil {
+		return nil, err
+	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {
