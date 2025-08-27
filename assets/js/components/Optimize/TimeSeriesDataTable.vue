@@ -27,20 +27,27 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
-
 					<tr>
-						<td class="fw-medium text-nowrap text-start">
-							{{ gridFeedinPriceLabel }}
-						</td>
+						<td class="fw-medium text-nowrap text-start">Household Demand (kW)</td>
 						<td
-							v-for="(value, index) in evopt.req.time_series.p_E"
+							v-for="(value, index) in evopt.req.time_series.gt"
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ fmtPricePerKWh(value * 1000, currency, false, false) }}
+							{{ formatEnergyToPower(value, index) }}
+						</td>
+					</tr>
+					<tr>
+						<td class="fw-medium text-nowrap text-start">Time Step Duration (h)</td>
+						<td
+							v-for="(value, index) in evopt.req.time_series.dt"
+							:key="index"
+							:class="['text-end']"
+						>
+							{{ formatDuration(value) }}
 						</td>
 					</tr>
 					<tr>
@@ -56,23 +63,15 @@
 						</td>
 					</tr>
 					<tr>
-						<td class="fw-medium text-nowrap text-start">Household Demand (kW)</td>
+						<td class="fw-medium text-nowrap text-start">
+							{{ gridFeedinPriceLabel }}
+						</td>
 						<td
-							v-for="(value, index) in evopt.req.time_series.gt"
+							v-for="(value, index) in evopt.req.time_series.p_E"
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
-						</td>
-					</tr>
-					<tr>
-						<td class="fw-medium text-nowrap text-start">Time Step Duration (h)</td>
-						<td
-							v-for="(value, index) in evopt.req.time_series.dt"
-							:key="index"
-							:class="['text-end']"
-						>
-							{{ formatDuration(value) }}
+							{{ fmtPricePerKWh(value * 1000, currency, false, false) }}
 						</td>
 					</tr>
 
@@ -87,7 +86,7 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
 					<tr>
@@ -97,7 +96,7 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
 					<tr>
@@ -125,7 +124,7 @@
 										class="battery-indicator me-2"
 										:style="{ backgroundColor: batteryColors[batteryIndex] }"
 									></span>
-									{{ getBatteryTitle(batteryIndex) }} Response
+									{{ getBatteryTitle(batteryIndex) }}
 								</div>
 							</td>
 						</tr>
@@ -136,7 +135,7 @@
 								:key="index"
 								:class="['text-end', { 'text-muted': value === 0 }]"
 							>
-								{{ formatPower(value) }}
+								{{ formatEnergyToPower(value, index) }}
 							</td>
 						</tr>
 						<tr>
@@ -146,7 +145,7 @@
 								:key="index"
 								:class="['text-end', { 'text-muted': value === 0 }]"
 							>
-								{{ formatPower(value) }}
+								{{ formatEnergyToPower(value, index) }}
 							</td>
 						</tr>
 						<tr>
@@ -245,7 +244,11 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		formatPower(watts: number): string {
+		formatEnergyToPower(wh: number, index: number): string {
+			// Convert Wh to kW by normalizing against time duration
+			const dtSeconds = this.evopt.req.time_series.dt[index];
+			const hours = dtSeconds / 3600; // Convert seconds to hours
+			const watts = wh / hours; // Convert to W (power)
 			return this.fmtW(watts, this.POWER_UNIT.KW, false, 1);
 		},
 		formatEnergy(wh: number): string {

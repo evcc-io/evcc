@@ -12,6 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -138,4 +139,16 @@ func customDevice(other map[string]any) (map[string]any, error) {
 	var res map[string]any
 	err := yaml.Unmarshal([]byte(customYaml), &res)
 	return res, err
+}
+
+func deviceHeader[T any](dev config.Device[T]) string {
+	name := dev.Config().Name
+
+	if cd, ok := dev.(config.ConfigurableDevice[T]); ok {
+		if title := cd.Properties().Title; title != "" {
+			return fmt.Sprintf("%s (%s)", title, name)
+		}
+	}
+
+	return name
 }

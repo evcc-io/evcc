@@ -375,7 +375,11 @@
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<ModbusProxyModal @changed="yamlChanged" />
-				<CircuitsModal @changed="yamlChanged" />
+				<CircuitsModal
+					:gridMeter="gridMeter"
+					:extMeters="extMeters"
+					@changed="yamlChanged"
+				/>
 				<EebusModal @changed="yamlChanged" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />

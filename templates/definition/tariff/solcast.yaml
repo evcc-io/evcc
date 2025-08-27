@@ -38,6 +38,7 @@ params:
     advanced: true
 render: |
   type: solcast
+  features: ["cacheable"]
   site: {{ .site }}
   token: {{ .token }}
   interval: {{ .interval }}
