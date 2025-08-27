@@ -139,7 +139,7 @@ func (c *cloud) IsV2() bool {
 func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 	var status CloudResponse
 
-	url := fmt.Sprintf("https://%s.api.v3.go-e.co/%s?token=%s", c.serial, function, c.token)
+	url := fmt.Sprintf("https://%s.api.v3.go-e.io/%s?token=%s", c.serial, function, c.token)
 	if payload != "" {
 		url += "&payload=" + payload
 	}
