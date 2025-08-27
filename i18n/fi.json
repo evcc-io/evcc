@@ -429,14 +429,18 @@
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
       "description": "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset.",
-      "descriptionToken": "Saat tunnuksen osoitteesta {url}. Tarjoamme myös kokeilutunnuksen testausta varten.",
+      "descriptionToken": "Sponsorit saavat sponsorointitunnuksensa osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
+      "enterYourToken": "Syötä sponsorointitunnuksesi",
       "error": "Sponsoritunnus ei kelpaa.",
+      "invalid": "epäkelpo",
       "labelToken": "Sponsoritunnus",
       "title": "Sponsorointi",
       "tokenRequired": "Sinun on määritettävä sponsoritunnus ennen kuin voit luoda tämän laitteen.",
       "tokenRequiredLearnMore": "Lisätietoja.",
       "tokenRequiredShort": "Sponsorointi-tokenia ei ole määritelty.",
-      "trialToken": "Kokeilutunnus"
+      "trialToken": "Kokeilutunnus",
+      "viaYaml": "evcc.yaml-tiedoston mukaisesti",
+      "yourToken": "Sponsorointitunnuksesi"
     },
     "system": {
       "backupRestore": {

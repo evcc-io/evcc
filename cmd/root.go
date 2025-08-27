@@ -254,13 +254,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup MCP
 	if viper.GetBool("mcp") {
-		const path = "/mcp"
-		local := conf.Network.URI()
 		router := httpd.Router()
 
 		var handler http.Handler
-		if handler, err = mcp.NewHandler(router, local, path); err == nil {
-			router.PathPrefix(path).Handler(handler)
+		if handler, err = mcp.NewHandler(router); err == nil {
+			router.PathPrefix("/mcp").Handler(handler)
 		}
 	}
 
