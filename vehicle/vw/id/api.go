@@ -75,6 +75,19 @@ func (v *API) Status(vin string) (res Status, err error) {
 	return res, err
 }
 
+// ParkingPosition implements the /parkingposition response
+func (v *API) ParkingPosition(vin string) (ParkingPosition, error) {
+	var res ParkingPosition
+	uri := fmt.Sprintf("%s/vehicles/%s/parkingposition", BaseURL, vin)
+
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
 // Action implements vehicle actions
 func (v *API) Action(vin, action, value string) error {
 	uri := fmt.Sprintf("%s/vehicles/%s/%s/%s", BaseURL, vin, action, value)
