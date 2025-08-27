@@ -1,5 +1,5 @@
 <template>
-	<div class="text-end mt-1">
+	<div v-if="isSupported" class="text-end mt-1">
 		<a v-if="!copied" href="#" class="text-primary small" @click.prevent="handleCopy">
 			{{ $t("config.general.copy") }}
 		</a>
@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { copyWithFeedback } from "@/utils/clipboard";
+import { copyToClipboard, isClipboardSupported } from "@/utils/clipboard";
 
 export default defineComponent({
 	name: "CopyLink",
@@ -26,14 +26,20 @@ export default defineComponent({
 			copied: false,
 		};
 	},
+	computed: {
+		isSupported() {
+			return isClipboardSupported();
+		},
+	},
 	methods: {
 		async handleCopy() {
-			await copyWithFeedback(
-				this.text,
-				(value) => {
-					this.copied = value;
-				}
-			);
+			const success = await copyToClipboard(this.text);
+			if (success) {
+				this.copied = true;
+				setTimeout(() => {
+					this.copied = false;
+				}, 2000);
+			}
 		},
 	},
 });

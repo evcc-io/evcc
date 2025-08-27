@@ -1,5 +1,12 @@
-// Copy text to clipboard, returns true if successful
+export function isClipboardSupported(): boolean {
+  return !!(navigator.clipboard && window.isSecureContext);
+}
+
 export async function copyToClipboard(text: string): Promise<boolean> {
+  if (!isClipboardSupported()) {
+    return false;
+  }
+  
   try {
     await navigator.clipboard.writeText(text);
     return true;
@@ -9,7 +16,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-// Copy text to clipboard and manage a "copied" state with timeout
 export async function copyWithFeedback(
   text: string,
   setCopiedState: (value: boolean) => void
