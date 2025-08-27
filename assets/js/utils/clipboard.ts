@@ -6,7 +6,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   if (!isClipboardSupported()) {
     return false;
   }
-  
   try {
     await navigator.clipboard.writeText(text);
     return true;
