@@ -39,7 +39,7 @@ meters:
             source: js
             vm: shared
             script: |
-              state.pvpower = this.feedInDisabled ? 0 : 8000+500*Math.random();
+              state.pvpower = 8000+500*Math.random();
               state.pvpower
         - name: batterypower
           type: float
@@ -56,11 +56,6 @@ meters:
       source: js
       vm: shared
       script: state.pvpower;
-    feedindisablelimitenable:
-      source: js
-      vm: shared
-      script: |
-        true;
 
   - name: battery
     type: custom
@@ -265,11 +260,8 @@ tariffs:
     bzn: DE-LU
     charges: 0.15
   feedin:
-    type: template
-    template: energy-charts-api # epex spot market prices
-    bzn: DE-LU
-    charges: -0.08
-    tax: 0.30
+    type: fixed
+    price: 0.08 # EUR/kWh
   solar:
     type: template
     template: demo-solar-forecast
