@@ -105,7 +105,7 @@ func (c *Pulsatrix) connectWs() error {
 	c.log.DEBUG.Printf("connecting to pulsatrix SECC %s", c.uri)
 	conn, _, err := websocket.Dial(ctx, c.uri, nil)
 	if err != nil {
-		return fmt.Errorf("websocket dial to pulsatrix SECC %sfailed: %w", c.uri, err)
+		return fmt.Errorf("websocket dial to pulsatrix SECC %s failed: %w", c.uri, err)
 	}
 
 	c.mu.Lock()
@@ -149,7 +149,7 @@ func (c *Pulsatrix) wsReader() {
 	defer func() {
 		c.mu.Lock()
 		if c.conn != nil {
-			c.conn.Close(websocket.StatusNormalClosure, "websocket reader to pulsatrix SECC exiting")
+			c.conn.Close(websocket.StatusNormalClosure, "websocket reader for pulsatrix SECC shutting down")
 			c.conn = nil
 		}
 		c.mu.Unlock()
@@ -224,7 +224,7 @@ func (c *Pulsatrix) heartbeat() {
 
 	for range ticker.C {
 		if err := c.Enable(c.enabled); err != nil {
-			c.log.WARN.Println("heartbeat with pulsatrix SECC %s failed: %v", c.uri, err)
+			c.log.WARN.Printf("heartbeat with pulsatrix SECC %s failed: %v", c.uri, err)
 		}
 	}
 }
