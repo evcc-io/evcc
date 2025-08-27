@@ -131,12 +131,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		bat := evopt.BatteryConfig{
 			ChargeFromGrid: true,
-
-			CMin: float32(lp.EffectiveMinPower()),
-			CMax: float32(lp.EffectiveMaxPower()),
-			DMax: 0,
-			SMin: 0,
-			PA:   pa,
+			CMin:           float32(lp.EffectiveMinPower()),
+			CMax:           float32(lp.EffectiveMaxPower()),
+			DMax:           0,
+			SMin:           0,
+			PA:             pa,
 		}
 
 		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
@@ -149,7 +148,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if v := lp.GetVehicle(); v != nil {
-			bat.SMax = float32(v.Capacity() * 1e3)                  // Wh
+			limit := lp.GetLimitEnergy() * 1e3 // Wh
+			if limit == 0 {
+				limit = v.Capacity() * float64(lp.GetLimitSoc()) / 10 // Wh
+			}
+
+			bat.SMax = float32(limit)
 			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
 
 			detail.Type = batteryTypeVehicle
