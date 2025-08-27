@@ -13,7 +13,7 @@ func (site *Site) smartFeedInDisableAvailable() bool {
 	for _, dev := range site.pvMeters {
 		meter := dev.Instance()
 
-		if _, ok := meter.(api.FeedinDisableController); ok {
+		if _, ok := meter.(api.FeedInDisableController); ok {
 			return true
 		}
 	}
@@ -35,7 +35,7 @@ func (site *Site) UpdateSmartFeedInDisable(rate api.Rate) error {
 		return nil
 	}
 
-	err := site.setFeedinDisable(enable)
+	err := site.setFeedInDisable(enable)
 	if err == nil {
 		site.Lock()
 		site.smartFeedInDisableActive = enable
@@ -46,12 +46,12 @@ func (site *Site) UpdateSmartFeedInDisable(rate api.Rate) error {
 	return err
 }
 
-func (site *Site) setFeedinDisable(enable bool) error {
+func (site *Site) setFeedInDisable(enable bool) error {
 	for _, dev := range site.pvMeters {
 		meter := dev.Instance()
 
-		if fl, ok := meter.(api.FeedinDisableController); ok {
-			if err := fl.FeedinDisableLimitEnable(enable); err != nil {
+		if fl, ok := meter.(api.FeedInDisableController); ok {
+			if err := fl.FeedInDisableLimitEnable(enable); err != nil {
 				return err
 			}
 		}

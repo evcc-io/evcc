@@ -14,7 +14,6 @@ javascript:
         batterypower: -750,
         batterySoc: 55,
         gridpower: -1000,
-        feedInDisabled: false
         loadpoints: [
           { enabled: true, vehicleSoc: 62, maxcurrent: 6, phases: 1, chargepower: 0 },
           { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
@@ -61,8 +60,7 @@ meters:
       source: js
       vm: shared
       script: |
-        state.feedInDisabled = feedindisablelimitenable;
-        state.feedInDisabled;
+        true;
 
   - name: battery
     type: custom

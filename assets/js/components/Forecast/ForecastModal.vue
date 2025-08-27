@@ -47,7 +47,11 @@
 					>
 				</div>
 			</div>
-			<div v-if="showSmartFeedIn" class="form-check form-switch mt-4">
+			<div
+				v-if="showSmartFeedIn"
+				class="form-check form-switch mt-4"
+				data-testid="smart-feed-in-disable-limit"
+			>
 				<input
 					id="smartFeedInDisableLimitEnabled"
 					:checked="smartFeedInDisableLimit !== null"
@@ -159,11 +163,7 @@ export default defineComponent({
 			);
 		},
 		showSmartFeedIn() {
-			return (
-				this.smartFeedInDisableAvailable &&
-				this.selectedType === ForecastType.FeedIn &&
-				this.$hiddenFeatures()
-			);
+			return this.smartFeedInDisableAvailable && this.selectedType === ForecastType.FeedIn;
 		},
 		solar() {
 			return this.showSolarAdjust && this.solarAdjusted

@@ -733,6 +733,7 @@
       "pv": "Solar system",
       "pvExport": "Grid export",
       "pvProduction": "Production",
+      "pvProductionLimited": "reduced",
       "selfConsumption": "Self-consumption"
     },
     "heatingStatus": {

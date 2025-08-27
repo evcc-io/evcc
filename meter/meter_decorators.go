@@ -2587,10 +2587,10 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -2598,11 +2598,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2613,11 +2613,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -2628,12 +2628,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2647,11 +2647,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -2662,12 +2662,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2681,12 +2681,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -2700,13 +2700,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2723,12 +2723,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -2742,13 +2742,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2765,13 +2765,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -2788,14 +2788,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2816,13 +2816,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -2831,14 +2831,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2850,14 +2850,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -2869,7 +2869,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -2877,7 +2877,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2892,14 +2892,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -2911,7 +2911,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -2919,7 +2919,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2934,7 +2934,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -2942,7 +2942,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -2957,7 +2957,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -2966,7 +2966,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -2984,7 +2984,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -2992,7 +2992,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3007,7 +3007,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -3016,7 +3016,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3034,7 +3034,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -3043,7 +3043,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3061,7 +3061,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -3071,7 +3071,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3093,7 +3093,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -3102,7 +3102,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -3112,7 +3112,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -3122,7 +3122,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3135,7 +3135,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -3145,7 +3145,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3158,7 +3158,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -3169,7 +3169,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3185,7 +3185,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -3195,7 +3195,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -3208,7 +3208,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -3219,7 +3219,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3235,7 +3235,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -3246,7 +3246,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3262,7 +3262,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -3274,7 +3274,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3293,7 +3293,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -3304,7 +3304,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3320,7 +3320,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -3332,7 +3332,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3351,7 +3351,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -3363,7 +3363,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3382,7 +3382,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -3395,7 +3395,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3417,7 +3417,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -3426,7 +3426,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -3436,7 +3436,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -3446,7 +3446,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3459,7 +3459,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -3469,7 +3469,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3482,7 +3482,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -3493,7 +3493,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3509,7 +3509,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -3519,7 +3519,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -3532,7 +3532,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -3543,7 +3543,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3559,7 +3559,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -3570,7 +3570,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3586,7 +3586,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -3598,7 +3598,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3617,7 +3617,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -3628,7 +3628,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3644,7 +3644,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -3656,7 +3656,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3675,7 +3675,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -3687,7 +3687,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3706,7 +3706,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -3719,7 +3719,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3742,7 +3742,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -3754,7 +3754,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -3765,7 +3765,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -3778,7 +3778,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3792,7 +3792,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -3805,7 +3805,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3819,7 +3819,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -3833,7 +3833,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3850,7 +3850,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -3863,7 +3863,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -3877,7 +3877,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -3891,7 +3891,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3908,7 +3908,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -3922,7 +3922,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -3939,7 +3939,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -3954,7 +3954,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -3974,7 +3974,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -3988,7 +3988,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4005,7 +4005,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -4020,7 +4020,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4040,7 +4040,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -4055,7 +4055,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4075,7 +4075,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -4091,7 +4091,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4113,7 +4113,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -4122,7 +4122,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -4132,7 +4132,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -4142,7 +4142,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4155,7 +4155,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -4165,7 +4165,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4178,7 +4178,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -4189,7 +4189,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4205,7 +4205,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -4215,7 +4215,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -4228,7 +4228,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -4239,7 +4239,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4255,7 +4255,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -4266,7 +4266,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4282,7 +4282,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -4294,7 +4294,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4313,7 +4313,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -4324,7 +4324,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4340,7 +4340,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -4352,7 +4352,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4371,7 +4371,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -4383,7 +4383,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4402,7 +4402,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -4415,7 +4415,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4438,7 +4438,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -4450,7 +4450,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -4461,7 +4461,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -4474,7 +4474,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4488,7 +4488,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -4501,7 +4501,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4515,7 +4515,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -4529,7 +4529,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4546,7 +4546,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -4559,7 +4559,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -4573,7 +4573,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -4587,7 +4587,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4604,7 +4604,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -4618,7 +4618,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4635,7 +4635,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -4650,7 +4650,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4670,7 +4670,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -4684,7 +4684,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4701,7 +4701,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -4716,7 +4716,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4736,7 +4736,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -4751,7 +4751,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4771,7 +4771,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -4787,7 +4787,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4810,7 +4810,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -4822,7 +4822,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -4833,7 +4833,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -4846,7 +4846,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4860,7 +4860,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -4873,7 +4873,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -4887,7 +4887,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -4901,7 +4901,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4918,7 +4918,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -4931,7 +4931,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -4945,7 +4945,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -4959,7 +4959,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -4976,7 +4976,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -4990,7 +4990,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5007,7 +5007,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -5022,7 +5022,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5042,7 +5042,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -5056,7 +5056,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5073,7 +5073,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -5088,7 +5088,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5108,7 +5108,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -5123,7 +5123,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5143,7 +5143,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -5159,7 +5159,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5183,7 +5183,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
@@ -5198,7 +5198,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 		}
@@ -5210,7 +5210,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 		}{
 			Meter: base,
@@ -5226,7 +5226,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5241,7 +5241,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 		}{
 			Meter: base,
@@ -5257,7 +5257,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5272,7 +5272,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
@@ -5289,7 +5289,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5307,7 +5307,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseVoltages
 		}{
 			Meter: base,
@@ -5323,7 +5323,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
@@ -5338,7 +5338,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
@@ -5355,7 +5355,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5373,7 +5373,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
@@ -5390,7 +5390,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5408,7 +5408,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -5426,7 +5426,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5447,7 +5447,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
@@ -5464,7 +5464,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5482,7 +5482,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -5500,7 +5500,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -5521,7 +5521,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
@@ -5539,7 +5539,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
@@ -5560,7 +5560,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
@@ -5579,7 +5579,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
@@ -8611,11 +8611,11 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8626,12 +8626,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8645,12 +8645,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8664,13 +8664,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8687,12 +8687,12 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8706,13 +8706,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8729,13 +8729,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8752,14 +8752,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8779,13 +8779,13 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8802,14 +8802,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhasePowers
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8829,14 +8829,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8856,7 +8856,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	case battery == nil && feedinDisableController != nil && maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -8864,7 +8864,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8888,14 +8888,14 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8907,7 +8907,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -8915,7 +8915,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8930,7 +8930,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -8938,7 +8938,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8953,7 +8953,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -8962,7 +8962,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -8980,7 +8980,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -8988,7 +8988,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9003,7 +9003,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -9012,7 +9012,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9030,7 +9030,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -9039,7 +9039,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9057,7 +9057,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9067,7 +9067,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9088,7 +9088,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -9097,7 +9097,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9115,7 +9115,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9125,7 +9125,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9146,7 +9146,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -9156,7 +9156,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9177,7 +9177,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		return &struct {
 			api.Meter
 			api.Battery
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9188,7 +9188,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9213,7 +9213,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -9223,7 +9223,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9236,7 +9236,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -9247,7 +9247,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9263,7 +9263,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -9274,7 +9274,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9290,7 +9290,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9302,7 +9302,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9321,7 +9321,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -9332,7 +9332,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9348,7 +9348,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -9360,7 +9360,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9379,7 +9379,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -9391,7 +9391,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9410,7 +9410,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9423,7 +9423,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9445,7 +9445,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -9457,7 +9457,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9476,7 +9476,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9489,7 +9489,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9511,7 +9511,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -9524,7 +9524,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9546,7 +9546,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryCapacity
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9560,7 +9560,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9585,7 +9585,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -9595,7 +9595,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9608,7 +9608,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -9619,7 +9619,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9635,7 +9635,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -9646,7 +9646,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9662,7 +9662,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9674,7 +9674,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9693,7 +9693,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -9704,7 +9704,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9720,7 +9720,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -9732,7 +9732,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9751,7 +9751,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -9763,7 +9763,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9782,7 +9782,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9795,7 +9795,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9817,7 +9817,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -9829,7 +9829,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9848,7 +9848,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9861,7 +9861,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9883,7 +9883,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -9896,7 +9896,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9918,7 +9918,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -9932,7 +9932,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9958,7 +9958,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -9971,7 +9971,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -9985,7 +9985,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -9999,7 +9999,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10016,7 +10016,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -10030,7 +10030,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10047,7 +10047,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10062,7 +10062,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10082,7 +10082,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -10096,7 +10096,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10113,7 +10113,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -10128,7 +10128,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10148,7 +10148,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -10163,7 +10163,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10183,7 +10183,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10199,7 +10199,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10222,7 +10222,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -10237,7 +10237,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10257,7 +10257,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10273,7 +10273,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10296,7 +10296,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -10312,7 +10312,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10335,7 +10335,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10352,7 +10352,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10377,7 +10377,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -10387,7 +10387,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10400,7 +10400,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -10411,7 +10411,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10427,7 +10427,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -10438,7 +10438,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10454,7 +10454,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10466,7 +10466,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10485,7 +10485,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -10496,7 +10496,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10512,7 +10512,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -10524,7 +10524,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10543,7 +10543,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -10555,7 +10555,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10574,7 +10574,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10587,7 +10587,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10609,7 +10609,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -10621,7 +10621,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10640,7 +10640,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10653,7 +10653,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10675,7 +10675,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -10688,7 +10688,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10710,7 +10710,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Meter
 			api.Battery
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10724,7 +10724,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10750,7 +10750,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -10763,7 +10763,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10777,7 +10777,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -10791,7 +10791,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10808,7 +10808,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -10822,7 +10822,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10839,7 +10839,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10854,7 +10854,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10874,7 +10874,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -10888,7 +10888,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10905,7 +10905,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -10920,7 +10920,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10940,7 +10940,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -10955,7 +10955,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -10975,7 +10975,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -10991,7 +10991,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11014,7 +11014,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -11029,7 +11029,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11049,7 +11049,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11065,7 +11065,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11088,7 +11088,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -11104,7 +11104,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11127,7 +11127,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryCapacity
 			api.BatteryController
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11144,7 +11144,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11170,7 +11170,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -11183,7 +11183,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11197,7 +11197,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -11211,7 +11211,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11228,7 +11228,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -11242,7 +11242,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11259,7 +11259,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11274,7 +11274,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11294,7 +11294,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -11308,7 +11308,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11325,7 +11325,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -11340,7 +11340,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11360,7 +11360,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -11375,7 +11375,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11395,7 +11395,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11411,7 +11411,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11434,7 +11434,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -11449,7 +11449,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11469,7 +11469,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11485,7 +11485,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11508,7 +11508,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -11524,7 +11524,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11547,7 +11547,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.Battery
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11564,7 +11564,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11591,7 +11591,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 		}{
 			Meter: base,
@@ -11607,7 +11607,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11622,7 +11622,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 		}{
@@ -11639,7 +11639,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11657,7 +11657,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 		}{
@@ -11674,7 +11674,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11692,7 +11692,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11710,7 +11710,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11731,7 +11731,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseVoltages
 		}{
@@ -11748,7 +11748,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11766,7 +11766,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseVoltages
@@ -11784,7 +11784,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11805,7 +11805,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhaseVoltages
@@ -11823,7 +11823,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11844,7 +11844,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11863,7 +11863,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11887,7 +11887,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -11905,7 +11905,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11926,7 +11926,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -11945,7 +11945,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -11969,7 +11969,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.PhaseCurrents
 			api.PhasePowers
@@ -11988,7 +11988,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -12012,7 +12012,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			api.BatteryCapacity
 			api.BatteryController
 			api.BatteryMaxPowerGetter
-			api.FeedinDisableController
+			api.FeedInDisableController
 			api.MaxACPowerGetter
 			api.MeterEnergy
 			api.PhaseCurrents
@@ -12032,7 +12032,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			BatteryMaxPowerGetter: &decorateMeterBatteryMaxPowerGetterImpl{
 				batteryMaxPowerGetter: batteryMaxPowerGetter,
 			},
-			FeedinDisableController: &decorateMeterFeedinDisableControllerImpl{
+			FeedInDisableController: &decorateMeterFeedInDisableControllerImpl{
 				feedinDisableController: feedinDisableController,
 			},
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -12088,11 +12088,11 @@ func (impl *decorateMeterBatteryMaxPowerGetterImpl) GetMaxChargeDischargePower()
 	return impl.batteryMaxPowerGetter()
 }
 
-type decorateMeterFeedinDisableControllerImpl struct {
+type decorateMeterFeedInDisableControllerImpl struct {
 	feedinDisableController func(bool) error
 }
 
-func (impl *decorateMeterFeedinDisableControllerImpl) FeedinDisableLimitEnable(p0 bool) error {
+func (impl *decorateMeterFeedInDisableControllerImpl) FeedInDisableLimitEnable(p0 bool) error {
 	return impl.feedinDisableController(p0)
 }
 

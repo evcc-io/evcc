@@ -170,7 +170,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if site.smartFeedInDisableAvailable() {
 		shutdown.Register(func() {
 			if site.SmartFeedInDisableActive() {
-				if err := site.setFeedinDisable(false); err != nil {
+				if err := site.setFeedInDisable(false); err != nil {
 					site.log.ERROR.Printf("smart feed-in disable: %v", err)
 				}
 			}
