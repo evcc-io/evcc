@@ -507,7 +507,7 @@ export default defineComponent({
 				startTime.setTime(startTime.getTime() - halfSlot);
 				endTime.setTime(endTime.getTime() - halfSlot);
 
-				annotations[`feedinDisabledZone${zoneIndex}`] = {
+				annotations[`feedInDisabledZone${zoneIndex}`] = {
 					type: "box",
 					drawTime: "beforeDatasetsDraw",
 					xMin: startTime,

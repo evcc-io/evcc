@@ -63,7 +63,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	var batModeS func(api.BatteryMode) error
-	var feedinDisableLimitEnableS func(bool) error
+	var feedInDisableLimitEnableS func(bool) error
 
 	switch {
 	case cc.Soc != nil && cc.LimitSoc != nil:
@@ -87,17 +87,17 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 
 	// decorate feedin disable limit enable
 	if cc.FeedInDisableLimitEnable != nil {
-		feedinS, err := cc.FeedInDisableLimitEnable.BoolSetter(ctx, "feedinDisableLimitEnable")
+		feedinS, err := cc.FeedInDisableLimitEnable.BoolSetter(ctx, "feedInDisableLimitEnable")
 		if err != nil {
 			return nil, fmt.Errorf("feedin disable limit enable: %w", err)
 		}
-		feedinDisableLimitEnableS = feedinS
+		feedInDisableLimitEnableS = feedinS
 	}
 
 	res := m.Decorate(
 		energyG, currentsG, voltagesG, powersG,
 		socG, cc.batteryCapacity.Decorator(), cc.batteryChargeDischargePower.Decorator(), batModeS,
-		feedinDisableLimitEnableS,
+		feedInDisableLimitEnableS,
 		cc.pvMaxACPower.Decorator(),
 	)
 
