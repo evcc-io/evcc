@@ -1,5 +1,4 @@
 template: energinet-price
-covers: ["energinet"]
 products:
   - brand: Energinet
 requirements:
