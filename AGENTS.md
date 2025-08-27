@@ -234,7 +234,18 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use `expectModalVisible()` and `expectModalHidden()` helpers
 - Test configuration persistence across application restarts
 - Standard structure: import `{ start, stop, baseUrl }` from `./evcc`, use `test.afterEach(stop)`
-- Never use fixed timeouts, use existance of elements or wait for network idle
+- **NEVER use fixed timeouts like `waitForTimeout()`** - Playwright's auto-waiting handles synchronization
+- Use Playwright's built-in waiting mechanisms: `expect()` assertions automatically wait for conditions
+- For dynamic content, rely on element visibility/text content assertions rather than arbitrary delays
+- **Comments**: Keep test comments very concise, lowercase, only where needed to clarify intent
+- **No step numbering**: Avoid numbered steps or excessive structure in comments
+- Combine related test scenarios into single comprehensive flows to reduce redundant setup
+- **Be compact**: Don't check visibility before interacting - Playwright handles this automatically
+- **Use concrete values**: In controlled test environments with mocked data, assert exact expected values
+- **Avoid regex in assertions**: Use `toContainText("exact string")` not `toContainText(/regex/)`
+- **Custom select boxes**: Use `selectOption({ label: "exact label" })` to verify option formatting
+- **Minimize variables**: Use inline selectors unless reused multiple times
+- **Descriptive test names**: Be brief but specific about what the test covers (e.g., "configure feed-in limit and verify production reduced indicator")
 
 ## Device Integration & Configuration
 

@@ -614,6 +614,8 @@
       "highlightedHour": "Günstigste Stunde",
       "range": "Bereich"
     },
+    "smartFeedInDisable": "Reduziere PV-Produktion, wenn Einspeisepreis {limit} ist.",
+    "smartFeedInDisableLow": "niedrig",
     "solar": {
       "dayAfterTomorrow": "Übermorgen",
       "partly": "teilweise",
