@@ -16,6 +16,13 @@
 		/>
 
 		<GeneralConfigEntry
+			test-id="generalconfig-apitoken"
+			:label="$t('config.general.apitoken')"
+			text="*******"
+			modal-id="apiTokenModal"
+		/>
+
+		<GeneralConfigEntry
 			test-id="generalconfig-telemetry"
 			:label="$t('config.general.telemetry')"
 			:text="$t(`config.general.${telemetryEnabled ? 'on' : 'off'}`)"

@@ -23,6 +23,19 @@
     "usageTab": "Batterienutzung"
   },
   "config": {
+    "apitoken": {
+      "cancel": "Abbrechen",
+      "confirmButton": "Generieren",
+      "curlLabel": "Beispiel curl-Befehl",
+      "description": "Generieren Sie ein API-Token für authentifizierungsgeschützte REST-API-Endpunkte. Siehe unsere ",
+      "docsLink": "REST-API Dokumentation",
+      "done": "Fertig",
+      "generateButton": "API-Token generieren",
+      "title": "API-Token",
+      "tokenGenerated": "Ihr API-Token wurde erfolgreich generiert.",
+      "tokenLabel": "API-Token",
+      "warning": "Unbegrenzt gültig. Das Ändern des Administrator-Passworts macht alle API-Token ungültig."
+    },
     "aux": {
       "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",
       "titleAdd": "Intelligenten Verbraucher hinzufügen",
@@ -148,7 +161,10 @@
       "optional": "optional"
     },
     "general": {
+      "apitoken": "API-Token",
       "cancel": "Abbrechen",
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",

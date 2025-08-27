@@ -23,6 +23,19 @@
     "usageTab": "Battery usage"
   },
   "config": {
+    "apitoken": {
+      "cancel": "Cancel",
+      "confirmButton": "Generate",
+      "curlLabel": "Example curl command",
+      "description": "Generate an API token for authentication-protected REST API endpoints. See our ",
+      "docsLink": "REST API documentation",
+      "done": "Done",
+      "generateButton": "Generate API Token",
+      "title": "API Token",
+      "tokenGenerated": "Your API token has been generated successfully.",
+      "tokenLabel": "API Token",
+      "warning": "Valid indefinitely. Changing the administrator password will invalidate all API tokens."
+    },
     "aux": {
       "description": "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed.",
       "titleAdd": "Add Self-Regulating Consumer",
@@ -148,7 +161,10 @@
       "optional": "optional"
     },
     "general": {
+      "apitoken": "API Token",
       "cancel": "Cancel",
+      "copied": "Copied!",
+      "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
