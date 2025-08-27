@@ -1,0 +1,63 @@
+template: vehicle-controlled
+group: generic
+products:
+  - description:
+      de: Fahrzeuggesteuerter Lader
+      en: Vehicle-controlled charger
+requirements:
+  description:
+    en: |
+      A charger implementation that delegates control to the vehicle instead of controlling the charger directly.
+      This is useful for "granny chargers" or simple chargers that cannot be controlled.
+
+      The charger requires a vehicle that supports both charge control and optionally position tracking for geofencing.
+
+      When geofencing is enabled, the evcc will only affect charging behavior when the vehicle is within the specified radius of the home coordinates.
+    de: |
+      Eine Lader-Implementierung, die die Kontrolle an das Fahrzeug delegiert, anstatt den Lader direkt zu steuern.
+      Dies ist nützlich für "Granny-Charger" oder einfache Lader, die nicht gesteuert werden können.
+
+      Der Lader benötigt ein Fahrzeug, das sowohl Ladesteuerung als auch optional Positionsverfolgung für Geofencing unterstützt.
+
+      Wenn Geofencing aktiviert ist, wird evcc nur eingreifen, wenn sich das Fahrzeug innerhalb des angegebenen Radius des Standortes befindet.
+params:
+  - name: geofence_enabled
+    description:
+      de: Geofencing aktivieren
+      en: Enable geofencing
+    type: bool
+    default: false
+  - name: home_latitude
+    description:
+      de: Ladestandort Breitengrad
+      en: Charging location latitude
+    type: float
+    help:
+      en: Latitude of your charging location in decimal degrees (e.g., 52.520008)
+      de: Breitengrad Ihres Ladestandorts in Dezimalgrad (z.B. 52.520008)
+  - name: home_longitude
+    description:
+      de: Ladestandort Längengrad
+      en: Charging location longitude
+    type: float
+    help:
+      en: Longitude of your charging location in decimal degrees (e.g., 13.404954)
+      de: Längengrad Ihres Ladestandorts in Dezimalgrad (z.B. 13.404954)
+  - name: radius_meters
+    description:
+      de: Geofence-Radius in Metern
+      en: Geofence radius in meters
+    type: int
+    default: 100
+    help:
+      en: Radius around charging location where charging is controlled by evcc (in meters)
+      de: Radius um den Ladestandort, in an dem evcc die Ladung steuert (in Metern)
+    advanced: true
+render: |
+  type: vehicle-controlled
+  {{- if .geofence_enabled }}
+  geofence_enabled: {{ .geofence_enabled }}
+  home_latitude: {{ .home_latitude }}
+  home_longitude: {{ .home_longitude }}
+  radius_meters: {{ .radius_meters }}
+  {{- end }}
