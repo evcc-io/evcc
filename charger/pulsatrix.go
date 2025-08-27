@@ -50,6 +50,20 @@ type Pulsatrix struct {
 	uri     string
 	enabled bool
 	data    *util.Monitor[pulsatrixData]
+	stats   *connectionStats
+}
+
+type connectionStats struct {
+	mu            sync.RWMutex
+	connects      int
+	disconnects   int
+	reconnects    int
+	writeErrors   int
+	readErrors    int
+	lastConnect   time.Time
+	lastError     time.Time
+	totalUptime   time.Duration
+	currentUptime time.Time
 }
 
 type pulsatrixData struct {
@@ -81,9 +95,10 @@ func NewPulsatrixFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewPulsatrix creates pulsatrix charger
 func NewPulsatrix(hostname string) (*Pulsatrix, error) {
 	wb := Pulsatrix{
-		log:  util.NewLogger("pulsatrix"),
-		uri:  fmt.Sprintf("ws://%s/api/ws", hostname),
-		data: util.NewMonitor[pulsatrixData](15 * time.Second),
+		log:   util.NewLogger("pulsatrix"),
+		uri:   fmt.Sprintf("ws://%s/api/ws", hostname),
+		data:  util.NewMonitor[pulsatrixData](15 * time.Second),
+		stats: &connectionStats{},
 	}
 
 	if err := wb.connectWs(); err != nil {
@@ -110,6 +125,7 @@ func (c *Pulsatrix) connectWs() error {
 
 	c.mu.Lock()
 	c.conn = conn
+	c.stats.recordConnect()
 	c.mu.Unlock()
 
 	// sync with pulsatrix SECC with retries
@@ -133,6 +149,7 @@ func (c *Pulsatrix) connectWs() error {
 
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnectWs() {
+	c.stats.recordReconnect()
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(2 * time.Second),
 		backoff.WithMaxInterval(30 * time.Second),
@@ -149,6 +166,7 @@ func (c *Pulsatrix) wsReader() {
 	defer func() {
 		c.mu.Lock()
 		if c.conn != nil {
+			c.stats.recordDisconnect()
 			c.conn.Close(websocket.StatusNormalClosure, "websocket reader for pulsatrix SECC shutting down")
 			c.conn = nil
 		}
@@ -167,6 +185,7 @@ func (c *Pulsatrix) wsReader() {
 		cancel() //  free immediately after read
 
 		if err != nil {
+			c.stats.recordReadError()
 			c.log.WARN.Printf("websocket read on pulsatrix SECC %s error: %v", c.uri, err)
 			return // Trigger defer reconnect
 		}
@@ -188,6 +207,7 @@ func (c *Pulsatrix) write(message string) error {
 	defer cancel()
 
 	if err := c.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
+		c.stats.recordWriteError()
 		c.log.WARN.Printf("write to pulsatrix SECC %s failed: %v - triggering reconnect", c.uri, err)
 		go c.reconnectWs() // Async reconnect
 		return err
@@ -222,9 +242,17 @@ func (c *Pulsatrix) heartbeat() {
 	ticker := time.NewTicker(3 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		if err := c.Enable(c.enabled); err != nil {
-			c.log.WARN.Printf("heartbeat with pulsatrix SECC %s failed: %v", c.uri, err)
+	statsTimer := time.NewTicker(60 * time.Minute)
+	defer statsTimer.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := c.Enable(c.enabled); err != nil {
+				c.log.WARN.Printf("heartbeat with pulsatrix SECC %s failed: %v", c.uri, err)
+			}
+		case <-statsTimer.C:
+			c.logConnectionStats()
 		}
 	}
 }
@@ -312,4 +340,62 @@ func (c *Pulsatrix) Voltages() (float64, float64, float64, error) {
 	}
 
 	return res.PhaseVoltage[0], res.PhaseVoltage[1], res.PhaseVoltage[2], nil
+}
+
+// Log connection statistics 
+func (s *connectionStats) recordConnect() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.connects++
+	s.lastConnect = time.Now()
+	s.currentUptime = time.Now()
+}
+
+func (s *connectionStats) recordDisconnect() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.disconnects++
+	if !s.currentUptime.IsZero() {
+		s.totalUptime += time.Since(s.currentUptime)
+	}
+}
+
+func (s *connectionStats) recordReconnect() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.reconnects++
+}
+
+func (s *connectionStats) recordWriteError() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.writeErrors++
+	s.lastError = time.Now()
+}
+
+func (s *connectionStats) recordReadError() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.readErrors++
+	s.lastError = time.Now()
+}
+
+func (c *Pulsatrix) logConnectionStats() {
+	s := c.stats
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	
+	uptime := s.totalUptime
+	if !s.currentUptime.IsZero() {
+		uptime += time.Since(s.currentUptime)
+	}
+	
+	c.log.DEBUG.Printf("pulsatrix SECC %s connection stats: connects: %d, disconnects: %d, reconnects: %d", 
+		c.uri, s.connects, s.disconnects, s.reconnects)
+	c.log.DEBUG.Printf("pulsatrix SECC %s error stats: writeErrors: %d, readErrors: %d, uptime: %v", 
+		c.uri, s.writeErrors, s.readErrors, uptime)
+	
+	if !s.lastError.IsZero() {
+		c.log.DEBUG.Printf("pulsatrix SECC %s stats: last error: %v ago", c.uri, time.Since(s.lastError))
+	}
 }
