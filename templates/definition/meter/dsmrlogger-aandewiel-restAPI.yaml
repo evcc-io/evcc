@@ -100,11 +100,11 @@ render: |
           uri: {{ include "uri" . }}
           headers:
           - content-type: application/json
-          jq: .actual[] | select(.name == "power_delivered_l2") | .value
+          jq: .actual[] | select(.name == "power_delivered_l3") | .value
           scale: -1000
         - source: http
           uri: {{ include "uri" . }}
           headers:
           - content-type: application/json
-          jq: .actual[] | select(.name == "power_returned_l2") | .value
+          jq: .actual[] | select(.name == "power_returned_l3") | .value
           scale: -1000 
