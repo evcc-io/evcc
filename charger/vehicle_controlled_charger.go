@@ -12,15 +12,14 @@ import (
 // VehicleControlledCharger is a charger implementation that delegates control to the vehicle
 // This is useful for "granny chargers" or simple chargers that can't be controlled directly
 type VehicleControlledCharger struct {
-	log                                 *util.Logger
-	lp                                  loadpoint.API
-	enabled                             bool
-	ignoreVehicleReportedChargingStatus bool
-	lastStateReportedByVehicle          api.ChargeStatus
-	geofenceEnabled                     bool
-	chargerLatitude                     float64
-	chargerLongitude                    float64
-	radius                              float64
+	log              *util.Logger
+	lp               loadpoint.API
+	enabled          bool
+	wasDisconnected  bool
+	geofenceEnabled  bool
+	chargerLatitude  float64
+	chargerLongitude float64
+	radius           float64
 }
 
 func init() {
@@ -44,13 +43,13 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 	}
 
 	c := &VehicleControlledCharger{
-		log:                                 util.NewLogger("vehicle-controlled"),
-		geofenceEnabled:                     cc.GeofenceEnabled,
-		chargerLatitude:                     cc.Latitude,
-		chargerLongitude:                    cc.Longitude,
-		radius:                              cc.Radius,
-		ignoreVehicleReportedChargingStatus: false,
-		lastStateReportedByVehicle:          api.StatusA,
+		log:              util.NewLogger("vehicle-controlled"),
+		enabled:          false,
+		wasDisconnected:  true,
+		geofenceEnabled:  cc.GeofenceEnabled,
+		chargerLatitude:  cc.Latitude,
+		chargerLongitude: cc.Longitude,
+		radius:           cc.Radius,
 	}
 
 	return c, nil
@@ -104,38 +103,26 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
-	if vehicleAPIStatus != c.lastStateReportedByVehicle {
-		// When we get a new state from the vehicle,
-		// we assume that it is fresh data and thus reset the ignore flag
-		c.ignoreVehicleReportedChargingStatus = false
-		c.lastStateReportedByVehicle = vehicleAPIStatus
-	}
-
 	if vehicleAPIStatus == api.StatusA || !vehicleIsAtCharger {
-		c.ignoreVehicleReportedChargingStatus = false
+		c.wasDisconnected = true
+		c.enabled = false
 		return api.StatusA, nil
 	} else {
+		if c.wasDisconnected {
+			c.enabled = vehicleAPIStatus == api.StatusC
+			c.wasDisconnected = false
+		}
 
-		if c.ignoreVehicleReportedChargingStatus {
-
-			// If the state of the vehicle has not changed since we last enaled/disabled charging,
-			// then we don't trust the state reported by the vehicle provider
-			if c.enabled {
-				return api.StatusC, nil
-			} else {
-				return api.StatusB, nil
-			}
+		if c.enabled {
+			return api.StatusC, nil
 		} else {
-			return vehicleAPIStatus, nil
+			return api.StatusB, nil
 		}
 	}
-
 }
 
 // Enabled implements the api.Charger interface
 func (c *VehicleControlledCharger) Enabled() (bool, error) {
-	// The vehicle provider Status() is delayed and cached,
-	// so we cannot use it to determine if the vehicle is charging
 	status, err := c.Status()
 	return status == api.StatusC, err
 }
@@ -163,7 +150,6 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 
 	err = chargeController.ChargeEnable(enable)
 	c.enabled = enable
-	c.ignoreVehicleReportedChargingStatus = true
 
 	return err
 }
