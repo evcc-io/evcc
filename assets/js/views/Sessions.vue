@@ -748,31 +748,31 @@ export default defineComponent({
 
 @media (min-width: 576px) {
 	.header-outer {
-		--vertical-shift: calc((100vw - 540px) / 2);
+		--vertical-shift: calc((100vw - 560px) / 2);
 	}
 }
 
 @media (min-width: 768px) {
 	.header-outer {
-		--vertical-shift: calc((100vw - 720px) / 2);
+		--vertical-shift: calc((100vw - 740px) / 2);
 	}
 }
 
 @media (min-width: 992px) {
 	.header-outer {
-		--vertical-shift: calc((100vw - 960px) / 2);
+		--vertical-shift: calc((100vw - 980px) / 2);
 	}
 }
 
 @media (min-width: 1200px) {
 	.header-outer {
-		--vertical-shift: calc((100vw - 1140px) / 2);
+		--vertical-shift: calc((100vw - 1160px) / 2);
 	}
 }
 
 @media (min-width: 1400px) {
 	.header-outer {
-		--vertical-shift: calc((100vw - 1320px) / 2);
+		--vertical-shift: calc((100vw - 1340px) / 2);
 	}
 }
 </style>
