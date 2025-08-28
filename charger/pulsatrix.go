@@ -151,10 +151,10 @@ func (c *Pulsatrix) connectWs() error {
 func (c *Pulsatrix) reconnectWs() {
 	c.stats.recordReconnect()
 	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(2 * time.Second),
-		backoff.WithMaxInterval(30 * time.Second),
+		backoff.WithInitialInterval(2*time.Second),
+		backoff.WithMaxInterval(30*time.Second),
 		backoff.WithMultiplier(1.5),
-		backoff.WithMaxElapsedTime(5 * time.Minute))
+		backoff.WithMaxElapsedTime(5*time.Minute))
 
 	if err := backoff.Retry(c.connectWs, bo); err != nil {
 		c.log.ERROR.Printf("reconnect to pulsatrix SECC %s failed after 5min: %v", c.uri, err)
@@ -172,7 +172,7 @@ func (c *Pulsatrix) wsReader() {
 		}
 		c.mu.Unlock()
 
- 		// exponential backoff reconnect after disconnect
+		// exponential backoff reconnect after disconnect
 		time.Sleep(time.Second) // short pause before reconnecting
 		go c.reconnectWs()
 	}()
@@ -342,7 +342,7 @@ func (c *Pulsatrix) Voltages() (float64, float64, float64, error) {
 	return res.PhaseVoltage[0], res.PhaseVoltage[1], res.PhaseVoltage[2], nil
 }
 
-// Log connection statistics 
+// Log connection statistics
 func (s *connectionStats) recordConnect() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -384,17 +384,17 @@ func (c *Pulsatrix) logConnectionStats() {
 	s := c.stats
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	uptime := s.totalUptime
 	if !s.currentUptime.IsZero() {
 		uptime += time.Since(s.currentUptime)
 	}
-	
-	c.log.DEBUG.Printf("pulsatrix SECC %s connection stats: connects: %d, disconnects: %d, reconnects: %d", 
+
+	c.log.DEBUG.Printf("pulsatrix SECC %s connection stats: connects: %d, disconnects: %d, reconnects: %d",
 		c.uri, s.connects, s.disconnects, s.reconnects)
-	c.log.DEBUG.Printf("pulsatrix SECC %s error stats: writeErrors: %d, readErrors: %d, uptime: %v", 
+	c.log.DEBUG.Printf("pulsatrix SECC %s error stats: writeErrors: %d, readErrors: %d, uptime: %v",
 		c.uri, s.writeErrors, s.readErrors, uptime)
-	
+
 	if !s.lastError.IsZero() {
 		c.log.DEBUG.Printf("pulsatrix SECC %s stats: last error: %v ago", c.uri, time.Since(s.lastError))
 	}
