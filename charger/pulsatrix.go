@@ -264,7 +264,6 @@ func (c *Pulsatrix) heartbeat() {
 	for {
 		select {
 		case <-ticker.C:
-		case <-ticker.C:
 			if err := c.Enable(c.enabled); err != nil {
 				c.stats.recordHeartbeatError()
 
