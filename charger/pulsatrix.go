@@ -357,6 +357,7 @@ func (s *connectionStats) recordDisconnect() {
 	s.disconnects++
 	if !s.currentUptime.IsZero() {
 		s.totalUptime += time.Since(s.currentUptime)
+		s.currentUptime = time.Time{} // reset after disconnect
 	}
 }
 
