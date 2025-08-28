@@ -27,7 +27,7 @@ params:
       en: Enable geofencing
     type: bool
     default: false
-  - name: home_latitude
+  - name: latitude
     description:
       de: Ladestandort Breitengrad
       en: Charging location latitude
@@ -35,7 +35,7 @@ params:
     help:
       en: Latitude of your charging location in decimal degrees (e.g., 52.520008)
       de: Breitengrad Ihres Ladestandorts in Dezimalgrad (z.B. 52.520008)
-  - name: home_longitude
+  - name: longitude
     description:
       de: Ladestandort Längengrad
       en: Charging location longitude
@@ -43,7 +43,7 @@ params:
     help:
       en: Longitude of your charging location in decimal degrees (e.g., 13.404954)
       de: Längengrad Ihres Ladestandorts in Dezimalgrad (z.B. 13.404954)
-  - name: radius_meters
+  - name: radius
     description:
       de: Geofence-Radius in Metern
       en: Geofence radius in meters
@@ -57,7 +57,7 @@ render: |
   type: vehicle-controlled
   {{- if .geofence_enabled }}
   geofence_enabled: {{ .geofence_enabled }}
-  home_latitude: {{ .home_latitude }}
-  home_longitude: {{ .home_longitude }}
-  radius_meters: {{ .radius_meters }}
+  latitude: {{ .latitude }}
+  longitude: {{ .longitude }}
+  radius: {{ .radius }}
   {{- end }}
