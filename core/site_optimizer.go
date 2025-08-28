@@ -148,9 +148,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if v := lp.GetVehicle(); v != nil {
-			limit := lp.GetLimitEnergy() * 1e3 // Wh
-			if limit == 0 {
-				limit = v.Capacity() * float64(lp.GetLimitSoc()) / 10 // Wh
+			limit := v.Capacity() * 1e3 // Wh
+			if v := lp.EffectiveLimitSoc(); v > 0 {
+				limit *= float64(v) / 100
+			} else if v := lp.GetLimitEnergy(); v > 0 {
+				limit = v * 1e3
 			}
 
 			bat.SMax = float32(limit)
