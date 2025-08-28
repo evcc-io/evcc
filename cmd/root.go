@@ -14,6 +14,7 @@ import (
 
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/mcp"
@@ -245,6 +246,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// announce on mDNS
 	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
 		err = configureMDNS(conf.Network)
+	}
+
+	// start SHM server
+	if err == nil {
+		var instance *shm.SEMP
+		instance, err = shm.New(conf.SHM, site, httpd.Addr, httpd.Router())
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		} else {
+			go instance.Run()
+		}
 	}
 
 	// start HEMS server

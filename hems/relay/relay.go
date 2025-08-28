@@ -21,8 +21,8 @@ type Relay struct {
 	maxPower float64
 }
 
-// New creates an Relay HEMS from generic config
-func New(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
+// NewFromConfig creates an Relay HEMS from generic config
+func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
 	var cc struct {
 		MaxPower float64
 		Limit    plugin.Config
