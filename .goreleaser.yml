@@ -75,16 +75,16 @@ changelog:
       - "^Translations"
   groups:
     - title: "Breaking Changes 🚨"
-      regexp: '\(BC\)'
+      regexp: '(?i)\(BC\)'
       order: 10
     - title: "Bug Fixes 🐞"
-      regexp: '^fix:|\bfix\b'
+      regexp: '(?i)^fix:|\bfix\b'
       order: 40
     - title: "New Features 💫"
-      regexp: '^feat:|\badd\b'
+      regexp: '(?i)^feat:|\badd\b'
       order: 20
     - title: "Experimental Features 🧪"
-      regexp: '^experimental:|\bexperimental\b'
+      regexp: '(?i)^experimental:|\bexperimental\b'
       order: 25
     - title: "Other Changes ☀️"
       order: 30
