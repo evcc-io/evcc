@@ -7,7 +7,6 @@ requirements:
   description:
     de: template für integration vom Aandewiel dsmr-logger
     en: Template to integrate the Aandewiel dsmr-logger
-    nl: Template om de DSMRlogger van Willem Aandewiel te integreren in evcc
 params:
   - name: usage
     choice:
