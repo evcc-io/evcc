@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test.describe("vehicle startup error", async () => {
+test.describe("vehicle startup error (using failing Tesla API)", async () => {
   test("broken vehicle: normal title and 'not reachable' icon", async ({ page }) => {
     await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).toBeVisible();
