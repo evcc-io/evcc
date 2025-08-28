@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -211,7 +210,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// accumulator
-		site.pvEnergy[ref] = metrics.NewAccumulator(clock.New())
+		site.pvEnergy[ref] = metrics.NewAccumulator()
 	}
 
 	// multiple batteries
@@ -255,14 +254,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
-	clock := clock.New()
-
 	site := &Site{
 		log:        util.NewLogger("site"),
 		Voltage:    230, // V
 		pvEnergy:   make(map[string]*metrics.Accumulator),
-		fcstEnergy: metrics.NewAccumulator(clock),
-		homeEnergy: metrics.NewCollector(clock),
+		fcstEnergy: metrics.NewAccumulator(),
+		homeEnergy: metrics.NewCollector(metrics.Home),
 	}
 
 	return site

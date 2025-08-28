@@ -3,19 +3,31 @@ package metrics
 import (
 	"time"
 
-	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/server/db"
 )
 
-const SlotDuration = 15 * time.Minute
+const (
+	SlotDuration = 15 * time.Minute
+
+	Home = "home" // virtual home meter
+)
 
 type Collector struct {
-	accu    Accumulator
+	entity  entity
+	accu    *Accumulator
 	started time.Time
 }
 
-func NewCollector(clock clock.Clock) *Collector {
+func NewCollector(name string, opt ...func(*Accumulator)) *Collector {
+	entity := entity{Name: name}
+	if err := db.Instance.FirstOrCreate(&entity).Error; err != nil {
+		// TODO return error
+		panic(err)
+	}
+
 	return &Collector{
-		accu: *NewAccumulator(clock),
+		entity: entity,
+		accu:   NewAccumulator(opt...),
 	}
 }
 
@@ -31,7 +43,7 @@ func (c *Collector) process(fun func()) error {
 	if slotStart := now.Truncate(SlotDuration); slotStart.After(c.started) {
 		// full slot completed
 		if slotStart.Sub(c.started) == SlotDuration {
-			if err := persist(c.started, c.accu.AccumulatedEnergy()); err != nil {
+			if err := c.persist(); err != nil {
 				return err
 			}
 		}
@@ -41,6 +53,14 @@ func (c *Collector) process(fun func()) error {
 	}
 
 	return nil
+}
+
+func (c *Collector) persist() error {
+	return persist(c.entity, c.started, c.accu.AccumulatedEnergy())
+}
+
+func (c *Collector) Profile(from time.Time) (*[96]float64, error) {
+	return profile(c.entity, from)
 }
 
 func (c *Collector) AddEnergy(v float64) error {

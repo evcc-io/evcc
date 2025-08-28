@@ -16,8 +16,18 @@ type Accumulator struct {
 	Accumulated float64  `json:"accumulated"` // kWh
 }
 
-func NewAccumulator(clock clock.Clock) *Accumulator {
-	return &Accumulator{clock: clock}
+func WithClock(clock clock.Clock) func(*Accumulator) {
+	return func(m *Accumulator) {
+		m.clock = clock
+	}
+}
+
+func NewAccumulator(opt ...func(*Accumulator)) *Accumulator {
+	m := &Accumulator{clock: clock.New()}
+	for _, o := range opt {
+		o(m)
+	}
+	return m
 }
 
 func (m *Accumulator) Updated() time.Time {

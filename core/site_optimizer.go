@@ -11,7 +11,6 @@ import (
 	evopt "github.com/andig/evopt/client"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -348,7 +347,7 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) []float64 {
 	// kWh over last 30 days
-	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
+	profile, err := site.homeEnergy.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		site.log.WARN.Println("optimizer:", err)
 		return lo.RepeatBy(minLen, func(_ int) float64 {

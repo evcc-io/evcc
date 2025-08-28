@@ -16,7 +16,10 @@ func TestSqliteTimestamp(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, Init())
 
-	persist(clock.Now(), 0)
+	entity := entity{Name: "foo"}
+	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
+
+	persist(entity, clock.Now(), 0)
 
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
@@ -48,20 +51,23 @@ func TestUpdateProfile(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	Init()
+	require.NoError(t, Init())
+
+	entity := entity{Name: "foo"}
+	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
 
 	// 2 days of data
 	// day 1:   0 ...  95
 	// day 2:  96 ... 181
 	for i := range 4 * 2 * 24 {
-		persist(clock.Now(), float64(i))
+		persist(entity, clock.Now(), float64(i))
 		clock.Add(15 * time.Minute)
 	}
 
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
-		prof, err := Profile(from)
+		prof, err := profile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -79,7 +85,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
 
-		prof, err := Profile(from)
+		prof, err := profile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64
