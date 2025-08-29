@@ -51,10 +51,6 @@ func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
-	} else {
-		if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
-			err = nil
-		}
 	}
 	return err
 }
@@ -69,6 +65,10 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 			// start refresh
 			if v.refreshTime.IsZero() {
 				if err = v.deepRefresh(); err != nil {
+					// if forbidden, return stale data, otherwise error
+					if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
+						return res, nil
+					}
 					return res, err
 				}
 
