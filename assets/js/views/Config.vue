@@ -383,6 +383,7 @@
 				<EebusModal @changed="yamlChanged" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
+				<ApiTokenModal />
 			</div>
 		</div>
 	</div>
@@ -447,11 +448,13 @@ import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import ApiTokenModal from "../components/Config/ApiTokenModal.vue";
 
 export default defineComponent({
 	name: "Config",
 	components: {
 		NewDeviceButton,
+		ApiTokenModal,
 		BackupRestoreModal,
 		ChargerModal,
 		CircuitsIcon,

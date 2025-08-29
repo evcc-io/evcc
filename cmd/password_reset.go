@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/server/auth"
 	"github.com/spf13/cobra"
 )
 

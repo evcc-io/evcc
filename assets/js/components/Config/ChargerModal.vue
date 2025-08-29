@@ -37,6 +37,7 @@
 					:help="$t('config.charger.ocppHelp')"
 				>
 					<input type="text" class="form-control border" :value="ocppUrl" readonly />
+					<CopyLink :text="ocppUrl" />
 				</FormRow>
 
 				<Modbus
@@ -101,6 +102,7 @@ import Markdown from "./Markdown.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
+import CopyLink from "../Helper/CopyLink.vue";
 import { initialTestState, performTest } from "./utils/test";
 import { ConfigType } from "@/types/evcc";
 import {
@@ -161,6 +163,7 @@ export default defineComponent({
 		YamlEntry,
 		TemplateSelector,
 		DeviceModalActions,
+		CopyLink,
 	},
 	props: {
 		id: Number,
