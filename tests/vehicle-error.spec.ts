@@ -32,7 +32,7 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
     await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
+    await modal.getByRole("link", { name: "Arrival" }).click();
     await expect(page.getByRole("combobox", { name: "Min. charge %" })).toBeEnabled();
     await expect(page.getByRole("combobox", { name: "Default limit" })).toBeEnabled();
   });
