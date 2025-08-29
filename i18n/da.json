@@ -600,13 +600,13 @@
   "forecast": {
     "co2": {
       "average": "Gennemsnit",
-      "lowestHour": "Reneste time",
+      "highlightedHour": "Reneste time",
       "range": "spændvidde"
     },
     "modalTitle": "Prognose",
     "price": {
       "average": "Gennemsnit",
-      "lowestHour": "Billigste time",
+      "highlightedHour": "Billigste time",
       "range": "Spændvidde"
     },
     "solar": {

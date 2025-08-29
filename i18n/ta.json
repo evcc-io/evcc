@@ -594,13 +594,13 @@
   "forecast": {
     "co2": {
       "average": "சராசரி",
-      "lowestHour": "தூய்மையான மணி",
+      "highlightedHour": "தூய்மையான மணி",
       "range": "வீச்சு"
     },
     "modalTitle": "முன்னறிவிப்பு",
     "price": {
       "average": "சராசரி",
-      "lowestHour": "மலிவான மணி",
+      "highlightedHour": "மலிவான மணி",
       "range": "வீச்சு"
     },
     "solar": {

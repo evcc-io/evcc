@@ -600,13 +600,13 @@
   "forecast": {
     "co2": {
       "average": "Genomsnitt",
-      "lowestHour": "Timme med lägst CO₂",
+      "highlightedHour": "Timme med lägst CO₂",
       "range": "Intervall"
     },
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
-      "lowestHour": "Billigaste timmen",
+      "highlightedHour": "Billigaste timmen",
       "range": "Intervall"
     },
     "solar": {

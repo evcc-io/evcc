@@ -294,7 +294,7 @@ html.dark .grid-import {
 	color: var(--bs-dark);
 }
 .pv-export {
-	background-color: var(--evcc-export);
+	background-color: var(--evcc-export-bg);
 	color: var(--bs-dark);
 }
 .unknown-power {

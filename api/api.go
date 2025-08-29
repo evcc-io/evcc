@@ -180,6 +180,11 @@ type SocLimiter interface {
 	GetLimitSoc() (int64, error)
 }
 
+// FeedInDisableController allows disabling grid feed-in, i.e. setting limit to 0W
+type FeedInDisableController interface {
+	FeedInDisableLimitEnable(bool) error
+}
+
 // ChargeController allows to start/stop the charging session on the vehicle side
 type ChargeController interface {
 	ChargeEnable(bool) error

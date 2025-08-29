@@ -468,13 +468,13 @@
   "forecast": {
     "co2": {
       "average": "Povprečje",
-      "lowestHour": "Najčistejša ura",
+      "highlightedHour": "Najčistejša ura",
       "range": "Doseg"
     },
     "modalTitle": "Napoved",
     "price": {
       "average": "Povprečje",
-      "lowestHour": "Najcenejša ura",
+      "highlightedHour": "Najcenejša ura",
       "range": "Doseg"
     },
     "solar": {

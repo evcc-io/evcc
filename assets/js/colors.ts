@@ -17,6 +17,7 @@ const colors: {
   pricePerKWh: string | null;
   price: string | null;
   co2: string | null;
+  export: string | null;
   background: string | null;
   light: string | null;
   selfPalette: string[];
@@ -31,6 +32,7 @@ const colors: {
   pricePerKWh: null,
   price: null,
   co2: null,
+  export: null,
   background: null,
   light: null,
   selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
@@ -62,6 +64,53 @@ export const fullColor = (color: string | null) => {
   return color?.toLowerCase().replace(/20$/, "ff");
 };
 
+export const createFeedInDisabledPattern = (
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  opacity = 0.5
+): CanvasPattern | null => {
+  const patternCanvas = document.createElement("canvas");
+  const patternContext = patternCanvas.getContext("2d");
+  if (!patternContext) return null;
+
+  // Set pattern size
+  patternCanvas.width = 10;
+  patternCanvas.height = 10;
+
+  // Create diagonal stripes with more saturation
+  patternContext.strokeStyle = color;
+  patternContext.globalAlpha = opacity;
+  patternContext.lineWidth = 3;
+
+  // Draw diagonal lines
+  patternContext.beginPath();
+  patternContext.moveTo(0, 10);
+  patternContext.lineTo(10, 0);
+  patternContext.stroke();
+
+  patternContext.beginPath();
+  patternContext.moveTo(-2, 2);
+  patternContext.lineTo(2, -2);
+  patternContext.stroke();
+
+  patternContext.beginPath();
+  patternContext.moveTo(8, 12);
+  patternContext.lineTo(12, 8);
+  patternContext.stroke();
+
+  return ctx.createPattern(patternCanvas, "repeat");
+};
+
+export const feedInDisabledPattern = (color: string): string => {
+  return `repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    ${color} 3px,
+    ${color} 5px
+  )`;
+};
+
 function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
   colors.text = style.getPropertyValue("--evcc-default-text");
@@ -71,6 +120,7 @@ function updateCssColors() {
   colors.grid = style.getPropertyValue("--evcc-grid");
   colors.price = style.getPropertyValue("--evcc-price");
   colors.co2 = style.getPropertyValue("--evcc-co2");
+  colors.export = style.getPropertyValue("--evcc-export");
   colors.background = style.getPropertyValue("--evcc-background");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");

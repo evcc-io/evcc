@@ -77,9 +77,14 @@
 import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
 import { defineComponent, type PropType } from "vue";
-import { type CURRENCY, type Rate, type SelectOption, type Slot } from "@/types/evcc";
-
-type LimitDirection = "above" | "below";
+import {
+	type CURRENCY,
+	type Rate,
+	type SelectOption,
+	type Slot,
+	type LimitDirection,
+} from "@/types/evcc";
+import { generateTariffLimitOptions } from "@/utils/tariffOptions";
 type HighlightColor = "text-primary" | "text-warning";
 
 export default defineComponent({
@@ -132,59 +137,19 @@ export default defineComponent({
 			return [];
 		},
 		limitOptions(): SelectOption<number>[] {
-			const { max } = this.optionsCostRange;
-
-			const values = [] as number[];
-			const stepSize = this.optionStepSize;
-			for (let i = 1; i <= 100; i++) {
-				const value = this.optionStartValue + stepSize * i;
-				if (max !== undefined && value > max + stepSize) break;
-				values.push(this.roundLimit(value) as number);
-			}
-			// add special entry if currently selected value is not in the scale
-			const selected = this.selectedLimit;
-			if (selected && !values.includes(selected)) {
-				values.push(selected);
-			}
-			values.sort((a, b) => a - b);
-			return values.map((value) => ({ value, name: this.formatLimit(value) }));
-		},
-		optionStartValue() {
 			if (!this.rates?.length) {
-				return 0;
-			}
-			const { min } = this.optionsCostRange;
-			const stepSize = this.optionStepSize;
-			// always show some negative values for price
-			const start = this.optionsStartAtZero ? 0 : stepSize * -11;
-			const minValue = min !== undefined ? Math.min(start, min) : start;
-			return Math.floor(minValue / stepSize) * stepSize;
-		},
-		optionStepSize() {
-			if (!this.rates?.length) {
-				return 0.001;
-			}
-			const { min, max } = this.optionsCostRange;
-			if (min === undefined || max === undefined) {
-				return 0.001;
+				return [];
 			}
 
-			const baseSteps = [0.001, 0.002, 0.005];
-			const range = max - Math.min(0, min);
-			for (let scale = 1; scale <= 10000; scale *= 10) {
-				for (const baseStep of baseSteps) {
-					const step = baseStep * scale;
-					if (range < step * 100) return step;
-				}
-			}
-			return 1;
-		},
-		optionsCostRange() {
-			const { min, max } = this.costRange(this.totalSlots);
-			if (this.optionsExtraHigh && max) {
-				return { min, max: max * 2 };
-			}
-			return { min, max };
+			const values = this.rates.map((rate) => rate.value);
+
+			return generateTariffLimitOptions(values, {
+				selectedValue: this.selectedLimit,
+				includeNegatives: !this.optionsStartAtZero,
+				extraHigh: this.optionsExtraHigh,
+				formatValue: (value: number) => this.formatValue(value),
+				direction: this.limitDirection,
+			});
 		},
 		slots(): Slot[] {
 			if (!this.rates?.length) {
@@ -296,12 +261,7 @@ export default defineComponent({
 		roundLimit(limit: number | null): number | null {
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
 		},
-		formatLimit(limit: number | null): string {
-			if (limit === null) {
-				return this.$t("smartCost.none");
-			}
-			return `${this.limitOperator} ${this.formatValue(limit)}`;
-		},
+
 		formatValue(value: number): string {
 			if (this.isCo2) {
 				return this.fmtCo2Medium(value);

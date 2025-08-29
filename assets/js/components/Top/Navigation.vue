@@ -192,8 +192,8 @@ export default defineComponent({
 			return this.batteryConfigured;
 		},
 		forecastAvailable() {
-			const { grid, solar, co2 } = this.forecast || {};
-			return grid || solar || co2;
+			const { grid, solar, co2, feedin } = this.forecast || {};
+			return grid || solar || co2 || feedin;
 		},
 		optimizeAvailable() {
 			return !!this.evopt && this.$hiddenFeatures();

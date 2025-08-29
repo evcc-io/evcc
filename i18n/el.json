@@ -594,13 +594,13 @@
   "forecast": {
     "co2": {
       "average": "Μέσος όρος",
-      "lowestHour": "«Πιο καθαρή ώρα»",
+      "highlightedHour": "«Πιο καθαρή ώρα»",
       "range": "'Εύρος"
     },
     "modalTitle": "Πρόγνωση",
     "price": {
       "average": "Μέσος όρος",
-      "lowestHour": "Πιο φθηνή ώρα",
+      "highlightedHour": "Πιο φθηνή ώρα",
       "range": "'Εύρος"
     },
     "solar": {
