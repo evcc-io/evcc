@@ -42,7 +42,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Odometer   string // optional
 			Climater   string // optional
 			FinishTime string // optional
-			MaxCurrent string // optional - number.* entity for max charge current
+			MaxCurrent string // optional - number.* or input_number.* entity for max charge current
 		}
 		Services struct {
 			Start  string `mapstructure:"start_charging"` // script.*  optional
@@ -123,14 +123,29 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
 	}
 
-	// implement maxCurrent getter/setter if configured (number.* entity expected)
+	// implement maxCurrent getter/setter if configured (number.* or input_number.* entity expected)
 	if cc.Sensors.MaxCurrent != "" {
 		getMaxCurrent = func() (int64, error) { return res.getIntSensor(cc.Sensors.MaxCurrent) }
 
 		setMaxCurrent = func(value int64) error {
-			// Home Assistant: service number.set_value with payload {"entity_id":"number.xxx","value": <number>}
+			// determine domain (number.* or input_number.*)
+			parts := strings.SplitN(cc.Sensors.MaxCurrent, ".", 2)
+			if len(parts) != 2 {
+				return errors.New("invalid entity id")
+			}
+			domain := parts[0]
+			var svc string
+			switch domain {
+			case "number":
+				svc = "number/set_value"
+			case "input_number":
+				svc = "input_number/set_value"
+			default:
+				return errors.New("unsupported entity domain for maxCurrent: " + domain)
+			}
+
 			payload := fmt.Sprintf(`{"entity_id": "%s", "value": %d}`, cc.Sensors.MaxCurrent, value)
-			uri := fmt.Sprintf("%s/api/services/number/set_value", res.uri)
+			uri := fmt.Sprintf("%s/api/services/%s", res.uri, svc)
 			req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
 			_, err := res.DoBody(req)
 			return err
