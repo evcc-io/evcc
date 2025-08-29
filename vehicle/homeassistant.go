@@ -42,6 +42,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Odometer   string // optional
 			Climater   string // optional
 			FinishTime string // optional
+			MaxCurrent string // optional - number.* entity for max charge current
 		}
 		Services struct {
 			Start  string `mapstructure:"start_charging"` // script.*  optional
@@ -86,7 +87,10 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		climater     func() (bool, error)
 		finish       func() (time.Time, error)
 		chargeEnable func(bool) error
-		wakeup       func() error
+
+		// new: max current getter/setter
+		setMaxCurrent func(int64) error
+		getMaxCurrent func() (int64, error)
 	)
 
 	if cc.Sensors.LimitSoc != "" {
@@ -119,6 +123,20 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
 	}
 
+	// implement maxCurrent getter/setter if configured (number.* entity expected)
+	if cc.Sensors.MaxCurrent != "" {
+		getMaxCurrent = func() (int64, error) { return res.getIntSensor(cc.Sensors.MaxCurrent) }
+
+		setMaxCurrent = func(value int64) error {
+			// Home Assistant: service number.set_value with payload {"entity_id":"number.xxx","value": <number>}
+			payload := fmt.Sprintf(`{"entity_id": "%s", "value": %d}`, cc.Sensors.MaxCurrent, value)
+			uri := fmt.Sprintf("%s/api/services/number/set_value", res.uri)
+			req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
+			_, err := res.DoBody(req)
+			return err
+		}
+	}
+
 	// decorate all features
 	return decorateVehicle(
 		res,
@@ -127,8 +145,8 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		rng,
 		odo,
 		climater,
-		nil, // maxCurrent setter not implemented
-		nil, // getMaxCurrent getter not implemented
+		setMaxCurrent, // maxCurrent setter
+		getMaxCurrent, // getMaxCurrent getter
 		finish,
 		wakeup,
 		chargeEnable,
