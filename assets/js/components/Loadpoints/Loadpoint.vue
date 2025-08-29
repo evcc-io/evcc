@@ -269,10 +269,7 @@ export default defineComponent({
 			return !!this.vehicleName;
 		},
 		vehicleHasSoc() {
-			return (
-				(this.vehicleKnown && this.vehicle?.features?.includes("Offline")) ||
-				this.vehicleNotReachable
-			);
+			return this.vehicleKnown && this.vehicle?.features?.includes("Offline");
 		},
 		vehicleNotReachable() {
 			// online vehicle that was not reachable at startup
