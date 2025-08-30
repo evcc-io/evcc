@@ -301,7 +301,6 @@ export default defineComponent({
 						responseType: "stream",
 						adapter: "fetch",
 						validateStatus,
-						timeout: 30000,
 						headers: {
 							Accept: "application/octet-stream",
 						},
