@@ -304,7 +304,7 @@ export default defineComponent({
 						timeout: 30000,
 						headers: {
 							Accept: "application/octet-stream",
-						}
+						},
 					}
 				)
 			);
