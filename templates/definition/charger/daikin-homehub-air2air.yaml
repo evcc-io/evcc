@@ -11,7 +11,7 @@ requirements:
 
       Homehub (EKRHH) muss im Modus 4 (Modbus TCP/IP für Air2Air-Wärmepumpen) konfiguriert werden.
     en: |
-      Works with air 2 air heat pumps that support 4th gen WLAN-adapters (BRP069C4).with a maximum of 5 units.
+      Works with air 2 air heat pumps that support 4th gen WLAN-adapters (BRP069C4). With a maximum of 5 units.
 
       Homehub (EKRHH) needs to be configured in mode 4 (Modbus TCP/IP for air2air heat pumps).
 params:
