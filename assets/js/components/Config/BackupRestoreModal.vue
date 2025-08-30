@@ -303,7 +303,7 @@ export default defineComponent({
 						validateStatus,
 						timeout: 30000,
 						headers: {
-							Accept: "application/octet-stream"
+							Accept: "application/octet-stream",
 						}
 					}
 				)
