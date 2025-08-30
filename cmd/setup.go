@@ -549,11 +549,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
-	// setup modbus proxy
-	if err == nil {
-		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
-	}
-
 	// setup javascript VMs
 	if err == nil {
 		err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
