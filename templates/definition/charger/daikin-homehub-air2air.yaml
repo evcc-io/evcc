@@ -58,7 +58,7 @@ render: |
             address: 1000
             type: writeholding
             encoding: int16
-    - case: 1 # dimm
+    - case: 1 # dim
       set:
         source: modbus
         {{- include "modbus" . | indent 6 }}
