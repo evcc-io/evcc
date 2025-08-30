@@ -299,11 +299,11 @@ export default defineComponent({
 					{ password: this.password },
 					{
 						responseType: "stream",
-						adapter: 'fetch',
+						adapter: "fetch",
 						validateStatus,
 						timeout: 30000,
 						headers: {
-							'Accept': 'application/octet-stream'
+							Accept: "application/octet-stream"
 						}
 					}
 				)
