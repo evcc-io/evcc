@@ -3,6 +3,14 @@ products:
   - brand: EM2GO
     description:
       generic: Duo Power
+requirements:
+  description:
+    de: |
+      Die Unterstützung ist im Moment vollständig kaputt und keine Verbindung möglich.
+      Alternativ [OCPP 1.6J](https://docs.evcc.io/docs/devices/chargers#ocpp-16j-kompatibel) mit `connector` Parameter nutzen.
+    en: |
+      Support is currently completely broken and no connection possible.
+      Alternatively use [OCPP 1.6J](https://docs.evcc.io/en/docs/devices/chargers#ocpp-16j-compatible) with `connector` parameter.
 capabilities: ["mA"]
 params:
   - name: modbus
