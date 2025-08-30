@@ -34,9 +34,7 @@ start/stop charging, current limits, phase switching) to the controller.
 
 Robust operation is ensured by automatic detection and handling of connection
 losses, with reconnection based on exponential backoff strategies. In addition
-to real-time data exchange, periodic heartbeats maintain connectivity, while
-connection statistics such as uptime, error counts, and reconnection attempts
-are tracked.
+to real-time data exchange, periodic heartbeats maintain connectivity.
 
 For further details, see: https://docs.pulsatrix.com or https://pulsatrix.de
 */
@@ -59,41 +57,29 @@ import (
 )
 
 const (
-	dataTimeout       = 15 * time.Second
-	heartbeatInterval = 3 * time.Minute
-	statsInterval     = 60 * time.Minute
-	maxRetries        = 3
-	syncRetries       = 3
+	dataTimeout          = 15 * time.Second
+	heartbeatInterval    = 3 * time.Minute
+	maxRetries           = 3
+	syncRetries          = 3
+	backoffInitial       = 2 * time.Second
+	backoffMax           = 30 * time.Second
+	backoffMultiplier    = 1.5
+	backoffMaxElapsed    = 15 * time.Minute
 )
 
 // pulsatrix charger implementation
 type Pulsatrix struct {
-	log      *util.Logger
-	mu       sync.RWMutex
-	conn     *websocket.Conn
-	hostname string
-	uri      string
-	enabled  int32 // atomic for thread-safe access
-	data     *util.Monitor[pulsatrixData]
-	stats    *connectionStats
-	cancel   context.CancelFunc // for graceful shutdown
-	wg       sync.WaitGroup     // for goroutine synchronization
-}
-
-type connectionStats struct {
+	log                        *util.Logger
 	mu                         sync.RWMutex
-	connects                   int64 // atomic counters
-	disconnects                int64
-	reconnects                 int64
-	writeErrors                int64
-	readErrors                 int64
-	heartbeatErrors            int64
-	consecutiveReadErrors      int32
-	consecutiveHeartbeatErrors int32
-	lastConnect                time.Time
-	lastError                  time.Time
-	totalUptime                time.Duration
-	currentUptime              time.Time
+	conn                       *websocket.Conn
+	hostname                   string
+	uri                        string
+	enabled                    int32 // atomic for thread-safe access
+	data                       *util.Monitor[pulsatrixData]
+	cancel                     context.CancelFunc // for graceful shutdown
+	wg                         sync.WaitGroup     // for goroutine synchronization
+	consecutiveReadErrors      int32              // atomic counter
+	consecutiveHeartbeatErrors int32              // atomic counter
 }
 
 type pulsatrixData struct {
@@ -134,22 +120,19 @@ func NewPulsatrix(hostname string) (*Pulsatrix, error) {
 		hostname: hostname,
 		uri:      fmt.Sprintf("ws://%s/api/ws", hostname),
 		data:     util.NewMonitor[pulsatrixData](dataTimeout),
-		stats:    &connectionStats{},
 	}
 
-	if err := wb.connectWs(); err != nil {
+	if err := wb.connect(); err != nil {
 		return nil, fmt.Errorf("initial connection failed: %w", err)
 	}
 
 	return wb, nil
 }
 
-// connectWs connects to a pulsatrix SECC via websocket
-func (c *Pulsatrix) connectWs() error {
+// connect connects to a pulsatrix SECC via websocket
+func (c *Pulsatrix) connect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
-
-	c.log.DEBUG.Printf("connecting to pulsatrix SECC at %s", c.hostname)
 
 	conn, _, err := websocket.Dial(ctx, c.uri, &websocket.DialOptions{
 		CompressionMode: websocket.CompressionDisabled,
@@ -164,29 +147,32 @@ func (c *Pulsatrix) connectWs() error {
 		c.conn.Close(websocket.StatusNormalClosure, "replacing connection")
 	}
 	c.conn = conn
-	c.stats.recordConnect()
 
 	// create context for shutdown handling
 	ctx, c.cancel = context.WithCancel(context.Background())
 	c.mu.Unlock()
 
 	// sync with retry mechanism
-	if err := c.syncWithRetry(); err != nil {
+	if err := c.sync(); err != nil {
 		conn.Close(websocket.StatusInternalError, "sync failed")
 		return fmt.Errorf("sync failed: %w", err)
 	}
 
 	// start background routines
 	c.wg.Add(2)
-	go c.wsReader(ctx)
+	go c.reader(ctx)
 	go c.heartbeat(ctx)
+
+	// reset error counters on successful connection
+	atomic.StoreInt32(&c.consecutiveReadErrors, 0)
+	atomic.StoreInt32(&c.consecutiveHeartbeatErrors, 0)
 
 	c.log.INFO.Printf("connected to pulsatrix SECC at %s", c.hostname)
 	return nil
 }
 
-// syncWithRetry attempts synchronization with retry mechanism
-func (c *Pulsatrix) syncWithRetry() error {
+// sync attempts synchronization with retry mechanism
+func (c *Pulsatrix) sync() error {
 	for i := 0; i < syncRetries; i++ {
 		if err := c.Enable(false); err == nil {
 			return nil
@@ -198,33 +184,30 @@ func (c *Pulsatrix) syncWithRetry() error {
 	return fmt.Errorf("sync with pulsatrix SECC at %s failed after %d attempts", c.hostname, syncRetries)
 }
 
-// reconnectWs reconnects to a pulsatrix SECC websocket
-func (c *Pulsatrix) reconnectWs() {
-	c.stats.recordReconnect()
-
+// reconnect reconnects to a pulsatrix SECC websocket
+func (c *Pulsatrix) reconnect() {
 	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(2*time.Second),
-		backoff.WithMaxInterval(30*time.Second),
-		backoff.WithMultiplier(1.5),
-		backoff.WithMaxElapsedTime(15*time.Minute),
+		backoff.WithInitialInterval(backoffInitial),
+		backoff.WithMaxInterval(backoffMax),
+		backoff.WithMultiplier(backoffMultiplier),
+		backoff.WithMaxElapsedTime(backoffMaxElapsed),
 	)
 
 	operation := func() error {
-		return c.connectWs()
+		return c.connect()
 	}
 
 	if err := backoff.Retry(operation, bo); err != nil {
-		c.log.ERROR.Printf("reconnect to pulsatrix SECC at %s failed after 15min: %v", c.hostname, err)
+		c.log.ERROR.Printf("reconnect to pulsatrix SECC at %s failed: %v", c.hostname, err)
 	}
 }
 
-// wsReader runs a loop that reads messages from the websocket
-func (c *Pulsatrix) wsReader(ctx context.Context) {
+// reader runs a loop that reads messages from the websocket
+func (c *Pulsatrix) reader(ctx context.Context) {
 	defer c.wg.Done()
 	defer func() {
 		c.mu.Lock()
 		if c.conn != nil {
-			c.stats.recordDisconnect()
 			c.conn.Close(websocket.StatusNormalClosure, "websocket reader shutting down")
 			c.conn = nil
 		}
@@ -236,7 +219,7 @@ func (c *Pulsatrix) wsReader(ctx context.Context) {
 			return // shutdown requested
 		default:
 			time.Sleep(time.Second)
-			go c.reconnectWs()
+			go c.reconnect()
 		}
 	}()
 
@@ -258,21 +241,24 @@ func (c *Pulsatrix) wsReader(ctx context.Context) {
 				return
 			}
 
-			c.stats.recordReadError()
+			atomic.AddInt32(&c.consecutiveReadErrors, 1)
+			consecutiveErrors := atomic.LoadInt32(&c.consecutiveReadErrors)
+			
 			// warn only after consecutive errors
-			if c.stats.shouldWarnRead() {
+			if consecutiveErrors >= maxRetries {
 				c.log.WARN.Printf("websocket read on pulsatrix SECC at %s failed %d times consecutively: %v",
-					c.hostname, atomic.LoadInt32(&c.stats.consecutiveReadErrors), err)
+					c.hostname, consecutiveErrors, err)
 			} else {
 				c.log.TRACE.Printf("websocket read error on pulsatrix SECC at %s (attempt %d of %d): %v",
-					c.hostname, atomic.LoadInt32(&c.stats.consecutiveReadErrors), maxRetries, err)
+					c.hostname, consecutiveErrors, maxRetries, err)
 			}
 			return // trigger defer reconnect
 		}
 
 		// reset error counter after successful read
-		c.stats.resetReadErrors()
-		c.parseWsMessage(messageType, message)
+		atomic.StoreInt32(&c.consecutiveReadErrors, 0)
+
+		c.parseMessage(messageType, message)
 	}
 }
 
@@ -294,16 +280,15 @@ func (c *Pulsatrix) write(message string) error {
 	defer cancel()
 
 	if err := conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
-		c.stats.recordWriteError()
 		c.log.WARN.Printf("write to pulsatrix SECC at %s failed: %v - trying reconnect", c.hostname, err)
-		go c.reconnectWs() // async reconnect
+		go c.reconnect() // async reconnect
 		return err
 	}
 	return nil
 }
 
-// parseWsMessage parses a message from the websocket
-func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []byte) {
+// parseMessage parses a message from the websocket
+func (c *Pulsatrix) parseMessage(messageType websocket.MessageType, message []byte) {
 	if messageType != websocket.MessageText {
 		return
 	}
@@ -329,39 +314,32 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 	}
 }
 
-// heartbeat sends a heartbeat to the pulsatrix SECC
+// heartbeat sends a heartbeat to the pulsatrix SECC to keep remote control active
 func (c *Pulsatrix) heartbeat(ctx context.Context) {
 	defer c.wg.Done()
 
-	heartbeatTicker := time.NewTicker(heartbeatInterval)
-	defer heartbeatTicker.Stop()
-
-	statsTicker := time.NewTicker(statsInterval)
-	defer statsTicker.Stop()
+	ticker := time.NewTicker(heartbeatInterval)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-heartbeatTicker.C:
+		case <-ticker.C:
 			enabled := atomic.LoadInt32(&c.enabled) != 0
 			if err := c.Enable(enabled); err != nil {
-				c.stats.recordHeartbeatError()
-
+				atomic.AddInt32(&c.consecutiveHeartbeatErrors, 1)
+				consecutiveErrors := atomic.LoadInt32(&c.consecutiveHeartbeatErrors)
+				
 				// warn only after consecutive failures
-				if c.stats.shouldWarnHeartbeat() {
+				if consecutiveErrors >= maxRetries {
 					c.log.WARN.Printf("heartbeat with pulsatrix SECC at %s failed %d times consecutively: %v",
-						c.hostname, atomic.LoadInt32(&c.stats.consecutiveHeartbeatErrors), err)
-				} else {
-					c.log.TRACE.Printf("heartbeat failure on pulsatrix SECC at %s (attempt %d of %d): %v",
-						c.hostname, atomic.LoadInt32(&c.stats.consecutiveHeartbeatErrors), maxRetries, err)
+						c.hostname, consecutiveErrors, err)
 				}
 			} else {
 				// reset error counter after successful heartbeat
-				c.stats.resetHeartbeatErrors()
+				atomic.StoreInt32(&c.consecutiveHeartbeatErrors, 0)
 			}
-		case <-statsTicker.C:
-			c.logConnectionStats()
 		}
 	}
 }
@@ -386,6 +364,8 @@ func (c *Pulsatrix) Shutdown() error {
 		return fmt.Errorf("shutdown timeout")
 	}
 }
+
+// evcc.io API functions
 
 // Status implements the api.Charger interface
 func (c *Pulsatrix) Status() (api.ChargeStatus, error) {
@@ -476,99 +456,4 @@ func (c *Pulsatrix) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 	return res.PhaseVoltage[0], res.PhaseVoltage[1], res.PhaseVoltage[2], nil
-}
-
-// connection statistics methods
-
-func (s *connectionStats) recordConnect() {
-	atomic.AddInt64(&s.connects, 1)
-	s.mu.Lock()
-	s.lastConnect = time.Now()
-	s.currentUptime = time.Now()
-	s.mu.Unlock()
-	atomic.StoreInt32(&s.consecutiveReadErrors, 0)
-	atomic.StoreInt32(&s.consecutiveHeartbeatErrors, 0)
-}
-
-func (s *connectionStats) recordDisconnect() {
-	atomic.AddInt64(&s.disconnects, 1)
-	s.mu.Lock()
-	if !s.currentUptime.IsZero() {
-		s.totalUptime += time.Since(s.currentUptime)
-		s.currentUptime = time.Time{}
-	}
-	s.mu.Unlock()
-}
-
-func (s *connectionStats) recordReconnect() {
-	atomic.AddInt64(&s.reconnects, 1)
-}
-
-func (s *connectionStats) recordWriteError() {
-	atomic.AddInt64(&s.writeErrors, 1)
-	s.mu.Lock()
-	s.lastError = time.Now()
-	s.mu.Unlock()
-}
-
-func (s *connectionStats) recordReadError() {
-	atomic.AddInt64(&s.readErrors, 1)
-	atomic.AddInt32(&s.consecutiveReadErrors, 1)
-	s.mu.Lock()
-	s.lastError = time.Now()
-	s.mu.Unlock()
-}
-
-func (s *connectionStats) recordHeartbeatError() {
-	atomic.AddInt64(&s.heartbeatErrors, 1)
-	atomic.AddInt32(&s.consecutiveHeartbeatErrors, 1)
-	s.mu.Lock()
-	s.lastError = time.Now()
-	s.mu.Unlock()
-}
-
-func (s *connectionStats) resetReadErrors() {
-	atomic.StoreInt32(&s.consecutiveReadErrors, 0)
-}
-
-func (s *connectionStats) resetHeartbeatErrors() {
-	atomic.StoreInt32(&s.consecutiveHeartbeatErrors, 0)
-}
-
-func (s *connectionStats) shouldWarnRead() bool {
-	return atomic.LoadInt32(&s.consecutiveReadErrors) >= maxRetries
-}
-
-func (s *connectionStats) shouldWarnHeartbeat() bool {
-	return atomic.LoadInt32(&s.consecutiveHeartbeatErrors) >= maxRetries
-}
-
-func (c *Pulsatrix) logConnectionStats() {
-	s := c.stats
-
-	// atomic reads - no lock needed for counters
-	connects := atomic.LoadInt64(&s.connects)
-	disconnects := atomic.LoadInt64(&s.disconnects)
-	reconnects := atomic.LoadInt64(&s.reconnects)
-	writeErrors := atomic.LoadInt64(&s.writeErrors)
-	readErrors := atomic.LoadInt64(&s.readErrors)
-	heartbeatErrors := atomic.LoadInt64(&s.heartbeatErrors)
-
-	// only lock for time-related data
-	s.mu.RLock()
-	uptime := s.totalUptime
-	if !s.currentUptime.IsZero() {
-		uptime += time.Since(s.currentUptime)
-	}
-	lastError := s.lastError
-	s.mu.RUnlock()
-
-	c.log.DEBUG.Printf("pulsatrix SECC at %s connection stats: connects: %d, disconnects: %d, reconnects: %d",
-		c.hostname, connects, disconnects, reconnects)
-	c.log.DEBUG.Printf("pulsatrix SECC at %s error stats: writeErrors: %d, readErrors: %d, heartbeatErrors: %d, uptime: %v",
-		c.hostname, writeErrors, readErrors, heartbeatErrors, uptime)
-
-	if !lastError.IsZero() {
-		c.log.DEBUG.Printf("pulsatrix SECC at %s stats: last error: %v ago", c.hostname, time.Since(lastError))
-	}
 }
