@@ -297,7 +297,15 @@ export default defineComponent({
 				api.post(
 					"/system/backup",
 					{ password: this.password },
-					{ responseType: "blob", validateStatus }
+					{
+						responseType: "stream",
+						adapter: 'fetch',
+						validateStatus,
+						timeout: 30000,
+						headers: {
+							'Accept': 'application/octet-stream'
+						}
+					}
 				)
 			);
 			if (res) {
