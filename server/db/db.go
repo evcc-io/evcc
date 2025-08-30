@@ -12,7 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var Instance *gorm.DB
+var (
+	Instance *gorm.DB
+	FilePath string // Store the actual SQLite file path
+)
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
@@ -24,8 +27,12 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Store the expanded file path for later use
+		FilePath = file
+
 		log.INFO.Println("using sqlite database:", file)
-		if err := os.MkdirAll(filepath.Dir(file), os.ModePerm); err != nil {
+		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
 			return nil, err
 		}
 		// avoid busy errors
@@ -46,4 +53,12 @@ func New(driver, dsn string) (*gorm.DB, error) {
 func NewInstance(driver, dsn string) (err error) {
 	Instance, err = New(strings.ToLower(driver), dsn)
 	return
+}
+
+func Close() error {
+	db, err := Instance.DB()
+	if err != nil {
+		return err
+	}
+	return db.Close()
 }

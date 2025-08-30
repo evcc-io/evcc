@@ -115,12 +115,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
-		from = lp.vehicle.Title()
+		from = lp.vehicle.GetTitle()
 	}
 	to := "unknown"
 	if v != nil {
 		lp.coordinator.Acquire(v)
-		to = v.Title()
+		to = v.GetTitle()
 	}
 
 	lp.vehicle = v
@@ -141,6 +141,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		lp.publish(keys.VehicleTitle, v.GetTitle())
 
 		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
@@ -151,9 +152,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
-		lp.publish(keys.VehicleSoc, 0)
-		lp.publish(keys.VehicleName, "")
-		lp.publish(keys.VehicleOdometer, 0.0)
+		lp.unpublishVehicleIdentity()
 	}
 
 	// re-publish vehicle settings
@@ -166,7 +165,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.updateSession(func(session *session.Session) {
 		var title string
 		if v != nil {
-			title = v.Title()
+			title = v.GetTitle()
 		}
 
 		lp.session.Vehicle = title
@@ -174,23 +173,34 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
+	// wake up charger or vehicle. First wakeupAttemptsLeft will be odd.
+	charger, chargerCanWakeUp := lp.charger.(api.Resurrector)
+	vehicle, vehicleCanWakeUp := lp.GetVehicle().(api.Resurrector)
+
 	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
-		// charger
-		if c, ok := lp.charger.(api.Resurrector); ok {
-			lp.log.DEBUG.Printf("wake-up charger, attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
-			if err := c.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up charger: %v", err)
-			}
+		if chargerCanWakeUp {
+			lp.wakeUpResurrector(charger, "charger")
+		} else if vehicleCanWakeUp {
+			lp.wakeUpResurrector(vehicle, "vehicle")
 		}
 	} else {
-		// vehicle
-		if vs, ok := lp.GetVehicle().(api.Resurrector); ok {
-			lp.log.DEBUG.Printf("wake-up vehicle, attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
-			if err := vs.WakeUp(); err != nil {
-				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
-			}
+		if chargerCanWakeUp && vehicleCanWakeUp {
+			lp.wakeUpResurrector(vehicle, "vehicle")
 		}
 	}
+}
+
+func (lp *Loadpoint) wakeUpResurrector(resurrector api.Resurrector, name string) {
+	lp.log.DEBUG.Printf("wake-up %s, attempts left: %d", name, lp.wakeUpTimer.wakeupAttemptsLeft)
+	if err := resurrector.WakeUp(); err != nil {
+		lp.log.ERROR.Printf("wake-up %s: %v", name, err)
+	}
+}
+
+// unpublishVehicleIdentity resets published vehicle identification
+func (lp *Loadpoint) unpublishVehicleIdentity() {
+	lp.publish(keys.VehicleName, "")
+	lp.publish(keys.VehicleTitle, "")
 }
 
 // unpublishVehicle resets published vehicle data
@@ -201,6 +211,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 	lp.publish(keys.VehicleSoc, 0.0)
 	lp.publish(keys.VehicleRange, int64(0))
 	lp.publish(keys.VehicleLimitSoc, 0.0)
+	lp.publish(keys.VehicleOdometer, 0.0)
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)

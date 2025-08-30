@@ -12,6 +12,9 @@ const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
+	flagDemoMode            = "demo"
+	flagDemoModeDescription = "Enter demo mode. Disables auth, config ui and restart"
+
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
@@ -61,6 +64,9 @@ const (
 	flagRepeatDescription         = "Repeat until interrupted"
 	flagRepeatInterval            = "repeat-interval"
 	flagRepeatIntervalDescription = "Interval between repetitions"
+
+	flagHeartbeat            = "heartbeat"
+	flagHeartbeatDescription = "After command, continue running device heartbeats (if any) until interrupted"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"

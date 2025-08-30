@@ -2,7 +2,16 @@ template: sonnenbatterie-eco56
 products:
   - brand: Sonnen
     description:
-      generic: comfort, eco 5, eco 6, oem 6.5
+      generic: comfort
+  - brand: Sonnen
+    description:
+      generic: eco 5
+  - brand: Sonnen
+    description:
+      generic: eco 6
+  - brand: Sonnen
+    description:
+      generic: oem 6.5
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

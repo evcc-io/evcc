@@ -1,5 +1,4 @@
 template: tessie
-group: generic
 products:
   - description:
       generic: Tessie
@@ -17,6 +16,9 @@ params:
     required: true
   - name: location
     description:
+      de: Ort
+      en: Location
+    help:
       de: Definieren Sie einen Ort, an dem das Tessie-Ladegerät funktioniert (always = immer, kein Geofence) oder ein benutzerdefinierter Ort (genauer Name), wie in Tessie definiert (Case sensitive)
       en: Define a location where the Tessie charger will work (always = always, no geofence) or a custom location (exact name) as defined in Tessie (Case sensitive)
     example: "tessiehome"

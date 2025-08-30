@@ -37,8 +37,12 @@
       "ocppHelp": "Skopiuj ten adres do konfiguracji Twojej ładowarki",
       "switchsockets": "Przełączalne gniazdka",
       "template": "Producent",
-      "titleAdd": "Dodaj ładowarkę",
-      "titleEdit": "Edytuj ładowarkę"
+      "titleAdd": {
+        "charging": "Dodaj ładowarkę"
+      },
+      "titleEdit": {
+        "charging": "Edytuj ładowarkę"
+      }
     },
     "circuits": {
       "description": "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
@@ -126,7 +130,9 @@
       "title": "InfluxDB"
     },
     "loadpoint": {
-      "addCharger": "Dodaj ładowarkę"
+      "addCharger": {
+        "charging": "Dodaj ładowarkę"
+      }
     },
     "main": {
       "addLoadpoint": "Dodaj ładowarkę",
@@ -489,10 +495,9 @@
       "odometer": "Przebieg (km)",
       "vehicle": "Pojazd"
     },
-    "csvMonth": "Pobierz plik {month} CSV",
+    "csvPeriod": "Pobierz plik {period} CSV",
     "csvTotal": "Pobierz plik CSV",
     "date": "Rozpoczęty",
-    "downloadCsv": "Pobierz jako CSV",
     "energy": "Naładowano",
     "filter": {
       "allLoadpoints": "wszystkie punkty ładowania",
@@ -540,7 +545,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} z {total}",
+    "activeHours": "{active} z {total}",
     "activeHoursLabel": "Aktywne godziny",
     "applyToAll": "Aplikować wszędzie?",
     "batteryDescription": "Ładuje akumulator domu energią z sieci.",

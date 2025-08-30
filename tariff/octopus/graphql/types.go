@@ -11,10 +11,13 @@ type krakenTokenAuthentication struct {
 // credentials used to authorize the request.
 type krakenAccountLookup struct {
 	Viewer struct {
-		Accounts []struct {
-			Number string
-		}
+		Accounts []krakenAccount
 	}
+}
+
+// krakenAccount represents an Octopus Energy account.
+type krakenAccount struct {
+	Number string
 }
 
 type tariffData struct {

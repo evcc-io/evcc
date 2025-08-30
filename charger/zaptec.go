@@ -48,18 +48,22 @@ type Zaptec struct {
 	version    int
 	enabled    bool
 	priority   bool
+	passive    bool
 }
 
 func init() {
-	registry.Add("zaptec", NewZaptecFromConfig)
+	registry.AddCtx("zaptec", NewZaptecFromConfig)
 }
 
+//go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
-func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewZaptecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User, Password string
 		Id             string
 		Priority       bool
+		Passive        bool
 		Cache          time.Duration
 	}{
 		Cache: time.Second,
@@ -73,11 +77,11 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)
+	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
+func NewZaptec(ctx context.Context, user, password, id string, priority bool, passive bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -88,6 +92,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		Helper:   request.NewHelper(log),
 		log:      log,
 		priority: priority,
+		passive:  passive,
 	}
 
 	// setup cached values
@@ -100,7 +105,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		return res, err
 	}, cache)
 
-	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
+	provider, err := oidc.NewProvider(ctx, zaptec.ApiURL+"/")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
@@ -113,19 +118,19 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		},
 	}
 
-	ctx := context.WithValue(
-		context.Background(),
+	oauthCtx := context.WithValue(
+		ctx,
 		oauth2.HTTPClient,
 		c.Client,
 	)
 
-	token, err := oc.PasswordCredentialsToken(ctx, user, password)
+	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
 	if err != nil {
 		return nil, err
 	}
 
 	c.Transport = &oauth2.Transport{
-		Source: oc.TokenSource(context.Background(), token),
+		Source: oc.TokenSource(ctx, token),
 		Base:   c.Transport,
 	}
 
@@ -141,11 +146,13 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		return nil, err
 	}
 
-	c.maxCurrent, err = c.getMaxCurrent()
-	if err != nil {
-		return nil, err
+	var phases1p3p func(int) error
+	if maxCurrent, err := c.getInstallationMaxCurrent(); err == nil {
+		phases1p3p = c.phases1p3p
+		c.maxCurrent = maxCurrent
 	}
-	return c, nil
+
+	return decorateZaptec(c, phases1p3p), nil
 }
 
 func (c *Zaptec) detectVersion() (int, error) {
@@ -215,18 +222,29 @@ func (c *Zaptec) Enable(enable bool) error {
 	}
 
 	uri := fmt.Sprintf("%s/api/chargers/%s/sendCommand/%d", zaptec.ApiURL, c.instance.Id, cmd)
-
 	req, _ := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-	_, err := c.DoBody(req)
-	if err == nil {
+
+	var res struct {
+		Code int
+	}
+
+	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
+	if err := c.DoJSON(req, &res); err == nil || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
 	}
 
-	return err
+	return nil
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
+	if c.passive {
+		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil {
+			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current fields set")
+			return nil
+		}
+	}
+
 	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.instance.Id)
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
@@ -303,10 +321,8 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 	return f[0], f[1], f[2], err
 }
 
-var _ api.PhaseSwitcher = (*Zaptec)(nil)
-
-// Phases1p3p implements the api.ChargePhases interface
-func (c *Zaptec) Phases1p3p(phases int) error {
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *Zaptec) phases1p3p(phases int) error {
 	err := c.switchPhases(phases)
 	if err != nil || !c.priority {
 		return err
@@ -370,7 +386,7 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) getMaxCurrent() (int, error) {
+func (c *Zaptec) getInstallationMaxCurrent() (int, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
@@ -395,7 +411,7 @@ func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
 
 var _ api.Diagnosis = (*Zaptec)(nil)
 
-// Diagnosis implements the api.ChargePhases interface
+// Diagnosis implements the api.Diagnosis interface
 func (c *Zaptec) Diagnose() {
 	res, _ := c.statusG.Get()
 

@@ -19,18 +19,19 @@
 	</LabelAndValue>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import { distanceUnit } from "@/units";
 import formatter from "@/mixins/formatter";
 
-export default {
+export default defineComponent({
 	name: "LimitSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		limitSoc: Number,
+		limitSoc: { type: Number, default: 0 },
 		rangePerSoc: Number,
 		heating: Boolean,
 	},
@@ -57,23 +58,26 @@ export default {
 		},
 	},
 	methods: {
-		change(e) {
-			return this.$emit("limit-soc-updated", parseInt(e.target.value, 10));
+		change(e: Event) {
+			return this.$emit(
+				"limit-soc-updated",
+				parseInt((e.target as HTMLSelectElement).value, 10)
+			);
 		},
-		estimatedRange(soc) {
+		estimatedRange(soc: number) {
 			if (this.rangePerSoc) {
 				return Math.round(soc * this.rangePerSoc);
 			}
 			return null;
 		},
-		formatSoc(value) {
+		formatSoc(value: number) {
 			return this.heating ? this.fmtTemperature(value) : this.fmtPercentage(value);
 		},
-		formatKm(value) {
+		formatKm(value: number) {
 			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

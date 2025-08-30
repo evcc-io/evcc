@@ -1,0 +1,45 @@
+interval: 0.1s
+
+site:
+  title: Smart Feed-in
+  meters:
+    grid: grid
+
+loadpoints:
+  - title: LP1
+    charger: charger1
+    mode: pv
+  - title: LP2
+    charger: charger2
+    mode: pv
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: -2000
+
+chargers:
+  - name: charger1
+    type: template
+    template: demo-charger
+    status: C
+    power: 2000
+  - name: charger2
+    type: template
+    template: demo-charger
+    status: B
+    power: 0
+
+tariffs:
+  currency: EUR
+  feedin:
+    type: fixed
+    price: 0.2 # EUR/kWh
+    zones:
+      - hours: 0-5
+        price: 0.4
+      - hours: 5-6
+        price: 0.6
+      - hours: 18-0
+        price: 0.4

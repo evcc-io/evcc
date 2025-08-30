@@ -2,47 +2,51 @@ template: volvo-connected
 products:
   - brand: Volvo
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
-      Für die Nutzung mit EVCC benötigst du einen Volvo Account und einen Volvo Connected Car API Key. 
-      Erstelle dazu auf der [Account Seite](https://developer.volvocars.com/account/) eine neue Applikation und speichere den primären VCC API Key ab. 
-      Veröffentliche nun deine Applikation und wähle unter "Scopes" die Berechtigungen "Connected Vehicle API -> conve:vehicle-relation" und "Energy API -> (alles)" aus.
-      Als Redirect URL musst du die URL deiner EVCC Instanz eintragen, zb "http://evcc.local:7070/oauth/callback".
-      Sobald die Applikation erstellt ist, wird sie als "Publication under Review" angezeigt. Das ist nicht weiter schlimm, es funktioniert trotzdem.
-      Beim Anlegen des Fahrzeugs über die UI wird ein Fehler angezeigt.
-      Schaue im Log nach der Meldung "registering oauth provider at /oauth/login?..." und öffne den Link "http://evcc.local:7070/oauth/login?..." in einem neuen Tab.
-      Melde dich mit deinem Volvo Account an und erlaube den Zugriff auf die Daten. Ist die Autorisierung erfolgreich, kann das Fahrzeug hinzugefügt werden.
+      Für die Nutzung mit evcc benötigst du einen Volvo Account und einen Volvo Connected Car API Key. 
+      1. Erstelle dazu auf der [Account Seite](https://developer.volvocars.com/account/) eine neue Applikation und speichere den primären VCC API Key ab. 
+      2. Veröffentliche nun deine Applikation und wähle unter **Scopes** folgende Berechtigungen **Connected Vehicle API:** `conve:vehicle-relation, conve:odometer-status`, **Energy API:** `energy:state:read`
+      3. Als Redirect URL musst du die URL deiner evcc Instanz eintragen, zb `https://evcc.example.org/providerauth/callback`.
+      4. Beim Anlegen des Fahrzeugs über die UI wird ein Fehler angezeigt.
+      5. Öffne einen neuen Tab und gehe auf die evcc Konfigurationsseite. Im Menü oben rechts wird ein Knopf zum Anmelden angezeigt.
+      6. Melde dich mit deinem Volvo Account an und erlaube den Zugriff auf die Daten. Ist die Autorisierung erfolgreich, kann das Fahrzeug hinzugefügt werden.
     en: |
-      To use with EVCC, you need a Volvo account and a Volvo Connected Car API Key.
-      To do this, create a new application on the [Account page](https://developer.volvocars.com/account/) and save the primary VCC API key.
-      Now publish your application and select the permissions "Connected Vehicle API -> conve:vehicle-relation" and "Energy API -> (everything)" under "Scopes".
-      You must enter the URL of your EVCC instance as the redirect URL, e.g. "http://evcc.local:7070/oauth/callback".
-      Once the application is created, it will be displayed as "Publication under Review". This is not a problem, it still works.
-      When adding the vehicle via the UI, an error message is displayed.
-      Check the log for the message "registering oauth provider at /oauth/login?..." and open the link "http://evcc.local:7070/oauth/login?..." in a new tab.
-      Log in with your Volvo account and allow access to the data. If the authorization is successful, the vehicle can be added.
+      To use with evcc, you need a Volvo account and a Volvo Connected Car API Key.
+      1. To do this, create a new application on the [Account page](https://developer.volvocars.com/account/) and save the primary VCC API key.
+      2. Now publish your application and select the **Scope** permissions **Connected Vehicle API:** `conve:vehicle-relation, conve:odometer-status`, **Energy API:** `energy:state:read`.
+      3. You must enter the URL of your evcc instance as the redirect URL, e.g. `https://evcc.example.org/providerauth/callback`.
+      4. When adding the vehicle via the UI, an error message is displayed.
+      5. Open a new tab and go to the evcc configuration page. A button for logging in will appear in the top right menu.
+      6. Log in with your Volvo account and allow access to the data. If the authorization is successful, the vehicle can be added.
 params:
   - preset: vehicle-common
   - name: vccapikey
     required: true
+    description:
+      generic: VCC API Key
     help:
-      en: "VCC API Key of your [Volvo Developer App](https://developer.volvocars.com/)."
-      de: "VCC API Key deiner [Volvo Developer App](https://developer.volvocars.com/)."
+      en: "from [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientId
     required: true
     help:
-      en: "Client ID of your [Volvo Developer App](https://developer.volvocars.com/)."
-      de: "Client ID deiner [Volvo Developer App](https://developer.volvocars.com/)."
+      en: "from [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientSecret
     required: true
     help:
-      en: "Client Secret of your [Volvo Developer App](https://developer.volvocars.com/)."
-      de: "Client Secret deiner [Volvo Developer App](https://developer.volvocars.com/)."
+      en: "from [Volvo Developer App](https://developer.volvocars.com/)."
+      de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: redirectUri
     required: true
+    description:
+      generic: Redirect URI
     help:
-      en: "Redirect URI of your EVCC instance, format: `http://evcc.local:7070/oauth/callback`. Must match the redirect URI set in your Volvo Developer App."
-      de: "Redirect-URI deiner EVCC-Instanz, Format: http://evcc.local:7070/oauth/callback. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
+      en: "Redirect URI of your evcc instance. Must match the redirect URI set in your Volvo Developer App."
+      de: "Redirect-URI deiner evcc-Instanz. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
+    example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WF0FXX...
   - name: accessToken

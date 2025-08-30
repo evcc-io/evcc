@@ -23,6 +23,11 @@
     "usageTab": "Poraba baterije"
   },
   "config": {
+    "aux": {
+      "description": "Naprava, ki prilagaja svojo porabo glede na razpoložljivi presežek (kot so pametni grelniki vode). evcc pričakuje, da bo ta naprava po potrebi zmanjšala porabo energije.",
+      "titleAdd": "Dodajte samoregulirajočega odjemalca",
+      "titleEdit": "Uredi samoregulirajočega odjemalca"
+    },
     "battery": {
       "titleAdd": "Dodaj baterijo",
       "titleEdit": "Uredi baterijo"
@@ -34,12 +39,17 @@
     "charger": {
       "chargers": "polnilnice za EV",
       "generic": "Splošne integracije",
+      "heatingdevices": "Ogrevalne naprave",
       "ocppHelp": "Kopirajte ta naslov v konfiguracijo vaše polnilnice.",
       "ocppLabel": "URL strežnika OCPP",
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
-      "titleAdd": "Dodaj polnilnik",
-      "titleEdit": "Uredi polnilec"
+      "titleAdd": {
+        "charging": "Dodaj polnilnik"
+      },
+      "titleEdit": {
+        "charging": "Uredi polnilec"
+      }
     },
     "circuits": {
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
@@ -90,6 +100,7 @@
       "range": "Doseg",
       "singlePhase": "Enofazni",
       "soc": "Polnjenje",
+      "solarForecast": "Napoved sončne energije",
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
@@ -101,11 +112,25 @@
       "B": "B (povezan)",
       "C": "C (polnjenje)"
     },
+    "devices": {
+      "auxMeter": "Pametni porabnik",
+      "batteryStorage": "Baterijski hranilnik",
+      "solarSystem": "Solarni sistem"
+    },
+    "editor": {
+      "loading": "Nalaganje urejevalnika YAML …"
+    },
     "eebus": {
       "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus.",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "Lahko se uporablja za upravljanje obremenitve ali statistične namene.",
+      "titleAdd": "Dodaj zunanji merilnik",
+      "titleEdit": "Uredi zunanji merilnik"
+    },
     "form": {
+      "danger": "Nevarnost",
       "deprecated": "deprecated",
       "example": "Primer",
       "optional": "neobvezno"
@@ -153,10 +178,14 @@
       "v2Support": "Nazaj na InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Dodaj polnilnik",
+      "addCharger": {
+        "charging": "Dodaj polnilnik"
+      },
       "addMeter": "Dodaj namenski merilnik za polnilnico",
       "cancel": "Prekliči",
-      "chargerLabel": "Polnilnica",
+      "chargerLabel": {
+        "charging": "Polnilnica"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
       "chargerPower22kw": "22 kW",
@@ -167,7 +196,9 @@
       "chargingTitle": "Polnjenje",
       "circuitLabel": "Krog",
       "circuitUnassigned": "nedodeljeno",
-      "defaultModeHelp": "Način polnjenja pri priklopu vozila.",
+      "defaultModeHelp": {
+        "charging": "Način polnjenja pri priklopu vozila."
+      },
       "defaultModeHelpKeep": "Ohrani zadnji izbrani način polnjenja.",
       "defaultModeLabel": "Privzeti način",
       "delete": "Izbriši",
@@ -318,7 +349,7 @@
       "addToken": "Vnesite žeton",
       "changeToken": "Spremeni žeton",
       "description": "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov.",
-      "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje.",
+      "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje {trialToken}.",
       "error": "Sponzorski žeton ni veljaven.",
       "labelToken": "Sponzorski žeton",
       "title": "Sponzorstvo",
@@ -790,10 +821,9 @@
       "solarpercentage": "Sončna energija (%)",
       "vehicle": "Vozilo"
     },
-    "csvMonth": "Prenesi {month} CSV",
+    "csvPeriod": "Prenesi {period} CSV",
     "csvTotal": "Prenesi celoten CSV",
     "date": "Začetek",
-    "downloadCsv": "Prenesi kot CSV",
     "energy": "Napolnjeno",
     "filter": {
       "allLoadpoints": "vsa polnilna mesta",
@@ -868,7 +898,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} od {total}",
+    "activeHours": "{active} od {total}",
     "activeHoursLabel": "Aktivne ure",
     "applyToAll": "Uporabi povsod?",
     "batteryDescription": "Napolni domačo baterijo z energijo iz omrežja.",

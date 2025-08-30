@@ -1,0 +1,29 @@
+## required attributes [type: sgready]
+
+setmode: # set operation mode (1: reduced, 2: normal, 3 boost)
+  source: js
+  script: console.log(mode) #
+
+## optional attributes (read-only)
+
+#getmode: # operation mode (1: reduced, 2: normal, 3 boost)
+#  source: const
+#  value: 2
+#power: # charge power in W
+#  source: const
+#  value: 11000
+#energy: # meter reading in kWh
+#  source: const
+#  value: 42.5
+#temp: # current temperature (°C)
+#  source: const
+#  value: 42
+#limittemp: # temperature limit (°C) configured in device
+#  source: const
+#  value: 84
+
+## optional attributes (writeable)
+
+#setmaxpower: # update the maximum charging power
+#  source: js
+#  script: console.log(maxpower);

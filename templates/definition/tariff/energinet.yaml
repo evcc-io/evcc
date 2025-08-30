@@ -1,4 +1,5 @@
 template: energinet
+deprecated: true
 products:
   - brand: Energinet
 requirements:

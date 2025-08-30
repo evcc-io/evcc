@@ -2,10 +2,10 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	"dario.cat/mergo"
@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"go.yaml.in/yaml/v4"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
@@ -73,7 +74,7 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[string]any, error) {
@@ -99,12 +100,38 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			return nil, err
 		}
 
-		params, err := sanitizeMasked(class, conf.Other)
-		if err != nil {
-			return nil, err
+		if conf.Type == typeTemplate {
+			// template device, mask config
+			params, err := sanitizeMasked(class, conf.Other)
+			if err != nil {
+				return nil, err
+			}
+			dc["config"] = params
+		} else {
+			// custom device, no masking
+			config := make(map[string]any)
+			for k, v := range conf.Other {
+				config[k] = v
+			}
+
+			// extract title & icon if possible (user-defined vehicle embeds)
+			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
+				var yamlData map[string]any
+				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
+					if title, ok := yamlData["title"].(string); ok {
+						config["title"] = title
+					}
+					if icon, ok := yamlData["icon"].(string); ok {
+						config["icon"] = icon
+					}
+				}
+			}
+
+			dc["config"] = config
 		}
-		dc["config"] = params
-	} else {
+	}
+
+	if dc["config"] == nil {
 		// add title if available
 		config := make(map[string]any)
 		if title, ok := conf.Other["title"].(string); ok {
@@ -170,20 +197,28 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO return application/yaml content type if type != template
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
-func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
+func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
+	var zero T
+
 	dev, err := h.ByName(name)
 	if err != nil {
-		var zero T
 		return zero, err
 	}
 
-	return dev.Instance(), nil
+	instance := dev.Instance()
+
+	// check if device instance is nil (https://github.com/golang/go/issues/46320#issuecomment-965970859)
+	if rv := reflect.ValueOf(&instance); rv.Elem().IsZero() || rv.Elem().IsNil() {
+		return zero, fmt.Errorf("instance %s not initialized", name)
+	}
+
+	return instance, nil
 }
 
-// deviceStatusHandler returns a device configuration by class
+// deviceStatusHandler returns the device test status by class
 func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -216,7 +251,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, testInstance(instance))
+	jsonWrite(w, testInstance(instance))
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
@@ -225,7 +260,7 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, req.Other, config.WithProperties(req.Properties))
+	conf, err := config.AddConfig(class, req.Serialise(), config.WithProperties(req.Properties))
 	if err != nil {
 		return nil, err
 	}
@@ -243,8 +278,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -287,7 +322,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		Name: config.NameForID(conf.ID),
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
@@ -300,6 +335,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 	if !ok {
 		return errors.New("not configurable")
 	}
+
 	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
 }
 
@@ -319,8 +355,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -360,7 +396,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		ID: id,
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func configurableDevice[T any](name string, h config.Handler[T]) (config.ConfigurableDevice[T], error) {
@@ -479,6 +515,14 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		case templates.Circuit:
 			err = deleteDevice(id, config.Circuits())
+
+			// cleanup references
+			for _, dev := range h.Devices() {
+				lp := dev.Instance()
+				if lp.GetCircuitRef() == config.NameForID(id) {
+					lp.SetCircuitRef("")
+				}
+			}
 		}
 
 		setConfigDirty()
@@ -494,7 +538,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			ID: id,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -528,8 +572,8 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -557,8 +601,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// prevent context from being cancelled
+	// prevent context from being cancelled during test
 	close(done)
+	defer cancel()
 
-	jsonResult(w, testInstance(instance))
+	jsonWrite(w, testInstance(instance))
 }

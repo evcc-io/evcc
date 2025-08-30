@@ -40,13 +40,13 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Cache                      time.Duration
 		RefreshToken               string
 		SiteId                     int64
-		battery                    `mapstructure:",squash"`
+		batterySocLimits           `mapstructure:",squash"`
 	}{
-		Cache: time.Second,
-		battery: battery{
+		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -69,11 +69,11 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, battery battery) (api.Meter, error) {
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits) (api.Meter, error) {
 	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
@@ -142,7 +142,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate api.BatterySoc
+	// decorate battery
 	var batterySoc func() (float64, error)
 	var batteryCapacity func() float64
 	if usage == "battery" {
@@ -161,8 +161,15 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	// decorate api.BatteryController
 	var batModeS func(api.BatteryMode) error
 	if batteryControl {
-		batModeS = battery.LimitController(m.socG, func(limit float64) error {
-			return m.energySite.SetBatteryReserve(uint64(limit))
+		batModeS = batterySocLimits.LimitController(m.socG, func(limit float64) error {
+			// Handle Tesla firmware 25.18.4 restrictions:
+			// Values between 81-99% are not allowed, only ≤80% or exactly 100%
+			limitUint := uint64(limit)
+			if limitUint > 80 && limitUint < 100 {
+				// Adjust to maximum allowed (80%)
+				limitUint = 80
+			}
+			return m.energySite.SetBatteryReserve(limitUint)
 		})
 	}
 
@@ -220,6 +227,8 @@ func (m *PowerWall) socG() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	currentSoc := math.Round(ess.PercentageCharged + 0.5) // .5 ensures we round up
-	return currentSoc, nil
+	// Fix for Tesla firmware 25.18.4: Remove the problematic +0.5 rounding logic
+	// that was interfering with exact 100% reserve settings. Simply return the
+	// actual current SOC rounded to nearest integer.
+	return math.Round(ess.PercentageCharged), nil
 }

@@ -41,6 +41,7 @@ type Config struct {
 	CCSPApplicationID string
 	PushType          string
 	Cfb               string
+	LoginFormHost     string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -65,7 +66,6 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 }
 
 func (v *Identity) getDeviceID() (string, error) {
-	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
 	stamp, err := v.stamp()
 	if err != nil {
 		return "", err
@@ -111,6 +111,7 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 		PublicSuffixList: publicsuffix.List,
 	})
 
+	// TODO: check whether &lang= is necessary
 	uri := fmt.Sprintf(
 		"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
 		v.config.URI,
@@ -142,7 +143,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 	return err
 }
 
-func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) brandLoginHyundaiEU(cookieClient *request.Helper, user, password string) (string, error) {
 	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
@@ -246,6 +247,94 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	return code, err
 }
 
+func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
+	cookieClient := request.NewHelper(v.log)
+	cookieClient.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+
+	headers := map[string]string{
+		"content-type": "application/x-www-form-urlencoded",
+		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+	}
+
+	data := url.Values{
+		"client_id":         {"peukiaidm-online-sales"},
+		"encryptedPassword": {"false"},
+		"password":          {password},
+		"redirect_uri":      {"https://www.kia.com/api/bin/oneid/login"},
+		"state":             {"aHR0cHM6Ly93d3cua2lhLmNvbTo0NDMvZGUvP3ZlZD0yYWhVS0V3akI2ZFc3dDQtUEF4WFBSZkVESGNDQ0J4UVFnVTk2QkFnY0VBZyZfdG09MTc1NTg1NTY2ODE2Mg==_default"},
+		"username":          {user},
+		"remember_me":       {"false"},
+	}
+
+	req, _ := request.New(http.MethodPost, "https://idpconnect-eu.kia.com/auth/account/signin", strings.NewReader(data.Encode()), headers)
+
+	if _, err := cookieClient.Do(req); err != nil {
+		return "", err
+	}
+
+	v.deviceID, _ = v.getDeviceID()
+
+	// get the connector_session_key
+	uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.LoginFormHost, v.config.CCSPServiceID, v.config.URI, "en")
+	headers = map[string]string{
+		"ccsp-application-id": v.config.CCSPApplicationID,
+		"ccsp-device-id":      v.deviceID,
+		"ccsp-service-id":     v.config.CCSPServiceID,
+		"User-Agent":          "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+	}
+	req, _ = request.New(http.MethodGet, uri, nil, headers)
+	resp, err := cookieClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// get redirect URL from request
+	nextUri := resp.Request.URL.Query().Get("next_uri")
+	if nextUri == "" {
+		return "", errors.New("empty redirect url on connector session key request")
+	}
+
+	// create a client that doesn't honor redirects so we receive the original response
+	// no idea how to do that with the internal request.New(...) function
+	sc := http.Client{
+		Jar:       cookieClient.Client.Jar,
+		Transport: request.NewTripper(v.log, http.DefaultTransport),
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req, err = request.New(http.MethodGet, nextUri, nil, headers)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err = sc.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	location := resp.Header.Get("Location")
+	if location == "" {
+		return "", errors.New("missing location header")
+	}
+
+	locationUrl, err := url.Parse(location)
+	if err != nil {
+		return "", err
+	}
+
+	code := locationUrl.Query().Get("code")
+	if code == "" {
+		return "", errors.New("missing code")
+	}
+
+	return code, nil
+}
+
 func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
 	data := map[string]interface{}{
 		"email":    user,
@@ -275,7 +364,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	return accCode, err
 }
 
-func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
+func (v *Identity) exchangeCodeHyundaiEU(accCode string) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
@@ -291,6 +380,28 @@ func (v *Identity) exchangeCode(accCode string) (*oauth2.Token, error) {
 	var token oauth2.Token
 
 	req, _ := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	err := v.DoJSON(req, &token)
+
+	return util.TokenWithExpiry(&token), err
+}
+
+func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
+	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
+	headers := map[string]string{
+		"Content-type": "application/x-www-form-urlencoded",
+		"User-Agent":   "okhttp/3.10.0",
+	}
+	data := url.Values{
+		"grant_type":    {"authorization_code"},
+		"code":          {accCode},
+		"redirect_uri":  {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"client_id":     {v.config.CCSPServiceID},
+		"client_secret": {"secret"},
+	}
+
+	var token oauth2.Token
+
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	err := v.DoJSON(req, &token)
 
 	return util.TokenWithExpiry(&token), err
@@ -320,35 +431,46 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language string) (err error) {
+func (v *Identity) Login(user, password, language, brand string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
-
-	v.deviceID, err = v.getDeviceID()
-
-	var cookieClient *request.Helper
-	if err == nil {
-		cookieClient, err = v.getCookies()
-	}
-
-	if err == nil {
-		err = v.setLanguage(cookieClient, language)
-	}
-
 	var code string
-	if err == nil {
-		// try new login first, then fallback
-		if code, err = v.brandLogin(cookieClient, user, password); err != nil {
-			code, err = v.bluelinkLogin(cookieClient, user, password)
+	switch brand {
+	case "kia":
+		code, err = v.brandLoginKiaEU(user, password)
+		if err == nil {
+			var token *oauth2.Token
+			if token, err = v.exchangeCodeKiaEU(code); err == nil {
+				v.TokenSource = oauth.RefreshTokenSource(token, v)
+			}
 		}
-	}
+	case "hyundai":
+		v.deviceID, err = v.getDeviceID()
 
-	if err == nil {
-		var token *oauth2.Token
-		if token, err = v.exchangeCode(code); err == nil {
-			v.TokenSource = oauth.RefreshTokenSource(token, v)
+		var cookieClient *request.Helper
+		if err == nil {
+			cookieClient, err = v.getCookies()
 		}
+
+		if err == nil {
+			err = v.setLanguage(cookieClient, language)
+		}
+
+		if err == nil {
+			// try new login first, then fallback
+			if code, err = v.brandLoginHyundaiEU(cookieClient, user, password); err != nil {
+				code, err = v.bluelinkLogin(cookieClient, user, password)
+			}
+			if err == nil {
+				var token *oauth2.Token
+				if token, err = v.exchangeCodeHyundaiEU(code); err == nil {
+					v.TokenSource = oauth.RefreshTokenSource(token, v)
+				}
+			}
+		}
+	default:
+		err = fmt.Errorf("unknown brand (%s)", brand)
 	}
 
 	if err != nil {

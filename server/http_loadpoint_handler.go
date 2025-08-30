@@ -37,7 +37,7 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 			Demand: demand,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -69,7 +69,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Power:        maxPower,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -131,7 +131,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Power:        maxPower,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -189,7 +189,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Power:        maxPower,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -234,7 +234,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			Time:         ts,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -247,7 +247,7 @@ func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -268,10 +268,10 @@ func vehicleSelectHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 		res := struct {
 			Vehicle string `json:"vehicle"`
 		}{
-			Vehicle: v.Title(),
+			Vehicle: v.GetTitle(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -280,7 +280,7 @@ func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.SetVehicle(nil)
 		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -289,6 +289,6 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.StartVehicleDetection()
 		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }

@@ -10,6 +10,9 @@ params:
     type: string
     required: true
     example: AGILE-FLEX-22-11-25
+    description:
+      en: Product Code
+      de: Tarifcode
     help:
       de: "Der Tarifcode für Ihren Energievertrag. Stellen Sie sicher, dass dieser auf Ihren Importtarifcode eingestellt ist."
       en: "The tariff code for your energy contract. Make sure this is set to your import tariff code."
@@ -23,6 +26,9 @@ params:
   - name: directDebit
     type: bool
     default: true
+    description:
+      en: Direct debit tariff
+      de: Lastschrifttarif
     help:
       de: "Ich benutze den BACS-Lastschrifttarif."
       en: "Use Direct Debit tariff rates."

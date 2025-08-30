@@ -234,7 +234,7 @@ vehicles:
     icon: waterheater
 
 site:
-  title: Zuhause
+  title: Demo Mode
   meters:
     grid: grid
     pv: pv
@@ -262,6 +262,14 @@ tariffs:
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  #co2:
-  #  type: grünstromindex
-  #  zip: 12349
+  solar:
+    type: template
+    template: demo-solar-forecast
+    kwp: 15.5
+    sunrise: 7
+    sunset: 17
+  co2:
+    type: template
+    template: demo-co2-forecast
+    base: 350
+    variation: 0.4

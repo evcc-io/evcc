@@ -33,14 +33,15 @@
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>
 			</label>
 		</div>
 		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
-			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
+			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">
+				{{ $t("config.icon.change") }}
+			</a>
 		</div>
 	</div>
 	<SelectGroup
@@ -61,7 +62,7 @@
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
 				{{ name }}
 			</option>
-			<hr v-else :key="idx" />
+			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea
@@ -160,9 +161,6 @@ export default {
 			}
 			if (this.unit) {
 				return this.unit;
-			}
-			if (this.property === "capacity") {
-				return "kWh";
 			}
 			return null;
 		},

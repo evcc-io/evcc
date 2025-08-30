@@ -58,6 +58,20 @@ func (t *Template) Validate() error {
 	}
 
 	for _, p := range t.Params {
+		if p.IsDeprecated() {
+			continue
+		}
+
+		if p.Description.String("en") == "" || p.Description.String("de") == "" {
+			return fmt.Errorf("description for param %s cant be empty in template %s", p.Name, t.Template)
+		}
+
+		maxLength := 50
+		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
+		if actualLength > maxLength {
+			return fmt.Errorf("description for param %s is too long in template %s. allowed: %d. actual length: %d. use help field for details instead.", p.Name, t.Template, maxLength, actualLength)
+		}
+
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {

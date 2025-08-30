@@ -3,6 +3,9 @@ products:
   - brand: Sungrow
     description:
       generic: AC011E-01
+  - brand: Sungrow
+    description:
+      generic: AC22E-01
 capabilities: ["mA", "1p3p"]
 requirements:
   evcc: ["sponsorship"]

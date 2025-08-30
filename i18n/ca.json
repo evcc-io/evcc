@@ -261,7 +261,6 @@
       "vehicle": "Vehicle"
     },
     "date": "Període",
-    "downloadCsv": "Descarregar com a CSV",
     "energy": "Carregada",
     "loadpoint": "Punt de recàrrega",
     "price": "Preu",
@@ -301,7 +300,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} de {total}",
+    "activeHours": "{active} de {total}",
     "activeHoursLabel": "Hores funcionant",
     "co2Label": "Emissions de CO₂",
     "co2Limit": "Límit de CO₂",

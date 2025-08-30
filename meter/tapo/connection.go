@@ -55,7 +55,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	}
 	conn.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
-	return conn, err
+	return conn, nil
 }
 
 // Enable implements the api.Charger interface

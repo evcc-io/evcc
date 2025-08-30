@@ -84,7 +84,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 			attr["vehiclePlanTime"], _, attr["vehiclePlanSoc"] = v.GetPlanSoc()
 
 			instance := v.Instance()
-			attr["vehicleTitle"] = instance.Title()
+			attr["vehicleTitle"] = instance.GetTitle()
 			attr["vehicleIcon"] = instance.Icon()
 			attr["vehicleCapacity"] = instance.Capacity()
 		}

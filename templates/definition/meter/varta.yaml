@@ -3,11 +3,20 @@ covers: ["varta-energiespeicher", "varta-energiespeicher-battery-only"]
 products:
   - brand: VARTA
     description:
-      generic: pulse, pulse neo, element
+      generic: pulse
+  - brand: VARTA
+    description:
+      generic: pulse neo
+  - brand: VARTA
+    description:
+      generic: element
+  - brand: VARTA
+    description:
+      generic: element backup
 requirements:
   description:
-    de: PV nur verfügbar mit PV-Sensor
-    en: PV only available with PV sensor
+    de: PV ist nur mit einem zusätzlichen PV-Sensor verfügbar, da die Leistung der im SUNSPEC-Manager eingetragenen Geräte nicht über Modbus ausgegeben wird. Für den element backup ist mindestens die Firmwareversion F21000612 erforderlich. Das Firmware-Update wird nicht automatisch ausgerollt, kann aber auf Anfrage vom technischen Service von VARTA freigegeben werden.
+    en: PV is only available with an additional PV sensor, as the power of the devices registered in the SUNSPEC Manager is not output via Modbus. Element backup requires at least firmware version F21000612. The firmware update is not rolled out automatically, but can be released upon request by VARTA's technical service.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -15,6 +24,15 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: watchdog
+    type: duration
+    default: 120s
+    usages: ["battery"]
+    advanced: true
+  - name: maxdischargepower
+    unit: W
+    default: 4000
+    advanced: true
   - name: capacity
     advanced: true
 render: |
@@ -52,5 +70,44 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    reset: 1
+    set:
+      source: switch
+      switch:
+        - case: 1  # normal
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: -{{- .maxdischargepower }} # value must be negative
+                set:
+                  source: modbus
+                  uri: {{ .host }}:{{ .port }}
+                  id: 255
+                  register:
+                    address: 1074  # max discharge power
+                    type: writeholding
+                    decode: int16
+        - case: 2  # hold
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  uri: {{ .host }}:{{ .port }}
+                  id: 255
+                  register:
+                    address: 1074  # max discharge power
+                    type: writeholding
+                    decode: int16
+        - case: 3  # charge (not implemented)
+          set:
+            source: error
+            error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}

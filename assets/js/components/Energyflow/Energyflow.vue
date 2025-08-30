@@ -70,7 +70,7 @@
 				<div
 					class="col-12 col-md-6 pe-md-5 pb-4 d-flex flex-column justify-content-between"
 				>
-					<div class="d-flex justify-content-between align-items-end mb-4">
+					<div class="d-flex justify-content-between align-items-baseline mb-4">
 						<h3 class="m-0">In</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
@@ -154,7 +154,7 @@
 				<div
 					class="col-12 col-md-6 ps-md-5 pb-4 d-flex flex-column justify-content-between"
 				>
-					<div class="d-flex justify-content-between align-items-end mb-4">
+					<div class="d-flex justify-content-between align-items-baseline mb-4">
 						<h3 class="m-0">Out</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
@@ -287,10 +287,15 @@ import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import settings from "@/settings";
-import { CO2_TYPE } from "@/units";
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, CURRENCY, Forecast, LoadpointCompact } from "@/types/evcc";
+import {
+	SMART_COST_TYPE,
+	type Battery,
+	type CURRENCY,
+	type Forecast,
+	type LoadpointCompact,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "Energyflow",
@@ -419,7 +424,7 @@ export default defineComponent({
 			return (temp: number) => this.fmtTemperature(temp);
 		},
 		co2Available() {
-			return this.smartCostType === CO2_TYPE;
+			return this.smartCostType === SMART_COST_TYPE.CO2;
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;

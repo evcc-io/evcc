@@ -37,8 +37,8 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	log := util.NewLogger("foo")
 	vehicles := []api.Vehicle{v1, v2}
 
-	v1.MockVehicle.EXPECT().Title().Return("v1").AnyTimes()
-	v2.MockVehicle.EXPECT().Title().Return("v2").AnyTimes()
+	v1.MockVehicle.EXPECT().GetTitle().Return("v1").AnyTimes()
+	v2.MockVehicle.EXPECT().GetTitle().Return("v2").AnyTimes()
 	v1.MockVehicle.EXPECT().Identifiers().Return(nil).AnyTimes()
 	v2.MockVehicle.EXPECT().Identifiers().Return([]string{"it's me"}).AnyTimes()
 

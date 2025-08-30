@@ -25,8 +25,8 @@ export default defineComponent({
 	name: "SelectGroup",
 	props: {
 		id: String,
-		options: Array as PropType<SelectOption<string>[]>,
-		modelValue: [Number, String, Boolean],
+		options: Array as PropType<SelectOption<string | number>[]>,
+		modelValue: [Number, String, Boolean, null],
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,

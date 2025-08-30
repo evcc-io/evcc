@@ -13,8 +13,17 @@ params:
   - name: apiKey
     type: string
     required: true
+  - name: accountNumber
+    type: string
+    required: false
+    description:
+      en: Account Number
+      de: Kundennummer
     help:
-      generic: "Octopus Energy API Key."
+      en: "Only required if you have multiple accounts."
+      de: "Nur erforderlich, wenn mehrere Konten vorhanden sind."
+    example: "X-XXXXXXXX"
 render: |
   type: octopusenergy
   apikey: {{ .apiKey }}
+  accountNumber: {{ .accountNumber }}

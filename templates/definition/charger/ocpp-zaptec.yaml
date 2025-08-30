@@ -2,7 +2,7 @@ template: ocpp-zaptec
 products:
   - brand: Zaptec
     description:
-      generic: Go
+      generic: Go (OCPP)
 capabilities: ["rfid"]
 requirements:
   description:

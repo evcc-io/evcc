@@ -1,6 +1,10 @@
 template: renault
 products:
   - brand: Renault
+requirements:
+  description:
+    en: Renault Zoe and Twingo Electric require a minimum charging current of 8A at 3p (older models even 10A).
+    de: Renault Zoe and Twingo Electric benötigen bei 3p einen minimalen Ladestrom von 8A (ältere Modelle sogar 10A).
 params:
   - preset: vehicle-base
   - name: vin
@@ -8,10 +12,19 @@ params:
   - name: alternativewakeup
     type: bool
     description:
-      de: Alternativer Aufweckmechanismus
-      en: Alternative wakeup mechanism
+      de: Alternative Aufweckmechanismus (veraltet)
+      en: Alternative wakeup mechanism (deprecated)
+    advanced: true
+    deprecated: true
+  - name: wakeupmode
+    type: choice
+    choice: ["default", "alternative", "MY24"]
+    default: default
+    description:
+      de: Aufweckmechanismus
+      en: Wakeup mechanism
     advanced: true
 render: |
   type: renault
   {{ include "vehicle-base" . }}
-  alternativewakeup: {{ .alternativewakeup }}
+  wakeupmode: {{ .wakeupmode }}

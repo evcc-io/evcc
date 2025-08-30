@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"golang.org/x/text/encoding/unicode"
 )
 
 // DaheimLadenMB charger implementation
@@ -39,7 +38,7 @@ type DaheimLadenMB struct {
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
-	dlRegCurrents        = 5   // 3xUint32 RO 0.1A
+	dlRegCurrents        = 6   // 3xUint16 plus placeholder RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
@@ -52,28 +51,39 @@ const (
 	dlRegCurrentLimit    = 91  // Uint16 WR 0.1A
 	dlRegChargeControl   = 93  // Uint16 WR ENUM
 	dlRegChargeCmd       = 95  // Uint16 WR ENUM
-	dlRegVoltages        = 108 // 3xUint32 RO 0.1V
+	dlRegVoltages        = 109 // 3xUint16 plus placeholder RO 0.1V
+
+	// PRO only
+	dlRegPhaseSwitchState   = 184
+	dlRegPhaseSwitchControl = 186
 )
 
 func init() {
 	registry.AddCtx("daheimladen-mb", NewDaheimLadenMBFromConfig)
 }
 
+//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLadenMB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+
 // NewDaheimLadenMBFromConfig creates a DaheimLadenMB charger from generic config
 func NewDaheimLadenMBFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Phases1p3p         bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 255,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDaheimLadenMB(ctx, cc.URI, cc.ID)
+	return NewDaheimLadenMB(ctx, cc.URI, cc.ID, cc.Phases1p3p)
 }
 
 // NewDaheimLadenMB creates DaheimLadenMB charger
-func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, error) {
+func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -106,7 +116,14 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8) (api.Charger, e
 		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
-	return wb, err
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
+	if phases {
+		phases1p3p = wb.phases1p3p
+		phasesG = wb.getPhases
+	}
+
+	return decorateDaheimLaden(wb, phases1p3p, phasesG), nil
 }
 
 func (wb *DaheimLadenMB) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -158,11 +175,11 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	case 3: // Start-up State (B2)
 		return api.StatusB, nil
 	case 4: // Charging (C)
-		enabled, err := wb.Enabled()
-		if !enabled {
+		power, err := wb.CurrentPower()
+		if power == 0 {
 			return api.StatusB, err
 		}
-		return api.StatusC, nil
+		return api.StatusC, err
 	case 5: // Start-UP Fail (B2)
 		return api.StatusB, nil
 	case 6: // Session Terminated by EVSE
@@ -186,16 +203,27 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 		current = wb.curr
 	}
 
+	// break to avoid too fast commands
+	time.Sleep(2 * time.Second)
+
 	return wb.setCurrent(current)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*DaheimLadenMB)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *DaheimLadenMB) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
 	curr := uint16(current * 10)
+
 	err := wb.setCurrent(curr)
 	if err == nil {
 		wb.curr = curr
@@ -230,14 +258,15 @@ func (wb *DaheimLadenMB) TotalEnergy() (float64, error) {
 
 // getPhaseValues returns 3 sequential register values
 func (wb *DaheimLadenMB) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	b, err := wb.conn.ReadHoldingRegisters(reg, 5)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
+		// 16-bit registers for currents/voltages spaced by 1 empty register
+		res[i] = float64(binary.BigEndian.Uint16(b[4*i:])) / 10
 	}
 
 	return res[0], res[1], res[2], nil
@@ -257,15 +286,29 @@ func (wb *DaheimLadenMB) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *DaheimLadenMB) phases1p3p(phases int) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(phases))
+
+	_, err := wb.conn.WriteMultipleRegisters(dlRegPhaseSwitchControl, 1, b)
+	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *DaheimLadenMB) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(binary.BigEndian.Uint16(b)), nil
+}
+
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *DaheimLadenMB) Diagnose() {
-	utf16BytesToString := func(b []byte) string {
-		s, _ := unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
-		return s
-	}
-
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegChargingState, 1); err == nil {
 		fmt.Printf("\tCharging Station State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
@@ -279,7 +322,8 @@ func (wb *DaheimLadenMB) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
-		fmt.Printf("\tStation ID:\t%s\n", utf16BytesToString(b))
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("\tStation ID:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
