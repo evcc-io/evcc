@@ -57,14 +57,14 @@ import (
 )
 
 const (
-	dataTimeout          = 15 * time.Second
-	heartbeatInterval    = 3 * time.Minute
-	maxRetries           = 3
-	syncRetries          = 3
-	backoffInitial       = 2 * time.Second
-	backoffMax           = 30 * time.Second
-	backoffMultiplier    = 1.5
-	backoffMaxElapsed    = 15 * time.Minute
+	dataTimeout       = 15 * time.Second
+	heartbeatInterval = 3 * time.Minute
+	maxRetries        = 3
+	syncRetries       = 3
+	backoffInitial    = 2 * time.Second
+	backoffMax        = 30 * time.Second
+	backoffMultiplier = 1.5
+	backoffMaxElapsed = 15 * time.Minute
 )
 
 // pulsatrix charger implementation
@@ -243,7 +243,7 @@ func (c *Pulsatrix) reader(ctx context.Context) {
 
 			atomic.AddInt32(&c.consecutiveReadErrors, 1)
 			consecutiveErrors := atomic.LoadInt32(&c.consecutiveReadErrors)
-			
+
 			// warn only after consecutive errors
 			if consecutiveErrors >= maxRetries {
 				c.log.WARN.Printf("websocket read on pulsatrix SECC at %s failed %d times consecutively: %v",
@@ -330,7 +330,7 @@ func (c *Pulsatrix) heartbeat(ctx context.Context) {
 			if err := c.Enable(enabled); err != nil {
 				atomic.AddInt32(&c.consecutiveHeartbeatErrors, 1)
 				consecutiveErrors := atomic.LoadInt32(&c.consecutiveHeartbeatErrors)
-				
+
 				// warn only after consecutive failures
 				if consecutiveErrors >= maxRetries {
 					c.log.WARN.Printf("heartbeat with pulsatrix SECC at %s failed %d times consecutively: %v",
