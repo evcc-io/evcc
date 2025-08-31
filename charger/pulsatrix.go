@@ -65,6 +65,7 @@ const (
 	backoffMax        = 30 * time.Second
 	backoffMultiplier = 1.5
 	backoffMaxElapsed = 15 * time.Minute
+	errorLogInterval  = 15 * time.Minute
 )
 
 // pulsatrix charger implementation
@@ -190,15 +191,25 @@ func (c *Pulsatrix) reconnect() {
 		backoff.WithInitialInterval(backoffInitial),
 		backoff.WithMaxInterval(backoffMax),
 		backoff.WithMultiplier(backoffMultiplier),
-		backoff.WithMaxElapsedTime(backoffMaxElapsed),
 	)
+	bo.MaxElapsedTime = 0 // 0 means no time limit - retry indefinitely
 
+	var lastErrorLog time.Time
 	operation := func() error {
-		return c.connect()
+		err := c.connect()
+		if err != nil {
+			// log error every errorLogInterval
+			if time.Since(lastErrorLog) >= errorLogInterval {
+				c.log.ERROR.Printf("reconnect to pulsatrix SECC at %s still failing: %v", c.hostname, err)
+				lastErrorLog = time.Now()
+			}
+		}
+		return err
 	}
 
 	if err := backoff.Retry(operation, bo); err != nil {
-		c.log.ERROR.Printf("reconnect to pulsatrix SECC at %s failed: %v", c.hostname, err)
+		// should never be reached with MaxElapsedTime = 0
+		c.log.ERROR.Printf("unexpected backoff failure: %v", err)
 	}
 }
 
