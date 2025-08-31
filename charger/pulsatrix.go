@@ -64,7 +64,6 @@ const (
 	backoffInitial    = 2 * time.Second
 	backoffMax        = 30 * time.Second
 	backoffMultiplier = 1.5
-	backoffMaxElapsed = 15 * time.Minute
 	errorLogInterval  = 15 * time.Minute
 )
 
