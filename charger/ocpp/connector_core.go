@@ -105,15 +105,35 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 	return res, nil
 }
 
-func (conn *Connector) assumeMeterStopped() {
-	conn.meterUpdated = conn.clock.Now()
-
+func (conn *Connector) setPowerToZero() {
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
 			Value: "0",
 			Unit:  types.UnitOfMeasureW,
 		}
 	}
+
+	for phase := 1; phase <= 3; phase++ {
+		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]; ok {
+			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)] = types.SampledValue{
+				Value: "0",
+				Unit:  types.UnitOfMeasureW,
+			}
+		}
+
+		// Connector.CurrentPower() checks "phase-N" as matter of last resort
+		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"]; ok {
+			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"] = types.SampledValue{
+				Value: "0",
+				Unit:  types.UnitOfMeasureW,
+			}
+		}
+	}
+}
+
+func (conn *Connector) assumeMeterStopped() {
+	conn.meterUpdated = conn.clock.Now()
+	conn.setPowerToZero()
 
 	for phase := 1; phase <= 3; phase++ {
 		if _, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]; ok {
