@@ -15,6 +15,7 @@ type VehicleControlledCharger struct {
 	log              *util.Logger
 	lp               loadpoint.API
 	enabled          bool
+	isCharging       bool
 	wasDisconnected  bool
 	geofenceEnabled  bool
 	chargerLatitude  float64
@@ -34,7 +35,7 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 		Longitude       float64 `mapstructure:"longitude"`
 		Radius          float64 `mapstructure:"radius"`
 	}{
-		Radius:          100, // Default 100 meter radius
+		Radius: 100, // Default 100 meter radius
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -44,6 +45,7 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 	c := &VehicleControlledCharger{
 		log:              util.NewLogger("vehicle-controlled"),
 		enabled:          false,
+		isCharging:       false,
 		wasDisconnected:  true,
 		geofenceEnabled:  cc.GeofenceEnabled,
 		chargerLatitude:  cc.Latitude,
@@ -67,7 +69,7 @@ func (c *VehicleControlledCharger) isVehicleAtCharger(vehicle api.Vehicle) (bool
 
 	lat, lon, err := positioner.Position()
 	if err != nil {
-		return true, err
+		return false, err
 	}
 
 	distance := simpleDistance(c.chargerLatitude, c.chargerLongitude, lat, lon)
@@ -88,8 +90,7 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 	// Check if vehicle is at the charger (trying to use geofencing)
 	vehicleIsAtCharger, err := c.isVehicleAtCharger(vehicle)
 	if err != nil {
-		c.log.ERROR.Printf("%v. Assuming vehicle is at charger", err)
-		vehicleIsAtCharger = true
+		return api.StatusA, err
 	}
 
 	chargeState, ok := vehicle.(api.ChargeState)
@@ -104,16 +105,16 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 
 	if vehicleAPIStatus == api.StatusA || !vehicleIsAtCharger {
 		c.wasDisconnected = true
-		c.enabled = false
+		c.isCharging = false
 		return api.StatusA, nil
 	}
 
 	if c.wasDisconnected {
-		c.enabled = vehicleAPIStatus == api.StatusC
+		c.isCharging = vehicleAPIStatus == api.StatusC
 		c.wasDisconnected = false
 	}
 
-	if c.enabled {
+	if c.isCharging {
 		return api.StatusC, nil
 	}
 
@@ -122,8 +123,7 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *VehicleControlledCharger) Enabled() (bool, error) {
-	status, err := c.Status()
-	return status == api.StatusC, err
+	return verifyEnabled(c, c.enabled)
 }
 
 // Enable implements the api.Charger interface
@@ -139,6 +139,7 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 	// ignore disabling when vehicle is already disconnected
 	if status == api.StatusA && !enable {
 		c.enabled = false
+		c.isCharging = false
 		return nil
 	}
 
@@ -148,9 +149,13 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 	}
 
 	err = chargeController.ChargeEnable(enable)
+	if err != nil {
+		return err
+	}
 	c.enabled = enable
+	c.isCharging = enable
 
-	return err
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
