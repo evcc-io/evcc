@@ -6,7 +6,7 @@ import (
 
 func TestStekkerRates(t *testing.T) {
 	s, err := NewStekkerFromConfig(map[string]interface{}{
-		"zone": "BE",
+		"Region": "BE",
 	})
 	if err != nil {
 		t.Fatalf("config error: %v", err)
