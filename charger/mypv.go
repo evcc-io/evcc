@@ -45,12 +45,13 @@ type MyPv struct {
 }
 
 const (
-	elwaRegSetPower       = 1000
-	elwaRegTempLimit      = 1002
-	elwaRegStatus         = 1003
-	elwaRegLoadState      = 1059
-	elwaRegPower          = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
-	elwaRegOperationState = 1077
+	elwaRegSetPower        = 1000
+	elwaRegTempLimit       = 1002
+	elwaRegStatus          = 1003
+	elwaRegLoadState       = 1059
+	elwaRegPower           = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegOperationState  = 1077
+	elwaERegOperationState = 1003
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
@@ -65,6 +66,10 @@ func init() {
 	// https: // github.com/evcc-io/evcc/issues/18020
 	registry.AddCtx("ac-thor", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 		return newMyPvFromConfig(ctx, "ac-thor", other, 9)
+	})
+
+	registry.AddCtx("ac-elwa-e", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+		return newMyPvFromConfig(ctx, "ac-elwa-e", other, 2)
 	})
 }
 
@@ -194,19 +199,44 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
+	var b []byte
+	var err error
+	fmt.Printf("Debug: wb.name=%q\n", wb.name)
+	b, err = wb.conn.ReadHoldingRegisters(elwaERegOperationState, 1)
 	if err != nil {
-		return false, err
+		fmt.Printf("Debug: Fehler beim Lesen der Register: %v\n", err)
+	} else {
+		fmt.Printf("Debug: elwaRegOperationState=%d\n", binary.BigEndian.Uint16(b))
 	}
-
-	switch binary.BigEndian.Uint16(b) {
-	case
-		1, // heating PV excess
-		2: // boost backup
-		return true, nil
-	case
-		0: // standby
-		return false, nil
+	switch wb.name {
+	case "ac-elwa-e":
+		b, err = wb.conn.ReadHoldingRegisters(elwaERegOperationState, 1)
+		if err != nil {
+			return false, err
+		}
+		switch binary.BigEndian.Uint16(b) {
+		case
+			2, // heating PV excess
+			4: // boost backup
+			return true, nil
+		case
+			0: // standby
+			return false, nil
+		}
+	default: // "ac-thor" and "ac-elwa-2"
+		b, err = wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
+		if err != nil {
+			return false, err
+		}
+		switch binary.BigEndian.Uint16(b) {
+		case
+			1, // heating PV excess
+			2: // boost backup
+			return true, nil
+		case
+			0: // standby
+			return false, nil
+		}
 	}
 
 	// fallback to cached value as last resort
