@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"slices"
 	"strings"
 	"time"
 
@@ -56,6 +57,16 @@ func getSampleKey(s types.SampledValue) types.Measurand {
 	return s.Measurand
 }
 
+func containsMeasurand(meterValues []types.MeterValue, measurand types.Measurand) bool {
+	pos := slices.IndexFunc(meterValues, func(m types.MeterValue) bool {
+		subpos := slices.IndexFunc(m.SampledValue, func(s types.SampledValue) bool {
+			return s.Measurand == measurand
+		})
+		return subpos != -1
+	})
+	return pos != -1
+}
+
 func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
@@ -69,6 +80,14 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		conn.txnId = *request.TransactionId
 	}
 
+	// Some wallboxes do not report power if no car is connected
+	// This leads to the situation that the last reported power value is used for current power consumption
+	// which is wrong if the car has been disconnected in the meantime
+	if !containsMeasurand(request.MeterValue, types.MeasurandPowerActiveImport) {
+		conn.log.WARN.Printf("power active import: not reported, assuming zero")
+		conn.setPowerToZero(true)
+	}
+
 	for _, meterValue := range sortByAge(request.MeterValue) {
 		if meterValue.Timestamp == nil {
 			// this should be done before the sorting, but lets assume either all or no sample has a timestamp
@@ -79,6 +98,10 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				sample.Value = strings.TrimSpace(sample.Value)
+
+				// debug log getSampleKey() and sample
+				conn.log.WARN.Printf("meter value: %s = %s, raw == %s", getSampleKey(sample), sample.Value, sample)
+
 				conn.measurements[getSampleKey(sample)] = sample
 				conn.meterUpdated = meterValue.Timestamp.Time
 			}
@@ -105,15 +128,36 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 	return res, nil
 }
 
-func (conn *Connector) assumeMeterStopped() {
-	conn.meterUpdated = conn.clock.Now()
-
+func (conn *Connector) setPowerToZero(forceSetFallBackPower bool) {
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
 			Value: "0",
 			Unit:  types.UnitOfMeasureW,
 		}
 	}
+
+	for phase := 1; phase <= 3; phase++ {
+		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]; ok {
+			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)] = types.SampledValue{
+				Value: "0",
+				Unit:  types.UnitOfMeasureW,
+			}
+		}
+
+		// Connector.CurrentPower() checks "phase-N" as matter of last resort
+		// Can be always set to zero to have 0 power reported at startup, or CurrentPower() returns no Api error
+		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"]; ok || forceSetFallBackPower {
+			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"] = types.SampledValue{
+				Value: "0",
+				Unit:  types.UnitOfMeasureW,
+			}
+		}
+	}
+}
+
+func (conn *Connector) assumeMeterStopped() {
+	conn.meterUpdated = conn.clock.Now()
+	conn.setPowerToZero(false)
 
 	for phase := 1; phase <= 3; phase++ {
 		if _, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]; ok {
