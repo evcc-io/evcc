@@ -51,7 +51,7 @@ const (
 	elwaRegLoadState       = 1059
 	elwaRegPower           = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
 	elwaRegOperationState  = 1077
-	elwaERegOperationState = 1003
+	elwaERegOperationState = elwaRegStatus // same register for elwa-e operation state
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
@@ -201,13 +201,6 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 func (wb *MyPv) Enabled() (bool, error) {
 	var b []byte
 	var err error
-	fmt.Printf("Debug: wb.name=%q\n", wb.name)
-	b, err = wb.conn.ReadHoldingRegisters(elwaERegOperationState, 1)
-	if err != nil {
-		fmt.Printf("Debug: Fehler beim Lesen der Register: %v\n", err)
-	} else {
-		fmt.Printf("Debug: elwaRegOperationState=%d\n", binary.BigEndian.Uint16(b))
-	}
 	switch wb.name {
 	case "ac-elwa-e":
 		b, err = wb.conn.ReadHoldingRegisters(elwaERegOperationState, 1)
