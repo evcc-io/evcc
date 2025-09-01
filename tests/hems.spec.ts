@@ -41,12 +41,7 @@ test.describe("HEMS", () => {
     await expectModalVisible(circuitsModal);
     const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
     await editorClear(circuitsEditor);
-    await editorPaste(
-      circuitsEditor,
-      page,
-      `- name: main
-  title: House`
-    );
+    await editorPaste(circuitsEditor, page, `- name: lpc`);
     await circuitsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitsModal);
 
@@ -61,6 +56,7 @@ test.describe("HEMS", () => {
       page,
       `type: relay
 maxPower: 4200
+interval: 0.1s
 limit:
   source: http
   uri: ${simulatorUrl()}/api/state
@@ -76,7 +72,7 @@ limit:
     const lpModal = page.getByTestId("loadpoint-modal");
     await newLoadpoint(page, "Carport");
     await addDemoCharger(page);
-    await lpModal.getByLabel("Circuit").selectOption("main");
+    await lpModal.getByLabel("Circuit").selectOption("lpc");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Carport");
@@ -85,7 +81,7 @@ limit:
 
     // verify circuits
     await expect(page.getByTestId("circuits")).toContainText(
-      ["HEMS (lpc)", "Power", "0.0 kW", "House (main)", "Power", "0.0 kW"].join("")
+      ["HEMS (lpc)", "Power", "0.0 kW"].join("")
     );
 
     // enable hems in simulator
@@ -95,11 +91,9 @@ limit:
     await simulatorApply(page);
 
     // verify config ui
-    // TODO: long wait(!!) because relay impl. only refreshes every 10s
     await page.goto("/#/config");
     await expect(page.getByTestId("circuits")).toContainText(
-      ["HEMS (lpc)", "Power", "0.0 kW / 4.2 kW", "House (main)", "Power", "0.0 kW"].join(""),
-      { timeout: 15000 }
+      ["HEMS (lpc)", "Power", "0.0 kW / 4.2 kW"].join("")
     );
 
     // verify main ui
