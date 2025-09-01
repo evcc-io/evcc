@@ -4,6 +4,7 @@ products:
 requirements:
   description:
     en: "Stekker.app spot prices in day-ahead market and 24h AI price Forecast"
+  evcc: ["skiptest"]
 group: price
 countries: ["EU"]
 params:

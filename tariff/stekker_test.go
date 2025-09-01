@@ -4,17 +4,19 @@ import (
 	"testing"
 )
 
-func TestStekkerRates(t *testing.T) {
-	s, err := NewStekkerFromConfig(map[string]interface{}{
+func TestTemplatesStekker(t *testing.T) {
+	cfg := map[string]interface{}{
 		"region": "BE",
-	})
+	}
+
+	s, err := NewStekkerFromConfig(cfg)
 	if err != nil {
-		t.Fatalf("config error: %v", err)
+		t.Fatalf("failed to create Stekker tariff provider: %v", err)
 	}
 
 	rates, err := s.Rates()
 	if err != nil {
-		t.Fatalf("failed to get rates: %v", err)
+		t.Fatalf("failed to fetch rates: %v", err)
 	}
 
 	if len(rates) == 0 {
