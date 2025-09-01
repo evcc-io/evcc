@@ -204,7 +204,7 @@ func (wb *MyPv) Enabled() (bool, error) {
 		enabled []uint16
 	)
 
-	// Gerätetyp-spezifische Konfiguration
+	// device-specific  configuration
 	switch wb.name {
 	case "ac-elwa-e":
 		reg = elwaERegOperationState
@@ -214,14 +214,14 @@ func (wb *MyPv) Enabled() (bool, error) {
 		enabled = []uint16{1, 2} // heating PV excess, boost backup
 	}
 
-	// Einmalig Register lesen
+	// register read
 	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
 	if err != nil {
 		return false, err
 	}
 	state := binary.BigEndian.Uint16(b)
 
-	// Auswerten
+	// determine enabled state
 	switch state {
 	case 0: // standby
 		return false, nil
