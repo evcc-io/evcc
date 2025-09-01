@@ -34,7 +34,6 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 		Longitude       float64 `mapstructure:"longitude"`
 		Radius          float64 `mapstructure:"radius"`
 	}{
-		GeofenceEnabled: false,
 		Radius:          100, // Default 100 meter radius
 	}
 
@@ -66,12 +65,12 @@ func (c *VehicleControlledCharger) isVehicleAtCharger(vehicle api.Vehicle) (bool
 		return false, errors.New("vehicle must support position tracking if geofence is enabled")
 	}
 
-	lat, lng, err := positioner.Position()
+	lat, lon, err := positioner.Position()
 	if err != nil {
 		return true, err
 	}
 
-	distance := simpleDistance(c.chargerLatitude, c.chargerLongitude, lat, lng)
+	distance := simpleDistance(c.chargerLatitude, c.chargerLongitude, lat, lon)
 	return distance <= c.radius, nil
 }
 
@@ -97,28 +96,28 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 	if !ok {
 		return api.StatusA, errors.New("vehicle not capable of reporting charging status")
 	}
-	vehicleAPIStatus, err := chargeState.Status()
 
+	vehicleAPIStatus, err := chargeState.Status()
 	if err != nil {
-		return api.StatusA, err
+		return api.StatusNone, err
 	}
 
 	if vehicleAPIStatus == api.StatusA || !vehicleIsAtCharger {
 		c.wasDisconnected = true
 		c.enabled = false
 		return api.StatusA, nil
-	} else {
-		if c.wasDisconnected {
-			c.enabled = vehicleAPIStatus == api.StatusC
-			c.wasDisconnected = false
-		}
-
-		if c.enabled {
-			return api.StatusC, nil
-		} else {
-			return api.StatusB, nil
-		}
 	}
+
+	if c.wasDisconnected {
+		c.enabled = vehicleAPIStatus == api.StatusC
+		c.wasDisconnected = false
+	}
+
+	if c.enabled {
+		return api.StatusC, nil
+	}
+
+	return api.StatusB, nil
 }
 
 // Enabled implements the api.Charger interface
