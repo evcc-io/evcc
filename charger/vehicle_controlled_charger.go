@@ -44,8 +44,6 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 
 	c := &VehicleControlledCharger{
 		log:              util.NewLogger("vehicle-controlled"),
-		enabled:          false,
-		isCharging:       false,
 		wasDisconnected:  true,
 		geofenceEnabled:  cc.GeofenceEnabled,
 		chargerLatitude:  cc.Latitude,
@@ -180,13 +178,12 @@ func (c *VehicleControlledCharger) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 }
 
-func simpleDistance(lat1, lng1, lat2, lng2 float64) float64 {
-	// Approximate Eucledian distance, good enough for geofencing
-	const metersPerDegreeLat = 111000                         // ~111km per degree latitude (constant)
-	metersPerDegreeLng := 111000 * math.Cos(lat1*math.Pi/180) // varies by latitude
+// simpleDistance approximates Euclidean distance, good enough for geofencing
+func simpleDistance(lat1, lon1, lat2, lon2 float64) float64 {
+	const metersPerDegreeLat = 111000 // ~111km per degree latitude (constant)
 
 	deltaLat := (lat2 - lat1) * metersPerDegreeLat
-	deltaLng := (lng2 - lng1) * metersPerDegreeLng
+	deltaLon := (lon2 - lon1) * metersPerDegreeLat * math.Cos(lat1*math.Pi/180) // varies by latitude
 
-	return math.Sqrt(deltaLat*deltaLat + deltaLng*deltaLng)
+	return math.Sqrt(deltaLat*deltaLat + deltaLon*deltaLon)
 }
