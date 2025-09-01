@@ -15,42 +15,42 @@ import (
 
 // Map van bidding zones
 var biddingZones = map[string]string{
-	"BE":    "Belgium",
-	"NL":    "Netherlands",
-	"DE-LU": "Germany & Luxembourg",
-	"FR":    "France",
-	"CH":    "Switzerland",
-	"SE4":   "Sweden SE4",
-	"SE3":   "Sweden SE3",
-	"SE1":   "Sweden SE1",
-	"DK1":   "Denmark DK1",
-	"DK2":   "Denmark DK2",
-	"FI":    "Finland",
-	"NO1":   "Norway NO1",
-	"NO2":   "Norway NO2",
-	"NO3":   "Norway NO3",
-	"NO4":   "Norway NO4",
-	"NO5":   "Norway NO5",
-	"LV":    "Latvia",
-	"LT":    "Lithuania",
-	"PL":    "Poland",
-	"PT":    "Portugal",
-	"RO":    "Romania",
-	"RS":    "Serbia",
-	"SI":    "Slovenia",
-	"SK":    "Slovakia",
-	"HU":    "Hungary",
-	"AT":    "Austria",
-	"CZ":    "Czech Republic",
-	"HR":    "Croatia",
-	"EE":    "Estonia",
+	"BE":    "BE",
+	"NL":    "NL",
+	"DE-LU": "DE-LU",
+	"FR":    "FR",
+	"CH":    "CH",
+	"SE4":   "SE4",
+	"SE3":   "SE3",
+	"SE1":   "SE1",
+	"DK1":   "DK1",
+	"DK2":   "DK2",
+	"FI":    "FI",
+	"NO1":   "NO1",
+	"NO2":   "NO2",
+	"NO3":   "NO3",
+	"NO4":   "NO4",
+	"NO5":   "NO5",
+	"LV":    "LV",
+	"LT":    "LT",
+	"PL":    "PL",
+	"PT":    "PT",
+	"RO":    "RO",
+	"RS":    "RS",
+	"SI":    "SI",
+	"SK":    "SK",
+	"HU":    "HU",
+	"AT":    "AT",
+	"CZ":    "CZ",
+	"HR":    "HR",
+	"EE":    "EE",
 }
 
 // Stekker provider
 type Stekker struct {
-	uri   string
-	zone  string // full zone name
-	short string // short code
+	uri    string
+	region string // full zone name
+	short  string // short code
 }
 
 // init registreert provider in registry
@@ -61,26 +61,26 @@ func init() {
 // NewStekkerFromConfig maakt provider van config
 func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Zone string
-		URI  string
+		Region string
+		URI    string
 	}{
-		URI:  "https://stekker.app/epex-forecast",
-		Zone: "BE",
+		URI:    "https://stekker.app/epex-forecast",
+		Region: "BE",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	region, ok := biddingZones[cc.Zone]
+	region, ok := biddingZones[cc.Region]
 	if !ok {
-		return nil, fmt.Errorf("unsupported zone: %s", cc.Zone)
+		return nil, fmt.Errorf("unsupported zone: %s", cc.Region)
 	}
 
 	return &Stekker{
-		uri:   cc.URI,
-		zone:  region,
-		short: cc.Zone,
+		uri:    cc.URI,
+		region: region,
+		short:  cc.Region,
 	}, nil
 }
 
@@ -91,7 +91,11 @@ func (t *Stekker) Type() api.TariffType {
 
 // Rates haalt de prijzen op van Stekker
 func (t *Stekker) Rates() (api.Rates, error) {
-	url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", t.uri, t.zone)
+	// Log de regio en URL
+	url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", t.uri, t.region)
+	fmt.Println("Fetching Stekker prices for region:", t.region)
+	fmt.Println("Request URL:", url)
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -151,6 +155,8 @@ func (t *Stekker) Rates() (api.Rates, error) {
 			})
 		}
 	}
+
+	fmt.Println("Fetched", len(res), "rates from Stekker")
 
 	return res, nil
 }
