@@ -1,10 +1,9 @@
 template: stekker
 products:
-  - brand: Nordpool spot prices
+  - brand: Stekker spot prices and AI Forecast
 requirements:
   description:
-    de: "Nordpool Spot Preise im Day-Ahead-Markt für alle Märkte in der Nordpool-Region."
-    en: "Nordpool spot prices in day-ahead market for all markets in the Nordpool region."
+    en: "Stekker.app spot prices in day-ahead market and 24h AI price Forecast"
 group: price
 countries: ["EU"]
 params:

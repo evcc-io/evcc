@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -48,9 +49,11 @@ var biddingZones = map[string]string{
 
 // Stekker provider
 type Stekker struct {
-	uri    string
-	region string // full zone name
-	short  string // short code
+	uri         string
+	region      string // full zone name
+	short       string // short code
+	lastFetch   time.Time
+	cachedRates api.Rates
 }
 
 // init registreert provider in registry
@@ -91,10 +94,14 @@ func (t *Stekker) Type() api.TariffType {
 
 // Rates haalt de prijzen op van Stekker
 func (t *Stekker) Rates() (api.Rates, error) {
+	if time.Since(t.lastFetch) < 15*time.Minute {
+		return t.cachedRates, nil
+	}
 	// Log de regio en URL
 	url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", t.uri, t.region)
-	fmt.Println("Fetching Stekker prices for region:", t.region)
-	fmt.Println("Request URL:", url)
+	// in Rates():
+	log.Printf("[INFO] Fetching Stekker prices for region: %s", t.region)
+	log.Printf("[DEBUG] Request URL: %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -158,5 +165,7 @@ func (t *Stekker) Rates() (api.Rates, error) {
 
 	fmt.Println("Fetched", len(res), "rates from Stekker")
 
+	t.cachedRates = res
+	t.lastFetch = time.Now()
 	return res, nil
 }
