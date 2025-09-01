@@ -44,7 +44,7 @@ params:
         "SK",
         "HU",
         "CZ",
-        "HR"
+        "HR",
       ]
   - name: currency
     default: EUR
