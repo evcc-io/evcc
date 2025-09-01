@@ -32,6 +32,7 @@ type EEBus struct {
 	failsafeDuration time.Duration
 
 	heartbeat *util.Value[struct{}]
+	interval  time.Duration
 }
 
 type Limits struct {
@@ -44,8 +45,9 @@ type Limits struct {
 // New creates an EEBus HEMS from generic config
 func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
 	cc := struct {
-		Ski    string
-		Limits `mapstructure:",squash"`
+		Ski      string
+		Limits   `mapstructure:",squash"`
+		Interval time.Duration
 	}{
 		Limits: Limits{
 			ContractualConsumptionNominalMax:    24800,
@@ -53,6 +55,7 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEB
 			FailsafeConsumptionActivePowerLimit: 4200,
 			FailsafeDurationMinimum:             2 * time.Hour,
 		},
+		Interval: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -82,11 +85,11 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEB
 	}
 	site.SetCircuit(lpc)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc, cc.Interval)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -97,6 +100,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(),
 		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
+		interval:  interval,
 
 		consumptionLimit: &ucapi.LoadLimit{
 			Value:        limits.ConsumptionLimit,
@@ -149,7 +153,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 }
 
 func (c *EEBus) Run() {
-	for range time.Tick(10 * time.Second) {
+	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}

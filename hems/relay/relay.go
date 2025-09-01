@@ -19,13 +19,17 @@ type Relay struct {
 	root     api.Circuit
 	limit    func() (bool, error)
 	maxPower float64
+	interval time.Duration
 }
 
 // New creates an Relay HEMS from generic config
 func New(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
-	var cc struct {
+	cc := struct {
 		MaxPower float64
 		Limit    plugin.Config
+		Interval time.Duration
+	}{
+		Interval: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -61,23 +65,24 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 		return nil, err
 	}
 
-	return NewRelay(lpc, limitG, cc.MaxPower)
+	return NewRelay(lpc, limitG, cc.MaxPower, cc.Interval)
 }
 
 // NewRelay creates Relay HEMS
-func NewRelay(root api.Circuit, limit func() (bool, error), maxPower float64) (*Relay, error) {
+func NewRelay(root api.Circuit, limit func() (bool, error), maxPower float64, interval time.Duration) (*Relay, error) {
 	c := &Relay{
 		log:      util.NewLogger("relay"),
 		root:     root,
 		maxPower: maxPower,
 		limit:    limit,
+		interval: interval,
 	}
 
 	return c, nil
 }
 
 func (c *Relay) Run() {
-	for range time.Tick(10 * time.Second) {
+	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
