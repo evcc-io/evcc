@@ -199,19 +199,13 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	var (
-		reg     uint16
-		enabled []uint16
-	)
+	// "ac-thor" and "ac-elwa-2"
+    reg := elwaRegOperationState
+    enabled := []uint16{1, 2} // heating PV excess, boost backup
 
-	// device-specific  configuration
-	switch wb.name {
-	case "ac-elwa-e":
+	if wb.name == "ac-elwa-e" {
 		reg = elwaERegOperationState
 		enabled = []uint16{2, 4} // heating PV excess, boost backup
-	default: // "ac-thor" and "ac-elwa-2"
-		reg = elwaRegOperationState
-		enabled = []uint16{1, 2} // heating PV excess, boost backup
 	}
 
 	// register read
