@@ -8,9 +8,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 )
 
 type Relay struct {
@@ -38,15 +38,10 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 		return nil, errors.New("hems requires load management- please configure root circuit")
 	}
 
-	// create new root circuit for LPC
-	lpc, err := circuit.New(util.NewLogger("lpc"), "relay", 0, 0, nil, time.Minute)
+	// register LPC circuit if not already registered
+	lpc, err := shared.GetOrCreateCircuit("lpc", "relay")
 	if err != nil {
 		return nil, err
-	}
-
-	// register LPC-Circuit for use in config, if not already registered
-	if _, err := config.Circuits().ByName("lpc"); err != nil {
-		_ = config.Circuits().Add(config.NewStaticDevice(config.Named{Name: "lpc"}, api.Circuit(lpc)))
 	}
 
 	// wrap old root with new pc parent
