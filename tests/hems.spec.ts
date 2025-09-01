@@ -1,0 +1,112 @@
+import { test, expect } from "@playwright/test";
+import { start, stop, restart, baseUrl } from "./evcc";
+import {
+  expectModalVisible,
+  expectModalHidden,
+  editorClear,
+  editorPaste,
+  enableExperimental,
+  addDemoCharger,
+  newLoadpoint,
+} from "./utils";
+import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
+
+test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
+
+test.beforeAll(async () => {
+  await startSimulator();
+});
+
+test.afterAll(async () => {
+  await stopSimulator();
+});
+
+test.afterEach(async () => {
+  await stop();
+});
+
+const CONFIG = "fast.evcc.yaml";
+
+test.describe("HEMS", () => {
+  test("configure loadmanagement and hems via UI, verify logic", async ({ page }) => {
+    await start(CONFIG);
+
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    // configure circuits
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    const circuitsModal = page.getByTestId("circuits-modal");
+    await expectModalVisible(circuitsModal);
+    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
+    await editorClear(circuitsEditor);
+    await editorPaste(
+      circuitsEditor,
+      page,
+      `- name: main
+  title: House`
+    );
+    await circuitsModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitsModal);
+
+    // configure hems
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+    const hemsEditor = hemsModal.getByTestId("yaml-editor");
+    await editorClear(hemsEditor);
+    await editorPaste(
+      hemsEditor,
+      page,
+      `type: relay
+maxPower: 4200
+limit:
+  source: http
+  uri: ${simulatorUrl()}/api/state
+  jq: .hems.relay`
+    );
+    await hemsModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(hemsModal);
+
+    await restart(CONFIG);
+    await page.goto("/#/config");
+
+    // configure loadpoint
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await newLoadpoint(page, "Carport");
+    await addDemoCharger(page);
+    await lpModal.getByLabel("Circuit").selectOption("main");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint")).toContainText("Carport");
+
+    await restart(CONFIG);
+
+    // verify circuits
+    await expect(page.getByTestId("circuits")).toContainText(
+      ["HEMS (lpc)", "Power", "0.0 kW", "House (main)", "Power", "0.0 kW"].join("")
+    );
+
+    // enable hems in simulator
+    await page.goto(simulatorUrl());
+    const hemsRelayCheckbox = page.getByLabel("Relay Limit");
+    await hemsRelayCheckbox.check();
+    await simulatorApply(page);
+
+    // verify config ui
+    // TODO: long wait(!!) because relay impl. only refreshes every 10s
+    await page.goto("/#/config");
+    await expect(page.getByTestId("circuits")).toContainText(
+      ["HEMS (lpc)", "Power", "0.0 kW / 4.2 kW", "House (main)", "Power", "0.0 kW"].join(""),
+      { timeout: 15000 }
+    );
+
+    // verify main ui
+    await page.getByTestId("home-link").click();
+    await page.getByTestId("visualization").click();
+    await expect(page.getByTestId("energyflow-entry-loadpoints")).toContainText(
+      "Charger (4.2 kW limit)"
+    );
+  });
+});

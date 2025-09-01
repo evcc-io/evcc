@@ -173,12 +173,7 @@
 							data-testid="energyflow-entry-home"
 						/>
 						<EnergyflowEntry
-							:name="
-								// @ts-ignore
-								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
-									count: activeLoadpointsCount,
-								})
-							"
+							:name="loadpointsLabel"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
 							:power="loadpointsPower"
@@ -295,6 +290,7 @@ import {
 	type CURRENCY,
 	type Forecast,
 	type LoadpointCompact,
+	type Circuit,
 } from "@/types/evcc";
 
 export default defineComponent({
@@ -334,6 +330,7 @@ export default defineComponent({
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		circuits: { type: Object as PropType<Record<string, Circuit>> },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
@@ -478,6 +475,23 @@ export default defineComponent({
 		},
 		loadpointsExpanded() {
 			return settings.energyflowLoadpoints;
+		},
+		loadpointsLabel() {
+			// @ts-expect-error plural
+			let result = this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
+				count: this.activeLoadpointsCount,
+			});
+
+			if (this.lpcLimit) {
+				result += ` (${this.$t("main.energyflow.loadpointsLimit", {
+					limit: this.fmtW(this.lpcLimit, POWER_UNIT.KW),
+				})})`;
+			}
+
+			return result;
+		},
+		lpcLimit(): number | null {
+			return this.circuits?.["lpc"]?.maxPower || null;
 		},
 	},
 	watch: {

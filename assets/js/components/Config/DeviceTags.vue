@@ -94,6 +94,8 @@ export default {
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
+				case "hemsType":
+					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},

@@ -265,17 +265,21 @@
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags
-									v-if="circuits.length == 0"
+									v-if="circuitsSorted.length == 0"
 									:tags="{ configured: { value: false } }"
 								/>
 								<template
-									v-for="(circuit, idx) in circuits"
+									v-for="(circuit, idx) in circuitsSorted"
 									v-else
 									:key="circuit.name"
 								>
 									<hr v-if="idx > 0" />
 									<p class="my-2 fw-bold">
-										{{ circuit.config?.title }}
+										{{
+											circuit.name === "lpc"
+												? $t("config.hems.title")
+												: circuit.config?.title
+										}}
 										<code>({{ circuit.name }})</code>
 									</p>
 									<DeviceTags :tags="circuitTags(circuit)" />
@@ -643,6 +647,12 @@ export default defineComponent({
 			return {
 				authDisabled: store.state?.authDisabled || false,
 			};
+		},
+		circuitsSorted() {
+			const sortedNames = Object.keys(store.state?.circuits || {});
+			return [...this.circuits].sort(
+				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
+			);
 		},
 	},
 	watch: {
