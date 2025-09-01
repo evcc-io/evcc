@@ -16,7 +16,7 @@ __debug_bin*
 !util/templates/**/*.yaml
 !assets/js/**/*.yaml
 !package*.json
-!evcc.yaml
+!evcc.dist.yaml
 !tests/**/*.evcc.yaml
 !tsconfig.json
 /templates/docs
