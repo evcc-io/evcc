@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -48,19 +48,18 @@ var biddingZones = map[string]string{
 
 // Stekker provider
 type Stekker struct {
-	*embed
 	uri   string
-	zone  string // full zone name voor URL
+	zone  string // full zone name
 	short string // short code
 }
 
-// init registreert provider
+// init registreert provider in registry
 func init() {
-	provider.Registry.Add("stekker", NewStekkerFromConfig)
+	registry.Add("stekker", NewStekkerFromConfig)
 }
 
-// Constructor
-func NewStekkerFromConfig(other map[string]interface{}) (provider.Provider, error) {
+// NewStekkerFromConfig maakt provider van config
+func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
 		Zone string
 		URI  string
@@ -79,15 +78,19 @@ func NewStekkerFromConfig(other map[string]interface{}) (provider.Provider, erro
 	}
 
 	return &Stekker{
-		embed: &embed{},
 		uri:   cc.URI,
 		zone:  region,
 		short: cc.Zone,
 	}, nil
 }
 
+// Type identificeert het soort tarief
+func (t *Stekker) Type() api.TariffType {
+	return api.TariffTypePriceForecast
+}
+
 // Rates haalt de prijzen op van Stekker
-func (t *Stekker) Rates() (provider.Rates, error) {
+func (t *Stekker) Rates() (api.Rates, error) {
 	url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", t.uri, t.zone)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -116,7 +119,7 @@ func (t *Stekker) Rates() (provider.Rates, error) {
 		return nil, err
 	}
 
-	var res provider.Rates
+	var res api.Rates
 	for _, series := range data {
 		name, _ := series["name"].(string)
 		if !(strings.Contains(name, "Market") || strings.Contains(name, "Forecast")) {
@@ -141,10 +144,10 @@ func (t *Stekker) Rates() (provider.Rates, error) {
 			start = start.UTC()
 			end := start.Add(time.Hour)
 
-			res = append(res, provider.Rate{
+			res = append(res, api.Rate{
 				Start: start,
 				End:   end,
-				Price: yt / 1000.0, // €/MWh -> €/kWh
+				Value: yt / 1000.0, // €/MWh -> €/kWh
 			})
 		}
 	}

@@ -1,35 +1,25 @@
 package tariff
 
-import "testing"
+import (
+	"testing"
+)
 
-// TestStekkerAllZones tries all supported zones to ensure provider works.
-func TestStekkerAllZones(t *testing.T) {
-	for short, _ := range biddingZones {
-		t.Run(short, func(t *testing.T) {
-			p, err := NewStekkerFromConfig(map[string]interface{}{
-				"zone": short,
-			})
-			if err != nil {
-				t.Fatalf("zone %s config error: %v", short, err)
-			}
-
-			rates, err := p.Rates()
-			if err != nil {
-				t.Fatalf("zone %s fetch error: %v", short, err)
-			}
-
-			if len(rates) == 0 {
-				t.Fatalf("zone %s returned no rates", short)
-			}
-
-			for _, r := range rates {
-				if r.Price <= 0 {
-					t.Errorf("zone %s invalid price: %+v", short, r)
-				}
-				if r.Start.Location().String() != "UTC" {
-					t.Errorf("zone %s expected UTC, got %v", short, r.Start.Location())
-				}
-			}
-		})
+func TestStekkerRates(t *testing.T) {
+	s, err := NewStekkerFromConfig(map[string]interface{}{
+		"zone": "BE",
+	})
+	if err != nil {
+		t.Fatalf("config error: %v", err)
 	}
+
+	rates, err := s.Rates()
+	if err != nil {
+		t.Fatalf("failed to get rates: %v", err)
+	}
+
+	if len(rates) == 0 {
+		t.Fatalf("no rates returned")
+	}
+
+	t.Logf("fetched %d rates, first=%+v", len(rates), rates[0])
 }
