@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"slices"
 	"sync/atomic"
 	"time"
 
@@ -200,8 +201,8 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
 	// "ac-thor" and "ac-elwa-2"
-    reg := elwaRegOperationState
-    enabled := []uint16{1, 2} // heating PV excess, boost backup
+	reg := elwaRegOperationState
+	enabled := []uint16{1, 2} // heating PV excess, boost backup
 
 	if wb.name == "ac-elwa-e" {
 		reg = elwaERegOperationState
@@ -209,21 +210,18 @@ func (wb *MyPv) Enabled() (bool, error) {
 	}
 
 	// register read
-	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+	b, err := wb.conn.ReadHoldingRegisters(uint16(reg), 1)
 	if err != nil {
 		return false, err
 	}
 	state := binary.BigEndian.Uint16(b)
 
 	// determine enabled state
-	switch state {
-	case 0: // standby
+	if state == 0 { // standby
 		return false, nil
 	}
-	for _, s := range enabled {
-		if state == s {
-			return true, nil
-		}
+	if slices.Contains(enabled, state) {
+		return true, nil
 	}
 
 	// fallback to cached value as last resort
