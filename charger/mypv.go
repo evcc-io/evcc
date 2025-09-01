@@ -199,36 +199,36 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	var b []byte
-	var err error
+	var (
+		reg     uint16
+		enabled []uint16
+	)
+
+	// Gerätetyp-spezifische Konfiguration
 	switch wb.name {
 	case "ac-elwa-e":
-		b, err = wb.conn.ReadHoldingRegisters(elwaERegOperationState, 1)
-		if err != nil {
-			return false, err
-		}
-		switch binary.BigEndian.Uint16(b) {
-		case
-			2, // heating PV excess
-			4: // boost backup
-			return true, nil
-		case
-			0: // standby
-			return false, nil
-		}
+		reg = elwaERegOperationState
+		enabled = []uint16{2, 4} // heating PV excess, boost backup
 	default: // "ac-thor" and "ac-elwa-2"
-		b, err = wb.conn.ReadHoldingRegisters(elwaRegOperationState, 1)
-		if err != nil {
-			return false, err
-		}
-		switch binary.BigEndian.Uint16(b) {
-		case
-			1, // heating PV excess
-			2: // boost backup
+		reg = elwaRegOperationState
+		enabled = []uint16{1, 2} // heating PV excess, boost backup
+	}
+
+	// Einmalig Register lesen
+	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+	if err != nil {
+		return false, err
+	}
+	state := binary.BigEndian.Uint16(b)
+
+	// Auswerten
+	switch state {
+	case 0: // standby
+		return false, nil
+	}
+	for _, s := range enabled {
+		if state == s {
 			return true, nil
-		case
-			0: // standby
-			return false, nil
 		}
 	}
 

@@ -6,8 +6,8 @@ products:
 group: heating
 requirements:
   description:
-    de: Über das lokale Webinterface des AC ELWA-E muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
-    en: Use the local web interface of AC ELWA-E to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
+    de: Für den Heizstab von my-PV ohne Display. Über das lokale Webinterface des AC ELWA-E muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
+    en: For the heating rod from my-PV without a display. Use the local web interface of AC ELWA-E to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
   evcc: ["sponsorship"]
 params:
   - name: modbus
