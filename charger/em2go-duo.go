@@ -127,7 +127,7 @@ func (wb *Em2GoDuo) Status() (api.ChargeStatus, error) {
 		3: // Charging
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
 }
 
@@ -164,7 +164,7 @@ func (wb *Em2GoDuo) MaxCurrent(current int64) error {
 var _ api.CurrentGetter = (*Em2GoDuo)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
-func (wb Em2GoDuo) GetMaxCurrent() (float64, error) {
+func (wb *Em2GoDuo) GetMaxCurrent() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.base+em2GoDuoRegConCurrentLimit, 1)
 	if err != nil {
 		return 0, err
@@ -243,15 +243,6 @@ var _ api.Diagnosis = (*Em2GoDuo)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Em2GoDuo) Diagnose() {
-	var serial []byte
-	for reg := 0; reg < 8; reg++ {
-		b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSerial+2*uint16(reg), 2)
-		if err != nil {
-			return
-		}
-		serial = append(serial, b...)
-	}
-	fmt.Printf("\tSerial: %s\n", string(serial))
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegConnectorState, 1); err == nil {
 		fmt.Printf("\tConnector State:\t%d\n", encoding.Uint16(b))
 	}
