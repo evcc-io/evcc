@@ -226,7 +226,7 @@ func (wb *Em2GoDuo) Currents() (float64, float64, float64, error) {
 
 var _ api.PhaseVoltages = (*Em2GoDuo)(nil)
 
-// Currents implements the api.PhaseVoltages interface
+// Voltages implements the api.PhaseVoltages interface
 func (wb *Em2GoDuo) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(wb.base + em2GoDuoRegConVoltages)
 }
