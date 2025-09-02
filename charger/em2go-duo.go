@@ -30,11 +30,9 @@ import (
 
 // Em2GoDuo charger implementation
 type Em2GoDuo struct {
-	log        *util.Logger
-	conn       *modbus.Connection
-	current    uint16
-	workaround bool
-	base       uint16
+	log  *util.Logger
+	conn *modbus.Connection
+	base uint16
 }
 
 const (
@@ -56,7 +54,7 @@ const (
 )
 
 func init() {
-	registry.AddCtx("em2goduo-duo", NewEm2GoDuoFromConfig) // TODO remove deprecated
+	registry.AddCtx("em2go-duo", NewEm2GoDuoFromConfig)
 }
 
 // NewEm2GoDuoFromConfig creates a Em2GoDuo charger from generic config
@@ -92,10 +90,9 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 	conn.Logger(log.TRACE)
 
 	wb := &Em2GoDuo{
-		log:     log,
-		conn:    conn,
-		current: 6,
-		base:    256 * uint16(connector),
+		log:  log,
+		conn: conn,
+		base: 256 * uint16(connector),
 	}
 
 	return wb, nil
