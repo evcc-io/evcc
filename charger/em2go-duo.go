@@ -266,7 +266,7 @@ func (wb *Em2GoDuo) Diagnose() {
 		fmt.Printf("\tError Code:\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSafeCurrent, 1); err == nil {
-		fmt.Printf("\tSafe Current:\t%dfA\n", encoding.Uint16(b))
+		fmt.Printf("\tSafe Current:\t%dA\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegCommTimeout, 1); err == nil {
 		fmt.Printf("\tConnection Timeout:\t%d\n", encoding.Uint16(b))
