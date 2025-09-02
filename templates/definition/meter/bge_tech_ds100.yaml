@@ -40,21 +40,21 @@ render: |
       address: 0x0410 # Electricity of A phase
       type: holding
       decode: int32
-    scale: 0.1
+    scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 0x0412  # Electricity of B phase
       type: holding
       decode: int32
-    scale: 0.1
+    scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 0x0414 # Electricity of C phase
       type: holding
       decode: int32
-    scale: 0.1
+    scale: 0.001
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
