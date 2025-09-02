@@ -30,9 +30,10 @@ import (
 
 // Em2GoDuo charger implementation
 type Em2GoDuo struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	base uint16
+	log       *util.Logger
+	conn      *modbus.Connection
+	base      uint16
+	connector int
 }
 
 const (
@@ -76,6 +77,10 @@ func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]interface{}) (a
 
 // NewEm2GoDuo creates Em2GoDuo charger
 func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) (api.Charger, error) {
+	if connector < 1 || connector > 2 {
+		return nil, fmt.Errorf("invalid connector %d, must be 1 or 2", connector)
+	}
+
 	uri = util.DefaultPort(uri, 502)
 
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
@@ -90,9 +95,10 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 	conn.Logger(log.TRACE)
 
 	wb := &Em2GoDuo{
-		log:  log,
-		conn: conn,
-		base: 256 * uint16(connector),
+		log:       log,
+		conn:      conn,
+		base:      256 * uint16(connector),
+		connector: connector,
 	}
 
 	return wb, nil
@@ -108,7 +114,7 @@ func (wb *Em2GoDuo) Status() (api.ChargeStatus, error) {
 	s := encoding.Uint16(b)
 
 	// High 8-bit value for connector 2, low 8-bit value for connector 1
-	if wb.base == 512 {
+	if wb.connector == 2 {
 		s >>= 8
 	}
 
@@ -243,6 +249,7 @@ var _ api.Diagnosis = (*Em2GoDuo)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Em2GoDuo) Diagnose() {
+	fmt.Printf("\tConnector:\t%d\n", wb.connector)
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegConnectorState, 1); err == nil {
 		fmt.Printf("\tConnector State:\t%d\n", encoding.Uint16(b))
 	}
@@ -253,7 +260,7 @@ func (wb *Em2GoDuo) Diagnose() {
 		fmt.Printf("\tError Code:\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSafeCurrent, 1); err == nil {
-		fmt.Printf("\tSafe Current:\t%dA\n", encoding.Uint16(b))
+		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(encoding.Uint16(b))/10)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegCommTimeout, 1); err == nil {
 		fmt.Printf("\tConnection Timeout:\t%d\n", encoding.Uint16(b))
