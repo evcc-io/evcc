@@ -162,7 +162,7 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 // Wrap wraps circuit with parent, keeping the original meter
 func (c *Circuit) Wrap(parent api.Circuit) error {
 	if parent == c {
-		return errors.New("cannot wrap circuit with itself")
+		return nil // wrap circuit with itself
 	}
 	if c.meter != nil {
 		parent.(*Circuit).meter = c.meter
