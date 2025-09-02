@@ -98,9 +98,18 @@ limit:
 
     // verify main ui
     await page.getByTestId("home-link").click();
-    await page.getByTestId("visualization").click();
-    await expect(page.getByTestId("energyflow-entry-loadpoints")).toContainText(
-      "Charger (4.2 kW limit)"
+    const hemsWarning = page.getByTestId("hems-warning");
+    await expect(hemsWarning).toContainText(
+      "External limit: Reduced charging to not exceed 4.2 kW."
     );
+
+    // disable in simulator
+    await page.goto(simulatorUrl());
+    await hemsRelayCheckbox.uncheck();
+    await simulatorApply(page);
+
+    // verify main ui
+    await page.goto("/");
+    await expect(hemsWarning).not.toBeVisible();
   });
 });

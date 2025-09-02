@@ -275,11 +275,7 @@
 								>
 									<hr v-if="idx > 0" />
 									<p class="my-2 fw-bold">
-										{{
-											circuit.name === "lpc"
-												? $t("config.hems.title")
-												: circuit.config?.title
-										}}
+										{{ circuit.config?.title }}
 										<code>({{ circuit.name }})</code>
 									</p>
 									<DeviceTags :tags="circuitTags(circuit)" />
@@ -618,12 +614,21 @@ export default defineComponent({
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		hemsTags() {
-			const result = { configured: { value: false }, hemsType: {} };
 			const { type } = store.state?.hems || {};
-			if (type) {
-				result.configured.value = true;
-				result.hemsType = { value: type };
+			if (!type) {
+				return { configured: { value: false } };
 			}
+			const result = {
+				hemsType: {},
+				hemsActiveLimit: { value: null as number | null },
+			};
+			result.hemsType = { value: type };
+			const lpc = store.state?.circuits?.["lpc"];
+			if (lpc) {
+				const value = lpc.maxPower || null;
+				result.hemsActiveLimit = { value };
+			}
+
 			return result;
 		},
 		isSponsor() {
@@ -714,7 +719,15 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const response = await api.get("/config/devices/circuit");
-			this.circuits = response.data || [];
+			const circuits = response.data || [];
+			// set lpc default title
+			circuits.forEach((c: ConfigCircuit) => {
+				if (c.name === "lpc" && !c.config?.title) {
+					c.config = c.config || {};
+					c.config.title = this.$t("config.hems.title");
+				}
+			});
+			this.circuits = circuits;
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {

@@ -99,6 +99,7 @@
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
+      "hemsActiveLimit": "Active limit",
       "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "no": "no",
@@ -737,6 +738,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready. Waiting for heater…"
+    },
+    "hemsWarning": {
+      "description": "Reduced charging to not exceed {limit}.",
+      "title": "External limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",

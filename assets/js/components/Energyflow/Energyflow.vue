@@ -290,7 +290,6 @@ import {
 	type CURRENCY,
 	type Forecast,
 	type LoadpointCompact,
-	type Circuit,
 } from "@/types/evcc";
 
 export default defineComponent({
@@ -330,7 +329,6 @@ export default defineComponent({
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
-		circuits: { type: Object as PropType<Record<string, Circuit>> },
 	},
 	data: () => {
 		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
@@ -478,20 +476,9 @@ export default defineComponent({
 		},
 		loadpointsLabel() {
 			// @ts-expect-error plural
-			let result = this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
+			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
 				count: this.activeLoadpointsCount,
 			});
-
-			if (this.lpcLimit) {
-				result += ` (${this.$t("main.energyflow.loadpointsLimit", {
-					limit: this.fmtW(this.lpcLimit, POWER_UNIT.KW),
-				})})`;
-			}
-
-			return result;
-		},
-		lpcLimit(): number | null {
-			return this.circuits?.["lpc"]?.maxPower || null;
 		},
 	},
 	watch: {

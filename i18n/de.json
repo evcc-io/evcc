@@ -99,6 +99,7 @@
       "feedinPrice": "Einspeisevergütung",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
+      "hemsActiveLimit": "Aktives Limit",
       "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "no": "Nein",
@@ -737,6 +738,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit. Warte auf Heizung …"
+    },
+    "hemsWarning": {
+      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
+      "title": "Externe Begrenzung:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",

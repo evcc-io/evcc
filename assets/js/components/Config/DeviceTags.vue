@@ -55,6 +55,7 @@ export default {
 			switch (name) {
 				case "power":
 				case "solarForecast":
+				case "hemsActiveLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "capacity":
