@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/encoding"
 )
 
@@ -79,6 +80,10 @@ func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]interface{}) (a
 func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) (api.Charger, error) {
 	if connector < 1 || connector > 2 {
 		return nil, fmt.Errorf("invalid connector %d, must be 1 or 2", connector)
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	uri = util.DefaultPort(uri, 502)
