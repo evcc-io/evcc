@@ -86,7 +86,7 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 	// Add delay of 60 milliseconds between requests
 	conn.Delay(60 * time.Millisecond)
 
-	log := util.NewLogger("em2goduo")
+	log := util.NewLogger("em2go-duo")
 	conn.Logger(log.TRACE)
 
 	wb := &Em2GoDuo{
@@ -107,7 +107,7 @@ func (wb *Em2GoDuo) Status() (api.ChargeStatus, error) {
 
 	s := encoding.Uint16(b)
 
-	// High 8-bit value for connector 2, Low 8-bit value for connector 1
+	// High 8-bit value for connector 2, low 8-bit value for connector 1
 	if wb.base == 512 {
 		s >>= 8
 	}
@@ -138,9 +138,7 @@ func (wb *Em2GoDuo) Enabled() (bool, error) {
 		return false, err
 	}
 
-	u := encoding.Uint16(b)
-
-	return u == 1, nil
+	return encoding.Uint16(b) == 1, nil
 }
 
 // Enable implements the api.Charger interface
@@ -159,6 +157,7 @@ func (wb *Em2GoDuo) MaxCurrent(current int64) error {
 	encoding.PutUint16(b, uint16(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.base+em2GoDuoRegConCurrentLimit, 1, b)
+
 	return err
 }
 
