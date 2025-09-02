@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"math"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -15,8 +16,6 @@ type VehicleControlledCharger struct {
 	log              *util.Logger
 	lp               loadpoint.API
 	enabled          bool
-	isCharging       bool
-	wasDisconnected  bool
 	geofenceEnabled  bool
 	chargerLatitude  float64
 	chargerLongitude float64
@@ -44,7 +43,6 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 
 	c := &VehicleControlledCharger{
 		log:              util.NewLogger("vehicle-controlled"),
-		wasDisconnected:  true,
 		geofenceEnabled:  cc.GeofenceEnabled,
 		chargerLatitude:  cc.Latitude,
 		chargerLongitude: cc.Longitude,
@@ -102,21 +100,10 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 	}
 
 	if vehicleAPIStatus == api.StatusA || !vehicleIsAtCharger {
-		c.wasDisconnected = true
-		c.isCharging = false
 		return api.StatusA, nil
 	}
 
-	if c.wasDisconnected {
-		c.isCharging = vehicleAPIStatus == api.StatusC
-		c.wasDisconnected = false
-	}
-
-	if c.isCharging {
-		return api.StatusC, nil
-	}
-
-	return api.StatusB, nil
+	return vehicleAPIStatus, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -137,7 +124,6 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 	// ignore disabling when vehicle is already disconnected
 	if status == api.StatusA && !enable {
 		c.enabled = false
-		c.isCharging = false
 		return nil
 	}
 
@@ -151,7 +137,12 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 		return err
 	}
 	c.enabled = enable
-	c.isCharging = enable
+	// reset vehicle cache
+	//  - delayed to allow vehicle APIs to reflect new charging status
+	go func() {
+		time.Sleep(30 * time.Second)
+		util.ResetCached()
+	}()
 
 	return nil
 }
