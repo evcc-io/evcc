@@ -52,6 +52,12 @@ type testStruct struct {
 	Field2 int
 }
 
+type testStructWithBool struct {
+	Field1 string
+	Field2 int
+	Field3 bool
+}
+
 func TestMergeMaskedAny(t *testing.T) {
 	tests := []struct {
 		old           any
@@ -70,6 +76,36 @@ func TestMergeMaskedAny(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		require.NoError(t, mergeMaskedAny(tc.old, tc.new))
+		assert.Equal(t, tc.expected, tc.new)
+	}
+
+	// Test boolean field handling
+	boolTests := []struct {
+		old           any
+		new, expected *testStructWithBool
+	}{
+		{
+			// Boolean false should not be overwritten by true
+			old:      &testStructWithBool{"oldValue", 24, true},
+			new:      &testStructWithBool{"newValue", 42, false},
+			expected: &testStructWithBool{"newValue", 42, false},
+		},
+		{
+			// Boolean true should be preserved
+			old:      &testStructWithBool{"oldValue", 24, false},
+			new:      &testStructWithBool{"newValue", 42, true},
+			expected: &testStructWithBool{"newValue", 42, true},
+		},
+		{
+			// Masked string should be restored, boolean should not be merged
+			old:      &testStructWithBool{"oldValue", 24, true},
+			new:      &testStructWithBool{masked, 42, false},
+			expected: &testStructWithBool{"oldValue", 42, false},
+		},
+	}
+
+	for _, tc := range boolTests {
 		require.NoError(t, mergeMaskedAny(tc.old, tc.new))
 		assert.Equal(t, tc.expected, tc.new)
 	}
