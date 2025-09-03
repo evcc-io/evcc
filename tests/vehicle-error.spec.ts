@@ -28,7 +28,7 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
     await expect(page.getByTestId("vehicle-not-reachable-icon")).not.toBeVisible();
   });
 
-  test("broken vehicle: arrival enabeld", async ({ page }) => {
+  test("broken vehicle: arrival enabled", async ({ page }) => {
     await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
