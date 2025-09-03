@@ -19,13 +19,13 @@ package charger
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/volkszaehler/mbmd/encoding"
 )
 
 // Em2GoDuo charger implementation
@@ -111,7 +111,7 @@ func (wb *Em2GoDuo) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	s := encoding.Uint16(b)
+	s := binary.BigEndian.Uint16(b)
 
 	// High 8-bit value for connector 2, low 8-bit value for connector 1
 	if wb.connector == 2 {
@@ -144,13 +144,15 @@ func (wb *Em2GoDuo) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return encoding.Uint16(b) == 1, nil
+	return binary.BigEndian.Uint16(b) == 1, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Em2GoDuo) Enable(enable bool) error {
 	b := make([]byte, 2)
-	encoding.PutUint16(b, map[bool]uint16{true: 1, false: 2}[enable])
+	if enable {
+		binary.BigEndian.PutUint16(b, 1)
+	}
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.base+em2GoDuoRegConChargeCommand, 1, b)
 
@@ -160,7 +162,7 @@ func (wb *Em2GoDuo) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *Em2GoDuo) MaxCurrent(current int64) error {
 	b := make([]byte, 2)
-	encoding.PutUint16(b, uint16(current))
+	binary.BigEndian.PutUint16(b, uint16(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.base+em2GoDuoRegConCurrentLimit, 1, b)
 
@@ -176,7 +178,7 @@ func (wb *Em2GoDuo) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)), err
+	return float64(binary.BigEndian.Uint16(b)), err
 }
 
 var _ api.Meter = (*Em2GoDuo)(nil)
@@ -188,7 +190,7 @@ func (wb *Em2GoDuo) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(b)), nil
+	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.MeterEnergy = (*Em2GoDuo)(nil)
@@ -200,7 +202,7 @@ func (wb *Em2GoDuo) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(b)) / 10, nil
+	return float64(binary.BigEndian.Uint32(b)) / 10, nil
 }
 
 // getPhaseValues returns 3 register values offset by 2
@@ -213,7 +215,7 @@ func (wb *Em2GoDuo) getPhaseValues(reg uint16) (float64, float64, float64, error
 			return 0, 0, 0, err
 		}
 
-		res[i] = float64(encoding.Uint16(b)) / 10
+		res[i] = float64(binary.BigEndian.Uint16(b)) / 10
 	}
 
 	return res[0], res[1], res[2], nil
@@ -242,7 +244,7 @@ func (wb *Em2GoDuo) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint32(b)) * time.Second, nil
+	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
 var _ api.Diagnosis = (*Em2GoDuo)(nil)
@@ -251,18 +253,18 @@ var _ api.Diagnosis = (*Em2GoDuo)(nil)
 func (wb *Em2GoDuo) Diagnose() {
 	fmt.Printf("\tConnector:\t%d\n", wb.connector)
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegConnectorState, 1); err == nil {
-		fmt.Printf("\tConnector State:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tConnector State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegCableState, 1); err == nil {
-		fmt.Printf("\tCable State:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tCable State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegErrorCode, 1); err == nil {
-		fmt.Printf("\tError Code:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tError Code:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSafeCurrent, 1); err == nil {
-		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(encoding.Uint16(b))/10)
+		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b))/10)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegCommTimeout, 1); err == nil {
-		fmt.Printf("\tConnection Timeout:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tConnection Timeout:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
