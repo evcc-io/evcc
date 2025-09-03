@@ -27,13 +27,9 @@ func isConfigurable(ref string) bool {
 
 // filterConfigurable filters configurable meters
 func filterConfigurable(ref []string) []string {
-	var res []string
-	for _, r := range ref {
-		if isConfigurable(r) {
-			res = append(res, r)
-		}
-	}
-	return res
+	return lo.Filter(ref, func(ref string, _ int) bool {
+		return isConfigurable(ref)
+	})
 }
 
 // GetTitle returns the title
