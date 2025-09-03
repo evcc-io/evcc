@@ -433,7 +433,7 @@
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
-      "description": "evcc comes with integration for Sunny Home Manager. When run in the same network your Sunny Home Manager interface should prompt you to add evcc. Everything should work out of the box without need for adjustments here.",
+      "description": "evcc comes with integration for the SMA Sunny Home Manager 2.0. When run in the same network your Sunny Home Manager interface should prompt you to add evcc. Everything should work out of the box without need for adjustments here.",
       "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
       "descriptionIdPattern": "Identifier pattern",
       "descriptionIds": "In Sunny Home Manager every device (charging point, ..) needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL to check your current identifiers.",
