@@ -325,15 +325,10 @@ func mergeMaskedAny(old, new any) error {
 type maskedTransformer struct{}
 
 func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
-	if typ.Kind() != reflect.String {
-		return nil
-	}
-
 	return func(dst, src reflect.Value) error {
-		if dst.String() == masked {
+		if typ.Kind() == reflect.String && dst.String() == masked {
 			dst.Set(src)
 		}
-
 		return nil
 	}
 }

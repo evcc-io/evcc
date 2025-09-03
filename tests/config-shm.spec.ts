@@ -75,5 +75,14 @@ test.describe("SHM", () => {
       `<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID.toLowerCase()}-00</DeviceId>`
     );
     await sempPage.close();
+
+    // uncheck allow control
+    await allowControl.uncheck();
+    await expect(allowControl).not.toBeChecked();
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+
+    // verify it shows as disabled
+    await expect(shmCard).toContainText(["Allow control", "no"].join(""));
   });
 });
