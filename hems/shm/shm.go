@@ -55,11 +55,11 @@ type Config = struct {
 	AllowControl bool
 }
 
+const DefaultVendorID = "28081973"
+
 // NewFromConfig generates SHM SEMP Gateway listening at /semp endpoint
 func NewFromConfig(conf map[string]interface{}, site site.API, addr string, router *mux.Router) (*SEMP, error) {
-	cc := Config{
-		VendorID: "28081973",
-	}
+	cc := Config{}
 
 	if err := util.DecodeOther(conf, &cc); err != nil {
 		return nil, err
@@ -69,7 +69,9 @@ func NewFromConfig(conf map[string]interface{}, site site.API, addr string, rout
 }
 
 func New(cc Config, site site.API, addr string, router *mux.Router) (*SEMP, error) {
-	if len(cc.VendorID) != 8 {
+	if cc.VendorID == "" {
+		cc.VendorID = DefaultVendorID
+	} else if len(cc.VendorID) != 8 {
 		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
 	}
 
@@ -195,7 +197,6 @@ func (s *SEMP) callbackURI() string {
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }
