@@ -41,7 +41,7 @@ export function energyOptions(
 ) {
   const step = optionStep(maxEnergy);
   const result = [];
-  
+
   // helper to create option
   const makeOption = (energy: number) => {
     let text = fmtEnergy(energy, step, fmtWh, zeroText);
@@ -54,17 +54,17 @@ export function energyOptions(
     const energyNormal = parseFloat(energy.toFixed(3));
     return { energy: energyNormal, text, disabled };
   };
-  
+
   // add standard increments
   for (let energy = 0; energy <= maxEnergy; energy += step) {
     result.push(makeOption(energy));
   }
-  
+
   // add selected value if it's not in the list
-  if (selectedValue && !result.find(o => o.energy === selectedValue)) {
+  if (selectedValue && !result.find((o) => o.energy === selectedValue)) {
     result.push(makeOption(selectedValue));
     result.sort((a, b) => a.energy - b.energy);
   }
-  
+
   return result;
 }

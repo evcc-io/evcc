@@ -228,13 +228,13 @@ export default defineComponent({
 			const options = Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
-			
+
 			// add current soc value if it's not in the list
-			if (this.selectedSoc && !options.find(o => o.value === this.selectedSoc)) {
+			if (this.selectedSoc && !options.find((o) => o.value === this.selectedSoc)) {
 				options.push(this.socOption(this.selectedSoc));
 				options.sort((a, b) => a.value - b.value);
 			}
-			
+
 			return options;
 		},
 		energyOptions() {
