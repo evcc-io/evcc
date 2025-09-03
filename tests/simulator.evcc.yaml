@@ -46,7 +46,12 @@ meters:
 loadpoints:
   - title: Carport
     charger: charger
+    meter: lp0meter
+    mode: pv
     circuit: lpc
+    soc:
+      estimate: false
+    vehicle: golf
 
 chargers:
   - name: charger
