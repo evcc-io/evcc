@@ -67,7 +67,6 @@ const (
 func init() {
 	registry.AddCtx("em2go", NewEm2GoFromConfig)
 	registry.AddCtx("em2go-home", NewEm2GoFromConfig)
-	registry.AddCtx("em2go-duo", NewEm2GoFromConfig) // TODO remove deprecated
 }
 
 //go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
