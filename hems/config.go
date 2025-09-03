@@ -8,9 +8,6 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/eebus"
 	"github.com/evcc-io/evcc/hems/relay"
-	"github.com/evcc-io/evcc/hems/shm"
-	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/util"
 )
 
 // HEMS describes the HEMS system interface
@@ -19,11 +16,10 @@ type HEMS interface {
 }
 
 // NewFromConfig creates new HEMS from config
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}, site site.API, httpd *server.HTTPd) (HEMS, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}, site site.API) (HEMS, error) {
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
-		util.NewLogger("main").WARN.Println("configuring SMA Sunny Home Manager as HEMS is deprecated and will be removed in a future version")
-		return shm.NewFromConfig(other, site, httpd.Addr, httpd.Router())
+		return nil, errors.New("breaking change: Sunny Home Manager integration is always on. Remove your configuration from hems section. Configuration can be done in the new top-level shm section")
 	case "eebus":
 		return eebus.NewFromConfig(ctx, other, site)
 	case "relay":

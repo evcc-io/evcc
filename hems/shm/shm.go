@@ -49,30 +49,11 @@ type SEMP struct {
 	site         site.API
 }
 
-type Config = struct {
-	VendorID     string
-	DeviceID     string
-	AllowControl bool
-}
-
-const DefaultVendorID = "28081973"
-
-// NewFromConfig generates SHM SEMP Gateway listening at /semp endpoint
-func NewFromConfig(conf map[string]interface{}, site site.API, addr string, router *mux.Router) (*SEMP, error) {
-	cc := Config{}
-
-	if err := util.DecodeOther(conf, &cc); err != nil {
-		return nil, err
-	}
-
-	return New(cc, site, addr, router)
-}
-
-func New(cc Config, site site.API, addr string, router *mux.Router) (*SEMP, error) {
-	if cc.VendorID == "" {
-		cc.VendorID = DefaultVendorID
-	} else if len(cc.VendorID) != 8 {
-		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
+func New(allowControl bool, vendorId, deviceId string, site site.API, addr string, router *mux.Router) (*SEMP, error) {
+	if vendorId == "" {
+		vendorId = "28081973"
+	} else if len(vendorId) != 8 {
+		return nil, fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
 	}
 
 	uid, err := uuid.NewUUID()
@@ -81,18 +62,18 @@ func New(cc Config, site site.API, addr string, router *mux.Router) (*SEMP, erro
 	}
 
 	var did []byte
-	if cc.DeviceID == "" {
+	if deviceId == "" {
 		if did, err = UniqueDeviceID(); err != nil {
 			return nil, fmt.Errorf("creating device id: %w", err)
 		}
 	} else {
-		if did, err = hex.DecodeString(cc.DeviceID); err != nil {
+		if did, err = hex.DecodeString(deviceId); err != nil {
 			return nil, fmt.Errorf("device id: %w", err)
 		}
 	}
 
 	if len(did) != 6 {
-		return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
+		return nil, fmt.Errorf("invalid device id: %v. Must be 12 characters HEX string", deviceId)
 	}
 
 	s := &SEMP{
@@ -100,9 +81,9 @@ func New(cc Config, site site.API, addr string, router *mux.Router) (*SEMP, erro
 		log:          util.NewLogger("semp"),
 		site:         site,
 		uid:          uid.String(),
-		vid:          cc.VendorID,
+		vid:          vendorId,
 		did:          did,
-		controllable: cc.AllowControl,
+		controllable: allowControl,
 	}
 
 	// find external port

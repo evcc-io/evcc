@@ -14,7 +14,6 @@ import (
 
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/mcp"
@@ -255,18 +254,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start SHM server
 	if err == nil {
-		var instance *shm.SEMP
-		instance, err = shm.New(conf.SHM, site, httpd.Addr, httpd.Router())
-		if err != nil {
-			err = wrapErrorWithClass(ClassHEMS, err)
-		} else {
-			go instance.Run()
-		}
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
 	}
 
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
 	}
 
 	// setup MCP
@@ -289,6 +282,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
 	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}

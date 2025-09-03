@@ -295,7 +295,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							:title="$t('config.hems.shm.cardTitle')"
+							:title="$t('config.shm.cardTitle')"
 							editable
 							:error="hasClassError('shm')"
 							data-testid="shm"
@@ -631,7 +631,7 @@ export default defineComponent({
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		shmTags() {
-			return { configured: { value: store.state?.shm?.type !== "" } };
+			return { configured: { value: true } };
 		},
 		hemsTags() {
 			const { type } = store.state?.hems || {};
@@ -642,7 +642,9 @@ export default defineComponent({
 				hemsType: {},
 				hemsActiveLimit: { value: null as number | null },
 			};
-			result.hemsType = { value: type };
+			if (["relay", "eebus"].includes(type)) {
+				result.hemsType = { value: type };
+			}
 			const lpc = store.state?.circuits?.["lpc"];
 			if (lpc) {
 				const value = lpc.maxPower || null;

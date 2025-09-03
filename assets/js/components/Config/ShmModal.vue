@@ -1,79 +1,73 @@
 <template>
 	<JsonModal
 		id="shmModal"
-		:title="$t('config.hems.shm.title')"
-		:description="$t('config.hems.description')"
+		:title="$t('config.shm.title')"
+		:description="$t('config.shm.description')"
 		docs="/docs/reference/configuration/hems"
 		endpoint="/config/shm"
 		state-key="shm"
-		:disableRemove="true"
+		disableRemove
 		data-testid="shm-modal"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
-			<div class="mb-4">
-				<label for="hemsSystemSelect" class="form-label">
-					{{ $t("config.hems.shm.template") }}
-				</label>
-				<select
-					id="shmSystemSelect"
-					name="shmSystem"
-					class="form-select w-100"
-					:value="values.type"
-					@input="(e) => (values.type = (e.target as HTMLInputElement).value)"
-				>
-					<option value="">{{ $t("config.hems.shm.noSystem") }}</option>
-					<option value="shm">{{ $t("config.hems.shm.title") }}</option>
-				</select>
-			</div>
-			<div v-if="values.type">
-				<FormRow id="shmControl" :label="$t('config.hems.shm.labelControl')" optional>
-					<div class="d-flex">
+			<FormRow id="shmControl" :label="$t('config.shm.labelControl')" optional>
+				<div class="d-flex">
+					<input
+						id="shmControl"
+						v-model="values.allowControl"
+						class="form-check-input"
+						type="checkbox"
+					/>
+					<label class="form-check-label ms-2" for="shmControl">
+						{{ $t("config.shm.labelAllowControl") }}
+					</label>
+				</div>
+			</FormRow>
+			<PropertyCollapsible>
+				<template #advanced>
+					<p>{{ $t("config.shm.descriptionIds") }}</p>
+					<p>
+						{{ $t("config.shm.descriptionIdPattern") }}<br />
+						<code>F-AAAAAAAA-BBBBBBBBBBBB-00</code>
+					</p>
+					<p>
+						{{ $t("config.shm.descriptionSempUrl") }}<br />
+						<a :href="sempUrl" target="_blank" data-testid="semp-url">{{ sempUrl }}</a>
+					</p>
+					<FormRow
+						id="shmVendorid"
+						:label="$t('config.shm.labelVendorId')"
+						:help="$t('config.shm.descriptionVendorId')"
+						example="AAAAAAAA"
+						optional
+					>
 						<input
-							id="shmControl"
-							v-model="values.allowcontrol"
-							class="form-check-input"
-							type="checkbox"
-						/>
-						<label class="form-check-label ms-2" for="shmControl">
-							{{ $t("config.hems.shm.labelAllowControl") }}
-						</label>
-					</div>
-				</FormRow>
-				<PropertyCollapsible>
-					<template #advanced>
-						<FormRow
 							id="shmVendorid"
-							:label="$t('config.hems.shm.labelVendorid')"
-							:help="$t('config.hems.shm.descriptionVendorid')"
-							example="12312312"
-							optional
-						>
-							<input
-								id="shmVendorid"
-								v-model="values.vendorId"
-								class="form-control"
-								minlength="8"
-								maxlength="8"
-							/>
-						</FormRow>
-						<FormRow
+							v-model="values.vendorId"
+							class="form-control"
+							minlength="8"
+							maxlength="8"
+							pattern="[A-Fa-f0-9]{8}"
+						/>
+					</FormRow>
+					<FormRow
+						id="shmDeviceid"
+						:label="$t('config.shm.labelDeviceId')"
+						:help="$t('config.shm.descriptionDeviceId')"
+						example="BBBBBBBBBBBB"
+						optional
+					>
+						<input
 							id="shmDeviceid"
-							:label="$t('config.hems.shm.labelDeviceid')"
-							:help="$t('config.hems.shm.descriptionDeviceid')"
-							example="BBBBBBBBBBBB"
-							optional
-						>
-							<input
-								id="shmDeviceid"
-								v-model="values.deviceId"
-								class="form-control"
-								minlength="10"
-								maxlength="10"
-							/> </FormRow
-					></template>
-				</PropertyCollapsible>
-			</div>
+							v-model="values.deviceId"
+							class="form-control"
+							minlength="12"
+							maxlength="12"
+							pattern="[A-Fa-f0-9]{12}"
+						/> </FormRow
+				></template>
+			</PropertyCollapsible>
 		</template>
 	</JsonModal>
 </template>
@@ -87,5 +81,11 @@ export default {
 	name: "ShmModal",
 	components: { JsonModal, FormRow, PropertyCollapsible },
 	emits: ["changed"],
+	computed: {
+		sempUrl() {
+			// TOOD: combine with url-gen logic coming in https://github.com/evcc-io/evcc/pull/23093
+			return `${window.location.protocol}//${window.location.hostname}:${window.location.port}/semp/`;
+		},
+	},
 };
 </script>
