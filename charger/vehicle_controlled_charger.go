@@ -13,13 +13,14 @@ import (
 // VehicleControlledCharger is a charger implementation that delegates control to the vehicle
 // This is useful for "granny chargers" or simple chargers that can't be controlled directly
 type VehicleControlledCharger struct {
-	log              *util.Logger
-	lp               loadpoint.API
-	enabled          bool
-	geofenceEnabled  bool
-	chargerLatitude  float64
-	chargerLongitude float64
-	radius           float64
+	log                    *util.Logger
+	lp                     loadpoint.API
+	enabled                bool
+	geofenceEnabled        bool
+	chargerLatitude        float64
+	chargerLongitude       float64
+	radius                 float64
+	waitingForCacheRefresh bool
 }
 
 func init() {
@@ -102,7 +103,10 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 	if vehicleAPIStatus == api.StatusA || !vehicleIsAtCharger {
 		return api.StatusA, nil
 	}
-
+	if c.waitingForCacheRefresh && !c.enabled {
+		// to avoid charge logic errors
+		return api.StatusB, nil
+	}
 	return vehicleAPIStatus, nil
 }
 
@@ -139,9 +143,11 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 	c.enabled = enable
 	// reset vehicle cache
 	//  - delayed to allow vehicle APIs to reflect new charging status
+	c.waitingForCacheRefresh = true
 	go func() {
-		time.Sleep(30 * time.Second)
+		time.Sleep(3 * time.Minute)
 		util.ResetCached()
+		c.waitingForCacheRefresh = false
 	}()
 
 	return nil
