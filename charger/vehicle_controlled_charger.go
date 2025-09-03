@@ -10,6 +10,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+const cacheRefreshDelay = 3 * time.Minute
+
 // VehicleControlledCharger is a charger implementation that delegates control to the vehicle
 // This is useful for "granny chargers" or simple chargers that can't be controlled directly
 type VehicleControlledCharger struct {
@@ -20,7 +22,7 @@ type VehicleControlledCharger struct {
 	latitude               float64
 	longitude              float64
 	radius                 float64
-	waitingForCacheRefresh bool
+	cacheRefreshExpectedAt time.Time
 }
 
 func init() {
@@ -102,9 +104,8 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 	if status == api.StatusA || !atHome {
 		return api.StatusA, nil
 	}
-
-	if c.waitingForCacheRefresh && !c.enabled {
-		// to avoid charge logic errors
+	if time.Now().Before(c.cacheRefreshExpectedAt) && !c.enabled {
+		// to avoid charge logic errors while waiting for cache refresh
 		return api.StatusB, nil
 	}
 
@@ -145,13 +146,11 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 	c.enabled = enable
 	// reset vehicle cache
 	//  - delayed to allow vehicle APIs to reflect new charging status
-	c.waitingForCacheRefresh = true
-
 	go func() {
-		time.Sleep(3 * time.Minute)
+		time.Sleep(cacheRefreshDelay)
 		util.ResetCached()
-		c.waitingForCacheRefresh = false
 	}()
+	c.cacheRefreshExpectedAt = time.Now().Add(cacheRefreshDelay + 10*time.Second)
 
 	return nil
 }

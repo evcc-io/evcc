@@ -171,7 +171,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.positionG()
 	if res.Latitude == 0 && res.Longitude == 0 {
-		err = errors.New("car is returning 0,0 coordinates for position")
+		err = api.ErrNotAvailable
 	}
 
 	if err != nil {
