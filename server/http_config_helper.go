@@ -332,7 +332,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 			return nil
 		}
 	}
-	
+
 	if typ.Kind() != reflect.String {
 		return nil
 	}
