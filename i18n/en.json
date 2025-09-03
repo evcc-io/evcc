@@ -77,6 +77,7 @@
       "title": "Control behavior"
     },
     "deviceValue": {
+      "allowControl": "Allow control",
       "amount": "Amount",
       "broker": "Broker",
       "bucket": "Bucket",

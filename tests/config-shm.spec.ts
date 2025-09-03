@@ -21,6 +21,7 @@ test.describe("SHM", () => {
     await enableExperimental(page, false);
 
     const shmCard = page.getByTestId("shm");
+    await expect(shmCard).toContainText(["Allow control", "no"].join(""));
 
     // configure SHM with allow control and IDs
     await shmCard.getByRole("button", { name: "edit" }).click();
@@ -51,13 +52,14 @@ test.describe("SHM", () => {
 
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
-    await expect(shmCard).toContainText(["Configured", "yes"].join(""));
+    await expect(shmCard).toContainText(["Allow control", "yes"].join(""));
 
     // verify persistence after restart
     await restart(CONFIG);
     await page.goto("/#/config");
 
-    await page.getByTestId("shm").getByRole("button", { name: "edit" }).click();
+    await expect(shmCard).toContainText(["Allow control", "yes"].join(""));
+    await shmCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
     await expect(allowControl).toBeChecked();
     await expect(vendor).toHaveValue(VALID_VENDOR_ID);
