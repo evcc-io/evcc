@@ -8,54 +8,81 @@
 		:transform-read-values="transformReadValues"
 		data-testid="sponsor-modal"
 		size="lg"
-		:no-buttons="!showForm"
-		:disable-remove="!hasToken"
+		:no-buttons="notUiEditable"
+		:disable-remove="!hasUiToken"
+		disable-cancel
 		@changed="$emit('changed')"
 		@open="showForm = false"
 	>
 		<template #default="{ values }">
-			<SponsorTokenExpires v-bind="sponsor" />
 			<div class="mt-4 mb-3">
 				<Sponsor v-bind="sponsor" />
 			</div>
-			<div v-if="!showForm" class="d-flex gap-1 justify-content-between flex-wrap">
-				<button
-					type="button"
-					class="btn btn-link text-muted text-truncate"
-					@click="showForm = !showForm"
-				>
-					{{ sponsorTokenLabel }}
-				</button>
-				<a
-					v-if="!hasToken"
-					class="btn btn-link text-muted text-truncate"
-					:href="trialTokenLink"
-					target="_blank"
-				>
-					{{ $t("config.sponsor.trialToken") }}
-				</a>
-			</div>
-			<div v-else>
-				<hr />
-				<FormRow
+			<hr class="my-4" />
+			<div v-if="showTokenForm">
+				<div class="d-flex justify-content-between align-items-center">
+					<label for="sponsorToken" class="fw-bold my-2">{{
+						$t("config.sponsor.enterYourToken")
+					}}</label>
+					<button
+						v-if="hasUiToken"
+						type="button"
+						class="btn btn-link btn-sm text-nowrap text-muted"
+						@click="
+							editMode = false;
+							values.token = '';
+						"
+					>
+						{{ $t("config.general.cancel") }}
+					</button>
+				</div>
+				<textarea
 					id="sponsorToken"
-					:label="sponsorTokenLabel"
-					:help="
-						$t('config.sponsor.descriptionToken', { url: 'https://sponsor.evcc.io/' })
-					"
-					docs-link="/docs/sponsorship#trial"
-					class="mt-4"
-				>
-					<textarea
-						id="sponsorToken"
-						v-model="values.token"
-						required
-						rows="5"
-						spellcheck="false"
+					v-model="values.token"
+					class="form-control mb-1"
+					required
+					rows="5"
+					spellcheck="false"
+					@paste="(event) => handlePaste(event, values)"
+				/>
+				<i18n-t tag="small" keypath="config.sponsor.descriptionToken" scope="global">
+					<template #url>
+						<a href="https://sponsor.evcc.io" target="_blank">sponsor.evcc.io</a>
+					</template>
+					<template #trialToken>
+						<a :href="trialTokenLink" target="_blank">{{
+							$t("config.sponsor.trialToken")
+						}}</a>
+					</template>
+				</i18n-t>
+			</div>
+			<div v-else-if="token">
+				<label for="existingToken" class="fw-bold my-2">{{
+					$t("config.sponsor.yourToken")
+				}}</label>
+				<div class="d-flex align-items-start gap-2 text-muted">
+					<input
+						id="existingToken"
+						:value="token"
+						disabled
+						rows="1"
 						class="form-control"
-						@paste="(event) => handlePaste(event, values)"
+						:class="{ 'is-invalid': error }"
 					/>
-				</FormRow>
+					<span v-if="fromYaml" class="text-muted text-nowrap align-self-center ms-2">
+						{{ $t("config.sponsor.viaYaml") }}
+					</span>
+					<button
+						v-else
+						type="button"
+						class="btn btn-link text-nowrap"
+						:class="error ? 'text-danger' : 'text-muted'"
+						@click="editMode = true"
+					>
+						{{ $t("config.sponsor.changeToken") }}
+					</button>
+				</div>
+				<SponsorTokenExpires v-bind="sponsor" />
 			</div>
 		</template>
 	</JsonModal>
@@ -63,31 +90,42 @@
 
 <script>
 import JsonModal from "./JsonModal.vue";
-import FormRow from "./FormRow.vue";
-import Sponsor, { VICTRON_DEVICE } from "../Savings/Sponsor.vue";
+import Sponsor from "../Savings/Sponsor.vue";
 import SponsorTokenExpires from "../Savings/SponsorTokenExpires.vue";
 import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import { cleanYaml } from "@/utils/cleanYaml";
 export default {
 	name: "SponsorModal",
-	components: { FormRow, JsonModal, Sponsor, SponsorTokenExpires },
+	components: { JsonModal, Sponsor, SponsorTokenExpires },
+	props: {
+		error: Boolean,
+	},
 	emits: ["changed"],
 	data: () => ({
-		showForm: false,
+		editMode: false,
 	}),
 	computed: {
 		sponsor() {
 			return store?.state?.sponsor;
 		},
-		hasToken() {
-			const name = this.sponsor?.name || "";
-			return name !== "" && name !== VICTRON_DEVICE;
+		token() {
+			return this.sponsor?.token;
 		},
-		sponsorTokenLabel() {
-			return this.hasToken
-				? this.$t("config.sponsor.changeToken")
-				: this.$t("config.sponsor.addToken");
+		fromYaml() {
+			return this.sponsor?.fromYaml;
+		},
+		name() {
+			return this.sponsor?.name || "";
+		},
+		showTokenForm() {
+			return this.editMode || !this.token;
+		},
+		notUiEditable() {
+			return !!this.name && this.fromYaml;
+		},
+		hasUiToken() {
+			return this.token && !this.fromYaml;
 		},
 		trialTokenLink() {
 			return `${docsPrefix()}/docs/sponsorship#trial`;

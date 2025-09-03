@@ -47,13 +47,13 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	wb, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"), cc.Cache)
 	if err != nil {
-		return wb, err
+		return nil, err
 	}
 
 	// auto-detect capabilities
 	params, err := wb.paramG.Get()
 	if err != nil {
-		return wb, err
+		return nil, err
 	}
 
 	if !params.AlwaysActive {

@@ -7,7 +7,10 @@
 				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
-				<GeneralConfig @site-changed="siteChanged" />
+				<GeneralConfig
+					:sponsor-error="hasClassError('sponsorship')"
+					@site-changed="siteChanged"
+				/>
 
 				<div v-if="$hiddenFeatures()">
 					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
@@ -262,11 +265,11 @@
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags
-									v-if="circuits.length == 0"
+									v-if="circuitsSorted.length == 0"
 									:tags="{ configured: { value: false } }"
 								/>
 								<template
-									v-for="(circuit, idx) in circuits"
+									v-for="(circuit, idx) in circuitsSorted"
 									v-else
 									:key="circuit.name"
 								>
@@ -367,12 +370,16 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<SponsorModal @changed="loadDirty" />
+				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 				<HemsModal @changed="yamlChanged" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<ModbusProxyModal @changed="yamlChanged" />
-				<CircuitsModal @changed="yamlChanged" />
+				<CircuitsModal
+					:gridMeter="gridMeter"
+					:extMeters="extMeters"
+					@changed="yamlChanged"
+				/>
 				<EebusModal @changed="yamlChanged" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
@@ -607,12 +614,21 @@ export default defineComponent({
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		hemsTags() {
-			const result = { configured: { value: false }, hemsType: {} };
 			const { type } = store.state?.hems || {};
-			if (type) {
-				result.configured.value = true;
-				result.hemsType = { value: type };
+			if (!type) {
+				return { configured: { value: false } };
 			}
+			const result = {
+				hemsType: {},
+				hemsActiveLimit: { value: null as number | null },
+			};
+			result.hemsType = { value: type };
+			const lpc = store.state?.circuits?.["lpc"];
+			if (lpc) {
+				const value = lpc.maxPower || null;
+				result.hemsActiveLimit = { value };
+			}
+
 			return result;
 		},
 		isSponsor() {
@@ -636,6 +652,12 @@ export default defineComponent({
 			return {
 				authDisabled: store.state?.authDisabled || false,
 			};
+		},
+		circuitsSorted() {
+			const sortedNames = Object.keys(store.state?.circuits || {});
+			return [...this.circuits].sort(
+				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
+			);
 		},
 	},
 	watch: {
@@ -697,7 +719,15 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const response = await api.get("/config/devices/circuit");
-			this.circuits = response.data || [];
+			const circuits = response.data || [];
+			// set lpc default title
+			circuits.forEach((c: ConfigCircuit) => {
+				if (c.name === "lpc" && !c.config?.title) {
+					c.config = c.config || {};
+					c.config.title = this.$t("config.hems.title");
+				}
+			});
+			this.circuits = circuits;
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {

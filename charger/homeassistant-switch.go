@@ -45,7 +45,7 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 
 func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
 	c := &HomeAssistantSwitch{
-		baseURL:      baseURL,
+		baseURL:      strings.TrimSuffix(baseURL, "/"),
 		switchEntity: switchEntity,
 		powerEntity:  powerEntity,
 		Helper:       request.NewHelper(util.NewLogger("ha-switch")),

@@ -4,6 +4,8 @@ products:
     description:
       generic: Power
 capabilities: ["battery-control"]
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

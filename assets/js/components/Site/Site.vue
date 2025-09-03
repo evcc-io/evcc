@@ -19,6 +19,7 @@
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
+			<HemsWarning :circuits="circuits" />
 			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
@@ -77,6 +78,7 @@ import "@h2d2/shopicons/es/regular/arrowup";
 import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
+import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
@@ -90,9 +92,11 @@ import type {
 	Forecast,
 	LoadpointCompact,
 	Notification,
+	Circuit,
 	SMART_COST_TYPE,
 	Sponsor,
 	FatalError,
+	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
 
@@ -102,6 +106,7 @@ export default defineComponent({
 		Loadpoints,
 		Energyflow,
 		Footer,
+		HemsWarning,
 		Notifications,
 		TopNavigation: Navigation,
 		WelcomeIcons,
@@ -155,7 +160,9 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
+		circuits: Object as PropType<Record<string, Circuit>>,
 		telemetry: Boolean,
+		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
 		batteryConfigured() {

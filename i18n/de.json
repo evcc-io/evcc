@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
-      "title": "Lastmanagement"
+      "title": "Lastmanagement",
+      "usableMeters": "Verwendbare Zählerreferenzen"
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Einspeisevergütung",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktives Limit",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "no": "Nein",
       "odometer": "Kilometerstand",
@@ -123,6 +125,10 @@
       "A": "A (nicht verbunden)",
       "B": "B (verbunden)",
       "C": "C (lädt)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
@@ -176,7 +182,7 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
-      "description": "evcc mit einem anderen Heimenergiemanagementsystem verbinden.",
+      "description": "Leistungsbegrenzung durch externe Systeme (bspw. Steuerboxen, § 14a EnWG). Setzt Lastmanagementkonfiguration voraus.",
       "title": "HEMS"
     },
     "icon": {
@@ -429,14 +435,18 @@
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
-      "descriptionToken": "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an.",
+      "descriptionToken": "Als Sponsor erhältst du dein Token auf {url}. Zum Ausprobieren gibts ein {trialToken}.",
+      "enterYourToken": "Token eingeben",
       "error": "Das Sponsortoken ist ungültig.",
+      "invalid": "ungültig",
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
-      "trialToken": "Testtoken"
+      "trialToken": "Testtoken",
+      "viaYaml": "über evcc.yaml",
+      "yourToken": "Dein Token"
     },
     "system": {
       "backupRestore": {
@@ -716,6 +726,7 @@
       "gridImport": "Netzbezug",
       "homePower": "Verbrauch",
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
+      "loadpointsLimit": "{limit} Limit",
       "noEnergy": "Keine Messwerte",
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
@@ -727,6 +738,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit. Warte auf Heizung …"
+    },
+    "hemsWarning": {
+      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
+      "title": "Externe Begrenzung:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",

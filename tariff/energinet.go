@@ -53,11 +53,10 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
+	// TODO remove
+	t.log.WARN.Println("tariff is deprecated and will be removed in a future version")
 
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Energinet) run(done chan error) {

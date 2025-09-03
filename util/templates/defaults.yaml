@@ -66,6 +66,12 @@ params:
       en: Network interface
     advanced: true
     example: eth0
+  - name: schema
+    description:
+      generic: Schema
+    type: choice
+    choice: ["https", "http"]
+    default: https
   - name: user
     description:
       de: Benutzerkonto
@@ -127,8 +133,8 @@ params:
       de: Cache
       en: Cache
     help:
-      de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
-      en: Time interval with when data should be reloaded from the vehicle
+      de: Zeitintervall für erneute Datenabfrage
+      en: Time interval for data refresh
     advanced: true
     type: duration
     example: 5m
@@ -331,11 +337,6 @@ params:
       en: For forced charging of the battery.
       de: Für erzwungenes Laden des Speichers.
     advanced: true
-  - name: chargepower
-    description:
-      en: Maximum charge power
-      de: Maximale Ladeleistung
-    deprecated: true
   - name: maxchargerate
     unit: "%"
     type: int

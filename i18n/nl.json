@@ -16,9 +16,9 @@
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
     "legendMiddleSubline": "als de thuisaccu {soc} bereikt heeft.",
-    "legendTopAutostart": "Laden vanuit de thuisbatterij eens de batterij",
+    "legendTopAutostart": "Laden vanuit de thuisbatterij",
     "legendTopName": "Opladen met energie uit de thuisaccu",
-    "legendTopSubline": "stoppen wanneer de thuisaccu {soc} bereikt.",
+    "legendTopSubline": "eens de thuisaccu {soc} bereikt heeft.",
     "modalTitle": "Thuisaccu",
     "usageTab": "Batterijgebruik"
   },
@@ -45,15 +45,27 @@
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
       "titleAdd": {
-        "charging": "Voeg Lader toe"
+        "charging": "Voeg Lader toe",
+        "heating": "Voeg verwarmer toe"
       },
       "titleEdit": {
-        "charging": "Editeer Lader"
+        "charging": "Wijzig lader",
+        "heating": "Pas verwarmer aan"
+      },
+      "type": {
+        "custom": {
+          "charging": "Gebruikersgedefinieerde lader",
+          "heating": "Gebruikersgedefinieerde verwarmer"
+        },
+        "heatpump": "Gebruikersgedefinieerde warmtepomp",
+        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
+        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
-      "title": "Belastingbeheer"
+      "title": "Electriciteitsnetwerk beheer"
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
@@ -125,7 +137,7 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan worden gebruikt voor belastingbeheer of statistische doeleinden.",
+      "description": "Kan worden gebruikt voor electriciteitsnetwerk beheer of statistische doeleinden.",
       "titleAdd": "Externe Meter Toevoegen",
       "titleEdit": "Externe meter bewerken"
     },
@@ -143,12 +155,15 @@
       "docsLink": "Zie documentatie.",
       "experimental": "Experimenteel",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
+      "invalidFileSelected": "Ongeldig bestand geselecteerd",
+      "noFileSelected": "Geen bestand geselecteerd.",
       "off": "uit",
       "on": "aan",
       "password": "Wachtwoord",
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
       "save": "Opslaan",
+      "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
       "telemetry": "Telemetrie",
       "templateLoading": "Laden...",
@@ -185,15 +200,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Laadpunt toevoegen"
+        "charging": "Laadpunt toevoegen",
+        "heating": "Verwarmer toevoegen"
       },
-      "addMeter": "Toevoegen van een toegewijde laadmeter",
+      "addMeter": "Toevoegen van een toegewijde energiemeter",
       "cancel": "Annuleren",
       "chargerError": {
-        "charging": "Het configureren van een oplader is vereist."
+        "charging": "Het configureren van een lader is vereist.",
+        "heating": "Een verwarmer instellen is vereist."
       },
       "chargerLabel": {
-        "charging": "Oplader"
+        "charging": "Oplader",
+        "heating": "Verwarmingstoestel"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Zal een stroom van 6 tot 16 A gebruiken.",
@@ -202,14 +220,15 @@
       "chargerPowerCustom": "andere",
       "chargerPowerCustomHelp": "Definieer een aangepast stroombereik.",
       "chargerTypeLabel": "Type laadpunt",
-      "chargingTitle": "Opladen",
-      "circuitHelp": "Toewijzing van Load management om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
+      "chargingTitle": "Gedrag",
+      "circuitHelp": "Toewijzing van een circuit van je electriciteitsnetwerk om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "niet toegewezen",
       "defaultModeHelp": {
-        "charging": "Laadmodus bij het aansluiten van een voertuig."
+        "charging": "Laadmodus bij het aansluiten van een voertuig.",
+        "heating": "Wordt ingesteld bij opstarten van het systeem."
       },
-      "defaultModeHelpKeep": "Behoud de laatst-geselecteerde laadmodus.",
+      "defaultModeHelpKeep": "Behoud de laatst-geselecteerde modus.",
       "defaultModeLabel": "Standaard mode",
       "delete": "Wissen",
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
@@ -222,14 +241,18 @@
       "minCurrentHelp": "Kies 6 A enkel wanneer je weet wat je aan het doen bent.",
       "minCurrentLabel": "“Minimale stroom”",
       "noVehicles": "Geen voertuigen ingesteld.",
+      "option": {
+        "charging": "Laadpunt toevoegen",
+        "heating": "Verwarmingstoestel toevoegen"
+      },
       "phases1p": "“1-fase”",
       "phases3p": "“3-fase”",
       "phasesAutomatic": "“Automatische fasen”",
       "phasesAutomaticHelp": "Uw laadstation ondersteunt automatisch wisselen tussen laden op 1 of 3-fasen. U kunt dit aanpassen van op het startscherm tijdens de laadsessie.",
-      "phasesHelp": "Aantal aangesloten fasen op het laadstation.",
+      "phasesHelp": "Aantal aangesloten fasen.",
       "phasesLabel": "“Fasen”",
-      "pollIntervalDanger": "Het voertuig vaak bevragen kan de accu sneller ontladen. Sommige autofabrikanten kunnen mogelijk actief het laden voorkomen in dit geval. Niet aangeraden! Gebruik dit alleen wanneer je je bewust bent van de risico's.",
-      "pollIntervalHelp": "Tijd tussen API-updates van voertuigen. Korte intervallen kunnen de accu van het voertuig leegmaken.",
+      "pollIntervalDanger": "Het voertuig vaak bevragen kan de 12V accu sneller ontladen. Sommige autofabrikanten kunnen mogelijk actief het laden voorkomen in dit geval. Niet aangeraden! Gebruik dit alleen wanneer je je bewust bent van de risico's.",
+      "pollIntervalHelp": "Tijd tussen API-updates van voertuigen. Korte intervallen kunnen de 12V accu van het voertuig leeg trekken.",
       "pollIntervalLabel": "Update-interval",
       "pollModeAlways": "altijd",
       "pollModeAlwaysHelp": "Vraag altijd om regelmatige statusupdates.",
@@ -238,50 +261,61 @@
       "pollModeConnected": "verbonden",
       "pollModeConnectedHelp": "Werk de voertuigstatus met regelmatige tussenpozen bij wanneer deze is aangesloten.",
       "pollModeLabel": "Update gedrag",
-      "priorityHelp": "Oplaadpunten met een hogere prioriteit krijgen voorrang bij zonne-energie overschotten.",
+      "priorityHelp": "Hogere prioriteit krijgt voorrang bij toegang tot zonne-energie overschotten.",
       "priorityLabel": "Prioriteit",
       "save": "Opslaan",
       "showAllSettings": "Alle instellingen tonen",
       "solarBehaviorCustomHelp": "Definieer uw eigen in- en uitschakeldrempels en vertragingen.",
-      "solarBehaviorDefaultHelp": "Laad alleen op met een overschot aan zonne-energie. Begin na {enableDelay} van overschot. Stop als er niet genoeg overschot is voor {disableDelay}.",
-      "solarBehaviorLabel": "Gedrag van de zonne-energie",
+      "solarBehaviorDefaultHelp": "Begin na {enableDelay} van overschot. Stop als er niet genoeg overschot is voor {disableDelay}.",
+      "solarBehaviorLabel": "Zonne-energie",
       "solarModeCustom": "Aangepast",
       "solarModeMaximum": "Maximale zonne-energie",
       "thresholdDisableDelayLabel": "Vertraging uitschakelen",
       "thresholdDisableHelpInvalid": "Gebruik alstublieft een positieve waarde.",
-      "thresholdDisableHelpPositive": "Stop met opladen wanneer er meer dan {stroom} van het net wordt gebruikt voor {vertraging}.",
-      "thresholdDisableHelpZero": "Stop wanneer het minimale laadvermogen niet kan worden voldaan voor {delay}.",
+      "thresholdDisableHelpPositive": "Stop wanneer er meer dan {stroom} van het net wordt gebruikt voor {vertraging}.",
+      "thresholdDisableHelpZero": "Stop wanneer het minimaal vereiste laadvermogen niet kan worden voldaan voor {delay}.",
       "thresholdDisableLabel": "Schakel netspanning uit",
       "thresholdEnableDelayLabel": "Vertraging inschakelen",
       "thresholdEnableHelpInvalid": "Gebruik aub een negatieve waarde.",
-      "thresholdEnableHelpNegative": "Begin met opladen wanneer het overschot van {surplus} beschikbaar is voor {delay}.",
-      "thresholdEnableHelpZero": "Begin wanneer het minimale overschot aan laadvermogen beschikbaar is voor {delay}.",
+      "thresholdEnableHelpNegative": "Begin wanneer het overschot van {surplus} beschikbaar is voor {delay}.",
+      "thresholdEnableHelpZero": "Begin wanneer het gevraagde aan laadvermogen beschikbaar is voor {delay}.",
       "thresholdEnableLabel": "Netstroom inschakelen",
-      "titleAdd": "Oplaadpunt toevoegen",
-      "titleEdit": "Laadpunt bewerken",
-      "titleExample": "Garage, carport, enz.",
+      "titleAdd": {
+        "charging": "Laadpunt Toevoegen",
+        "heating": "Verwarmingstoestel Toevoegen",
+        "unknown": "Voeg een lader of verwarmingsapparaat toe"
+      },
+      "titleEdit": {
+        "charging": "Wijzig lader",
+        "heating": "Wijzig verwarmingsapparaat",
+        "unknown": "Wijzig lader of verwarmingsapparaat"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Warmtepomp, verwarmingsapparaat, etc."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische detectie",
       "vehicleHelpAutoDetection": "Selecteert automatisch het meest aannemelijke voertuig. Handmatige aanpassen is mogelijk.",
-      "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier aan het opladen is. Automatische detectie uitgeschakeld. Handmatige aanpassen is mogelijk.",
+      "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier laadt. Automatische detectie uitgeschakeld. Handmatig aanpassen is mogelijk.",
       "vehicleLabel": "Standaard voertuig",
       "vehiclesTitle": "Voertuigen"
     },
     "main": {
       "addAdditional": "Extra meter toevoegen",
       "addGrid": "Netmeter toevoegen",
-      "addLoadpoint": "Voeg laadpunt toe",
+      "addLoadpoint": "Voeg lader of verwarmingsapparaat toe",
       "addPvBattery": "Voeg zonnepaneel of batterij toe",
       "addTariffs": "Tarieven toevoegen",
       "addVehicle": "Voeg voertuig toe",
       "configured": "geconfigureerd",
       "edit": "bewerken",
-      "loadpointRequired": "Er moet tenminste één laadpunt worden geconfigureerd.",
+      "loadpointRequired": "Er moet tenminste één laadpunt ingesteld worden.",
       "name": "Naam",
       "title": "Configuratie",
       "unconfigured": "Niet geconfigureerd",
       "vehicles": "Mijn voertuigen",
-      "yaml": "Apparaat van evcc.yaml kan niet worden bewerkt."
+      "yaml": "Apparaten geconfigureerd in evcc.yaml kunnen hier niet worden bewerkt."
     },
     "messaging": {
       "description": "Ontvang berichten over je oplaadsessies.",
@@ -363,6 +397,10 @@
         "big": "groot-endian",
         "little": "klein-endian"
       },
+      "operationMode": {
+        "heating": "Verwarmen",
+        "standby": "Stand-by"
+      },
       "schema": {
         "http": "HTTP (niet-versleuteld)",
         "https": "HTTPS (versleuteld)"
@@ -382,7 +420,7 @@
       "general": "Algemeen",
       "grid": "Netaansluiting",
       "integrations": "Integraties",
-      "loadpoints": "Laadpunten",
+      "loadpoints": "Laden en verwarmen",
       "meter": "Zonnepanelen & accu",
       "system": "Systeem",
       "vehicles": "Voertuigen"
@@ -391,15 +429,52 @@
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
       "description": "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten.",
-      "descriptionToken": "Haal de token op vanaf {url}. We bieden ook een trial-token aan om te testen.",
+      "descriptionToken": "Sponsors vinden hun token op {url}. Om te starten, bieden we een {trialToken}.",
+      "enterYourToken": "Typ hier je token",
       "error": "De sponsortoken is ongeldig.",
+      "invalid": "ongeldig",
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "U moet een sponsortoken configureren voordat u dit apparaat kunt aanmaken.",
       "tokenRequiredLearnMore": "Meer informatie.",
-      "trialToken": "Tijdelijke token"
+      "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
+      "trialToken": "Tijdelijke token",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Jouw token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download backup...",
+          "confirmationButton": "Download backup",
+          "confirmationText": "Voer je wachtwoord in om het database bestand te downloaden.",
+          "description": "Backup je data naar een bestand. Dit bestand kan gebruikt worden om je data te herstellen in geval van een systeemfout.",
+          "title": "Backup"
+        },
+        "cancel": "Annuleer",
+        "description": "Backup, herstel en rest je data. Nuttig als je je data naar een ander systeem wilt migreren.",
+        "note": "Notabene: alle bovenstaande acties hebben alleen impact op je databasedata. Het evcc.yaml configuratiebestand blijft onveranderd.",
+        "reset": {
+          "action": "Reset...",
+          "confirmationButton": "Reset & herstart",
+          "confirmationText": "Deze actie zal de geselecteerde data permanent verwijderen. Controleer of je eerst de backup gedownload hebt.",
+          "description": "Heb je problemen met de configuratie en wil je opnieuw starten? Verwijder alle data en begin opnieuw.",
+          "sessions": "Laadsessies",
+          "sessionsDescription": "Verwijdert je laadsessie historie.",
+          "settings": "Configuratie & instellingen",
+          "settingsDescription": "Verwijderd alle geconfigureerde apparaten, diensten, planningen, caches, etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Herstel...",
+          "confirmationButton": "Herstel en herstart",
+          "confirmationText": "Dit zal de complete database overschrijven. Controleer eerst of je de backup hebt gedownload.",
+          "description": "Herstel je data vanuit een backupbestand. Dit zal je huidige data overschrijven.",
+          "labelFile": "Backupbestand",
+          "title": "Herstel"
+        },
+        "title": "Backup en Herstel"
+      },
       "logs": "Logboeken",
       "restart": "Herstart",
       "restartRequiredDescription": "Herstart om het effect te zien.",
@@ -432,7 +507,7 @@
       "delete": "Verwijder",
       "generic": "Andere integraties",
       "identifiers": "RFID identificatiegegevens",
-      "identifiersHelp": "Lijst van RFIDs om het voertuig te identificeren. Een RFID per regel. De huidige RFID kan gevonden worden op de overzichtspagina, bij het respectievelijke laadstation.",
+      "identifiersHelp": "Lijst van RFIDs om het voertuig te identificeren. Een RFID per regel. De huidige RFID kan gevonden worden op de overzichtspagina, bij het respectievelijke laadpunt.",
       "maximumCurrent": "Maximale stroomsterkte",
       "maximumCurrentHelp": "Moet hoger zijn dan de minimale stroomsterkte.",
       "maximumPhases": "Maximaal aantal fases",
@@ -549,6 +624,10 @@
   },
   "header": {
     "about": "Over",
+    "authProviders": {
+      "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
+      "title": "Authorisatie Status"
+    },
     "blog": "Blog",
     "docs": "Documentatie",
     "github": "GitHub",
@@ -599,7 +678,7 @@
     "iframeIssue": "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert.",
     "invalid": "Wachtwoord onjuist.",
     "login": "Inloggen",
-    "password": "Wachtwoord",
+    "password": "Beheerderswachtwoord",
     "reset": "Wachtwoord resetten?",
     "title": "Authenticatie"
   },
@@ -793,7 +872,7 @@
       "disconnected": "Niet verbonden.",
       "feedinPriorityNextStart": "Hoge energieprijs start over {duration}.",
       "feedinPriorityPausing": "Zonne opladen gepauzeerd om grid import te maximaliseren.",
-      "finished": "Geëindigd.",
+      "finished": "Beëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt gepauzeerd.",
       "pvEnable": "Voldoende PV overschot beschikbaar. Laden wordt gestart.",
@@ -807,7 +886,7 @@
       "waitForVehicle": "Klaar. Wachten op voertuig…",
       "welcome": "Verkort initiële lading om de verbinding te bevestigen."
     },
-    "vehicles": "Parking",
+    "vehicles": "Parkeerplaats",
     "welcome": "Welkom aan boord!"
   },
   "notifications": {
@@ -882,7 +961,7 @@
       "identifier": "ID",
       "loadpoint": "Oplaadpunt",
       "meterstart": "Meter start (kWh)",
-      "meterstop": "Meter stop (kwh)",
+      "meterstop": "Meter stop (kWh)",
       "odometer": "Kilometerstand (km)",
       "price": "Prijs",
       "priceperkwh": "Prijs/kWh",
@@ -947,7 +1026,7 @@
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
       "getNew": "Vraag een nieuwe aan",
-      "hint": "Nota: We zullen dit in de toekomst automatiseren."
+      "hint": "Notabene: We zullen dit in de toekomst automatiseren."
     },
     "telemetry": {
       "label": "Telemetrie"
@@ -955,7 +1034,7 @@
     "theme": {
       "auto": "systeem",
       "dark": "donker",
-      "label": "Ontwerp",
+      "label": "Thema",
       "light": "licht"
     },
     "time": {
@@ -985,7 +1064,7 @@
     "priceLabel": "Energieprijs",
     "priceLimit": "Prijslimiet",
     "resetAction": "Limiet verwijderen",
-    "resetWarning": "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opruimen?",
+    "resetWarning": "Er is geen dynamische netprijs of CO₂-bron geconfigureerd. Er is echter nog steeds een limiet van {limit}. Je configuratie opschonen?",
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
@@ -993,6 +1072,7 @@
     "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",
+    "resetWarning": "Er is geen dynamisch teruglevertarief ingesteld. Er is echter nog steeds een limiet van {limit}. Wil je je configuratie opschonen?",
     "title": "Terugleveren prioritiseren"
   },
   "startupError": {
@@ -1001,7 +1081,7 @@
     "description": "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}.",
     "discussions": "GitHub Discussies",
     "fixAndRestart": "Los het probleem op en herstart de server.",
-    "hint": "Let op: het kan ook zijn dat u een defect toestel heeft (omvormer, meter, …). Controleer uw netwerkverbindingen.",
+    "hint": "Let op: het kan ook zijn dat u een defect apparaat heeft (omvormer, meter, …). Controleer uw netwerkverbindingen.",
     "lineError": "Fout in {0}.",
     "lineErrorLink": "lijn {0}",
     "restartButton": "Herstart",

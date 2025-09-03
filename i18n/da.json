@@ -429,13 +429,18 @@
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
-      "descriptionToken": "Du får et token fra {url}. Vi tilbyder også et prøvetoken til test.",
+      "descriptionToken": "Sponsorer finder deres token på {url}. For at komme i gang tilbyder vi en{trialToken}.",
+      "enterYourToken": "Indtast din token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
+      "invalid": "ugyldig",
       "labelToken": "Sponsor token",
       "title": "Sponsorat",
       "tokenRequired": "Du skal konfigurere et sponsortoken, før du kan oprette denne enhed.",
       "tokenRequiredLearnMore": "Lær mere.",
-      "trialToken": "Test token"
+      "tokenRequiredShort": "Der er ingen sponsor token konfiguret.",
+      "trialToken": "Test token",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Dit token"
     },
     "system": {
       "backupRestore": {
@@ -458,7 +463,7 @@
           "sessions": "Opladningssessioner",
           "sessionsDescription": "Sletter din opladningshistorik.",
           "settings": "Konfiguration og indstillinger",
-          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester, abonnementer osv.",
+          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester og opladsningsplaner mm.",
           "title": "Nulstil"
         },
         "restore": {
@@ -620,6 +625,10 @@
   },
   "header": {
     "about": "Om",
+    "authProviders": {
+      "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
+      "title": "Autorisation status"
+    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",

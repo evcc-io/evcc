@@ -186,7 +186,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ### Essential Commands
 
-- Must build before testing: `make ui build`
+- Must build before testing executing playwright `make ui build` since it uses the binary. For manual testing assets are build and reloaded automatically (vite dev).
 - Run tests: `npm run playwright` or `npx playwright test`
 - Debug: `npx playwright test --debug`
 - Specific test: `npx playwright test tests/config-loadpoint.spec.ts`
@@ -208,6 +208,7 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use `expectModalVisible()` and `expectModalHidden()` helpers
 - Test configuration persistence across application restarts
 - Standard structure: import `{ start, stop, baseUrl }` from `./evcc`, use `test.afterEach(stop)`
+- Never use fixed timeouts, use existance of elements or wait for network idle
 
 ## Device Integration & Configuration
 

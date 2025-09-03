@@ -112,7 +112,7 @@ func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slave
 		identify = wb.identify
 	}
 
-	return decorateKSE(wb, phases1p3p, getPhases, identify), err
+	return decorateKSE(wb, phases1p3p, getPhases, identify), nil
 }
 
 // Status implements the api.Charger interface

@@ -27,4 +27,4 @@ params:
 render: |
   type: ngeso
   region: {{ .region }}
-  postcode: {{ .postcode }}
+  postcode: {{ .postalcode }}
