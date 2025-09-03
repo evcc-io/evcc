@@ -38,10 +38,9 @@ export interface HemsConfig {
 }
 
 export interface ShmConfig {
-  type: string;
-  allowcontrol: boolean;
-  vendorid: string;
-  deviceid: string;
+  allowControl: boolean;
+  vendorId: string;
+  deviceId: string;
 }
 
 export interface FatalError {
