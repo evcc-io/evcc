@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
-      "title": "Yük yönetimi"
+      "title": "Yük yönetimi",
+      "usableMeters": ""
     },
     "control": {
       "description": "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Satış fiyatı",
       "gridPrice": "Alım fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
+      "hemsActiveLimit": "",
       "hemsType": "Sistem",
       "identifier": "RFID tanımlayıcısı",
       "no": "hayır",
@@ -123,6 +125,10 @@
       "A": "“A (bağlı değil)”",
       "B": "“B (bağlı)”",
       "C": "“C (dolduruyor)”"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "“Akıllı tüketici”",
@@ -722,6 +728,7 @@
       "gridImport": "Şebeke kullanımı",
       "homePower": "Tüketim",
       "loadpoints": "Doldurma cihazı| Doldurma cihazı | {count} doldurma cihazları",
+      "loadpointsLimit": "",
       "noEnergy": "Ölçüm verisi yok",
       "pv": "“Güneş enerji sistemi”",
       "pvExport": "Şebekeye ihracat",
@@ -733,6 +740,10 @@
       "connected": "Beklemede.",
       "vehicleLimit": "“Isıtıcı sınırlaması”",
       "waitForVehicle": "Hazır. Isıtıcı bekleniyor…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Fiyat",
