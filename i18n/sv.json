@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
-      "title": "Belastningshantering"
+      "title": "Belastningshantering",
+      "usableMeters": ""
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Inmatningspris",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
+      "hemsActiveLimit": "",
       "hemsType": "System",
       "identifier": "RFID-identifierare",
       "no": "nej",
@@ -123,6 +125,10 @@
       "A": "A (ej ansluten)",
       "B": "B (ansluten)",
       "C": "C (laddar)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
@@ -723,6 +729,7 @@
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
       "loadpoints": "Laddare | Laddare | {count} laddare",
+      "loadpointsLimit": "",
       "noEnergy": "Inga mätaruppgifter",
       "pv": "Solanläggning",
       "pvExport": "Export till elnät",
@@ -734,6 +741,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
       "waitForVehicle": "Redo, väntar på värmare…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
