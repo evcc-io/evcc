@@ -1,3 +1,18 @@
+## external control via binary in put
+
+#type: relay
+#maxPower: 4200 # limit loadpoints to 4.2 kW total
+#limit: # limit signal, plugin
+#  source: mqtt
+#  topic: hems/limit/status # 0/false = normal, 1/true = limit active
+
+## external control via EEBus protocol
+
+#type: eebus # general EEBus setup (cert gen) required
+#ski: "1234-5678-90AB-CDEF" # SKI of control box (grid operator)
+
+## SMA Sunny Home Manager 2.0, will change soon https://github.com/evcc-io/evcc/pull/23190
+
 #type: sma
 #allowcontrol: false
 #vendorid: AAAAAAAA

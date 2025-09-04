@@ -55,6 +55,20 @@ func (mr *MockAPIMockRecorder) ActivePhases() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivePhases", reflect.TypeOf((*MockAPI)(nil).ActivePhases))
 }
 
+// EffectiveLimitSoc mocks base method.
+func (m *MockAPI) EffectiveLimitSoc() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveLimitSoc")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// EffectiveLimitSoc indicates an expected call of EffectiveLimitSoc.
+func (mr *MockAPIMockRecorder) EffectiveLimitSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveLimitSoc", reflect.TypeOf((*MockAPI)(nil).EffectiveLimitSoc))
+}
+
 // EffectiveMaxPower mocks base method.
 func (m *MockAPI) EffectiveMaxPower() float64 {
 	m.ctrl.T.Helper()

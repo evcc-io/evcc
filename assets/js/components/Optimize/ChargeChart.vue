@@ -204,7 +204,7 @@ export default defineComponent({
 			return [
 				{
 					label: "Solar Forecast",
-					data: this.evopt.req.time_series.ft.map(this.convertWToKW),
+					data: this.evopt.req.time_series.ft.map(this.convertWhToKW),
 					borderColor: colors.self,
 					backgroundColor: colors.self,
 					fill: false,
@@ -232,8 +232,8 @@ export default defineComponent({
 					// Charging = positive, Discharging = negative
 					const combinedPower = battery.charging_power.map((chargingPower, timeIndex) => {
 						const dischargingPower = battery.discharging_power[timeIndex] || 0;
-						const chargingKW = this.convertWToKW(chargingPower);
-						const dischargingKW = this.convertWToKW(dischargingPower);
+						const chargingKW = this.convertWhToKW(chargingPower, timeIndex);
+						const dischargingKW = this.convertWhToKW(dischargingPower, timeIndex);
 
 						// Return charging as positive, discharging as negative
 						// One should be zero, the other should have the value
@@ -255,7 +255,7 @@ export default defineComponent({
 			return datasets;
 		},
 		getHouseholdDatasets() {
-			const householdPower = this.evopt.req.time_series.gt.map(this.convertWToKW);
+			const householdPower = this.evopt.req.time_series.gt.map(this.convertWhToKW);
 
 			// Use the next color in the palette after all battery colors
 			const batteryCount = this.batteryColors.length;
@@ -285,8 +285,8 @@ export default defineComponent({
 			// Grid import is positive, grid export is negative (one is always zero)
 			const gridPower = gridImport.map((importValue, index) => {
 				const exportValue = gridExport[index] || 0;
-				const importKW = this.convertWToKW(importValue);
-				const exportKW = this.convertWToKW(exportValue);
+				const importKW = this.convertWhToKW(importValue, index);
+				const exportKW = this.convertWhToKW(exportValue, index);
 				// Return import as positive, export as negative
 				return importKW > 0 ? importKW : -exportKW;
 			});
@@ -309,8 +309,12 @@ export default defineComponent({
 			return datasets;
 		},
 
-		convertWToKW: (watts: number): number => {
-			return watts / 1000;
+		convertWhToKW(wh: number, index: number): number {
+			// Convert Wh to kW by normalizing against time duration
+			// Power (kW) = Energy (Wh) / Time (h) / 1000
+			const dtSeconds = this.evopt.req.time_series.dt[index];
+			const hours = dtSeconds / 3600; // Convert seconds to hours
+			return wh / hours / 1000;
 		},
 
 		formatValue: (value: number): string => {
