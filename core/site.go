@@ -155,6 +155,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
+	me, err := metrics.NewCollector(metrics.Home)
+	if err != nil {
+		return err
+	}
+	site.homeEnergy = me
+
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
@@ -259,7 +265,6 @@ func NewSite() *Site {
 		Voltage:    230, // V
 		pvEnergy:   make(map[string]*metrics.Accumulator),
 		fcstEnergy: metrics.NewAccumulator(),
-		homeEnergy: metrics.NewCollector(metrics.Home),
 	}
 
 	return site

@@ -18,17 +18,16 @@ type Collector struct {
 	started time.Time
 }
 
-func NewCollector(name string, opt ...func(*Accumulator)) *Collector {
+func NewCollector(name string, opt ...func(*Accumulator)) (*Collector, error) {
 	entity, err := createEntity(name)
 	if err != nil {
-		// TODO return error
-		panic(err)
+		return nil, err
 	}
 
 	return &Collector{
 		entity: entity,
 		accu:   NewAccumulator(opt...),
-	}
+	}, nil
 }
 
 func createEntity(name string) (entity, error) {
