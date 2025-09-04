@@ -353,10 +353,25 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 		if !found || err != nil {
 			return 0,0,0, err
 		}
+		var currentL1, currentL2, currentL3 float64
+		if voltageL1 != 0 {
+			currentL1 = powerL1/voltageL1
+		} else {
+			return 0,0,0,nil
+		}
+		if voltageL2 != 0 {
+			currentL2 = powerL2/voltageL2
+		} else {
+			return 0,0,0,nil
+		}
+		if voltageL3 != 0 {
+			currentL3 = powerL3/voltageL3
+		} else {
+			return 0,0,0,nil
+		}
 
+		return currentL1, currentL2, currentL3, nil
 
-		return powerL1/voltageL1, powerL2/voltageL2, powerL3/voltageL3, nil
-   
 	  case templates.UsagePV:
 		return 0,0,0, api.ErrNotAvailable
 	  case templates.UsageBattery:
