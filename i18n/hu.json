@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez.",
-      "title": "Terhelés Menedzsment"
+      "title": "Terhelés Menedzsment",
+      "usableMeters": ""
     },
     "control": {
       "description": "Általában az alapértelmezett értékek működőképesek. Csak akkor változtasd meg őket, ha tudod, hogy mit csinálsz.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Kötelező átvételi ár",
       "gridPrice": "Villamosenergia ára",
       "heaterTempLimit": "Fűtés limit",
+      "hemsActiveLimit": "",
       "hemsType": "Rendszer",
       "identifier": "RFID-Azonosító",
       "no": "nem",
@@ -123,6 +125,10 @@
       "A": "A (nincs csatlakoztatva)",
       "B": "B (csatlakoztatva)",
       "C": "C (töltés)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Okos fogyasztó",
@@ -722,6 +728,7 @@
       "gridImport": "Hálózatból import",
       "homePower": "Fogyasztás",
       "loadpoints": "Töltő| Töltő | {count} töltő",
+      "loadpointsLimit": "",
       "noEnergy": "Nincs mérési adat",
       "pv": "Napelemes rendszer",
       "pvExport": "Hálózatba export",
@@ -733,6 +740,10 @@
       "connected": "Készenlét.",
       "vehicleLimit": "Fűtés limit",
       "waitForVehicle": "Üzemkész. Fűtésre várakozás…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Ár",
