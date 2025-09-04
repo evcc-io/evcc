@@ -3,10 +3,11 @@ import { start, stop, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 
-test.beforeAll(async () => {
+test.beforeEach(async () => {
   await start("vehicle-error.evcc.yaml");
 });
-test.afterAll(async () => {
+
+test.afterEach(async () => {
   await stop();
 });
 
@@ -18,6 +19,12 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
   test("broken vehicle: normal title and 'not reachable' icon", async ({ page }) => {
     await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).toBeVisible();
+
+    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    await modal.getByRole("link", { name: "Arrival" }).click();
+    await expect(modal.getByRole("combobox", { name: "Min. charge %" })).toBeEnabled();
+    await expect(modal.getByRole("combobox", { name: "Default limit" })).toBeEnabled();
   });
 
   test("guest vehicle: normal title and no icon", async ({ page }) => {
@@ -26,15 +33,5 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
 
     await expect(page.getByTestId("vehicle-name")).toHaveText("Guest vehicle");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).not.toBeVisible();
-  });
-
-  test("broken vehicle: arrival enabled", async ({ page }) => {
-    await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
-
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
-    await modal.getByRole("link", { name: "Arrival" }).click();
-    await expect(modal.getByRole("combobox", { name: "Min. charge %" })).toBeEnabled();
-    await expect(modal.getByRole("combobox", { name: "Default limit" })).toBeEnabled();
   });
 });
