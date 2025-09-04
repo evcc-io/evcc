@@ -1,4 +1,4 @@
-package semp
+package shm
 
 import (
 	"encoding/binary"
@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/google/uuid"
@@ -50,18 +49,11 @@ type SEMP struct {
 	site         site.API
 }
 
-// New generates SEMP Gateway listening at /semp endpoint
-func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP, error) {
-	cc := struct {
-		VendorID     string
-		DeviceID     string
-		AllowControl bool
-	}{
-		VendorID: "28081973",
-	}
-
-	if err := util.DecodeOther(conf, &cc); err != nil {
-		return nil, err
+func New(allowControl bool, vendorId, deviceId string, site site.API, addr string, router *mux.Router) (*SEMP, error) {
+	if vendorId == "" {
+		vendorId = "28081973"
+	} else if len(vendorId) != 8 {
+		return nil, fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
 	}
 
 	uid, err := uuid.NewUUID()
@@ -69,23 +61,19 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 		return nil, err
 	}
 
-	if len(cc.VendorID) != 8 {
-		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
-	}
-
 	var did []byte
-	if cc.DeviceID == "" {
+	if deviceId == "" {
 		if did, err = UniqueDeviceID(); err != nil {
 			return nil, fmt.Errorf("creating device id: %w", err)
 		}
 	} else {
-		if did, err = hex.DecodeString(cc.DeviceID); err != nil {
+		if did, err = hex.DecodeString(deviceId); err != nil {
 			return nil, fmt.Errorf("device id: %w", err)
 		}
 	}
 
 	if len(did) != 6 {
-		return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
+		return nil, fmt.Errorf("invalid device id: %v. Must be 12 characters HEX string", deviceId)
 	}
 
 	s := &SEMP{
@@ -93,20 +81,21 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 		log:          util.NewLogger("semp"),
 		site:         site,
 		uid:          uid.String(),
-		vid:          cc.VendorID,
+		vid:          vendorId,
 		did:          did,
-		controllable: cc.AllowControl,
+		controllable: allowControl,
 	}
 
 	// find external port
-	_, port, err := net.SplitHostPort(httpd.Addr)
+	// TODO refactor network config
+	_, port, err := net.SplitHostPort(addr)
 	if err == nil {
 		s.port, err = strconv.Atoi(port)
 	}
 
 	s.hostURI = s.callbackURI()
 
-	s.handlers(httpd.Router())
+	s.handlers(router)
 
 	return s, err
 }
@@ -189,7 +178,6 @@ func (s *SEMP) callbackURI() string {
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }

@@ -10,10 +10,3 @@
 
 #type: eebus # general EEBus setup (cert gen) required
 #ski: "1234-5678-90AB-CDEF" # SKI of control box (grid operator)
-
-## SMA Sunny Home Manager 2.0, will change soon https://github.com/evcc-io/evcc/pull/23190
-
-#type: sma
-#allowcontrol: false
-#vendorid: AAAAAAAA
-#deviceid: BBBBBBBB
