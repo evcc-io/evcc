@@ -2,12 +2,16 @@
   "batterySettings": {
     "batteryLevel": "Ladenivå",
     "bufferStart": {
+      "above": "",
       "full": "når det er nesten fullt",
       "never": "bare med nok PV-overskudd"
     },
     "capacity": "{energy} av {total}",
+    "control": "",
+    "discharge": "",
     "disclaimerHint": "Merk:",
     "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
+    "gridChargeTab": "",
     "legendBottomName": "Hjemmelading har prioritet",
     "legendBottomSubline": "ikke bruk til lading",
     "legendMiddleName": "kjøretøy først",
@@ -15,18 +19,483 @@
     "legendTopAutostart": "starter automatisk",
     "legendTopName": "batteriassistert lading",
     "legendTopSubline": "uten avbrudd",
-    "modalTitle": "Batteriinnstillinger"
+    "modalTitle": "Batteriinnstillinger",
+    "usageTab": ""
   },
   "config": {
+    "aux": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "battery": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "charge": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "charger": {
+      "chargers": "",
+      "generic": "",
+      "heatingdevices": "",
+      "ocppHelp": "",
+      "ocppLabel": "",
+      "switchsockets": "",
+      "template": "",
+      "titleAdd": {
+        "charging": "",
+        "heating": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": ""
+      },
+      "type": {
+        "custom": {
+          "charging": "",
+          "heating": ""
+        },
+        "heatpump": "",
+        "sgready": "",
+        "sgready-boost": "",
+        "switchsocket": ""
+      }
+    },
+    "circuits": {
+      "description": "",
+      "title": "",
+      "usableMeters": ""
+    },
+    "control": {
+      "description": "",
+      "descriptionInterval": "",
+      "descriptionResidualPower": "",
+      "labelInterval": "",
+      "labelResidualPower": "",
+      "title": ""
+    },
+    "deviceValue": {
+      "amount": "",
+      "broker": "",
+      "bucket": "",
+      "capacity": "",
+      "chargeStatus": "",
+      "chargeStatusA": "",
+      "chargeStatusB": "",
+      "chargeStatusC": "",
+      "chargeStatusE": "",
+      "chargeStatusF": "",
+      "chargedEnergy": "",
+      "co2": "",
+      "configured": "",
+      "controllable": "",
+      "currency": "",
+      "current": "",
+      "currentRange": "",
+      "enabled": "",
+      "energy": "",
+      "feedinPrice": "",
+      "gridPrice": "",
+      "heaterTempLimit": "",
+      "hemsActiveLimit": "",
+      "hemsType": "",
+      "identifier": "",
+      "no": "",
+      "odometer": "",
+      "org": "",
+      "phaseCurrents": "",
+      "phasePowers": "",
+      "phaseVoltages": "",
+      "phases1p3p": "",
+      "power": "",
+      "powerRange": "",
+      "range": "",
+      "singlePhase": "",
+      "soc": "",
+      "solarForecast": "",
+      "temp": "",
+      "topic": "",
+      "url": "",
+      "vehicleLimitSoc": "",
+      "yes": ""
+    },
+    "deviceValueChargeStatus": {
+      "A": "",
+      "B": "",
+      "C": ""
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
+    },
+    "devices": {
+      "auxMeter": "",
+      "batteryStorage": "",
+      "solarSystem": ""
+    },
+    "editor": {
+      "loading": ""
+    },
+    "eebus": {
+      "description": "",
+      "title": ""
+    },
+    "ext": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "form": {
+      "danger": "",
+      "deprecated": "",
       "example": "Eksempel",
       "optional": "valgfritt"
     },
+    "general": {
+      "cancel": "",
+      "customHelp": "",
+      "customOption": "",
+      "delete": "",
+      "docsLink": "",
+      "experimental": "",
+      "hideAdvancedSettings": "",
+      "invalidFileSelected": "",
+      "noFileSelected": "",
+      "off": "",
+      "on": "",
+      "password": "",
+      "readFromFile": "",
+      "remove": "",
+      "save": "",
+      "selectFile": "",
+      "showAdvancedSettings": "",
+      "telemetry": "",
+      "templateLoading": "",
+      "title": "",
+      "validateSave": ""
+    },
+    "grid": {
+      "title": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "hems": {
+      "description": "",
+      "title": ""
+    },
+    "icon": {
+      "change": ""
+    },
+    "influx": {
+      "description": "",
+      "descriptionToken": "",
+      "labelBucket": "",
+      "labelCheckInsecure": "",
+      "labelDatabase": "",
+      "labelInsecure": "",
+      "labelOrg": "",
+      "labelPassword": "",
+      "labelToken": "",
+      "labelUrl": "",
+      "labelUser": "",
+      "title": "",
+      "v1Support": "",
+      "v2Support": ""
+    },
+    "loadpoint": {
+      "addCharger": {
+        "charging": "",
+        "heating": ""
+      },
+      "addMeter": "",
+      "cancel": "",
+      "chargerError": {
+        "charging": "",
+        "heating": ""
+      },
+      "chargerLabel": {
+        "charging": "",
+        "heating": ""
+      },
+      "chargerPower11kw": "",
+      "chargerPower11kwHelp": "",
+      "chargerPower22kw": "",
+      "chargerPower22kwHelp": "",
+      "chargerPowerCustom": "",
+      "chargerPowerCustomHelp": "",
+      "chargerTypeLabel": "",
+      "chargingTitle": "",
+      "circuitHelp": "",
+      "circuitLabel": "",
+      "circuitUnassigned": "",
+      "defaultModeHelp": {
+        "charging": "",
+        "heating": ""
+      },
+      "defaultModeHelpKeep": "",
+      "defaultModeLabel": "",
+      "delete": "",
+      "electricalSubtitle": "",
+      "electricalTitle": "",
+      "energyMeterHelp": "",
+      "energyMeterLabel": "",
+      "estimateLabel": "",
+      "maxCurrentHelp": "",
+      "maxCurrentLabel": "",
+      "minCurrentHelp": "",
+      "minCurrentLabel": "",
+      "noVehicles": "",
+      "option": {
+        "charging": "",
+        "heating": ""
+      },
+      "phases1p": "",
+      "phases3p": "",
+      "phasesAutomatic": "",
+      "phasesAutomaticHelp": "",
+      "phasesHelp": "",
+      "phasesLabel": "",
+      "pollIntervalDanger": "",
+      "pollIntervalHelp": "",
+      "pollIntervalLabel": "",
+      "pollModeAlways": "",
+      "pollModeAlwaysHelp": "",
+      "pollModeCharging": "",
+      "pollModeChargingHelp": "",
+      "pollModeConnected": "",
+      "pollModeConnectedHelp": "",
+      "pollModeLabel": "",
+      "priorityHelp": "",
+      "priorityLabel": "",
+      "save": "",
+      "showAllSettings": "",
+      "solarBehaviorCustomHelp": "",
+      "solarBehaviorDefaultHelp": "",
+      "solarBehaviorLabel": "",
+      "solarModeCustom": "",
+      "solarModeMaximum": "",
+      "thresholdDisableDelayLabel": "",
+      "thresholdDisableHelpInvalid": "",
+      "thresholdDisableHelpPositive": "",
+      "thresholdDisableHelpZero": "",
+      "thresholdDisableLabel": "",
+      "thresholdEnableDelayLabel": "",
+      "thresholdEnableHelpInvalid": "",
+      "thresholdEnableHelpNegative": "",
+      "thresholdEnableHelpZero": "",
+      "thresholdEnableLabel": "",
+      "titleAdd": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleExample": {
+        "charging": "",
+        "heating": ""
+      },
+      "titleLabel": "",
+      "vehicleAutoDetection": "",
+      "vehicleHelpAutoDetection": "",
+      "vehicleHelpDefault": "",
+      "vehicleLabel": "",
+      "vehiclesTitle": ""
+    },
     "main": {
+      "addAdditional": "",
+      "addGrid": "",
+      "addLoadpoint": "",
+      "addPvBattery": "",
+      "addTariffs": "",
       "addVehicle": "Legg til kjøretøy",
+      "configured": "",
       "edit": "rediger",
+      "loadpointRequired": "",
+      "name": "",
       "title": "Oppsett",
-      "vehicles": "Mine kjøretøy"
+      "unconfigured": "",
+      "vehicles": "Mine kjøretøy",
+      "yaml": ""
+    },
+    "messaging": {
+      "description": "",
+      "title": ""
+    },
+    "meter": {
+      "cancel": "",
+      "delete": "",
+      "generic": "",
+      "option": {
+        "aux": "",
+        "battery": "",
+        "ext": "",
+        "pv": ""
+      },
+      "save": "",
+      "specific": "",
+      "template": "",
+      "titleChoice": "",
+      "validateSave": ""
+    },
+    "modbus": {
+      "baudrate": "",
+      "comset": "",
+      "connection": "",
+      "connectionHintSerial": "",
+      "connectionHintTcpip": "",
+      "connectionValueSerial": "",
+      "connectionValueTcpip": "",
+      "device": "",
+      "deviceHint": "",
+      "host": "",
+      "hostHint": "",
+      "id": "",
+      "port": "",
+      "protocol": "",
+      "protocolHintRtu": "",
+      "protocolHintTcp": "",
+      "protocolValueRtu": "",
+      "protocolValueTcp": ""
+    },
+    "modbusproxy": {
+      "description": "",
+      "title": ""
+    },
+    "mqtt": {
+      "authentication": "",
+      "description": "",
+      "descriptionClientId": "",
+      "descriptionTopic": "",
+      "labelBroker": "",
+      "labelCaCert": "",
+      "labelCheckInsecure": "",
+      "labelClientCert": "",
+      "labelClientId": "",
+      "labelClientKey": "",
+      "labelInsecure": "",
+      "labelPassword": "",
+      "labelTopic": "",
+      "labelUser": "",
+      "publishing": "",
+      "title": ""
+    },
+    "network": {
+      "descriptionHost": "",
+      "descriptionPort": "",
+      "descriptionSchema": "",
+      "labelHost": "",
+      "labelPort": "",
+      "labelSchema": "",
+      "title": ""
+    },
+    "options": {
+      "boolean": {
+        "no": "",
+        "yes": ""
+      },
+      "endianness": {
+        "big": "",
+        "little": ""
+      },
+      "operationMode": {
+        "heating": "",
+        "standby": ""
+      },
+      "schema": {
+        "http": "",
+        "https": ""
+      },
+      "status": {
+        "A": "",
+        "B": "",
+        "C": ""
+      }
+    },
+    "pv": {
+      "titleAdd": "",
+      "titleEdit": ""
+    },
+    "section": {
+      "additionalMeter": "",
+      "general": "",
+      "grid": "",
+      "integrations": "",
+      "loadpoints": "",
+      "meter": "",
+      "system": "",
+      "vehicles": ""
+    },
+    "sponsor": {
+      "addToken": "",
+      "changeToken": "",
+      "description": "",
+      "descriptionToken": "",
+      "enterYourToken": "",
+      "error": "",
+      "invalid": "",
+      "labelToken": "",
+      "title": "",
+      "tokenRequired": "",
+      "tokenRequiredLearnMore": "",
+      "tokenRequiredShort": "",
+      "trialToken": "",
+      "viaYaml": "",
+      "yourToken": ""
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "title": ""
+        },
+        "cancel": "",
+        "description": "",
+        "note": "",
+        "reset": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "sessions": "",
+          "sessionsDescription": "",
+          "settings": "",
+          "settingsDescription": "",
+          "title": ""
+        },
+        "restore": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "labelFile": "",
+          "title": ""
+        },
+        "title": ""
+      },
+      "logs": "",
+      "restart": "",
+      "restartRequiredDescription": "",
+      "restartRequiredMessage": "",
+      "restartingDescription": "",
+      "restartingMessage": ""
+    },
+    "tariffs": {
+      "description": "",
+      "title": ""
+    },
+    "title": {
+      "description": "",
+      "label": "",
+      "title": ""
     },
     "validation": {
       "failed": "mislykket",
@@ -38,9 +507,23 @@
     },
     "vehicle": {
       "cancel": "Avbryt",
+      "chargingSettings": "",
+      "defaultMode": "",
+      "defaultModeHelp": "",
       "delete": "Slett kjøretøy",
       "generic": "Andre integreringer",
+      "identifiers": "",
+      "identifiersHelp": "",
+      "maximumCurrent": "",
+      "maximumCurrentHelp": "",
+      "maximumPhases": "",
+      "maximumPhasesHelp": "",
+      "minimumCurrent": "",
+      "minimumCurrentHelp": "",
       "online": "Kjøretøy med nettbasert API",
+      "primary": "",
+      "priority": "",
+      "priorityHelp": "",
       "save": "Lagre",
       "scooter": "Scooter",
       "template": "Fabrikat",
@@ -63,24 +546,42 @@
       "tabTitle": "Interessefellesskap"
     },
     "savings": {
+      "co2Saved": "",
+      "co2Title": "",
+      "configurePriceCo2": "",
       "footerLong": "{percent} solcelleenergi",
       "footerShort": "{percent} solenergi",
       "modalTitle": "Oversikt over ladeenergi",
+      "moneySaved": "",
       "percentGrid": "{self} kWh lysnett",
       "percentSelf": "{self} kWt sol",
       "percentTitle": "Solenergi",
+      "period": {
+        "30d": "",
+        "365d": "",
+        "thisYear": "",
+        "total": ""
+      },
+      "periodLabel": "",
       "priceTitle": "Kraftpris",
+      "referenceGrid": "",
+      "referenceLabel": "",
       "tabTitle": "Mine data"
     },
     "sponsor": {
       "becomeSponsor": "Bli sponsor",
+      "becomeSponsorExtended": "",
       "confetti": "Klar for konfetti?",
       "confettiPromise": "Du får klistremerker og digital konfetti",
       "sticker": "... eller evcc-klistremerker?",
       "supportUs": "Vårt oppdrag: gjør solenergi til normen. Hjelp oss ved å støtte evcc økonomisk.",
       "thanks": "Takk, {sponsor}! Ditt bidrag bidrar til å utvikle evcc videre.",
       "titleNoSponsor": "Støtt oss",
-      "titleSponsor": "Du er en støttespiller"
+      "titleSponsor": "Du er en støttespiller",
+      "titleTrial": "",
+      "titleVictron": "",
+      "trial": "",
+      "victron": ""
     },
     "telemetry": {
       "optIn": "Jeg ønsker å bidra med mine data.",
@@ -101,12 +602,44 @@
       "modalUpdateStatusStart": "Installasjonen startet:"
     }
   },
+  "forecast": {
+    "co2": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "modalTitle": "",
+    "price": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "solar": {
+      "dayAfterTomorrow": "",
+      "partly": "",
+      "remaining": "",
+      "today": "",
+      "tomorrow": ""
+    },
+    "solarAdjust": "",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    }
+  },
   "header": {
     "about": "Om",
+    "authProviders": {
+      "confirmLogout": "",
+      "title": ""
+    },
     "blog": "Blogg",
     "docs": "Dokumentasjon",
     "github": "GitHub",
     "login": "Kjøretøysinnlogginger",
+    "logout": "",
+    "nativeSettings": "",
     "needHelp": "Trenger du hjelp?",
     "sessions": "Ladeøkter"
   },
@@ -115,6 +648,8 @@
     "documentationButton": "Dokumentasjon",
     "issueButton": "Rapporter feil",
     "issueDescription": "Funnet noe merkelig eller feil?",
+    "logsButton": "",
+    "logsDescription": "",
     "modalTitle": "Trenger du hjelp?",
     "primaryActions": "Er det noe som ikke virker som det skal? Dette er gode ressurser å starte med.",
     "restart": {
@@ -128,28 +663,86 @@
     "restartDescription": "Prøvd å slå av og på igjen?",
     "secondaryActions": "Vedvarer problemet? Her har du mer drastiske tiltak."
   },
+  "log": {
+    "areaLabel": "",
+    "areas": "",
+    "download": "",
+    "levelLabel": "",
+    "nAreas": "",
+    "noResults": "",
+    "search": "",
+    "selectAll": "",
+    "showAll": "",
+    "title": "",
+    "update": ""
+  },
+  "loginModal": {
+    "cancel": "",
+    "demoMode": "",
+    "iframeHint": "",
+    "iframeIssue": "",
+    "invalid": "",
+    "login": "",
+    "password": "",
+    "reset": "",
+    "title": ""
+  },
   "main": {
     "chargingPlan": {
+      "active": "",
+      "addRepeatingPlan": "",
       "arrivalTab": "Ankomst",
+      "day": "",
       "departureTab": "Avgang",
+      "goal": "",
       "modalTitle": "Ladeplan",
       "none": "ingen",
+      "planNumber": "",
+      "preconditionDescription": "",
+      "preconditionLong": "",
+      "preconditionOptionAll": "",
+      "preconditionOptionNo": "",
+      "preconditionShort": "",
+      "remove": "",
+      "repeating": "",
+      "repeatingPlans": "",
+      "selectAll": "",
+      "time": "",
       "title": "Plan",
       "titleMinSoc": "Min.-lading",
-      "titleTargetCharge": "Avgang"
+      "titleTargetCharge": "Avgang",
+      "unsavedChanges": "",
+      "update": "",
+      "weekdays": ""
     },
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batterilading",
       "batteryDischarge": "Batteri utlading",
+      "batteryGridChargeActive": "",
+      "batteryGridChargeLimit": "",
+      "batteryHold": "",
       "batteryTooltip": "{energy} av {total} ({soc})",
+      "forecastTooltip": "",
       "gridImport": "Lysnettimport",
       "homePower": "Forbruk",
       "loadpoints": "Lader| Lader | {count} ladere",
+      "loadpointsLimit": "",
       "noEnergy": "Ingen telleverksdata",
+      "pv": "",
       "pvExport": "Lysnetteksport",
       "pvProduction": "Produksjon",
       "selfConsumption": "Eget forbruk"
+    },
+    "heatingStatus": {
+      "charging": "",
+      "connected": "",
+      "vehicleLimit": "",
+      "waitForVehicle": ""
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀-pris",
@@ -157,14 +750,29 @@
       "co2": "⌀-CO₂",
       "duration": "Varighet",
       "fallbackName": "Ladepunkt",
+      "finished": "",
       "power": "Effekt",
       "price": "Σ-pris",
+      "remaining": "",
+      "remoteDisabledHard": "",
+      "remoteDisabledSoft": "",
       "solar": "Solenergi"
     },
     "loadpointSettings": {
+      "batteryBoost": {
+        "description": "",
+        "label": "",
+        "mode": "",
+        "once": ""
+      },
+      "batteryUsage": "",
       "currents": "Ladestrøm",
       "default": "forvalg",
       "disclaimerHint": "Merknad:",
+      "limitSoc": {
+        "description": "",
+        "label": ""
+      },
       "maxCurrent": {
         "label": "Maks. ladestrøm"
       },
@@ -175,14 +783,18 @@
         "description": "For nødstilfeller. Kjøretøyet blir „raskt” ladet til {0} fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet.",
         "label": "Min. lading%"
       },
+      "onlyForSocBasedCharging": "",
       "phasesConfigured": {
         "label": "Faser",
+        "no1p3pSupport": "",
         "phases_0": "automatisk veksling",
         "phases_1": "1-fase",
         "phases_1_hint": "({min} til {max})",
         "phases_3": "3-fase",
         "phases_3_hint": "({min} til {max})"
       },
+      "smartCostCheap": "",
+      "smartCostClean": "",
       "title": "Innstillinger for {0}",
       "vehicle": "Kjøretøy"
     },
@@ -190,32 +802,44 @@
       "minpv": "Min+Sol-e.",
       "now": "Raskt",
       "off": "Stopp",
-      "pv": "Sol"
+      "pv": "Sol",
+      "smart": ""
     },
     "provider": {
       "login": "logg inn",
       "logout": "logg ut"
     },
+    "startConfiguration": "",
     "targetCharge": {
       "activate": "Aktiver",
       "co2Limit": "CO₂-grense på {co2}",
       "costLimitIgnore": "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden.",
+      "currentPlan": "",
       "descriptionEnergy": "Når skal {targetEnergy} være på kjøretøyet?",
       "descriptionSoc": "Når skal kjøretøyet lades til {targetSoc}?",
+      "goalReached": "",
       "inactiveLabel": "Stopptidspunkt",
+      "nextPlan": "",
+      "notReachableInTime": "",
       "onlyInPvMode": "Ladeplan fungerer kun i solcellemodus.",
       "planDuration": "Ladetid",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} til {end}",
       "planUnknown": "ikke kjent enda",
+      "preview": "",
       "priceLimit": "prisgrense på {price}",
+      "remove": "",
       "setTargetTime": "ingen",
+      "targetIsAboveLimit": "",
+      "targetIsAboveVehicleLimit": "",
       "targetIsInThePast": "Velg et tidspunkt i fremtiden, Marty.",
       "targetIsTooFarInTheFuture": "Planen vil bli justert så snart mer info tilkommer.",
       "title": "Mål-tid",
       "today": "i dag",
       "tomorrow": "i morgen",
-      "update": "Oppdater"
+      "update": "Oppdater",
+      "vehicleCapacityDocs": "",
+      "vehicleCapacityRequired": ""
     },
     "targetChargePlan": {
       "chargeDuration": "Ladetid",
@@ -235,6 +859,7 @@
       "fallbackName": "Kjøretøy",
       "moreActions": "Flere handlinger",
       "none": "Ingen kjøretøy",
+      "notReachable": "",
       "targetSoc": "Grense",
       "temp": "Temp.",
       "tempLimit": "Temp.-grense",
@@ -242,12 +867,22 @@
       "vehicleSoc": "Lade"
     },
     "vehicleStatus": {
+      "awaitingAuthorization": "",
+      "batteryBoost": "",
       "charging": "Lading...",
       "cheapEnergyCharging": "Billig energi tilgjengelig. Lader …",
+      "cheapEnergyNextStart": "",
+      "cheapEnergySet": "",
       "cleanEnergyCharging": "Ren energi tilgjengelig. Lader …",
+      "cleanEnergyNextStart": "",
+      "cleanEnergySet": "",
       "climating": "Klimaanlegg på forhånd oppdaget.",
       "connected": "Tilkoblet.",
+      "disconnectRequired": "",
       "disconnected": "Frakoblet.",
+      "feedinPriorityNextStart": "",
+      "feedinPriorityPausing": "",
+      "finished": "",
       "minCharge": "Minimumslading til {soc}.",
       "pvDisable": "Ikke nok overskudd. Pause i {remaining}...",
       "pvEnable": "Overskudd tilgjengelig. Starter om {remaining}...",
@@ -256,17 +891,38 @@
       "targetChargeActive": "Målladning aktiv ...",
       "targetChargePlanned": "Mållading starter på {time}.",
       "targetChargeWaitForVehicle": "Mållading klar. Venter på kjøretøy...",
+      "vehicleLimit": "",
       "vehicleLimitReached": "Kjøretøygrense på {soc} nådd.",
-      "waitForVehicle": "Klar. Venter på kjøretøy..."
+      "waitForVehicle": "Klar. Venter på kjøretøy...",
+      "welcome": ""
     },
-    "vehicles": "Parkering"
+    "vehicles": "Parkering",
+    "welcome": ""
   },
   "notifications": {
     "dismissAll": "Forkast alle",
+    "logs": "",
     "modalTitle": "Merknader"
   },
   "offline": {
-    "message": "Ikke koblet til en server."
+    "configurationError": "",
+    "message": "Ikke koblet til en server.",
+    "restart": "",
+    "restartNeeded": "",
+    "restarting": ""
+  },
+  "passwordModal": {
+    "description": "",
+    "empty": "",
+    "error": "",
+    "labelCurrent": "",
+    "labelNew": "",
+    "labelRepeat": "",
+    "newPassword": "",
+    "noMatch": "",
+    "titleNew": "",
+    "titleUpdate": "",
+    "updatePassword": ""
   },
   "session": {
     "cancel": "Avbryt",
@@ -286,9 +942,30 @@
     "avgPower": "⌀-effekt",
     "avgPrice": "⌀-pris",
     "chargeDuration": "Varighet",
+    "chartTitle": {
+      "avgCo2ByGroup": "",
+      "avgPriceByGroup": "",
+      "byGroupLoadpoint": "",
+      "byGroupVehicle": "",
+      "energy": "",
+      "energyGrouped": "",
+      "energyGroupedByGroup": "",
+      "energySubSolar": "",
+      "energySubTotal": "",
+      "groupedCo2ByGroup": "",
+      "groupedPriceByGroup": "",
+      "historyCo2": "",
+      "historyCo2Sub": "",
+      "historyPrice": "",
+      "historyPriceSub": "",
+      "solar": "",
+      "solarByGroup": ""
+    },
     "co2": "⌀-CO₂",
     "csv": {
       "chargedenergy": "Energi (kWh)",
+      "chargeduration": "",
+      "co2perkwh": "",
       "created": "Opprettet",
       "finished": "Fullført",
       "identifier": "Identifikator",
@@ -296,6 +973,9 @@
       "meterstart": "Start-målerstand (kWh)",
       "meterstop": "Stopp-målerstand (kWh)",
       "odometer": "Kilometerstand",
+      "price": "",
+      "priceperkwh": "",
+      "solarpercentage": "",
       "vehicle": "Kjøretøy"
     },
     "csvPeriod": "Last ned (måned) CSV",
@@ -307,16 +987,44 @@
       "allVehicles": "alle kjøretøy",
       "filter": "Filter"
     },
+    "group": {
+      "co2": "",
+      "grid": "",
+      "price": "",
+      "self": ""
+    },
+    "groupBy": {
+      "loadpoint": "",
+      "none": "",
+      "vehicle": ""
+    },
     "loadpoint": "Ladepunkt",
     "noData": "Ingen ladeøkter denne måneden.",
+    "overview": "",
+    "period": {
+      "month": "",
+      "total": "",
+      "year": ""
+    },
     "price": "Σ-pris",
     "reallyDelete": "Slett denne økten?",
+    "showIndividualEntries": "",
     "solar": "Solenergi",
     "title": "Ladeøkter",
     "total": "Totalt",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    },
     "vehicle": "Kjøretøy"
   },
   "settings": {
+    "fullscreen": {
+      "enter": "",
+      "exit": "",
+      "label": ""
+    },
     "hiddenFeatures": {
       "label": "Eksperimentelt",
       "value": "Vis eksperimentelle grensesnittsfunksjoner."
@@ -339,6 +1047,11 @@
       "label": "Design",
       "light": "lys"
     },
+    "time": {
+      "12h": "",
+      "24h": "",
+      "label": ""
+    },
     "title": "Innstillinger",
     "unit": {
       "km": "km",
@@ -349,13 +1062,28 @@
   "smartCost": {
     "activeHours": "{active} av {total}",
     "activeHoursLabel": "Aktive timer",
+    "applyToAll": "",
+    "batteryDescription": "",
+    "cheapTitle": "",
+    "cleanTitle": "",
     "co2Label": "CO₂-utslipp",
     "co2Limit": "CO₂-grense",
     "loadpointDescription": "Slår på midlertidig hurtiglading i solcellemodus.",
     "modalTitle": "Smart lysnettlading",
     "none": "ingen",
     "priceLabel": "Energipris",
-    "priceLimit": "Prisgrense"
+    "priceLimit": "Prisgrense",
+    "resetAction": "",
+    "resetWarning": "",
+    "saved": ""
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "",
+    "description": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetWarning": "",
+    "title": ""
   },
   "startupError": {
     "configFile": "Brukt oppsettsfil:",
