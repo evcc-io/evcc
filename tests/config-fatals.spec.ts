@@ -16,7 +16,7 @@ test.afterEach(async () => {
 });
 
 test.describe("fatal config handling", async () => {
-  test("broken pv meter", async ({ page }) => {
+  test("broken pv meter (using Shelly simulator)", async ({ page }) => {
     await startSimulator();
     await start();
 
@@ -56,7 +56,7 @@ test.describe("fatal config handling", async () => {
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 
-  test("broken loadpoint meter", async ({ page }) => {
+  test("broken loadpoint meter (using Shelly simulator)", async ({ page }) => {
     await startSimulator();
     await start();
 
@@ -117,7 +117,7 @@ test.describe("fatal config handling", async () => {
     await expect(page.getByTestId("fatal-error")).not.toBeVisible(); // error should be gone
   });
 
-  test("broken grid meter", async ({ page }) => {
+  test("broken grid meter (using Shelly simulator)", async ({ page }) => {
     // setup test data for mock api
     await startSimulator();
     await start();
