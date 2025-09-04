@@ -7,8 +7,6 @@ products:
     description:
       generic: AC22E-01
 capabilities: ["mA", "1p3p"]
-requirements:
-  evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

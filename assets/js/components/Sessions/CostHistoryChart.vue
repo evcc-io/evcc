@@ -325,10 +325,14 @@ export default defineComponent({
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value: number) =>
-								this.costType === TYPES.PRICE
-									? this.fmtMoney(value, this.currency, false, true)
-									: this.fmtNumber(value / 1e3, 0),
+							callback: (value: number) => {
+								if (this.costType === TYPES.PRICE) {
+									const showDecimals = this.suggestedMaxCost < 4;
+									return this.fmtMoney(value, this.currency, showDecimals, true);
+								} else {
+									return this.fmtNumber(value / 1e3, 0);
+								}
+							},
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},
