@@ -549,11 +549,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
 	}
 
-	// setup modbus proxy
-	if err == nil {
-		err = wrapErrorWithClass(ClassModbusProxy, configureModbusProxy(&conf.ModbusProxy))
-	}
-
 	// setup javascript VMs
 	if err == nil {
 		err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
@@ -878,16 +873,16 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 }
 
 func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
+	tariffs := tariff.Tariffs{
+		Currency: currency.EUR,
+	}
+
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
 		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
-			return nil, err
+			return &tariffs, err
 		}
-	}
-
-	tariffs := tariff.Tariffs{
-		Currency: currency.EUR,
 	}
 
 	if conf.Currency != "" {

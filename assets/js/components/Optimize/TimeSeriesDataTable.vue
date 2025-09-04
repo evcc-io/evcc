@@ -27,7 +27,7 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
 					<tr>
@@ -37,7 +37,7 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
 					<tr>
@@ -86,7 +86,7 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
 					<tr>
@@ -96,7 +96,7 @@
 							:key="index"
 							:class="['text-end', { 'text-muted': value === 0 }]"
 						>
-							{{ formatPower(value) }}
+							{{ formatEnergyToPower(value, index) }}
 						</td>
 					</tr>
 					<tr>
@@ -135,7 +135,7 @@
 								:key="index"
 								:class="['text-end', { 'text-muted': value === 0 }]"
 							>
-								{{ formatPower(value) }}
+								{{ formatEnergyToPower(value, index) }}
 							</td>
 						</tr>
 						<tr>
@@ -145,7 +145,7 @@
 								:key="index"
 								:class="['text-end', { 'text-muted': value === 0 }]"
 							>
-								{{ formatPower(value) }}
+								{{ formatEnergyToPower(value, index) }}
 							</td>
 						</tr>
 						<tr>
@@ -244,7 +244,11 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		formatPower(watts: number): string {
+		formatEnergyToPower(wh: number, index: number): string {
+			// Convert Wh to kW by normalizing against time duration
+			const dtSeconds = this.evopt.req.time_series.dt[index];
+			const hours = dtSeconds / 3600; // Convert seconds to hours
+			const watts = wh / hours; // Convert to W (power)
 			return this.fmtW(watts, this.POWER_UNIT.KW, false, 1);
 		},
 		formatEnergy(wh: number): string {

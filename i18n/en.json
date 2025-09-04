@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
-      "title": "Load Management"
+      "title": "Load Management",
+      "usableMeters": "Usable meter references"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Active limit",
+      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "no": "no",
       "odometer": "Odometer",
@@ -123,6 +125,10 @@
       "A": "A (not connected)",
       "B": "B (connected)",
       "C": "C (charging)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart consumer",
@@ -176,7 +182,7 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
-      "description": "Connect evcc to another home energy management system.",
+      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
       "title": "HEMS"
     },
     "icon": {
@@ -429,7 +435,7 @@
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
-      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a ",
+      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a {trialToken}.",
       "enterYourToken": "Enter your token",
       "error": "The sponsor token is not valid.",
       "invalid": "invalid",
@@ -438,7 +444,7 @@
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredLearnMore": "Learn more.",
       "tokenRequiredShort": "No sponsor token configured.",
-      "trialToken": "Trial token",
+      "trialToken": "trial token",
       "viaYaml": "via evcc.yaml",
       "yourToken": "Your token"
     },
@@ -720,6 +726,7 @@
       "gridImport": "Grid use",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",
       "pvExport": "Grid export",
@@ -731,6 +738,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready. Waiting for heater…"
+    },
+    "hemsWarning": {
+      "description": "Reduced charging to not exceed {limit}.",
+      "title": "External limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",

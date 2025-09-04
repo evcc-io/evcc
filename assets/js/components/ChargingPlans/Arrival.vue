@@ -11,7 +11,7 @@
 					:id="formId('minsoc')"
 					v-model.number="selectedMinSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedCharging"
+					:disabled="arrivalDisabled"
 					@change="changeMinSoc"
 				>
 					<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
@@ -38,7 +38,7 @@
 					:id="formId('limitsoc')"
 					v-model.number="selectedLimitSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedCharging"
+					:disabled="arrivalDisabled"
 					@change="changeLimitSoc"
 				>
 					<option v-for="soc in limitSocOptions" :key="soc.value" :value="soc.value">
@@ -51,7 +51,7 @@
 			</small>
 		</div>
 	</div>
-	<div v-if="!socBasedCharging" class="mx-2 small text-muted">
+	<div v-if="arrivalDisabled" class="mx-2 small text-muted">
 		<strong class="text-evcc">
 			{{ $t("main.loadpointSettings.disclaimerHint") }}
 		</strong>
@@ -73,6 +73,7 @@ export default defineComponent({
 		minSoc: { type: Number, default: 0 },
 		limitSoc: { type: Number, default: 0 },
 		vehicleName: String,
+		vehicleNotReachable: Boolean,
 		socBasedCharging: Boolean,
 		rangePerSoc: Number,
 	},
@@ -92,6 +93,9 @@ export default defineComponent({
 			return Array.from(Array(21).keys())
 				.map((i) => i * 5)
 				.map(this.socOption);
+		},
+		arrivalDisabled(): boolean {
+			return !(this.socBasedCharging || this.vehicleNotReachable);
 		},
 	},
 	watch: {

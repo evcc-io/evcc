@@ -404,7 +404,7 @@
       "addToken": "Unesite token",
       "changeToken": "Promijenite token",
       "description": "Sponzorski model nam omogućava održavanje projekta i razvoj novih mogućnosti. Sponzori imaju pristup svim implementacijama za punjače.",
-      "descriptionToken": "Token možete dobiti na {url}. Moguće je zatražiti i probni token za testiranje.",
+      "descriptionToken": "Token možete dobiti na {url}. Moguće je zatražiti i probni token za testiranje {trialToken}.",
       "error": "Sponzorski token nije ispravan.",
       "labelToken": "Sponzorski token",
       "title": "Sponzorstvo",
