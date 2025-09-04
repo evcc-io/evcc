@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
-      "title": "Gestion de la charge"
+      "title": "Gestion de la charge",
+      "usableMeters": ""
     },
     "control": {
       "description": "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Prix de revente",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
+      "hemsActiveLimit": "",
       "hemsType": "Système",
       "identifier": "Identifiant RFID",
       "no": "non",
@@ -123,6 +125,10 @@
       "A": "A (non connecté)",
       "B": "B (connecté)",
       "C": "C (en charge)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
@@ -722,6 +728,7 @@
       "gridImport": "Utilisation du réseau",
       "homePower": "Consommation",
       "loadpoints": "Recharge| Recharge | {count} chargeurs",
+      "loadpointsLimit": "",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
       "pvExport": "Injection",
@@ -733,6 +740,10 @@
       "connected": "En attente.",
       "vehicleLimit": "Limite de chauffage",
       "waitForVehicle": "Prêt. En attente du chauffage…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "Prix ⌀",
