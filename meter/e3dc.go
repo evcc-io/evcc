@@ -1,4 +1,4 @@
-// query on PM #1 and PVI #1 only
+// queries PM #1 and PVI #1 only
 
 package meter
 
@@ -151,7 +151,7 @@ func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any
 	       	if msg.Tag == wantedTag {
 			v, err := rscpValue(msg, fun)
 			if err != nil {
-				return zero, true, nil
+				return zero, true, err
 			}
 	               	return v, true, nil
 		}
@@ -371,7 +371,7 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 		}
 
 		return currentL1, currentL2, currentL3, nil
-
+   
 	  case templates.UsagePV:
 		return 0,0,0, api.ErrNotAvailable
 	  case templates.UsageBattery:
