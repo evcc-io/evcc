@@ -415,7 +415,6 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 			} else {
 				return 0, err
 			}
-
 		}
 
 		return (energyPerPhase[0] + energyPerPhase[1] + energyPerPhase[2]) / 1000, nil // Wh -> kWh
