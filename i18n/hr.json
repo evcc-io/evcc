@@ -57,12 +57,16 @@
           "charging": "Korisnički definirani punjač",
           "heating": "Korisnički definirani grijač"
         },
-        "heatpump": "Korisnički definirana dizalica topline"
+        "heatpump": "Korisnički definirana dizalica topline",
+        "sgready": "",
+        "sgready-boost": "",
+        "switchsocket": ""
       }
     },
     "circuits": {
       "description": "Osigurava da suma svih točaka punjenja povezanih na mrežu ne prelazi postavljene granice snage i struje. Krugovi mogu biti složeni hijerarhijski.",
-      "title": "Upravljanje opterećenjem"
+      "title": "Upravljanje opterećenjem",
+      "usableMeters": ""
     },
     "control": {
       "description": "Uobičajene vrijednosti su uglavnom ispravne. Promijenite samo ako znate što radite.",
@@ -95,6 +99,7 @@
       "feedinPrice": "Cijena izvoza",
       "gridPrice": "Cijena uvoza",
       "heaterTempLimit": "Ograničenje grijača",
+      "hemsActiveLimit": "",
       "hemsType": "Sustav",
       "identifier": "RFID-identifikator",
       "no": "ne",
@@ -120,6 +125,10 @@
       "A": "A (nije povezano)",
       "B": "B (povezano)",
       "C": "C (punjenje)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Pametni potrošač",
@@ -203,10 +212,12 @@
       "addMeter": "Dodati zasebno brojilo energije",
       "cancel": "Odustati",
       "chargerError": {
-        "charging": "Nužno je postaviti punjač."
+        "charging": "Nužno je postaviti punjač.",
+        "heating": ""
       },
       "chargerLabel": {
-        "charging": "Punjač"
+        "charging": "Punjač",
+        "heating": ""
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Koristiti će raspon struje od 6 i 16A.",
@@ -220,7 +231,8 @@
       "circuitLabel": "Strujni krug",
       "circuitUnassigned": "nepostavljen",
       "defaultModeHelp": {
-        "charging": "Način punjenja kada se vozilo poveže."
+        "charging": "Način punjenja kada se vozilo poveže.",
+        "heating": ""
       },
       "defaultModeHelpKeep": "Zadržava posljednje korišteni način punjenja.",
       "defaultModeLabel": "Uobičajeni način",
@@ -235,6 +247,10 @@
       "minCurrentHelp": "Postavite ispod 6A samo ako znate što radite.",
       "minCurrentLabel": "Minimalna struja",
       "noVehicles": "Niti jedno vozilo nije postavljeno.",
+      "option": {
+        "charging": "",
+        "heating": ""
+      },
       "phases1p": "1 faza",
       "phases3p": "3 faze",
       "phasesAutomatic": "Automatske faze",
@@ -270,9 +286,20 @@
       "thresholdEnableHelpNegative": "Započeti punjenje kada postoji višak od {surplus} kroz {delay}.",
       "thresholdEnableHelpZero": "Započeti kada je minimalni višak energije dostupan više od {delay}.",
       "thresholdEnableLabel": "Omogućiti energiju iz mreže",
-      "titleAdd": "Dodati točku punjenja",
-      "titleEdit": "Urediti točku punjenja",
-      "titleExample": "Garaža, dvorište i sl.",
+      "titleAdd": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleExample": {
+        "charging": "",
+        "heating": ""
+      },
       "titleLabel": "Naslov",
       "vehicleAutoDetection": "autodetekcija",
       "vehicleHelpAutoDetection": "Automatski odabire najvjerojatnije vozilo. Moguće je i ručno izmijeniti.",
@@ -376,6 +403,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "",
+        "standby": ""
+      },
       "schema": {
         "http": "HTTP (nekriptirano)",
         "https": "HTTPS (kriptirano)"
@@ -405,14 +436,51 @@
       "changeToken": "Promijenite token",
       "description": "Sponzorski model nam omogućava održavanje projekta i razvoj novih mogućnosti. Sponzori imaju pristup svim implementacijama za punjače.",
       "descriptionToken": "Token možete dobiti na {url}. Moguće je zatražiti i probni token za testiranje {trialToken}.",
+      "enterYourToken": "",
       "error": "Sponzorski token nije ispravan.",
+      "invalid": "",
       "labelToken": "Sponzorski token",
       "title": "Sponzorstvo",
       "tokenRequired": "Prije izrade ovog uređaja morate postaviti sponzorski token.",
       "tokenRequiredLearnMore": "Pročitajte više.",
-      "trialToken": "Privremeni token"
+      "tokenRequiredShort": "",
+      "trialToken": "Privremeni token",
+      "viaYaml": "",
+      "yourToken": ""
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "title": ""
+        },
+        "cancel": "",
+        "description": "",
+        "note": "",
+        "reset": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "sessions": "",
+          "sessionsDescription": "",
+          "settings": "",
+          "settingsDescription": "",
+          "title": ""
+        },
+        "restore": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "labelFile": "",
+          "title": ""
+        },
+        "title": ""
+      },
       "logs": "Zapisi",
       "restart": "Ponovno pokretanje",
       "restartRequiredDescription": "Ponovno pokrenite za primjenu promjena.",
@@ -562,6 +630,10 @@
   },
   "header": {
     "about": "O",
+    "authProviders": {
+      "confirmLogout": "",
+      "title": ""
+    },
     "blog": "Blog",
     "docs": "Dokumentacija",
     "github": "GitHub",
@@ -656,6 +728,7 @@
       "gridImport": "Upotreba mreže",
       "homePower": "Potrošnja",
       "loadpoints": "Punjač| Punjač | {count} punjača",
+      "loadpointsLimit": "",
       "noEnergy": "Nema mjernih podataka",
       "pv": "Solarni sustav",
       "pvExport": "Izvoz u mrežu",
@@ -667,6 +740,10 @@
       "connected": "Pripreman.",
       "vehicleLimit": "Ograničenje grijača",
       "waitForVehicle": "Spremno. Čeka se na grijač…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ cijena",
@@ -804,6 +881,8 @@
       "connected": "Povezano.",
       "disconnectRequired": "Zadatak prekinut. Molim ponovno spojite.",
       "disconnected": "Nepovezano.",
+      "feedinPriorityNextStart": "",
+      "feedinPriorityPausing": "",
       "finished": "Završeno.",
       "minCharge": "Minimalno punjenje do {soc}.",
       "pvDisable": "Nema dovoljno viška. Uskoro se zaustavlja.",
@@ -998,6 +1077,14 @@
     "resetAction": "Ukloniti ograničenje",
     "resetWarning": "Ne postoji dinamična cijena energije ili izvor informacija o CO₂ nije postavljen. No, čini se kako još uvijek postoji ograničenje od {limit}. Ispraviti postavke?",
     "saved": "Spremljeno."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "",
+    "description": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetWarning": "",
+    "title": ""
   },
   "startupError": {
     "configFile": "Korištena konfiguracijska datoteka:",
