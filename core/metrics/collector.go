@@ -19,8 +19,8 @@ type Collector struct {
 }
 
 func NewCollector(name string, opt ...func(*Accumulator)) *Collector {
-	entity := entity{Name: name}
-	if err := db.Instance.FirstOrCreate(&entity).Error; err != nil {
+	entity, err := createEntity(name)
+	if err != nil {
 		// TODO return error
 		panic(err)
 	}
@@ -29,6 +29,11 @@ func NewCollector(name string, opt ...func(*Accumulator)) *Collector {
 		entity: entity,
 		accu:   NewAccumulator(opt...),
 	}
+}
+
+func createEntity(name string) (entity, error) {
+	entity := entity{Name: name}
+	return entity, db.Instance.FirstOrCreate(&entity).Error
 }
 
 func (c *Collector) process(fun func()) error {

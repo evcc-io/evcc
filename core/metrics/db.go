@@ -22,10 +22,21 @@ type entity struct {
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func Init() error {
-	return errors.Join(
-		db.Instance.AutoMigrate(new(meter)),
-		db.Instance.AutoMigrate(new(entity)),
-	)
+	hasTable := db.Instance.Migrator().HasTable("metrics")
+
+	// create entity first to make sure foreign keys for existing data work
+	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
+		return err
+	}
+
+	// create entity for id 1
+	if !hasTable {
+		if _, err := createEntity(Home); err != nil {
+			return err
+		}
+	}
+
+	return db.Instance.AutoMigrate(new(meter))
 }
 
 // persist stores 15min consumption in Wh
