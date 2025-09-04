@@ -22,7 +22,7 @@ type entity struct {
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func Init() error {
-	hasTable := db.Instance.Migrator().HasTable("metrics")
+	hasTable := db.Instance.Migrator().HasTable("entities")
 
 	// create entity first to make sure foreign keys for existing data work
 	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
