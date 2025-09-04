@@ -45,15 +45,28 @@
       "switchsockets": "可切换插座",
       "template": "制造商",
       "titleAdd": {
-        "charging": "添加充电桩"
+        "charging": "添加充电桩",
+        "heating": ""
       },
       "titleEdit": {
-        "charging": "编辑充电桩"
+        "charging": "编辑充电桩",
+        "heating": ""
+      },
+      "type": {
+        "custom": {
+          "charging": "",
+          "heating": ""
+        },
+        "heatpump": "",
+        "sgready": "",
+        "sgready-boost": "",
+        "switchsocket": ""
       }
     },
     "circuits": {
       "description": "确保连接到同一电路的所有充电点的总和不超过配置的功率和电流限制。电路可以嵌套以构建层级结构。",
-      "title": "负载管理"
+      "title": "负载管理",
+      "usableMeters": ""
     },
     "control": {
       "description": "通常默认值即可。仅在您清楚了解操作后果时才更改它们。",
@@ -86,6 +99,7 @@
       "feedinPrice": "上网电价",
       "gridPrice": "电网电价",
       "heaterTempLimit": "加热器限制",
+      "hemsActiveLimit": "",
       "hemsType": "系统",
       "identifier": "RFID 标识符",
       "no": "否",
@@ -111,6 +125,10 @@
       "A": "A (未连接)",
       "B": "B (已连接)",
       "C": "C (充电中)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "智能耗电设备",
@@ -143,12 +161,15 @@
       "docsLink": "查看文档。",
       "experimental": "实验性",
       "hideAdvancedSettings": "隐藏高级设置",
+      "invalidFileSelected": "",
+      "noFileSelected": "",
       "off": "关",
       "on": "开",
       "password": "密码",
       "readFromFile": "从文件读取",
       "remove": "移除",
       "save": "保存",
+      "selectFile": "",
       "showAdvancedSettings": "显示高级设置",
       "telemetry": "遥测",
       "templateLoading": "加载中...",
@@ -185,15 +206,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "添加充电桩"
+        "charging": "添加充电桩",
+        "heating": ""
       },
       "addMeter": "添加专用充电桩计量表",
       "cancel": "取消",
       "chargerError": {
-        "charging": "必须配置充电桩。"
+        "charging": "必须配置充电桩。",
+        "heating": ""
       },
       "chargerLabel": {
-        "charging": "充电桩"
+        "charging": "充电桩",
+        "heating": ""
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "将使用 6 至 16 A 的电流范围。",
@@ -207,7 +231,8 @@
       "circuitLabel": "电路",
       "circuitUnassigned": "未分配",
       "defaultModeHelp": {
-        "charging": "连接车辆时的充电模式。"
+        "charging": "连接车辆时的充电模式。",
+        "heating": ""
       },
       "defaultModeHelpKeep": "保留上次选择的充电模式。",
       "defaultModeLabel": "默认模式",
@@ -222,6 +247,10 @@
       "minCurrentHelp": "仅在您清楚操作后果时才设置为低于 6 A。",
       "minCurrentLabel": "最小电流",
       "noVehicles": "未配置任何车辆。",
+      "option": {
+        "charging": "",
+        "heating": ""
+      },
       "phases1p": "单相",
       "phases3p": "三相",
       "phasesAutomatic": "自动相数切换",
@@ -257,9 +286,20 @@
       "thresholdEnableHelpNegative": "当有 {surplus} 剩余电力并持续 {delay} 时，开始充电。",
       "thresholdEnableHelpZero": "当满足最小充电功率的剩余电力持续 {delay} 时开始充电。",
       "thresholdEnableLabel": "启用电网功率阈值",
-      "titleAdd": "添加充电点",
-      "titleEdit": "编辑充电点",
-      "titleExample": "车库、车棚等",
+      "titleAdd": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleExample": {
+        "charging": "",
+        "heating": ""
+      },
       "titleLabel": "标题",
       "vehicleAutoDetection": "自动检测",
       "vehicleHelpAutoDetection": "自动选择最可能的车辆。可以手动覆盖。",
@@ -363,6 +403,10 @@
         "big": "大端字节序",
         "little": "小端字节序"
       },
+      "operationMode": {
+        "heating": "",
+        "standby": ""
+      },
       "schema": {
         "http": "HTTP (未加密)",
         "https": "HTTPS (已加密)"
@@ -392,14 +436,51 @@
       "changeToken": "更改令牌",
       "description": "赞助模式帮助我们维护项目并可持续地构建新的、令人兴奋的功能。作为赞助者，您可以访问所有充电桩的实现。",
       "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。 {trialToken}.",
+      "enterYourToken": "",
       "error": "赞助令牌无效。",
+      "invalid": "",
       "labelToken": "赞助令牌",
       "title": "赞助",
       "tokenRequired": "您必须先配置赞助令牌，然后才能创建此设备。",
       "tokenRequiredLearnMore": "了解更多。",
-      "trialToken": "试用令牌"
+      "tokenRequiredShort": "",
+      "trialToken": "试用令牌",
+      "viaYaml": "",
+      "yourToken": ""
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "title": ""
+        },
+        "cancel": "",
+        "description": "",
+        "note": "",
+        "reset": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "sessions": "",
+          "sessionsDescription": "",
+          "settings": "",
+          "settingsDescription": "",
+          "title": ""
+        },
+        "restore": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "labelFile": "",
+          "title": ""
+        },
+        "title": ""
+      },
       "logs": "日志",
       "restart": "重启",
       "restartRequiredDescription": "请重启以应用更改。",
@@ -549,6 +630,10 @@
   },
   "header": {
     "about": "关于",
+    "authProviders": {
+      "confirmLogout": "",
+      "title": ""
+    },
     "blog": "博客",
     "docs": "文档",
     "github": "GitHub",
@@ -593,6 +678,7 @@
   },
   "loginModal": {
     "cancel": "取消",
+    "demoMode": "",
     "error": "登录失败： ",
     "iframeHint": "在新标签页中打开 evcc。",
     "iframeIssue": "密码正确，但您的浏览器似乎已丢弃身份验证 Cookie。如果您通过 HTTP 在 iframe 中运行 evcc，可能会发生这种情况。",
@@ -642,6 +728,7 @@
       "gridImport": "电网用电",
       "homePower": "住宅耗电",
       "loadpoints": "充电点 | {count} 个充电点 | {count} 个充电点",
+      "loadpointsLimit": "",
       "noEnergy": "无计量数据",
       "pv": "太阳能系统",
       "pvExport": "输出到电网",
@@ -653,6 +740,10 @@
       "connected": "待机。",
       "vehicleLimit": "加热器限制",
       "waitForVehicle": "准备就绪。等待加热器启动…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ 电价",
@@ -790,6 +881,8 @@
       "connected": "已连接。",
       "disconnectRequired": "会话已终止。请重新连接。",
       "disconnected": "已断开连接。",
+      "feedinPriorityNextStart": "",
+      "feedinPriorityPausing": "",
       "finished": "已完成。",
       "minCharge": "最低充电至 {soc}。",
       "pvDisable": "余电不足。准备暂停。",
@@ -984,6 +1077,14 @@
     "resetAction": "移除上限",
     "resetWarning": "未配置动态电网价格或 CO₂ 来源。但是，仍设置了 {limit} 的上限。是否清理配置？",
     "saved": "已保存。"
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "",
+    "description": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetWarning": "",
+    "title": ""
   },
   "startupError": {
     "configFile": "使用的配置文件：",
