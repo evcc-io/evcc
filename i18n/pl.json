@@ -23,6 +23,11 @@
     "usageTab": "Użycie baterii"
   },
   "config": {
+    "aux": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "battery": {
       "titleAdd": "Dodaj baterię",
       "titleEdit": "Edytuj baterię"
@@ -34,22 +39,39 @@
     "charger": {
       "chargers": "ładowarki EV",
       "generic": "Ogólne integracje",
+      "heatingdevices": "",
       "ocppHelp": "Skopiuj ten adres do konfiguracji Twojej ładowarki",
+      "ocppLabel": "",
       "switchsockets": "Przełączalne gniazdka",
       "template": "Producent",
       "titleAdd": {
-        "charging": "Dodaj ładowarkę"
+        "charging": "Dodaj ładowarkę",
+        "heating": ""
       },
       "titleEdit": {
-        "charging": "Edytuj ładowarkę"
+        "charging": "Edytuj ładowarkę",
+        "heating": ""
+      },
+      "type": {
+        "custom": {
+          "charging": "",
+          "heating": ""
+        },
+        "heatpump": "",
+        "sgready": "",
+        "sgready-boost": "",
+        "switchsocket": ""
       }
     },
     "circuits": {
       "description": "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
-      "title": "Zarządzanie obciążeniem"
+      "title": "Zarządzanie obciążeniem",
+      "usableMeters": ""
     },
     "control": {
       "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
+      "descriptionInterval": "",
+      "descriptionResidualPower": "",
       "labelInterval": "Interwał aktualizacji",
       "labelResidualPower": "Moc resztkowa",
       "title": "Kontrola zachowania"
@@ -66,24 +88,35 @@
       "chargeStatusE": "brak zasilania",
       "chargeStatusF": "błąd",
       "chargedEnergy": "Naładowany",
+      "co2": "",
       "configured": "Skonfigurowany",
+      "controllable": "",
       "currency": "Waluta",
       "current": "Prąd",
       "currentRange": "Aktualne",
       "enabled": "Włączony",
       "energy": "Energia",
       "feedinPrice": "Cena sprzedaży energii do sieci",
+      "gridPrice": "",
+      "heaterTempLimit": "",
+      "hemsActiveLimit": "",
       "hemsType": "System",
+      "identifier": "",
       "no": "nie",
       "odometer": "Drogomierz",
+      "org": "",
       "phaseCurrents": "Prąd L1, L2, L3",
       "phasePowers": "Moc L1, L2, L3",
       "phaseVoltages": "Napięcie L1, L2, L3",
+      "phases1p3p": "",
       "power": "Moc",
       "powerRange": "Zasilanie",
       "range": "Zasięg",
+      "singlePhase": "",
       "soc": "Stan naładowania",
+      "solarForecast": "",
       "temp": "Temperatura",
+      "topic": "",
       "url": "URL",
       "vehicleLimitSoc": "Limit pojazdu",
       "yes": "tak"
@@ -93,88 +126,376 @@
       "B": "B (połączony)",
       "C": "C (ładowanie)"
     },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
+    },
+    "devices": {
+      "auxMeter": "",
+      "batteryStorage": "",
+      "solarSystem": ""
+    },
+    "editor": {
+      "loading": ""
+    },
     "eebus": {
+      "description": "",
       "title": "EEBus"
     },
+    "ext": {
+      "description": "",
+      "titleAdd": "",
+      "titleEdit": ""
+    },
     "form": {
+      "danger": "",
+      "deprecated": "",
       "example": "Przykład",
       "optional": "opcjonalny"
     },
     "general": {
       "cancel": "Anulować",
+      "customHelp": "",
+      "customOption": "",
       "delete": "Usuń",
       "docsLink": "Zobacz dokumentacje",
       "experimental": "Eksperymentalny",
       "hideAdvancedSettings": "Schowaj ustawienia zaawansowane",
+      "invalidFileSelected": "",
+      "noFileSelected": "",
       "off": "wyłączony",
       "on": "włączony",
       "password": "Hasło",
       "readFromFile": "Przeczytaj z pliku",
       "remove": "Usuń",
       "save": "Zapisz",
+      "selectFile": "",
       "showAdvancedSettings": "Pokaż ustawienia zaawansowane",
       "telemetry": "Telemetria",
+      "templateLoading": "",
       "title": "Tytuł",
       "validateSave": "Zatwierdź i zapisz"
     },
     "grid": {
+      "title": "",
       "titleAdd": "Dodaj licznik sieci",
       "titleEdit": "Edytuj licznik sieci"
     },
+    "hems": {
+      "description": "",
+      "title": ""
+    },
+    "icon": {
+      "change": ""
+    },
     "influx": {
+      "description": "",
+      "descriptionToken": "",
       "labelBucket": "Bucket",
+      "labelCheckInsecure": "",
       "labelDatabase": "Baza danych",
+      "labelInsecure": "",
+      "labelOrg": "",
       "labelPassword": "Hasło",
       "labelToken": "API Token",
       "labelUrl": "URL",
-      "title": "InfluxDB"
+      "labelUser": "",
+      "title": "InfluxDB",
+      "v1Support": "",
+      "v2Support": ""
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Dodaj ładowarkę"
-      }
+        "charging": "Dodaj ładowarkę",
+        "heating": ""
+      },
+      "addMeter": "",
+      "cancel": "",
+      "chargerError": {
+        "charging": "",
+        "heating": ""
+      },
+      "chargerLabel": {
+        "charging": "",
+        "heating": ""
+      },
+      "chargerPower11kw": "",
+      "chargerPower11kwHelp": "",
+      "chargerPower22kw": "",
+      "chargerPower22kwHelp": "",
+      "chargerPowerCustom": "",
+      "chargerPowerCustomHelp": "",
+      "chargerTypeLabel": "",
+      "chargingTitle": "",
+      "circuitHelp": "",
+      "circuitLabel": "",
+      "circuitUnassigned": "",
+      "defaultModeHelp": {
+        "charging": "",
+        "heating": ""
+      },
+      "defaultModeHelpKeep": "",
+      "defaultModeLabel": "",
+      "delete": "",
+      "electricalSubtitle": "",
+      "electricalTitle": "",
+      "energyMeterHelp": "",
+      "energyMeterLabel": "",
+      "estimateLabel": "",
+      "maxCurrentHelp": "",
+      "maxCurrentLabel": "",
+      "minCurrentHelp": "",
+      "minCurrentLabel": "",
+      "noVehicles": "",
+      "option": {
+        "charging": "",
+        "heating": ""
+      },
+      "phases1p": "",
+      "phases3p": "",
+      "phasesAutomatic": "",
+      "phasesAutomaticHelp": "",
+      "phasesHelp": "",
+      "phasesLabel": "",
+      "pollIntervalDanger": "",
+      "pollIntervalHelp": "",
+      "pollIntervalLabel": "",
+      "pollModeAlways": "",
+      "pollModeAlwaysHelp": "",
+      "pollModeCharging": "",
+      "pollModeChargingHelp": "",
+      "pollModeConnected": "",
+      "pollModeConnectedHelp": "",
+      "pollModeLabel": "",
+      "priorityHelp": "",
+      "priorityLabel": "",
+      "save": "",
+      "showAllSettings": "",
+      "solarBehaviorCustomHelp": "",
+      "solarBehaviorDefaultHelp": "",
+      "solarBehaviorLabel": "",
+      "solarModeCustom": "",
+      "solarModeMaximum": "",
+      "thresholdDisableDelayLabel": "",
+      "thresholdDisableHelpInvalid": "",
+      "thresholdDisableHelpPositive": "",
+      "thresholdDisableHelpZero": "",
+      "thresholdDisableLabel": "",
+      "thresholdEnableDelayLabel": "",
+      "thresholdEnableHelpInvalid": "",
+      "thresholdEnableHelpNegative": "",
+      "thresholdEnableHelpZero": "",
+      "thresholdEnableLabel": "",
+      "titleAdd": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleExample": {
+        "charging": "",
+        "heating": ""
+      },
+      "titleLabel": "",
+      "vehicleAutoDetection": "",
+      "vehicleHelpAutoDetection": "",
+      "vehicleHelpDefault": "",
+      "vehicleLabel": "",
+      "vehiclesTitle": ""
     },
     "main": {
+      "addAdditional": "",
+      "addGrid": "",
       "addLoadpoint": "Dodaj ładowarkę",
       "addPvBattery": "Dodaj licznik energii słonecznej lub baterii",
+      "addTariffs": "",
       "addVehicle": "Dodaj pojazd",
+      "configured": "",
       "edit": "edytować",
+      "loadpointRequired": "",
+      "name": "",
       "title": "Konfiguracja",
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
       "yaml": "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
     },
     "messaging": {
-      "description": "Otrzymuj wiadomości o sesjach ładowania."
+      "description": "Otrzymuj wiadomości o sesjach ładowania.",
+      "title": ""
     },
     "meter": {
       "cancel": "Anulować",
       "delete": "Usuwać",
+      "generic": "",
+      "option": {
+        "aux": "",
+        "battery": "",
+        "ext": "",
+        "pv": ""
+      },
       "save": "Zapisz",
+      "specific": "",
       "template": "Producent",
       "titleChoice": "Co chcesz dodać?",
       "validateSave": "Sprawdź i zapisz"
     },
+    "modbus": {
+      "baudrate": "",
+      "comset": "",
+      "connection": "",
+      "connectionHintSerial": "",
+      "connectionHintTcpip": "",
+      "connectionValueSerial": "",
+      "connectionValueTcpip": "",
+      "device": "",
+      "deviceHint": "",
+      "host": "",
+      "hostHint": "",
+      "id": "",
+      "port": "",
+      "protocol": "",
+      "protocolHintRtu": "",
+      "protocolHintTcp": "",
+      "protocolValueRtu": "",
+      "protocolValueTcp": ""
+    },
     "modbusproxy": {
+      "description": "",
       "title": "Modbus Proxy"
     },
     "mqtt": {
+      "authentication": "",
+      "description": "",
+      "descriptionClientId": "",
+      "descriptionTopic": "",
+      "labelBroker": "",
+      "labelCaCert": "",
+      "labelCheckInsecure": "",
+      "labelClientCert": "",
       "labelClientId": "Client ID",
+      "labelClientKey": "",
+      "labelInsecure": "",
       "labelPassword": "Hasło",
+      "labelTopic": "",
+      "labelUser": "",
+      "publishing": "",
       "title": "MQTT"
     },
     "network": {
-      "labelPort": "Port"
+      "descriptionHost": "",
+      "descriptionPort": "",
+      "descriptionSchema": "",
+      "labelHost": "",
+      "labelPort": "Port",
+      "labelSchema": "",
+      "title": ""
     },
     "options": {
+      "boolean": {
+        "no": "",
+        "yes": ""
+      },
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "",
+        "standby": ""
+      },
+      "schema": {
+        "http": "",
+        "https": ""
+      },
+      "status": {
+        "A": "",
+        "B": "",
+        "C": ""
       }
     },
     "pv": {
       "titleAdd": "Dodaj licznik energii słonecznej",
       "titleEdit": "Edytuj licznik energii słonecznej"
+    },
+    "section": {
+      "additionalMeter": "",
+      "general": "",
+      "grid": "",
+      "integrations": "",
+      "loadpoints": "",
+      "meter": "",
+      "system": "",
+      "vehicles": ""
+    },
+    "sponsor": {
+      "addToken": "",
+      "changeToken": "",
+      "description": "",
+      "descriptionToken": "",
+      "enterYourToken": "",
+      "error": "",
+      "invalid": "",
+      "labelToken": "",
+      "title": "",
+      "tokenRequired": "",
+      "tokenRequiredLearnMore": "",
+      "tokenRequiredShort": "",
+      "trialToken": "",
+      "viaYaml": "",
+      "yourToken": ""
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "title": ""
+        },
+        "cancel": "",
+        "description": "",
+        "note": "",
+        "reset": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "sessions": "",
+          "sessionsDescription": "",
+          "settings": "",
+          "settingsDescription": "",
+          "title": ""
+        },
+        "restore": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "labelFile": "",
+          "title": ""
+        },
+        "title": ""
+      },
+      "logs": "",
+      "restart": "",
+      "restartRequiredDescription": "",
+      "restartRequiredMessage": "",
+      "restartingDescription": "",
+      "restartingMessage": ""
+    },
+    "tariffs": {
+      "description": "",
+      "title": ""
+    },
+    "title": {
+      "description": "",
+      "label": "",
+      "title": ""
     },
     "validation": {
       "failed": "nie udało się",
@@ -186,9 +507,23 @@
     },
     "vehicle": {
       "cancel": "Anulować",
+      "chargingSettings": "",
+      "defaultMode": "",
+      "defaultModeHelp": "",
       "delete": "Usuń.",
       "generic": "Inne integracje",
+      "identifiers": "",
+      "identifiersHelp": "",
+      "maximumCurrent": "",
+      "maximumCurrentHelp": "",
+      "maximumPhases": "",
+      "maximumPhasesHelp": "",
+      "minimumCurrent": "",
+      "minimumCurrentHelp": "",
       "online": "Pojazdy z API online",
+      "primary": "",
+      "priority": "",
+      "priorityHelp": "",
       "save": "Zapisz",
       "scooter": "Skuter",
       "template": "Producent",
@@ -224,6 +559,7 @@
       "period": {
         "30d": "ostatnie 30 dni",
         "365d": "ostatnie 365 dni",
+        "thisYear": "",
         "total": "cały czas"
       },
       "periodLabel": "Okres:",
@@ -234,13 +570,18 @@
     },
     "sponsor": {
       "becomeSponsor": "Zostań sponsorem",
+      "becomeSponsorExtended": "",
       "confetti": "Gotowy na konfetti?",
       "confettiPromise": "Będą naklejki i cyfrowe konfetti",
       "sticker": "… lub naklejki evcc?",
       "supportUs": "Nasza misja: Spraw, aby ładowanie słoneczne stało się standardem. Pomóż evcc, płacąc tyle, ile jest to dla Ciebie warte.",
       "thanks": "Dzięki za wsparcie, {sponsor}! Pomaga nam to w dalszym rozwoju.",
       "titleNoSponsor": "Wesprzyj nas",
-      "titleSponsor": "Jesteś sponsorem"
+      "titleSponsor": "Jesteś sponsorem",
+      "titleTrial": "",
+      "titleVictron": "",
+      "trial": "",
+      "victron": ""
     },
     "telemetry": {
       "optIn": "Chcę udostępnić swoje dane.",
@@ -261,12 +602,43 @@
       "modalUpdateStatusStart": "Instalacja rozpoczęta:"
     }
   },
+  "forecast": {
+    "co2": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "modalTitle": "",
+    "price": {
+      "average": "",
+      "lowestHour": "",
+      "range": ""
+    },
+    "solar": {
+      "dayAfterTomorrow": "",
+      "partly": "",
+      "remaining": "",
+      "today": "",
+      "tomorrow": ""
+    },
+    "solarAdjust": "",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    }
+  },
   "header": {
     "about": "O evcc",
+    "authProviders": {
+      "confirmLogout": "",
+      "title": ""
+    },
     "blog": "Blog",
     "docs": "Dokumentacja",
     "github": "GitHub",
     "login": "Dane logowania pojazdu",
+    "logout": "",
     "nativeSettings": "Zmień serwer",
     "needHelp": "Potrzebuję Pomocy?",
     "sessions": "Sesje ładowania"
@@ -276,6 +648,8 @@
     "documentationButton": "Dokumentacja",
     "issueButton": "Zgłoś błąd",
     "issueDescription": "Znalazłeś dziwne lub niewłaściwe zachowanie?",
+    "logsButton": "",
+    "logsDescription": "",
     "modalTitle": "Potrzebuję pomocy?",
     "primaryActions": "Coś nie działa tak, jak powinno? To dobre miejsca, aby uzyskać pomoc.",
     "restart": {
@@ -289,16 +663,50 @@
     "restartDescription": "Próbowałeś go wyłączyć i włączyć ponownie?",
     "secondaryActions": "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
   },
+  "log": {
+    "areaLabel": "",
+    "areas": "",
+    "download": "",
+    "levelLabel": "",
+    "nAreas": "",
+    "noResults": "",
+    "search": "",
+    "selectAll": "",
+    "showAll": "",
+    "title": "",
+    "update": ""
+  },
+  "loginModal": {
+    "cancel": "",
+    "demoMode": "",
+    "iframeHint": "",
+    "iframeIssue": "",
+    "invalid": "",
+    "login": "",
+    "password": "",
+    "reset": "",
+    "title": ""
+  },
   "main": {
     "chargingPlan": {
       "active": "Aktywny",
+      "addRepeatingPlan": "",
       "arrivalTab": "Przyjazd",
       "day": "Dzień",
       "departureTab": "Wyjazd",
       "goal": "Cel ładowania",
       "modalTitle": "Plan ładowania",
       "none": "nic",
+      "planNumber": "",
+      "preconditionDescription": "",
+      "preconditionLong": "",
+      "preconditionOptionAll": "",
+      "preconditionOptionNo": "",
+      "preconditionShort": "",
       "remove": "Wyjąć",
+      "repeating": "",
+      "repeatingPlans": "",
+      "selectAll": "",
       "time": "Czas",
       "title": "Plan",
       "titleMinSoc": "Minimalne ładowanie",
@@ -311,19 +719,30 @@
       "battery": "Bateria",
       "batteryCharge": "Ładowanie baterii",
       "batteryDischarge": "Rozładowanie baterii",
+      "batteryGridChargeActive": "",
+      "batteryGridChargeLimit": "",
       "batteryHold": "Bateria (locked)",
       "batteryTooltip": "{energy} z {total} ({soc})",
+      "forecastTooltip": "",
       "gridImport": "Z sieci",
       "homePower": "Zużycie",
       "loadpoints": "Ładowarka | Ładowarka | {count} Ładowarki",
+      "loadpointsLimit": "",
       "noEnergy": "Brak danych licznika",
+      "pv": "",
       "pvExport": "Eksport na siec",
       "pvProduction": "Produkcja",
       "selfConsumption": "Konsumpcja własna"
     },
     "heatingStatus": {
       "charging": "Ogrzewanie…",
+      "connected": "",
+      "vehicleLimit": "",
       "waitForVehicle": "Gotowe. Czekam na grzejnik…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -331,6 +750,7 @@
       "co2": "⌀ CO₂",
       "duration": "Czas trwania",
       "fallbackName": "Ładowarka",
+      "finished": "",
       "power": "Moc",
       "price": "Koszt",
       "remaining": "Pozostało",
@@ -339,6 +759,13 @@
       "solar": "Słoneczna"
     },
     "loadpointSettings": {
+      "batteryBoost": {
+        "description": "",
+        "label": "",
+        "mode": "",
+        "once": ""
+      },
+      "batteryUsage": "",
       "currents": "Prąd Ładowania",
       "default": "domyślny",
       "disclaimerHint": "Uwaga:",
@@ -375,12 +802,14 @@
       "minpv": "Min+Słońce",
       "now": "Szybko",
       "off": "Stop",
-      "pv": "Słońce"
+      "pv": "Słońce",
+      "smart": ""
     },
     "provider": {
       "login": "zaloguj się",
       "logout": "wyloguj"
     },
+    "startConfiguration": "",
     "targetCharge": {
       "activate": "Aktywować",
       "co2Limit": "Limit CO₂ z {co2}",
@@ -388,7 +817,9 @@
       "currentPlan": "Plan aktywny",
       "descriptionEnergy": "Do kiedy należy załadować {targetEnergy} do pojazdu?",
       "descriptionSoc": "Kiedy pojazd powinien zostać naladowany do {targetSoc}?",
+      "goalReached": "",
       "inactiveLabel": "Czas docelowy",
+      "nextPlan": "",
       "notReachableInTime": "Cel zostanie osiągnięty {overrun} później.",
       "onlyInPvMode": "Plan ładowania działa tylko w trybie solarnym.",
       "planDuration": "Czas ładowania",
@@ -436,12 +867,22 @@
       "vehicleSoc": "Bateria"
     },
     "vehicleStatus": {
+      "awaitingAuthorization": "",
+      "batteryBoost": "",
       "charging": "Ładuje się...",
       "cheapEnergyCharging": "Dostępna tania energia.",
+      "cheapEnergyNextStart": "",
+      "cheapEnergySet": "",
       "cleanEnergyCharging": "Czysta energia dostępna.",
+      "cleanEnergyNextStart": "",
+      "cleanEnergySet": "",
       "climating": "Wykryto wstępne przygotowanie",
       "connected": "Połączony.",
+      "disconnectRequired": "",
       "disconnected": "Rozłączony.",
+      "feedinPriorityNextStart": "",
+      "feedinPriorityPausing": "",
+      "finished": "",
       "minCharge": "Minimalne ładowanie do {soc}.",
       "pvDisable": "Za mało nadwyżki. Wkrótce przerwa.",
       "pvEnable": "Dostępne nadwyżki. Zaczynamy wkrótce.",
@@ -450,17 +891,38 @@
       "targetChargeActive": "Plan ładowania aktywny. Szacunkowy czas zakończenia za {duration}.",
       "targetChargePlanned": "Zaplanowane ładowanie zacznie się {duration}.",
       "targetChargeWaitForVehicle": "Zaplanowane ładowanie gotowy. Czekajem na pojazd...",
+      "vehicleLimit": "",
       "vehicleLimitReached": "Osiągnięto limit pojazdu.",
-      "waitForVehicle": "Gotowe. Czekam na pojazd..."
+      "waitForVehicle": "Gotowe. Czekam na pojazd...",
+      "welcome": ""
     },
-    "vehicles": "Garaż"
+    "vehicles": "Garaż",
+    "welcome": ""
   },
   "notifications": {
     "dismissAll": "Odrzuć wszystkie",
+    "logs": "",
     "modalTitle": "Powiadomienia"
   },
   "offline": {
-    "message": "Brak połączenia z serwerem."
+    "configurationError": "",
+    "message": "Brak połączenia z serwerem.",
+    "restart": "",
+    "restartNeeded": "",
+    "restarting": ""
+  },
+  "passwordModal": {
+    "description": "",
+    "empty": "",
+    "error": "",
+    "labelCurrent": "",
+    "labelNew": "",
+    "labelRepeat": "",
+    "newPassword": "",
+    "noMatch": "",
+    "titleNew": "",
+    "titleUpdate": "",
+    "updatePassword": ""
   },
   "session": {
     "cancel": "Anuluj",
@@ -481,11 +943,29 @@
     "avgPrice": "⌀ Cena",
     "chargeDuration": "Czas trwania",
     "chartTitle": {
-      "solar": "Udział energii słonecznej w ciągu roku"
+      "avgCo2ByGroup": "",
+      "avgPriceByGroup": "",
+      "byGroupLoadpoint": "",
+      "byGroupVehicle": "",
+      "energy": "",
+      "energyGrouped": "",
+      "energyGroupedByGroup": "",
+      "energySubSolar": "",
+      "energySubTotal": "",
+      "groupedCo2ByGroup": "",
+      "groupedPriceByGroup": "",
+      "historyCo2": "",
+      "historyCo2Sub": "",
+      "historyPrice": "",
+      "historyPriceSub": "",
+      "solar": "Udział energii słonecznej w ciągu roku",
+      "solarByGroup": ""
     },
     "co2": "⌀ CO₂",
     "csv": {
       "chargedenergy": "Energia (kWh)",
+      "chargeduration": "",
+      "co2perkwh": "",
       "created": "Stworzony",
       "finished": "Zakończony",
       "identifier": "Identyfikator",
@@ -493,6 +973,9 @@
       "meterstart": "Licznik początek (kWh)",
       "meterstop": "Licznik koniec (kWh)",
       "odometer": "Przebieg (km)",
+      "price": "",
+      "priceperkwh": "",
+      "solarpercentage": "",
       "vehicle": "Pojazd"
     },
     "csvPeriod": "Pobierz plik {period} CSV",
@@ -504,17 +987,44 @@
       "allVehicles": "wszystkie pojazdy",
       "filter": "Filtrować"
     },
+    "group": {
+      "co2": "",
+      "grid": "",
+      "price": "",
+      "self": ""
+    },
+    "groupBy": {
+      "loadpoint": "",
+      "none": "",
+      "vehicle": ""
+    },
     "loadpoint": "Ładowarka",
     "noData": "Brak sesji ładowania w tym miesiącu.",
     "overview": "Przegląd",
+    "period": {
+      "month": "",
+      "total": "",
+      "year": ""
+    },
     "price": "Koszt",
     "reallyDelete": "Czy na pewno chcesz usunąć tę sesję?",
+    "showIndividualEntries": "",
     "solar": "Słoneczna",
     "title": "Sesje ładowania",
     "total": "Totalny",
+    "type": {
+      "co2": "",
+      "price": "",
+      "solar": ""
+    },
     "vehicle": "Pojazd"
   },
   "settings": {
+    "fullscreen": {
+      "enter": "",
+      "exit": "",
+      "label": ""
+    },
     "hiddenFeatures": {
       "label": "Eksperymentalny",
       "value": "Pokaż eksperymentalne funkcje interfejsu"
@@ -537,6 +1047,11 @@
       "label": "Wygląd",
       "light": "jasny"
     },
+    "time": {
+      "12h": "",
+      "24h": "",
+      "label": ""
+    },
     "title": "Interfejs użytkownika",
     "unit": {
       "km": "km",
@@ -558,7 +1073,17 @@
     "none": "nie ma",
     "priceLabel": "Cena energii",
     "priceLimit": "Limit ceny",
+    "resetAction": "",
+    "resetWarning": "",
     "saved": "Zapisano."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "",
+    "description": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetWarning": "",
+    "title": ""
   },
   "startupError": {
     "configFile": "Używany plik konfiguracyjny:",
