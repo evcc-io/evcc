@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Διασφαλίζει ότι το άθροισμα όλων των σημείων φόρτισης που είναι συνδεδεμένα σε ένα κύκλωμα δεν υπερβαίνει τα οριζόμενα όρια ισχύος και έντασης ρεύματος. Τα κυκλώματα μπορούν να είναι σε ένθετες δομές για τη δημιουργία μιας ιεραρχίας.",
-      "title": "Διαχείριση Φορτίου"
+      "title": "Διαχείριση Φορτίου",
+      "usableMeters": ""
     },
     "control": {
       "description": "Συνήθως οι προεπιλεγμένες τιμές αρκούν. Αλλάξτε τις μόνο εάν γνωρίζετε τι κάνετε.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Ταρίφα Feed-in",
       "gridPrice": "Τιμή δικτύου",
       "heaterTempLimit": "Όριο θερμαντήρα",
+      "hemsActiveLimit": "",
       "hemsType": "Σύστημα",
       "identifier": "Αναγνωριστικό RFID",
       "no": "όχι",
@@ -123,6 +125,10 @@
       "A": "A (δεν είναι συνδεδεμένο)",
       "B": "B (συνδεδεμένο)",
       "C": "C (φορτίζει)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Έξυπνος καταναλωτής",
@@ -430,12 +436,17 @@
       "changeToken": "Αλλαγή του token",
       "description": "Το μοντέλο χορηγίας μας βοηθά να διατηρήσουμε το έργο και να δημιουργήσουμε με βιώσιμο τρόπο νέες και συναρπαστικές λειτουργίες. Ως χορηγός έχετε πρόσβαση σε όλες τις εφαρμογές φορτιστή.",
       "descriptionToken": "Θα λάβετε το token από το {url}. Προσφέρουμε επίσης ένα προσωρινό token για δοκιμή {trialToken}.",
+      "enterYourToken": "",
       "error": "Το sponsor token δεν είναι έγκυρο .",
+      "invalid": "",
       "labelToken": "Sponsor token",
       "title": "Χορηγία",
       "tokenRequired": "Πρέπει να εισάγετε ένα sponsor token για να μπορέσετε να δημιουργήσετε αυτή τη συσκευή.",
       "tokenRequiredLearnMore": "Μάθετε περισσότερα.",
-      "trialToken": "Δοκιμαστικό token"
+      "tokenRequiredShort": "",
+      "trialToken": "Δοκιμαστικό token",
+      "viaYaml": "",
+      "yourToken": ""
     },
     "system": {
       "backupRestore": {
@@ -619,6 +630,10 @@
   },
   "header": {
     "about": "Σχετικά",
+    "authProviders": {
+      "confirmLogout": "",
+      "title": ""
+    },
     "blog": "Blog",
     "docs": "Τεκμηρίωση",
     "github": "GitHub",
@@ -713,6 +728,7 @@
       "gridImport": "Χρήση δικτύου",
       "homePower": "Κατανάλωση",
       "loadpoints": "Φορτιστής| Φορτιστής | {count} φορτιστές",
+      "loadpointsLimit": "",
       "noEnergy": "Χωρίς δεδομένα μετρητή",
       "pv": "Ηλιακό σύστημα",
       "pvExport": "Εξαγωγή προς δικτύο",
@@ -724,6 +740,10 @@
       "connected": "Αναμονή.",
       "vehicleLimit": "Όριο θερμαντήρα",
       "waitForVehicle": "Έτοιμο. Αναμονή για θερμαντήρα…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Τιμή",
