@@ -11,7 +11,6 @@
     "discharge": "“Preveniți descărcarea în modul rapid și încărcarea planificată.”",
     "disclaimerHint": "Nota:",
     "disclaimerText": "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator",
-    "gridChargeTab": "",
     "legendBottomName": "prioritate casa",
     "legendBottomSubline": "neutilizat pentru incarcare",
     "legendMiddleName": "in primul rand vehiculul",
@@ -19,483 +18,57 @@
     "legendTopAutostart": "porneste automat",
     "legendTopName": "Incarcare ajutata de baterie",
     "legendTopSubline": "fara intreruperi",
-    "modalTitle": "Setari bateriei",
-    "usageTab": ""
+    "modalTitle": "Setari bateriei"
   },
   "config": {
-    "aux": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "battery": {
       "titleAdd": "adăugați contorul de baterie",
       "titleEdit": "Editați contorul de baterie."
     },
-    "charge": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
-    "charger": {
-      "chargers": "",
-      "generic": "",
-      "heatingdevices": "",
-      "ocppHelp": "",
-      "ocppLabel": "",
-      "switchsockets": "",
-      "template": "",
-      "titleAdd": {
-        "charging": "",
-        "heating": ""
-      },
-      "titleEdit": {
-        "charging": "",
-        "heating": ""
-      },
-      "type": {
-        "custom": {
-          "charging": "",
-          "heating": ""
-        },
-        "heatpump": "",
-        "sgready": "",
-        "sgready-boost": "",
-        "switchsocket": ""
-      }
-    },
-    "circuits": {
-      "description": "",
-      "title": "",
-      "usableMeters": ""
-    },
-    "control": {
-      "description": "",
-      "descriptionInterval": "",
-      "descriptionResidualPower": "",
-      "labelInterval": "",
-      "labelResidualPower": "",
-      "title": ""
-    },
     "deviceValue": {
-      "amount": "",
-      "broker": "",
-      "bucket": "",
       "capacity": "Capacitatea",
       "chargeStatus": "Stare",
-      "chargeStatusA": "",
-      "chargeStatusB": "",
-      "chargeStatusC": "",
-      "chargeStatusE": "",
-      "chargeStatusF": "",
       "chargedEnergy": "Încărcat",
-      "co2": "",
-      "configured": "",
-      "controllable": "",
-      "currency": "",
       "current": "Curent",
-      "currentRange": "",
       "enabled": "Activat",
       "energy": "Energie",
-      "feedinPrice": "",
-      "gridPrice": "",
-      "heaterTempLimit": "",
-      "hemsActiveLimit": "",
-      "hemsType": "",
-      "identifier": "",
-      "no": "",
       "odometer": "Kilometraj",
-      "org": "",
       "phaseCurrents": "Curent L1, L2, L3",
       "phasePowers": "Putere L1, L2, L3",
       "phaseVoltages": "Voltaj L1, L2, L3",
-      "phases1p3p": "",
       "power": "Putere",
-      "powerRange": "",
       "range": "Autonomie",
-      "singlePhase": "",
-      "soc": "Stare de încărcare",
-      "solarForecast": "",
-      "temp": "",
-      "topic": "",
-      "url": "",
-      "vehicleLimitSoc": "",
-      "yes": ""
-    },
-    "deviceValueChargeStatus": {
-      "A": "",
-      "B": "",
-      "C": ""
-    },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
-    },
-    "devices": {
-      "auxMeter": "",
-      "batteryStorage": "",
-      "solarSystem": ""
-    },
-    "editor": {
-      "loading": ""
-    },
-    "eebus": {
-      "description": "",
-      "title": ""
-    },
-    "ext": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
+      "soc": "Stare de încărcare"
     },
     "form": {
-      "danger": "",
-      "deprecated": "",
       "example": "Exemplu",
       "optional": "optional"
     },
-    "general": {
-      "cancel": "",
-      "customHelp": "",
-      "customOption": "",
-      "delete": "",
-      "docsLink": "",
-      "experimental": "",
-      "hideAdvancedSettings": "",
-      "invalidFileSelected": "",
-      "noFileSelected": "",
-      "off": "",
-      "on": "",
-      "password": "",
-      "readFromFile": "",
-      "remove": "",
-      "save": "",
-      "selectFile": "",
-      "showAdvancedSettings": "",
-      "telemetry": "",
-      "templateLoading": "",
-      "title": "",
-      "validateSave": ""
-    },
     "grid": {
-      "title": "",
       "titleAdd": "Adăugați Contorul de Grilă",
       "titleEdit": "Editați Contorul de bransament"
     },
-    "hems": {
-      "description": "",
-      "title": ""
-    },
-    "icon": {
-      "change": ""
-    },
-    "influx": {
-      "description": "",
-      "descriptionToken": "",
-      "labelBucket": "",
-      "labelCheckInsecure": "",
-      "labelDatabase": "",
-      "labelInsecure": "",
-      "labelOrg": "",
-      "labelPassword": "",
-      "labelToken": "",
-      "labelUrl": "",
-      "labelUser": "",
-      "title": "",
-      "v1Support": "",
-      "v2Support": ""
-    },
-    "loadpoint": {
-      "addCharger": {
-        "charging": "",
-        "heating": ""
-      },
-      "addMeter": "",
-      "cancel": "",
-      "chargerError": {
-        "charging": "",
-        "heating": ""
-      },
-      "chargerLabel": {
-        "charging": "",
-        "heating": ""
-      },
-      "chargerPower11kw": "",
-      "chargerPower11kwHelp": "",
-      "chargerPower22kw": "",
-      "chargerPower22kwHelp": "",
-      "chargerPowerCustom": "",
-      "chargerPowerCustomHelp": "",
-      "chargerTypeLabel": "",
-      "chargingTitle": "",
-      "circuitHelp": "",
-      "circuitLabel": "",
-      "circuitUnassigned": "",
-      "defaultModeHelp": {
-        "charging": "",
-        "heating": ""
-      },
-      "defaultModeHelpKeep": "",
-      "defaultModeLabel": "",
-      "delete": "",
-      "electricalSubtitle": "",
-      "electricalTitle": "",
-      "energyMeterHelp": "",
-      "energyMeterLabel": "",
-      "estimateLabel": "",
-      "maxCurrentHelp": "",
-      "maxCurrentLabel": "",
-      "minCurrentHelp": "",
-      "minCurrentLabel": "",
-      "noVehicles": "",
-      "option": {
-        "charging": "",
-        "heating": ""
-      },
-      "phases1p": "",
-      "phases3p": "",
-      "phasesAutomatic": "",
-      "phasesAutomaticHelp": "",
-      "phasesHelp": "",
-      "phasesLabel": "",
-      "pollIntervalDanger": "",
-      "pollIntervalHelp": "",
-      "pollIntervalLabel": "",
-      "pollModeAlways": "",
-      "pollModeAlwaysHelp": "",
-      "pollModeCharging": "",
-      "pollModeChargingHelp": "",
-      "pollModeConnected": "",
-      "pollModeConnectedHelp": "",
-      "pollModeLabel": "",
-      "priorityHelp": "",
-      "priorityLabel": "",
-      "save": "",
-      "showAllSettings": "",
-      "solarBehaviorCustomHelp": "",
-      "solarBehaviorDefaultHelp": "",
-      "solarBehaviorLabel": "",
-      "solarModeCustom": "",
-      "solarModeMaximum": "",
-      "thresholdDisableDelayLabel": "",
-      "thresholdDisableHelpInvalid": "",
-      "thresholdDisableHelpPositive": "",
-      "thresholdDisableHelpZero": "",
-      "thresholdDisableLabel": "",
-      "thresholdEnableDelayLabel": "",
-      "thresholdEnableHelpInvalid": "",
-      "thresholdEnableHelpNegative": "",
-      "thresholdEnableHelpZero": "",
-      "thresholdEnableLabel": "",
-      "titleAdd": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleEdit": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleExample": {
-        "charging": "",
-        "heating": ""
-      },
-      "titleLabel": "",
-      "vehicleAutoDetection": "",
-      "vehicleHelpAutoDetection": "",
-      "vehicleHelpDefault": "",
-      "vehicleLabel": "",
-      "vehiclesTitle": ""
-    },
     "main": {
-      "addAdditional": "",
-      "addGrid": "",
       "addLoadpoint": "Adăugați punct de încărcare",
       "addPvBattery": "Adăugați solar sau baterie",
-      "addTariffs": "",
       "addVehicle": "Adauga masina",
-      "configured": "",
       "edit": "Editeaza",
-      "loadpointRequired": "",
-      "name": "",
       "title": "Configuratie",
       "unconfigured": "neconfigurat",
       "vehicles": "Masinile mele",
       "yaml": "Configurat în evcc.yaml. Nu poate fi editat în interfața"
     },
-    "messaging": {
-      "description": "",
-      "title": ""
-    },
     "meter": {
       "cancel": "Anulare",
       "delete": "șterge",
-      "generic": "",
-      "option": {
-        "aux": "",
-        "battery": "",
-        "ext": "",
-        "pv": ""
-      },
       "save": "Salveaza",
-      "specific": "",
       "template": "Producător",
       "titleChoice": "Ce vrei să adaugi?",
       "validateSave": "Valideaza si salveaza"
     },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
-    },
-    "modbusproxy": {
-      "description": "",
-      "title": ""
-    },
-    "mqtt": {
-      "authentication": "",
-      "description": "",
-      "descriptionClientId": "",
-      "descriptionTopic": "",
-      "labelBroker": "",
-      "labelCaCert": "",
-      "labelCheckInsecure": "",
-      "labelClientCert": "",
-      "labelClientId": "",
-      "labelClientKey": "",
-      "labelInsecure": "",
-      "labelPassword": "",
-      "labelTopic": "",
-      "labelUser": "",
-      "publishing": "",
-      "title": ""
-    },
-    "network": {
-      "descriptionHost": "",
-      "descriptionPort": "",
-      "descriptionSchema": "",
-      "labelHost": "",
-      "labelPort": "",
-      "labelSchema": "",
-      "title": ""
-    },
-    "options": {
-      "boolean": {
-        "no": "",
-        "yes": ""
-      },
-      "endianness": {
-        "big": "",
-        "little": ""
-      },
-      "operationMode": {
-        "heating": "",
-        "standby": ""
-      },
-      "schema": {
-        "http": "",
-        "https": ""
-      },
-      "status": {
-        "A": "",
-        "B": "",
-        "C": ""
-      }
-    },
     "pv": {
       "titleAdd": "Adauga SmartMeter",
       "titleEdit": "Editeaza SmartMeter"
-    },
-    "section": {
-      "additionalMeter": "",
-      "general": "",
-      "grid": "",
-      "integrations": "",
-      "loadpoints": "",
-      "meter": "",
-      "system": "",
-      "vehicles": ""
-    },
-    "sponsor": {
-      "addToken": "",
-      "changeToken": "",
-      "description": "",
-      "descriptionToken": "",
-      "enterYourToken": "",
-      "error": "",
-      "invalid": "",
-      "labelToken": "",
-      "title": "",
-      "tokenRequired": "",
-      "tokenRequiredLearnMore": "",
-      "tokenRequiredShort": "",
-      "trialToken": "",
-      "viaYaml": "",
-      "yourToken": ""
-    },
-    "system": {
-      "backupRestore": {
-        "backup": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "title": ""
-        },
-        "cancel": "",
-        "description": "",
-        "note": "",
-        "reset": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "sessions": "",
-          "sessionsDescription": "",
-          "settings": "",
-          "settingsDescription": "",
-          "title": ""
-        },
-        "restore": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "labelFile": "",
-          "title": ""
-        },
-        "title": ""
-      },
-      "logs": "",
-      "restart": "",
-      "restartRequiredDescription": "",
-      "restartRequiredMessage": "",
-      "restartingDescription": "",
-      "restartingMessage": ""
-    },
-    "tariffs": {
-      "description": "",
-      "title": ""
-    },
-    "title": {
-      "description": "",
-      "label": "",
-      "title": ""
     },
     "validation": {
       "failed": "esuat",
@@ -507,23 +80,9 @@
     },
     "vehicle": {
       "cancel": "Anulare",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
       "delete": "Sterge",
       "generic": "Alte integrari",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
       "online": "Masini cu API oline",
-      "primary": "",
-      "priority": "",
-      "priorityHelp": "",
       "save": "Salveaza",
       "scooter": "Scuter",
       "template": "Producator",
@@ -559,7 +118,6 @@
       "period": {
         "30d": "ultimele 30 de zile",
         "365d": "ultimul an",
-        "thisYear": "",
         "total": "de la inceput"
       },
       "periodLabel": "Perioada:",
@@ -570,18 +128,13 @@
     },
     "sponsor": {
       "becomeSponsor": "Sponsorizează-ne",
-      "becomeSponsorExtended": "",
       "confetti": "Ești pregătit să sărbătorești?",
       "confettiPromise": "Primești abțibilduri si confetti digital",
       "sticker": "… sau abțibilduri evcc?",
       "supportUs": "Țelul nostru este ca energia solara să devina standard. Ajută și tu la dezvoltarea EVCC plătind atât cât valorează pt tine.",
       "thanks": "Multumim, {sponsor}! Contribuția ta ajuta la dezvoltarea evcc.",
       "titleNoSponsor": "Sponsorizeaza-ne",
-      "titleSponsor": "Ești sponsor",
-      "titleTrial": "",
-      "titleVictron": "",
-      "trial": "",
-      "victron": ""
+      "titleSponsor": "Ești sponsor"
     },
     "telemetry": {
       "optIn": "Vreau să trimit datele mele.",
@@ -602,44 +155,12 @@
       "modalUpdateStatusStart": "Instalare pornita:"
     }
   },
-  "forecast": {
-    "co2": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "modalTitle": "",
-    "price": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "solar": {
-      "dayAfterTomorrow": "",
-      "partly": "",
-      "remaining": "",
-      "today": "",
-      "tomorrow": ""
-    },
-    "solarAdjust": "",
-    "type": {
-      "co2": "",
-      "price": "",
-      "solar": ""
-    }
-  },
   "header": {
     "about": "Despre",
-    "authProviders": {
-      "confirmLogout": "",
-      "title": ""
-    },
     "blog": "Blog",
     "docs": "Documentație",
     "github": "GitHub",
     "login": "Login Masina",
-    "logout": "",
-    "nativeSettings": "",
     "needHelp": "Ai nevoie de Ajutor ?",
     "sessions": "Sesiuni de Incărcare"
   },
@@ -648,8 +169,6 @@
     "documentationButton": "Documentatie",
     "issueButton": "Raporteaza un Bug",
     "issueDescription": "Functionare bizara sau gresita ?",
-    "logsButton": "",
-    "logsDescription": "",
     "modalTitle": "Ai nevoie de ajutor ?",
     "primaryActions": "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor.",
     "restart": {
@@ -663,86 +182,39 @@
     "restartDescription": "Ai incercat sa inchizi si sa deschizi din nou?",
     "secondaryActions": "Inca nu ati rezolvat problema? Iata niste alte optiuni"
   },
-  "log": {
-    "areaLabel": "",
-    "areas": "",
-    "download": "",
-    "levelLabel": "",
-    "nAreas": "",
-    "noResults": "",
-    "search": "",
-    "selectAll": "",
-    "showAll": "",
-    "title": "",
-    "update": ""
-  },
-  "loginModal": {
-    "cancel": "",
-    "demoMode": "",
-    "iframeHint": "",
-    "iframeIssue": "",
-    "invalid": "",
-    "login": "",
-    "password": "",
-    "reset": "",
-    "title": ""
-  },
   "main": {
     "chargingPlan": {
       "active": "Activ",
-      "addRepeatingPlan": "",
       "arrivalTab": "Ajungere",
       "day": "Zi",
       "departureTab": "Plecare",
       "goal": "Scopul incarcarii",
       "modalTitle": "Plan de incarcare",
       "none": "nimic",
-      "planNumber": "",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Elimina",
-      "repeating": "",
-      "repeatingPlans": "",
-      "selectAll": "",
       "time": "Timp",
       "title": "Plan",
       "titleMinSoc": "Incarcare minima",
       "titleTargetCharge": "Plecare",
-      "unsavedChanges": "",
-      "update": "Aplica",
-      "weekdays": ""
+      "update": "Aplica"
     },
     "energyflow": {
       "battery": "Baterie",
       "batteryCharge": "Incarca bateria",
       "batteryDischarge": "Descărcare baterie",
-      "batteryGridChargeActive": "",
-      "batteryGridChargeLimit": "",
       "batteryHold": "Baterie (inchisa)",
       "batteryTooltip": "{energy} din {total} ({soc})",
-      "forecastTooltip": "",
       "gridImport": "Folosirea rețelei",
       "homePower": "Consum",
       "loadpoints": "Încarcator| Încarcator | {count} încarcatoare",
-      "loadpointsLimit": "",
       "noEnergy": "Lipsă date contor",
-      "pv": "",
       "pvExport": "Export in rețea",
       "pvProduction": "Producție",
       "selfConsumption": "Consum propriu"
     },
     "heatingStatus": {
       "charging": "Incalzeste...",
-      "connected": "",
-      "vehicleLimit": "",
       "waitForVehicle": "Pregatit. Astept dupa incalzitor…"
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Pret",
@@ -750,7 +222,6 @@
       "co2": "⌀ CO₂",
       "duration": "Durata",
       "fallbackName": "Punct de încărcare",
-      "finished": "",
       "power": "Putere",
       "price": "Σ Pret",
       "remaining": "Ramas",
@@ -759,13 +230,6 @@
       "solar": "Solar"
     },
     "loadpointSettings": {
-      "batteryBoost": {
-        "description": "",
-        "label": "",
-        "mode": "",
-        "once": ""
-      },
-      "batteryUsage": "",
       "currents": "Curent încărcare",
       "default": "default",
       "disclaimerHint": "Nota:",
@@ -793,8 +257,6 @@
         "phases_3": "3 faze",
         "phases_3_hint": "({min} la {max})"
       },
-      "smartCostCheap": "",
-      "smartCostClean": "",
       "title": "Setări {0}",
       "vehicle": "Vehicul"
     },
@@ -802,14 +264,12 @@
       "minpv": "Min+Solar",
       "now": "Rapid",
       "off": "Oprit",
-      "pv": "Solar",
-      "smart": ""
+      "pv": "Solar"
     },
     "provider": {
       "login": "autentificare",
       "logout": "deconectează"
     },
-    "startConfiguration": "",
     "targetCharge": {
       "activate": "Activează",
       "co2Limit": "limita CO₂ de {co2}",
@@ -817,9 +277,7 @@
       "currentPlan": "Plan activ",
       "descriptionEnergy": "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?",
       "descriptionSoc": "Când ar trebui vehiculul să fie încărcat la {targetSoc}?",
-      "goalReached": "",
       "inactiveLabel": "Timp dorit",
-      "nextPlan": "",
       "notReachableInTime": "Telul nu a fost atins la timp. Estimare: {endTime}.",
       "onlyInPvMode": "Planul de incarcare merge doar in mod Solar.",
       "planDuration": "Timp de încărcare",
@@ -859,7 +317,6 @@
       "fallbackName": "vehicul",
       "moreActions": "Mai multe acțiuni",
       "none": "Lipsă Vehicul",
-      "notReachable": "",
       "targetSoc": "Limită",
       "temp": "Temp.",
       "tempLimit": "Temp. limit",
@@ -867,22 +324,12 @@
       "vehicleSoc": "Încărcare"
     },
     "vehicleStatus": {
-      "awaitingAuthorization": "",
-      "batteryBoost": "",
       "charging": "Încarcă…",
       "cheapEnergyCharging": "Energie ieftina disponibila. {price} (limit {limit})",
-      "cheapEnergyNextStart": "",
-      "cheapEnergySet": "",
       "cleanEnergyCharging": "Energie curata disponibila. {co2} (limit {limit})",
-      "cleanEnergyNextStart": "",
-      "cleanEnergySet": "",
       "climating": "Preconditionare detectata.",
       "connected": "Conectat.",
-      "disconnectRequired": "",
       "disconnected": "Deconectat.",
-      "feedinPriorityNextStart": "",
-      "feedinPriorityPausing": "",
-      "finished": "",
       "minCharge": "Incarcare minima {soc}.",
       "pvDisable": "Surplus insuficient FV. Pauza in {remaining}…",
       "pvEnable": "Surplus FV disponibil. Pornesc în {remaining}…",
@@ -891,38 +338,17 @@
       "targetChargeActive": "Încarcare țintă activă…",
       "targetChargePlanned": "Încărcarea pornește la {time}.",
       "targetChargeWaitForVehicle": "Încărcare terminată. Aștept după vehicul…",
-      "vehicleLimit": "",
       "vehicleLimitReached": "Limita {soc} a fost atinsă.",
-      "waitForVehicle": "Pregătit. Aștept după vehicul…",
-      "welcome": ""
+      "waitForVehicle": "Pregătit. Aștept după vehicul…"
     },
-    "vehicles": "Parcare",
-    "welcome": ""
+    "vehicles": "Parcare"
   },
   "notifications": {
     "dismissAll": "Închide tot",
-    "logs": "",
     "modalTitle": "Notificări"
   },
   "offline": {
-    "configurationError": "",
-    "message": "Nu se poate conecta la server.",
-    "restart": "",
-    "restartNeeded": "",
-    "restarting": ""
-  },
-  "passwordModal": {
-    "description": "",
-    "empty": "",
-    "error": "",
-    "labelCurrent": "",
-    "labelNew": "",
-    "labelRepeat": "",
-    "newPassword": "",
-    "noMatch": "",
-    "titleNew": "",
-    "titleUpdate": "",
-    "updatePassword": ""
+    "message": "Nu se poate conecta la server."
   },
   "session": {
     "cancel": "Anulează",
@@ -942,30 +368,9 @@
     "avgPower": "⌀ Putere",
     "avgPrice": "⌀ Pret",
     "chargeDuration": "Durata",
-    "chartTitle": {
-      "avgCo2ByGroup": "",
-      "avgPriceByGroup": "",
-      "byGroupLoadpoint": "",
-      "byGroupVehicle": "",
-      "energy": "",
-      "energyGrouped": "",
-      "energyGroupedByGroup": "",
-      "energySubSolar": "",
-      "energySubTotal": "",
-      "groupedCo2ByGroup": "",
-      "groupedPriceByGroup": "",
-      "historyCo2": "",
-      "historyCo2Sub": "",
-      "historyPrice": "",
-      "historyPriceSub": "",
-      "solar": "",
-      "solarByGroup": ""
-    },
     "co2": "⌀ CO₂",
     "csv": {
       "chargedenergy": "Energie (kWh)",
-      "chargeduration": "",
-      "co2perkwh": "",
       "created": "Creat",
       "finished": "Terminat",
       "identifier": "Identificator",
@@ -973,9 +378,6 @@
       "meterstart": "Start contor (kWh)",
       "meterstop": "Stop contor (kWh)",
       "odometer": "Kilometraj (km)",
-      "price": "",
-      "priceperkwh": "",
-      "solarpercentage": "",
       "vehicle": "Vehicul"
     },
     "csvPeriod": "Descarca {period} CSV",
@@ -987,44 +389,16 @@
       "allVehicles": "toate masinile",
       "filter": "Filtru"
     },
-    "group": {
-      "co2": "",
-      "grid": "",
-      "price": "",
-      "self": ""
-    },
-    "groupBy": {
-      "loadpoint": "",
-      "none": "",
-      "vehicle": ""
-    },
     "loadpoint": "Punct încărcare",
     "noData": "Nu exista sesiuni de incarcare luna aceasta.",
-    "overview": "",
-    "period": {
-      "month": "",
-      "total": "",
-      "year": ""
-    },
     "price": "Σ Pret",
     "reallyDelete": "Esti sigur că dorești să ștergi această sesiune?",
-    "showIndividualEntries": "",
     "solar": "Solar",
     "title": "Sesiuni încărcare",
     "total": "Total",
-    "type": {
-      "co2": "",
-      "price": "",
-      "solar": ""
-    },
     "vehicle": "Vehicul"
   },
   "settings": {
-    "fullscreen": {
-      "enter": "",
-      "exit": "",
-      "label": ""
-    },
     "hiddenFeatures": {
       "label": "Experimentală",
       "value": "Arată caracteristice experimentale."
@@ -1047,11 +421,6 @@
       "label": "Design",
       "light": "deschis"
     },
-    "time": {
-      "12h": "",
-      "24h": "",
-      "label": ""
-    },
     "title": "Configuratie",
     "unit": {
       "km": "km",
@@ -1062,28 +431,13 @@
   "smartCost": {
     "activeHours": "{active} din {total}",
     "activeHoursLabel": "Ore de functionare",
-    "applyToAll": "",
-    "batteryDescription": "",
-    "cheapTitle": "",
-    "cleanTitle": "",
     "co2Label": "emisii CO₂",
     "co2Limit": "limita CO₂",
     "loadpointDescription": "Activeaza temporar Incarcarea Rapida in mod Solar.",
     "modalTitle": "Incarcare Smart Grid",
     "none": "nimic",
     "priceLabel": "Pretul energiei",
-    "priceLimit": "Limita de pret",
-    "resetAction": "",
-    "resetWarning": "",
-    "saved": ""
-  },
-  "smartFeedInPriority": {
-    "activeHoursLabel": "",
-    "description": "",
-    "priceLabel": "",
-    "priceLimit": "",
-    "resetWarning": "",
-    "title": ""
+    "priceLimit": "Limita de pret"
   },
   "startupError": {
     "configFile": "Fișier configurare folosit:",

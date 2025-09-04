@@ -65,8 +65,7 @@
     },
     "circuits": {
       "description": "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
-      "title": "Kuormanhallinta",
-      "usableMeters": ""
+      "title": "Kuormanhallinta"
     },
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
@@ -99,7 +98,6 @@
       "feedinPrice": "Sähköverkkoon myynninhinta",
       "gridPrice": "Verkosta ostonhinta",
       "heaterTempLimit": "Lämmityksen raja",
-      "hemsActiveLimit": "",
       "hemsType": "Järjestelmä",
       "identifier": "RFID-tunniste",
       "no": "ei",
@@ -125,10 +123,6 @@
       "A": "A (ei yhdistetty)",
       "B": "B (yhdistetty)",
       "C": "C (lataa)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
     },
     "devices": {
       "auxMeter": "Älykkään virranhallinnan laite",
@@ -728,7 +722,6 @@
       "gridImport": "Kulutus sähköverkosta",
       "homePower": "Kodin sähkönkulutus",
       "loadpoints": "Latauslaite| Latauslaite | {count} latauslaitetta",
-      "loadpointsLimit": "",
       "noEnergy": "Ei mittarin tietoja",
       "pv": "Aurinkosähköjärjestelmä",
       "pvExport": "Sähköverkkoon vienti",
@@ -740,10 +733,6 @@
       "connected": "Valmiustila.",
       "vehicleLimit": "Lämmittimen rajoitin",
       "waitForVehicle": "Valmiina. Odottaa lämmitintä…"
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Hinta",

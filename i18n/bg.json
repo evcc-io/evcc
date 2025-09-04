@@ -45,28 +45,15 @@
       "switchsockets": "Контакти с прекъсвач",
       "template": "Производител",
       "titleAdd": {
-        "charging": "Добави зарядно",
-        "heating": ""
+        "charging": "Добави зарядно"
       },
       "titleEdit": {
-        "charging": "Промени зарядно",
-        "heating": ""
-      },
-      "type": {
-        "custom": {
-          "charging": "",
-          "heating": ""
-        },
-        "heatpump": "",
-        "sgready": "",
-        "sgready-boost": "",
-        "switchsocket": ""
+        "charging": "Промени зарядно"
       }
     },
     "circuits": {
       "description": "Гарантира, че сумата от всички точки на натоварване, свързани към една верига, не надвишава конфигурираните граници на мощност и ток. Веригите могат да бъдат вложени, за да се изгради йерархия.",
-      "title": "Управление на натоварването",
-      "usableMeters": ""
+      "title": "Управление на натоварването"
     },
     "control": {
       "description": "Обикновено стойностите по подразбиране са наред. Променяйте ги само ако знаете какво правите.",
@@ -99,7 +86,6 @@
       "feedinPrice": "Цена за изкупуване",
       "gridPrice": "Цена на мрежата",
       "heaterTempLimit": "Лимит на загревателя",
-      "hemsActiveLimit": "",
       "hemsType": "Система",
       "identifier": "RFID идентификатор",
       "no": "не",
@@ -126,17 +112,10 @@
       "B": "Б (свързан)",
       "C": "В (зарежда се)"
     },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
-    },
     "devices": {
       "auxMeter": "Смарт потребител",
       "batteryStorage": "Батерия",
       "solarSystem": "Фотоволтаична система"
-    },
-    "editor": {
-      "loading": ""
     },
     "eebus": {
       "description": "Основна конфигурация за комуникация с други EEBus устройства.",
@@ -155,21 +134,16 @@
     },
     "general": {
       "cancel": "Отказ",
-      "customHelp": "",
-      "customOption": "",
       "delete": "Изтрий",
       "docsLink": "Виж документацията.",
       "experimental": "Експериментален",
       "hideAdvancedSettings": "Скрий разширените настройки",
-      "invalidFileSelected": "",
-      "noFileSelected": "",
       "off": "изключено",
       "on": "включено",
       "password": "Парола",
       "readFromFile": "Прочети от файл",
       "remove": "Премахни",
       "save": "Запази",
-      "selectFile": "",
       "showAdvancedSettings": "Покажи разширените настройки",
       "telemetry": "Телеметрия",
       "templateLoading": "Зарежда се...",
@@ -184,9 +158,6 @@
     "hems": {
       "description": "Свържете evcc с друга система за управление на домашната енергия.",
       "title": "„Система за управление на енергията в дома“"
-    },
-    "icon": {
-      "change": ""
     },
     "influx": {
       "description": "Записва данни за зареждане и други метрики в InfluxDB. Използвайте Grafana или други инструменти за визуализиране на данните.",
@@ -206,18 +177,15 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Добави зарядно",
-        "heating": ""
+        "charging": "Добави зарядно"
       },
       "addMeter": "Добави електромер за зарядното",
       "cancel": "Откажи",
       "chargerError": {
-        "charging": "Необходимо е да конфигурирате зарядното.",
-        "heating": ""
+        "charging": "Необходимо е да конфигурирате зарядното."
       },
       "chargerLabel": {
-        "charging": "Зарядно",
-        "heating": ""
+        "charging": "Зарядно"
       },
       "chargerPower11kw": "11 кВт",
       "chargerPower11kwHelp": "Ще бъде използван ток в диапазона от 6 до 16 А.",
@@ -227,12 +195,10 @@
       "chargerPowerCustomHelp": "Определи специфичен токов диапазон.",
       "chargerTypeLabel": "Вид на зарадяното",
       "chargingTitle": "Зарежда",
-      "circuitHelp": "",
       "circuitLabel": "Верига",
       "circuitUnassigned": "неразпределен",
       "defaultModeHelp": {
-        "charging": "Режим на зареждане при свързване с автомобила.",
-        "heating": ""
+        "charging": "Режим на зареждане при свързване с автомобила."
       },
       "defaultModeHelpKeep": "Запазва последно избрания режим на зареждане.",
       "defaultModeLabel": "Режим по подразбиране",
@@ -247,10 +213,6 @@
       "minCurrentHelp": "Използвай по-малко от 6 А, само ако знаеш какво правиш.",
       "minCurrentLabel": "Минимален ток",
       "noVehicles": "Няма конфигурирани автомобили.",
-      "option": {
-        "charging": "",
-        "heating": ""
-      },
       "phases1p": "еднофазен",
       "phases3p": "трифазен",
       "phasesAutomatic": "Автоматични фази",
@@ -286,20 +248,6 @@
       "thresholdEnableHelpNegative": "Започни зареждането, след като има {surplus} излищък за {delay}.",
       "thresholdEnableHelpZero": "Започни, когато минималната мощност на зарежда от излишък е достъпна за {delay}.",
       "thresholdEnableLabel": "Активирай мощност от мрежата",
-      "titleAdd": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleEdit": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleExample": {
-        "charging": "",
-        "heating": ""
-      },
       "titleLabel": "Название",
       "vehicleAutoDetection": "автоматично намиране",
       "vehicleHelpAutoDetection": "Автоматично избиране на най-подходящия автомобил. Ръчната промяна е възможна.",
@@ -330,7 +278,6 @@
     "meter": {
       "cancel": "Отказ",
       "delete": "Изтрий",
-      "generic": "",
       "option": {
         "aux": "Добави интелигентен консуматор",
         "battery": "Добави домашна батерия",
@@ -338,7 +285,6 @@
         "pv": "Добави фотоволтаичен електромер"
       },
       "save": "Запази",
-      "specific": "",
       "template": "Производител",
       "titleChoice": "Какво искате да добавите?",
       "validateSave": "Валидирай и запази"
@@ -403,10 +349,6 @@
         "big": "голям ендиан",
         "little": "„малко ендианско“"
       },
-      "operationMode": {
-        "heating": "",
-        "standby": ""
-      },
       "schema": {
         "http": "HTTP (некриптиран)",
         "https": "HTTPS (криптиран)"
@@ -436,51 +378,14 @@
       "changeToken": "Промяна на спонсорския токен",
       "description": "Моделът за спонсорство ни помага да поддържаме проекта и устойчиво да изграждаме нови и вълнуващи функции. Като спонсор получавате достъп до всички реализации на зарядни устройства.",
       "descriptionToken": "Получавате токена от {url}. Ние също предлагаме пробен токен за тестване {trialToken}.",
-      "enterYourToken": "",
       "error": "Спонсорският токен не е валиден.",
-      "invalid": "",
       "labelToken": "Спонсорски токен",
       "title": "Спонсорство",
       "tokenRequired": "Необходимо е да конфигурирате спонсорен тоукън, за да може да създадете това устройство.",
       "tokenRequiredLearnMore": "Научи повече.",
-      "tokenRequiredShort": "",
-      "trialToken": "Временен тоукън",
-      "viaYaml": "",
-      "yourToken": ""
+      "trialToken": "Временен тоукън"
     },
     "system": {
-      "backupRestore": {
-        "backup": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "title": ""
-        },
-        "cancel": "",
-        "description": "",
-        "note": "",
-        "reset": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "sessions": "",
-          "sessionsDescription": "",
-          "settings": "",
-          "settingsDescription": "",
-          "title": ""
-        },
-        "restore": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "labelFile": "",
-          "title": ""
-        },
-        "title": ""
-      },
       "logs": "Логове",
       "restart": "Рестартиране",
       "restartRequiredDescription": "Моля, рестартирайте, за да видите ефекта.",
@@ -521,7 +426,6 @@
       "minimumCurrent": "Минимален ток",
       "minimumCurrentHelp": "Използвайте стойности по-малко от 6 А само ако знаете какво правите.",
       "online": "Автомобил с онлайн свързаност",
-      "primary": "",
       "priority": "Приоритет",
       "priorityHelp": "Висок приоритет означава, че този автомобил ще има по-предпочитам достъп до фотоволтаичния излишък.",
       "save": "Запази",
@@ -630,10 +534,6 @@
   },
   "header": {
     "about": "Относно",
-    "authProviders": {
-      "confirmLogout": "",
-      "title": ""
-    },
     "blog": "Блог",
     "docs": "Документация",
     "github": "GitHub",
@@ -678,7 +578,6 @@
   },
   "loginModal": {
     "cancel": "Отказ",
-    "demoMode": "",
     "error": "Входът не бе успешен: ",
     "iframeHint": "Отворете evcc в нов раздел.",
     "iframeIssue": "Вашата парола е правилна, но изглежда, че браузърът ви е загубил бисквитката за удостоверяване. Това може да се случи, ако стартирате evcc в iframe чрез HTTP.",
@@ -728,7 +627,6 @@
       "gridImport": "Използвана енергия от мрежата",
       "homePower": "Потребление",
       "loadpoints": "Зарядно устройство | Зарядно устройство | {count} зарядни устройства",
-      "loadpointsLimit": "",
       "noEnergy": "Няма данни от измервателния уред",
       "pv": "Фотоволтаична система",
       "pvExport": "Енергия, която се подава в електрическата мрежа",
@@ -740,10 +638,6 @@
       "connected": "В режим на изчакване.",
       "vehicleLimit": "Лимит на нагревателя",
       "waitForVehicle": "Готово. Чака се нагревателят …"
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Цена",
@@ -881,8 +775,6 @@
       "connected": "Превозното средство е свързано",
       "disconnectRequired": "Процесът е прекратен. Моля, свържете се отново.",
       "disconnected": "Разединен.",
-      "feedinPriorityNextStart": "",
-      "feedinPriorityPausing": "",
       "finished": "Завършен.",
       "minCharge": "Минимално зареждане до {soc}.",
       "pvDisable": "Недостатъчен излишък. Скоро ще бъде пауза.",
@@ -1077,14 +969,6 @@
     "resetAction": "Премахни ограничението",
     "resetWarning": "Няма конфигурирана динамична цена или източник на въглероден двуокис. Въпреки това има лимит {limit}. Почистете си конфигурацията!",
     "saved": "Запазено."
-  },
-  "smartFeedInPriority": {
-    "activeHoursLabel": "",
-    "description": "",
-    "priceLabel": "",
-    "priceLimit": "",
-    "resetWarning": "",
-    "title": ""
   },
   "startupError": {
     "configFile": "Използван конфигурационен файл:",

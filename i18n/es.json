@@ -23,21 +23,11 @@
     "usageTab": "Uso de la batería"
   },
   "config": {
-    "aux": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "battery": {
       "titleAdd": "Añadir batería",
       "titleEdit": "Editar batería"
     },
-    "charge": {
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "charger": {
-      "chargers": "",
       "generic": "Integraciones genéricas",
       "heatingdevices": "Dispositivos de calefacción",
       "ocppHelp": "Copia esta dirección en la configuración de cargadores.",
@@ -65,8 +55,7 @@
     },
     "circuits": {
       "description": "Asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites de corriente. Los circuitos pueden ser anidados para construir una jerarquía.",
-      "title": "Gestión de Carga",
-      "usableMeters": ""
+      "title": "Gestión de Carga"
     },
     "control": {
       "description": "Los valores predeterminados son razonables. Cámbialos solo si sabes lo que estás haciendo.",
@@ -77,7 +66,6 @@
       "title": "Controlar la conducta"
     },
     "deviceValue": {
-      "amount": "",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacidad",
@@ -98,83 +86,44 @@
       "energy": "Energía",
       "feedinPrice": "Precio de entrada",
       "gridPrice": "Precio de red",
-      "heaterTempLimit": "",
-      "hemsActiveLimit": "",
       "hemsType": "Sistema",
-      "identifier": "",
       "no": "no",
       "odometer": "Cuentakilómetros",
       "org": "Organización",
       "phaseCurrents": "Actual L1, L2, L3",
       "phasePowers": "Potencia L1, L2, L3",
       "phaseVoltages": "Voltaje L1, L2, L3",
-      "phases1p3p": "",
       "power": "Potencia",
       "powerRange": "Potencia",
       "range": "Alcance",
-      "singlePhase": "",
       "soc": "SoC",
-      "solarForecast": "",
       "temp": "Temperatura",
       "topic": "Tema",
       "url": "URL",
-      "vehicleLimitSoc": "",
       "yes": "sí"
-    },
-    "deviceValueChargeStatus": {
-      "A": "",
-      "B": "",
-      "C": ""
-    },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
-    },
-    "devices": {
-      "auxMeter": "",
-      "batteryStorage": "",
-      "solarSystem": ""
-    },
-    "editor": {
-      "loading": ""
     },
     "eebus": {
       "description": "Configuración que permite a evcc comunicarse con otros dispositivos EEBus",
       "title": "EEBus"
     },
-    "ext": {
-      "description": "",
-      "titleAdd": "",
-      "titleEdit": ""
-    },
     "form": {
-      "danger": "",
-      "deprecated": "",
       "example": "Ejemplo",
       "optional": "opcional"
     },
     "general": {
       "cancel": "Cancelar",
-      "customHelp": "",
-      "customOption": "",
-      "delete": "",
       "docsLink": "Ver documentación.",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Ocultar configuración avanzada",
-      "invalidFileSelected": "",
-      "noFileSelected": "",
       "off": "apagar",
       "on": "encender",
       "password": "Contraseña",
       "readFromFile": "Leer del archivo",
       "remove": "Quitar",
       "save": "Guardar",
-      "selectFile": "",
       "showAdvancedSettings": "Mostrar configuración avanzada",
       "telemetry": "Telemetría",
-      "templateLoading": "",
-      "title": "Título",
-      "validateSave": ""
+      "title": "Título"
     },
     "grid": {
       "title": "Contador de red",
@@ -184,9 +133,6 @@
     "hems": {
       "description": "Conecta evcc a otro sistema de gestión de energía del hogar",
       "title": "HEMS"
-    },
-    "icon": {
-      "change": ""
     },
     "influx": {
       "description": "Escribe datos de cobro y otras métricas en InfluxDB. Utiliza Grafana u otras herramientas para visualizar los datos",
@@ -204,120 +150,12 @@
       "v1Support": "¿Necesitas soporte para InfluxDB 1.x?",
       "v2Support": "Volver a InfluxDB 2.x"
     },
-    "loadpoint": {
-      "addCharger": {
-        "charging": "",
-        "heating": ""
-      },
-      "addMeter": "",
-      "cancel": "",
-      "chargerError": {
-        "charging": "",
-        "heating": ""
-      },
-      "chargerLabel": {
-        "charging": "",
-        "heating": ""
-      },
-      "chargerPower11kw": "",
-      "chargerPower11kwHelp": "",
-      "chargerPower22kw": "",
-      "chargerPower22kwHelp": "",
-      "chargerPowerCustom": "",
-      "chargerPowerCustomHelp": "",
-      "chargerTypeLabel": "",
-      "chargingTitle": "",
-      "circuitHelp": "",
-      "circuitLabel": "",
-      "circuitUnassigned": "",
-      "defaultModeHelp": {
-        "charging": "",
-        "heating": ""
-      },
-      "defaultModeHelpKeep": "",
-      "defaultModeLabel": "",
-      "delete": "",
-      "electricalSubtitle": "",
-      "electricalTitle": "",
-      "energyMeterHelp": "",
-      "energyMeterLabel": "",
-      "estimateLabel": "",
-      "maxCurrentHelp": "",
-      "maxCurrentLabel": "",
-      "minCurrentHelp": "",
-      "minCurrentLabel": "",
-      "noVehicles": "",
-      "option": {
-        "charging": "",
-        "heating": ""
-      },
-      "phases1p": "",
-      "phases3p": "",
-      "phasesAutomatic": "",
-      "phasesAutomaticHelp": "",
-      "phasesHelp": "",
-      "phasesLabel": "",
-      "pollIntervalDanger": "",
-      "pollIntervalHelp": "",
-      "pollIntervalLabel": "",
-      "pollModeAlways": "",
-      "pollModeAlwaysHelp": "",
-      "pollModeCharging": "",
-      "pollModeChargingHelp": "",
-      "pollModeConnected": "",
-      "pollModeConnectedHelp": "",
-      "pollModeLabel": "",
-      "priorityHelp": "",
-      "priorityLabel": "",
-      "save": "",
-      "showAllSettings": "",
-      "solarBehaviorCustomHelp": "",
-      "solarBehaviorDefaultHelp": "",
-      "solarBehaviorLabel": "",
-      "solarModeCustom": "",
-      "solarModeMaximum": "",
-      "thresholdDisableDelayLabel": "",
-      "thresholdDisableHelpInvalid": "",
-      "thresholdDisableHelpPositive": "",
-      "thresholdDisableHelpZero": "",
-      "thresholdDisableLabel": "",
-      "thresholdEnableDelayLabel": "",
-      "thresholdEnableHelpInvalid": "",
-      "thresholdEnableHelpNegative": "",
-      "thresholdEnableHelpZero": "",
-      "thresholdEnableLabel": "",
-      "titleAdd": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleEdit": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleExample": {
-        "charging": "",
-        "heating": ""
-      },
-      "titleLabel": "",
-      "vehicleAutoDetection": "",
-      "vehicleHelpAutoDetection": "",
-      "vehicleHelpDefault": "",
-      "vehicleLabel": "",
-      "vehiclesTitle": ""
-    },
     "main": {
-      "addAdditional": "",
-      "addGrid": "",
       "addLoadpoint": "Añadir un punto de carga",
       "addPvBattery": "Añadir solar o batería",
-      "addTariffs": "",
       "addVehicle": "Añadir un vehículo",
       "configured": "configurado",
       "edit": "editar",
-      "loadpointRequired": "",
-      "name": "",
       "title": "Configuración",
       "unconfigured": "no configurado",
       "vehicles": "Mis vehículos",
@@ -330,38 +168,10 @@
     "meter": {
       "cancel": "Cancelar",
       "delete": "Borrar",
-      "generic": "",
-      "option": {
-        "aux": "",
-        "battery": "",
-        "ext": "",
-        "pv": ""
-      },
       "save": "Guardar",
-      "specific": "",
       "template": "Fabricante",
       "titleChoice": "¿Qué quieres añadir?",
       "validateSave": "Validar y guardar"
-    },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "Permite que varios clientes accedan a un único dispositivo Modbus",
@@ -403,18 +213,9 @@
         "big": "big endian",
         "little": "little endian"
       },
-      "operationMode": {
-        "heating": "",
-        "standby": ""
-      },
       "schema": {
         "http": "HTTP (sin cifrar)",
         "https": "HTTPS (cifrado)"
-      },
-      "status": {
-        "A": "",
-        "B": "",
-        "C": ""
       }
     },
     "pv": {
@@ -422,7 +223,6 @@
       "titleEdit": "Editar contador solar"
     },
     "section": {
-      "additionalMeter": "",
       "general": "General",
       "grid": "Red eléctrica",
       "integrations": "Integraciones",
@@ -436,51 +236,11 @@
       "changeToken": "Cambiar el token de patrocinador",
       "description": "El modelo de patrocinio nos ayuda a mantener el proyecto y a desarrollar de forma sostenible nuevas y emocionantes funciones. Como patrocinador, obtienes acceso a todas las implementaciones de cargadores",
       "descriptionToken": "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar {trialToken}.",
-      "enterYourToken": "",
       "error": "El token de patrocinador no es válido",
-      "invalid": "",
       "labelToken": "Token del patrocinador",
-      "title": "Patrocinio",
-      "tokenRequired": "",
-      "tokenRequiredLearnMore": "",
-      "tokenRequiredShort": "",
-      "trialToken": "",
-      "viaYaml": "",
-      "yourToken": ""
+      "title": "Patrocinio"
     },
     "system": {
-      "backupRestore": {
-        "backup": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "title": ""
-        },
-        "cancel": "",
-        "description": "",
-        "note": "",
-        "reset": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "sessions": "",
-          "sessionsDescription": "",
-          "settings": "",
-          "settingsDescription": "",
-          "title": ""
-        },
-        "restore": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "labelFile": "",
-          "title": ""
-        },
-        "title": ""
-      },
       "logs": "Registros",
       "restart": "Reiniciar",
       "restartRequiredDescription": "Por favor, reinicie para aplicar los cambios",
@@ -507,23 +267,9 @@
     },
     "vehicle": {
       "cancel": "Cancelar",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
       "delete": "Borrar",
       "generic": "Otras integraciones",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
       "online": "Vehículos con API en línea",
-      "primary": "",
-      "priority": "",
-      "priorityHelp": "",
       "save": "Guardar",
       "scooter": "Escúter",
       "template": "Fabricante",
@@ -602,38 +348,8 @@
       "modalUpdateStatusStart": "Instalación iniciada:"
     }
   },
-  "forecast": {
-    "co2": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "modalTitle": "",
-    "price": {
-      "average": "",
-      "lowestHour": "",
-      "range": ""
-    },
-    "solar": {
-      "dayAfterTomorrow": "",
-      "partly": "",
-      "remaining": "",
-      "today": "",
-      "tomorrow": ""
-    },
-    "solarAdjust": "",
-    "type": {
-      "co2": "",
-      "price": "",
-      "solar": ""
-    }
-  },
   "header": {
     "about": "Sobre",
-    "authProviders": {
-      "confirmLogout": "",
-      "title": ""
-    },
     "blog": "Blog",
     "docs": "Documentación",
     "github": "GitHub",
@@ -678,7 +394,6 @@
   },
   "loginModal": {
     "cancel": "Cancelar",
-    "demoMode": "",
     "error": "Error en el inicio de sesion: ",
     "iframeHint": "Abrir evcc en una nueva pestaña",
     "iframeIssue": "Tu contraseña es correcta, pero tu navegador parece haber eliminado la cookie de autenticación. Esto puede suceder si ejecutas evcc en un iframe a través de HTTP",
@@ -699,11 +414,6 @@
       "modalTitle": "Plan de carga",
       "none": "ninguno",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Quitar",
       "repeating": "repitiendo",
       "repeatingPlans": "Planes recurrentes",
@@ -720,30 +430,19 @@
       "battery": "Batería",
       "batteryCharge": "Cargar la batería",
       "batteryDischarge": "Descargar la batería",
-      "batteryGridChargeActive": "",
-      "batteryGridChargeLimit": "",
       "batteryHold": "Batería (bloqueada)",
       "batteryTooltip": "{energy} de {total} ({soc})",
-      "forecastTooltip": "",
       "gridImport": "Consumo de red",
       "homePower": "Consumo",
       "loadpoints": "Punto de carga | Punto de carga | {count} Puntos de carga",
-      "loadpointsLimit": "",
       "noEnergy": "Sin lecturas",
-      "pv": "",
       "pvExport": "Excedente",
       "pvProduction": "Producción",
       "selfConsumption": "Autoconsumo"
     },
     "heatingStatus": {
       "charging": "Calefacción...",
-      "connected": "",
-      "vehicleLimit": "",
       "waitForVehicle": "Listo. Esperando a que se caliente..."
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "Precio ⌀",
@@ -751,7 +450,6 @@
       "co2": "CO₂ ⌀",
       "duration": "Duración",
       "fallbackName": "Punto de carga",
-      "finished": "",
       "power": "Potencia",
       "price": "Precio",
       "remaining": "Tiempo restante",
@@ -810,7 +508,6 @@
       "login": "iniciar sesión",
       "logout": "cerrar sesión"
     },
-    "startConfiguration": "",
     "targetCharge": {
       "activate": "Activar",
       "co2Limit": "Límite de CO₂ del {co2}",
@@ -818,7 +515,6 @@
       "currentPlan": "Plan activo",
       "descriptionEnergy": "¿Hasta cuándo deben haberse cargado {targetEnergy} al vehículo?",
       "descriptionSoc": "¿Hasta cuándo debe haberse cargarse el vehículo al {targetSoc}?",
-      "goalReached": "",
       "inactiveLabel": "Tiempo objetivo",
       "nextPlan": "Próximo plan",
       "notReachableInTime": "El objetivo se alcanzará {overrun} más tarde",
@@ -881,8 +577,6 @@
       "connected": "Conectado.",
       "disconnectRequired": "Sesión terminada. Por favor, vuelve a conectarte",
       "disconnected": "Desconectado.",
-      "feedinPriorityNextStart": "",
-      "feedinPriorityPausing": "",
       "finished": "Finalizado.",
       "minCharge": "Carga mínima hasta {soc}.",
       "pvDisable": "No hay suficientes excedentes. Haremos una pausa pronto",
@@ -897,8 +591,7 @@
       "waitForVehicle": "Listo para cargar. Esperando vehículo.",
       "welcome": "Breve carga inicial para confirmar la conexión."
     },
-    "vehicles": "Estacionamiento",
-    "welcome": ""
+    "vehicles": "Estacionamiento"
   },
   "notifications": {
     "dismissAll": "Eliminar notificaciones",
@@ -1048,11 +741,6 @@
       "label": "Tema",
       "light": "claro"
     },
-    "time": {
-      "12h": "",
-      "24h": "",
-      "label": ""
-    },
     "title": "Interfaz de usuario",
     "unit": {
       "km": "km",
@@ -1074,17 +762,7 @@
     "none": "ninguno",
     "priceLabel": "Precio de la energía",
     "priceLimit": "Límite de precio",
-    "resetAction": "",
-    "resetWarning": "",
     "saved": "Guardado."
-  },
-  "smartFeedInPriority": {
-    "activeHoursLabel": "",
-    "description": "",
-    "priceLabel": "",
-    "priceLimit": "",
-    "resetWarning": "",
-    "title": ""
   },
   "startupError": {
     "configFile": "Archivo de configuración utilizado:",

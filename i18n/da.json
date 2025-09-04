@@ -65,8 +65,7 @@
     },
     "circuits": {
       "description": "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
-      "title": "Belastningsstyring",
-      "usableMeters": ""
+      "title": "Belastningsstyring"
     },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
@@ -99,7 +98,6 @@
       "feedinPrice": "Indfødningstarif",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
-      "hemsActiveLimit": "",
       "hemsType": "System",
       "identifier": "RFID-identifikator",
       "no": "nej",
@@ -125,10 +123,6 @@
       "A": "A (ikke forbundet)",
       "B": "B (forbundet)",
       "C": "C (oplader)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
     },
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
@@ -729,7 +723,6 @@
       "gridImport": "Forbrug fra elnet",
       "homePower": "Forbrug",
       "loadpoints": "Oplader| Oplader | {count} opladere",
-      "loadpointsLimit": "",
       "noEnergy": "Ingen målerdata",
       "pv": "Solcelleanlæg",
       "pvExport": "Eksport til elnet",
@@ -741,10 +734,6 @@
       "connected": "Standby.",
       "vehicleLimit": "Opvarmning begrænsning",
       "waitForVehicle": "Klar. Venter på varmelegeme…"
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",

@@ -65,8 +65,7 @@
     },
     "circuits": {
       "description": "Zajišťuje, že součet všech nabíjecích bodů připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
-      "title": "Řízení zátěže",
-      "usableMeters": ""
+      "title": "Řízení zátěže"
     },
     "control": {
       "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
@@ -99,7 +98,6 @@
       "feedinPrice": "Cena za výkup energie",
       "gridPrice": "Cena ze sítě",
       "heaterTempLimit": "Limit topení",
-      "hemsActiveLimit": "",
       "hemsType": "System",
       "identifier": "RFID identifikátor",
       "no": "ne",
@@ -125,10 +123,6 @@
       "A": "A (nepřipojeno)",
       "B": "B (připojeno)",
       "C": "C (nabíjení)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
     },
     "devices": {
       "auxMeter": "Chytrý spotřebič",
@@ -728,7 +722,6 @@
       "gridImport": "Odběr ze sítě",
       "homePower": "Spotřeba domu",
       "loadpoints": "Nabíječka | Nabíječka | {count} nabíječek",
-      "loadpointsLimit": "",
       "noEnergy": "Žádná data z měřiče",
       "pv": "FVE",
       "pvExport": "Export do sítě",
@@ -740,10 +733,6 @@
       "connected": "Pohotovostní režim.",
       "vehicleLimit": "Limit topení",
       "waitForVehicle": "Připraven. Čekám na odpověď topidla…"
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",

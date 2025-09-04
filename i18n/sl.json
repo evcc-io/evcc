@@ -45,28 +45,15 @@
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
       "titleAdd": {
-        "charging": "Dodaj polnilnik",
-        "heating": ""
+        "charging": "Dodaj polnilnik"
       },
       "titleEdit": {
-        "charging": "Uredi polnilec",
-        "heating": ""
-      },
-      "type": {
-        "custom": {
-          "charging": "",
-          "heating": ""
-        },
-        "heatpump": "",
-        "sgready": "",
-        "sgready-boost": "",
-        "switchsocket": ""
+        "charging": "Uredi polnilec"
       }
     },
     "circuits": {
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
-      "title": "Upravljanje obremenitve",
-      "usableMeters": ""
+      "title": "Upravljanje obremenitve"
     },
     "control": {
       "description": "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete.",
@@ -99,7 +86,6 @@
       "feedinPrice": "Cena prejete energije iz omrežja",
       "gridPrice": "Cena omrežja",
       "heaterTempLimit": "Omejitev ogrevanja",
-      "hemsActiveLimit": "",
       "hemsType": "Sistem",
       "identifier": "RFID-Identifier",
       "no": "ne",
@@ -126,10 +112,6 @@
       "B": "B (povezan)",
       "C": "C (polnjenje)"
     },
-    "deviceValueHemsType": {
-      "eebus": "",
-      "relay": ""
-    },
     "devices": {
       "auxMeter": "Pametni porabnik",
       "batteryStorage": "Baterijski hranilnik",
@@ -155,24 +137,18 @@
     },
     "general": {
       "cancel": "Prekliči",
-      "customHelp": "",
-      "customOption": "",
       "delete": "Izbriši",
       "docsLink": "Oglejte si dokumentacijo.",
       "experimental": "Eksperimentalno",
       "hideAdvancedSettings": "Skrij napredne nastavitve",
-      "invalidFileSelected": "",
-      "noFileSelected": "",
       "off": "izklopljeno",
       "on": "vklopljeno",
       "password": "Geslo",
       "readFromFile": "Preberi iz datoteke",
       "remove": "Odstrani",
       "save": "Shrani",
-      "selectFile": "",
       "showAdvancedSettings": "Prikaži napredne nastavitve",
       "telemetry": "Telemetrija",
-      "templateLoading": "",
       "title": "Ime",
       "validateSave": "Preveri in shrani"
     },
@@ -184,9 +160,6 @@
     "hems": {
       "description": "Povežite evcc z drugim sistemom za upravljanje z energijo doma.",
       "title": "HEMS"
-    },
-    "icon": {
-      "change": ""
     },
     "influx": {
       "description": "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja.",
@@ -206,18 +179,12 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Dodaj polnilnik",
-        "heating": ""
+        "charging": "Dodaj polnilnik"
       },
       "addMeter": "Dodaj namenski merilnik za polnilnico",
       "cancel": "Prekliči",
-      "chargerError": {
-        "charging": "",
-        "heating": ""
-      },
       "chargerLabel": {
-        "charging": "Polnilnica",
-        "heating": ""
+        "charging": "Polnilnica"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
@@ -227,12 +194,10 @@
       "chargerPowerCustomHelp": "Določite drug obseg toka.",
       "chargerTypeLabel": "Vrsta polnilnice",
       "chargingTitle": "Polnjenje",
-      "circuitHelp": "",
       "circuitLabel": "Krog",
       "circuitUnassigned": "nedodeljeno",
       "defaultModeHelp": {
-        "charging": "Način polnjenja pri priklopu vozila.",
-        "heating": ""
+        "charging": "Način polnjenja pri priklopu vozila."
       },
       "defaultModeHelpKeep": "Ohrani zadnji izbrani način polnjenja.",
       "defaultModeLabel": "Privzeti način",
@@ -247,17 +212,12 @@
       "minCurrentHelp": "Pod 6 A pojdi samo, če veš, kaj delaš.",
       "minCurrentLabel": "Minimalni tok",
       "noVehicles": "Nobeno vozilo ni konfigurirano.",
-      "option": {
-        "charging": "",
-        "heating": ""
-      },
       "phases1p": "1-fazni",
       "phases3p": "3-fazni",
       "phasesAutomatic": "Samodejne faze",
       "phasesAutomaticHelp": "Vaš polnilnik podpira samodejno preklapljanje med 1- in 3-faznim polnjenjem. Na glavnem zaslonu lahko prilagodite obnašanje faze med polnjenjem.",
       "phasesHelp": "Število faz, povezanih s polnilnikom.",
       "phasesLabel": "Faze",
-      "pollIntervalDanger": "",
       "pollIntervalHelp": "Čas med posodobitvami API-ja vozila. Kratki intervali lahko izpraznijo akumulator vozila.",
       "pollIntervalLabel": "Interval posodabljanja",
       "pollModeAlways": "vedno",
@@ -286,20 +246,6 @@
       "thresholdEnableHelpNegative": "Začnite polniti, ko bo {surplus} presežek na voljo za {delay}.",
       "thresholdEnableHelpZero": "Začni, ko je na voljo minimalni presežek polnilne moči za {delay}.",
       "thresholdEnableLabel": "Omogoči polnjenje iz omrežja",
-      "titleAdd": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleEdit": {
-        "charging": "",
-        "heating": "",
-        "unknown": ""
-      },
-      "titleExample": {
-        "charging": "",
-        "heating": ""
-      },
       "titleLabel": "Ime",
       "vehicleAutoDetection": "samodejno zaznavanje",
       "vehicleHelpAutoDetection": "Samodejno izbere najbolj verjetno vozilo. Možen je ročni popravek.",
@@ -308,7 +254,6 @@
       "vehiclesTitle": "Vozila"
     },
     "main": {
-      "addAdditional": "",
       "addGrid": "Dodaj števec električnega omrežja",
       "addLoadpoint": "Dodaj polnilno mesto",
       "addPvBattery": "Dodaj sončne celice ali baterijo",
@@ -316,7 +261,6 @@
       "addVehicle": "Dodaj vozilo",
       "configured": "konfigurirano",
       "edit": "uredi",
-      "loadpointRequired": "",
       "name": "Ime",
       "title": "Konfiguracija",
       "unconfigured": "ni konfigurirano",
@@ -330,38 +274,10 @@
     "meter": {
       "cancel": "Prekliči",
       "delete": "Izbriši",
-      "generic": "",
-      "option": {
-        "aux": "",
-        "battery": "",
-        "ext": "",
-        "pv": ""
-      },
       "save": "Shrani",
-      "specific": "",
       "template": "Proizvajalec",
       "titleChoice": "Kaj želite dodati?",
       "validateSave": "Preveri in shrani"
-    },
-    "modbus": {
-      "baudrate": "",
-      "comset": "",
-      "connection": "",
-      "connectionHintSerial": "",
-      "connectionHintTcpip": "",
-      "connectionValueSerial": "",
-      "connectionValueTcpip": "",
-      "device": "",
-      "deviceHint": "",
-      "host": "",
-      "hostHint": "",
-      "id": "",
-      "port": "",
-      "protocol": "",
-      "protocolHintRtu": "",
-      "protocolHintTcp": "",
-      "protocolValueRtu": "",
-      "protocolValueTcp": ""
     },
     "modbusproxy": {
       "description": "Dovoli več odjemalcem dostop do ene naprave Modbus.",
@@ -403,10 +319,6 @@
         "big": "big-endian",
         "little": "little-endian"
       },
-      "operationMode": {
-        "heating": "",
-        "standby": ""
-      },
       "schema": {
         "http": "HTTP (nešifrirano)",
         "https": "HTTPS (šifrirano)"
@@ -422,7 +334,6 @@
       "titleEdit": "Uredi merilnik sončne energije"
     },
     "section": {
-      "additionalMeter": "",
       "general": "Splošno",
       "grid": "Omrežje",
       "integrations": "Integracije",
@@ -436,51 +347,14 @@
       "changeToken": "Spremeni žeton",
       "description": "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov.",
       "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje {trialToken}.",
-      "enterYourToken": "",
       "error": "Sponzorski žeton ni veljaven.",
-      "invalid": "",
       "labelToken": "Sponzorski žeton",
       "title": "Sponzorstvo",
       "tokenRequired": "Pred ustvarjanjem te naprave morate konfigurirati žeton sponzorja.",
       "tokenRequiredLearnMore": "Več o tem.",
-      "tokenRequiredShort": "",
-      "trialToken": "Poskusni žeton",
-      "viaYaml": "",
-      "yourToken": ""
+      "trialToken": "Poskusni žeton"
     },
     "system": {
-      "backupRestore": {
-        "backup": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "title": ""
-        },
-        "cancel": "",
-        "description": "",
-        "note": "",
-        "reset": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "sessions": "",
-          "sessionsDescription": "",
-          "settings": "",
-          "settingsDescription": "",
-          "title": ""
-        },
-        "restore": {
-          "action": "",
-          "confirmationButton": "",
-          "confirmationText": "",
-          "description": "",
-          "labelFile": "",
-          "title": ""
-        },
-        "title": ""
-      },
       "logs": "Logi",
       "restart": "Ponovni zagon",
       "restartRequiredDescription": "Prosimo, ponovno zaženite, da vidite učinek.",
@@ -507,23 +381,9 @@
     },
     "vehicle": {
       "cancel": "Prekliči",
-      "chargingSettings": "",
-      "defaultMode": "",
-      "defaultModeHelp": "",
       "delete": "Izbriši",
       "generic": "Druge integracije",
-      "identifiers": "",
-      "identifiersHelp": "",
-      "maximumCurrent": "",
-      "maximumCurrentHelp": "",
-      "maximumPhases": "",
-      "maximumPhasesHelp": "",
-      "minimumCurrent": "",
-      "minimumCurrentHelp": "",
       "online": "Vozila s spletnim API-jem",
-      "primary": "",
-      "priority": "",
-      "priorityHelp": "",
       "save": "Shrani",
       "scooter": "Skuter",
       "template": "Proizvajalec",
@@ -630,10 +490,6 @@
   },
   "header": {
     "about": "Informacije",
-    "authProviders": {
-      "confirmLogout": "",
-      "title": ""
-    },
     "blog": "Blog",
     "docs": "Dokumentacija",
     "github": "GitHub",
@@ -678,7 +534,6 @@
   },
   "loginModal": {
     "cancel": "Prekliči",
-    "demoMode": "",
     "error": "Prijava ni uspela: ",
     "iframeHint": "Odpri evcc v novem zavihku.",
     "iframeIssue": "Vaše geslo je pravilno, vendar se zdi, da je vaš brskalnik izpustil piškotek za preverjanje pristnosti. To se lahko zgodi, če zaženete evcc v iframe prek HTTP.",
@@ -699,11 +554,6 @@
       "modalTitle": "Načrt polnjenja",
       "none": "brez",
       "planNumber": "Načrt {number}",
-      "preconditionDescription": "",
-      "preconditionLong": "",
-      "preconditionOptionAll": "",
-      "preconditionOptionNo": "",
-      "preconditionShort": "",
       "remove": "Odstrani",
       "repeating": "ponavljajoči",
       "repeatingPlans": "Ponavljajoči načrti",
@@ -728,22 +578,15 @@
       "gridImport": "Uvoz iz omrežja",
       "homePower": "Poraba objekta",
       "loadpoints": "Polnilnica | Polnilnici | {count} polnilnih mest",
-      "loadpointsLimit": "",
       "noEnergy": "Ni podatkov o merilniku",
-      "pv": "",
       "pvExport": "Izvoz v omrežje",
       "pvProduction": "Proizvodnja",
       "selfConsumption": "Samoporaba"
     },
     "heatingStatus": {
       "charging": "Gretje…",
-      "connected": "",
       "vehicleLimit": "Omejitev ogrevanja",
       "waitForVehicle": "Pripravljen. Čakam na grelec…"
-    },
-    "hemsWarning": {
-      "description": "",
-      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -751,7 +594,6 @@
       "co2": "⌀ CO₂",
       "duration": "Trajanje",
       "fallbackName": "Polnilno mesto",
-      "finished": "",
       "power": "Moč",
       "price": "Cena",
       "remaining": "Preostalo",
@@ -818,7 +660,6 @@
       "currentPlan": "Aktivni načrt",
       "descriptionEnergy": "Do kdaj želite da se vozilo napolni za {targetEnergy}?",
       "descriptionSoc": "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?",
-      "goalReached": "",
       "inactiveLabel": "Ciljni čas",
       "nextPlan": "Naslednji načrt",
       "notReachableInTime": "Cilj bo dosežen {overrun} pozneje.",
@@ -881,8 +722,6 @@
       "connected": "Povezan.",
       "disconnectRequired": "Seja prekinjena. Ponovno se povežite.",
       "disconnected": "Odklopljen.",
-      "feedinPriorityNextStart": "",
-      "feedinPriorityPausing": "",
       "finished": "Končano.",
       "minCharge": "Minimalno polnjenje na {soc}.",
       "pvDisable": "Premalo presežka. Prekinitev polnjenja se bo izvedla kmalu.",
@@ -1048,11 +887,6 @@
       "label": "Izgled",
       "light": "svetlo"
     },
-    "time": {
-      "12h": "",
-      "24h": "",
-      "label": ""
-    },
     "title": "Uporabniški vmesnik",
     "unit": {
       "km": "km",
@@ -1077,14 +911,6 @@
     "resetAction": "Odstrani omejitev",
     "resetWarning": "Dinamična cena omrežja ali vir CO₂ ni konfiguriran. Še vedno pa obstaja omejitev {limit}. Ali želite počistiti konfiguracijo?",
     "saved": "Shranjeno."
-  },
-  "smartFeedInPriority": {
-    "activeHoursLabel": "",
-    "description": "",
-    "priceLabel": "",
-    "priceLimit": "",
-    "resetWarning": "",
-    "title": ""
   },
   "startupError": {
     "configFile": "Uporabljena konfiguracijska datoteka:",
