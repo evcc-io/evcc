@@ -1,4 +1,4 @@
-// queries PM #1 and PVI #1 only
+// query on PM #1 and PVI #1 only
 
 package meter
 
