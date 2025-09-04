@@ -600,13 +600,13 @@
   "forecast": {
     "co2": {
       "average": "Vidurkis",
-      "lowestHour": "Švariausia valanda",
+      "highlightedHour": "Švariausia valanda",
       "range": "Diapazonas"
     },
     "modalTitle": "Prognozė",
     "price": {
       "average": "Vidurkis",
-      "lowestHour": "Pigiausia valanda",
+      "highlightedHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
     "solar": {

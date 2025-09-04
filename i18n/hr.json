@@ -534,13 +534,13 @@
   "forecast": {
     "co2": {
       "average": "Prosjek",
-      "lowestHour": "Najčišći sat",
+      "highlightedHour": "Najčišći sat",
       "range": "Raspon"
     },
     "modalTitle": "Predviđanje",
     "price": {
       "average": "Prosjek",
-      "lowestHour": "Najjeftiniji sat",
+      "highlightedHour": "Najjeftiniji sat",
       "range": "Opseg"
     },
     "solar": {

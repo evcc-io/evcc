@@ -296,8 +296,4 @@ export default defineComponent({
 .container h4:first-child {
 	margin-top: 0 !important;
 }
-
-.custom-select-inline {
-	display: inline-block !important;
-}
 </style>

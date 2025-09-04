@@ -155,6 +155,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+
+		"smartfeedindisable":       {"POST", "/smartfeedindisablelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetSmartFeedInDisableLimit), site.GetSmartFeedInDisableLimit)},
+		"smartfeedindisabledelete": {"DELETE", "/smartfeedindisablelimit", floatPtrHandler(pass(site.SetSmartFeedInDisableLimit), site.GetSmartFeedInDisableLimit)},
 	}
 
 	for _, r := range routes {

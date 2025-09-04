@@ -509,13 +509,13 @@
   "forecast": {
     "co2": {
       "average": "Средно",
-      "lowestHour": "Най-чистият час",
+      "highlightedHour": "Най-чистият час",
       "range": "Диапазон"
     },
     "modalTitle": "Прогноза",
     "price": {
       "average": "Средно",
-      "lowestHour": "Най-евтиният час",
+      "highlightedHour": "Най-евтиният час",
       "range": "Диапазон"
     },
     "solar": {

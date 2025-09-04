@@ -31,13 +31,14 @@ import {
 	Chart,
 } from "chart.js";
 import ChartDataLabels, { type Context } from "chartjs-plugin-datalabels";
+import ChartAnnotation from "chartjs-plugin-annotation";
 import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import colors, { lighterColor } from "@/colors";
+import colors, { lighterColor, createFeedInDisabledPattern } from "@/colors";
 import type { CURRENCY } from "@/types/evcc";
 import { ForecastType, highestSlotIndexByDay } from "@/utils/forecast";
-import type { ForecastSlot, SolarDetails, TimeseriesEntry } from "./types";
+import type { ForecastSlot, SolarDetails, TimeseriesEntry, ForecastZone } from "./types";
 
 registerChartComponents([
 	BarController,
@@ -51,6 +52,7 @@ registerChartComponents([
 	Tooltip,
 	PointElement,
 	ChartDataLabels,
+	ChartAnnotation,
 ]);
 
 export default defineComponent({
@@ -61,8 +63,13 @@ export default defineComponent({
 		grid: { type: Array as PropType<ForecastSlot[]> },
 		solar: { type: Object as PropType<SolarDetails> },
 		co2: { type: Array as PropType<ForecastSlot[]> },
+		feedin: { type: Array as PropType<ForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		selected: { type: String as PropType<ForecastType> },
+		feedInDisabledZones: {
+			type: Array as PropType<ForecastZone[]>,
+			default: () => [],
+		},
 	},
 	emits: ["selected"],
 	data(): {
@@ -97,6 +104,9 @@ export default defineComponent({
 		co2Slots() {
 			return this.filterSlots(this.co2);
 		},
+		feedinSlots() {
+			return this.filterSlots(this.feedin);
+		},
 		maxPriceIndex() {
 			return this.maxIndex(this.gridSlots);
 		},
@@ -108,6 +118,12 @@ export default defineComponent({
 		},
 		minCo2Index() {
 			return this.minIndex(this.co2Slots);
+		},
+		maxFeedinIndex() {
+			return this.maxIndex(this.feedinSlots);
+		},
+		minFeedinIndex() {
+			return this.minIndex(this.feedinSlots);
 		},
 		maxSolarIndex() {
 			return this.maxEntryIndex(this.solarEntries);
@@ -152,15 +168,15 @@ export default defineComponent({
 					yAxisID: "yForecast",
 					backgroundColor: lighterColor(color),
 					borderColor: color,
-					fill: "start",
-					tension: 0.5,
+					fill: "origin",
+					tension: 0.15,
 					pointRadius: 0,
 					animation: {
 						y: { duration: this.animations ? 500 : 0 },
 					},
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
-					order: active ? 0 : 1,
+					order: this.getDatasetOrder(ForecastType.Solar, active),
 				});
 			}
 			if (this.gridSlots.length > 0) {
@@ -181,7 +197,7 @@ export default defineComponent({
 					borderRadius: 8,
 					backgroundColor: color,
 					borderColor: color,
-					order: active ? 0 : 1,
+					order: this.getDatasetOrder(ForecastType.Price, active),
 				});
 			}
 			if (this.co2Slots.length > 0) {
@@ -206,11 +222,32 @@ export default defineComponent({
 					yAxisID: "yCo2",
 					backgroundColor: color,
 					borderColor: color,
-					tension: 0.25,
+					tension: 0.15,
 					pointRadius: 0,
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
-					order: active ? 0 : 1,
+					order: this.getDatasetOrder(ForecastType.Co2, active),
+				});
+			}
+			if (this.feedinSlots.length > 0) {
+				const active = this.selected === ForecastType.FeedIn;
+				const color = active ? colors.export : colors.border;
+				datasets.push({
+					label: ForecastType.FeedIn,
+					data: this.feedinSlots.map((slot, index) => ({
+						y: slot.value,
+						x: new Date(slot.start),
+						highlight:
+							active &&
+							(this.selectedIndex !== null
+								? this.selectedIndex === index
+								: index === this.maxFeedinIndex || index === this.minFeedinIndex),
+					})),
+					yAxisID: "yPrice",
+					borderRadius: 8,
+					backgroundColor: color,
+					borderColor: color,
+					order: this.getDatasetOrder(ForecastType.FeedIn, active),
 				});
 			}
 
@@ -252,6 +289,9 @@ export default defineComponent({
 				},
 				plugins: {
 					...commonOptions.plugins,
+					annotation: {
+						annotations: vThis.getFeedInLimitAnnotations(),
+					},
 					datalabels: {
 						backgroundColor(context: Context) {
 							return context.dataset.borderColor;
@@ -298,6 +338,7 @@ export default defineComponent({
 							if (value.highlight) {
 								switch (context.dataset.label) {
 									case ForecastType.Price:
+									case ForecastType.FeedIn:
 										return vThis.fmtPricePerKWh(
 											value.y,
 											vThis.currency,
@@ -367,22 +408,24 @@ export default defineComponent({
 							},
 						},
 					},
-					yForecast: {
-						...this.yScaleOptions(ForecastType.Solar),
-						min: 0,
-						max: this.yMaxEntry(this.solarEntries, this.solar?.scale),
-						beginAtZero: true,
-					},
-					yCo2: {
-						...this.yScaleOptions(ForecastType.Co2),
-						min: 0,
-						max: this.yMax(this.co2Slots),
-					},
-					yPrice: {
-						...this.yScaleOptions(ForecastType.Price),
-						suggestedMin: 0,
-						max: this.yMax(this.gridSlots),
-					},
+					...(() => {
+						const scales = this.calculateAlignedScales();
+						return {
+							yForecast: {
+								...this.yScaleOptions(ForecastType.Solar),
+								...scales.solar,
+								beginAtZero: true,
+							},
+							yCo2: {
+								...this.yScaleOptions(ForecastType.Co2),
+								...scales.co2,
+							},
+							yPrice: {
+								...this.yScaleOptions(ForecastType.Price, ForecastType.FeedIn),
+								...scales.price,
+							},
+						};
+					})(),
 				},
 			};
 		},
@@ -393,6 +436,7 @@ export default defineComponent({
 				[ForecastType.Solar]: this.solarEntries,
 				[ForecastType.Price]: this.gridSlots,
 				[ForecastType.Co2]: this.co2Slots,
+				[ForecastType.FeedIn]: this.feedinSlots,
 			};
 
 			return slotMap[this.selected]?.[this.selectedIndex] ?? null;
@@ -401,6 +445,12 @@ export default defineComponent({
 	watch: {
 		selectedSlot(slot) {
 			this.$emit("selected", slot);
+		},
+		feedInDisabledZones() {
+			this.updateChart();
+		},
+		selected() {
+			this.updateChart();
 		},
 	},
 	mounted() {
@@ -418,6 +468,73 @@ export default defineComponent({
 		}
 	},
 	methods: {
+		updateChart() {
+			// Force chart update
+			this.$nextTick(() => {
+				// @ts-expect-error unknown chart type
+				this.$refs.chart?.chart?.update();
+			});
+		},
+		getFeedInLimitAnnotations() {
+			const annotations: Record<string, any> = {};
+
+			// Only show annotations if zones exist
+			if (!this.feedInDisabledZones || this.feedInDisabledZones.length === 0) {
+				return annotations;
+			}
+
+			// Determine color based on whether feedin is selected
+			const isActive = this.selected === ForecastType.FeedIn;
+			const patternColor = isActive ? colors.export : colors.border;
+			const patternOpacity = isActive ? 0.6 : 0.4;
+
+			// Create annotations for each disabled zone
+			this.feedInDisabledZones.forEach((zone, zoneIndex) => {
+				// Bar charts center bars on their time value
+				// We need to extend from half slot before start to the end
+				const startTime = new Date(zone.start);
+				const endTime = new Date(zone.end);
+
+				// Calculate slot duration (typically 1 hour for feedin slots)
+				const firstSlot = this.feedinSlots[0];
+				const slotDuration = firstSlot
+					? new Date(firstSlot.end).getTime() - new Date(firstSlot.start).getTime()
+					: 3600000; // Default to 1 hour
+
+				// Bars are centered on their time value
+				// Extend start by half slot to left, reduce end by half slot to right
+				const halfSlot = slotDuration / 2;
+				startTime.setTime(startTime.getTime() - halfSlot);
+				endTime.setTime(endTime.getTime() - halfSlot);
+
+				annotations[`feedInDisabledZone${zoneIndex}`] = {
+					type: "box",
+					drawTime: "beforeDatasetsDraw",
+					xMin: startTime,
+					xMax: endTime,
+					yMin: "min",
+					yMax: "max",
+					backgroundColor: (context: any) => {
+						const pattern = createFeedInDisabledPattern(
+							context.chart.ctx,
+							patternColor || "",
+							patternOpacity
+						);
+						if (pattern) {
+							// Anchor pattern to the adjusted start of the zone
+							const chart = context.chart;
+							const xScale = chart.scales.x;
+							const pixelX = xScale.getPixelForValue(startTime);
+							pattern.setTransform(new DOMMatrix().translateSelf(pixelX, 0));
+						}
+						return pattern || "transparent";
+					},
+					borderWidth: 0,
+				};
+			});
+
+			return annotations;
+		},
 		updateStartDate() {
 			const now = new Date();
 			now.setMinutes(0);
@@ -496,8 +613,8 @@ export default defineComponent({
 				return entry.val > entries[max].val ? index : max;
 			}, 0);
 		},
-		yScaleOptions(type: ForecastType) {
-			return type === this.selected
+		yScaleOptions(...types: ForecastType[]) {
+			return this.selected && types.includes(this.selected)
 				? {
 						display: true,
 						ticks: { display: false },
@@ -512,6 +629,78 @@ export default defineComponent({
 						},
 					}
 				: { display: false };
+		},
+		getDatasetOrder(type: ForecastType, active: boolean): number {
+			// Special handling for price/feedin group - they share the same Y-axis
+			// and should maintain consistent order (price first, then feedin)
+			const isPriceGroup = type === ForecastType.Price || type === ForecastType.FeedIn;
+			const isSelectedPriceGroup =
+				this.selected === ForecastType.Price || this.selected === ForecastType.FeedIn;
+
+			if (isPriceGroup && isSelectedPriceGroup) {
+				// Both price and feedin should be rendered on top when either is selected
+				// Price gets order 0, feedin gets order 1 (price renders first)
+				return type === ForecastType.Price ? 0 : 1;
+			}
+
+			// Standard ordering: selected type gets order 0, others get order 1
+			return active ? 0 : 1;
+		},
+		calculateAlignedScales() {
+			// Different units need individual scales but aligned 0 lines
+			// Challenge: Price/feedin can be negative, solar/CO₂ are always positive
+			// Solution: Adjust all scales so 0 appears at the same relative position
+
+			const solarMax = this.yMaxEntry(this.solarEntries, this.solar?.scale) || 10;
+			const co2Max = this.yMax(this.co2Slots) || 500;
+
+			// For price data, we need to find both min and max values
+			const priceValues = [
+				...(this.gridSlots?.map((slot) => slot.value) || []),
+				...(this.feedinSlots?.map((slot) => slot.value) || []),
+			].filter((val) => val != null);
+
+			let priceMin = 0;
+			let priceMax = 0.5;
+
+			if (priceValues.length > 0) {
+				const actualMin = Math.min(...priceValues);
+				const actualMax = Math.max(...priceValues);
+
+				// Add 15% padding like original yMax method
+				priceMin = actualMin < 0 ? actualMin * 1.15 : 0;
+				priceMax = actualMax > 0 ? actualMax * 1.15 : 0;
+			}
+
+			// Calculate where 0 should be positioned (as ratio from bottom)
+			// If price has negative values, 0 is not at the bottom
+			const priceRange = priceMax - priceMin;
+			const zeroPosition = priceRange > 0 ? Math.abs(priceMin) / priceRange : 0;
+
+			// Adjust solar and co2 scales to position their 0 at the same relative position
+			let adjustedSolarMin = 0;
+			let adjustedCo2Min = 0;
+
+			if (zeroPosition > 0 && zeroPosition < 1) {
+				// 0 is not at bottom, need to add negative space to solar/co2
+				adjustedSolarMin = -solarMax * (zeroPosition / (1 - zeroPosition));
+				adjustedCo2Min = -co2Max * (zeroPosition / (1 - zeroPosition));
+			}
+
+			return {
+				solar: {
+					min: adjustedSolarMin,
+					max: solarMax,
+				},
+				co2: {
+					min: adjustedCo2Min,
+					max: co2Max,
+				},
+				price: {
+					min: priceMin,
+					max: priceMax,
+				},
+			};
 		},
 	},
 });

@@ -117,6 +117,9 @@ type Site struct {
 	batteryMode              api.BatteryMode // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time       // Battery mode timer for external control
+
+	smartFeedInDisableLimit  *float64 // Feed-in limit
+	smartFeedInDisableActive bool     // Feed-in limit active
 }
 
 // MetersConfig contains the site's meter configuration
@@ -161,6 +164,16 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
 			telemetry.Persist(log)
+		})
+	}
+
+	if site.smartFeedInDisableAvailable() {
+		shutdown.Register(func() {
+			if site.SmartFeedInDisableActive() {
+				if err := site.setFeedInDisable(false); err != nil {
+					site.log.ERROR.Printf("smart feed-in disable: %v", err)
+				}
+			}
 		})
 	}
 
@@ -939,22 +952,25 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	rate, err := consumption.At(time.Now())
+	rate, err := rateAt(consumption, time.Now())
 	if consumption != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(consumption) > 0 {
-			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
-				consumption[0].Start.Local().Format(time.RFC3339),
-				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
+		site.log.WARN.Printf("planner: %v", err)
 	}
 
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
+
+	// smart feed-in disable
+	if site.smartFeedInDisableAvailable() {
+		if feedinRate, err := rateAt(feedin, time.Now()); err == nil {
+			if err := site.UpdateSmartFeedInDisable(feedinRate); err != nil {
+				site.log.WARN.Printf("set feed-in limit: %v", err)
+			}
+		} else {
+			site.log.WARN.Printf("feed-in: %v", err)
+		}
+	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
@@ -1014,6 +1030,7 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
+	site.publish(keys.SmartFeedInDisableAvailable, site.smartFeedInDisableAvailable())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {

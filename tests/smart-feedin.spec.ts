@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible, openTopNavigation } from "./utils";
 
 const CONFIG = "smart-feedin.evcc.yaml";
 
@@ -70,5 +70,62 @@ test.describe("smart feed-in priority", async () => {
     const modal2 = page.getByTestId("loadpoint-settings-modal").last();
     await expectModalVisible(modal2);
     await expect(modal2.getByLabel("Feed-in limit")).toHaveValue("0.1");
+  });
+});
+
+test.describe("smart feed-in disable (zero feed-in)", async () => {
+  test("configure feed-in limit and verify production reduced indicator", async ({ page }) => {
+    await page.goto("/");
+
+    // open energy flow
+    const energyflow = page.getByTestId("energyflow");
+    await energyflow.click();
+    await expect(energyflow).not.toContainText("Production (reduced)");
+
+    // open export in forecast modal
+    await openTopNavigation(page);
+    await page.getByTestId("topnavigation-forecast").click();
+    const forecastModal = page.getByTestId("forecast-modal");
+    await expectModalVisible(forecastModal);
+    await forecastModal.getByRole("button", { name: "Export" }).click();
+
+    // verify content sections
+    await expect(forecastModal.getByText("Average")).toBeVisible();
+    await expect(forecastModal.getByText("2.5 ct/kWh")).toBeVisible();
+    await expect(forecastModal.getByText("Range")).toBeVisible();
+    await expect(forecastModal.getByText("-2.0 – 10.0 ct/kWh")).toBeVisible();
+    await expect(forecastModal.getByText("Highest hour")).toBeVisible();
+    await expect(forecastModal.getByText("10.0 ct/kWh")).toBeVisible();
+
+    // enable limit
+    const smartFeedInLimit = forecastModal.getByTestId("smart-feed-in-disable-limit");
+    await expect(smartFeedInLimit).toContainText("low");
+    await smartFeedInLimit.getByRole("switch").click();
+    await expect(smartFeedInLimit).toContainText("≤ 0.0 ct");
+
+    // change limit
+    const options = smartFeedInLimit.locator("#smartFeedInDisableLimit");
+    await options.selectOption({ label: "≤ -2.0 ct" });
+    await expect(smartFeedInLimit).toContainText("≤ -2.0 ct");
+
+    // set high limit
+    await options.selectOption({ label: "≤ 10.0 ct" });
+    await forecastModal.getByLabel("Close").click();
+    await expectModalHidden(forecastModal);
+
+    // verify limit
+    await expect(energyflow).toContainText("Production (reduced)");
+
+    // reset to normal
+    await openTopNavigation(page);
+    await page.getByTestId("topnavigation-forecast").click();
+    await expectModalVisible(forecastModal);
+    await forecastModal.getByRole("button", { name: "Export" }).click();
+    await smartFeedInLimit.getByRole("switch").click();
+    await forecastModal.getByLabel("Close").click();
+    await expectModalHidden(forecastModal);
+
+    // verify reset
+    await expect(energyflow).not.toContainText("Production (reduced)");
   });
 });

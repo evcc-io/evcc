@@ -605,15 +605,22 @@
   "forecast": {
     "co2": {
       "average": "Average",
-      "lowestHour": "Cleanest hour",
+      "highlightedHour": "Cleanest hour",
+      "range": "Range"
+    },
+    "feedin": {
+      "average": "Average",
+      "highlightedHour": "Highest hour",
       "range": "Range"
     },
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",
-      "lowestHour": "Cheapest hour",
+      "highlightedHour": "Cheapest hour",
       "range": "Range"
     },
+    "smartFeedInDisable": "Reduce solar production when feed-in prices are {limit}.",
+    "smartFeedInDisableLow": "low",
     "solar": {
       "dayAfterTomorrow": "Day after tomorrow",
       "partly": "partly",
@@ -624,7 +631,8 @@
     "solarAdjust": "Adjust solar forecast based on real production data{percent}.",
     "type": {
       "co2": "CO₂",
-      "price": "Price",
+      "feedin": "Export",
+      "price": "Grid use",
       "solar": "Solar"
     }
   },
@@ -731,6 +739,7 @@
       "pv": "Solar system",
       "pvExport": "Grid export",
       "pvProduction": "Production",
+      "pvProductionLimited": "reduced",
       "selfConsumption": "Self-consumption"
     },
     "heatingStatus": {

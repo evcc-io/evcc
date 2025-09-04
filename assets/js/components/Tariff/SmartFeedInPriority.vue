@@ -25,7 +25,7 @@ import api from "@/api";
 import { type CURRENCY } from "@/types/evcc";
 
 export default defineComponent({
-	name: "SmartFeedInPriority",
+	name: "SmartFeedinPriority",
 	components: { SmartTariffBase },
 	props: {
 		currentLimit: {

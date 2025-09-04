@@ -509,13 +509,13 @@
   "forecast": {
     "co2": {
       "average": "Media",
-      "lowestHour": "Ora più ecologica",
+      "highlightedHour": "Ora più ecologica",
       "range": "Intervallo"
     },
     "modalTitle": "Previsioni",
     "price": {
       "average": "Media",
-      "lowestHour": "Ora più economica",
+      "highlightedHour": "Ora più economica",
       "range": "Intervallo"
     },
     "solar": {

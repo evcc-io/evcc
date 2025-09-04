@@ -76,4 +76,10 @@ type API interface {
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
 	SetBatteryModeExternal(api.BatteryMode)
+
+	//
+	// feed-in control
+	//
+	GetSmartFeedInDisableLimit() *float64
+	SetSmartFeedInDisableLimit(limit *float64)
 }

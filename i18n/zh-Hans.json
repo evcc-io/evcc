@@ -521,13 +521,13 @@
   "forecast": {
     "co2": {
       "average": "平均值",
-      "lowestHour": "最清洁时段",
+      "highlightedHour": "最清洁时段",
       "range": "范围"
     },
     "modalTitle": "预测",
     "price": {
       "average": "平均值",
-      "lowestHour": "最便宜时段",
+      "highlightedHour": "最便宜时段",
       "range": "范围"
     },
     "solar": {
