@@ -45,15 +45,28 @@
       "switchsockets": "Prese commutabili",
       "template": "Produttore",
       "titleAdd": {
-        "charging": "Aggiungi caricabatterie"
+        "charging": "Aggiungi caricabatterie",
+        "heating": ""
       },
       "titleEdit": {
-        "charging": "Modifica caricabatterie"
+        "charging": "Modifica caricabatterie",
+        "heating": ""
+      },
+      "type": {
+        "custom": {
+          "charging": "",
+          "heating": ""
+        },
+        "heatpump": "",
+        "sgready": "",
+        "sgready-boost": "",
+        "switchsocket": ""
       }
     },
     "circuits": {
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
-      "title": "Gestione del carico"
+      "title": "Gestione del carico",
+      "usableMeters": ""
     },
     "control": {
       "description": "Normalmente le impostazioni di default sono adeguate. Modificale solo se sai cosa stai facendo.",
@@ -86,6 +99,7 @@
       "feedinPrice": "Prezzo di vendita",
       "gridPrice": "Prezzo d'acquisto",
       "heaterTempLimit": "Limite del dispositivo di riscaldamento",
+      "hemsActiveLimit": "",
       "hemsType": "Sistema",
       "identifier": "Identificatore RFID",
       "no": "no",
@@ -112,10 +126,17 @@
       "B": "B (collegato)",
       "C": "C (in carica)"
     },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
+    },
     "devices": {
       "auxMeter": "Dispositivo smart",
       "batteryStorage": "Batteria di accumulo",
       "solarSystem": "Sistema fotovoltaico"
+    },
+    "editor": {
+      "loading": ""
     },
     "eebus": {
       "description": "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus",
@@ -134,16 +155,21 @@
     },
     "general": {
       "cancel": "Annulla",
+      "customHelp": "",
+      "customOption": "",
       "delete": "Cancella",
       "docsLink": "Vedi la documentazione.",
       "experimental": "Sperimentale",
       "hideAdvancedSettings": "Nascondi impostazioni avanzate",
+      "invalidFileSelected": "",
+      "noFileSelected": "",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Importa da file",
       "remove": "Rimuovi",
       "save": "Salva",
+      "selectFile": "",
       "showAdvancedSettings": "Mostra impostazioni avanzate",
       "telemetry": "Telemetria",
       "templateLoading": "Caricamento...",
@@ -158,6 +184,9 @@
     "hems": {
       "description": "Connetti evcc ad un altro sistema di gestione della corrente di casa.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": ""
     },
     "influx": {
       "description": "Scrive i dati di ricarica e le altre metriche su InfluxDB. Usa Grafana o altri strumenti per visualizzare i dati.",
@@ -177,15 +206,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Aggiungi caricabatterie"
+        "charging": "Aggiungi caricabatterie",
+        "heating": ""
       },
       "addMeter": "Aggiungi un contatore dedicato per il caricabatterie",
       "cancel": "Annulla",
       "chargerError": {
-        "charging": "È necessario configurare un caricatore."
+        "charging": "È necessario configurare un caricatore.",
+        "heating": ""
       },
       "chargerLabel": {
-        "charging": "Caricabatterie"
+        "charging": "Caricabatterie",
+        "heating": ""
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16A",
@@ -195,10 +227,12 @@
       "chargerPowerCustomHelp": "Definire un intervallo di corrente personalizzato",
       "chargerTypeLabel": "Tipo di caricabatterie",
       "chargingTitle": "In carica",
+      "circuitHelp": "",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "non assegnato",
       "defaultModeHelp": {
-        "charging": "Modalità di ricarica quando si collega il veicolo."
+        "charging": "Modalità di ricarica quando si collega il veicolo.",
+        "heating": ""
       },
       "defaultModeHelpKeep": "Mantiene l'ultima modalità di ricarica selezionata.",
       "defaultModeLabel": "Modalità predefinita",
@@ -213,6 +247,10 @@
       "minCurrentHelp": "Scendere al di sotto dei 6A solo se si sa quello che si sta facendo.",
       "minCurrentLabel": "Corrente minima",
       "noVehicles": "Nessun veicolo configurato.",
+      "option": {
+        "charging": "",
+        "heating": ""
+      },
       "phases1p": "Monofase",
       "phases3p": "Trifase",
       "phasesAutomatic": "Fasi automatiche",
@@ -248,9 +286,20 @@
       "thresholdEnableHelpNegative": "Inizia la ricarica quando un surplus di {surplus} è disponibile per {delay}.",
       "thresholdEnableHelpZero": "Inizia la ricarica quando la potenza di ricarica minima è disponibile per {delay}.",
       "thresholdEnableLabel": "Soglia di attivazione (W)",
-      "titleAdd": "Aggiungi punto di ricarica",
-      "titleEdit": "Modifica punto di ricarica",
-      "titleExample": "Garage, posto auto, ecc.",
+      "titleAdd": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleEdit": {
+        "charging": "",
+        "heating": "",
+        "unknown": ""
+      },
+      "titleExample": {
+        "charging": "",
+        "heating": ""
+      },
       "titleLabel": "Titolo",
       "vehicleAutoDetection": "identificazione automatica",
       "vehicleHelpAutoDetection": "Seleziona automaticamente il veicolo più plausibile. E' comunque possibile la modifica manuale.",
@@ -281,6 +330,7 @@
     "meter": {
       "cancel": "Annulla",
       "delete": "Elimina",
+      "generic": "",
       "option": {
         "aux": "Aggiungi un consumatore autoregolato",
         "battery": "Aggiungi contatore batteria",
@@ -288,6 +338,7 @@
         "pv": "Aggiungi contatore fotovoltaico"
       },
       "save": "Salva",
+      "specific": "",
       "template": "Produttore",
       "titleChoice": "Cosa vuoi aggiungere?",
       "validateSave": "Conferma e salva"
@@ -352,6 +403,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "",
+        "standby": ""
+      },
       "schema": {
         "http": "HTTP (non crittografato)",
         "https": "HTTPS (crittografato)"
@@ -381,14 +436,51 @@
       "changeToken": "Modifica il token",
       "description": "Il modello di sponsorizzazione ci aiuta a mantenere il progetto e a introdurre in modo sostenibile nuove ed entusiasmanti funzionalità. Come sponsor hai accesso a tutte le implementazioni del caricabatterie.",
       "descriptionToken": "Ricevi il token da {url}. Offriamo anche un token di prova per i test {trialToken}.",
+      "enterYourToken": "",
       "error": "Il token sponsor non è valido.",
+      "invalid": "",
       "labelToken": "Token sponsor",
       "title": "Sponsorizzazione",
       "tokenRequired": "Devi configurare un token sponsor prima di poter creare questo dispositivo.",
       "tokenRequiredLearnMore": "Maggiori informazioni",
-      "trialToken": "Token di prova"
+      "tokenRequiredShort": "",
+      "trialToken": "Token di prova",
+      "viaYaml": "",
+      "yourToken": ""
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "title": ""
+        },
+        "cancel": "",
+        "description": "",
+        "note": "",
+        "reset": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "sessions": "",
+          "sessionsDescription": "",
+          "settings": "",
+          "settingsDescription": "",
+          "title": ""
+        },
+        "restore": {
+          "action": "",
+          "confirmationButton": "",
+          "confirmationText": "",
+          "description": "",
+          "labelFile": "",
+          "title": ""
+        },
+        "title": ""
+      },
       "logs": "Logs",
       "restart": "Riavvia",
       "restartRequiredDescription": "Riavvia per vedere l'effetto.",
@@ -429,6 +521,7 @@
       "minimumCurrent": "Corrente minima",
       "minimumCurrentHelp": "Scendi al di sotto di 6A solo se sai cosa stai facendo.",
       "online": "Veicoli con API online",
+      "primary": "",
       "priority": "Priorità",
       "priorityHelp": "Con una priorità maggiore il veicolo ha un accesso prioritario al surplus solare.",
       "save": "Salva",
@@ -537,6 +630,10 @@
   },
   "header": {
     "about": "Riguardo",
+    "authProviders": {
+      "confirmLogout": "",
+      "title": ""
+    },
     "blog": "Blog",
     "docs": "Documentazione",
     "github": "GitHub",
@@ -581,6 +678,7 @@
   },
   "loginModal": {
     "cancel": "Annulla",
+    "demoMode": "",
     "error": "Login fallito: ",
     "iframeHint": "Apri evcc in una nuova scheda.",
     "iframeIssue": "La tua password è corretta, ma sembra che il cookie di autenticazione sia stato eliminato. Questo può succedere quando usi evcc su un iframe su HTTP.",
@@ -630,6 +728,7 @@
       "gridImport": "Uso della rete",
       "homePower": "Consumo",
       "loadpoints": "Caricabatterie| Caricabatterie | {count} caricabatterie",
+      "loadpointsLimit": "",
       "noEnergy": "Nessun valore",
       "pv": "Fotovoltaico",
       "pvExport": "Immissione in rete",
@@ -641,6 +740,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Limite riscaldamento",
       "waitForVehicle": "Pronto. In attesa del calorifero. . ."
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Prezzo",
@@ -778,6 +881,8 @@
       "connected": "Collegato.",
       "disconnectRequired": "Sessione terminata. Per favore riconnettersi.",
       "disconnected": "Disconnesso.",
+      "feedinPriorityNextStart": "",
+      "feedinPriorityPausing": "",
       "finished": "Finito.",
       "minCharge": "Ricarica minima a {soc}.",
       "pvDisable": "Eccedenza insufficiente. In pausa {remaining}…",
@@ -972,6 +1077,14 @@
     "resetAction": "Rimuovi limite",
     "resetWarning": "Tariffa dinamica o sorgente di CO₂ non configurate. Tuttavia, c'è ancora un limite di {limit}. Annullare la configurazione?",
     "saved": "Salvato."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "",
+    "description": "",
+    "priceLabel": "",
+    "priceLimit": "",
+    "resetWarning": "",
+    "title": ""
   },
   "startupError": {
     "configFile": "File di configurazione utilizzato:",
