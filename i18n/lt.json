@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
-      "title": "Apkrovos valdymas"
+      "title": "Apkrovos valdymas",
+      "usableMeters": ""
     },
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Tiekimo į tinklą kaina",
       "gridPrice": "Energijos pirkimo kaina",
       "heaterTempLimit": "Šildymo limitas",
+      "hemsActiveLimit": "",
       "hemsType": "Sistema",
       "identifier": "RFID-Identifikatorius",
       "no": "ne",
@@ -123,6 +125,10 @@
       "A": "A (neprijungtas)",
       "B": "B (prijungtas)",
       "C": "C (įkrauna)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Išmanusis vartotojas",
@@ -723,6 +729,7 @@
       "gridImport": "Iš tinklo",
       "homePower": "Namo suvartojimas",
       "loadpoints": "Įkroviklis | Įkroviklis | {count} įkrovikliai",
+      "loadpointsLimit": "",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
       "pvExport": "Tinklo eksportas",
@@ -734,6 +741,10 @@
       "connected": "Budėjimo režimas.",
       "vehicleLimit": "Šildymo limitas",
       "waitForVehicle": "Paruošta. Laukiame šildytuvo…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Kaina",
