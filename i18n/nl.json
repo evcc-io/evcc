@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
-      "title": "Electriciteitsnetwerk beheer"
+      "title": "Electriciteitsnetwerk beheer",
+      "usableMeters": ""
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
@@ -98,6 +99,7 @@
       "feedinPrice": "Terugleververgoeding",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
+      "hemsActiveLimit": "",
       "hemsType": "Systeem",
       "identifier": "RFID-Nummer",
       "no": "nee",
@@ -123,6 +125,10 @@
       "A": "A (niet aangesloten)",
       "B": "B (aangesloten)",
       "C": "C (opladen)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "",
+      "relay": ""
     },
     "devices": {
       "auxMeter": "Slimme verbruiker",
@@ -722,6 +728,7 @@
       "gridImport": "Netafname",
       "homePower": "Consumptie",
       "loadpoints": "Lader| Lader | {count} laders",
+      "loadpointsLimit": "",
       "noEnergy": "Geen meter data",
       "pv": "PV-systeem",
       "pvExport": "Netinjectie",
@@ -733,6 +740,10 @@
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
       "waitForVehicle": "Klaar. Wachten op verwarming…"
+    },
+    "hemsWarning": {
+      "description": "",
+      "title": ""
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",
