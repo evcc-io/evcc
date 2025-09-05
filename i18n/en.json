@@ -99,7 +99,8 @@
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Active limit",
+      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "no": "no",
       "odometer": "Odometer",
@@ -124,6 +125,10 @@
       "A": "A (not connected)",
       "B": "B (connected)",
       "C": "C (charging)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart consumer",
@@ -177,7 +182,7 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
-      "description": "Connect evcc to another home energy management system.",
+      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
       "title": "HEMS"
     },
     "icon": {
@@ -721,6 +726,7 @@
       "gridImport": "Grid use",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",
       "pvExport": "Grid export",
@@ -732,6 +738,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready. Waiting for heater…"
+    },
+    "hemsWarning": {
+      "description": "Reduced charging to not exceed {limit}.",
+      "title": "External limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",

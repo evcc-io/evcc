@@ -10,6 +10,7 @@ let state = {
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
+  hems: { relay: false },
 };
 
 const loggingMiddleware = (
