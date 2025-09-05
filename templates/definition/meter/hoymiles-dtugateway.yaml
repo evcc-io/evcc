@@ -1,0 +1,19 @@
+template: hoymiles-DTUGateway
+products:
+  - brand: Hoymiles
+    description:
+      generic: HM & HMS Series (via DTU Gateway)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/api/data.json
+    jq: .grid.p
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/data.json
+    jq: .grid.tE
