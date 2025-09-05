@@ -223,14 +223,12 @@ type parseResult struct {
 	types                          []string
 }
 
-func parseFile(file string) (*parseResult, error) {
+func parseFile(file string, function, basetype, returntype *string, types *[]string) error {
 	f, err := os.Open(file)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer f.Close()
-
-	var res parseResult
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -244,20 +242,20 @@ func parseFile(file string) (*parseResult, error) {
 
 			switch segs[0] {
 			case "function":
-				res.function = segs[1]
+				*function = segs[1]
 			case "basetype":
-				res.basetype = segs[1]
+				*basetype = segs[1]
 			case "returntype":
-				res.returntype = segs[1]
+				*returntype = segs[1]
 			case "type":
-				res.types = append(res.types, segs[1])
+				*types = append(*types, segs[1])
 			default:
 				panic("invalid directive //evcc:" + segs[0])
 			}
 		}
 	}
 
-	return &res, scanner.Err()
+	return scanner.Err()
 }
 
 func main() {
@@ -277,23 +275,9 @@ func main() {
 	}
 
 	if *function == "" {
-		parsed, err := parseFile(gofile)
-		if err != nil {
+		if err := parseFile(gofile, function, base, ret, types); err != nil {
 			fmt.Println(err)
 			os.Exit(2)
-		}
-
-		if parsed.basetype != "" {
-			base = &parsed.basetype
-		}
-		if parsed.returntype != "" {
-			ret = &parsed.returntype
-		}
-		if parsed.function != "" {
-			function = &parsed.function
-		}
-		if len(parsed.types) > 0 {
-			types = &parsed.types
 		}
 	}
 
