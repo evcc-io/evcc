@@ -1,8 +1,9 @@
-template: hoymiles-DTUGateway
+template: hoymiles-dtugateway
 products:
   - brand: Hoymiles
     description:
-      generic: HM & HMS Series (via DTU Gateway)
+      de: HMS Serie mit integriertem WLAN (über DTU Gateway)
+      en: HMS Series with integrated Wifi (via DTU Gateway)
 params:
   - name: usage
     choice: ["pv"]
