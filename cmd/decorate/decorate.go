@@ -252,7 +252,7 @@ func parseFile(file string) (*parseResult, error) {
 			case "type":
 				res.types = append(res.types, segs[1])
 			default:
-				panic("invalid command //evcc:" + segs[0])
+				panic("invalid directive //evcc:" + segs[0])
 			}
 		}
 	}
