@@ -429,7 +429,7 @@
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
-      "descriptionToken": "\"Sponsorer finder deres token på {url}. For at komme i gang tilbyder vi en\" ",
+      "descriptionToken": "Sponsorer finder deres token på {url}. For at komme i gang tilbyder vi en{trialToken}.",
       "enterYourToken": "Indtast din token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
       "invalid": "ugyldig",

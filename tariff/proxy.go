@@ -35,10 +35,23 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		}
 	}
 
+	var embed struct {
+		Features []api.Feature  `mapstructure:"features"`
+		Other    map[string]any `mapstructure:",remain"`
+	}
+
+	if err := util.DecodeOther(other, &embed); err != nil {
+		return nil, err
+	}
+
+	if !slices.Contains(embed.Features, api.Cacheable) {
+		return NewFromConfig(ctx, typ, embed.Other)
+	}
+
 	p := &CachingProxy{
 		ctx:    ctx,
 		typ:    typ,
-		config: other,
+		config: embed.Other,
 		key:    tariffType + "-" + cacheKey(typ, other),
 	}
 
@@ -46,7 +59,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	data, err := p.cacheGet(untilEndOfTomorrow())
 	if err != nil {
 		// attempt to create a new instance
-		tariff, err := NewFromConfig(ctx, typ, other)
+		tariff, err := NewFromConfig(ctx, typ, embed.Other)
 		if err != nil {
 			// check if we have at least data for the next 24 hours
 			atLeast2hrs, err2 := p.cacheGet(for24hrs())

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )
@@ -55,7 +56,7 @@ func WithProperties(p Properties) func(*Config) {
 
 // Update updates a config's details to the database
 func (d *Config) Update(conf map[string]any, opt ...func(*Config)) error {
-	return db.Transaction(func(tx *gorm.DB) error {
+	return db.Instance.Transaction(func(tx *gorm.DB) error {
 		var config Config
 		if err := tx.Where(Config{Class: d.Class, ID: d.ID}).First(&config).Error; err != nil {
 			return err
@@ -72,15 +73,11 @@ func (d *Config) Update(conf map[string]any, opt ...func(*Config)) error {
 
 // Delete deletes a config from the database
 func (d *Config) Delete() error {
-	return db.Delete(Config{ID: d.ID}).Error
+	return db.Instance.Delete(Config{ID: d.ID}).Error
 }
 
-var db *gorm.DB
-
-func Init(instance *gorm.DB) error {
-	db = instance
-	m := db.Migrator()
-	return m.AutoMigrate(new(Config))
+func Init() error {
+	return db.Instance.AutoMigrate(new(Config))
 }
 
 // NameForID returns a unique config name for the given id
@@ -96,7 +93,7 @@ func IDForName(name string) (int, error) {
 // ConfigurationsByClass returns devices by class from the database
 func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	var devices []Config
-	tx := db.Where(&Config{Class: class}).Find(&devices)
+	tx := db.Instance.Where(&Config{Class: class}).Find(&devices)
 
 	// remove devices without details
 	res := make([]Config, 0, len(devices))
@@ -112,7 +109,7 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 // ConfigByID returns device by id from the database
 func ConfigByID(id int) (Config, error) {
 	var config Config
-	tx := db.Where(&Config{ID: id}).First(&config)
+	tx := db.Instance.Where(&Config{ID: id}).First(&config)
 	return config, tx.Error
 }
 
@@ -127,7 +124,7 @@ func AddConfig(class templates.Class, conf map[string]any, opt ...func(*Config))
 		o(&config)
 	}
 
-	if err := db.Create(&config).Error; err != nil {
+	if err := db.Instance.Create(&config).Error; err != nil {
 		return Config{}, err
 	}
 

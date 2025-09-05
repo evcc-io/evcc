@@ -75,7 +75,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		for _, dev := range meters {
 			v := dev.Instance()
 
-			d.DumpWithHeader(dev.Config().Name, v)
+			d.DumpWithHeader(deviceHeader(dev), v)
 		}
 		if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
 			if d, err := cmd.Flags().GetDuration(flagRepeatInterval); d > 0 && err == nil {

@@ -559,12 +559,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
 	}
 
-	// setup config database
-	if err == nil {
-		// TODO decide wrapping
-		err = config.Init(db.Instance)
-	}
-
 	return err
 }
 
@@ -591,6 +585,10 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := cache.Init(); err != nil {
+		return err
+	}
+
+	if err := config.Init(); err != nil {
 		return err
 	}
 
@@ -875,16 +873,16 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 }
 
 func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
+	tariffs := tariff.Tariffs{
+		Currency: currency.EUR,
+	}
+
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
 		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
-			return nil, err
+			return &tariffs, err
 		}
-	}
-
-	tariffs := tariff.Tariffs{
-		Currency: currency.EUR,
 	}
 
 	if conf.Currency != "" {
@@ -903,7 +901,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	if err := eg.Wait(); err != nil {
-		return nil, &ClassError{ClassTariff, err}
+		return &tariffs, &ClassError{ClassTariff, err}
 	}
 
 	return &tariffs, nil

@@ -80,8 +80,13 @@ func ParseCredentialsPage(r io.ReadCloser) (CredentialParams, error) {
 }
 
 func parseCredentials(body string) (CredentialParams, error) {
+	var res CredentialParams
+
 	// find js block
 	match := regexp.MustCompile(`(?s)window._IDK\s*=\s*(.*?)[;<]`).FindAllStringSubmatch(body, -1)
+	if len(match) < 1 || len(match[0]) < 2 {
+		return res, errors.New("IDK form not found")
+	}
 
 	// clean quotes
 	quotes1 := strings.ReplaceAll(match[0][1], `'`, `"`)
@@ -90,7 +95,6 @@ func parseCredentials(body string) (CredentialParams, error) {
 	// strip , }
 	tmpl := regexp.MustCompile(`(?s),\s+}`).ReplaceAllString(quotes2, "}")
 
-	var res CredentialParams
 	err := json.Unmarshal([]byte(tmpl), &res)
 
 	return res, err
