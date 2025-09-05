@@ -49,7 +49,7 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    scale: 0.1
+    scale: 1
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -123,7 +123,7 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      scale: 0.1
+      scale: 1
     {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -131,7 +131,7 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      scale: 0.1
+      scale: 1
     {{- end }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
@@ -156,7 +156,7 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    scale: 0.1
+    scale: 1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
