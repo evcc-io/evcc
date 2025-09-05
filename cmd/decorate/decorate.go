@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	_ "embed"
 	"fmt"
@@ -20,7 +21,13 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+// go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate
+//evcc:function decorateTest
+//evcc:basetype api.Charger
+//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.PhaseSwitcher,Phases1p3p,func(int) error
+//evcc:type api.PhaseGetter,GetPhases,func() (int, error)
 
 //go:embed decorate.tpl
 var srcTmpl string
@@ -197,7 +204,7 @@ COMBO:
 var (
 	target   = pflag.StringP("out", "o", "", "output file")
 	pkg      = pflag.StringP("package", "p", "", "package name")
-	function = pflag.StringP("function", "f", "decorate", "function name")
+	function = pflag.StringP("function", "f", "", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
 	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
@@ -211,13 +218,83 @@ func Usage() {
 	pflag.PrintDefaults()
 }
 
+type parseResult struct {
+	function, basetype, returntype string
+	types                          []string
+}
+
+func parseFile(file string) (*parseResult, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var res parseResult
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if s, ok := strings.CutPrefix(line, "//evcc:"); ok {
+			segs := strings.SplitN(s, " ", 2)
+			if len(segs) != 2 {
+				panic("invalid segments: " + s)
+			}
+
+			switch segs[0] {
+			case "function":
+				res.function = segs[1]
+			case "basetype":
+				res.basetype = segs[1]
+			case "returntype":
+				res.returntype = segs[1]
+			case "type":
+				res.types = append(res.types, segs[1])
+			default:
+				panic("invalid command //evcc:" + segs[0])
+			}
+		}
+	}
+
+	return &res, scanner.Err()
+}
+
 func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
 
 	// read target from go:generate
+	gofile, ok := os.LookupEnv("GOFILE")
+	if *target == "" && ok {
+		gofile := strings.TrimSuffix(gofile, ".go") + "_decorators.go"
+		target = &gofile
+	}
+
+	// read target from go:generate
 	if gopkg, ok := os.LookupEnv("GOPACKAGE"); *pkg == "" && ok {
 		pkg = &gopkg
+	}
+
+	if *function == "" {
+		parsed, err := parseFile(gofile)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
+
+		if parsed.basetype != "" {
+			base = &parsed.basetype
+		}
+		if parsed.returntype != "" {
+			ret = &parsed.returntype
+		}
+		if parsed.function != "" {
+			function = &parsed.function
+		}
+		if len(parsed.types) > 0 {
+			types = &parsed.types
+		}
 	}
 
 	if *base == "" || *pkg == "" || len(*types) == 0 {
@@ -240,12 +317,6 @@ func main() {
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
-
-	// read target from go:generate
-	if gofile, ok := os.LookupEnv("GOFILE"); *target == "" && ok {
-		gofile = strings.TrimSuffix(gofile, ".go") + "_decorators.go"
-		target = &gofile
-	}
 
 	var name string
 	if target != nil {
