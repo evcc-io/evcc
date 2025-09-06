@@ -100,10 +100,14 @@ func (p *Prometheus) FloatGetter() (func() (float64, error), error) {
 
 		if res.Type() == model.ValVector {
 			vectorVal := res.(model.Vector)
-			if vectorVal.Len() < 1 {
-				return 0, fmt.Errorf("query returned empty %q, verify that the query returns values", model.ValVector.String())
+			if vectorVal.Len() != 1 {
+				return 0, fmt.Errorf("query must return exactly 1 metric, got %d instead", vectorVal.Len())
 			}
-			return float64(vectorVal[vectorVal.Len()-1].Value), nil
+			metric := vectorVal[0]
+			if metric.Histogram != nil {
+				return 0, fmt.Errorf("query returned histogram, expected value")
+			}
+			return float64(metric.Value), nil
 		}
 
 		return 0, fmt.Errorf("query returned value of type %q, expected %q or %q", res.Type().String(), model.ValScalar.String(), model.ValVector.String())
