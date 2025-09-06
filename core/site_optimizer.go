@@ -211,7 +211,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for i, b := range battery {
-		if b.Capacity == nil || b.Soc == nil {
+		// TODO decide if nil should be only indicator
+		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil || *b.Soc == 0 {
 			continue
 		}
 
