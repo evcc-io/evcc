@@ -32,7 +32,7 @@ params:
     description:
       de: GEN-Anschluss als Solar-Eingang verwenden
       en: Treat GEN port as solar input
-  - name: newfirmware
+  - name: firmware1098
     type: bool
     default: false
     advanced: true
@@ -56,7 +56,7 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if eq .newfirmware "true" }}
+    {{- if eq .firmware1098 "true" }}
     scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
     {{- else }}
     scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
@@ -134,7 +134,7 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if eq .newfirmware "true" }}
+      {{- if eq .firmware1098 "true" }}
       scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
       {{- else }}
       scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
@@ -146,7 +146,7 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if eq .newfirmware "true" }}
+      {{- if eq .firmware1098 "true" }}
       scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
       {{- else }}
       scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
@@ -175,7 +175,7 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if eq .newfirmware "true" }}
+    {{- if eq .firmware1098 "true" }}
     scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
     {{- else }}
     scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
