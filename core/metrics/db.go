@@ -9,28 +9,48 @@ import (
 
 type meter struct {
 	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
+	Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
 	Value     float64   `json:"val" gorm:"column:val"`
+}
+
+type entity struct {
+	Id   int    `gorm:"column:id;primarykey"`
+	Name string `gorm:"column:name;uniqueIndex:name_idx"`
 }
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func Init() error {
+	hasTable := db.Instance.Migrator().HasTable("entities")
+
+	// create entity first to make sure foreign keys for existing data work
+	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
+		return err
+	}
+
+	// create entity for id 1
+	if !hasTable {
+		if _, err := createEntity(Home); err != nil {
+			return err
+		}
+	}
+
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// Persist stores 15min consumption in Wh
-func Persist(ts time.Time, value float64) error {
-	return db.Instance.Create(meter{
-		Meter:     1,
+// persist stores 15min consumption in Wh
+func persist(entity entity, ts time.Time, value float64) error {
+	return db.Instance.Create(&meter{
+		Entity:    entity,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
 	}).Error
 }
 
-// Profile returns a 15min average meter profile in Wh.
-// Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
-func Profile(from time.Time) (*[96]float64, error) {
+// profile returns a 15min average meter profile in Wh.
+// profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
+func profile(entity entity, from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
