@@ -32,6 +32,13 @@ params:
     description:
       de: GEN-Anschluss als Solar-Eingang verwenden
       en: Treat GEN port as solar input
+  - name: firmwareversion
+    type: bool
+    default: false
+    advanced: true
+    description:
+      de: Controller Firmware Version 1098 oder neuer installiert -> neuere Firmware verwendet andere Skalierung mancher Modbusregister
+      en: Controller Firmware Version 1098 or newer installed -> new firmware uses different scaling factors for some modbus registers
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -49,7 +56,11 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    scale: 1
+    {{- if eq .firmwareversion "true" }}
+    scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
+    {{- else }}
+    scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
+    {{- end }}
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -123,7 +134,11 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      scale: 1
+      {{- if eq .firmwareversion "true" }}
+      scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
+      {{- else }}
+      scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
+      {{- end }}
     {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -131,7 +146,11 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      scale: 1
+      {{- if eq .firmwareversion "true" }}
+      scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
+      {{- else }}
+      scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
+      {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
@@ -156,7 +175,11 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    scale: 1
+    {{- if eq .firmwareversion "true" }}
+    scale: 1   # Firmware >= 1098: scaling factor is 1 kWh
+    {{- else }}
+    scale: 0.1 # Older firmware: scaling factor is 0.1 kWh
+    {{- end }}
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
