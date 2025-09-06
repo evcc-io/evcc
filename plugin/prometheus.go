@@ -93,12 +93,20 @@ func (p *Prometheus) FloatGetter() (func() (float64, error), error) {
 			return 0, err
 		}
 
-		if res.Type() != model.ValScalar {
-			return 0, fmt.Errorf("query returned value of type %q, expected %q, consider wrapping query in scalar()", res.Type().String(), model.ValScalar.String())
+		if res.Type() == model.ValScalar {
+			scalarVal := res.(*model.Scalar)
+			return float64(scalarVal.Value), nil
 		}
 
-		scalarVal := res.(*model.Scalar)
-		return float64(scalarVal.Value), nil
+		if res.Type() == model.ValVector {
+			vectorVal := res.(model.Vector)
+			if vectorVal.Len() < 1 {
+				return 0, fmt.Errorf("query returned empty %q, verify that the query returns values", model.ValVector.String())
+			}
+			return float64(vectorVal[vectorVal.Len()-1].Value), nil
+		}
+
+		return 0, fmt.Errorf("query returned value of type %q, expected %q or %q", res.Type().String(), model.ValScalar.String(), model.ValVector.String())
 	}, nil
 }
 
