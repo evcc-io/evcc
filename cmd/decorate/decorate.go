@@ -218,11 +218,6 @@ func Usage() {
 	pflag.PrintDefaults()
 }
 
-type parseResult struct {
-	function, basetype, returntype string
-	types                          []string
-}
-
 func parseFile(file string, function, basetype, returntype *string, types *[]string) error {
 	f, err := os.Open(file)
 	if err != nil {
