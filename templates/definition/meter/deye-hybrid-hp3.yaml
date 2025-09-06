@@ -37,8 +37,8 @@ params:
     default: false
     advanced: true
     description:
-      de: Für Firmware 1098 und neuer: andere Skalierung
-      en: For Firmware 1098 and newer: different scaling factors
+      de: Andere Skalierung für Firmware 1098 und neuer
+      en: Different scaling factors for Firmware 1098 and newer 
 render: |
   type: custom
   {{- if eq .usage "grid" }}
