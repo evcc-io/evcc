@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
-      "title": "Apkrovos valdymas"
+      "title": "Apkrovos valdymas",
+      "usableMeters": "Galimi skaitikliai"
     },
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Tiekimo į tinklą kaina",
       "gridPrice": "Energijos pirkimo kaina",
       "heaterTempLimit": "Šildymo limitas",
-      "hemsType": "Sistema",
+      "hemsActiveLimit": "Aktyvus limitas",
+      "hemsType": "Komunikacija",
       "identifier": "RFID-Identifikatorius",
       "no": "ne",
       "odometer": "Odometras",
@@ -123,6 +125,10 @@
       "A": "A (neprijungtas)",
       "B": "B (prijungtas)",
       "C": "C (įkrauna)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "naudoja EEBus",
+      "relay": "naudoja Relė"
     },
     "devices": {
       "auxMeter": "Išmanusis vartotojas",
@@ -176,7 +182,7 @@
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
-      "description": "Prijunkite evcc prie kitos namų energijos valdymo sistemos.",
+      "description": "Galios ribojimas naudojant išorinę sistemą (pvz. “EnWG 14a” valdiklį). Reikia apkrovos valdymo konfigūracijos.",
       "title": "HEMS"
     },
     "icon": {
@@ -429,7 +435,7 @@
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
-      "descriptionToken": "Rėmėjai žetoną (token) gauna iš {url}. Taip pat siūlome laikiną žetoną pabandymui. ",
+      "descriptionToken": "Rėmėjai ras savo žetoną (token) {url}. Pradžiai siūlome {trialToken}.",
       "enterYourToken": "Įrašykite savo žetoną",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
@@ -438,7 +444,7 @@
       "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo žetoną.",
       "tokenRequiredLearnMore": "Sužinoti daugiau.",
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
-      "trialToken": "Bandomasis žetonas",
+      "trialToken": "bandomasis žetonas (token)",
       "viaYaml": "per evcc.yaml",
       "yourToken": "Jūsų žetonas"
     },
@@ -723,6 +729,7 @@
       "gridImport": "Iš tinklo",
       "homePower": "Namo suvartojimas",
       "loadpoints": "Įkroviklis | Įkroviklis | {count} įkrovikliai",
+      "loadpointsLimit": "{limit} limitas",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
       "pvExport": "Tinklo eksportas",
@@ -734,6 +741,10 @@
       "connected": "Budėjimo režimas.",
       "vehicleLimit": "Šildymo limitas",
       "waitForVehicle": "Paruošta. Laukiame šildytuvo…"
+    },
+    "hemsWarning": {
+      "description": "Įkrovimas apribotas, kad neviršyti {limit}.",
+      "title": "Išorinis limitas:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Kaina",

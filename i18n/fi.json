@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
-      "title": "Kuormanhallinta"
+      "title": "Kuormanhallinta",
+      "usableMeters": "Käytettävissä olevat mittarit"
     },
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Sähköverkkoon myynninhinta",
       "gridPrice": "Verkosta ostonhinta",
       "heaterTempLimit": "Lämmityksen raja",
-      "hemsType": "Järjestelmä",
+      "hemsActiveLimit": "Aktiivinen raja",
+      "hemsType": "Kommunikaatiomenetelmä",
       "identifier": "RFID-tunniste",
       "no": "ei",
       "odometer": "Matkamittari",
@@ -123,6 +125,10 @@
       "A": "A (ei yhdistetty)",
       "B": "B (yhdistetty)",
       "C": "C (lataa)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "EEBusilla",
+      "relay": "Relayllä"
     },
     "devices": {
       "auxMeter": "Älykkään virranhallinnan laite",
@@ -176,7 +182,7 @@
       "titleEdit": "Muokkaa sähköverkonmittaria"
     },
     "hems": {
-      "description": "Yhdistä evcc toiseen kodin energianhallintajärjestelmään.",
+      "description": "Ulkoisen järjestelmän (kuten EnWG kontrolleri) asettama tehon rajoitus. Vaatii kuormanhallinnan määrittämistä.",
       "title": "HEMS"
     },
     "icon": {
@@ -429,7 +435,7 @@
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
       "description": "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset.",
-      "descriptionToken": "Sponsorit saavat sponsorointitunnuksensa osoitteesta {url}. Päästäksesi alkuun tarjoamme ",
+      "descriptionToken": "Sponsorit saavat sponsorointitunnuksensa osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
       "enterYourToken": "Syötä sponsorointitunnuksesi",
       "error": "Sponsoritunnus ei kelpaa.",
       "invalid": "epäkelpo",
@@ -438,7 +444,7 @@
       "tokenRequired": "Sinun on määritettävä sponsoritunnus ennen kuin voit luoda tämän laitteen.",
       "tokenRequiredLearnMore": "Lisätietoja.",
       "tokenRequiredShort": "Sponsorointi-tokenia ei ole määritelty.",
-      "trialToken": "Kokeilutunnus",
+      "trialToken": "kokeilutunnus",
       "viaYaml": "evcc.yaml-tiedoston mukaisesti",
       "yourToken": "Sponsorointitunnuksesi"
     },
@@ -722,6 +728,7 @@
       "gridImport": "Kulutus sähköverkosta",
       "homePower": "Kodin sähkönkulutus",
       "loadpoints": "Latauslaite| Latauslaite | {count} latauslaitetta",
+      "loadpointsLimit": "{limit} rajoitus",
       "noEnergy": "Ei mittarin tietoja",
       "pv": "Aurinkosähköjärjestelmä",
       "pvExport": "Sähköverkkoon vienti",
@@ -733,6 +740,10 @@
       "connected": "Valmiustila.",
       "vehicleLimit": "Lämmittimen rajoitin",
       "waitForVehicle": "Valmiina. Odottaa lämmitintä…"
+    },
+    "hemsWarning": {
+      "description": "Rajoitettu latausta, jotta rajaa {limit} ei ylitettäisi.",
+      "title": "Ulkoinen raja:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Hinta",

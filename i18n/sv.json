@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
-      "title": "Belastningshantering"
+      "title": "Belastningshantering",
+      "usableMeters": "Användbara mätarreferenser"
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Inmatningspris",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktiv begränsning",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -123,6 +125,10 @@
       "A": "A (ej ansluten)",
       "B": "B (ansluten)",
       "C": "C (laddar)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via relä"
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
@@ -176,7 +182,7 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
-      "description": "Anslut evcc till annat energistyrningssystem i hemmet.",
+      "description": "Effektbegränsning mha externt system (tex. §14a EnWG styrbox). Fordrar lasthanteringskonfiguration.",
       "title": "HEMS"
     },
     "icon": {
@@ -429,7 +435,7 @@
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Du får token från {url}. För att komma igång erbjuder vi en ",
+      "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
       "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
@@ -723,6 +729,7 @@
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
       "loadpoints": "Laddare | Laddare | {count} laddare",
+      "loadpointsLimit": "{limit} begränsning",
       "noEnergy": "Inga mätaruppgifter",
       "pv": "Solanläggning",
       "pvExport": "Export till elnät",
