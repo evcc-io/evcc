@@ -37,8 +37,8 @@ params:
     default: false
     advanced: true
     description:
-      de: Für Controller Firmware Version 1098 oder neuer -> neuere Firmware verwendet andere Skalierung mancher Modbusregister
-      en: For Controller Firmware Version 1098 or newer -> new firmware uses different scaling factors for some modbus registers
+      de: Für Firmware 1098 und neuer: andere Skalierung
+      en: For Firmware 1098 and newer: different scaling factors
 render: |
   type: custom
   {{- if eq .usage "grid" }}
