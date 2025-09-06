@@ -1,0 +1,188 @@
+package charger
+
+import (
+	"errors"
+	"math"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
+)
+
+const cacheRefreshDelay = 3 * time.Minute
+
+// VehicleControlledCharger is a charger implementation that delegates control to the vehicle
+// This is useful for "granny chargers" or simple chargers that can't be controlled directly
+type VehicleControlledCharger struct {
+	log                    *util.Logger
+	lp                     loadpoint.API
+	enabled                bool
+	geofenceEnabled        bool
+	latitude               float64
+	longitude              float64
+	radius                 float64
+	cacheRefreshExpectedAt time.Time
+}
+
+func init() {
+	registry.Add("vehicle-controlled", NewVehicleControlledChargerFromConfig)
+}
+
+// NewVehicleControlledChargerFromConfig creates a new vehicle-controlled charger
+func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Charger, error) {
+	cc := struct {
+		GeofenceEnabled bool    `mapstructure:"geofence_enabled"`
+		Latitude        float64 `mapstructure:"latitude"`
+		Longitude       float64 `mapstructure:"longitude"`
+		Radius          float64 `mapstructure:"radius"`
+	}{
+		Radius: 100, // Default 100 meter radius
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	c := &VehicleControlledCharger{
+		log:             util.NewLogger("vehicle-controlled"),
+		geofenceEnabled: cc.GeofenceEnabled,
+		latitude:        cc.Latitude,
+		longitude:       cc.Longitude,
+		radius:          cc.Radius,
+	}
+
+	return c, nil
+}
+
+// isVehicleAtHome checks if the vehicle is within the geofence (if enabled)
+func (c *VehicleControlledCharger) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
+	if !c.geofenceEnabled {
+		return true, nil // Assume at charger if geofencing is disabled
+	}
+
+	positioner, ok := vehicle.(api.VehiclePosition)
+	if !ok {
+		return false, errors.New("vehicle must support position tracking if geofence is enabled")
+	}
+
+	lat, lon, err := positioner.Position()
+	if err != nil {
+		return false, err
+	}
+
+	return c.distance(lat, lon) <= c.radius, nil
+}
+
+// Status implements the api.Charger interface
+func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
+	if c.lp == nil {
+		return api.StatusA, nil
+	}
+
+	vehicle := c.lp.GetVehicle()
+	if vehicle == nil {
+		return api.StatusA, nil // No vehicle = disconnected
+	}
+
+	// Check if vehicle is at the charger (trying to use geofencing)
+	atHome, err := c.isVehicleAtHome(vehicle)
+	if err != nil {
+		return api.StatusA, err
+	}
+
+	chargeState, ok := vehicle.(api.ChargeState)
+	if !ok {
+		return api.StatusA, errors.New("vehicle not capable of reporting charging status")
+	}
+
+	status, err := chargeState.Status()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	if status == api.StatusA || !atHome {
+		return api.StatusA, nil
+	}
+	if time.Now().Before(c.cacheRefreshExpectedAt) && !c.enabled {
+		// to avoid charge logic errors while waiting for cache refresh
+		return api.StatusB, nil
+	}
+
+	return status, nil
+}
+
+// Enabled implements the api.Charger interface
+func (c *VehicleControlledCharger) Enabled() (bool, error) {
+	return verifyEnabled(c, c.enabled)
+}
+
+// Enable implements the api.Charger interface
+func (c *VehicleControlledCharger) Enable(enable bool) error {
+	if c.lp == nil {
+		return errors.New("loadpoint not initialized")
+	}
+
+	status, err := c.Status()
+	if err != nil {
+		return err
+	}
+
+	// ignore disabling when vehicle is already disconnected
+	if status == api.StatusA && !enable {
+		c.enabled = false
+		return nil
+	}
+
+	chargeController, ok := c.lp.GetVehicle().(api.ChargeController)
+	if !ok {
+		return errors.New("vehicle not capable of start/stop")
+	}
+
+	if err := chargeController.ChargeEnable(enable); err != nil {
+		return err
+	}
+
+	c.enabled = enable
+	// reset vehicle cache
+	//  - delayed to allow vehicle APIs to reflect new charging status
+	go func() {
+		time.Sleep(cacheRefreshDelay)
+		util.ResetCached()
+	}()
+	c.cacheRefreshExpectedAt = time.Now().Add(cacheRefreshDelay + 10*time.Second)
+
+	return nil
+}
+
+// MaxCurrent implements the api.Charger interface
+func (c *VehicleControlledCharger) MaxCurrent(current int64) error {
+	if c.lp == nil {
+		return errors.New("loadpoint not initialized")
+	}
+
+	currentController, ok := c.lp.GetVehicle().(api.CurrentController)
+	if !ok {
+		return nil
+		// If we cannot control the current, we just pretend that we do
+	}
+
+	return currentController.MaxCurrent(current)
+}
+
+var _ loadpoint.Controller = (*VehicleControlledCharger)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (c *VehicleControlledCharger) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
+}
+
+// distance approximates Euclidean distance, good enough for geofencing
+func (c *VehicleControlledCharger) distance(lat, lon float64) float64 {
+	const metersPerDegreeLat = 111000 // ~111km per degree latitude (constant)
+
+	deltaLat := (c.latitude - lat) * metersPerDegreeLat
+	deltaLon := (c.longitude - lon) * metersPerDegreeLat * math.Cos(c.latitude*math.Pi/180) // varies by latitude
+
+	return math.Sqrt(deltaLat*deltaLat + deltaLon*deltaLon)
+}
