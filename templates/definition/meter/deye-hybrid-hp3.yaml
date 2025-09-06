@@ -38,7 +38,7 @@ params:
     advanced: true
     description:
       de: Fuer Firmware 1098 und neuer
-      en: For Firmware 1098 and newer 
+      en: For Firmware 1098 and newer
 render: |
   type: custom
   {{- if eq .usage "grid" }}
