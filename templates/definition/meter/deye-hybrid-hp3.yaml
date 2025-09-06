@@ -34,11 +34,10 @@ params:
       en: Treat GEN port as solar input
   - name: firmware1098
     type: bool
-    default: false
     advanced: true
     description:
-      de: Fuer Firmware 1098 und neuer
-      en: For Firmware 1098 and newer
+      de: Firmware 1098 oder neuer
+      en: Firmware 1098 or newer
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -57,7 +56,7 @@ render: |
       type: holding
       decode: uint32s
     {{- if ne .firmware1098 "true" }}
-    scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
+    scale: 0.1
     {{- end }}
   currents:
     - source: modbus
@@ -133,7 +132,7 @@ render: |
         type: holding
         decode: uint32s
       {{- if ne .firmware1098 "true" }}
-      scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
+      scale: 0.1
       {{- end }}
     {{- if eq .includegenport "true" }}
     - source: modbus
@@ -143,7 +142,7 @@ render: |
         type: holding
         decode: int32s
       {{- if ne .firmware1098 "true" }}
-      scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
+      scale: 0.1
       {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
@@ -170,7 +169,7 @@ render: |
       type: holding
       decode: uint32s
     {{- if ne .firmware1098 "true" }}
-    scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
+    scale: 0.1
     {{- end }}
   soc:
     source: modbus
