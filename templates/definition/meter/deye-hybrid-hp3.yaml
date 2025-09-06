@@ -56,7 +56,7 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if eq .firmware1098 "false" }}
+    {{- if ne .firmware1098 "true" }}
     scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
     {{- end }}
   currents:
@@ -132,7 +132,7 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if eq .firmware1098 "false" }}
+      {{- if ne .firmware1098 "true" }}
       scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
       {{- end }}
     {{- if eq .includegenport "true" }}
@@ -142,7 +142,7 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if eq .firmware1098 "false" }}
+      {{- if ne .firmware1098 "true" }}
       scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
       {{- end }}
     {{- end }}
@@ -169,7 +169,7 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if eq .firmware1098 "false" }}
+    {{- if ne .firmware1098 "true" }}
     scale: 0.1 # Firmware < 1098: scaling factor of 0.1 kWh needed
     {{- end }}
   soc:
