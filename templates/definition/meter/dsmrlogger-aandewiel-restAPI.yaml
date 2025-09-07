@@ -23,8 +23,8 @@ render: |
     headers:
       - content-type: application/json
     jq: >
-      (.actual[] | select(.name == "power_delivered") | .value) * 1000
-      - ((.actual[] | select(.name == "power_returned") | .value) * 1000)
+      ((.actual[] | select(.name == "power_delivered") | .value // 0) * 1000)
+      - ((.actual[] | select(.name == "power_returned") | .value // 0) * 1000)
 
   voltages: # phase voltages in V
     - source: http
