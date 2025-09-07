@@ -1,9 +1,9 @@
-template: vehicle-controlled
+template: vehicle-api
 group: generic
 products:
   - description:
-      de: Fahrzeuggesteuerter Lader
-      en: Vehicle-controlled charger
+      de: Steuerung über Fahrzeug-API
+      en: Charge using vehicle API
 requirements:
   description:
     en: |
@@ -14,10 +14,10 @@ requirements:
 
       When geofencing is enabled, the evcc will only affect charging behavior when the vehicle is within the specified radius of the home coordinates.
     de: |
-      Eine Lader-Implementierung, die die Kontrolle an das Fahrzeug delegiert, anstatt den Lader direkt zu steuern.
-      Dies ist nützlich für "Granny-Charger" oder einfache Lader, die nicht gesteuert werden können.
+      Eine Charger Implementierung, welche das Fahrzeug API für die Steuerung nutzt, anstatt den Charger direkt zu steuern.
+      Dies ist nützlich für "Granny-Charger" oder einfache Charger, die nicht gesteuert werden können.
 
-      Der Lader benötigt ein Fahrzeug, das sowohl Ladesteuerung als auch optional Positionsverfolgung für Geofencing unterstützt.
+      Der Charger benötigt ein Fahrzeug, das sowohl Ladesteuerung als auch optional Positionsverfolgung für Geofencing unterstützt.
 
       Wenn Geofencing aktiviert ist, wird evcc nur eingreifen, wenn sich das Fahrzeug innerhalb des angegebenen Radius des Standortes befindet.
 params:
@@ -54,7 +54,7 @@ params:
       de: Radius um den Ladestandort, in an dem evcc die Ladung steuert (in Metern)
     advanced: true
 render: |
-  type: vehicle-controlled
+  type: vehicle-api
   {{- if .geofence_enabled }}
   geofence_enabled: {{ .geofence_enabled }}
   latitude: {{ .latitude }}

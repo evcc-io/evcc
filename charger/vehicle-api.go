@@ -12,10 +12,9 @@ import (
 
 const cacheRefreshDelay = 3 * time.Minute
 
-// VehicleControlledCharger is a charger implementation that delegates control to the vehicle
+// VehicleApi is a charger implementation that uses the vehicle api
 // This is useful for "granny chargers" or simple chargers that can't be controlled directly
-type VehicleControlledCharger struct {
-	log                    *util.Logger
+type VehicleApi struct {
 	lp                     loadpoint.API
 	enabled                bool
 	geofenceEnabled        bool
@@ -26,11 +25,11 @@ type VehicleControlledCharger struct {
 }
 
 func init() {
-	registry.Add("vehicle-controlled", NewVehicleControlledChargerFromConfig)
+	registry.Add("vehicle-api", NewVehicleApiFromConfig)
 }
 
-// NewVehicleControlledChargerFromConfig creates a new vehicle-controlled charger
-func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewVehicleApiFromConfig creates a new vehicle-controlled charger
+func NewVehicleApiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		GeofenceEnabled bool    `mapstructure:"geofence_enabled"`
 		Latitude        float64 `mapstructure:"latitude"`
@@ -44,8 +43,7 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 		return nil, err
 	}
 
-	c := &VehicleControlledCharger{
-		log:             util.NewLogger("vehicle-controlled"),
+	c := &VehicleApi{
 		geofenceEnabled: cc.GeofenceEnabled,
 		latitude:        cc.Latitude,
 		longitude:       cc.Longitude,
@@ -56,7 +54,7 @@ func NewVehicleControlledChargerFromConfig(other map[string]interface{}) (api.Ch
 }
 
 // isVehicleAtHome checks if the vehicle is within the geofence (if enabled)
-func (c *VehicleControlledCharger) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
+func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 	if !c.geofenceEnabled {
 		return true, nil // Assume at charger if geofencing is disabled
 	}
@@ -75,7 +73,7 @@ func (c *VehicleControlledCharger) isVehicleAtHome(vehicle api.Vehicle) (bool, e
 }
 
 // Status implements the api.Charger interface
-func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
+func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	if c.lp == nil {
 		return api.StatusA, nil
 	}
@@ -113,12 +111,12 @@ func (c *VehicleControlledCharger) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (c *VehicleControlledCharger) Enabled() (bool, error) {
+func (c *VehicleApi) Enabled() (bool, error) {
 	return verifyEnabled(c, c.enabled)
 }
 
 // Enable implements the api.Charger interface
-func (c *VehicleControlledCharger) Enable(enable bool) error {
+func (c *VehicleApi) Enable(enable bool) error {
 	if c.lp == nil {
 		return errors.New("loadpoint not initialized")
 	}
@@ -156,7 +154,7 @@ func (c *VehicleControlledCharger) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (c *VehicleControlledCharger) MaxCurrent(current int64) error {
+func (c *VehicleApi) MaxCurrent(current int64) error {
 	if c.lp == nil {
 		return errors.New("loadpoint not initialized")
 	}
@@ -170,15 +168,15 @@ func (c *VehicleControlledCharger) MaxCurrent(current int64) error {
 	return currentController.MaxCurrent(current)
 }
 
-var _ loadpoint.Controller = (*VehicleControlledCharger)(nil)
+var _ loadpoint.Controller = (*VehicleApi)(nil)
 
 // LoadpointControl implements loadpoint.Controller
-func (c *VehicleControlledCharger) LoadpointControl(lp loadpoint.API) {
+func (c *VehicleApi) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 }
 
 // distance approximates Euclidean distance, good enough for geofencing
-func (c *VehicleControlledCharger) distance(lat, lon float64) float64 {
+func (c *VehicleApi) distance(lat, lon float64) float64 {
 	const metersPerDegreeLat = 111000 // ~111km per degree latitude (constant)
 
 	deltaLat := (c.latitude - lat) * metersPerDegreeLat
