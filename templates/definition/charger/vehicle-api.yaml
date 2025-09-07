@@ -10,15 +10,16 @@ requirements:
       A charger implementation that delegates control to the vehicle instead of controlling the charger directly.
       This is useful for "granny chargers" or simple chargers that cannot be controlled.
 
-      The charger requires a vehicle that supports both charge control and optionally position tracking for geofencing.
-
+      The charger requires a vehicle that supports charge control (start/stop charging) and the ability to report the charging status.
+      If the vehicle supports position tracking, this can be used for geofencing.
       When geofencing is enabled, the evcc will only affect charging behavior when the vehicle is within the specified radius of the home coordinates.
     de: |
       Eine Charger Implementierung, welche das Fahrzeug API für die Steuerung nutzt, anstatt den Charger direkt zu steuern.
       Dies ist nützlich für "Granny-Charger" oder einfache Charger, die nicht gesteuert werden können.
 
-      Der Charger benötigt ein Fahrzeug, das sowohl Ladesteuerung als auch optional Positionsverfolgung für Geofencing unterstützt.
+      Der Lader benötigt ein Fahrzeug, das sowohl Ladesteuerung als auch das Auslesen des Ladestatus unterstützt.
 
+      Wenn das Fahrzeug die Positionsverfolgung unterstützt, kann dies für Geofencing verwendet werden.
       Wenn Geofencing aktiviert ist, wird evcc nur eingreifen, wenn sich das Fahrzeug innerhalb des angegebenen Radius des Standortes befindet.
 params:
   - name: geofence_enabled
