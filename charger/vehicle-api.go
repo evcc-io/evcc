@@ -148,8 +148,7 @@ func (c *VehicleApi) Enable(enable bool) error {
 	}
 
 	c.enabled = enable
-	// reset vehicle cache
-	//  - delayed to allow vehicle APIs to reflect new charging status
+	// delayed reset if vehicle cache- allows vehicle APIs to reflect new charging status
 	c.cacheRefreshExpectedAt = time.Now().Add(3 * time.Minute)
 
 	return nil
