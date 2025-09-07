@@ -10,8 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const cacheRefreshDelay = 3 * time.Minute
-
 // VehicleApi is a charger implementation that uses the vehicle api
 // This is useful for "granny chargers" or simple chargers that can't be controlled directly
 type VehicleApi struct {
@@ -28,7 +26,7 @@ func init() {
 	registry.Add("vehicle-api", NewVehicleApiFromConfig)
 }
 
-// NewVehicleApiFromConfig creates a new vehicle-controlled charger
+// NewVehicleApiFromConfig creates a new vehicle-api charger
 func NewVehicleApiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		GeofenceEnabled bool    `mapstructure:"geofence_enabled"`
@@ -89,6 +87,18 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
+	if !c.cacheRefreshExpectedAt.IsZero() {
+		if time.Now().Before(c.cacheRefreshExpectedAt) {
+			if !c.enabled {
+				// to avoid charge logic errors while waiting for cache refresh
+				return api.StatusB, nil
+			}
+		} else {
+			util.ResetCached()
+			c.cacheRefreshExpectedAt = time.Time{}
+		}
+	}
+
 	chargeState, ok := vehicle.(api.ChargeState)
 	if !ok {
 		return api.StatusA, errors.New("vehicle not capable of reporting charging status")
@@ -101,10 +111,6 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 
 	if status == api.StatusA || !atHome {
 		return api.StatusA, nil
-	}
-	if time.Now().Before(c.cacheRefreshExpectedAt) && !c.enabled {
-		// to avoid charge logic errors while waiting for cache refresh
-		return api.StatusB, nil
 	}
 
 	return status, nil
@@ -144,11 +150,7 @@ func (c *VehicleApi) Enable(enable bool) error {
 	c.enabled = enable
 	// reset vehicle cache
 	//  - delayed to allow vehicle APIs to reflect new charging status
-	go func() {
-		time.Sleep(cacheRefreshDelay)
-		util.ResetCached()
-	}()
-	c.cacheRefreshExpectedAt = time.Now().Add(cacheRefreshDelay + 10*time.Second)
+	c.cacheRefreshExpectedAt = time.Now().Add(3 * time.Minute)
 
 	return nil
 }
