@@ -27,24 +27,38 @@ render: |
       - ((.actual[] | select(.name == "power_returned") | .value) * 1000)
 
   voltages: # phase voltages in V
-    source: http
-    uri: {{ include "uri" . }}
-    headers:
-      - content-type: application/json
-    jq: >
-      [.actual[] 
-        | select(.name == "voltage_l1" or .name == "voltage_l2" or .name == "voltage_l3") 
-        | .value]
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .actual[] | select(.name == "voltage_l1") | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .actual[] | select(.name == "voltage_l2") | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .actual[] | select(.name == "voltage_l3") | .value
 
   currents: # phase currents in A
-    source: http
-    uri: {{ include "uri" . }}
-    headers:
-      - content-type: application/json
-    jq: >
-      [.actual[] 
-        | select(.name == "current_l1" or .name == "current_l2" or .name == "current_l3") 
-        | .value]
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .actual[] | select(.name == "current_l1") | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .actual[] | select(.name == "current_l2") | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .actual[] | select(.name == "current_l3") | .value
 
   powers:
     - source: http
