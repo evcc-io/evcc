@@ -9,6 +9,12 @@ import (
 const (
 	SlotDuration = 15 * time.Minute
 
+	// groups
+	Virtual = "virtual"
+	Grid    = "grid"
+	PV      = "pv"
+
+	// meters
 	Home = "home" // virtual home meter
 )
 
@@ -18,8 +24,8 @@ type Collector struct {
 	started time.Time
 }
 
-func NewCollector(name string, opt ...func(*Accumulator)) (*Collector, error) {
-	entity, err := createEntity(name)
+func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
+	entity, err := createEntity(group, name)
 	if err != nil {
 		return nil, err
 	}
@@ -30,9 +36,17 @@ func NewCollector(name string, opt ...func(*Accumulator)) (*Collector, error) {
 	}, nil
 }
 
-func createEntity(name string) (entity, error) {
-	entity := entity{Name: name}
-	return entity, db.Instance.FirstOrCreate(&entity).Error
+func createEntity(group, name string) (entity, error) {
+	entity := entity{
+		Group: group,
+		Name:  name,
+	}
+
+	if err := db.Instance.Where(&entity).FirstOrCreate(&entity).Error; err != nil {
+		return entity, err
+	}
+
+	return entity, nil
 }
 
 func (c *Collector) process(fun func()) error {

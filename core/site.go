@@ -102,7 +102,7 @@ type Site struct {
 	fcstEnergy  *metrics.Accumulator
 	pvEnergy    map[string]*metrics.Accumulator
 
-	homeEnergy *metrics.Collector
+	homeEnergy, gridEnergy *metrics.Collector
 
 	// cached state
 	gridPower                float64         // Grid power
@@ -155,7 +155,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
-	me, err := metrics.NewCollector(metrics.Home)
+	me, err := metrics.NewCollector(metrics.Virtual, metrics.Home)
 	if err != nil {
 		return err
 	}
@@ -201,10 +201,17 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
+
 		site.gridMeter = dev.Instance()
 		if site.gridMeter == nil {
 			return errors.New("missing grid meter instance")
 		}
+
+		// me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef)
+		// if err != nil {
+		// 	return err
+		// }
+		// site.gridEnergy = me
 	}
 
 	// multiple pv

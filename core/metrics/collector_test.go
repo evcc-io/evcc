@@ -15,7 +15,7 @@ func TestCollectorAddPower(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	Init()
 
-	col, err := NewCollector("foo", WithClock(clock))
+	col, err := NewCollector("foo", "foo", WithClock(clock))
 	require.NoError(t, err)
 	require.True(t, col.accu.updated.IsZero())
 

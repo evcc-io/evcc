@@ -15,24 +15,40 @@ type meter struct {
 }
 
 type entity struct {
-	Id   int    `gorm:"column:id;primarykey"`
-	Name string `gorm:"column:name;uniqueIndex:name_idx"`
+	Id    int    `gorm:"column:id;primarykey"`
+	Group string `gorm:"column:group;uniqueIndex:group_name"`
+	Name  string `gorm:"column:name;uniqueIndex:group_name"`
 }
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func Init() error {
-	hasTable := db.Instance.Migrator().HasTable("entities")
+	m := db.Instance.Migrator()
+	hasTable := m.HasTable(new(entity))
 
 	// create entity first to make sure foreign keys for existing data work
 	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
 		return err
 	}
 
-	// create entity for id 1
-	if !hasTable {
-		if _, err := createEntity(Home); err != nil {
+	if idx := "name_idx"; m.HasIndex(new(entity), idx) {
+		if err := m.DropIndex(new(entity), idx); err != nil {
 			return err
+		}
+	}
+
+	// create entity for id 1
+	if hasTable {
+		var res entity
+		if err := db.Instance.Where(&entity{Id: 1, Name: Home}).FirstOrCreate(&res).Error; err != nil {
+			return err
+		}
+
+		if res.Group == "" {
+			res.Group = Virtual
+			if err := db.Instance.Save(&res).Error; err != nil {
+				return err
+			}
 		}
 	}
 
