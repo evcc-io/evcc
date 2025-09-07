@@ -1,4 +1,5 @@
 template: em2go-duo
+deprecated: true
 products:
   - brand: EM2GO
     description:

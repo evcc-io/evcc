@@ -30,3 +30,9 @@ func TestYamlDecodeLeadingZero(t *testing.T) {
 	p := Param{Type: TypeString}
 	assert.Equal(t, "'0815'", p.yamlQuote("0815"))
 }
+
+func TestYamlQuote(t *testing.T) {
+	assert.Equal(t, `"a\nb\nc"`, yamlQuote(`a
+b
+c`))
+}
