@@ -102,7 +102,7 @@ type Site struct {
 	fcstEnergy  *metrics.Accumulator
 	pvEnergy    map[string]*metrics.Accumulator
 
-	homeEnergy, gridEnergy *metrics.Collector
+	homeEnergy *metrics.Collector
 
 	// cached state
 	gridPower                float64         // Grid power
