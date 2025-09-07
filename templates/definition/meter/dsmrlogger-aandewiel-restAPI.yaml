@@ -1,4 +1,4 @@
-template: DSMRlogger-restAPI
+template: DSMRlogger
 products:
   - brand: Aandewiel
     description:
@@ -18,92 +18,53 @@ render: |
   {{- end }}
   type: custom
   power:
-    source: calc
-    add:
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
       - content-type: application/json
-      jq: .actual[] | select(.name == "power_delivered") | .value
-      scale: 1000
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
-      - content-type: application/json
-      jq: .actual[] | select(.name == "power_returned") | .value
-      scale: -1000     
+    jq: >
+      (.actual[] | select(.name == "power_delivered") | .value) * 1000
+      - ((.actual[] | select(.name == "power_returned") | .value) * 1000)
+
   voltages: # phase voltages in V
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
       - content-type: application/json
-      jq: .actual[] | select(.name == "voltage_l1") | .value
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
-      - content-type: application/json
-      jq: .actual[] | select(.name == "voltage_l2") | .value
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
-      - content-type: application/json
-      jq: .actual[] | select(.name == "voltage_l3") | .value
+    jq: >
+      [.actual[] 
+        | select(.name == "voltage_l1" or .name == "voltage_l2" or .name == "voltage_l3") 
+        | .value]
+
   currents: # phase currents in A
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
       - content-type: application/json
-      jq: .actual[] | select(.name == "current_l1") | .value
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
-      - content-type: application/json
-      jq: .actual[] | select(.name == "current_l2") | .value
-    - source: http
-      uri: {{ include "uri" . }}
-      headers:
-      - content-type: application/json
-      jq: .actual[] | select(.name == "current_l3") | .value
+    jq: >
+      [.actual[] 
+        | select(.name == "current_l1" or .name == "current_l2" or .name == "current_l3") 
+        | .value]
+
   powers:
-    - source: calc
-      add:
-        - source: http
-          uri: {{ include "uri" . }}
-          headers:
-          - content-type: application/json
-          jq: .actual[] | select(.name == "power_delivered_l1") | .value
-          scale: 1000
-        - source: http
-          uri: {{ include "uri" . }}
-          headers:
-          - content-type: application/json
-          jq: .actual[] | select(.name == "power_returned_l1") | .value
-          scale: -1000
-    - source: calc
-      add:
-        - source: http
-          uri: {{ include "uri" . }}
-          headers:
-          - content-type: application/json
-          jq: .actual[] | select(.name == "power_delivered_l2") | .value
-          scale: 1000
-        - source: http
-          uri: {{ include "uri" . }}
-          headers:
-          - content-type: application/json
-          jq: .actual[] | select(.name == "power_returned_l2") | .value
-          scale: -1000
-    - source: calc
-      add:
-        - source: http
-          uri: {{ include "uri" . }}
-          headers:
-          - content-type: application/json
-          jq: .actual[] | select(.name == "power_delivered_l3") | .value
-          scale: 1000
-        - source: http
-          uri: {{ include "uri" . }}
-          headers:
-          - content-type: application/json
-          jq: .actual[] | select(.name == "power_returned_l3") | .value
-          scale: -1000 
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: >
+        ((.actual[] | select(.name == "power_delivered_l1") | .value) * 1000)
+        - ((.actual[] | select(.name == "power_returned_l1") | .value) * 1000)
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: >
+        ((.actual[] | select(.name == "power_delivered_l2") | .value) * 1000)
+        - ((.actual[] | select(.name == "power_returned_l2") | .value) * 1000)
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: >
+        ((.actual[] | select(.name == "power_delivered_l3") | .value) * 1000)
+        - ((.actual[] | select(.name == "power_returned_l3") | .value) * 1000)
