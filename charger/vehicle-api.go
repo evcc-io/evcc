@@ -162,8 +162,8 @@ func (c *VehicleApi) MaxCurrent(current int64) error {
 
 	currentController, ok := c.lp.GetVehicle().(api.CurrentController)
 	if !ok {
-		return nil
 		// If we cannot control the current, we just pretend that we do
+		return nil
 	}
 
 	return currentController.MaxCurrent(current)
