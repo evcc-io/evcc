@@ -14,7 +14,10 @@ params:
       de: Zugriffs-Schlüssel aus Benutzer-Profil
     required: true  
   - name: item
-    choice: ["location", "plant", "inverter"]
+    description:
+      en: Element type to be queried
+      de: Elementtyp, der abgefragt werden soll
+    choice: ["location", "plant", "inverter", "module_field"]
     required: true  
   - name: uniquetoken
     description:
