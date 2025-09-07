@@ -102,7 +102,7 @@ type Site struct {
 	fcstEnergy  *metrics.Accumulator
 	pvEnergy    map[string]*metrics.Accumulator
 
-	homeEnergy *metrics.Collector
+	homeEnergy, gridEnergy *metrics.Collector
 
 	// cached state
 	gridPower                float64         // Grid power
@@ -207,11 +207,11 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		// me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef)
-		// if err != nil {
-		// 	return err
-		// }
-		// site.gridEnergy = me
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef)
+		if err != nil {
+			return err
+		}
+		site.gridEnergy = me
 	}
 
 	// multiple pv
@@ -345,7 +345,7 @@ func (site *Site) restoreSettings() error {
 		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Accumulated = fcst.Accumulated
+				site.pvEnergy[name].Pos = fcst.Pos
 			} else {
 				nok = true
 				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
@@ -353,7 +353,7 @@ func (site *Site) restoreSettings() error {
 		}
 
 		if !nok {
-			site.fcstEnergy.Accumulated = fcstEnergy
+			site.fcstEnergy.Pos = fcstEnergy
 			site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
 		} else {
 			// reset metrics
@@ -363,7 +363,7 @@ func (site *Site) restoreSettings() error {
 			settings.Delete(keys.SolarAccYield)
 
 			for _, pe := range site.pvEnergy {
-				pe.Accumulated = 0
+				pe.Pos = 0
 			}
 		}
 	}
@@ -601,15 +601,15 @@ func (site *Site) updatePvMeters() {
 		// use stored devices, not ui-updated instances!
 		name := dev.Config().Name
 
-		prev := site.pvEnergy[name].AccumulatedEnergy()
+		prev := site.pvEnergy[name].PosEnergy()
 		if mm[i].Energy > 0 {
 			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
-			site.pvEnergy[name].AddMeterTotal(mm[i].Energy)
+			site.pvEnergy[name].AddPosMeterTotal(mm[i].Energy)
 		} else {
 			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
-		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].AccumulatedEnergy())
+		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].PosEnergy())
 	}
 
 	// store
@@ -737,6 +737,9 @@ func (site *Site) updateGridMeter() error {
 		mm.Power = res
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
+
+		// TODO handle negative/ feed-in energy
+		site.gridEnergy.AddPower(mm.Power)
 	} else {
 		return fmt.Errorf("grid power: %v", err)
 	}

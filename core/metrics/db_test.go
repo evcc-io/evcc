@@ -19,7 +19,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	entity := entity{Name: "foo"}
 	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
 
-	persist(entity, clock.Now(), 0)
+	persist(entity, clock.Now(), 0, 0)
 
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestUpdateProfile(t *testing.T) {
 	// day 1:   0 ...  95
 	// day 2:  96 ... 181
 	for i := range 4 * 2 * 24 {
-		persist(entity, clock.Now(), float64(i))
+		persist(entity, clock.Now(), float64(i), float64(i))
 		clock.Add(15 * time.Minute)
 	}
 

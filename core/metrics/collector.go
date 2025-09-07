@@ -67,29 +67,42 @@ func (c *Collector) process(fun func()) error {
 		}
 
 		c.started = slotStart
-		c.accu.Accumulated = 0
+		c.accu.Pos = 0
+		c.accu.Neg = 0
 	}
 
 	return nil
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.AccumulatedEnergy())
+	return persist(c.entity, c.started, c.accu.PosEnergy(), c.accu.NegEnergy())
 }
 
 func (c *Collector) Profile(from time.Time) (*[96]float64, error) {
 	return profile(c.entity, from)
 }
 
-func (c *Collector) AddEnergy(v float64) error {
+func (c *Collector) AddPosEnergy(v float64) error {
 	return c.process(func() {
-		c.accu.AddEnergy(v)
+		c.accu.AddPosEnergy(v)
 	})
 }
 
-func (c *Collector) AddMeterTotal(v float64) error {
+func (c *Collector) AddNegEnergy(v float64) error {
 	return c.process(func() {
-		c.accu.AddMeterTotal(v)
+		c.accu.AddNegEnergy(v)
+	})
+}
+
+func (c *Collector) AddPosMeterTotal(v float64) error {
+	return c.process(func() {
+		c.accu.AddPosMeterTotal(v)
+	})
+}
+
+func (c *Collector) AddNegMeterTotal(v float64) error {
+	return c.process(func() {
+		c.accu.AddNegMeterTotal(v)
 	})
 }
 

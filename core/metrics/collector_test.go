@@ -25,13 +25,13 @@ func TestCollectorAddPower(t *testing.T) {
 
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddPower(1e3))
-	require.Equal(t, 1e3*5/60/1e3, col.accu.AccumulatedEnergy()) // kWh
+	require.Equal(t, 1e3*5/60/1e3, col.accu.PosEnergy()) // kWh
 
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddPower(1e3))
-	require.Equal(t, 0.0, col.accu.AccumulatedEnergy()) // accumulator reset after 15 minutes
+	require.Equal(t, 0.0, col.accu.PosEnergy()) // accumulator reset after 15 minutes
 
 	clock.Add(15 * time.Minute)
 	require.NoError(t, col.AddPower(1e3))
-	require.Equal(t, 0.0, col.accu.AccumulatedEnergy()) // accumulator reset after 15 minutes
+	require.Equal(t, 0.0, col.accu.PosEnergy()) // accumulator reset after 15 minutes
 }

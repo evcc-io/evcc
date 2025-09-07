@@ -10,10 +10,11 @@ import (
 )
 
 type Accumulator struct {
-	clock       clock.Clock
-	updated     time.Time
-	meter       *float64 // kWh
-	Accumulated float64  `json:"accumulated"` // kWh
+	clock              clock.Clock
+	updated            time.Time
+	posMeter, negMeter *float64 // kWh
+	Pos                float64  `json:"pos"` // kWh
+	Neg                float64  `json:"neg"` // kWh
 }
 
 func WithClock(clock clock.Clock) func(*Accumulator) {
@@ -36,44 +37,84 @@ func (m *Accumulator) Updated() time.Time {
 
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
-	fmt.Fprintf(b, "Accumulated: %.3fkWh updated: %v", m.Accumulated, m.updated.Truncate(time.Second))
-	if m.meter != nil {
-		fmt.Fprintf(b, " meter: %.3fkWh", *m.meter)
+	fmt.Fprintf(b, "Accumulated: %.3fkWh pos, %.3fkWh neg, updated: %v", m.Pos, m.Neg, m.updated.Truncate(time.Second))
+	if m.posMeter != nil || m.negMeter != nil {
+		fmt.Fprintf(b, " meter: ")
+		if m.posMeter != nil {
+			fmt.Fprintf(b, " %.3fkWh pos", *m.posMeter)
+		}
+		if m.negMeter != nil {
+			fmt.Fprintf(b, " %.3fkWh pos", *m.negMeter)
+		}
 	}
 	return b.String()
 }
 
-// AccumulatedEnergy returns the accumulated energy in kWh
-func (m *Accumulator) AccumulatedEnergy() float64 {
-	return m.Accumulated
+// PosEnergy returns the accumulated energy in kWh
+func (m *Accumulator) PosEnergy() float64 {
+	return m.Pos
 }
 
-// AddMeterTotal adds the difference to the last total meter value in kWh
-func (m *Accumulator) AddMeterTotal(v float64) {
+// NegEnergy returns the accumulated energy in kWh
+func (m *Accumulator) NegEnergy() float64 {
+	return m.Neg
+}
+
+// AddPosMeterTotal adds the difference to the last total meter value in kWh
+func (m *Accumulator) AddPosMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.meter = lo.ToPtr(v)
+		m.posMeter = lo.ToPtr(v)
 	}()
 
-	if m.meter == nil {
+	if m.posMeter == nil {
 		return
 	}
 
-	m.Accumulated += v - *m.meter
+	m.Pos += v - *m.posMeter
 }
 
-// AddEnergy adds the given energy in kWh
-func (m *Accumulator) AddEnergy(v float64) {
+// AddNegMeterTotal adds the difference to the last total meter value in kWh
+func (m *Accumulator) AddNegMeterTotal(v float64) {
+	defer func() {
+		m.updated = m.clock.Now()
+		m.negMeter = lo.ToPtr(v)
+	}()
+
+	if m.negMeter == nil {
+		return
+	}
+
+	m.Neg += v - *m.negMeter
+}
+
+// AddPosEnergy adds the given energy in kWh to the positive meter
+func (m *Accumulator) AddPosEnergy(v float64) {
 	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
 		return
 	}
 
-	m.Accumulated += v
+	m.Pos += v
+}
+
+// AddNegEnergy adds the given energy in kWh to the negative meter
+func (m *Accumulator) AddNegEnergy(v float64) {
+	defer func() { m.updated = m.clock.Now() }()
+
+	if m.updated.IsZero() {
+		return
+	}
+
+	m.Neg += v
 }
 
 // AddPower adds the given power in W, calculating the energy based on the time since the last update
 func (m *Accumulator) AddPower(v float64) {
-	m.AddEnergy(v * m.clock.Since(m.updated).Hours() / 1e3)
+	if v >= 0 {
+		m.AddPosEnergy(v * m.clock.Since(m.updated).Hours() / 1e3)
+	} else {
+		m.AddNegEnergy(-v * m.clock.Since(m.updated).Hours() / 1e3)
+	}
 }

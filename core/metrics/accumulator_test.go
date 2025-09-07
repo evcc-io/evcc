@@ -15,12 +15,12 @@ func TestMeterEnergyMeterTotal(t *testing.T) {
 
 	me := &Accumulator{clock: clock}
 
-	me.AddMeterTotal(10)
-	assert.Equal(t, 0.0, me.AccumulatedEnergy())
-	me.AddMeterTotal(11)
-	assert.Equal(t, 1.0, me.AccumulatedEnergy())
-	me.AddMeterTotal(11)
-	assert.Equal(t, 1.0, me.AccumulatedEnergy())
+	me.AddPosMeterTotal(10)
+	assert.Equal(t, 0.0, me.PosEnergy())
+	me.AddPosMeterTotal(11)
+	assert.Equal(t, 1.0, me.PosEnergy())
+	me.AddPosMeterTotal(11)
+	assert.Equal(t, 1.0, me.PosEnergy())
 }
 
 func TestMeterEnergyAddPower(t *testing.T) {
@@ -31,13 +31,13 @@ func TestMeterEnergyAddPower(t *testing.T) {
 
 	clock.Add(60 * time.Minute)
 	me.AddPower(1e3)
-	assert.Equal(t, 0.0, me.AccumulatedEnergy())
+	assert.Equal(t, 0.0, me.PosEnergy())
 
 	clock.Add(60 * time.Minute)
 	me.AddPower(1e3)
-	assert.Equal(t, 1.0, me.AccumulatedEnergy())
+	assert.Equal(t, 1.0, me.PosEnergy())
 
 	clock.Add(30 * time.Minute)
 	me.AddPower(1e3)
-	assert.Equal(t, 1.5, me.AccumulatedEnergy())
+	assert.Equal(t, 1.5, me.PosEnergy())
 }
