@@ -54,7 +54,7 @@ type Vitals struct {
 	CurrentAlerts     []any   `json:"current_alerts"`      // []
 }
 
-// NewTwc3FromConfig creates a new vehicle
+// NewTwc3FromConfig creates a new charger
 func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
