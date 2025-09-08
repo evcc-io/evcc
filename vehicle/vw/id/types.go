@@ -320,6 +320,13 @@ type EngineRangeStatus struct {
 	RemainingRangeKm int    `json:"remainingRange_km"`
 }
 
+// ParkingPosition is the /parkingposition api response
+type ParkingPosition struct {
+	Latitude             float64   `json:"latitude"`
+	Longitude            float64   `json:"longitude"`
+	CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+}
+
 // Timestamp implements JSON unmarshal
 type Timestamp struct {
 	time.Time
