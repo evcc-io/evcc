@@ -12,7 +12,7 @@ jobs:
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: print latest_commit
         run: echo ${{ github.sha }}
 
@@ -38,7 +38,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: refs/heads/master # force master
           fetch-depth: 0
@@ -120,7 +120,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
