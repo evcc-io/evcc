@@ -38,16 +38,13 @@ func init() {
 	registry.Add("stekker", NewStekkerFromConfig)
 }
 
+const stekkerURI = "https://stekker.app/epex-forecast"
+
 // NewStekkerFromConfig creates provider from config
 func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		embed  `mapstructure:",squash"`
 		Region string
-		URI    string
-	}{
-		URI:    "https://stekker.app/epex-forecast",
-		Region: "BE",
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -57,14 +54,9 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, fmt.Errorf("unsupported region: %s", cc.Region)
 	}
 
-	if err := cc.init(); err != nil {
-		return nil, err
-	}
-
 	t := &Stekker{
-		embed:  &cc.embed,
 		region: cc.Region,
-		uri:    cc.URI,
+		uri:    stekkerURI,
 		log:    util.NewLogger("stekker"),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}

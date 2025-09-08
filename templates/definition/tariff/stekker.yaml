@@ -47,14 +47,6 @@ params:
         "CZ",
         "HR",
       ]
-  - name: currency
-    default: EUR
-    type: choice
-    description:
-      en: Currency
-      de: Währung
-    choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK", "CHF"]
-    required: true
   - preset: tariff-base
 render: |
   type: stekker
