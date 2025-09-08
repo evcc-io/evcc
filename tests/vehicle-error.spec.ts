@@ -3,11 +3,11 @@ import { start, stop, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 
-test.beforeAll(async () => {
+test.beforeEach(async () => {
   await start("vehicle-error.evcc.yaml");
 });
 
-test.afterAll(async () => {
+test.afterEach(async () => {
   await stop();
 });
 

@@ -11,8 +11,9 @@ import (
 
 // Provider is an api.Vehicle implementation for VW ID cars
 type Provider struct {
-	statusG func() (Status, error)
-	action  func(action, value string) error
+	statusG   func() (Status, error)
+	positionG func() (ParkingPosition, error)
+	action    func(action, value string) error
 }
 
 // NewProvider creates a vehicle api provider
@@ -20,6 +21,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: util.Cached(func() (Status, error) {
 			return api.Status(vin)
+		}, cache),
+		positionG: util.Cached(func() (ParkingPosition, error) {
+			return api.ParkingPosition(vin)
 		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
@@ -159,6 +163,22 @@ var _ api.ChargeController = (*Provider)(nil)
 func (v *Provider) ChargeEnable(enable bool) error {
 	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
 	return v.action(ActionCharge, action[enable])
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.positionG()
+	if res.Latitude == 0 && res.Longitude == 0 {
+		err = api.ErrNotAvailable
+	}
+
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return res.Latitude, res.Longitude, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)
