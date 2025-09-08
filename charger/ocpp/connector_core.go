@@ -84,7 +84,6 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 	// This leads to the situation that the last reported power value is used for current power consumption
 	// which is wrong if the car has been disconnected in the meantime
 	if !containsMeasurand(request.MeterValue, types.MeasurandPowerActiveImport) {
-		conn.log.WARN.Printf("power active import: not reported, assuming zero")
 		conn.setPowerToZero(true)
 	}
 
@@ -98,10 +97,6 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				sample.Value = strings.TrimSpace(sample.Value)
-
-				// debug log getSampleKey() and sample
-				conn.log.WARN.Printf("meter value: %s = %s, raw == %s", getSampleKey(sample), sample.Value, sample)
-
 				conn.measurements[getSampleKey(sample)] = sample
 				conn.meterUpdated = meterValue.Timestamp.Time
 			}
