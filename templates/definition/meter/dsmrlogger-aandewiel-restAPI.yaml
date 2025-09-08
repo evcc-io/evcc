@@ -5,8 +5,7 @@ products:
       generic: DSMR logger restAPI version
 requirements:
   description:
-    de: template für integration vom Aandewiel dsmr-logger
-    en: Template to integrate the Aandewiel dsmr-logger
+    generic: Aandewiel dsmr-logger
 params:
   - name: usage
     choice:
