@@ -8,8 +8,7 @@ requirements:
     generic: Aandewiel dsmr-logger
 params:
   - name: usage
-    choice:
-      - grid
+    choice: ["grid"]
   - name: host
 render: |
   {{- define "uri" -}}
