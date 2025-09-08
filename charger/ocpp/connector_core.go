@@ -106,27 +106,23 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 }
 
 func (conn *Connector) setPowerToZero() {
+	zero_power :=
+		types.SampledValue{Value: "0", Unit: types.UnitOfMeasureW}
+
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
-		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
-			Value: "0",
-			Unit:  types.UnitOfMeasureW,
-		}
+		conn.measurements[types.MeasurandPowerActiveImport] = zero_power
 	}
 
 	for phase := 1; phase <= 3; phase++ {
-		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]; ok {
-			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)] = types.SampledValue{
-				Value: "0",
-				Unit:  types.UnitOfMeasureW,
-			}
+		key := getPhaseKey(types.MeasurandPowerActiveImport, phase)
+		if _, ok := conn.measurements[key]; ok {
+			conn.measurements[key] = zero_power
 		}
 
 		// Connector.CurrentPower() checks "phase-N" as matter of last resort
-		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"]; ok {
-			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"] = types.SampledValue{
-				Value: "0",
-				Unit:  types.UnitOfMeasureW,
-			}
+		keyN := getPhaseKey(types.MeasurandPowerActiveImport, phase) + "-N"
+		if _, ok := conn.measurements[keyN]; ok {
+			conn.measurements[keyN] = zero_power
 		}
 	}
 }
