@@ -12,6 +12,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // Supported regions
@@ -43,6 +44,7 @@ const stekkerURI = "https://stekker.app/epex-forecast"
 // NewStekkerFromConfig creates provider from config
 func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
+		embed  `mapstructure:",squash"`
 		Region string
 	}{}
 
@@ -55,6 +57,7 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Stekker{
+		embed:  &embed{},
 		region: cc.Region,
 		uri:    stekkerURI,
 		log:    util.NewLogger("stekker"),
@@ -66,19 +69,19 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Stekker) run(done chan error) {
 	var once sync.Once
+	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", t.uri, t.region)
-		t.log.DEBUG.Printf("Request URL: %s", url)
 
-		resp, err := http.Get(url)
+		resp, err := client.Get(url)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println("http error:", err)
 			continue
 		}
 
-		if resp.StatusCode != 200 {
+		if resp.StatusCode != http.StatusOK {
 			once.Do(func() { done <- fmt.Errorf("http status %d", resp.StatusCode) })
 			t.log.ERROR.Printf("http status %d", resp.StatusCode)
 			resp.Body.Close()
@@ -137,7 +140,7 @@ func (t *Stekker) run(done chan error) {
 				res = append(res, api.Rate{
 					Start: start,
 					End:   end,
-					Value: yt / 1000.0, // €/MWh -> €/kWh
+					Value: t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh with adjustments
 				})
 			}
 		}
