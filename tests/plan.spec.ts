@@ -378,7 +378,7 @@ test.describe("preview", async () => {
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
     const modal = await page.getByTestId("charging-plan-modal");
-    await expect(modal.getByTestId("tariff-value")).toHaveText("Energy price40.0 ct/kWh");
+    await expect(modal.getByTestId("tariff-value")).toHaveText(["Energy price", "40.0 ct/kWh"].join(""));
   });
 });
 
