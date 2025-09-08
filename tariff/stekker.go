@@ -46,7 +46,6 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		URI    string
 	}{
 		URI:    "https://stekker.app/epex-forecast",
-		Region: "BE",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
