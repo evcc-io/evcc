@@ -340,9 +340,9 @@ export default defineComponent({
 				{ length: 11 },
 				(_, i) => ({ key: i, name: `${i}` })
 			);
-			result[0].name = "0 (default)";
-			result[0].key = undefined;
-			result[10].name = "10 (highest)";
+			result[0]!.name = "0 (default)";
+			result[0]!.key = undefined;
+			result[10]!.name = "10 (highest)";
 			return result;
 		},
 		showActions() {

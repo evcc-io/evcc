@@ -72,7 +72,8 @@ const teslaloggerMiddleware = (
   next: Connect.NextFunction
 ) => {
   if (req.method === "GET" && req.originalUrl && req.originalUrl.startsWith("/currentjson/")) {
-    const id = parseInt(req.originalUrl.split("/")[2]);
+    const idPart = req.originalUrl.split("/")[2];
+    const id = idPart ? parseInt(idPart) : 0;
     const vehicle = state.vehicles[id - 1];
     if (!vehicle) {
       res.statusCode = 404;

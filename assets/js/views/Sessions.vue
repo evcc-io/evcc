@@ -519,8 +519,8 @@ export default defineComponent({
 				// Assign colors by used energy in the last three months
 				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
 				sortedEntries.forEach(([key]) => {
-					if (!result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length];
+					if (key && !result[key]) {
+						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
 						colorIndex++;
 					}
 				});
@@ -528,8 +528,8 @@ export default defineComponent({
 				// Assign colors to remaining entries
 				this.sessionsWithDefaults.forEach((session) => {
 					const key = session[colorType];
-					if (!result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length];
+					if (key && !result[key]) {
+						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
 						colorIndex++;
 					}
 				});
@@ -727,7 +727,7 @@ export default defineComponent({
 			if (arr.length === 0) return null;
 			const sorted = arr.sort((a, b) => a - b);
 			const index = (p / 100) * (sorted.length - 1);
-			return sorted[Math.floor(index)];
+			return sorted[Math.floor(index)] ?? null;
 		},
 	},
 });

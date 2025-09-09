@@ -17,22 +17,22 @@ export function cleanYaml(text: string, removeKey: string) {
   const lines = text.split("\n");
 
   // remove first comment lines
-  while (lines[0].startsWith("#")) lines.shift();
+  while (lines[0]?.startsWith("#")) lines.shift();
 
   const [firstLine, ...restLines] = lines;
 
-  if (!firstLine.startsWith(prefix)) {
+  if (!firstLine?.startsWith(prefix)) {
     // does not start with key, skip
     return text;
   } else {
-    const first = firstLine.slice(prefix.length).trim();
+    const first = firstLine?.slice(prefix.length).trim();
     if (first) {
       result.push(first);
     }
   }
 
   if (restLines.length > 0) {
-    const indentChars = restLines[0].match(/^(\s+)/)?.[0] || "";
+    const indentChars = restLines[0]?.match(/^(\s+)/)?.[0] || "";
     restLines
       .map((l) => (l.startsWith(indentChars) ? l.slice(indentChars.length) : l))
       .map((l) => l.trimEnd())

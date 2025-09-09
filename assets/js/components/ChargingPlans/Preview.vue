@@ -61,7 +61,7 @@ export default defineComponent({
 			if (!this.plan?.length) {
 				return null;
 			}
-			const end = this.plan[this.plan.length - 1].end;
+			const end = this.plan[this.plan.length - 1]?.end;
 			return end ? new Date(end) : null;
 		},
 		timeWarning(): boolean {
@@ -110,7 +110,7 @@ export default defineComponent({
 				: this.fmtPricePerKWh(value, this.currency);
 		},
 		activeSlot(): Slot | null {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
+			return this.activeIndex !== null ? (this.slots[this.activeIndex] ?? null) : null;
 		},
 		activeSlotName(): string | null {
 			if (this.activeSlot) {

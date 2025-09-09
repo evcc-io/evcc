@@ -72,16 +72,17 @@ export default defineComponent({
 			};
 		},
 		legends() {
-			const total = this.chartData.datasets[0].data.reduce((acc, curr) => acc + curr, 0);
+			const dataset = this.chartData.datasets[0]!;
+			const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
-			return this.chartData.labels.map((label, index) => ({
-				label: label,
-				color: this.chartData.datasets[0].backgroundColor[index],
-				value: [
-					this.formatValue(this.chartData.datasets[0].data[index]),
-					fmtShare(this.chartData.datasets[0].data[index]),
-				],
-			}));
+			return this.chartData.labels.map((label, index) => {
+				const dataValue = dataset.data[index] as number;
+				return {
+					label: label,
+					color: dataset.backgroundColor[index],
+					value: [this.formatValue(dataValue), fmtShare(dataValue)],
+				};
+			});
 		},
 		options() {
 			return {
