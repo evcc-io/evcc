@@ -80,10 +80,7 @@ export default defineComponent({
 				return {
 					label: label,
 					color: dataset.backgroundColor[index],
-					value: [
-						this.formatValue(dataValue),
-						fmtShare(dataValue),
-					],
+					value: [this.formatValue(dataValue), fmtShare(dataValue)],
 				};
 			});
 		},

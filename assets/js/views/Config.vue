@@ -1008,7 +1008,8 @@ export default defineComponent({
 		},
 		circuitTags(circuit: ConfigCircuit) {
 			const circuits = store.state?.circuits || {};
-			const data = circuits[circuit.name] as Circuit | undefined || {} as Partial<Circuit>;
+			const data =
+				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
 			const result: Record<string, object> = {};
 			const p = data.power || 0;
 			if (data.maxPower) {

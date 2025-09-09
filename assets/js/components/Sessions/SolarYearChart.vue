@@ -91,7 +91,8 @@ export default defineComponent({
 
 			const datasets = years.map((year) => {
 				const borderColor = colors.selfPalette[years.indexOf(year)] || undefined;
-				const backgroundColor = years.length === 1 && borderColor ? dimColor(borderColor) : "transparent";
+				const backgroundColor =
+					years.length === 1 && borderColor ? dimColor(borderColor) : "transparent";
 				return {
 					backgroundColor,
 					borderColor,
@@ -140,9 +141,7 @@ export default defineComponent({
 						label,
 						color: null,
 						value:
-							value === null
-								? "- %"
-								: this.fmtPercentage(value as number || 0, 1),
+							value === null ? "- %" : this.fmtPercentage((value as number) || 0, 1),
 					};
 				});
 			}

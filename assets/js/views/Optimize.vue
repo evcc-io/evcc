@@ -184,7 +184,7 @@ export default defineComponent({
 			if (!this.evopt?.res.batteries) return [];
 
 			return this.evopt.res.batteries.map(
-				(_, index) => colors.palette[index % colors.palette.length] || ''
+				(_, index) => colors.palette[index % colors.palette.length] || ""
 			);
 		},
 		dimmedBatteryColors() {

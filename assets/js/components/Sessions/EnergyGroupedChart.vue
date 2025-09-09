@@ -91,10 +91,7 @@ export default defineComponent({
 				return {
 					label: label,
 					color: dataset.backgroundColor[index],
-					value: [
-						fmtValue(dataValue),
-						fmtShare(dataValue),
-					],
+					value: [fmtValue(dataValue), fmtShare(dataValue)],
 				};
 			});
 		},

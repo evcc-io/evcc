@@ -520,7 +520,7 @@ export default defineComponent({
 				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
 				sortedEntries.forEach(([key]) => {
 					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || '';
+						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
 						colorIndex++;
 					}
 				});
@@ -529,7 +529,7 @@ export default defineComponent({
 				this.sessionsWithDefaults.forEach((session) => {
 					const key = session[colorType];
 					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || '';
+						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
 						colorIndex++;
 					}
 				});
