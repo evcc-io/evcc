@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) 2019-2025 evcc.io (andig, naltatis, premultiply)
 // Initial implementation and testing by achgut, Flo56958
 
 // This module is NOT covered by the MIT license. All rights reserved.
