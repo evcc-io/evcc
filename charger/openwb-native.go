@@ -14,8 +14,8 @@ import (
 	"github.com/volkszaehler/mbmd/encoding"
 )
 
-// OpenWbHw charger implementation
-type OpenWbHw struct {
+// OpenWbNative charger implementation
+type OpenWbNative struct {
 	conn        *modbus.Connection
 	current     uint16
 	log         *util.Logger
@@ -33,17 +33,16 @@ const (
 )
 
 func init() {
-	registry.AddCtx("openwbhw", NewOpenWbHwFromConfig)
+	registry.AddCtx("openwb-native", NewOpenWbNativeFromConfig)
 }
 
-//go:generate go tool decorate -f decorateOpenWbHw -b *OpenWbHw -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
-// NewOpenWbHwFromConfig creates an OpenWbHw DIN charger from generic config
-func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+// NewOpenWbNativeFromConfig creates an OpenWbNative DIN charger from generic config
+func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Phases1p3p      bool
 		RfId            bool
-		MilliAmps       bool
 		CpWait          float64
 		ChargePoint     int
 		modbus.Settings `mapstructure:",squash"`
@@ -58,22 +57,22 @@ func NewOpenWbHwFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	return NewOpenWbHw(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.MilliAmps, cc.CpWait, cc.ChargePoint)
+	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.ChargePoint)
 }
 
-// NewOpenWbHw creates OpenWbHw charger
-func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, configureMilliAmps bool, cpWait float64, chargePoint int) (api.Charger, error) {
+// NewOpenWbNative creates OpenWbNative charger
+func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, hasRfid bool, cpWait float64, chargePoint int) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("openwbhw")
+	log := util.NewLogger("openwb-native")
 
 	conn.Logger(log.TRACE)
 	conn.Delay(200 * time.Millisecond)
 
-	wb := &OpenWbHw{
+	wb := &OpenWbNative{
 		conn:    conn,
 		current: 6, // assume min current
 		log:     log,
@@ -99,23 +98,14 @@ func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, 
 
 		config := encoding.Uint16(bConfig)
 
-		if configureMilliAmps != (config&0x80 != 0) {
-			b := make([]byte, 2)
-			if configureMilliAmps {
-				config |= 0x0080 // set milliAmps bit
-				binary.BigEndian.PutUint16(b, config)
-			} else {
-				config &= 0xff7F // clear milliAmps bit
-				binary.BigEndian.PutUint16(b, config)
-			}
-			if _, err := wb.conn.WriteMultipleRegisters(owbhwRegConfig, 1, b); err != nil {
-				return nil, err
-			}
+		b := make([]byte, 2)
+		config |= 0x0080 // set milliAmps bit
+		binary.BigEndian.PutUint16(b, config)
+		if _, err := wb.conn.WriteMultipleRegisters(owbhwRegConfig, 1, b); err != nil {
+			return nil, err
 		}
 
-		if config&0x80 != 0 {
-			maxCurrentMillis = wb.maxCurrentMillis
-		}
+		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
 	// configure special external hardware features
@@ -141,11 +131,11 @@ func NewOpenWbHw(ctx context.Context, uri, device, comset string, baudrate int, 
 	}
 	wb.chargePoint = chargePoint
 
-	return decorateOpenWbHw(wb, maxCurrentMillis, phases1p3p, identify), nil
+	return decorateOpenWbNative(wb, maxCurrentMillis, phases1p3p, identify), nil
 }
 
 // Status implements the api.Charger interface
-func (wb *OpenWbHw) Status() (api.ChargeStatus, error) {
+func (wb *OpenWbNative) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(owbhwRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -167,7 +157,7 @@ func (wb *OpenWbHw) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *OpenWbHw) Enabled() (bool, error) {
+func (wb *OpenWbNative) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(owbhwRegCurrent, 1)
 	if err != nil {
 		return false, err
@@ -177,7 +167,7 @@ func (wb *OpenWbHw) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *OpenWbHw) Enable(enable bool) error {
+func (wb *OpenWbNative) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
 		binary.BigEndian.PutUint16(b, wb.current)
@@ -189,7 +179,7 @@ func (wb *OpenWbHw) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *OpenWbHw) MaxCurrent(current int64) error {
+func (wb *OpenWbNative) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
@@ -205,13 +195,17 @@ func (wb *OpenWbHw) MaxCurrent(current int64) error {
 	return err
 }
 
-// maxCurrentMillis implements the api.ChargerEx interface (Wallbe Firmware only)
-func (wb *OpenWbHw) maxCurrentMillis(current float64) error {
+// maxCurrentMillis implements the api.ChargerEx interface
+func (wb *OpenWbNative) maxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.1f", current)
+	}
+
 	return wb.MaxCurrent(int64(current * 100)) // 0.01A Steps
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
-func (wb *OpenWbHw) phases1p3p(phases int) error {
+func (wb *OpenWbNative) phases1p3p(phases int) error {
 	if err := wb.Enable(false); err != nil {
 		return err
 	}
@@ -239,17 +233,13 @@ func (wb *OpenWbHw) phases1p3p(phases int) error {
 	pinGpioCP.Low() // disable phase switching, reconnect CP
 	time.Sleep(time.Second)
 
-	if err := wb.Enable(true); err != nil {
-		return err
-	}
-
-	return nil
+	return wb.Enable(true)
 }
 
-var _ api.Resurrector = (*OpenWbHw)(nil)
+var _ api.Resurrector = (*OpenWbNative)(nil)
 
 // WakeUp implements the api.Resurrector interface
-func (wb *OpenWbHw) WakeUp() error {
+func (wb *OpenWbNative) WakeUp() error {
 	if err := wb.Enable(false); err != nil {
 		return err
 	}
@@ -274,19 +264,15 @@ func (wb *OpenWbHw) WakeUp() error {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *OpenWbHw) identify() (string, error) {
-	var completed bool = false
-
-	for !completed {
+func (wb *OpenWbNative) identify() (string, error) {
+	for {
 		select {
 		case rfid := <-wb.rfIdChannel:
 			wb.log.INFO.Printf("Read RFID \"%s\" from channel", rfid)
 			wb.rfId = rfid
 		default:
 			wb.log.INFO.Println("Nothing left to read from channel")
-			completed = true
+			return wb.rfId, nil
 		}
 	}
-
-	return wb.rfId, nil
 }

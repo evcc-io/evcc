@@ -1,4 +1,4 @@
-template: openwbhw
+template: openwb-native
 products:
   - brand: openWB
     description:
@@ -7,7 +7,8 @@ capabilities: ["1p3p", "rfid", "mA"]
 requirements:
   description:
     de: |
-      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2
+      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2. mA Regelung wird
+      automatisch benutzt wenn die EVCC Firmware es unterstützt.
 
       Installation ohne Display:
       - Raspberry Pi OS Lite (64bit) Image installieren und konfigurieren.
@@ -25,7 +26,7 @@ requirements:
         - ABB B23 (template: abb-ab) mit ID 201
 
       Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
-      - `apt install labwc wayfire seatd xdg-user-dirs firefox`
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
       - Datei `/home/pi/.config/labwc/autostart` mit folgendem Inhalt anlegen:
         ```bash
         /usr/bin/firefox --kiosk http://localhost:7070/ &
@@ -44,7 +45,8 @@ requirements:
       - Kiosk Modus Autostart aktivieren: `systemctl --user enable kiosk`
       - Als root: Starten von systemd user units ohne login des Users aktivieren: `loginctl enable-linger pi`
     en: |
-      Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2
+      Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2. mA control is usermod
+      automatically if the EVCC firmware supports it.
 
       Installation without display:
       - Install and configure Raspberry Pi OS Lite (64bit) image.
@@ -62,7 +64,7 @@ requirements:
         - ABB B23 (template: abb-ab) with ID 201
 
       Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
-      - `apt install labwc wayfire seatd xdg-user-dirs firefox`
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
       - Create the file `/home/pi/.config/labwc/autostart` with the following contents:
         ```bash
         /usr/bin/firefox --kiosk http://localhost:7070/ &
@@ -85,32 +87,23 @@ params:
     choice: ["rs485"]
     baudrate: 9600
     comset: 8N1
-  - name: milliamps
-    type: bool
-    description:
-      en: Enable mA support?
-      de: Aktivieren der mA-Unterstützung?
-    help:
-      en: Enable or disable milliampere support, if hardware supports it
-      de: Aktivieren oder Deaktivieren der Milliampere-Unterstützung, wenn die Hardware dies unterstützt
-    default: true
   - name: phases1p3p
     type: bool
     description:
-      en: Phase switching?
-      de: Phasenumschaltung?
+      en: Phase switching
+      de: Phasenumschaltung
     help:
-      en: Device is equipped with phase switching option?
-      de: Gerät ist mit Phasenumschaltungsoption ausgestattet?
+      en: Device is equipped with phase switching option
+      de: Gerät ist mit Phasenumschaltungsoption ausgestattet
     default: false
   - name: rfid
     type: bool
     description:
-      en: RFID reader?
-      de: RFID-Kartenleser?
+      en: RFID reader
+      de: RFID-Kartenleser
     help:
-      en: RFID card reader is present?
-      de: RFID-Kartenleser ist vorhanden?
+      en: RFID card reader is present
+      de: RFID-Kartenleser ist vorhanden
     default: false
   - name: cpwait
     type: float
@@ -133,8 +126,7 @@ params:
     default: 0
     advanced: true
 render: |
-  type: openwbhw
-  milliamps: {{ .milliamps }}
+  type: openwb-native
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
   cpwait: {{ .cpwait }}

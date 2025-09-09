@@ -6,104 +6,104 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenWbHw(base *OpenWbHw, chargerEx func(float64) error, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
+func decorateOpenWbNative(base *OpenWbNative, chargerEx func(float64) error, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
 	switch {
 	case chargerEx == nil && identifier == nil && phaseSwitcher == nil:
 		return base
 
 	case chargerEx != nil && identifier == nil && phaseSwitcher == nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.ChargerEx
 		}{
-			OpenWbHw: base,
-			ChargerEx: &decorateOpenWbHwChargerExImpl{
+			OpenWbNative: base,
+			ChargerEx: &decorateOpenWbNativeChargerExImpl{
 				chargerEx: chargerEx,
 			},
 		}
 
 	case chargerEx == nil && identifier == nil && phaseSwitcher != nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.PhaseSwitcher
 		}{
-			OpenWbHw: base,
-			PhaseSwitcher: &decorateOpenWbHwPhaseSwitcherImpl{
+			OpenWbNative: base,
+			PhaseSwitcher: &decorateOpenWbNativePhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
 	case chargerEx != nil && identifier == nil && phaseSwitcher != nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.ChargerEx
 			api.PhaseSwitcher
 		}{
-			OpenWbHw: base,
-			ChargerEx: &decorateOpenWbHwChargerExImpl{
+			OpenWbNative: base,
+			ChargerEx: &decorateOpenWbNativeChargerExImpl{
 				chargerEx: chargerEx,
 			},
-			PhaseSwitcher: &decorateOpenWbHwPhaseSwitcherImpl{
+			PhaseSwitcher: &decorateOpenWbNativePhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
 	case chargerEx == nil && identifier != nil && phaseSwitcher == nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.Identifier
 		}{
-			OpenWbHw: base,
-			Identifier: &decorateOpenWbHwIdentifierImpl{
+			OpenWbNative: base,
+			Identifier: &decorateOpenWbNativeIdentifierImpl{
 				identifier: identifier,
 			},
 		}
 
 	case chargerEx != nil && identifier != nil && phaseSwitcher == nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.ChargerEx
 			api.Identifier
 		}{
-			OpenWbHw: base,
-			ChargerEx: &decorateOpenWbHwChargerExImpl{
+			OpenWbNative: base,
+			ChargerEx: &decorateOpenWbNativeChargerExImpl{
 				chargerEx: chargerEx,
 			},
-			Identifier: &decorateOpenWbHwIdentifierImpl{
+			Identifier: &decorateOpenWbNativeIdentifierImpl{
 				identifier: identifier,
 			},
 		}
 
 	case chargerEx == nil && identifier != nil && phaseSwitcher != nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.Identifier
 			api.PhaseSwitcher
 		}{
-			OpenWbHw: base,
-			Identifier: &decorateOpenWbHwIdentifierImpl{
+			OpenWbNative: base,
+			Identifier: &decorateOpenWbNativeIdentifierImpl{
 				identifier: identifier,
 			},
-			PhaseSwitcher: &decorateOpenWbHwPhaseSwitcherImpl{
+			PhaseSwitcher: &decorateOpenWbNativePhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
 	case chargerEx != nil && identifier != nil && phaseSwitcher != nil:
 		return &struct {
-			*OpenWbHw
+			*OpenWbNative
 			api.ChargerEx
 			api.Identifier
 			api.PhaseSwitcher
 		}{
-			OpenWbHw: base,
-			ChargerEx: &decorateOpenWbHwChargerExImpl{
+			OpenWbNative: base,
+			ChargerEx: &decorateOpenWbNativeChargerExImpl{
 				chargerEx: chargerEx,
 			},
-			Identifier: &decorateOpenWbHwIdentifierImpl{
+			Identifier: &decorateOpenWbNativeIdentifierImpl{
 				identifier: identifier,
 			},
-			PhaseSwitcher: &decorateOpenWbHwPhaseSwitcherImpl{
+			PhaseSwitcher: &decorateOpenWbNativePhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
@@ -112,26 +112,26 @@ func decorateOpenWbHw(base *OpenWbHw, chargerEx func(float64) error, phaseSwitch
 	return nil
 }
 
-type decorateOpenWbHwChargerExImpl struct {
+type decorateOpenWbNativeChargerExImpl struct {
 	chargerEx func(float64) error
 }
 
-func (impl *decorateOpenWbHwChargerExImpl) MaxCurrentMillis(p0 float64) error {
+func (impl *decorateOpenWbNativeChargerExImpl) MaxCurrentMillis(p0 float64) error {
 	return impl.chargerEx(p0)
 }
 
-type decorateOpenWbHwIdentifierImpl struct {
+type decorateOpenWbNativeIdentifierImpl struct {
 	identifier func() (string, error)
 }
 
-func (impl *decorateOpenWbHwIdentifierImpl) Identify() (string, error) {
+func (impl *decorateOpenWbNativeIdentifierImpl) Identify() (string, error) {
 	return impl.identifier()
 }
 
-type decorateOpenWbHwPhaseSwitcherImpl struct {
+type decorateOpenWbNativePhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOpenWbHwPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+func (impl *decorateOpenWbNativePhaseSwitcherImpl) Phases1p3p(p0 int) error {
 	return impl.phaseSwitcher(p0)
 }
