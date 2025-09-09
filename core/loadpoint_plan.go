@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"time"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
@@ -16,7 +15,6 @@ const (
 )
 
 // TODO planActive is not guarded by mutex
-
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
@@ -59,7 +57,6 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 		}
 		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
 	}
-
 	energy := lp.remainingPlanEnergy(goal)
 	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 }
@@ -68,12 +65,10 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
-
 	if lp.socBasedPlanning() {
 		_, _, soc, _ := lp.nextVehiclePlan()
 		return float64(soc), true
 	}
-
 	_, _, limit := lp.getPlanEnergy()
 	return limit, false
 }
@@ -82,12 +77,10 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 func (lp *Loadpoint) GetPlanPreCondDuration() time.Duration {
 	lp.RLock()
 	defer lp.RUnlock()
-
 	if lp.socBasedPlanning() {
 		_, precondition, _, _ := lp.nextVehiclePlan()
 		return precondition
 	}
-
 	_, precondition, _ := lp.getPlanEnergy()
 	return precondition
 }
@@ -98,7 +91,6 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 	if lp.planner == nil || targetTime.IsZero() {
 		return nil
 	}
-
 	return lp.planner.Plan(requiredDuration, precondition, targetTime)
 }
 
@@ -107,33 +99,27 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		lp.setPlanActive(active)
 	}()
-
 	var planStart, planEnd time.Time
 	var planOverrun time.Duration
-
 	defer func() {
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
-
 	// re-check since plannerActive() is called before connected() check in Update()
 	if !lp.connected() {
 		return false
 	}
-
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
 		return false
 	}
-
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
 	}
-
 	goal, isSocBased := lp.GetPlanGoal()
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
@@ -142,43 +128,39 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		if lp.planActive && isSocBased && goal == 100 && lp.charging() {
 			return true
 		}
-
 		lp.finishPlan()
 		return false
 	}
-
 	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
 	if plan == nil {
 		return false
 	}
-
 	var overrun string
 	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 		planOverrun = excessDuration
 	}
-
 	planStart = planner.Start(plan)
 	planEnd = planner.End(plan)
 	lp.log.DEBUG.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
-
 	// log plan
 	for _, slot := range plan {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Value)
 	}
-
 	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
 	active = !activeSlot.End.IsZero()
-
 	if active {
 		// ignore short plans if not already active
 		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
+			// Ausnahme für Einzel-Slot-Plan: auch wenn kurz, soll hier geladen werden
+			if len(plan) == 1 {
+				return true
+			}
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
-
 		// remember last active plan's slot end time
 		lp.planSlotEnd = activeSlot.End
 	} else if lp.planActive {
@@ -201,6 +183,5 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		}
 	}
-
 	return active
 }
