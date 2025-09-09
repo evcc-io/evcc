@@ -49,7 +49,7 @@ export default defineComponent({
 				return null;
 			}
 			const { plan } = this.plan;
-			return plan[plan.length - 1].end;
+			return plan[plan.length - 1]!.end;
 		},
 		overrunFmt(): string {
 			if (!this.planOverrun) {

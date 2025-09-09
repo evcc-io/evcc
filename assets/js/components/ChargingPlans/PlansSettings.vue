@@ -139,7 +139,7 @@ export default defineComponent({
 			return this.repeatingPlans.length !== 0;
 		},
 		selectedPreviewPlanTitle(): string {
-			return this.previewPlanOptions[this.selectedPreviewId - 1]?.name;
+			return this.previewPlanOptions[this.selectedPreviewId - 1]?.name || "";
 		},
 		chargingPlanWarningsProps(): any {
 			return this.collectProps(Warnings);
