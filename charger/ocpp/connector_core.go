@@ -118,8 +118,9 @@ func (conn *Connector) assumeMeterStopped() {
 	for phase := 1; phase <= 3; phase++ {
 		// phase powers
 		for _, suffix := range []types.Measurand{"", "-N"} {
-			if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport+suffix, phase)]; ok {
-				conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport+suffix, phase)] = types.SampledValue{
+			key := getPhaseKey(types.MeasurandPowerActiveImport, phase) + suffix
+			if _, ok := conn.measurements[key]; ok {
+				conn.measurements[key] = types.SampledValue{
 					Value: "0",
 					Unit:  types.UnitOfMeasureW,
 				}
@@ -127,8 +128,9 @@ func (conn *Connector) assumeMeterStopped() {
 		}
 
 		// phase currents
-		if _, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]; ok {
-			conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)] = types.SampledValue{
+		key := getPhaseKey(types.MeasurandCurrentImport, phase)
+		if _, ok := conn.measurements[key]; ok {
+			conn.measurements[key] = types.SampledValue{
 				Value: "0",
 				Unit:  types.UnitOfMeasureA,
 			}

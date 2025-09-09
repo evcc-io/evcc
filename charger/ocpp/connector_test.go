@@ -165,7 +165,7 @@ func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.NoError(err, "CurrentPower")
 	suite.Equal(res, 3.0, "CurrentPower")
 
-	// This should set any power to zero
+	// set powers to zero
 	suite.conn.OnStopTransaction(nil)
 
 	res, err = suite.conn.CurrentPower()
