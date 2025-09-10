@@ -154,6 +154,9 @@ jobs:
       - name: Test
         run: make test-ui
 
+      - name: License
+        run: make license-ui
+
       - name: Build UI
         run: make ui
 
@@ -163,9 +166,6 @@ jobs:
         with:
           path: dist
           key: ${{ runner.os }}-${{ github.sha }}-dist
-
-      - name: License
-        run: make license
 
       - name: Porcelain
         run: |
