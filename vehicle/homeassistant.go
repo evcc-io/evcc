@@ -42,11 +42,13 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Odometer   string // optional
 			Climater   string // optional
 			FinishTime string // optional
+			MaxCurrent string // optional
 		}
 		Services struct {
-			Start  string `mapstructure:"start_charging"` // script.*  optional
-			Stop   string `mapstructure:"stop_charging"`  // script.*  optional
-			Wakeup string // script.*  optional
+			Start      string `mapstructure:"start_charging"` // script.*  optional
+			Stop       string `mapstructure:"stop_charging"`  // script.*  optional
+			Wakeup     string // script.*  optional
+			MaxCurrent string `mapstructure:"set_max_current"` // script.*  optional
 		}
 	}
 
@@ -79,14 +81,16 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	// prepare optional feature functions with concise names
 	var (
-		limitSoc     func() (int64, error)
-		status       func() (api.ChargeStatus, error)
-		rng          func() (int64, error)
-		odo          func() (float64, error)
-		climater     func() (bool, error)
-		finish       func() (time.Time, error)
-		chargeEnable func(bool) error
-		wakeup       func() error
+		limitSoc      func() (int64, error)
+		status        func() (api.ChargeStatus, error)
+		rng           func() (int64, error)
+		odo           func() (float64, error)
+		climater      func() (bool, error)
+		finish        func() (time.Time, error)
+		chargeEnable  func(bool) error
+		wakeup        func() error
+		maxCurrent    func(int64) error
+		getMaxCurrent func() (float64, error)
 	)
 
 	if cc.Sensors.LimitSoc != "" {
@@ -118,6 +122,14 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
 	}
+	if cc.Services.MaxCurrent != "" {
+		maxCurrent = func(current int64) error {
+			return res.callScriptWithCurrent(cc.Services.MaxCurrent, current)
+		}
+	}
+	if cc.Sensors.MaxCurrent != "" {
+		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.Sensors.MaxCurrent) }
+	}
 
 	// decorate all features
 	return decorateVehicle(
@@ -127,8 +139,8 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		rng,
 		odo,
 		climater,
-		nil, // maxCurrent setter not implemented
-		nil, // getMaxCurrent getter not implemented
+		maxCurrent,
+		getMaxCurrent,
 		finish,
 		wakeup,
 		chargeEnable,
@@ -160,6 +172,15 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 func (v *HomeAssistant) callScript(script string) error {
 	// All configured services are scripts, so always use script.turn_on
 	payload := fmt.Sprintf(`{"entity_id": "%s"}`, script)
+	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
+	_, err := v.DoBody(req)
+	return err
+}
+
+func (v *HomeAssistant) callScriptWithCurrent(script string, current int64) error {
+	// Call script with current parameter
+	payload := fmt.Sprintf(`{"entity_id": "%s", "variables": {"current": %d}}`, script, current)
 	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
 	_, err := v.DoBody(req)
