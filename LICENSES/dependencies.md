@@ -9,6 +9,14 @@ Backend modules and libraries used in the Go application.
 - **Source**: https://github.com/evcc-io/evcc/network/dependencies?q=ecosystem%3AGo
 - **Package Manager**: Go modules
 
+### Inlined Dependencies
+
+#### basvdlei/gotsmart
+
+- **License**: BSD 3-Clause License
+- **Files**: /meter/dsmr.go
+- **Notes**: Full license text is in the source file
+
 ## JavaScript Dependencies
 
 Frontend packages and build tools used in the Vue.js application.

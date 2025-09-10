@@ -65,8 +65,9 @@ Learn more about our [sponsorship model](https://docs.evcc.io/en/docs/sponsorshi
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-Note that all sponsor-required components are excluded from the MIT License.
-See file license header for details.
-If you want to use them in your own project, all end-users must obtain an evcc sponsorship token.
-
 For additional license information regarding fonts, icons, and other assets, please see the [LICENSES](LICENSES/) folder.
+
+**Note:** All sponsor-required components are excluded from the MIT License.
+See file license header for details.
+If you want to use them in your own project, one evcc sponsorship token is required per evcc instance.
+Custom licensing agreements are available - please [contact us](mailto:info@evcc.io) to discuss your specific requirements.

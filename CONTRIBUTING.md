@@ -162,4 +162,5 @@ Please open a GitHub pull request in the respective repository.
 
 ## License
 
-By contributing to evcc, you agree that your contributions will be licensed under the MIT License, the same license that covers the project. This constitutes an implicit Contributor License Agreement (CLA), following GitHub's standard practice where contributions are made under the same terms as the project license.
+By contributing to evcc, you agree that your contributions will be licensed under the existing license terms that apply to the respective parts of the project.
+This constitutes an implicit Contributor License Agreement (CLA), following GitHub's standard practice where contributions are made under the same terms as the project license.
