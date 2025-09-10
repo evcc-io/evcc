@@ -141,7 +141,7 @@ export default defineComponent({
 				return { value: key, name: value[1] };
 			});
 			// sort by name
-			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
+			locales.sort((a, b) => ((a.name || "") < (b.name || "") ? -1 : 1));
 			return locales;
 		},
 		fullscreenAvailable: () => {

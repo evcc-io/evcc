@@ -132,8 +132,9 @@ func (conn *Connector) setPowerToZero(forceSetFallBackPower bool) {
 	}
 
 	for phase := 1; phase <= 3; phase++ {
-		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]; ok {
-			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)] = types.SampledValue{
+		key := getPhaseKey(types.MeasurandPowerActiveImport, phase)
+		if _, ok := conn.measurements[key]; ok {
+			conn.measurements[key] = types.SampledValue{
 				Value: "0",
 				Unit:  types.UnitOfMeasureW,
 			}
@@ -141,8 +142,9 @@ func (conn *Connector) setPowerToZero(forceSetFallBackPower bool) {
 
 		// Connector.CurrentPower() checks "phase-N" as matter of last resort
 		// Can be always set to zero to have 0 power reported at startup, or CurrentPower() returns no Api error
-		if _, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"]; ok || forceSetFallBackPower {
-			conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)+"-N"] = types.SampledValue{
+		keyN := key + "-N"
+		if _, ok := conn.measurements[keyN]; ok || forceSetFallBackPower {
+			conn.measurements[keyN] = types.SampledValue{
 				Value: "0",
 				Unit:  types.UnitOfMeasureW,
 			}
@@ -155,8 +157,10 @@ func (conn *Connector) assumeMeterStopped() {
 	conn.setPowerToZero(false)
 
 	for phase := 1; phase <= 3; phase++ {
-		if _, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]; ok {
-			conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)] = types.SampledValue{
+		// phase currents
+		key := getPhaseKey(types.MeasurandCurrentImport, phase)
+		if _, ok := conn.measurements[key]; ok {
+			conn.measurements[key] = types.SampledValue{
 				Value: "0",
 				Unit:  types.UnitOfMeasureA,
 			}
