@@ -233,6 +233,23 @@
 		<div class="text-end">
 			<a class="link-primary" href="#" @click.prevent="addVehicle"> add vehicle </a>
 		</div>
+
+		<h4 class="my-4">HEMS</h4>
+		<div class="row">
+			<label for="hemsRelay" class="col-sm-6 col-form-label">Relay Limit</label>
+			<div class="col-sm-6 mb-3">
+				<div class="form-check form-switch">
+					<input
+						id="hemsRelay"
+						v-model="state.hems.relay"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+					/>
+					<label class="form-check-label" for="hemsRelay"> active </label>
+				</div>
+			</div>
+		</div>
 		<div class="p-4 text-center fixed-bottom bg-light text-dark bg-opacity-75">
 			<button type="submit" class="btn btn-primary">Apply changes</button>
 		</div>
@@ -260,6 +277,7 @@ export default defineComponent({
 					status: string;
 				}[];
 				vehicles: { soc: number; range: number }[];
+				hems: { relay: boolean };
 			} | null,
 		};
 	},
@@ -276,18 +294,24 @@ export default defineComponent({
 		},
 		addVehicle() {
 			// push a duplacate of the last entry
-			this.state?.vehicles.push({
-				...this.state.vehicles[this.state.vehicles.length - 1],
-			});
+			const vehicles = this.state?.vehicles;
+			if (!vehicles) return;
+			const lastVehicle = vehicles[vehicles.length - 1];
+			if (lastVehicle) {
+				vehicles.push({ ...lastVehicle });
+			}
 		},
 		removeVehicle(index: number) {
 			this.state?.vehicles.splice(index, 1);
 		},
 		addLoadpoint() {
 			// push a duplacate of the last entry
-			this.state?.loadpoints.push({
-				...this.state.loadpoints[this.state.loadpoints.length - 1],
-			});
+			const loadpoints = this.state?.loadpoints;
+			if (!loadpoints) return;
+			const lastLoadpoint = loadpoints[loadpoints.length - 1];
+			if (lastLoadpoint) {
+				loadpoints.push({ ...lastLoadpoint });
+			}
 		},
 		removeLoadpoint(index: number) {
 			this.state?.loadpoints.splice(index, 1);

@@ -60,7 +60,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[0].created);
+			return new Date(this.sessions[0]!.created);
 		},
 		month() {
 			return (this.firstDay?.getMonth() || 0) + 1;
@@ -72,7 +72,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[this.sessions.length - 1].created);
+			return new Date(this.sessions[this.sessions.length - 1]!.created);
 		},
 		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update cost history data");
@@ -133,11 +133,12 @@ export default defineComponent({
 							? session.price || 0
 							: (session.co2PerKWh || 0) * (session.chargedEnergy || 0);
 
-					result[index][groupKey] = (result[index][groupKey] || 0) + value;
+					const item = result[index]!;
+					item[groupKey] = (item[groupKey] || 0) + value;
 
-					result[index].totalCost = (result[index].totalCost || 0) + value;
-					result[index].totalKWh = (result[index].totalKWh || 0) + session.chargedEnergy;
-					result[index].avgCost = result[index].totalCost / result[index].totalKWh;
+					item.totalCost = (item.totalCost || 0) + value;
+					item.totalKWh = (item.totalKWh || 0) + session.chargedEnergy;
+					item.avgCost = item.totalCost / item.totalKWh;
 				});
 			}
 
@@ -257,7 +258,7 @@ export default defineComponent({
 						},
 						callbacks: {
 							title: (tooltipItem: TooltipItem<"bar">[]) => {
-								const { label } = tooltipItem[0];
+								const { label } = tooltipItem[0] || { label: "" };
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {

@@ -1,13 +1,14 @@
-template: bge_tech_ds100
+template: bgetech-ds100
+covers: ["bge_tech_ds100"]
 products:
-  - brand: BGEtech
+  - brand: B+GE-TECH
     description:
       generic: DS100
 params:
   - name: usage
-    choice: ["grid", "pv", "charge", "aux"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rs485"]
     baudrate: 1200
 render: |
   type: custom
@@ -26,9 +27,9 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       {{- if eq .usage "pv" }}
-      address: 0x0118 # Reversing active energy consumption
+      address: 0x0118 # Active energy (feed-in)
       {{- else }}
-      address: 0x010E # Forward active energy consumption
+      address: 0x010E # Active energy (consumption)
       {{- end }}
       type: holding
       decode: int32
@@ -37,24 +38,24 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0410 # Electricity of A phase
+      address: 0x0410 # Current of A phase
       type: holding
       decode: int32
-    scale: 0.1
+    scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0412  # Electricity of B phase
+      address: 0x0412  # Current of B phase
       type: holding
       decode: int32
-    scale: 0.1
+    scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0414 # Electricity of C phase
+      address: 0x0414 # Current of C phase
       type: holding
       decode: int32
-    scale: 0.1
+    scale: 0.001
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
