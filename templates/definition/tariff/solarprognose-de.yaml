@@ -8,28 +8,37 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: accesstoken
+  - name: token
     description:
       en: Access Token from User Profile
       de: Zugriffs-Schlüssel aus Benutzer-Profil
-    required: true  
+    advanced: true
   - name: item
-    description:
-      en: Element type to be queried
-      de: Elementtyp, der abgefragt werden soll
     choice: ["location", "plant", "inverter", "module_field"]
-    required: true  
+    description:
+      en: Item type to be queried.
+      de: Elementtyp, der abgefragt werden soll.
+    help:
+      en: Item and id/token are only required if more than one location is configured or if a specific item is to be queried. Otherwise, the API returns the data for the first location. See also https://www.solarprognose.de/web/en-en/solarprediction/page/api
+      de: Item und id/token werden nur benötigt, wenn mehr als ein Standort konfiguriert ist oder ein bestimmtes Element abgefragt werden soll. Ansonsten gibt die API die Daten für den ersten Standort zurück. Siehe auch https://www.solarprognose.de/web/de-de/solarprediction/page/api
+    advanced: true
+  - name: id
+    description:
+      en: Unique ID of the item to be queried
+      de: Eindeutige ID des abzufragenden Elements
+    advanced: true
   - name: uniquetoken
     description:
-      en: Unique token for selected Item
-      de: Eindeutiger Schlüssel für das angegebene Element 
-    required: true  
+      en: Unique token of the item to be queried
+      de: Eindeutiger Schlüssel des abzufragenden Elements
+    advanced: true
   - name: algorithm
+    choice: ["mosmix","own-v1","clearsky"]
     description:
-      en: Forecasting Algorithm
-      de: Prognosealgorithmus
-    default: mosmix  
-    advanced: true          
+      en: Forecasting Algorithm (mosmix, own-v1 or clearsky)
+      de: Prognosealgorithmus (mosmix, own-v1 oder clearsky)
+    default: mosmix
+    advanced: true
   - name: interval
     default: 1h
     advanced: true
@@ -38,7 +47,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&access-token={{ .accesstoken }}&item={{ .item }}&token={{ unquote .uniquetoken }}&algorithm={{ .algorithm }}&type=hourly
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}{{ if .uniquetoken }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ end }}&algorithm={{ .algorithm }}&type=hourly
     jq: |
       [ .data | to_entries.[] | {
         "start": (.key | tonumber | strftime("%FT%TZ") ),
