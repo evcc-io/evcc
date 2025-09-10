@@ -124,15 +124,6 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (a
 	if phases {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
-
-		// get initial state from charger
-		phases, err := wb.getPhases()
-		if err != nil {
-			return nil, fmt.Errorf("phases: %w", err)
-		}
-		if phases > 0 {
-			wb.phases = uint16(phases)
-		}
 	}
 
 	return decorateDaheimLaden(wb, phases1p3p, phasesG), nil
