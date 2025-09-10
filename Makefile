@@ -57,6 +57,9 @@ lint::
 lint-ui::
 	npm run lint
 
+license::
+	npm run license
+
 test-ui::
 	npm test
 
