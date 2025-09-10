@@ -19,7 +19,7 @@ type HEMS interface {
 func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}, site site.API) (HEMS, error) {
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
-		return nil, errors.New("breaking change: Sunny Home Manager integration is always on. Remove your configuration from hems section. Configuration can be done in the new top-level shm section")
+		return nil, errors.New("breaking change: Sunny Home Manager integration is always on. See https://github.com/evcc-io/evcc/releases and https://docs.evcc.io/en/docs/integrations/sma-sunny-home-manager")
 	case "eebus":
 		return eebus.NewFromConfig(ctx, other, site)
 	case "relay":
