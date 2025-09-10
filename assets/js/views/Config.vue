@@ -445,6 +445,7 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent } from "vue";
 import type {
+	Circuit,
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
@@ -1030,7 +1031,8 @@ export default defineComponent({
 		},
 		circuitTags(circuit: ConfigCircuit) {
 			const circuits = store.state?.circuits || {};
-			const data = circuits[circuit.name] || {};
+			const data =
+				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
 			const result: Record<string, object> = {};
 			const p = data.power || 0;
 			if (data.maxPower) {

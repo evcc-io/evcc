@@ -67,7 +67,7 @@ export default defineComponent({
 		},
 		timestamp: {
 			type: String,
-			required: true,
+			default: "",
 		},
 		currency: {
 			type: String as PropType<CURRENCY>,
@@ -75,7 +75,7 @@ export default defineComponent({
 		},
 		batteryColors: {
 			type: Array as PropType<string[]>,
-			required: true,
+			default: () => [],
 		},
 	},
 	computed: {
@@ -312,7 +312,7 @@ export default defineComponent({
 		convertWhToKW(wh: number, index: number): number {
 			// Convert Wh to kW by normalizing against time duration
 			// Power (kW) = Energy (Wh) / Time (h) / 1000
-			const dtSeconds = this.evopt.req.time_series.dt[index];
+			const dtSeconds = this.evopt.req.time_series.dt[index] || 0;
 			const hours = dtSeconds / 3600; // Convert seconds to hours
 			return wh / hours / 1000;
 		},
