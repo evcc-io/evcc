@@ -30,9 +30,10 @@ import (
 
 // DaheimLadenMB charger implementation
 type DaheimLadenMB struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
+	log    *util.Logger
+	conn   *modbus.Connection
+	curr   uint16
+	phases uint16
 }
 
 const (
@@ -56,6 +57,7 @@ const (
 	// PRO only
 	dlRegPhaseSwitchState   = 184
 	dlRegPhaseSwitchControl = 186
+	dlRegPhaseSwitchAction  = 188
 )
 
 func init() {
@@ -93,9 +95,10 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (a
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLadenMB{
-		log:  log,
-		conn: conn,
-		curr: 60, // assume min current
+		log:    log,
+		conn:   conn,
+		curr:   60, // assume min current
+		phases: 3,  // assume 3p
 	}
 
 	// get initial state from charger
@@ -121,6 +124,15 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (a
 	if phases {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
+
+		// get initial state from charger
+		phases, err := wb.getPhases()
+		if err != nil {
+			return nil, fmt.Errorf("phases: %w", err)
+		}
+		if phases > 0 {
+			wb.phases = uint16(phases)
+		}
 	}
 
 	return decorateDaheimLaden(wb, phases1p3p, phasesG), nil
@@ -292,17 +304,30 @@ func (wb *DaheimLadenMB) phases1p3p(phases int) error {
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
 	_, err := wb.conn.WriteMultipleRegisters(dlRegPhaseSwitchControl, 1, b)
+	if err == nil {
+		wb.phases = uint16(phases)
+	}
 	return err
 }
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *DaheimLadenMB) getPhases() (int, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchAction, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	return int(binary.BigEndian.Uint16(b)), nil
+	// 0=standby, 1=changing, 2=changed
+	if binary.BigEndian.Uint16(b) != 1 {
+		b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		wb.phases = binary.BigEndian.Uint16(b)
+	}
+
+	return int(wb.phases), nil
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
