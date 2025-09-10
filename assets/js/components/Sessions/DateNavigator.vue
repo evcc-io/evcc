@@ -201,7 +201,10 @@ export default defineComponent({
 		},
 		emitMonthYear(monthYear: string) {
 			const [year, month] = monthYear.split("-");
-			this.$emit("update-date", { year: parseInt(year), month: parseInt(month) });
+			this.$emit("update-date", {
+				year: parseInt(year || "0"),
+				month: parseInt(month || "0"),
+			});
 		},
 		emitYear(year: number) {
 			this.$emit("update-date", { year, month: undefined });

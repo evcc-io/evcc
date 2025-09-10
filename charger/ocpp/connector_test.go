@@ -152,3 +152,23 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	_, _, _, err = suite.conn.Voltages()
 	suite.NoError(err, "Voltages")
 }
+
+func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
+	suite.conn.meterUpdated = suite.clock.Now()
+
+	// Set some power
+	suite.conn.measurements[types.MeasurandPowerActiveImport+".L1-N"] = types.SampledValue{Value: "1"}
+	suite.conn.measurements[types.MeasurandPowerActiveImport+".L2-N"] = types.SampledValue{Value: "1"}
+	suite.conn.measurements[types.MeasurandPowerActiveImport+".L3-N"] = types.SampledValue{Value: "1"}
+
+	res, err := suite.conn.CurrentPower()
+	suite.NoError(err, "CurrentPower")
+	suite.Equal(res, 3.0, "CurrentPower")
+
+	// set powers to zero
+	suite.conn.OnStopTransaction(nil)
+
+	res, err = suite.conn.CurrentPower()
+	suite.NoError(err, "CurrentPower")
+	suite.Equal(res, 0.0, "CurrentPower")
+}

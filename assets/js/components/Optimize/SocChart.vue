@@ -54,7 +54,7 @@ export default defineComponent({
 		},
 		timestamp: {
 			type: String,
-			required: true,
+			default: "",
 		},
 		currency: {
 			type: String as PropType<CURRENCY>,
@@ -62,7 +62,7 @@ export default defineComponent({
 		},
 		batteryColors: {
 			type: Array as PropType<string[]>,
-			required: true,
+			default: () => [],
 		},
 	},
 	computed: {
