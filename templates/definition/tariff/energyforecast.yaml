@@ -1,0 +1,30 @@
+template: energyforecast
+products:
+  - brand: energyforecast.de
+requirements:
+  description:
+    de: "Day-ahead Energiepreise (je kWh) an der Börse mit anschließender Vorhersage für die nächsten 48 Stunden. Benötigt einen API-Token von energyforecast.de. "
+    en: "Day-ahead energy prices (per kWh) on the exchange with subsequent forecast for the next 48 hours. Requires an API token from energyforecast.de."
+  evcc: ["skiptest"]
+group: price
+countries: ["DE", "LU"]
+params:
+  - name: token
+    required: true
+    mask: true
+    description:
+      de: API-Token
+      en: API Token
+    help:
+      de: "Token von https://www.energyforecast.de"
+      en: "Token from https://www.energyforecast.de"
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    # Pass fixed_cost_cent=0&vat=0 to get raw market prices without API-side cost calculation
+    # This allows evcc to handle cost calculation using standard charges/tax parameters
+    uri: https://www.energyforecast.de/api/v1/predictions/next_48_hours?token={{ .token }}&fixed_cost_cent=0&vat=0
+    jq: 'map({ "start": (.start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ")), "end": (.end | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ")), "value": .price }) | tostring'
