@@ -133,6 +133,9 @@ jobs:
           version: latest
           args: --timeout 5m
 
+      - name: License
+        run: make license
+
   ui:
     name: UI
     runs-on: depot-ubuntu-24.04-arm
@@ -153,6 +156,9 @@ jobs:
 
       - name: Test
         run: make test-ui
+
+      - name: License
+        run: make license-ui
 
       - name: Build UI
         run: make ui
