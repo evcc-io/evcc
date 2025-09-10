@@ -683,11 +683,9 @@ func configureSHM(conf *globalconfig.Shm, site *core.Site, httpd *server.HTTPd) 
 		}
 	}
 
-	instance, err := shm.New(conf.AllowControl, conf.VendorId, conf.DeviceId, site, httpd.Addr, httpd.Router())
-	if err != nil {
+	if err := shm.NewFromConfig(*conf, site, httpd.Addr, httpd.Router()); err != nil {
 		return fmt.Errorf("failed configuring shm: %w", err)
 	}
-	go instance.Run()
 
 	return nil
 }

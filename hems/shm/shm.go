@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
@@ -49,31 +50,33 @@ type SEMP struct {
 	site         site.API
 }
 
-func New(allowControl bool, vendorId, deviceId string, site site.API, addr string, router *mux.Router) (*SEMP, error) {
+// NewFromConfig creates a new SEMP instance from configuration and starts it
+func NewFromConfig(cfg globalconfig.Shm, site site.API, addr string, router *mux.Router) error {
+	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"
 	} else if len(vendorId) != 8 {
-		return nil, fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
+		return fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
 	}
 
 	uid, err := uuid.NewUUID()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var did []byte
-	if deviceId == "" {
+	if cfg.DeviceId == "" {
 		if did, err = UniqueDeviceID(); err != nil {
-			return nil, fmt.Errorf("creating device id: %w", err)
+			return fmt.Errorf("creating device id: %w", err)
 		}
 	} else {
-		if did, err = hex.DecodeString(deviceId); err != nil {
-			return nil, fmt.Errorf("device id: %w", err)
+		if did, err = hex.DecodeString(cfg.DeviceId); err != nil {
+			return fmt.Errorf("device id: %w", err)
 		}
 	}
 
 	if len(did) != 6 {
-		return nil, fmt.Errorf("invalid device id: %v. Must be 12 characters HEX string", deviceId)
+		return fmt.Errorf("invalid device id: %v. Must be 12 characters HEX string", cfg.DeviceId)
 	}
 
 	s := &SEMP{
@@ -83,7 +86,7 @@ func New(allowControl bool, vendorId, deviceId string, site site.API, addr strin
 		uid:          uid.String(),
 		vid:          vendorId,
 		did:          did,
-		controllable: allowControl,
+		controllable: cfg.AllowControl,
 	}
 
 	// find external port
@@ -97,7 +100,12 @@ func New(allowControl bool, vendorId, deviceId string, site site.API, addr strin
 
 	s.handlers(router)
 
-	return s, err
+	if err != nil {
+		return err
+	}
+
+	go s.Run()
+	return nil
 }
 
 func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
