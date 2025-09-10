@@ -160,7 +160,6 @@ type Network struct {
 	Schema string `json:"schema"`
 	Host   string `json:"host"`
 	Port   int    `json:"port"`
-	Uri    string `json:"uri"`
 }
 
 func (c Network) HostPort() string {
