@@ -77,11 +77,15 @@ export default defineComponent({
 			};
 		},
 		legends() {
-			return this.chartData.labels.map((label, index) => ({
-				label: label,
-				color: this.chartData.datasets[0].borderColor[index],
-				value: this.formatValue(this.chartData.datasets[0].data[index]),
-			}));
+			return this.chartData.labels.map((label, index) => {
+				const dataset = this.chartData.datasets[0]!;
+				const dataValue = dataset.data[index] as number;
+				return {
+					label: label,
+					color: dataset.borderColor[index],
+					value: this.formatValue(dataValue),
+				};
+			});
 		},
 		options() {
 			return {

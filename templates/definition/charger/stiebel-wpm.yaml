@@ -111,7 +111,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 680
+      address: 3680
       type: input
       encoding: int16
     scale: 0.1

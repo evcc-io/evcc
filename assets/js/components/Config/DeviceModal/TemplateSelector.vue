@@ -81,7 +81,7 @@ export default defineComponent({
 		},
 		getProductName() {
 			const select = this.$refs["select"] as HTMLSelectElement;
-			return select.options[select.selectedIndex].text;
+			return select.options[select.selectedIndex]?.text || "";
 		},
 	},
 });

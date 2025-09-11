@@ -265,11 +265,11 @@
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags
-									v-if="circuits.length == 0"
+									v-if="circuitsSorted.length == 0"
 									:tags="{ configured: { value: false } }"
 								/>
 								<template
-									v-for="(circuit, idx) in circuits"
+									v-for="(circuit, idx) in circuitsSorted"
 									v-else
 									:key="circuit.name"
 								>
@@ -430,6 +430,7 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent } from "vue";
 import type {
+	Circuit,
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
@@ -614,12 +615,21 @@ export default defineComponent({
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		hemsTags() {
-			const result = { configured: { value: false }, hemsType: {} };
 			const { type } = store.state?.hems || {};
-			if (type) {
-				result.configured.value = true;
-				result.hemsType = { value: type };
+			if (!type) {
+				return { configured: { value: false } };
 			}
+			const result = {
+				hemsType: {},
+				hemsActiveLimit: { value: null as number | null },
+			};
+			result.hemsType = { value: type };
+			const lpc = store.state?.circuits?.["lpc"];
+			if (lpc) {
+				const value = lpc.maxPower || null;
+				result.hemsActiveLimit = { value };
+			}
+
 			return result;
 		},
 		isSponsor() {
@@ -643,6 +653,12 @@ export default defineComponent({
 			return {
 				authDisabled: store.state?.authDisabled || false,
 			};
+		},
+		circuitsSorted() {
+			const sortedNames = Object.keys(store.state?.circuits || {});
+			return [...this.circuits].sort(
+				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
+			);
 		},
 	},
 	watch: {
@@ -704,7 +720,15 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const response = await api.get("/config/devices/circuit");
-			this.circuits = response.data || [];
+			const circuits = response.data || [];
+			// set lpc default title
+			circuits.forEach((c: ConfigCircuit) => {
+				if (c.name === "lpc" && !c.config?.title) {
+					c.config = c.config || {};
+					c.config.title = this.$t("config.hems.title");
+				}
+			});
+			this.circuits = circuits;
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {
@@ -984,7 +1008,8 @@ export default defineComponent({
 		},
 		circuitTags(circuit: ConfigCircuit) {
 			const circuits = store.state?.circuits || {};
-			const data = circuits[circuit.name] || {};
+			const data =
+				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
 			const result: Record<string, object> = {};
 			const p = data.power || 0;
 			if (data.maxPower) {

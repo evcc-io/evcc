@@ -55,6 +55,7 @@ export default {
 			switch (name) {
 				case "power":
 				case "solarForecast":
+				case "hemsActiveLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "capacity":
@@ -94,6 +95,8 @@ export default {
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
+				case "hemsType":
+					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},
