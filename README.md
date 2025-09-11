@@ -60,3 +60,14 @@ Maintaining evcc consumes time and effort. With the vast amount of different dev
 While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
 Learn more about our [sponsorship model](https://docs.evcc.io/en/docs/sponsorship).
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+For additional license information regarding fonts, icons, and other assets, please see the [LICENSES](LICENSES/) folder.
+
+**Note:** All sponsor-required components are excluded from the MIT License.
+See file license header for details.
+If you want to use them in your own project, one evcc sponsorship token is required per evcc instance.
+Custom licensing agreements are available - please [contact us](mailto:info@evcc.io) to discuss your specific requirements.

@@ -61,7 +61,7 @@ export default defineComponent({
 		},
 		timestamp: {
 			type: String,
-			required: true,
+			default: "",
 		},
 		currency: {
 			type: String as PropType<CURRENCY>,

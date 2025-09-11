@@ -40,7 +40,8 @@ export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 
   const dayString = dayStringByOffset(day);
   const dayEntries = filterEntriesByDate(entries, dayString);
   const sortedEntries = dayEntries.sort((a, b) => b.val - a.val);
-  const highestEntry = sortedEntries[0] || {};
+  const highestEntry = sortedEntries[0];
+  if (!highestEntry) return -1;
   return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
 

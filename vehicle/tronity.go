@@ -2,7 +2,7 @@ package vehicle
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
