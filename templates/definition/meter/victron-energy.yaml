@@ -185,6 +185,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # %
-  maxdischargepower: {{ .maxdischargepower }} # %
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
