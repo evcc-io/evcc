@@ -88,13 +88,13 @@ params:
     description:
       de: Entität zum Lesen des aktuellen Ladestroms
       en: Entity to read current charging current
-    example: "number.vehicle_charge_current"
+    example: "number.vehicle_get_max_current"
     type: string
   - name: setMaxCurrent
     description:
       de: Service zum Setzen des Ladestroms
       en: Service to set charging current
-    example: "script.set_vehicle_charge_current"
+    example: "script.vehicle_set_max_current"
     type: string
 render: |
   type: homeassistant

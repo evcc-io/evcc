@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -31,9 +33,11 @@ func init() {
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
-		embed         `mapstructure:",squash"`
-		URI           string
-		Token         string
+		embed `mapstructure:",squash"`
+		URI   string
+		Token string
+
+		// Sensor entities
 		Soc           string // required
 		Range         string // optional
 		Status        string // optional
@@ -41,7 +45,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		Odometer      string // optional
 		Climater      string // optional
 		FinishTime    string // optional
-		GetMaxCurrent string `mapstructure:"getMaxCurrent"`  // optional
+		GetMaxCurrent string `mapstructure:"getMaxCurrent"` // optional
+
+		// Service entities
 		StartCharging string `mapstructure:"start_charging"` // script.*  optional
 		StopCharging  string `mapstructure:"stop_charging"`  // script.*  optional
 		Wakeup        string // script.*  optional
@@ -167,19 +173,38 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 
 func (v *HomeAssistant) callScript(script string) error {
 	// All configured services are scripts, so always use script.turn_on
-	payload := fmt.Sprintf(`{"entity_id": "%s"}`, script)
+	payload := map[string]string{
+		"entity_id": script,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
 	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
-	req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
-	_, err := v.DoBody(req)
+	req, _ := request.New(http.MethodPost, uri, bytes.NewReader(body))
+	_, err = v.DoBody(req)
 	return err
 }
 
 func (v *HomeAssistant) callScriptWithCurrent(script string, current int64) error {
 	// Call script with current parameter
-	payload := fmt.Sprintf(`{"entity_id": "%s", "variables": {"current": %d}}`, script, current)
+	payload := map[string]interface{}{
+		"entity_id": script,
+		"variables": map[string]int64{
+			"current": current,
+		},
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
 	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
-	req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
-	_, err := v.DoBody(req)
+	req, _ := request.New(http.MethodPost, uri, bytes.NewReader(body))
+	_, err = v.DoBody(req)
 	return err
 }
 
