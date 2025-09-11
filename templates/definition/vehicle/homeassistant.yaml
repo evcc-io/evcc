@@ -98,33 +98,7 @@ params:
     type: string
 render: |
   type: homeassistant
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- if .identifiers }}
-  identifiers: {{ .identifiers }}
-  {{- end }}
-  {{- if or .mode .priority .minCurrent }}
-  onIdentify:
-    {{- if .mode }}
-    mode: {{ .mode }}
-    {{- end }}
-    {{- if .priority }}
-    priority: {{ .priority }}
-    {{- end }}
-    {{- if .minCurrent }}
-    minCurrent: {{ .minCurrent }}
-    {{- end }}
-  {{- end }}
+  {{ include "vehicle-common" . }}
   uri: {{ .uri }}
   token: {{ .token }}
   sensors:
@@ -135,9 +109,9 @@ render: |
     odometer: {{ .odometer }}
     climater: {{ .climater }}
     finishTime: {{ .finishTime }}
-    maxCurrent: {{ .maxCurrent }}
     getMaxCurrent: {{ .getMaxCurrent }}
   services:
     start_charging: {{ .start_charging }}
     stop_charging: {{ .stop_charging }}
     wakeup: {{ .wakeup }}
+    maxCurrent: {{ .maxCurrent }}
