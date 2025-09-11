@@ -31,6 +31,24 @@ func init() {
 
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
+	// Remove conflicting top-level parameters that would interfere with OnIdentify mapping
+	maxCurrentEntity := ""
+	getMaxCurrentEntity := ""
+	
+	if val, ok := other["maxCurrent"]; ok {
+		if str, ok := val.(string); ok {
+			maxCurrentEntity = str
+		}
+		delete(other, "maxCurrent") // Remove to prevent OnIdentify.MaxCurrent conflict
+	}
+	
+	if val, ok := other["getMaxCurrent"]; ok {
+		if str, ok := val.(string); ok {
+			getMaxCurrentEntity = str
+		}
+		delete(other, "getMaxCurrent") // Remove to prevent OnIdentify conflict
+	}
+
 	var cc struct {
 		embed   `mapstructure:",squash"`
 		URI     string
@@ -45,7 +63,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			FinishTime    string // optional
 			MaxCurrent    string // optional - number.* or input_number.* entity for max charge current setter
 			GetMaxCurrent string `mapstructure:"getMaxCurrent"` // optional - sensor.*, number.* or input_number.* entity for max charge current getter
-		}
+		} `mapstructure:"sensors"`
 		Services struct {
 			Start  string `mapstructure:"start_charging"` // script.*  optional
 			Stop   string `mapstructure:"stop_charging"`  // script.*  optional
@@ -55,6 +73,14 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// Set the extracted sensor entity values
+	if maxCurrentEntity != "" {
+		cc.Sensors.MaxCurrent = maxCurrentEntity
+	}
+	if getMaxCurrentEntity != "" {
+		cc.Sensors.GetMaxCurrent = getMaxCurrentEntity
 	}
 
 	switch {
