@@ -395,7 +395,7 @@ func (wb *Keba) getPhases() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if binary.BigEndian.Uint32(b) == 0 {
+	if binary.BigEndian.Uint32(b) == 1 {
 		return 1, nil
 	}
 	return 3, nil
