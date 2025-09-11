@@ -247,6 +247,7 @@ func (v *Identity) brandLoginHyundaiEU(cookieClient *request.Helper, user, passw
 	return code, err
 }
 
+/* Unused for now
 func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 	cookieClient := request.NewHelper(v.log)
 	cookieClient.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
@@ -335,6 +336,7 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 
 	return code, nil
 }
+*/
 
 func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
 	data := map[string]interface{}{
@@ -407,6 +409,7 @@ func (v *Identity) exchangeCodeKiaEURefreshToken(accCode string) (*oauth2.Token,
 	return util.TokenWithExpiry(&token), err
 }
 
+/* Unused for now
 func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
 	headers := map[string]string{
@@ -428,6 +431,7 @@ func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
 
 	return util.TokenWithExpiry(&token), err
 }
+*/
 
 // RefreshToken implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
