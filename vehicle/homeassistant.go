@@ -31,21 +31,21 @@ func init() {
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
-		embed           `mapstructure:",squash"`
-		URI             string
-		Token           string
-		Soc             string // required
-		Range           string // optional
-		Status          string // optional
-		LimitSoc        string // optional
-		Odometer        string // optional
-		Climater        string // optional
-		FinishTime      string // optional
-		GetMaxCurrent   string `mapstructure:"getMaxCurrent"` // optional
-		StartCharging   string `mapstructure:"start_charging"` // script.*  optional
-		StopCharging    string `mapstructure:"stop_charging"`  // script.*  optional
-		Wakeup          string // script.*  optional
-		SetMaxCurrent   string `mapstructure:"setMaxCurrent"` // script.*  optional
+		embed         `mapstructure:",squash"`
+		URI           string
+		Token         string
+		Soc           string // required
+		Range         string // optional
+		Status        string // optional
+		LimitSoc      string // optional
+		Odometer      string // optional
+		Climater      string // optional
+		FinishTime    string // optional
+		GetMaxCurrent string `mapstructure:"getMaxCurrent"`  // optional
+		StartCharging string `mapstructure:"start_charging"` // script.*  optional
+		StopCharging  string `mapstructure:"stop_charging"`  // script.*  optional
+		Wakeup        string // script.*  optional
+		SetMaxCurrent string `mapstructure:"setMaxCurrent"` // script.*  optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
