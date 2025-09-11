@@ -255,7 +255,8 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 
 	headers := map[string]string{
 		"content-type": "application/x-www-form-urlencoded",
-		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+		// "User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
 	}
 
 	data := url.Values{
@@ -385,6 +386,27 @@ func (v *Identity) exchangeCodeHyundaiEU(accCode string) (*oauth2.Token, error) 
 	return util.TokenWithExpiry(&token), err
 }
 
+func (v *Identity) exchangeCodeKiaEURefreshToken(accCode string) (*oauth2.Token, error) {
+	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
+	headers := map[string]string{
+		"Content-type": "application/x-www-form-urlencoded",
+		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+	}
+	data := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {accCode},
+		"client_id":     {v.config.CCSPServiceID},
+		"client_secret": {"secret"},
+	}
+
+	var token oauth2.Token
+
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
+	err := v.DoJSON(req, &token)
+
+	return util.TokenWithExpiry(&token), err
+}
+
 func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
 	uri := v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
 	headers := map[string]string{
@@ -412,7 +434,8 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
-		"User-Agent":    "okhttp/3.10.0",
+		"User-Agent":    "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+		// "User-Agent":    "okhttp/3.10.0",
 	}
 
 	data := url.Values{
@@ -438,13 +461,15 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 	var code string
 	switch brand {
 	case "kia":
-		code, err = v.brandLoginKiaEU(user, password)
-		if err == nil {
-			var token *oauth2.Token
-			if token, err = v.exchangeCodeKiaEU(code); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource(token, v)
-			}
+		// the "password" now is the refresh token ...
+		// code, err = v.brandLoginKiaEU(user, password)
+		// if err == nil {
+		var token *oauth2.Token
+		if token, err = v.exchangeCodeKiaEURefreshToken(password); err == nil {
+			v.TokenSource = oauth.RefreshTokenSource(token, v)
 		}
+		v.deviceID, err = v.getDeviceID()
+		// }
 	case "hyundai":
 		v.deviceID, err = v.getDeviceID()
 
