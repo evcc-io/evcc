@@ -31,25 +31,21 @@ func init() {
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
-		embed   `mapstructure:",squash"`
-		URI     string
-		Token   string
-		Sensors struct {
-			Soc        string // required
-			Range      string // optional
-			Status     string // optional
-			LimitSoc   string // optional
-			Odometer   string // optional
-			Climater   string // optional
-			FinishTime string // optional
-			MaxCurrent string // optional
-		}
-		Services struct {
-			Start      string `mapstructure:"start_charging"` // script.*  optional
-			Stop       string `mapstructure:"stop_charging"`  // script.*  optional
-			Wakeup     string // script.*  optional
-			MaxCurrent string `mapstructure:"set_max_current"` // script.*  optional
-		}
+		embed           `mapstructure:",squash"`
+		URI             string
+		Token           string
+		Soc             string // required
+		Range           string // optional
+		Status          string // optional
+		LimitSoc        string // optional
+		Odometer        string // optional
+		Climater        string // optional
+		FinishTime      string // optional
+		GetMaxCurrent   string `mapstructure:"getMaxCurrent"` // optional
+		StartCharging   string `mapstructure:"start_charging"` // script.*  optional
+		StopCharging    string `mapstructure:"stop_charging"`  // script.*  optional
+		Wakeup          string // script.*  optional
+		SetMaxCurrent   string `mapstructure:"setMaxCurrent"` // script.*  optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -61,7 +57,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, errors.New("missing uri")
 	case cc.Token == "":
 		return nil, errors.New("missing token")
-	case cc.Sensors.Soc == "":
+	case cc.Soc == "":
 		return nil, errors.New("missing soc sensor")
 	}
 
@@ -69,7 +65,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		embed:  &cc.embed,
 		Helper: request.NewHelper(util.NewLogger("ha-vehicle").Redact(cc.Token)),
 		uri:    strings.TrimSuffix(cc.URI, "/"),
-		soc:    cc.Sensors.Soc,
+		soc:    cc.Soc,
 	}
 
 	res.Client.Transport = &transport.Decorator{
@@ -89,46 +85,46 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		finish        func() (time.Time, error)
 		chargeEnable  func(bool) error
 		wakeup        func() error
-		maxCurrent    func(int64) error
+		setMaxCurrent func(int64) error
 		getMaxCurrent func() (float64, error)
 	)
 
-	if cc.Sensors.LimitSoc != "" {
-		limitSoc = func() (int64, error) { return res.getIntSensor(cc.Sensors.LimitSoc) }
+	if cc.LimitSoc != "" {
+		limitSoc = func() (int64, error) { return res.getIntSensor(cc.LimitSoc) }
 	}
-	if cc.Sensors.Status != "" {
-		status = func() (api.ChargeStatus, error) { return res.status(cc.Sensors.Status) }
+	if cc.Status != "" {
+		status = func() (api.ChargeStatus, error) { return res.status(cc.Status) }
 	}
-	if cc.Sensors.Range != "" {
-		rng = func() (int64, error) { return res.getIntSensor(cc.Sensors.Range) }
+	if cc.Range != "" {
+		rng = func() (int64, error) { return res.getIntSensor(cc.Range) }
 	}
-	if cc.Sensors.Odometer != "" {
-		odo = func() (float64, error) { return res.getFloatSensor(cc.Sensors.Odometer) }
+	if cc.Odometer != "" {
+		odo = func() (float64, error) { return res.getFloatSensor(cc.Odometer) }
 	}
-	if cc.Sensors.Climater != "" {
-		climater = func() (bool, error) { return res.getBoolSensor(cc.Sensors.Climater) }
+	if cc.Climater != "" {
+		climater = func() (bool, error) { return res.getBoolSensor(cc.Climater) }
 	}
-	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return res.getTimeSensor(cc.Sensors.FinishTime) }
+	if cc.FinishTime != "" {
+		finish = func() (time.Time, error) { return res.getTimeSensor(cc.FinishTime) }
 	}
-	if cc.Services.Start != "" && cc.Services.Stop != "" {
+	if cc.GetMaxCurrent != "" {
+		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.GetMaxCurrent) }
+	}
+	if cc.StartCharging != "" && cc.StopCharging != "" {
 		chargeEnable = func(enable bool) error {
 			if enable {
-				return res.callScript(cc.Services.Start)
+				return res.callScript(cc.StartCharging)
 			}
-			return res.callScript(cc.Services.Stop)
+			return res.callScript(cc.StopCharging)
 		}
 	}
-	if cc.Services.Wakeup != "" {
-		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
+	if cc.Wakeup != "" {
+		wakeup = func() error { return res.callScript(cc.Wakeup) }
 	}
-	if cc.Services.MaxCurrent != "" {
-		maxCurrent = func(current int64) error {
-			return res.callScriptWithCurrent(cc.Services.MaxCurrent, current)
+	if cc.SetMaxCurrent != "" {
+		setMaxCurrent = func(current int64) error {
+			return res.callScriptWithCurrent(cc.SetMaxCurrent, current)
 		}
-	}
-	if cc.Sensors.MaxCurrent != "" {
-		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.Sensors.MaxCurrent) }
 	}
 
 	// decorate all features
@@ -139,7 +135,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		rng,
 		odo,
 		climater,
-		maxCurrent,
+		setMaxCurrent,
 		getMaxCurrent,
 		finish,
 		wakeup,
