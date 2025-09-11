@@ -34,6 +34,14 @@ params:
   - name: maxsoc
     type: int
     advanced: true
+  - name: maxchargepower
+    type: int
+    unit: W
+    advanced: true
+  - name: maxdischargepower
+    type: int
+    unit: W
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -177,4 +185,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
+  maxchargepower: {{ .maxchargepower }} # %
+  maxdischargepower: {{ .maxdischargepower }} # %
   {{- end }}
