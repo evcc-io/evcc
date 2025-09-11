@@ -33,7 +33,7 @@ params:
       de: Eindeutiger Schlüssel des abzufragenden Elements
     advanced: true
   - name: algorithm
-    choice: ["mosmix","own-v1","clearsky"]
+    choice: ["mosmix", "own-v1", "clearsky"]
     description:
       en: Forecasting Algorithm (mosmix, own-v1 or clearsky)
       de: Prognosealgorithmus (mosmix, own-v1 oder clearsky)
