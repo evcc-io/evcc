@@ -101,17 +101,15 @@ render: |
   {{ include "vehicle-common" . }}
   uri: {{ .uri }}
   token: {{ .token }}
-  sensors:
-    soc: {{ .soc }}
-    range: {{ .range }}
-    status: {{ .status }}
-    limitSoc: {{ .limitSoc }}
-    odometer: {{ .odometer }}
-    climater: {{ .climater }}
-    finishTime: {{ .finishTime }}
-    maxCurrent: {{ .getMaxCurrent }}
-  services:
-    start_charging: {{ .start_charging }}
-    stop_charging: {{ .stop_charging }}
-    wakeup: {{ .wakeup }}
-    setMaxCurrent: {{ .setMaxCurrent }}
+  soc: {{ .soc }}
+  range: {{ .range }}
+  status: {{ .status }}
+  limitSoc: {{ .limitSoc }}
+  odometer: {{ .odometer }}
+  climater: {{ .climater }}
+  finishTime: {{ .finishTime }}
+  getMaxCurrent: {{ .getMaxCurrent }}
+  start_charging: {{ .start_charging }}
+  stop_charging: {{ .stop_charging }}
+  wakeup: {{ .wakeup }}
+  setMaxCurrent: {{ .setMaxCurrent }}
