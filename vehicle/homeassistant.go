@@ -19,6 +19,7 @@ import (
 type HomeAssistant struct {
 	*embed
 	*request.Helper
+	log *util.Logger
 	uri string
 	soc string
 }
@@ -35,14 +36,15 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		URI     string
 		Token   string
 		Sensors struct {
-			Soc        string // required
-			Range      string // optional
-			Status     string // optional
-			LimitSoc   string // optional
-			Odometer   string // optional
-			Climater   string // optional
-			FinishTime string // optional
-			MaxCurrent string // optional - number.* or input_number.* entity for max charge current
+			Soc           string // required
+			Range         string // optional
+			Status        string // optional
+			LimitSoc      string // optional
+			Odometer      string // optional
+			Climater      string // optional
+			FinishTime    string // optional
+			MaxCurrent    string // optional - number.* or input_number.* entity for max charge current setter
+			GetMaxCurrent string `mapstructure:"getMaxCurrent"` // optional - sensor.*, number.* or input_number.* entity for max charge current getter
 		}
 		Services struct {
 			Start  string `mapstructure:"start_charging"` // script.*  optional
@@ -64,9 +66,11 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, errors.New("missing soc sensor")
 	}
 
+	log := util.NewLogger("ha-vehicle").Redact(cc.Token)
 	res := &HomeAssistant{
 		embed:  &cc.embed,
-		Helper: request.NewHelper(util.NewLogger("ha-vehicle").Redact(cc.Token)),
+		Helper: request.NewHelper(log),
+		log:    log,
 		uri:    strings.TrimSuffix(cc.URI, "/"),
 		soc:    cc.Sensors.Soc,
 	}
@@ -90,7 +94,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 		// new: max current getter/setter
 		setMaxCurrent func(int64) error
-		getMaxCurrent func() (int64, error)
+		getMaxCurrent func() (float64, error)
+
+		wakeup func() error
 	)
 
 	if cc.Sensors.LimitSoc != "" {
@@ -124,9 +130,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	// implement maxCurrent getter/setter if configured (number.* or input_number.* entity expected)
+	// NOTE: The MaxCurrent setter will only be called if the vehicle is used as a charger (not by default from the loadpoint logic).
+	// For Home Assistant, you must explicitly call the vehicle's MaxCurrent if you want to propagate changes from the loadpoint.
 	if cc.Sensors.MaxCurrent != "" {
-		getMaxCurrent = func() (int64, error) { return res.getIntSensor(cc.Sensors.MaxCurrent) }
-
 		setMaxCurrent = func(value int64) error {
 			// determine domain (number.* or input_number.*)
 			parts := strings.SplitN(cc.Sensors.MaxCurrent, ".", 2)
@@ -146,10 +152,25 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 			payload := fmt.Sprintf(`{"entity_id": "%s", "value": %d}`, cc.Sensors.MaxCurrent, value)
 			uri := fmt.Sprintf("%s/api/services/%s", res.uri, svc)
-			req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
-			_, err := res.DoBody(req)
+			req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload), request.JSONEncoding)
+			res.log.ERROR.Printf("TESTLOG: setMaxCurrent CALLED with value=%d uri=%s payload=%s", value, uri, payload)
+			body, err := res.DoBody(req)
+			if err != nil {
+				res.log.ERROR.Printf("ha-vehicle: setMaxCurrent failed: %v uri=%s payload=%s response=%s", err, uri, payload, string(body))
+			} else {
+				res.log.DEBUG.Printf("ha-vehicle: setMaxCurrent response: %s", string(body))
+			}
 			return err
 		}
+	}
+
+	// implement getMaxCurrent getter if configured separately (for reading current from HA)
+	// supports sensor.*, number.*, or input_number.* entities
+	if cc.Sensors.GetMaxCurrent != "" {
+		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.Sensors.GetMaxCurrent) }
+	} else if cc.Sensors.MaxCurrent != "" {
+		// fallback: use MaxCurrent entity for both reading and writing
+		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.Sensors.MaxCurrent) }
 	}
 
 	// decorate all features
