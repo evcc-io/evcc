@@ -173,12 +173,7 @@
 							data-testid="energyflow-entry-home"
 						/>
 						<EnergyflowEntry
-							:name="
-								// @ts-ignore
-								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
-									count: activeLoadpointsCount,
-								})
-							"
+							:name="loadpointsLabel"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
 							:power="loadpointsPower"
@@ -478,6 +473,12 @@ export default defineComponent({
 		},
 		loadpointsExpanded() {
 			return settings.energyflowLoadpoints;
+		},
+		loadpointsLabel() {
+			// @ts-expect-error plural
+			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
+				count: this.activeLoadpointsCount,
+			});
 		},
 	},
 	watch: {

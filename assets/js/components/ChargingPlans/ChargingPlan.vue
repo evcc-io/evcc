@@ -132,6 +132,7 @@ export default defineComponent({
 		capacity: Number,
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
+		vehicleNotReachable: Boolean,
 		forecast: Object as PropType<Forecast>,
 	},
 	data() {

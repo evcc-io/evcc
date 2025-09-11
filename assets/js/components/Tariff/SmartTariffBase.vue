@@ -247,7 +247,7 @@ export default defineComponent({
 			return this.fmtCostRange(this.costRange(this.activeSlots));
 		},
 		activeSlot(): Slot | null {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
+			return this.activeIndex !== null ? this.slots[this.activeIndex] || null : null;
 		},
 		activeSlotCost() {
 			const value = this.activeSlot?.value;
@@ -343,7 +343,7 @@ export default defineComponent({
 			this.activeIndex = index;
 		},
 		slotSelected(index: number) {
-			const value = this.slots[index].value;
+			const value = this.slots[index]?.value;
 			if (value !== undefined) {
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;

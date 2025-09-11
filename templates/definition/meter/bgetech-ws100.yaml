@@ -1,0 +1,36 @@
+template: bgetech-ws100
+covers: ["bge_tech_ws100"]
+products:
+  - brand: B+GE-TECH
+    description:
+      generic: WS100
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 1200
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x0104 # Total active power
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .usage "pv" }}
+      address: 0x0118 # Active energy (feed-in)
+      {{- else }}
+      address: 0x010E # Active energy (consumption)
+      {{- end }}
+      type: holding
+      decode: int32
+    scale: 0.01

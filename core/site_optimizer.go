@@ -131,12 +131,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		bat := evopt.BatteryConfig{
 			ChargeFromGrid: true,
-
-			CMin: float32(lp.EffectiveMinPower()),
-			CMax: float32(lp.EffectiveMaxPower()),
-			DMax: 0,
-			SMin: 0,
-			PA:   pa,
+			CMin:           float32(lp.EffectiveMinPower()),
+			CMax:           float32(lp.EffectiveMaxPower()),
+			DMax:           0,
+			SMin:           0,
+			PA:             pa,
 		}
 
 		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
@@ -149,7 +148,14 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if v := lp.GetVehicle(); v != nil {
-			bat.SMax = float32(v.Capacity() * 1e3)                  // Wh
+			limit := v.Capacity() * 1e3 // Wh
+			if v := lp.EffectiveLimitSoc(); v > 0 {
+				limit *= float64(v) / 100
+			} else if v := lp.GetLimitEnergy(); v > 0 {
+				limit = v * 1e3
+			}
+
+			bat.SMax = float32(limit)
 			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
 
 			detail.Type = batteryTypeVehicle
@@ -205,7 +211,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for i, b := range battery {
-		if b.Capacity == nil || b.Soc == nil {
+		// TODO decide if nil should be only indicator
+		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil || *b.Soc == 0 {
 			continue
 		}
 
@@ -225,10 +232,16 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			bat.ChargeFromGrid = true
 		}
 
-		if m, ok := instance.(api.BatteryMaxPowerGetter); ok {
-			charge, discharge := m.GetMaxChargeDischargePower()
+		if m, ok := instance.(api.BatteryPowerLimiter); ok {
+			charge, discharge := m.GetPowerLimits()
 			bat.CMax = float32(charge)
 			bat.DMax = float32(discharge)
+		}
+
+		if m, ok := instance.(api.BatterySocLimiter); ok {
+			min, max := m.GetSocLimits()
+			bat.SMin = float32(*b.Capacity * float64(min) * 10) // Wh
+			bat.SMax = float32(*b.Capacity * float64(max) * 10) // Wh
 		}
 
 		req.Batteries = append(req.Batteries, bat)

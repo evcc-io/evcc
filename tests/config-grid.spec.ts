@@ -31,7 +31,7 @@ test.describe("main screen", async () => {
 });
 
 test.describe("grid meter", async () => {
-  test("create, edit and remove grid meter", async ({ page }) => {
+  test("create, edit and remove grid meter (using OpenEMS simulator)", async ({ page }) => {
     // setup test data for mock openems api
     await page.goto(simulatorUrl());
     await page.getByLabel("Grid Power").fill("5000");

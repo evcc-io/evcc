@@ -199,7 +199,8 @@ export default defineComponent({
           const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
             numeric: "auto",
           });
-          return rtf.formatToParts(1, "day")[0].value;
+          const part = rtf.formatToParts(1, "day")[0];
+          return part?.value || "";
         } catch (e) {
           console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
           return "tomorrow";
