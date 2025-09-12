@@ -625,7 +625,7 @@
   "header": {
     "about": "À propos",
     "authProviders": {
-      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {titre} ?",
+      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
