@@ -769,7 +769,7 @@
       "cheapEnergyNextStart": "Евтината енергия в {duration}",
       "cheapEnergySet": "Лимитът на цената е зададен.",
       "cleanEnergyCharging": "Налична е чиста енергия.",
-      "cleanEnergyNextStart": "Чиста енергия в {продължителност}.",
+      "cleanEnergyNextStart": "Чиста енергия в {duration}.",
       "cleanEnergySet": "Лимитът на CO₂ е зададен.",
       "climating": "Открито е предварително кондициониране.",
       "connected": "Превозното средство е свързано",
