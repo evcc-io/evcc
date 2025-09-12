@@ -185,7 +185,6 @@
     "influx": {
       "description": "Zapisuje dane dotyczące ładowania i inne metryki do InfluxDB. Użyj Grafany lub innych narzędzi do wizualizacji danych.",
       "descriptionToken": "Aby dowiedzieć się, jak utworzyć bazę danych InfluxDB, zapoznaj się z dokumentacją InfluxDB. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "",
       "labelCheckInsecure": "Zezwalaj na certyfikaty podpisane samodzielnie",
       "labelDatabase": "Baza danych",
       "labelInsecure": "Zatwierdzenie certyfikatu",
@@ -287,9 +286,6 @@
       "template": "Producent",
       "titleChoice": "Co chcesz dodać?",
       "validateSave": "Sprawdź i zapisz"
-    },
-    "modbusproxy": {
-      "title": ""
     },
     "mqtt": {
       "labelClientId": "ID klienta",
