@@ -429,7 +429,7 @@
       "addToken": "Token beírása",
       "changeToken": "Token megváltoztatása",
       "description": "A szponzorációs modell segít a projekt fenntartásában és az új izgalmas funkciók bevezetésében. Szponzorként teljes hozzáférést kapsz az összes töltőberendezés implementációjához.",
-      "descriptionToken": "A tokent innen kapja: {url}. A teszteléshez próba tokent is kínálunk. ",
+      "descriptionToken": "A tokent innen kapja: {url}. A teszteléshez {trialToken} tokent is kínálunk.",
       "enterYourToken": "Add meg a tokenedet",
       "error": "A szponzor token nem érvényes.",
       "invalid": "érvénytelen",

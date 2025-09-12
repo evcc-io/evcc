@@ -822,7 +822,7 @@
       "goalReached": "Målet är uppnått",
       "inactiveLabel": "Mål-tid",
       "nextPlan": "Nästa plan",
-      "notReachableInTime": "Laddmål kommer att nås {endTime} senare.",
+      "notReachableInTime": "Laddmål kommer att nås {overrun} senare.",
       "onlyInPvMode": "Laddplan fungerar enbart i sol-läge.",
       "planDuration": "Laddtid",
       "planPeriodLabel": "Period",
