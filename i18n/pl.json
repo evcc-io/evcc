@@ -1,6 +1,6 @@
 {
   "batterySettings": {
-    "batteryLevel": "Poziom akumulatora",
+    "batteryLevel": "Stan naładowania akumulatora",
     "bufferStart": {
       "above": "kiedy powyżej {soc}.",
       "full": "kiedy na {soc}.",
@@ -17,14 +17,14 @@
     "legendMiddleName": "Ustaw priorytet ładowaniu pojazdów",
     "legendMiddleSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
     "legendTopAutostart": "Rozpocznij automatycznie",
-    "legendTopName": "Ładowanie pojazdu z wykorzystaniem akumulatora",
+    "legendTopName": "Ładowanie pojazdu z wykorzystaniem akumulatora domowego",
     "legendTopSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
     "modalTitle": "Akumulator domowy",
     "usageTab": "Użycie akumulatora"
   },
   "config": {
     "aux": {
-      "description": "Urządzenie, które dostosowuje swoje zużycie energii na podstawie dostępnej nadwyżki (np. inteligentne podgrzewacze wody). evcc zakłada, że urządzenie to zmniejszy zużycie energii, jeśli zajdzie taka potrzeba.",
+      "description": "Urządzenie, które dostosowuje swój pobór energii na podstawie dostępnej nadwyżki (np. inteligentne podgrzewacze wody). evcc zakłada, że urządzenie to zmniejszy zużycie energii, jeśli zajdzie taka potrzeba.",
       "titleAdd": "Dodaj samoregulujące się urządzenie konsumujące",
       "titleEdit": "Edytuj samoregulujące się urządzenie konsumujące"
     },
@@ -58,11 +58,13 @@
           "heating": "Grzejnik zdefiniowany przez użytkownika"
         },
         "heatpump": "Pompa ciepła zdefiniowana przez użytkownika",
+        "sgready": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, all)",
+        "sgready-boost": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, boost)",
         "switchsocket": "Gniazdo przełącznika zdefiniowane przez użytkownika"
       }
     },
     "circuits": {
-      "description": "Zapewnia, że suma wszystkich punktów obciążenia podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
+      "description": "Zapewnia, że suma wszystkich punktów odbioru energii podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
       "title": "Zarządzanie obciążeniem",
       "usableMeters": "Użyteczne odniesienia licznikowe"
     },
@@ -78,8 +80,8 @@
       "amount": "Ilość",
       "capacity": "Pojemność",
       "chargeStatus": "Status",
-      "chargeStatusA": "nie połączony",
-      "chargeStatusB": "połączony",
+      "chargeStatusA": "niepodłączony",
+      "chargeStatusB": "podłączony",
       "chargeStatusC": "ładowanie",
       "chargeStatusE": "brak zasilania",
       "chargeStatusF": "błąd",
@@ -118,8 +120,8 @@
       "yes": "tak"
     },
     "deviceValueChargeStatus": {
-      "A": "A (nie połączony)",
-      "B": "B (połączony)",
+      "A": "A (niepodłączony)",
+      "B": "B (podłączony)",
       "C": "C (ładowanie)"
     },
     "devices": {
@@ -143,14 +145,14 @@
       "danger": "Niebezpieczeństwo",
       "deprecated": "przestarzałe",
       "example": "Przykład",
-      "optional": "opcjonalny"
+      "optional": "opcjonalnie"
     },
     "general": {
       "cancel": "Anulować",
       "customHelp": "Utwórz urządzenie zdefiniowane przez użytkownika korzystając z systemu wtyczek evcc.",
       "customOption": "Urządzenie zdefiniowane przez użytkownika",
       "delete": "Usuń",
-      "docsLink": "Zobacz dokumentacje",
+      "docsLink": "Zobacz dokumentacje.",
       "experimental": "Eksperymentalny",
       "hideAdvancedSettings": "Ukryj ustawienia zaawansowane",
       "invalidFileSelected": "Wybrano nieprawidłowy plik",
@@ -158,8 +160,8 @@
       "off": "wyłączony",
       "on": "włączony",
       "password": "Hasło",
-      "readFromFile": "Przeczytaj z pliku",
-      "remove": "Usuń",
+      "readFromFile": "Wczytaj z pliku",
+      "remove": "Wymaż",
       "save": "Zapisz",
       "selectFile": "Przeglądaj",
       "showAdvancedSettings": "Pokaż ustawienia zaawansowane",
@@ -169,9 +171,9 @@
       "validateSave": "Zatwierdź i zapisz"
     },
     "grid": {
-      "title": "Licznik sieci",
-      "titleAdd": "Dodaj licznik sieci",
-      "titleEdit": "Edytuj licznik sieci"
+      "title": "Licznik sieciowy",
+      "titleAdd": "Dodaj licznik sieciowy",
+      "titleEdit": "Edytuj licznik sieciowy"
     },
     "hems": {
       "description": "Ograniczenie mocy przez systemy zewnętrzne (np. kontrolery EnWG 14a). Wymaga konfiguracji zarządzania obciążeniem.",
@@ -183,10 +185,10 @@
     "influx": {
       "description": "Zapisuje dane dotyczące ładowania i inne metryki do InfluxDB. Użyj Grafany lub innych narzędzi do wizualizacji danych.",
       "descriptionToken": "Aby dowiedzieć się, jak utworzyć bazę danych InfluxDB, zapoznaj się z dokumentacją InfluxDB. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "",
       "labelCheckInsecure": "Zezwalaj na certyfikaty podpisane samodzielnie",
       "labelDatabase": "Baza danych",
-      "labelInsecure": "Walidacja certyfikatu",
+      "labelInsecure": "Zatwierdzenie certyfikatu",
       "labelOrg": "Organizacja",
       "labelPassword": "Hasło",
       "labelToken": "API Token",
@@ -199,13 +201,25 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Dodaj ładowarkę",
-        "heating": "Dodaj urządzenie grzejące"
+        "heating": "Dodaj ogrzewacz"
       },
       "addMeter": "Dodaj dedykowany licznik energii",
       "cancel": "Anuluj",
       "chargerError": {
         "charging": "Wymagana jest konfiguracja ładowarki.",
         "heating": "Wymagana jest konfiguracja urządzenia grzejnego."
+      },
+      "chargerLabel": {
+        "charging": "Ładowarka",
+        "heating": "Ogrzewacz"
+      },
+      "chargingTitle": "Postępowanie",
+      "defaultModeHelp": {
+        "charging": "Tryb ładowania po podłączeniu pojazdu."
+      },
+      "option": {
+        "charging": "Dodaj punkt ładowania",
+        "heating": "Dodaj urządzenie grzewcze"
       },
       "phasesAutomaticHelp": "Ładowarka obsługuje automatyczne przełączanie między ładowaniem 1- i 3-fazowym. Na ekranie głównym możesz dostosować zachowywanie się faz podczas ładowania.",
       "phasesHelp": "Liczba podłączonych faz.",
@@ -219,63 +233,86 @@
       "pollModeChargingHelp": "Żądaj aktualizacji statusu pojazdu tylko podczas ładowania.",
       "pollModeConnected": "połączony",
       "pollModeConnectedHelp": "Aktualizuj status pojazdu w regularnych odstępach czasu po podłączeniu.",
-      "pollModeLabel": "Aktualizacja postępowania",
+      "pollModeLabel": "Postępowanie aktualizacji",
       "priorityHelp": "Wyższy priorytet zapewnia preferowany dostęp do nadwyżek energii słonecznej.",
       "priorityLabel": "Priorytet",
       "save": "Zapisz",
       "showAllSettings": "Pokaż wszystkie ustawienia",
       "solarBehaviorCustomHelp": "Zdefiniuj własne progi włączania i wyłączania oraz opóźnienia.",
       "solarBehaviorDefaultHelp": "Rozpocznij po {enableDelay} wystarczającej nadwyżki. Zatrzymaj, gdy nadwyżka nie będzie wystarczająca dla {disableDelay}.",
-      "solarBehaviorLabel": "Solarny",
+      "solarBehaviorLabel": "Słońce",
       "solarModeCustom": "własne",
-      "solarModeMaximum": "maksimum solarnie",
+      "solarModeMaximum": "maksymalnie słońce",
       "thresholdDisableDelayLabel": "Wyłącz opóźnienie",
       "thresholdDisableHelpInvalid": "Proszę użyć wartości dodatniej.",
       "thresholdDisableHelpPositive": "Zatrzymaj, gdy z sieci zostanie zużyte więcej niż {power} przez {delay}.",
       "thresholdDisableHelpZero": "Zatrzymaj, gdy minimalna wymagana moc nie może zostać osiągnięta przez {delay}.",
-      "thresholdDisableLabel": "Wyłącz zasilanie sieciowe",
+      "thresholdDisableLabel": "Wyłącz zasilanie z sieci",
       "thresholdEnableDelayLabel": "Włącz opóźnienie",
       "thresholdEnableHelpInvalid": "Proszę użyć wartości ujemnej.",
       "thresholdEnableHelpNegative": "Rozpocznij, gdy nadwyżka {surplus} będzie dostępna przez {delay}.",
       "thresholdEnableHelpZero": "Rozpocznij, gdy minimalna wymagana moc będzie osiągnięta przez {delay}.",
-      "thresholdEnableLabel": "Włącz zasilanie sieciowe"
+      "thresholdEnableLabel": "Pozwól na zasilanie z sieci",
+      "titleLabel": "Nazwa",
+      "vehiclesTitle": "Pojazdy"
     },
     "main": {
-      "addLoadpoint": "Dodaj ładowarkę",
+      "addGrid": "Dodaj licznik sieciowy",
+      "addLoadpoint": "Dodaj ładowarkę lub grzejnik",
       "addPvBattery": "Dodaj licznik energii słonecznej lub baterii",
+      "addTariffs": "Dodaj taryfę",
       "addVehicle": "Dodaj pojazd",
+      "configured": "skonfigurowany",
       "edit": "edytować",
+      "name": "Nazwa",
       "title": "Konfiguracja",
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
-      "yaml": "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
+      "yaml": "Urządzenia skonfigurowano w pliku evcc.yaml nie można edytować w interfejsie użytkownika."
     },
     "messaging": {
-      "description": "Otrzymuj wiadomości o sesjach ładowania."
+      "description": "Otrzymuj wiadomości o sesjach ładowania.",
+      "title": "Powiadomienia"
     },
     "meter": {
-      "cancel": "Anulować",
-      "delete": "Usuwać",
+      "cancel": "Anuluj",
+      "delete": "Usuń",
+      "generic": "Integracje podstawowe",
+      "option": {
+        "battery": "Dodaj licznik akumulatora domowego",
+        "ext": "Dodaj zewnętrzny licznik",
+        "pv": "Dodaj licznik energii słonecznej"
+      },
       "save": "Zapisz",
       "template": "Producent",
       "titleChoice": "Co chcesz dodać?",
       "validateSave": "Sprawdź i zapisz"
     },
     "modbusproxy": {
-      "title": "Modbus Proxy"
+      "title": ""
     },
     "mqtt": {
-      "labelClientId": "Client ID",
+      "labelClientId": "ID klienta",
       "labelPassword": "Hasło",
       "title": "MQTT"
     },
     "network": {
+      "descriptionSchema": "Wpływa tylko na sposób generowania adresów URL. Wybranie protokołu HTTPS nie spowoduje włączenia szyfrowania.",
       "labelPort": "Port"
     },
     "options": {
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "Grzeje",
+        "standby": "Oczekuje"
+      },
+      "status": {
+        "A": "A (niepodłączony)",
+        "B": "B (podłączony)",
+        "C": "C (ładowanie)"
       }
     },
     "pv": {
@@ -459,8 +496,8 @@
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecastTooltip": "prognoza: pozostała dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
-      "homePower": "Zużycie",
-      "loadpoints": "Ładowarka | Ładowarka | {count} Ładowarki",
+      "homePower": "Pobór",
+      "loadpoints": "Odbiornik energii| Odbiornik energii | {count} odbiorniki energii",
       "noEnergy": "Brak danych licznika energii",
       "pv": "Instalacja PV",
       "pvExport": "Eksport do sieci",
@@ -474,15 +511,15 @@
       "waitForVehicle": "Gotowe. Czekam na grzejnik…"
     },
     "hemsWarning": {
-      "description": "Obniżone zużycie energii, nieprzekraczające {limit}.",
+      "description": "Obniżenie poboru energii, nieprzekraczające {limit}.",
       "title": "Limit zewnętrzny:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
-      "charged": "Obciążenie",
+      "charged": "Naładowano",
       "co2": "⌀ CO₂",
-      "duration": "Trwanie",
-      "fallbackName": "Punkt obciążenia",
+      "duration": "Czas trwania",
+      "fallbackName": "Punkt odbioru energii",
       "finished": "Czas zakończenia",
       "power": "Moc",
       "price": "Koszt",
@@ -513,13 +550,13 @@
         "label": "Min. Prąd"
       },
       "minSoc": {
-        "description": "Pojazd jest „szybko” ładowany do {0} w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w pochmurne dni.",
+        "description": "Pojazd będzie „szybko” naładowany do {0} w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w pochmurne dni.",
         "label": "Minimalne naładowanie %"
       },
       "onlyForSocBasedCharging": "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania.",
       "phasesConfigured": {
         "label": "Fazy",
-        "no1p3pSupport": "Jak jest podłączona ładowarka?",
+        "no1p3pSupport": "Jak podłączone jest urządzenie?",
         "phases_0": "automatyczne przełączanie",
         "phases_1": "1 faza",
         "phases_1_hint": "({min} do {max})",
@@ -548,7 +585,7 @@
       "costLimitIgnore": "Skonfigurowany {limit} będzie ignorowany w tym okresie.",
       "currentPlan": "Plan aktywny",
       "descriptionEnergy": "Do kiedy należy załadować {targetEnergy} do pojazdu?",
-      "descriptionSoc": "Kiedy pojazd powinien zostać naladowany do {targetSoc}?",
+      "descriptionSoc": "Kiedy pojazd powinien zostać naładowany do {targetSoc}?",
       "goalReached": "Cel już osiągnięty",
       "inactiveLabel": "Czas docelowy",
       "nextPlan": "Następny plan",
@@ -571,7 +608,7 @@
       "tomorrow": "jutro",
       "update": "Aktualizować",
       "vehicleCapacityDocs": "Dowiedz się, jak to skonfigurować.",
-      "vehicleCapacityRequired": "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora pojazdu."
+      "vehicleCapacityRequired": "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora trakcyjnego pojazdu."
     },
     "targetChargePlan": {
       "chargeDuration": "Czas ładowania",
@@ -581,27 +618,27 @@
       "unknownPrice": "nadal nieznany"
     },
     "targetEnergy": {
-      "label": "Ograniczenie",
+      "label": "Limit",
       "noLimit": "brak"
     },
     "vehicle": {
       "addVehicle": "Dodaj pojazd",
       "changeVehicle": "Zmień pojazd",
-      "detectionActive": "Wykrywanie pojazdu...",
+      "detectionActive": "Wykrywanie pojazdu…",
       "fallbackName": "Pojazd",
       "moreActions": "Więcej akcji",
       "none": "Brak pojazdu",
       "notReachable": "Samochód był niedostępny. Spróbuj ponownie uruchomić evcc.",
-      "targetSoc": "Ograniczenie",
+      "targetSoc": "Limit",
       "temp": "Temp.",
-      "tempLimit": "Ograniczenie temp.",
+      "tempLimit": "Limit temp.",
       "unknown": "Pojazd gościa",
-      "vehicleSoc": "Naładowano"
+      "vehicleSoc": "Poziom naładowania"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Oczekiwanie na zezwolenie.",
       "batteryBoost": "Doładowanie akumulatora aktywne.",
-      "charging": "Ładuje się...",
+      "charging": "Ładuje się…",
       "cheapEnergyCharging": "Dostępna tania energia.",
       "cheapEnergyNextStart": "Tania energia za {duration}.",
       "cheapEnergySet": "Limit cenowy został ustalony.",
@@ -678,8 +715,8 @@
       "avgPriceByGroup": "⌀ Cena {byGroup}",
       "byGroupLoadpoint": "według punktu ładowania",
       "byGroupVehicle": "według pojazdu",
-      "energy": "Naładowana energia",
-      "energyGrouped": "Energia słoneczna kontra energia z sieci",
+      "energy": "Załadowana energia",
+      "energyGrouped": "Energia słoneczna a energia z sieci",
       "energyGroupedByGroup": "Energia {byGroup}",
       "energySubSolar": "{value} słońce",
       "energySubTotal": "{value} razem",
@@ -698,7 +735,7 @@
       "created": "Utworzenie",
       "finished": "Zakończenie",
       "identifier": "Identyfikator",
-      "loadpoint": "Punkt ładowania",
+      "loadpoint": "Punkt obciążenia",
       "meterstart": "Licznik początek (kWh)",
       "meterstop": "Licznik zakończenie (kWh)",
       "odometer": "Przebieg (km)",
@@ -710,7 +747,7 @@
     "csvPeriod": "Pobierz plik {period} CSV",
     "csvTotal": "Pobierz plik CSV",
     "date": "Rozpoczęcie",
-    "energy": "Naładowano",
+    "energy": "Energia",
     "filter": {
       "allLoadpoints": "wszystkie punkty ładowania",
       "allVehicles": "wszystkie pojazdy",
@@ -723,11 +760,11 @@
       "self": "Słońce"
     },
     "groupBy": {
-      "loadpoint": "Punkt ładowania",
+      "loadpoint": "Punkt obciążenia",
       "none": "Wszystko",
       "vehicle": "Pojazd"
     },
-    "loadpoint": "Punkt ładowania",
+    "loadpoint": "Punkt obciążenia",
     "noData": "Brak sesji ładowania w tym miesiącu.",
     "overview": "Przegląd",
     "period": {
