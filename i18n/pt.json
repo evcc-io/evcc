@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Assegura que a soma de todos os Postos de Carregamento conectados a um circuito não excede os limites de potência e corrente configurados. Os circuitos podem ser combinados para construir uma hierarquia.",
-      "title": "Gestão de Cargas"
+      "title": "Gestão de Cargas",
+      "usableMeters": "Referências dos contadores utilizáveis"
     },
     "control": {
       "description": "Normalmente funciona com os valores padrão. Mude-os apenas se sabe o que está a fazer.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Preço de injeção na rede",
       "gridPrice": "Preço da Rede",
       "heaterTempLimit": "Limite do aquecimento",
-      "hemsType": "Sistema",
+      "hemsActiveLimit": "Limite ativo",
+      "hemsType": "Comunicação",
       "identifier": "Identificador RFID",
       "no": "não",
       "odometer": "Totalizador Km",
@@ -123,6 +125,10 @@
       "A": "A (não ligado)",
       "B": "B (ligado)",
       "C": "C (a carregar)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "“Consumidor inteligente”",
@@ -176,7 +182,7 @@
       "titleEdit": "Editar Contator de Rede"
     },
     "hems": {
-      "description": "Conectar evcc a outro sistema de gestão de energia doméstica.",
+      "description": "Limitação da potência por sistemas externos (por exemplo, controladores EnWG 14a). Requer configuração de gestão de carga.",
       "title": "HEMS"
     },
     "icon": {
@@ -430,13 +436,17 @@
       "changeToken": "Alterar token",
       "description": "O modelo de apoio (sponsoring) ajuda-nos a manter o projeto e a desenvolver, de forma sustentável, novas funcionalidades. Como apoiante (sponsor), terá acesso às integrações de todos os Carregadores.",
       "descriptionToken": "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste {trialToken}.",
+      "enterYourToken": "Introduzir o seu token",
       "error": "O token de Apoiante (Sponsor) não é válido.",
+      "invalid": "inválido",
       "labelToken": "Token de Apoiante (Sponsor)",
       "title": "Patrocínio",
       "tokenRequired": "Tem de configurar um token de Patrocínio (Sponsor) antes de poder criar este dispositivo.",
       "tokenRequiredLearnMore": "Mais informações.",
       "tokenRequiredShort": "Nenhum token de patrocínio configurado.",
-      "trialToken": "Token de teste"
+      "trialToken": "token de teste",
+      "viaYaml": "através de evcc.yaml",
+      "yourToken": "O seu token"
     },
     "system": {
       "backupRestore": {
@@ -718,6 +728,7 @@
       "gridImport": "Consumo da Rede",
       "homePower": "Consumo",
       "loadpoints": "Carregador | Carregador | {count} Carregadores",
+      "loadpointsLimit": "limite {limit}",
       "noEnergy": "Sem dados",
       "pv": "Sistema fotovoltaico",
       "pvExport": "Injeção na Rede",
@@ -729,6 +740,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Limite do aquecedor",
       "waitForVehicle": "Pronto. À espera do aquecedor…"
+    },
+    "hemsWarning": {
+      "description": "Reduzir a carga de modo a não exceder {limit}.",
+      "title": "Limite externo:"
     },
     "loadpoint": {
       "avgPrice": "Preço",
