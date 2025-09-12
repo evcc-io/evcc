@@ -29,9 +29,7 @@ params:
     advanced: true
   - name: maxchargepower
     default: 10000
-    advanced: true
   - name: maxdischargepower
-    advanced: true
   - name: capacity
     advanced: true
   - name: maxacpower
