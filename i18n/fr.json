@@ -279,12 +279,12 @@
       "thresholdDisableDelayLabel": "Délai de désactivation",
       "thresholdDisableHelpInvalid": "Veuillez entrer une valeur positive.",
       "thresholdDisableHelpPositive": "Arrêter lorsque plus de {power} est utilisé depuis le réseau depuis {delay}.",
-      "thresholdDisableHelpZero": "Arrêter lorsque la puissance minimale requise ne peut être assurée pendant {délai}.",
+      "thresholdDisableHelpZero": "Arrêter lorsque la puissance minimale requise ne peut être assurée pendant {delay}.",
       "thresholdDisableLabel": "Seuil de désactivation (W)",
       "thresholdEnableDelayLabel": "Délai d’activation",
       "thresholdEnableHelpInvalid": "Veuillez utiliser une valeur négative.",
       "thresholdEnableHelpNegative": "Démarrer lorsqu’un surplus de {surplus} est disponible depuis {delay}.",
-      "thresholdEnableHelpZero": "Démarrer lorsque la puissance minimale requise peut être assurée pendant {délai}.",
+      "thresholdEnableHelpZero": "Démarrer lorsque la puissance minimale requise peut être assurée pendant {delay}.",
       "thresholdEnableLabel": "Seuil d’activation (W)",
       "titleAdd": {
         "charging": "Ajouter point de charge",
@@ -631,7 +631,7 @@
   "header": {
     "about": "À propos",
     "authProviders": {
-      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {titre} ?",
+      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
@@ -813,7 +813,7 @@
     "startConfiguration": "Commençons la configuration",
     "targetCharge": {
       "activate": "Activer",
-      "co2Limit": "Limite de CO₂ {co2]",
+      "co2Limit": "Limite de CO₂ {co2}",
       "costLimitIgnore": "La limite configurée {limit} sera ignorée durant cette période.",
       "currentPlan": "Plan actif",
       "descriptionEnergy": "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy} ?",
