@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	_ "embed"
 	"fmt"
@@ -20,7 +21,13 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+// go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate
+//evcc:function decorateTest
+//evcc:basetype api.Charger
+//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.PhaseSwitcher,Phases1p3p,func(int) error
+//evcc:type api.PhaseGetter,GetPhases,func() (int, error)
 
 //go:embed decorate.tpl
 var srcTmpl string
@@ -47,8 +54,10 @@ var a struct {
 
 	api.Battery
 	api.BatteryCapacity
+	api.SocLimiter // vehicles only
 	api.BatteryController
-	api.SocLimiter
+	api.BatterySocLimiter
+	api.BatteryPowerLimiter
 }
 
 func typ(i any) string {
@@ -56,10 +65,10 @@ func typ(i any) string {
 }
 
 var dependents = map[string][]string{
-	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers), typ(&a.MaxACPowerGetter)},
+	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.MaxACPowerGetter)},
 	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
-	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController), typ(&a.SocLimiter)},
+	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.SocLimiter), typ(&a.BatteryController), typ(&a.BatterySocLimiter), typ(&a.BatteryPowerLimiter)},
 }
 
 // hasIntersection returns if the slices intersect
@@ -196,7 +205,7 @@ COMBO:
 var (
 	target   = pflag.StringP("out", "o", "", "output file")
 	pkg      = pflag.StringP("package", "p", "", "package name")
-	function = pflag.StringP("function", "f", "decorate", "function name")
+	function = pflag.StringP("function", "f", "", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
 	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
@@ -210,13 +219,62 @@ func Usage() {
 	pflag.PrintDefaults()
 }
 
+func parseFile(file string, function, basetype, returntype *string, types *[]string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if s, ok := strings.CutPrefix(line, "//evcc:"); ok {
+			segs := strings.SplitN(s, " ", 2)
+			if len(segs) != 2 {
+				panic("invalid segments: " + s)
+			}
+
+			switch segs[0] {
+			case "function":
+				*function = segs[1]
+			case "basetype":
+				*basetype = segs[1]
+			case "returntype":
+				*returntype = segs[1]
+			case "type":
+				*types = append(*types, segs[1])
+			default:
+				panic("invalid directive //evcc:" + segs[0])
+			}
+		}
+	}
+
+	return scanner.Err()
+}
+
 func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
 
 	// read target from go:generate
+	gofile, ok := os.LookupEnv("GOFILE")
+	if *target == "" && ok {
+		gofile := strings.TrimSuffix(gofile, ".go") + "_decorators.go"
+		target = &gofile
+	}
+
+	// read target from go:generate
 	if gopkg, ok := os.LookupEnv("GOPACKAGE"); *pkg == "" && ok {
 		pkg = &gopkg
+	}
+
+	if *function == "" {
+		if err := parseFile(gofile, function, base, ret, types); err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
 	}
 
 	if *base == "" || *pkg == "" || len(*types) == 0 {
@@ -239,12 +297,6 @@ func main() {
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
-
-	// read target from go:generate
-	if gofile, ok := os.LookupEnv("GOFILE"); *target == "" && ok {
-		gofile = strings.TrimSuffix(gofile, ".go") + "_decorators.go"
-		target = &gofile
-	}
 
 	var name string
 	if target != nil {

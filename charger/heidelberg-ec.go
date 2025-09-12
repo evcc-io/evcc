@@ -2,8 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
-// Copyright (c) 2022 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -227,14 +226,14 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	cur := uint16(10 * current)
+	curr := uint16(10 * current)
 
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, cur)
+	binary.BigEndian.PutUint16(b, curr)
 
 	_, err := wb.conn.WriteMultipleRegisters(hecRegAmpsConfig, 1, b)
 	if err == nil {
-		wb.current = cur
+		wb.current = curr
 	}
 
 	return err

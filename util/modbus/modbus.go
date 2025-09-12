@@ -172,11 +172,29 @@ func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*met
 	switch proto {
 	case Udp:
 		return registeredConnection(ctx, uri, proto, meters.NewRTUOverUDP(uri))
+
 	case Rtu:
-		return registeredConnection(ctx, uri, proto, meters.NewRTUOverTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewRTUOverTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
+
 	case Ascii:
-		return registeredConnection(ctx, uri, proto, meters.NewASCIIOverTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewASCIIOverTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
+
 	default:
-		return registeredConnection(ctx, uri, proto, meters.NewTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
 	}
 }

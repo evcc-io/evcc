@@ -19,29 +19,31 @@ import (
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 	return loadpoint.StaticConfig{
-		Charger: lp.GetChargerName(),
-		Meter:   lp.GetMeterName(),
-		Circuit: lp.GetCircuitName(),
-		Vehicle: lp.GetDefaultVehicle(),
+		Charger: lp.GetChargerRef(),
+		Meter:   lp.GetMeterRef(),
+		Circuit: lp.GetCircuitRef(),
+		Vehicle: lp.GetDefaultVehicleRef(),
 	}
 }
 
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
-	planTime, planEnergy := lp.GetPlanEnergy()
+	planTime, planPrecondition, planEnergy := lp.GetPlanEnergy()
 	return loadpoint.DynamicConfig{
-		Title:            lp.GetTitle(),
-		DefaultMode:      string(lp.GetDefaultMode()),
-		Priority:         lp.GetPriority(),
-		PhasesConfigured: lp.GetPhasesConfigured(),
-		MinCurrent:       lp.GetMinCurrent(),
-		MaxCurrent:       lp.GetMaxCurrent(),
-		SmartCostLimit:   lp.GetSmartCostLimit(),
-		Thresholds:       lp.GetThresholds(),
-		Soc:              lp.GetSocConfig(),
-		PlanEnergy:       planEnergy,
-		PlanTime:         planTime,
-		LimitEnergy:      lp.GetLimitEnergy(),
-		LimitSoc:         lp.GetLimitSoc(),
+		Title:                    lp.GetTitle(),
+		DefaultMode:              string(lp.GetDefaultMode()),
+		Priority:                 lp.GetPriority(),
+		PhasesConfigured:         lp.GetPhasesConfigured(),
+		MinCurrent:               lp.GetMinCurrent(),
+		MaxCurrent:               lp.GetMaxCurrent(),
+		SmartCostLimit:           lp.GetSmartCostLimit(),
+		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
+		Thresholds:               lp.GetThresholds(),
+		Soc:                      lp.GetSocConfig(),
+		PlanEnergy:               planEnergy,
+		PlanTime:                 planTime,
+		PlanPrecondition:         int64(planPrecondition.Seconds()),
+		LimitEnergy:              lp.GetLimitEnergy(),
+		LimitSoc:                 lp.GetLimitSoc(),
 	}
 }
 
@@ -66,17 +68,35 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
-	lp := dev.Instance()
-
 	var id int
 	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
 		id = configurable.ID()
 	}
 
-	res := loadpointFullConfig{
-		ID:   id,
-		Name: dev.Config().Name,
+	lp := dev.Instance()
 
+	// // missing instance due to error, decode config from database
+	// if lp == nil || reflect.ValueOf(lp).IsNil() {
+	// 	cc := dev.Config()
+
+	// 	dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
+
+	// 	var static loadpoint.StaticConfig
+	// 	_ = util.DecodeOther(staticMap, &static)
+
+	// 	res := loadpointFullConfig{
+	// 		ID:            id,
+	// 		Name:          dev.Config().Name,
+	// 		StaticConfig:  static,
+	// 		DynamicConfig: dynamic,
+	// 	}
+
+	// 	return res
+	// }
+
+	res := loadpointFullConfig{
+		ID:            id,
+		Name:          dev.Config().Name,
 		StaticConfig:  getLoadpointStaticConfig(lp),
 		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
@@ -91,7 +111,7 @@ func loadpointsConfigHandler() http.HandlerFunc {
 			return loadpointConfig(dev)
 		})
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -116,7 +136,7 @@ func loadpointConfigHandler() http.HandlerFunc {
 
 		res := loadpointConfig(dev)
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -137,7 +157,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		name := "lp-" + strconv.Itoa(id+1)
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 
-		conf, err := config.AddConfig(templates.Loadpoint, "", static)
+		conf, err := config.AddConfig(templates.Loadpoint, static)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -205,7 +225,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 
 		// merge here to maintain dynamic part of the config
 		other := configurable.Config().Other
-		if err := mergo.Merge(&other, static); err != nil {
+		if err := mergo.Merge(&other, static, mergo.WithOverride); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -242,6 +262,33 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
+		// cleanup references
+		lp, err := configurableDevice(config.NameForID(id), h)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		instance := lp.Instance()
+
+		if dev, err := configurableDevice(instance.GetChargerRef(), config.Chargers()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Chargers()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
+		if dev, err := configurableDevice(instance.GetMeterRef(), config.Meters()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Meters()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
 		setConfigDirty()
 
 		if err := deleteDevice(id, h); err != nil {
@@ -255,6 +302,6 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			ID: id,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }

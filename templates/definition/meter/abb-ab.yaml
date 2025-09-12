@@ -2,7 +2,16 @@ template: abb-ab
 products:
   - brand: ABB
     description:
-      generic: A43, A44, B23, B24
+      generic: A43
+  - brand: ABB
+    description:
+      generic: A44
+  - brand: ABB
+    description:
+      generic: B23
+  - brand: ABB
+    description:
+      generic: B24
 params:
   - name: usage
     choice: ["grid", "charge"]

@@ -12,23 +12,29 @@ requirements:
 params:
   - name: user
   - name: password
+  - name: realm
+    type: choice
+    choice: [DE, AT]
+    default: DE
+    description:
+      de: Region
+      en: Region
   - name: zone
     type: int
-    help:
-      de: Id der Boostzone
-      en: Boost zone id
+    description:
+      de: ID der Boostzone
+      en: Boost zone ID
   - name: setpoint
     type: float
-    help:
+    description:
       de: Boost Temperatur
-      en: Boost temperature setpoint
+      en: Boost temperature
   - name: phases
-    type: int
-    advanced: true
+    deprecated: true
 render: |
   type: vaillant
   user: {{ .user }}
   password: {{ .password }}
+  realm: {{ if eq .realm "AT" -}} vaillant-austria-b2c {{- end }}
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}
-  phases: {{ .phases }}

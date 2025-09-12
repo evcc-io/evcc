@@ -29,7 +29,7 @@ func init() {
 // NewSMAFromConfig creates an SMA meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity                 `mapstructure:",squash"`
+		batteryCapacity          `mapstructure:",squash"`
 		URI, Password, Interface string
 		Serial                   uint32
 		Scale                    float64 // power only
@@ -42,7 +42,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.capacity.Decorator())
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.batteryCapacity.Decorator())
 }
 
 // NewSMA creates an SMA meter

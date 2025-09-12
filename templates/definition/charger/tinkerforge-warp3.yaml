@@ -2,9 +2,6 @@ template: tinkerforge-warp3
 products:
   - brand: TinkerForge
     description:
-      generic: WARP3 Charger Smart
-  - brand: TinkerForge
-    description:
       generic: WARP3 Charger Pro
 capabilities: ["mA", "1p3p", "rfid"]
 requirements:

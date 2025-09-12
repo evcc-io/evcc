@@ -13,6 +13,8 @@ group: price
 countries: ["EU"]
 params:
   - name: securitytoken
+    description:
+      generic: Security token
     help:
       de: "Registrierung und anschließende Helpdesk-Anfrage erforderlich. Details zum Ablauf gibts hier https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_authentication_and_authorisation"
       en: "Registration and subsequent helpdesk request required. Details on the process can be found here https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_authentication_and_authorisation"

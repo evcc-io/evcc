@@ -52,11 +52,7 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 		Source: corrently.TokenSource(log, &oauth2.Token{AccessToken: cc.Token}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *GrünStromIndex) run(done chan error) {
@@ -88,9 +84,9 @@ func (t *GrünStromIndex) run(done chan error) {
 		data := make(api.Rates, 0, len(res.Forecast))
 		for _, r := range res.Forecast {
 			data = append(data, api.Rate{
-				Price: float64(r.Co2GStandard),
 				Start: time.UnixMilli(r.Timeframe.Start).Local(),
 				End:   time.UnixMilli(r.Timeframe.End).Local(),
+				Value: float64(r.Co2GStandard),
 			})
 		}
 

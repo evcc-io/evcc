@@ -10,7 +10,7 @@ params:
   - name: user
   - name: password
 render: |
-  type: shelly-energymeter
+  type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
   {{- if .user }}
   user: {{ .user }}
@@ -18,4 +18,5 @@ render: |
   {{- if .password }}
   password: {{ .password }}
   {{- end }}
+  usage: {{ .usage }}
   channel: 0  # shelly device relay channel

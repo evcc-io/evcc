@@ -43,7 +43,7 @@ func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
 		conn:  conn,
 	}
 
-	return c, err
+	return c, nil
 }
 
 // CurrentPower implements the api.Meter interface

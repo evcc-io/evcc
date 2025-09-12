@@ -79,11 +79,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err = <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Entsoe) run(done chan error) {
@@ -154,7 +150,7 @@ func (t *Entsoe) run(done chan error) {
 			ar := api.Rate{
 				Start: r.Start.Local(),
 				End:   r.End.Local(),
-				Price: t.totalPrice(r.Value, r.Start),
+				Value: t.totalPrice(r.Value, r.Start),
 			}
 			data = append(data, ar)
 		}

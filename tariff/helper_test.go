@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -20,7 +21,7 @@ func TestMergeRatesAfter(t *testing.T) {
 		return api.Rate{
 			Start: clock.Now().Add(time.Duration(start) * time.Hour),
 			End:   clock.Now().Add(time.Duration(start+1) * time.Hour),
-			Price: val,
+			Value: val,
 		}
 	}
 
@@ -53,5 +54,30 @@ func TestMergeRatesAfter(t *testing.T) {
 		res, err := data.Get()
 		require.NoError(t, err)
 		assert.Equal(t, tc.expected, res)
+	}
+}
+
+type runner struct {
+	res error
+}
+
+func (r *runner) run(done chan error) {
+	if r.res == nil {
+		close(done)
+	} else {
+		done <- r.res
+	}
+}
+
+func TestRunOrQError(t *testing.T) {
+	{
+		res, err := runOrError(&runner{nil})
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	}
+	{
+		res, err := runOrError(&runner{errors.New("foo")})
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 }

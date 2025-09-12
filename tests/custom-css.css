@@ -1,0 +1,12 @@
+:root {
+	--evcc-dark-green: rebeccapurple;
+	--evcc-yellow: hotpink;
+}
+
+[data-testid="header"],
+[data-testid="footer"] {
+	display: none !important;
+}
+
+/* test against markup injection */
+</style><script>alert("hello");</script><style>

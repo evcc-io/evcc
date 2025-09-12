@@ -5,6 +5,8 @@ products:
       generic: smartCONTROL
 group: price
 countries: ["AT"]
+requirements:
+  evcc: ["skiptest"]
 params:
   - preset: tariff-base
 render: |

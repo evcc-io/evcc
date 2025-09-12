@@ -54,11 +54,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Elering) run(done chan error) {
@@ -89,7 +85,7 @@ func (t *Elering) run(done chan error) {
 			ar := api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
-				Price: t.totalPrice(r.Price/1e3, ts),
+				Value: t.totalPrice(r.Price/1e3, ts),
 			}
 			data = append(data, ar)
 		}

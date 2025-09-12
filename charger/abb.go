@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply, andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -91,11 +91,13 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 	// keep-alive
 	go func() {
 		for range time.Tick(30 * time.Second) {
-			_, _ = wb.status()
+			if _, err := wb.status(); err != nil {
+				log.ERROR.Println("heartbeat:", err)
+			}
 		}
 	}()
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *ABB) status() (byte, error) {
@@ -181,9 +183,14 @@ func (wb *ABB) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint32(current * 1e3)
+	curr := uint32(current * 1e3)
 
-	return wb.setCurrent(wb.curr)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.curr = curr
+	}
+
+	return err
 }
 
 var _ api.Meter = (*ABB)(nil)
@@ -195,7 +202,7 @@ func (wb *ABB) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)), err
+	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.ChargeRater = (*ABB)(nil)
@@ -207,7 +214,7 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
 // getPhaseValues returns 3 sequential register values

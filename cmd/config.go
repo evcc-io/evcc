@@ -27,8 +27,8 @@ func runConfig(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup environment
-	if err := configureEnvironment(cmd, &conf); err != nil {
+	// setup persistence
+	if err := configureDatabase(conf.Database); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -54,7 +54,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 			}
 
 			for _, c := range configurable {
-				fmt.Println(config.NameForID(c.ID), "type:"+c.Type, redactMap(c.Data))
+				fmt.Println(config.NameForID(c.ID), fmt.Sprintf("%+v", c.Properties), redactMap(c.Data))
 			}
 
 			fmt.Println("")

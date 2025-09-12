@@ -15,4 +15,10 @@ const (
 	Tariffs            = "tariffs"
 	Version            = "version"
 	Fatal              = "fatal"
+	Startup            = "startup"
+	Plant              = "plant"
+	Telemetry          = "telemetry"
+	DemoMode           = "demoMode"
+	AuthDisabled       = "authDisabled"
+	AuthProviders      = "authProviders"
 )

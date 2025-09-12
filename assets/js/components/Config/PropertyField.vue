@@ -1,5 +1,5 @@
 <template>
-	<div v-if="unitValue" class="input-group" :class="sizeClass">
+	<div v-if="unitValue" class="input-group" :class="inputClasses">
 		<input
 			:id="id"
 			v-model="value"
@@ -33,14 +33,15 @@
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>
 			</label>
 		</div>
 		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
-			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
+			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">
+				{{ $t("config.icon.change") }}
+			</a>
 		</div>
 	</div>
 	<SelectGroup
@@ -55,13 +56,13 @@
 			{ value: true, name: $t('config.options.boolean.yes') },
 		]"
 	/>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="sizeClass">
+	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="inputClasses">
 		<option v-if="!required" value="">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
 				{{ name }}
 			</option>
-			<hr v-else :key="idx" />
+			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea
@@ -69,7 +70,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="sizeClass"
+		:class="inputClasses"
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
@@ -80,7 +81,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="sizeClass"
+		:class="inputClasses"
 		:type="inputType"
 		:step="step"
 		:placeholder="placeholder"
@@ -92,8 +93,8 @@
 <script>
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
-import SelectGroup from "../SelectGroup.vue";
-import formatter from "../../mixins/formatter";
+import SelectGroup from "../Helper/SelectGroup.vue";
+import formatter from "@/mixins/formatter";
 
 const NS_PER_SECOND = 1000000000;
 
@@ -111,6 +112,7 @@ export default {
 		size: String,
 		scale: Number,
 		required: Boolean,
+		invalid: Boolean,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 	},
@@ -137,6 +139,13 @@ export default {
 			}
 			return "";
 		},
+		inputClasses() {
+			let result = this.sizeClass;
+			if (this.invalid) {
+				result += " is-invalid";
+			}
+			return result;
+		},
 		endAlign() {
 			return ["Int", "Float", "Duration"].includes(this.type);
 		},
@@ -152,9 +161,6 @@ export default {
 			}
 			if (this.unit) {
 				return this.unit;
-			}
-			if (this.property === "capacity") {
-				return "kWh";
 			}
 			return null;
 		},
@@ -206,7 +212,7 @@ export default {
 				}
 
 				if (this.boolean) {
-					return this.modelValue === true;
+					return this.modelValue === "true" || this.modelValue === true;
 				}
 
 				if (this.array) {

@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown/v2"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // processDeviceSelection processes the user-selected device, checks
@@ -436,6 +436,10 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 	langLabel := param.Description.String(c.lang)
 	if langLabel != "" {
 		label = langLabel
+	}
+
+	if param.Unit != "" {
+		label = fmt.Sprintf("%s (%s)", label, param.Unit)
 	}
 
 	value := c.askValue(question{

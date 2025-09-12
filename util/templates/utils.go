@@ -8,7 +8,34 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"go.yaml.in/yaml/v4"
 )
+
+func yamlQuote(value string) string {
+	if value == "" {
+		return value
+	}
+
+	// quote multi-line strings with "" and convert line breaks to literal \n
+	if strings.Contains(value, "\n") {
+		return `"` + strings.ReplaceAll(value, "\n", "\\n") + `"`
+	}
+
+	input := fmt.Sprintf("key: %s", value)
+
+	var res struct {
+		Value any `yaml:"key"`
+	}
+
+	if err := yaml.Unmarshal([]byte(input), &res); err == nil {
+		b, err := yaml.Marshal(res)
+		if err == nil && strings.TrimSpace(strings.TrimPrefix(string(b), "key: ")) == value {
+			return value
+		}
+	}
+
+	return quote(value)
+}
 
 func quote(value string) string {
 	quoted := strings.ReplaceAll(value, `'`, `''`)
@@ -41,6 +68,7 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		},
 		"urlEncode": url.QueryEscape,
 		"unquote":   unquote,
+		"quote":     yamlQuote,
 	}
 
 	return tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap)

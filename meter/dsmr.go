@@ -247,10 +247,35 @@ func (m *Dsmr) get(id string) (float64, error) {
 	return strconv.ParseFloat(res.Value, 64)
 }
 
+func (m *Dsmr) sumPhases(obis [3]string) (float64, error) {
+	var sum float64
+	for _, o := range obis {
+		f, err := m.get(o)
+		if err != nil {
+			return 0, err
+		}
+		sum += f
+	}
+	return sum, nil
+}
+
 // CurrentPower implements the api.Meter interface
 func (m *Dsmr) CurrentPower() (float64, error) {
 	bezug, err1 := m.get("1-0:1.7.0")
+	if errors.Is(err1, api.ErrNotAvailable) {
+		if f, err := m.sumPhases([3]string{"1-0:21.7.0", "1-0:41.7.0", "1-0:61.7.0"}); err == nil {
+			bezug = f
+			err1 = nil
+		}
+	}
+
 	lief, err2 := m.get("1-0:2.7.0")
+	if errors.Is(err2, api.ErrNotAvailable) {
+		if f, err := m.sumPhases([3]string{"1-0:22.7.0", "1-0:42.7.0", "1-0:62.7.0"}); err == nil {
+			lief = f
+			err2 = nil
+		}
+	}
 
 	// allow one value to be missing
 	if err1 == nil && errors.Is(err2, api.ErrNotAvailable) || err2 == nil && errors.Is(err1, api.ErrNotAvailable) {

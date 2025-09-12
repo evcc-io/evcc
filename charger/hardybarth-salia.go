@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -104,7 +104,7 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		return nil, err
 	}
 
-	if v.Compare(version.Must(version.NewSemver("2.0.0"))) >= 0 {
+	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.0.0"))) {
 		wb.fw = 2
 	}
 
@@ -266,12 +266,13 @@ func (wb *Salia) currents() (float64, float64, float64, error) {
 	return i.L1.Actual / 1e3, i.L2.Actual / 1e3, i.L3.Actual / 1e3, err
 }
 
-// var _ api.Identifier = (*Salia)(nil)
-
-// // Identify implements the api.Identifier interface
-// func (wb *Salia) Identify() (string, error) {
-// 	return "", api.ErrNotAvailable
-// }
+func (wb *Salia) Identify() (string, error) {
+	res, err := wb.apiG.Get()
+	if err != nil {
+		return "", err
+	}
+	return res.Secc.Port0.RFID.AuthorizationRequest.Key, nil
+}
 
 func (wb *Salia) getPhases() (int, error) {
 	res, err := wb.apiG.Get()

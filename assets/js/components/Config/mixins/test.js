@@ -38,7 +38,7 @@ export default {
       this.testState = TEST_RUNNING;
       try {
         const res = await testApi();
-        for (const [key, { error }] of Object.entries(res.data.result)) {
+        for (const [key, { error }] of Object.entries(res.data)) {
           if (error) {
             this.testState = TEST_FAILED;
             this.testResult = null;
@@ -46,7 +46,7 @@ export default {
             return false;
           }
         }
-        this.testResult = res.data.result;
+        this.testResult = res.data;
         this.testError = null;
         this.testState = TEST_SUCCESS;
         return true;

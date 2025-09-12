@@ -81,10 +81,10 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 		if v, err := h.vehicles.ByName(name); err == nil {
 			attr["vehicleLimitSoc"] = v.GetLimitSoc()
 			attr["vehicleMinSoc"] = v.GetMinSoc()
-			attr["vehiclePlanTime"], attr["vehiclePlanSoc"] = v.GetPlanSoc()
+			attr["vehiclePlanTime"], _, attr["vehiclePlanSoc"] = v.GetPlanSoc()
 
 			instance := v.Instance()
-			attr["vehicleTitle"] = instance.Title()
+			attr["vehicleTitle"] = instance.GetTitle()
 			attr["vehicleIcon"] = instance.Icon()
 			attr["vehicleCapacity"] = instance.Capacity()
 		}

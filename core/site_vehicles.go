@@ -13,8 +13,9 @@ import (
 )
 
 type planStruct struct {
-	Soc  int       `json:"soc"`
-	Time time.Time `json:"time"`
+	Soc          int       `json:"soc"`
+	Precondition int64     `json:"precondition"`
+	Time         time.Time `json:"time"`
 }
 
 type vehicleStruct struct {
@@ -40,15 +41,15 @@ func (site *Site) publishVehicles() {
 	for _, v := range vv {
 		var plan *planStruct
 
-		if time, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Time: time}
+		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
+			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
 		}
 
 		instance := v.Instance()
 		ac := instance.OnIdentified()
 
 		res[v.Name()] = vehicleStruct{
-			Title:          instance.Title(),
+			Title:          instance.GetTitle(),
 			Icon:           instance.Icon(),
 			Capacity:       instance.Capacity(),
 			Phases:         instance.Phases(),

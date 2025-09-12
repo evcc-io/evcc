@@ -1,0 +1,17 @@
+template: tinkerforge-warp3-smart
+products:
+  - brand: TinkerForge
+    description:
+      generic: WARP3 Charger Smart
+capabilities: ["mA", "1p3p", "rfid"]
+requirements:
+  evcc: ["skiptest"]
+params:
+  - preset: mqtt
+  - name: topic
+    default: warp
+render: |
+  type: warp2
+  {{ include "mqtt" . }}
+  topic: {{ .topic }}
+  energymanager: {{ .topic }}

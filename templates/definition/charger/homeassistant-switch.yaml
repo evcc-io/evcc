@@ -1,0 +1,44 @@
+template: homeassistant-switch
+products:
+  - brand: Home Assistant
+    description:
+      de: Schalter
+      en: Switch
+group: switchsockets
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: baseurl
+    description:
+      de: Basis-URL der Home Assistant Instanz
+      en: Base URL of the Home Assistant instance
+    required: true
+    example: http://homeassistant.local:8123
+  - name: token
+    mask: true
+    required: true
+    description:
+      de: Long-Lived Access Token
+      en: Long-Lived Access Token
+    help:
+      de: aus Home Assistant Profil
+      en: from Home Assistant profile
+  - name: switchentity
+    required: true
+    description:
+      de: Entity ID des schaltbaren Geräts
+      en: Entity ID of the switch device
+    example: switch.smartsocket
+  - name: powerentity
+    description:
+      de: Entity ID für Leistungsmessung
+      en: Entity ID for power measurement
+    example: sensor.smartsocket_power
+  - preset: switchsocket
+render: |
+  type: homeassistant-switch
+  baseurl: {{ .baseurl }}
+  token: {{ .token }}
+  switchentity: {{ .switchentity }}
+  powerentity: {{ .powerentity }}
+  {{ include "switchsocket" . }}

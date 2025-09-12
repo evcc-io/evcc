@@ -14,7 +14,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/hems/semp"
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
@@ -47,7 +46,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
 
-	c.log.INFO.Printf("evcc %s", server.FormattedVersion())
+	c.log.INFO.Printf("evcc %s", util.FormattedVersion())
 
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)

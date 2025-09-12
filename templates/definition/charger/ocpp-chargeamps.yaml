@@ -1,0 +1,12 @@
+template: ocpp-chargeamps
+products:
+  - brand: Charge Amps
+    description:
+      generic: Halo
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

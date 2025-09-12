@@ -32,6 +32,8 @@ params:
       de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
   - name: refreshToken
   - name: siteId
+    description:
+      generic: Site ID
     help:
       en: optional product identifier of the energy site, use to override autodectction
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung

@@ -78,10 +78,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	if forecastG != nil {
 		done := make(chan error)
 		go t.run(forecastG, done, cc.Interval)
-		err = <-done
+
+		if err := <-done; err != nil {
+			return nil, err
+		}
 	}
 
-	return t, err
+	return t, nil
 }
 
 func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
@@ -99,7 +102,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			}
 			for i, r := range data {
 				data[i] = api.Rate{
-					Price: t.totalPrice(r.Price, r.Start),
+					Value: t.totalPrice(r.Value, r.Start),
 					Start: r.Start.Local(),
 					End:   r.End.Local(),
 				}
@@ -145,7 +148,7 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 		res[i] = api.Rate{
 			Start: slot,
 			End:   slot.Add(time.Hour),
-			Price: t.totalPrice(price, slot),
+			Value: t.totalPrice(price, slot),
 		}
 	}
 

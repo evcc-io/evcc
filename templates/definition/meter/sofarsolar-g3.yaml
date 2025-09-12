@@ -14,8 +14,8 @@ products:
       generic: SOFAR 5…24KTL-G3
 requirements:
   description:
-    de: Die Verbindung über einen LSE-3 Logger Stick mittels LAN Anschluss und ModBus TCP über Port 8899 ist die einfachste Anbindung. Der LSW-3 WLAN Stick wird nicht unterstützt. Bei seriellem Anschluss via RS485 am COM Port ist eine wechselrichterseitige Terminierung notwendig.
-    en: LSE-3 logger stick using a LAN connection and ModBus TCP via the port 8899 is the easiest connection. The LSW-3 WiFi stick is not supported. For a RS485 serial connection using the inverter's COM port the inverter's side must be properly terminated.
+    de: Zu den Details wie man den Wechselrichter verbindet siehe die [Sofar Solar Installations Anleitung von homeassistant-solax-modbus](https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/).
+    en: For more details on how to establish a connection to the inverter see the [Sofar Solar installation doc of homeassistant-solax-modbus](https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/).
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -28,8 +28,8 @@ params:
     deprecated: true
   - name: storageunit
     help:
-      de: Nummer des Batteriespeichers. Im Fall eines BTS Speichers nicht die Adresse eines BTS 5K Batteriemodules, sondern der Speicherturm (BTS 5K-BDU Steuerungseinheit mit 1-4 BTS 5K Modulen).
-      en: Number of the battery storage. In case of a BTS storage not the address of a BTS 5K battery module, but the storage tower (BTS 5K-BDU control unit with 1-4 BTS 5K modules).
+      de: Im Fall eines BTS Speichers nicht die Adresse eines BTS 5K Batteriemodules, sondern der Speicherturm (BTS 5K-BDU Steuerungseinheit mit 1-4 BTS 5K Modulen).
+      en: In case of a BTS storage not the address of a BTS 5K battery module, but the storage tower (BTS 5K-BDU control unit with 1-4 BTS 5K modules).
     type: int
     default: 1
     advanced: true
@@ -38,8 +38,8 @@ params:
   - name: maxacpower
   - name: defaultmode
     help:
-      de: Standardmodus für die aktive Batteriesteuerung. Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
-      en: Default mode for battery control. Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
+      de: Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
+      en: Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
     default: 0 # self use
     advanced: true
   # battery control

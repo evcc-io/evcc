@@ -14,7 +14,7 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
+      - -X github.com/evcc-io/evcc/util.Version={{ .Version }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -43,12 +43,12 @@ env:
   - CGO_ENABLED=0
 
 archives:
-  - builds:
+  - ids:
       - evcc
-    format: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - evcc.dist.yaml
     name_template: >-
@@ -71,7 +71,23 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^build"
       - "^Translations"
+  groups:
+    - title: "Breaking Changes 🚨"
+      regexp: '(?i)\(BC\)'
+      order: 10
+    - title: "Bug Fixes 🐞"
+      regexp: '(?i)^fix:|\bfix\b'
+      order: 40
+    - title: "New Features 💫"
+      regexp: '(?i)^feat:|\badd\b'
+      order: 20
+    - title: "Experimental Features 🧪"
+      regexp: '(?i)^experimental:|\bexperimental\b'
+      order: 25
+    - title: "Other Changes ☀️"
+      order: 30
 
 nfpms:
   - id: default
@@ -80,7 +96,7 @@ nfpms:
 
     homepage: https://evcc.io
     description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
+    maintainer: info@evcc.io
     license: MIT
     vendor: evcc.io
 
@@ -106,7 +122,7 @@ brews:
       name: homebrew-tap
     commit_author:
       name: andig
-      email: cpuidle@gmx.de
+      email: info@evcc.io
     directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"

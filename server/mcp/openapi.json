@@ -1,0 +1,2380 @@
+{
+  "components": {
+    "parameters": {
+      "batteryMode": {
+        "in": "path",
+        "name": "batteryMode",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/BatteryMode"
+        }
+      },
+      "costLimit": {
+        "description": "Cost limit in configured currency (default EUR) or CO2 limit in g/kWh",
+        "example": 0.25,
+        "in": "path",
+        "name": "cost",
+        "required": true,
+        "schema": {
+          "type": "number"
+        }
+      },
+      "current": {
+        "description": "Electric current in A",
+        "in": "path",
+        "name": "current",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Current"
+        }
+      },
+      "delay": {
+        "description": "Duration in seconds.",
+        "in": "path",
+        "name": "delay",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Delay"
+        }
+      },
+      "enable": {
+        "description": "Charging mode.",
+        "in": "path",
+        "name": "enable",
+        "required": true,
+        "schema": {
+          "enum": [
+            "true",
+            "false",
+            "1",
+            "0"
+          ],
+          "type": "string"
+        }
+      },
+      "energy": {
+        "description": "Energy in kWh",
+        "in": "path",
+        "name": "energy",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Energy"
+        }
+      },
+      "hourMinuteTime": {
+        "description": "Time in `HOURS:MINUTES` format",
+        "in": "path",
+        "name": "hourMinuteTime",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/HourMinuteTime"
+        }
+      },
+      "id": {
+        "description": "Loadpoint index starting at 1",
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Id"
+        }
+      },
+      "logAreas": {
+        "description": "Comma-separated list of log areas",
+        "explode": true,
+        "in": "query",
+        "name": "areas",
+        "schema": {
+          "$ref": "#/components/schemas/LogAreas"
+        }
+      },
+      "logLevel": {
+        "description": "Log level",
+        "in": "query",
+        "name": "level",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/LogLevel"
+        }
+      },
+      "mode": {
+        "in": "path",
+        "name": "mode",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Mode"
+        }
+      },
+      "phases": {
+        "description": "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)",
+        "in": "path",
+        "name": "phases",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Phases"
+        }
+      },
+      "power": {
+        "description": "Power in W",
+        "in": "path",
+        "name": "power",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Power"
+        }
+      },
+      "soc": {
+        "description": "SOC in %",
+        "in": "path",
+        "name": "soc",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Soc"
+        }
+      },
+      "threshold": {
+        "description": "Power in W",
+        "in": "path",
+        "name": "threshold",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Power"
+        }
+      },
+      "timestamp": {
+        "description": "Timestamp in RFC3339 format",
+        "in": "path",
+        "name": "timestamp",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Timestamp"
+        }
+      },
+      "timezone": {
+        "in": "path",
+        "name": "timezone",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/IANATimeZone"
+        }
+      },
+      "vehicleName": {
+        "description": "Vehicle name",
+        "in": "path",
+        "name": "name",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/VehicleName"
+        }
+      },
+      "weekdays": {
+        "description": "The Weekdays",
+        "in": "path",
+        "name": "weekdays",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Weekdays"
+        }
+      }
+    },
+    "responses": {
+      "BatteryModeResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge",
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Battery mode"
+      },
+      "BlankResponse": {
+        "description": "Success - Blank response"
+      },
+      "BooleanResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Boolean result"
+      },
+      "EmptyResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Empty result"
+      },
+      "IntegerResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Integer result"
+      },
+      "NanoSecondsResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Number result - Unit is **nanoseconds**"
+      },
+      "NullResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "description": "Value is always null",
+                  "nullable": true,
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Null result"
+      },
+      "NumberResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Number result"
+      },
+      "PlanRatesResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "$ref": "#/components/schemas/PlanRates"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - PlanRates result"
+      },
+      "SocResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "properties": {
+                    "soc": {
+                      "$ref": "#/components/schemas/Soc"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success - Soc result"
+      },
+      "Unauthorized": {
+        "content": {
+          "text/plain": {
+            "schema": {
+              "enum": [
+                "Unauthorized"
+              ],
+              "type": "string"
+            }
+          }
+        },
+        "description": "Unauthorized - Login and try again"
+      }
+    },
+    "schemas": {
+      "BatteryMode": {
+        "description": "Battery mode",
+        "enum": [
+          "unknown",
+          "normal",
+          "hold",
+          "charge"
+        ],
+        "example": "normal",
+        "type": "string"
+      },
+      "ChangePassword": {
+        "properties": {
+          "current": {
+            "$ref": "#/components/schemas/Password"
+          },
+          "new": {
+            "$ref": "#/components/schemas/Password"
+          }
+        },
+        "type": "object"
+      },
+      "ChargingSessions": {
+        "description": "Charging sessions",
+        "items": {
+          "properties": {
+            "chargeDuration": {
+              "description": "Duration of active charging",
+              "type": "number"
+            },
+            "chargedEnergy": {
+              "description": "Charged energy in kWh",
+              "type": "number"
+            },
+            "co2PerKWh": {
+              "description": "Average CO₂ emissions per kWh",
+              "type": "number"
+            },
+            "created": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "finished": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "id": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "loadpoint": {
+              "$ref": "#/components/schemas/LoadpointName"
+            },
+            "meterStart": {
+              "description": "Meter reading at start of charging session",
+              "nullable": true,
+              "type": "number"
+            },
+            "meterStop": {
+              "description": "Meter reading at end of charging session",
+              "nullable": true,
+              "type": "number"
+            },
+            "odometer": {
+              "description": "Vehicle odometer reading in kilometers",
+              "nullable": true,
+              "type": "number"
+            },
+            "price": {
+              "description": "Total price of the session",
+              "type": "number"
+            },
+            "pricePerKWh": {
+              "description": "Average price per kWh",
+              "type": "number"
+            },
+            "solarPercentage": {
+              "description": "Solar percentage of the session",
+              "type": "number"
+            },
+            "vehicle": {
+              "$ref": "#/components/schemas/VehicleName"
+            }
+          },
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "Current": {
+        "description": "Electric current in A",
+        "example": 16,
+        "minimum": 0,
+        "type": "number"
+      },
+      "Delay": {
+        "description": "Duration in seconds.",
+        "example": 60,
+        "type": "integer"
+      },
+      "Energy": {
+        "description": "Energy in kWh",
+        "example": 25.5,
+        "minimum": 0,
+        "type": "number"
+      },
+      "HourMinuteTime": {
+        "description": "Time in `HH:MM` format",
+        "example": "12:30",
+        "format": "HH:MM",
+        "pattern": "[0-1][0-9]:[0-5][0-9]",
+        "type": "string"
+      },
+      "IANATimeZone": {
+        "description": "Timezone in IANA format",
+        "example": "Europe/Berlin",
+        "externalDocs": {
+          "url": "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List"
+        },
+        "type": "string"
+      },
+      "Id": {
+        "description": "Loadpoint index starting at 1.",
+        "example": 1,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "LoadpointName": {
+        "example": "Garage",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#title"
+        },
+        "type": "string"
+      },
+      "LogArea": {
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#levels"
+        },
+        "type": "string"
+      },
+      "LogAreas": {
+        "example": [
+          "lp-1",
+          "site",
+          "db"
+        ],
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#levels"
+        },
+        "items": {
+          "$ref": "#/components/schemas/LogArea"
+        },
+        "type": "array"
+      },
+      "LogLevel": {
+        "enum": [
+          "FATAL",
+          "ERROR",
+          "WARN",
+          "INFO",
+          "DEBUG",
+          "TRACE"
+        ],
+        "example": "DEBUG",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#log"
+        },
+        "type": "string"
+      },
+      "Mode": {
+        "description": "Charging mode.",
+        "enum": [
+          "off",
+          "now",
+          "minpv",
+          "pv"
+        ],
+        "type": "string"
+      },
+      "Password": {
+        "description": "Admin password",
+        "type": "string"
+      },
+      "Phases": {
+        "description": "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)",
+        "enum": [
+          "0",
+          "1",
+          "3"
+        ],
+        "example": "3",
+        "type": "string"
+      },
+      "PlanRates": {
+        "properties": {
+          "duration": {
+            "description": "Duration in s",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/Rates"
+          },
+          "planTime": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "power": {
+            "$ref": "#/components/schemas/Power"
+          }
+        },
+        "type": "object"
+      },
+      "Power": {
+        "description": "Power in W",
+        "example": 2500,
+        "minimum": 0,
+        "type": "number"
+      },
+      "Precondition": {
+        "description": "Late charging duration in seconds.",
+        "example": 3600,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "Rate": {
+        "description": "A charging interval",
+        "properties": {
+          "end": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "start": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "value": {
+            "description": "Cost",
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Rates": {
+        "items": {
+          "$ref": "#/components/schemas/Rate"
+        },
+        "type": "array"
+      },
+      "RepeatingPlan": {
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans#repeating-plans"
+        },
+        "properties": {
+          "active": {
+            "description": "Set plan active.",
+            "type": "boolean"
+          },
+          "precondition": {
+            "$ref": "#/components/schemas/Precondition"
+          },
+          "soc": {
+            "$ref": "#/components/schemas/Soc"
+          },
+          "time": {
+            "$ref": "#/components/schemas/HourMinuteTime"
+          },
+          "tz": {
+            "$ref": "#/components/schemas/IANATimeZone"
+          },
+          "weekdays": {
+            "$ref": "#/components/schemas/Weekdays"
+          }
+        },
+        "type": "object"
+      },
+      "RepeatingPlans": {
+        "properties": {
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/RepeatingPlan"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "Soc": {
+        "description": "SOC in %",
+        "example": 60,
+        "maximum": 100,
+        "minimum": 0,
+        "type": "number"
+      },
+      "State": {
+        "description": "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases.",
+        "type": "object"
+      },
+      "StaticEnergyPlan": {
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans#energy-amount-plan"
+        },
+        "properties": {
+          "energy": {
+            "$ref": "#/components/schemas/Energy"
+          },
+          "precondition": {
+            "$ref": "#/components/schemas/Precondition"
+          },
+          "time": {
+            "$ref": "#/components/schemas/Timestamp"
+          }
+        },
+        "type": "object"
+      },
+      "StaticSocPlan": {
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
+        },
+        "properties": {
+          "precondition": {
+            "$ref": "#/components/schemas/Precondition"
+          },
+          "soc": {
+            "$ref": "#/components/schemas/Soc"
+          },
+          "time": {
+            "$ref": "#/components/schemas/Timestamp"
+          }
+        },
+        "type": "object"
+      },
+      "Timestamp": {
+        "description": "Timestamp in RFC3339 format",
+        "example": "2025-07-19T12:30:00Z",
+        "format": "date-time",
+        "type": "string"
+      },
+      "VehicleName": {
+        "example": "vehicle_1",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/vehicles#name"
+        },
+        "minLength": 1,
+        "pattern": "[a-zA-Z0-9_.:-]+",
+        "type": "string"
+      },
+      "VehicleTitle": {
+        "example": "blauer e-Golf",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/vehicles#title"
+        },
+        "type": "string"
+      },
+      "Weekdays": {
+        "description": "The Weekdays",
+        "example": [
+          1,
+          3,
+          4
+        ],
+        "items": {
+          "description": "0: Sunday, 1: Monday, 2: Tuesday, 3: Wednesday, 4: Thursday, 5: Friday, 6: Saturday",
+          "maximum": 6,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "type": "array",
+        "uniqueItems": true
+      }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "in": "cookie",
+        "name": "auth",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "url": "https://github.com/evcc-io/evcc"
+    },
+    "description": "Solar charging. Super simple.",
+    "title": "evcc",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "description": "Administrator login. Returns authorization cookie required for all protected endpoints.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "$ref": "#/components/schemas/Password"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The authorization cookie",
+                "schema": {
+                  "example": "auth=ey...qY; Path=/; Expires=Fri, 04 Apr 2025 14:35:37 GMT; HttpOnly; SameSite=Strict",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid password provided"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "Logout and delete authorization cookie",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The authorization cookie",
+                "schema": {
+                  "enum": [
+                    "auth=; Path=/; HttpOnly"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/password": {
+      "put": {
+        "description": "Changes the admin password.",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid password provided"
+          }
+        },
+        "summary": "Change admin password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/status": {
+      "get": {
+        "description": "Whether the current user is logged in.",
+        "operationId": "getAuthStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "enum": [
+                    "true",
+                    "false"
+                  ],
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Authentication status",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/batterydischargecontrol/{enable}": {
+      "post": {
+        "description": "Prevent home battery discharge during vehicle fast charging.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBatteryDischargeControl",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Control battery-discharge",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterygridchargelimit": {
+      "delete": {
+        "description": "Remove battery grid charge limit.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "removeBatteryGridChargeLimit",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Remove battery grid charge limit",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterygridchargelimit/{cost}": {
+      "post": {
+        "description": "Charge home battery from grid when price or emissions are below the threshold. Uses price if a dynamic tariff exists. Uses emissions if a CO₂-tariff is configured. Ignored otherwise.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBatteryGridChargeLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set battery grid charge limit",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterymode": {
+      "delete": {
+        "description": "Default evcc control behavior is restored",
+        "operationId": "disableExternalBatteryControl",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BatteryModeResult"
+          }
+        },
+        "summary": "Disable external battery control",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterymode/{batteryMode}": {
+      "post": {
+        "description": "Directly controls the mode of all controllable batteries. evcc behavior like 'price limit' or 'prevent discharge while fast charging' is overruled. External mode resets after 60s. The external system has to call this endpoint regularly.",
+        "operationId": "setExternalBatteryMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/batteryMode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BatteryModeResult"
+          }
+        },
+        "summary": "Set external battery mode",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/buffersoc/{soc}": {
+      "post": {
+        "description": "Set battery buffer SoC.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBufferSoc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set battery buffer SoC",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/bufferstartsoc/{soc}": {
+      "post": {
+        "description": "Set battery buffer start SoC.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setBufferStartSoc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set battery buffer start SoC",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Returns 200 if the evcc loop runs as expected.",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "example": "OK",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/loadpoints/{id}/batteryboost/{enable}": {
+      "post": {
+        "description": "Enable or disable battery boost.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
+        },
+        "operationId": "setLoadpointBatteryBoost",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Set battery boost",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/disable/delay/{delay}": {
+      "post": {
+        "description": "Delay before charging stops in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints"
+        },
+        "operationId": "setLoadpointDisableDelay",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/delay"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NanoSecondsResult"
+          }
+        },
+        "summary": "Disable threshold-delay",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/disable/threshold/{threshold}": {
+      "post": {
+        "description": "Specifies the grid draw power to stop charging in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold-1"
+        },
+        "operationId": "setLoadpointDisableThreshold",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/threshold"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Disable threshold",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/enable/delay/{delay}": {
+      "post": {
+        "description": "Delay before charging starts in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay"
+        },
+        "operationId": "setLoadpointEnableDelay",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/delay"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NanoSecondsResult"
+          }
+        },
+        "summary": "Enable threshold-delay",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/enable/threshold/{threshold}": {
+      "post": {
+        "description": "Specifies the available surplus power to start charging in solar mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold"
+        },
+        "operationId": "setLoadpointEnableThreshold",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/threshold"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Enable threshold",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/limitenergy/{energy}": {
+      "post": {
+        "description": "Updates the energy limit of the loadpoint. Only available for guest vehicles and vehicles with unknown SoC. Limit is removed on vehicle disconnect.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointEnergyLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/energy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update energy limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/limitsoc/{soc}": {
+      "post": {
+        "description": "Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointSocLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update limit SoC",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/maxcurrent/{current}": {
+      "post": {
+        "description": "Updates the maximum current of the loadpoint.",
+        "operationId": "setLoadpointMaxCurrent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/current"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update maximum current",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/mincurrent/{current}": {
+      "post": {
+        "description": "Updates the minimum current of the loadpoint.",
+        "operationId": "setLoadpointMinCurrent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/current"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update minimum current",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/mode/{mode}": {
+      "post": {
+        "description": "Changes the charging behavior of the loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "setLoadpointMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/mode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/Mode"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Update charge mode",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/phases/{phases}": {
+      "post": {
+        "description": "Updates the allowed phases of the loadpoint. Selects the desired phase mode for chargers with automatic phase switching. For manual phase switching chargers (via cable or Lasttrennschalter) this value tells evcc the actual phases.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases"
+        },
+        "operationId": "setLoadpointPhases",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/phases"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          },
+          "400": {
+            "description": "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
+          }
+        },
+        "summary": "Update allowed phases",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan": {
+      "get": {
+        "description": "Returns the current charging plan for this loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "getLoadpointPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "allOf": [
+                        {
+                          "properties": {
+                            "planId": {
+                              "$ref": "#/components/schemas/Id"
+                            },
+                            "precondition": {
+                              "$ref": "#/components/schemas/Precondition"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        {
+                          "$ref": "#/components/schemas/PlanRates"
+                        }
+                      ]
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Get charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/energy": {
+      "delete": {
+        "description": "Delete charging plan. Only available when a vehicle without SoC is connected.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "deleteLoadpointEnergyPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/EmptyResult"
+          }
+        },
+        "summary": "Delete energy-based charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/energy/{energy}/{timestamp}": {
+      "post": {
+        "description": "Create charging plan with fixed time and energy target. Only available when a vehicle without SoC is connected.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setLoadpointEnergyPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/energy"
+          },
+          {
+            "$ref": "#/components/parameters/timestamp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/StaticEnergyPlan"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set energy-based charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}": {
+      "get": {
+        "description": "Simulate repeating charging plan and return the result. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointRepeatingPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          },
+          {
+            "$ref": "#/components/parameters/weekdays"
+          },
+          {
+            "$ref": "#/components/parameters/hourMinuteTime"
+          },
+          {
+            "$ref": "#/components/parameters/timezone"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PlanRatesResult"
+          }
+        },
+        "summary": "Repeating plan preview",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/static/preview/energy/{energy}/{timestamp}": {
+      "get": {
+        "description": "Simulate charging plan based on energy goal. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointEnergyPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/energy"
+          },
+          {
+            "$ref": "#/components/parameters/timestamp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PlanRatesResult"
+          }
+        },
+        "summary": "Simulate energy-based charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}": {
+      "get": {
+        "description": "Simulate charging plan based on SoC goal. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointSocPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          },
+          {
+            "$ref": "#/components/parameters/timestamp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PlanRatesResult"
+          }
+        },
+        "summary": "Simulate soc-based charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/priority/{priority}": {
+      "post": {
+        "description": "Set loadpoint priority.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "operationId": "setLoadpointPriority",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "description": "Higher number means higher priority.",
+            "example": 2,
+            "in": "path",
+            "name": "priority",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/IntegerResult"
+          }
+        },
+        "summary": "Set priority",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartcostlimit": {
+      "delete": {
+        "description": "Delete cost or emission limit for fast-charging with grid energy.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/dynamic-prices"
+        },
+        "operationId": "deleteLoadpointSmartCostLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Delete smart charging cost limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartcostlimit/{cost}": {
+      "post": {
+        "description": "Set cost or emission limit for fast-charging with grid energy.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/dynamic-prices"
+        },
+        "operationId": "setLoadpointSmartCostLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart charging cost limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/vehicle": {
+      "delete": {
+        "description": "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+        },
+        "operationId": "removeLoadpointVehicle",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/EmptyResult"
+          }
+        },
+        "summary": "Remove vehicle",
+        "tags": [
+          "loadpoints"
+        ]
+      },
+      "patch": {
+        "description": "Starts the automatic vehicle detection process.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+        },
+        "operationId": "startLoadpointVehicleDetection",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/EmptyResult"
+          }
+        },
+        "summary": "Start vehicle detection",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/vehicle/{name}": {
+      "post": {
+        "description": "Assigns vehicle to loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+        },
+        "operationId": "assignLoadpointVehicle",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "properties": {
+                        "vehicle": {
+                          "$ref": "#/components/schemas/VehicleTitle"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Assign vehicle",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/prioritysoc/{soc}": {
+      "post": {
+        "description": "Set battery priority SoC.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery"
+        },
+        "operationId": "setPrioritySoc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set battery priority SoC",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/residualpower/{power}": {
+      "post": {
+        "description": "Set grid connection operating point.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/site#residualpower"
+        },
+        "operationId": "setResidualPower",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/power"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set grid residual power",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/session/{id}": {
+      "delete": {
+        "description": "Delete charging session.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/sessions"
+        },
+        "operationId": "deleteSession",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Delete charging session",
+        "tags": [
+          "sessions"
+        ]
+      },
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/id"
+        }
+      ],
+      "put": {
+        "description": "Update vehicle of charging session.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/sessions"
+        },
+        "operationId": "updateSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "loadpoint": {
+                    "$ref": "#/components/schemas/LoadpointName"
+                  },
+                  "vehicle": {
+                    "$ref": "#/components/schemas/VehicleName"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "summary": "Update vehicle of charging session",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/sessions": {
+      "get": {
+        "description": "Returns a list of charging sessions.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/sessions"
+        },
+        "operationId": "getSessions",
+        "parameters": [
+          {
+            "description": "Response format (default json)",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "csv"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language (defaults to accept header)",
+            "in": "query",
+            "name": "lang",
+            "schema": {
+              "example": "de",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Month filter",
+            "in": "query",
+            "name": "month",
+            "schema": {
+              "example": 2,
+              "maximum": 12,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Year filter",
+            "in": "query",
+            "name": "year",
+            "schema": {
+              "example": 2025,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/ChargingSessions"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "description": "Download csv-file",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Charging sessions",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/settings/telemetry": {
+      "get": {
+        "description": "Returns the current telemetry status.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
+        },
+        "operationId": "getTelemetryStatus",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Telemetry status",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/settings/telemetry/{enable}": {
+      "post": {
+        "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
+        },
+        "operationId": "setTelemetryStatus",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          },
+          "400": {
+            "description": "Sponsorship required"
+          }
+        },
+        "summary": "Enable/disable telemetry",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/smartcostlimit": {
+      "delete": {
+        "description": "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "removeGlobalSmartCostLimit",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Remove smart charging cost limit for all loadpoints.",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartcostlimit/{cost}": {
+      "post": {
+        "description": "Convenience method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "setGlobalSmartCostLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart charging cost limit for all loadpoints",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/state": {
+      "get": {
+        "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/state"
+        },
+        "operationId": "getState",
+        "parameters": [
+          {
+            "description": "Filter the state with JQ",
+            "examples": {
+              "all": {
+                "summary": "complete state",
+                "value": "."
+              },
+              "firstLoadpoint": {
+                "summary": "only first loadpoint",
+                "value": ".loadpoints[0]"
+              }
+            },
+            "in": "query",
+            "name": "jq",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/State"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "System state",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/system/log": {
+      "get": {
+        "description": "Returns the latest log lines.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/log"
+        },
+        "operationId": "getSystemLogs",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/logAreas"
+          },
+          {
+            "$ref": "#/components/parameters/logLevel"
+          },
+          {
+            "description": "Number of log lines to return",
+            "example": 100,
+            "in": "query",
+            "name": "count",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "File type",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "txt"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "description": "Download txt-file",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Logs",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/system/log/areas": {
+      "get": {
+        "description": "Returns a list of all log areas (e.g. `lp-1`, `site`, `db`).",
+        "operationId": "getLogAreas",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/LogAreas"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "List of all log areas",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/system/shutdown": {
+      "post": {
+        "description": "Shut down instance. There is no reboot command. We expect the underlying system (docker, systemd, etc.) to restart the evcc instance once it's terminated.",
+        "operationId": "shutdownSystem",
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Shutdown evcc",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/tariff/{type}": {
+      "get": {
+        "description": "Returns the prices or emission values for the upcoming hours",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/devices/tariffs"
+        },
+        "operationId": "getTariffInfo",
+        "parameters": [
+          {
+            "description": "Tariff type",
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "grid",
+                "feedin",
+                "co2",
+                "planner",
+                "solar"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "properties": {
+                        "rates": {
+                          "$ref": "#/components/schemas/Rates"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "404": {
+            "description": "Tariff not defined"
+          }
+        },
+        "summary": "Tariff information",
+        "tags": [
+          "tariffs"
+        ]
+      }
+    },
+    "/vehicles/{name}/limitsoc/{soc}": {
+      "post": {
+        "description": "Charging will stop when this SoC is reached.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limits"
+        },
+        "operationId": "setVehicleSocLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SocResult"
+          }
+        },
+        "summary": "Set SoC limit",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/minsoc/{soc}": {
+      "post": {
+        "description": "Vehicle will be fast-charged until this SoC is reached.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limits"
+        },
+        "operationId": "setVehicleMinSoc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SocResult"
+          }
+        },
+        "summary": "Set minimum SoC",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/plan/repeating": {
+      "post": {
+        "description": "Updates the repeating charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "updateVehicleRepeatingPlans",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepeatingPlans"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/RepeatingPlans"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Update repeating plans",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/plan/soc": {
+      "delete": {
+        "description": "Delete the charging plan",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "deleteVehicleSocPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/EmptyResult"
+          }
+        },
+        "summary": "Delete a SoC-based charging plan",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/plan/soc/{soc}/{timestamp}": {
+      "post": {
+        "description": "Create charging plan with fixed time and SoC target.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setVehicleSocPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          },
+          {
+            "$ref": "#/components/parameters/timestamp"
+          },
+          {
+            "in": "query",
+            "name": "precondition",
+            "schema": {
+              "$ref": "#/components/schemas/Precondition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/StaticSocPlan"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set a SoC-based charging plan",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "auth"
+    },
+    {
+      "name": "battery"
+    },
+    {
+      "name": "general"
+    },
+    {
+      "name": "loadpoints"
+    },
+    {
+      "name": "sessions"
+    },
+    {
+      "name": "system"
+    },
+    {
+      "name": "tariffs"
+    },
+    {
+      "name": "vehicles"
+    }
+  ]
+}

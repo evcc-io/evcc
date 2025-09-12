@@ -1,0 +1,205 @@
+template: viessmann
+products:
+  - brand: Viessmann
+    description:
+      generic: Heatpump (SG Ready)
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
+    en: |
+      One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
+params:
+  - name: user
+    required: true
+    help:
+      de: Registrieren auf [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Register at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+  - name: password
+    required: true
+    help:
+      de: Für den konfigurierten Viessmann Account.
+      en: For the configured Viessmann account.
+  - name: clientid
+    required: true
+    description:
+      de: Client ID
+      en: Client ID
+    help:
+      de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+  - name: gateway_serial
+    required: true
+    description:
+      de: Gateway Serial
+      en: Gateway Serial
+    help:
+      de: Seriennummer des VitoConnect modul (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: VitoConnect serial number (VitoCare App -> Settings -> Communication module -> Serial number)
+  - name: installation_id
+    required: true
+    description:
+      de: Installation ID
+      en: Installation ID
+    help:
+      de: |
+        Leider kann man die Installation ID nicht einfach in der Viessmann App einsehen - stattdessen müssen wir die folgenden Kommandos in der Kommandozeile ausführen. Es ist uns bewusst, dass das nicht für jeden Benutzer einfach umsetzbar ist, aber bisher haben wir leider keinen besseren Ablauf...<br/>
+
+        Vorraussetzungen: curl, jq, und die folgenden Umgebungsvariblen:
+
+        ```
+        VIESSMANN_USER=<your-user>
+        VIESSMANN_PASS=<your-password>
+        VIESSMANN_CLIENT_ID=<your-clientid>
+        ```
+
+        Dann holen wir uns einen oauth token (n.b. am besten den gesamten Block in das Terminal kopieren, da die Zwischenvariable 'CODE' nur 20 Sekunden gültig ist):
+
+        ```
+        VIESSMANN_REDIRECT_URI="http://localhost:4200/"
+        VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
+        VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
+
+        VIESSMANN_CODE=$(curl -X POST --silent \
+          --user $VIESSMANN_USER:$VIESSMANN_PASS \
+          --output /dev/null \
+          --dump-header -    \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          | grep "^location: "            \
+          | sed 's/.*\?code=\(.*\).*/\1/' \
+          | tr -d '[:space:]')
+
+        TOKEN_RESPONSE=$(curl -XPOST --silent \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
+
+        VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
+        ```
+
+        Damit können wir jetzt die Installation ID abfragen:
+
+        ```
+        curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
+          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
+          | jq '.data[].id'
+        ```
+      en: |
+        Unfortunately you cannot simply lookup this number in the Viessmann app - instead you need to use the following commands on the command line... we're aware this is not for every user, but currently we don't have a better workflow...<br/>
+
+        Prerequisites: curl, jq, and the following parameters:
+
+        ```
+        VIESSMANN_USER=<your-user>
+        VIESSMANN_PASS=<your-password>
+        VIESSMANN_CLIENT_ID=<your-clientid>
+        ```
+
+        Then execute the following to get an oauth token (n.b. it's best to paste the entire block as-is, since the intermediate 'CODE' is only valid for 20 seconds):
+
+        ```
+        VIESSMANN_REDIRECT_URI="http://localhost:4200/"
+        VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
+        VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
+
+        VIESSMANN_CODE=$(curl -X POST --silent \
+          --user $VIESSMANN_USER:$VIESSMANN_PASS \
+          --output /dev/null \
+          --dump-header -    \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          | grep "^location: "            \
+          | sed 's/.*\?code=\(.*\).*/\1/' \
+          | tr -d '[:space:]')
+
+        TOKEN_RESPONSE=$(curl -XPOST --silent \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
+
+        VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
+        ```
+
+        Finally, get the installation id:
+
+        ```
+        curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
+          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
+          | jq '.data[].id'
+        ```
+  - name: device_id
+    required: true
+    description:
+      de: Device ID
+      en: Device ID
+    help:
+      de: normalerweise `0`
+      en: typically `0`
+    default: 0
+  - name: target_temperature
+    deprecated: true
+    description:
+      de: Zieltemperatur für Einmal-Warmwasser-Zubereitung
+      en: Target temperature for one-time charge
+    unit: °C
+    help:
+      de: Parameter existiert nur aus historischen Gründen. Zieltemperatur kann in der ViCare App eingestellt werden (wird nicht von allen Anlagen unterstützt)
+      en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
+    required: false
+    default: 45
+    type: int
+render: |
+  type: sgready
+  getmode:
+    source: http
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
+    cache: 2s # to prevent making two identical requests straight after each other for "getmode"
+    auth:
+      source: viessmann
+      user: {{ .user }}
+      password: {{ .password }}
+      clientid: {{ .clientid }}
+    jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    # false -> oneTimeCharge is disabled -> normal mode -> 2
+    # true -> oneTimeCharge is enabled -> boost mode -> 3
+  setmode:
+    source: watchdog
+    timeout: 60m # re-write at timeout/2
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 2 # normal
+        set:
+          source: http
+          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
+          method: POST 
+          headers:  
+            - content-type: application/json
+          auth:
+            source: viessmann
+            user: {{ .user }}
+            password: {{ .password }}
+            clientid: {{ .clientid }}
+          body: >
+            { }
+      - case: 3 # boost
+        set:
+          source: http
+          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          method: POST 
+          headers:  
+            - content-type: application/json
+          auth:
+            source: viessmann
+            user: {{ .user }}
+            password: {{ .password }}
+            clientid: {{ .clientid }}
+          body: >
+            { }
+      - case: 1 # dimm
+        set:
+          source: error
+          error: ErrNotAvailable

@@ -21,7 +21,9 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
-    advanced: true
+    help:
+      en: Maximum charge power for forced charging of the battery in watts. (0 to automatically set the value of the maximum BDC rated power)
+      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. (0 um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -186,12 +188,26 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
+        # Reset max battery discharge power
+        - source: const
+          {{- if .maxchargepower }}
+          value: {{ div .maxchargepower 10 }}
+          {{- else }}
+          value: 1060 # 10.6kW, max allowed value for register
+          {{- end }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
     - case: 2 # hold
       set:
         source: sequence
         set:
         - source: const
-          value: 2 # Forced mode (charge/discharge/stop)
+          value: 0 # Self-consumption mode (Default)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -206,6 +222,16 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        # Set max battery discharge power, effectively stops discharging
+        - source: const
+          value: 1 # 0.01kW, min allowed value for register
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
     - case: 3 # charge

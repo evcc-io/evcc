@@ -16,11 +16,13 @@ import (
 )
 
 type Octopus struct {
-	log         *util.Logger
-	region      string
-	productCode string
-	apikey      string
-	data        *util.Monitor[api.Rates]
+	log           *util.Logger
+	region        string
+	productCode   string
+	apikey        string
+	accountnumber string
+	paymentMethod string
+	data          *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -31,10 +33,12 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region      string
-		Tariff      string // DEPRECATED: use ProductCode
-		ProductCode string
-		ApiKey      string
+		Region        string
+		Tariff        string // DEPRECATED: use ProductCode
+		ProductCode   string
+		DirectDebit   bool
+		ApiKey        string
+		AccountNumber string
 	}
 
 	logger := util.NewLogger("octopus")
@@ -65,20 +69,22 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 			return nil, errors.New("invalid apikey format")
 		}
 	}
-
+	paymentMethod := octoRest.RatePaymentMethodDirectDebit
+	if !cc.DirectDebit {
+		// Not using Direct Debit, filter by non-Direct Debit tariff entries
+		paymentMethod = octoRest.RatePaymentMethodNotDirectDebit
+	}
 	t := &Octopus{
-		log:         logger,
-		region:      cc.Region,
-		productCode: cc.ProductCode,
-		apikey:      cc.ApiKey,
-		data:        util.NewMonitor[api.Rates](2 * time.Hour),
+		log:           logger,
+		region:        cc.Region,
+		productCode:   cc.ProductCode,
+		apikey:        cc.ApiKey,
+		accountnumber: cc.AccountNumber,
+		paymentMethod: paymentMethod,
+		data:          util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Octopus) run(done chan error) {
@@ -89,7 +95,7 @@ func (t *Octopus) run(done chan error) {
 
 	// If ApiKey is available, use GraphQL to get appropriate tariff code before entering execution loop.
 	if t.apikey != "" {
-		gqlCli, err := octoGql.NewClient(t.log, t.apikey)
+		gqlCli, err := octoGql.NewClient(t.log, t.apikey, t.accountnumber)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
@@ -122,11 +128,27 @@ func (t *Octopus) run(done chan error) {
 
 		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
+			// This checks whether:
+			// - a Payment Method is set on the Result
+			// - a Payment Method filter is set
+			// - the Payment Method in the Result matches the Payment Method filter
+			if r.PaymentMethod != "" && t.paymentMethod != "" && r.PaymentMethod != t.paymentMethod {
+				// A Payment Method filter is set, and this Tariff entry does not match our filter.
+				continue
+			}
+			// ValidityEnd can be zero (wonderful) which just means that the tariff has no present expected end.
+			// We need to catch that and set the date to something way in the future.
+			rateEnd := r.ValidityEnd
+			if rateEnd.IsZero() {
+				t.log.TRACE.Printf("handling rate with indefinite length: %v", r.ValidityStart)
+				// Currently adds a year from the start date
+				rateEnd = r.ValidityStart.AddDate(1, 0, 0)
+			}
 			ar := api.Rate{
 				Start: r.ValidityStart,
-				End:   r.ValidityEnd,
+				End:   rateEnd,
 				// UnitRates are supplied inclusive of tax, though this could be flipped easily with a config flag.
-				Price: r.PriceInclusiveTax / 1e2,
+				Value: r.PriceInclusiveTax / 1e2,
 			}
 			data = append(data, ar)
 		}

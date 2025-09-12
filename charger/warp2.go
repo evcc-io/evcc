@@ -85,7 +85,7 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), err
+	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), nil
 }
 
 // NewWarp2 creates a new configurable charger

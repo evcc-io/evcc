@@ -2,23 +2,76 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
+	"reflect"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/samber/lo"
+	"go.yaml.in/yaml/v4"
 )
 
 const (
-	// typeTemplate is the updatable configuration type
-	typeTemplate = "template"
-
-	// masked indicates a masked config parameter value
-	masked = "***"
+	typeTemplate = "template" // typeTemplate is the updatable configuration type
+	masked       = "***"      // masked indicates a masked config parameter value
 )
+
+var customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+
+type configReq struct {
+	config.Properties `json:",inline" mapstructure:",squash"`
+	Yaml              string
+	Other             map[string]any `json:",inline" mapstructure:",remain"`
+}
+
+// TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
+func (c *configReq) UnmarshalJSON(data []byte) error {
+	var res map[string]any
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+
+	var cr configReq
+	if err := util.DecodeOther(res, &cr); err != nil {
+		return err
+	}
+
+	*c = cr
+	return nil
+}
+
+func (c *configReq) Serialise() map[string]any {
+	if c.Yaml != "" {
+		return map[string]any{
+			"yaml": c.Yaml,
+		}
+	}
+	return c.Other
+}
+
+func propsToMap(props config.Properties) (map[string]any, error) {
+	res := make(map[string]any)
+	if err := mapstructure.Decode(props, &res); err != nil {
+		return nil, err
+	}
+
+	return lo.PickBy(res, func(k string, v any) bool {
+		if k == "Type" || v.(string) == "" {
+			return false
+		}
+		return true
+	}), nil
+}
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
@@ -107,7 +160,7 @@ func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	return ctx, cancel, done
 }
 
-func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -115,12 +168,20 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 		return nil, zero, nil, err
 	}
 
-	merged, err := mergeMasked(class, conf, dev.Config().Other)
+	conf := dev.Config()
+
+	// TODO merge custom config
+	if req.Yaml != "" {
+		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		return dev, instance, req.Serialise(), err
+	}
+
+	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
 		return nil, zero, nil, err
 	}
 
-	instance, err := newFromConf(ctx, typeTemplate, merged)
+	instance, err := newFromConf(ctx, conf.Type, merged)
 
 	return dev, instance, merged, err
 }
@@ -218,6 +279,18 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("phases1p3p", true, nil)
 	}
 
+	if hasFeature(instance, api.Heating) {
+		makeResult("heating", true, nil)
+	}
+
+	if hasFeature(instance, api.IntegratedDevice) {
+		makeResult("integratedDevice", true, nil)
+	}
+
+	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
+		makeResult("icon", dev.Icon(), nil)
+	}
+
 	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
 		makeResult("singlePhase", true, nil)
 	}
@@ -242,4 +315,53 @@ func testInstance(instance any) map[string]testResult {
 	}
 
 	return res
+}
+
+// mergeMaskedAny similar to mergeMasked but for interfaces
+func mergeMaskedAny(old, new any) error {
+	return mergo.Merge(new, old, mergo.WithTransformers(&maskedTransformer{}))
+}
+
+type maskedTransformer struct{}
+
+func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	if typ.Kind() != reflect.String {
+		return nil
+	}
+
+	return func(dst, src reflect.Value) error {
+		if dst.String() == masked {
+			dst.Set(src)
+		}
+
+		return nil
+	}
+}
+
+func decodeDeviceConfig(r io.Reader) (configReq, error) {
+	var res configReq
+
+	if err := json.NewDecoder(r).Decode(&res); err != nil {
+		return configReq{}, err
+	}
+
+	if res.Yaml == "" {
+		return res, nil
+	}
+
+	if !slices.ContainsFunc(customTypes, func(s string) bool {
+		return strings.EqualFold(res.Type, s)
+	}) {
+		return configReq{}, errors.New("invalid config: yaml only allowed for types " + strings.Join(customTypes, ", "))
+	}
+
+	if len(res.Other) != 0 {
+		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
+	}
+
+	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+		return configReq{}, err
+	}
+
+	return res, nil
 }

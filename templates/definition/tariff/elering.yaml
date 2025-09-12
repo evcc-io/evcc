@@ -11,6 +11,7 @@ params:
     example: ee
     type: choice
     choice: ["ee", "lt", "lv", "fi"]
+    required: true
   - preset: tariff-base
 render: |
   type: elering

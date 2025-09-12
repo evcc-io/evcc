@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 type DeviceTestResult string

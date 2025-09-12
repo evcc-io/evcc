@@ -1,0 +1,59 @@
+{
+  "batterySettings": {
+    "batteryLevel": "مستوى البطارية",
+    "bufferStart": {
+      "full": "عندما أوشكت على الامتلاء {soc}.",
+      "never": "فقط مع فائض كافٍ"
+    },
+    "legendBottomName": "أولوية المنزل",
+    "legendBottomSubline": "حتى تصل إلى {soc}.",
+    "legendMiddleName": "السيارة أولا",
+    "legendMiddleSubline": "عندما تكون بطارية المنزل فوق {soc}.",
+    "legendTopAutostart": "يبدأ تلقائيًا",
+    "legendTopName": "بطارية تدعم الشحن",
+    "legendTopSubline": "عندما تكون بطارية المنزل فوق {soc}.",
+    "modalTitle": "إعدادات البطارية"
+  },
+  "config": {
+    "form": {
+      "example": "مثال",
+      "optional": "اختياري"
+    },
+    "main": {
+      "addVehicle": "اضف عربة",
+      "edit": "عدّل",
+      "title": "الإعدادات",
+      "vehicles": "عرباتي"
+    },
+    "validation": {
+      "failed": "أخفق",
+      "label": "الحالة",
+      "running": "التحقق من صحة...",
+      "success": "ناجح",
+      "unknown": "غير معروف",
+      "validate": "تحقق من الصحة"
+    },
+    "vehicle": {
+      "cancel": "الغاء",
+      "delete": "احذف عربة"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "شمسي",
+      "greenEnergySub1": "مشحونة بـ evcc",
+      "greenEnergySub2": "منذ أكتوبر ٢٠٢٢",
+      "greenShare": "حصة الطاقة الشمسية",
+      "greenShareSub1": "القوة المقدمة من",
+      "greenShareSub2": "تخزين الطاقة الشمسية وتخزين البطارية",
+      "power": "قوة الشحن",
+      "powerSub1": "{activeClients} من إجمالي {totalClients} مشاركين",
+      "powerSub2": "الشحن ...",
+      "tabTitle": "مجتمع مباشر"
+    },
+    "savings": {
+      "footerLong": "{percent} من الطاقة الشمسية",
+      "footerShort": "{percent} شمسي\""
+    }
+  }
+}

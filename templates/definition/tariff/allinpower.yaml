@@ -18,5 +18,5 @@ render: |
       [.timestamps, .prices] | transpose | map({
         "start": .[0] | strptime("%FT%T.%f%z") | strftime("%FT%TZ"),
         "end":   .[0] | strptime("%FT%T.%f%z") | mktime + 3600 | strftime("%FT%TZ"),
-        "price": .[1]
+        "value": .[1]
       }) | tostring

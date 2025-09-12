@@ -66,7 +66,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if err == nil {
 		switch strings.ToLower(res.Services.Charging.Status) {
-		case "connected", "readyforcharging":
+		case "connected", "readyforcharging", "error":
 			status = api.StatusB
 		case "charging":
 			status = api.StatusC
@@ -140,6 +140,9 @@ var _ api.SocLimiter = (*Provider)(nil)
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
+	if err == nil && res.Services.Charging.ChargeSettings == "profile" {
+		return 0, api.ErrNotAvailable
+	}
 	return int64(res.Services.Charging.TargetPct), err
 }
 

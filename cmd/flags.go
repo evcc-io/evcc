@@ -12,6 +12,9 @@ const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
+	flagDemoMode            = "demo"
+	flagDemoModeDescription = "Enter demo mode. Disables auth, config ui and restart"
+
 	flagIgnoreDatabase            = "ignore-db"
 	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
@@ -21,6 +24,9 @@ const (
 
 	flagDisableAuth            = "disable-auth"
 	flagDisableAuthDescription = "Disable authentication (dangerous)"
+
+	flagCustomCss            = "custom-css"
+	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
 
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
@@ -54,8 +60,13 @@ const (
 	flagStop            = "stop"
 	flagStopDescription = "Stop charging"
 
-	flagRepeat            = "repeat"
-	flagRepeatDescription = "Repeat until interrupted"
+	flagRepeat                    = "repeat"
+	flagRepeatDescription         = "Repeat until interrupted"
+	flagRepeatInterval            = "repeat-interval"
+	flagRepeatIntervalDescription = "Interval between repetitions"
+
+	flagHeartbeat            = "heartbeat"
+	flagHeartbeatDescription = "After command, continue running device heartbeats (if any) until interrupted"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"

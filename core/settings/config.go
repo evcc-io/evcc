@@ -56,6 +56,10 @@ func (s *ConfigSettings) SetFloat(key string, val float64) {
 	s.set(key, val)
 }
 
+func (s *ConfigSettings) SetFloatPtr(key string, val *float64) {
+	s.set(key, val)
+}
+
 func (s *ConfigSettings) SetTime(key string, val time.Time) {
 	s.set(key, val)
 }

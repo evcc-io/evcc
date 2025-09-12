@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -34,32 +34,37 @@ import (
 
 // https://www.keba.com/en/emobility/service-support/downloads/Downloads
 // https://www.keba.com/download/x/dea7ae6b84/kecontactp30modbustcp_pgen.pdf
+// https://www.keba.com/download/x/4a24e19f80/kecontactp40modbustcp_pgen.pdf
 
 // Keba is an api.Charger implementation
 type Keba struct {
 	*embed
-	log  *util.Logger
-	conn *modbus.Connection
+	log          *util.Logger
+	conn         *modbus.Connection
+	current      uint16
+	regEnable    uint16
+	energyFactor float64
 }
 
 const (
-	kebaRegChargingState   = 1000
-	kebaRegCableState      = 1004
-	kebaRegCurrents        = 1008 // 6 regs, mA
-	kebaRegSerial          = 1014 // leading zeros trimmed
-	kebaRegProduct         = 1016
-	kebaRegFirmware        = 1018
-	kebaRegPower           = 1020 // mW
-	kebaRegEnergy          = 1036 // Wh
-	kebaRegVoltages        = 1040 // 6 regs, V
-	kebaRegRfid            = 1500 // hex
-	kebaRegSessionEnergy   = 1502 // Wh
-	kebaRegPhaseSource     = 1550
-	kebaRegPhaseState      = 1552
-	kebaRegFailsafeTimeout = 1602
-	kebaRegMaxCurrent      = 5004 // mA
-	kebaRegEnable          = 5014
-	kebaRegTriggerPhase    = 5052
+	kebaRegChargingState        = 1000
+	kebaRegCableState           = 1004
+	kebaRegCurrents             = 1008 // 6 regs, mA
+	kebaRegSerial               = 1014 // leading zeros trimmed
+	kebaRegProduct              = 1016
+	kebaRegFirmware             = 1018
+	kebaRegPower                = 1020 // mW
+	kebaRegEnergy               = 1036 // Wh
+	kebaRegVoltages             = 1040 // 6 regs, V
+	kebaRegRfid                 = 1500 // hex
+	kebaRegSessionEnergy        = 1502 // Wh
+	kebaRegPhaseSource          = 1550
+	kebaRegPhaseState           = 1552
+	kebaRegFailsafeTimeout      = 1602
+	kebaRegMaxCurrent           = 5004 // mA
+	kebaRegEnable               = 5014
+	kebaRegWriteFailsafeTimeout = 5018 //unit16!
+	kebaRegTriggerPhase         = 5052
 )
 
 func init() {
@@ -88,12 +93,14 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		return nil, err
 	}
 
-	// features
+	// optional features
 	var (
 		currentPower, totalEnergy func() (float64, error)
 		currents                  func() (float64, float64, float64, error)
 		identify                  func() (string, error)
 		reason                    func() (api.Reason, error)
+		phasesS                   func(int) error
+		phasesG                   func() (int, error)
 	)
 
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2)
@@ -101,22 +108,46 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		return nil, err
 	}
 
-	if features := binary.BigEndian.Uint32(b); (features/10)%10 > 0 {
+	productCodeStr := fmt.Sprintf("%d", binary.BigEndian.Uint32(b))
+
+	var hasEnergyMeter bool
+	var hasRFID bool
+
+	if len(productCodeStr) == 6 && productCodeStr[0] == '3' {
+		// P30
+		hasEnergyMeter = productCodeStr[4] != '0'
+		hasRFID = productCodeStr[5] == '1'
+	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
+		// P40
+		wb.regEnable = kebaRegMaxCurrent
+		hasEnergyMeter = productCodeStr[4] != '0'
+		hasRFID = productCodeStr[5] == '1'
+
+		b, err := wb.conn.ReadHoldingRegisters(kebaRegFirmware, 2)
+		if err != nil {
+			return nil, err
+		}
+
+		// software version
+		if binary.BigEndian.Uint32(b) < 10201 {
+			// In software versions below 1.2.1 the registers 1502 and 1036
+			// falsely report the value in “Wh” instead of “0.1 Wh”.
+			wb.energyFactor = 1e3
+		}
+	}
+
+	if hasEnergyMeter {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
 	}
 
-	if features := binary.BigEndian.Uint32(b); features%10 > 0 {
+	if hasRFID {
 		identify = wb.identify
 		reason = wb.statusReason
 	}
 
 	// phases
-	var (
-		phasesS func(int) error
-		phasesG func() (int, error)
-	)
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
 		if source := binary.BigEndian.Uint32(b); source == 3 {
 			phasesS = wb.phases1p3p
@@ -131,7 +162,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+		go wb.heartbeat(ctx, u)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
@@ -152,15 +183,19 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 	conn.Logger(log.TRACE)
 
 	wb := &Keba{
-		embed: &embed,
-		log:   log,
-		conn:  conn,
+		embed:        &embed,
+		log:          log,
+		conn:         conn,
+		regEnable:    kebaRegEnable,
+		energyFactor: 1e4,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
-func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
+func (wb *Keba) heartbeat(ctx context.Context, u uint32) {
+	timeout := time.Duration(u) * time.Second / 2
+
 	for tick := time.Tick(timeout); ; {
 		select {
 		case <-tick:
@@ -168,7 +203,7 @@ func (wb *Keba) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if _, err := wb.Enabled(); err != nil {
+		if _, err := wb.conn.WriteSingleRegister(kebaRegWriteFailsafeTimeout, uint16(u)); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -236,6 +271,16 @@ func (wb *Keba) statusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Keba) Enabled() (bool, error) {
+	// P40
+	if wb.regEnable == kebaRegMaxCurrent {
+		b, err := wb.conn.ReadHoldingRegisters(kebaRegMaxCurrent, 1)
+		if err != nil {
+			return false, err
+		}
+		return binary.BigEndian.Uint16(b) != 0, err
+	}
+
+	// P30
 	s, err := wb.getChargingState()
 	if err != nil {
 		return false, err
@@ -248,9 +293,16 @@ func (wb *Keba) Enabled() (bool, error) {
 func (wb *Keba) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 1
+		if wb.regEnable == kebaRegMaxCurrent {
+			// P40
+			u = wb.current
+		} else {
+			// P30
+			u = 1
+		}
 	}
-	_, err := wb.conn.WriteSingleRegister(kebaRegEnable, u)
+
+	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
 	return err
 }
 
@@ -263,8 +315,13 @@ var _ api.ChargerEx = (*Keba)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Keba) MaxCurrentMillis(current float64) error {
-	u := uint16(current * 1000)
-	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, u)
+	curr := uint16(current * 1000)
+
+	_, err := wb.conn.WriteSingleRegister(kebaRegMaxCurrent, curr)
+	if err == nil {
+		wb.current = curr
+	}
+
 	return err
 }
 
@@ -285,7 +342,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e4, nil
+	return float64(binary.BigEndian.Uint32(b)) / wb.energyFactor, nil
 }
 
 // chargedEnergy is not supported since Keba does not reset it when plugging in a new car
@@ -338,10 +395,7 @@ func (wb *Keba) getPhases() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if binary.BigEndian.Uint32(b) == 0 {
-		return 1, nil
-	}
-	return 3, nil
+	return int(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.Diagnosis = (*Keba)(nil)

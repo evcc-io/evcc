@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -59,7 +59,6 @@ type Easee struct {
 	pilotMode             string
 	reasonForNoCurrent    int
 	phaseMode             int
-	sessionStartEnergy    *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid      string
@@ -71,11 +70,11 @@ type Easee struct {
 }
 
 func init() {
-	registry.Add("easee", NewEaseeFromConfig)
+	registry.AddCtx("easee", NewEaseeFromConfig)
 }
 
 // NewEaseeFromConfig creates a Easee charger from generic config
-func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEaseeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User      string
 		Password  string
@@ -94,11 +93,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
+	return NewEasee(ctx, cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
+func NewEasee(ctx context.Context, user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -123,7 +122,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
 	// replace client transport with authenticated transport
@@ -136,11 +135,11 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	if charger == "" {
 		chargers, err := c.chargers()
 		if err != nil {
-			return c, err
+			return nil, err
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
+			return nil, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID
@@ -167,7 +166,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		}
 	}
 
-	client, err := signalr.NewClient(context.Background(),
+	client, err := signalr.NewClient(ctx,
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithBackoff(func() backoff.BackOff {
 			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
@@ -181,7 +180,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(ctx, request.Timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -189,11 +188,35 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	// wait for first update
 	select {
 	case <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
 
+	if err == nil {
+		c.waitForOptionalState()
+	}
+
 	return c, err
+}
+
+func (c *Easee) waitForOptionalState() {
+	for i := 0; i < 30; i++ {
+		if c.optionalStatePresent() {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	c.log.WARN.Println("did not receive full state from cloud")
+}
+
+// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
+func (c *Easee) optionalStatePresent() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	wanted := []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.TOTAL_POWER}
+	return len(wanted) == len(lo.Intersect(wanted, lo.Keys(c.obsTime)))
 }
 
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
@@ -297,10 +320,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
-		if c.sessionStartEnergy == nil {
-			f := c.totalEnergy
-			c.sessionStartEnergy = &f
-		}
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -319,17 +338,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
-
 	case easee.CHARGER_OP_MODE:
 		opMode := value.(int)
 
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
-		// Remember value of LIFETIME_ENERGY as start value of the charging session
 		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
-			c.sessionStartEnergy = nil
 		}
 
 		c.opMode = opMode
@@ -671,14 +687,6 @@ var _ api.ChargeRater = (*Easee)(nil)
 func (c *Easee) ChargedEnergy() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-
-	// return either the self calced session energy (current LIFETIME_ENERGY minus remembered start value),
-	// or the SESSION_ENERGY value by the API. Each value could be lower than the other, depending on
-	// order and receive timestamp of the product update. We want to return the higher (and newer) value.
-	if c.sessionStartEnergy != nil {
-		return max(c.sessionEnergy, c.totalEnergy-*c.sessionStartEnergy), nil
-	}
-
 	return c.sessionEnergy, nil
 }
 
@@ -697,6 +705,8 @@ var _ api.MeterEnergy = (*Easee)(nil)
 func (c *Easee) TotalEnergy() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+	// updates for this are only sent once an hour, so inaccurate by design
+	// see also https://github.com/evcc-io/evcc/issues/20594
 	return c.totalEnergy, nil
 }
 

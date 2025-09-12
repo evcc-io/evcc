@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -12,20 +11,20 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 func settingsGetStringHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, _ := settings.String(key)
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
 func settingsDeleteHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(key, "")
-		jsonResult(w, true)
+		jsonWrite(w, true)
 	}
 }
 
@@ -42,7 +41,7 @@ func settingsSetDurationHandler(key string) http.HandlerFunc {
 		settings.SetInt(key, int64(time.Second*time.Duration(val)))
 		setConfigDirty()
 
-		jsonResult(w, val)
+		jsonWrite(w, val)
 	}
 }
 
@@ -54,7 +53,7 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 			return
 		}
 
-		if err := yaml.NewDecoder(bytes.NewBuffer(b)).Decode(&other); err != nil && err != io.EOF {
+		if err := yaml.Unmarshal(b, &other); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -68,23 +67,13 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 		settings.SetString(key, val)
 		setConfigDirty()
 
-		jsonResult(w, val)
+		jsonWrite(w, val)
 	}
 }
 
-// func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
-// 			jsonError(w, http.StatusInternalServerError, err)
-// 			return
-// 		}
-
-// 		jsonResult(w, struc)
-// 	}
-// }
-
-func settingsSetJsonHandler(key string, valueChan chan<- util.Param, struc any) http.HandlerFunc {
+func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc func() any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		struc := newStruc()
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&struc); err != nil {
@@ -92,12 +81,20 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, struc any) 
 			return
 		}
 
+		oldStruc := newStruc()
+		if err := settings.Json(key, &oldStruc); err == nil {
+			if err := mergeMaskedAny(oldStruc, struc); err != nil {
+				jsonError(w, http.StatusInternalServerError, err)
+				return
+			}
+		}
+
 		settings.SetJson(key, struc)
 		setConfigDirty()
 
 		valueChan <- util.Param{Key: key, Val: struc}
 
-		jsonResult(w, true)
+		jsonWrite(w, true)
 	}
 }
 
@@ -108,6 +105,6 @@ func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc an
 
 		valueChan <- util.Param{Key: key, Val: struc}
 
-		jsonResult(w, true)
+		jsonWrite(w, true)
 	}
 }

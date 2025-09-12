@@ -2,10 +2,13 @@ template: janitza
 products:
   - brand: Janitza
     description:
-      generic: B series, UMG series
+      generic: B series
+  - brand: Janitza
+    description:
+      generic: UMG series
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |

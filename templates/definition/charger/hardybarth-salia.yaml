@@ -1,11 +1,17 @@
 template: hardybarth-salia
 products:
-  - brand: HardyBarth
+  - brand: Hardy Barth
     description:
-      generic: cPH2, cPμ2
+      generic: cPH2
+  - brand: Hardy Barth
+    description:
+      generic: cPμ2
   - brand: echarge
     description:
-      generic: cPH2, cPμ2
+      generic: cPH2
+  - brand: echarge
+    description:
+      generic: cPμ2
 requirements:
   evcc: ["sponsorship"]
 params:

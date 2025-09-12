@@ -3,8 +3,12 @@ deprecated: true
 products:
   - brand: Wallbe
     description:
-      de: Eco, Pro (vor ~2019)
-      en: Eco, Pro (pre ~2019)
+      de: Eco (vor ~2019)
+      en: Eco (pre ~2019)
+  - brand: Wallbe
+    description:
+      de: Pro (vor ~2019)
+      en: Pro (pre ~2019)
 requirements:
   description:
     en: DIP switch 10 must be set to 'ON'.

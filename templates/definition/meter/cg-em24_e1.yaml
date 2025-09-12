@@ -1,0 +1,39 @@
+template: cg-em24_e1
+products:
+  - brand: Carlo Gavazzi
+    description:
+      generic: EM24_E1
+  - brand: Victron
+    description:
+      generic: EM24_E1
+requirements:
+  description:
+    de: |
+      EM24_E1 mit Ethernet-Anschluss. Benutze die EM24 für die EM24 mit RS-485-Anschluss, denn die Definition ist nicht kompatibel.
+      Die EM24_E1 muss mindestens Firmware version 1.8.3 haben, diese is hier zu finden: [victronenergy.com](https://professional.victronenergy.com/downloads/firmware/)
+    en: |
+      EM24_E1 with Ethernet connection. Use the EM24 if you have an EM24 with RS-485 connection, the definitions are not compatible.
+      The firmware version should be at least version 1.8.3, you can find this version here: [victronenergy.com](https://professional.victronenergy.com/downloads/firmware/)
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: cgem24_e1
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3

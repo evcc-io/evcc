@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "evcc",
-	"image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/go:1-1.24-bookworm",
 	"features": {
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
 			"moby": true,
@@ -17,9 +17,6 @@
 			"version": "lts",
 			"pnpmVersion": "latest",
 			"nvmVersion": "latest"
-		},
-		"ghcr.io/devcontainers/features/go:1": {
-			"version": "latest"
 		}
 	},
 	"postCreateCommand": "make install-ui && make install",

@@ -12,11 +12,16 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
+	"go.yaml.in/yaml/v4"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
 	levels := viper.GetStringMapString("levels")
+	if levels == nil {
+		levels = make(map[string]string)
+	}
 
 	var level string
 	for _, kv := range strings.Split(viper.GetString("log"), ",") {
@@ -54,7 +59,8 @@ var redactSecrets = []string{
 	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
 	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
 	"app", "chats", "recipients", // push messaging
-	"vin", // vehicles
+	"vin",               // vehicles
+	"lat", "lon", "zip", // solar forecast
 }
 
 // redact redacts a configuration string
@@ -89,6 +95,18 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
+// joinErrors is like errors.Join but does not wrap single errors (refs https://groups.google.com/g/golang-nuts/c/N0D1g5Ec_ZU)
+func joinErrors(errs ...error) error {
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.Join(errs...)
+	}
+}
+
 func wrapFatalError(err error) error {
 	if err == nil {
 		return nil
@@ -110,4 +128,27 @@ func wrapFatalError(err error) error {
 	}
 
 	return &FatalError{err}
+}
+
+func customDevice(other map[string]any) (map[string]any, error) {
+	customYaml, ok := other["yaml"].(string)
+	if !ok {
+		return other, nil
+	}
+
+	var res map[string]any
+	err := yaml.Unmarshal([]byte(customYaml), &res)
+	return res, err
+}
+
+func deviceHeader[T any](dev config.Device[T]) string {
+	name := dev.Config().Name
+
+	if cd, ok := dev.(config.ConfigurableDevice[T]); ok {
+		if title := cd.Properties().Title; title != "" {
+			return fmt.Sprintf("%s (%s)", title, name)
+		}
+	}
+
+	return name
 }

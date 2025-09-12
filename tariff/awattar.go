@@ -50,11 +50,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Awattar) run(done chan error) {
@@ -85,7 +81,7 @@ func (t *Awattar) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: t.totalPrice(r.Marketprice/1e3, r.StartTimestamp),
+				Value: t.totalPrice(r.Marketprice/1e3, r.StartTimestamp),
 			}
 			data = append(data, ar)
 		}

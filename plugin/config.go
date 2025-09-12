@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	reg "github.com/evcc-io/evcc/util/registry"
@@ -58,6 +59,10 @@ func plugin[T any](typ string, ctx context.Context, config *Config) (T, error) {
 
 	if config == nil {
 		return zero, nil
+	}
+
+	if config.Source == "" {
+		return zero, errors.New("missing plugin source")
 	}
 
 	factory, err := registry.Get(config.Source)

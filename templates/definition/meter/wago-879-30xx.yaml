@@ -1,0 +1,28 @@
+template: wago-879-30xx
+products:
+  - brand: Wago
+    description:
+      generic: 879-30xx
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: wago87930
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3

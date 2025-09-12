@@ -14,7 +14,9 @@ params:
     example: WVWZZZ...
   - name: timeout
     default: 10s
+  - preset: vehicle-features
 render: |
   type: vw
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}
   timeout: {{ .timeout }}

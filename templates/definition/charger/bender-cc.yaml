@@ -1,0 +1,73 @@
+template: bender-cc
+covers: ["bender"]
+products:
+  - brand: Bender
+    description:
+      generic: CC612
+  - brand: Bender
+    description:
+      generic: CC613
+  - brand: Mennekes
+    description:
+      generic: AMTRON Professional
+  - brand: Mennekes
+    description:
+      generic: AMEDIO Professional
+  - brand: Mennekes
+    description:
+      generic: AMTRON ChargeControl
+  - brand: Webasto
+    description:
+      generic: Live
+  - brand: Juice
+    description:
+      generic: Charger Me
+  - brand: TechniSat
+    description:
+      generic: Technivolt
+  - brand: Ebee
+    description:
+      generic: Wallbox
+  - brand: Optec
+    description:
+      generic: Mobility One
+  - brand: Garo
+    description:
+      generic: GLB
+  - brand: Garo
+    description:
+      generic: GLB+
+  - brand: Garo
+    description:
+      generic: LS4
+  - brand: Garo
+    description:
+      generic: LS4 compact
+  - brand: Ensto
+    description:
+      generic: Chago Wallbox
+  - brand: Ubitricity
+    description:
+      generic: Heinz
+  - brand: CUBOS
+    description:
+      generic: C11E
+  - brand: CUBOS
+    description:
+      generic: C22E
+  - brand: Spelsberg
+    description:
+      generic: Wallbox Smart Pro
+capabilities: ["rfid"]
+requirements:
+  description:
+    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
+    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: bender
+  {{- include "modbus" . }}

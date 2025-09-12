@@ -236,7 +236,7 @@ func (c *OpenEVSE) CurrentPower() (float64, error) {
 	return res.Power, err
 }
 
-// phases1p3p implements the api.ChargePhases interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (c *OpenEVSE) phases1p3p(phases int) error {
 	var set3p int
 	if phases == 3 {

@@ -9,20 +9,20 @@ import (
 	"github.com/jinzhu/now"
 )
 
-type timeseriesProvider struct{}
+type timeseriesPlugin struct{}
 
 func init() {
 	registry.AddCtx("timeseries", TimeSeriesFromConfig)
 }
 
-// TimeSeriesFromConfig creates timeseries provider
+// TimeSeriesFromConfig creates timeseries plugin
 func TimeSeriesFromConfig(_ context.Context, _ map[string]interface{}) (Plugin, error) {
-	return new(timeseriesProvider), nil
+	return new(timeseriesPlugin), nil
 }
 
-var _ StringGetter = (*timeseriesProvider)(nil)
+var _ StringGetter = (*timeseriesPlugin)(nil)
 
-func (p *timeseriesProvider) StringGetter() (func() (string, error), error) {
+func (p *timeseriesPlugin) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		res := make(api.Rates, 48)
 		ts := now.BeginningOfHour()

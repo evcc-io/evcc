@@ -2,9 +2,15 @@ template: ac-thor
 products:
   - brand: my-PV
     description:
-      generic: AC THOR, AC THOR 9s
+      generic: AC•THOR
+  - brand: my-PV
+    description:
+      generic: AC•THOR 9s
 group: heating
 requirements:
+  description:
+    de: Über das lokale Webinterface des AC•THOR muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
+    en: Use the local web interface of AC•THOR to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
   evcc: ["sponsorship"]
 params:
   - name: modbus
@@ -12,10 +18,14 @@ params:
   - name: tempsource
     choice: ["1", "2", "3"]
     default: "1"
+  - name: scale
+    type: float
+    default: 1
     description:
-      en: "Temperature sensor"
-      de: "Temperatursensor"
+      en: "Scale factor for power limit"
+      de: "Skalierungsfaktor der Leistungsvorgabe"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
   tempsource: {{ .tempsource }}
+  scale: {{ .scale }}

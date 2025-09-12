@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -53,16 +53,14 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		Realm           string
 		HeatingZone     int
 		HeatingSetpoint float32
-		Phases          int
 		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Realm:  sensonet.REALM_GERMANY,
-		Phases: 1,
-		Cache:  time.Minute,
+		Realm: sensonet.REALM_GERMANY,
+		Cache: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -95,24 +93,52 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 	systemId := homes[0].SystemID
 	heating := cc.HeatingSetpoint > 0
 
+	wwCancel := func() {}
+
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
 			if heating {
 				return conn.StopZoneQuickVeto(systemId, cc.HeatingZone)
 			}
+
+			wwCancel()
 			return conn.StopHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT)
+
 		case Boost:
 			if heating {
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
-			return conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT) // zone 255
+
+			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+				return err
+			}
+
+			var wwCtx context.Context
+			wwCtx, wwCancel = context.WithCancel(ctx)
+
+			// re-boost every 15m
+			go func() {
+				for {
+					select {
+					case <-wwCtx.Done():
+						return
+					case <-time.After(15 * time.Minute):
+						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+							log.ERROR.Println("hot water boost:", err)
+						}
+					}
+				}
+			}()
+
+			return nil
+
 		default:
 			return api.ErrNotAvailable
 		}
 	}
 
-	sgr, err := NewSgReady(ctx, &cc.embed, set, nil)
+	sgr, err := NewSgReady(ctx, &cc.embed, set, nil, nil)
 	if err != nil {
 		return nil, err
 	}

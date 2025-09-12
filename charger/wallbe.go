@@ -68,17 +68,20 @@ func NewWallbeFromConfig(ctx context.Context, other map[string]interface{}) (api
 		wb.factor = 1
 	}
 
-	var currentPower func() (float64, error)
+	// decorate meter
+	var (
+		power, energy func() (float64, error)
+		currents      func() (float64, float64, float64, error)
+	)
+
 	if cc.Meter.Power {
-		currentPower = wb.currentPower
+		power = wb.currentPower
 	}
 
-	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
+		energy = wb.totalEnergy
 	}
 
-	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
 		currents = wb.currents
 	}
@@ -88,7 +91,7 @@ func NewWallbeFromConfig(ctx context.Context, other map[string]interface{}) (api
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decorateWallbe(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
+	return decorateWallbe(wb, power, energy, currents, maxCurrentMillis), nil
 }
 
 // NewWallbe creates a Wallbe charger

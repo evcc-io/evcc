@@ -34,7 +34,7 @@ func init() {
 func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Model              string
-		capacity           `mapstructure:",squash"`
+		batteryCapacity    `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
 		Currents           []string
@@ -88,7 +88,9 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 		device: device,
 	}
 
-	m.opPower, err = rs485FindDeviceOp(device, cc.Power)
+	ops := device.Producer().Produce()
+
+	m.opPower, err = rs485FindDeviceOp(ops, cc.Power)
 	if err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
@@ -96,7 +98,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 	// decorate energy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		m.opEnergy, err = rs485FindDeviceOp(device, cc.Energy)
+		m.opEnergy, err = rs485FindDeviceOp(ops, cc.Energy)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
@@ -105,19 +107,19 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 	}
 
 	// decorate currents
-	currentsG, err := m.buildPhaseProviders(cc.Currents)
+	currentsG, err := m.buildPhaseProviders(ops, cc.Currents)
 	if err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
 	}
 
 	// decorate voltages
-	voltagesG, err := m.buildPhaseProviders(cc.Voltages)
+	voltagesG, err := m.buildPhaseProviders(ops, cc.Voltages)
 	if err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
 	// decorate powers
-	powersG, err := m.buildPhaseProviders(cc.Powers)
+	powersG, err := m.buildPhaseProviders(ops, cc.Powers)
 	if err != nil {
 		return nil, fmt.Errorf("powers: %w", err)
 	}
@@ -125,7 +127,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 	// decorate soc
 	var soc func() (float64, error)
 	if cc.Soc != "" {
-		m.opSoc, err = rs485FindDeviceOp(device, cc.Soc)
+		m.opSoc, err = rs485FindDeviceOp(ops, cc.Soc)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
@@ -133,10 +135,10 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 		soc = m.soc
 	}
 
-	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.capacity.Decorator()), nil
+	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.batteryCapacity.Decorator()), nil
 }
 
-func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, float64, float64, error), error) {
+func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []string) (func() (float64, float64, float64, error), error) {
 	if len(readings) == 0 {
 		return nil, nil
 	}
@@ -147,7 +149,7 @@ func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, fl
 
 	var phases [3]func() (float64, error)
 	for idx, reading := range readings {
-		opCurrent, err := rs485FindDeviceOp(m.device, reading)
+		opCurrent, err := rs485FindDeviceOp(ops, reading)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
 		}

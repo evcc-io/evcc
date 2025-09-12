@@ -1,0 +1,12 @@
+template: ocpp-beny
+products:
+  - brand: ZJ Beny
+    description:
+      generic: BCP EV charger
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

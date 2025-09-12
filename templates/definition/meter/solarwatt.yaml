@@ -6,7 +6,10 @@ products:
       generic: MyReserve
   - brand: Solarwatt
     description:
-      generic: EnergyManager, EnergyManager Pro
+      generic: EnergyManager
+  - brand: Solarwatt
+    description:
+      generic: EnergyManager Pro
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

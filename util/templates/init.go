@@ -12,7 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 func init() {
 	ConfigDefaults.Load()
 
-	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
+	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
 		load(class)

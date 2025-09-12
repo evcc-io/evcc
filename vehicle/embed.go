@@ -25,8 +25,8 @@ func (v *embed) fromVehicle(title string, capacity float64) {
 	}
 }
 
-// Title implements the api.Vehicle interface
-func (v *embed) Title() string {
+// GetTitle implements the api.Vehicle interface
+func (v *embed) GetTitle() string {
 	return v.Title_
 }
 

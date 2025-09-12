@@ -65,11 +65,7 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Pun) run(done chan error) {
@@ -205,7 +201,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		ar := api.Rate{
 			Start: ts,
 			End:   ts.Add(time.Hour),
-			Price: t.totalPrice(price/1e3, ts),
+			Value: t.totalPrice(price/1e3, ts),
 		}
 		data = append(data, ar)
 	}

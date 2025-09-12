@@ -1,0 +1,21 @@
+template: bosch-bpt
+# UDP implementation is broken
+# deprecated: true
+products:
+  - brand: Bosch
+    description:
+      generic: BPT-S 5 Hybrid
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: uri
+  - name: capacity
+    advanced: true
+render: |
+  type: bosch-bpt
+  usage: {{ .usage }}
+  uri: {{ .uri }}
+  capacity: {{ .capacity }} # kWh

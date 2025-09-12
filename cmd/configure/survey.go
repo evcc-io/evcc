@@ -122,15 +122,20 @@ func (c *CmdConfigure) askBoolValue(label string) string {
 
 func (c *CmdConfigure) askParam(p templates.Param) string {
 	var mask, required bool
-	if p.Mask != nil {
-		mask = *p.Mask
+	if p.IsMasked() {
+		mask = p.Mask
 	}
-	if p.Required != nil {
-		required = *p.Required
+	if p.IsRequired() {
+		required = p.Required
+	}
+
+	label := p.Description.String(c.lang)
+	if p.Unit != "" {
+		label = fmt.Sprintf("%s (%s)", label, p.Unit)
 	}
 
 	return c.askValue(question{
-		label:     p.Description.String(c.lang),
+		label:     label,
 		valueType: p.Type,
 		choice:    p.Choice,
 		mask:      mask,

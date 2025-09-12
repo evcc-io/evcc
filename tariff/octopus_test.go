@@ -12,8 +12,9 @@ func TestOctopusConfigParse(t *testing.T) {
 
 	// This test will start failing if you remove the deprecated "tariff" config var.
 	validTariffConfig := map[string]interface{}{
-		"region": "H",
-		"tariff": "GO-22-03-29",
+		"region":      "H",
+		"tariff":      "GO-22-03-29",
+		"directDebit": "True",
 	}
 
 	_, err := NewOctopusFromConfig(validTariffConfig)
@@ -22,6 +23,7 @@ func TestOctopusConfigParse(t *testing.T) {
 	validProductCodeConfig := map[string]interface{}{
 		"region":      "H",
 		"productcode": "GO-22-03-29",
+		"directDebit": "False",
 	}
 
 	_, err = NewOctopusFromConfig(validProductCodeConfig)

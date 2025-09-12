@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"reflect"
 	"slices"
 	"strconv"
@@ -17,7 +16,7 @@ import (
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -79,7 +78,7 @@ func Delete(key string) error {
 			return err
 		}
 
-		settings = slices.Delete(settings, idx, idx)
+		settings = slices.Delete(settings, idx, idx+1)
 	}
 
 	return nil
@@ -224,11 +223,12 @@ func Yaml(key string, other, res any) error {
 	if err != nil {
 		return err
 	}
+
 	if s == "" {
 		return ErrNotFound
 	}
 
-	if err := yaml.NewDecoder(bytes.NewBuffer([]byte(s))).Decode(&other); err != nil && err != io.EOF {
+	if err := yaml.Unmarshal([]byte(s), &other); err != nil {
 		return err
 	}
 

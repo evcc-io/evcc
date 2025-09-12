@@ -69,19 +69,14 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	log := util.NewLogger("cfos")
 	conn.Logger(log.TRACE)
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
-
 	wb := &CfosPowerBrain{
 		conn: conn,
 	}
 
 	// decorate meter
 	var (
-		power    func() (float64, error)
-		energy   func() (float64, error)
-		currents func() (float64, float64, float64, error)
+		power, energy func() (float64, error)
+		currents      func() (float64, float64, float64, error)
 	)
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
 		power = wb.currentPower

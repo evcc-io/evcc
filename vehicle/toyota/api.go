@@ -1,6 +1,9 @@
 package toyota
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"time"
@@ -19,12 +22,14 @@ const (
 	VehicleGuidPath          = "v2/vehicle/guid"
 	RemoteElectricStatusPath = "v1/global/remote/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
+	ClientRefKey             = "3e0b15f6c9c87fbd"
 )
 
 type API struct {
 	*request.Helper
-	log      *util.Logger
-	identity *Identity
+	log       *util.Logger
+	identity  *Identity
+	clientRef string
 }
 
 func NewAPI(log *util.Logger, identity *Identity) *API {
@@ -42,6 +47,11 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		Base:   v.Transport,
 	}
 
+	// create HMAC digest for x-client-ref header
+	h := hmac.New(sha256.New, []byte(ClientRefKey))
+	h.Write([]byte(v.identity.uuid))
+	v.clientRef = hex.EncodeToString(h.Sum(nil))
+
 	return v
 }
 
@@ -49,9 +59,11 @@ func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":    request.JSONContent,
-		"x-guid":    v.identity.uuid,
-		"x-api-key": ApiKey,
+		"Accept":       request.JSONContent,
+		"x-guid":       v.identity.uuid,
+		"x-api-key":    ApiKey,
+		"x-client-ref": v.clientRef,
+		"x-appversion": ClientRefKey,
 	})
 	var resp Vehicles
 	if err == nil {
@@ -68,10 +80,12 @@ func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":    request.JSONContent,
-		"x-guid":    v.identity.uuid,
-		"x-api-key": ApiKey,
-		"vin":       vin,
+		"Accept":       request.JSONContent,
+		"x-guid":       v.identity.uuid,
+		"x-api-key":    ApiKey,
+		"x-client-ref": v.clientRef,
+		"x-appversion": ClientRefKey,
+		"vin":          vin,
 	})
 	var status Status
 	if err == nil {

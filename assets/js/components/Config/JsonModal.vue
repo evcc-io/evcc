@@ -21,6 +21,7 @@
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
 				>
 					<button
+						v-if="!disableCancel"
 						type="button"
 						class="btn btn-link text-muted btn-cancel"
 						data-bs-dismiss="modal"
@@ -63,10 +64,10 @@
 </template>
 
 <script>
-import GenericModal from "../GenericModal.vue";
-import api from "../../api";
-import { docsPrefix } from "../../i18n";
-import store from "../../store";
+import GenericModal from "../Helper/GenericModal.vue";
+import api from "@/api";
+import { docsPrefix } from "@/i18n";
+import store from "@/store";
 
 export default {
 	name: "JsonModal",
@@ -77,6 +78,7 @@ export default {
 		errorMessage: String,
 		docs: String,
 		endpoint: String,
+		disableCancel: Boolean,
 		disableRemove: Boolean,
 		noButtons: Boolean,
 		transformReadValues: Function,
@@ -125,7 +127,8 @@ export default {
 			this.saving = true;
 			this.error = "";
 			try {
-				const res = await api[this.saveMethod](this.endpoint, this.values, {
+				const values = this.trimValues(this.values);
+				const res = await api[this.saveMethod](this.endpoint, values, {
 					validateStatus: (code) => [200, 202, 400].includes(code),
 				});
 				if (res.status === 200 || res.status === 202) {
@@ -158,6 +161,15 @@ export default {
 				console.error(e);
 			}
 			this.removing = false;
+		},
+		trimValues(values) {
+			// extend to recursive when needed in the future
+			return Object.fromEntries(
+				Object.entries(values).map(([key, value]) => [
+					key,
+					typeof value === "string" ? value.trim() : value,
+				])
+			);
 		},
 	},
 };

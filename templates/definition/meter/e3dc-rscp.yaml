@@ -24,8 +24,12 @@ params:
   - name: password
     required: true
   - name: key
+    description:
+      generic: RSCP-Password
     required: true
   - name: battery
+    description:
+      generic: Battery
     deprecated: true
   - name: dischargelimit
     description:
@@ -36,6 +40,7 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: int
     advanced: true
+  - name: maxacpower
   - name: capacity
     advanced: true
 render: |

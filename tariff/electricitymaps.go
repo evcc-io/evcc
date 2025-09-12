@@ -70,11 +70,7 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 		}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *ElectricityMaps) run(done chan error) {
@@ -103,7 +99,7 @@ func (t *ElectricityMaps) run(done chan error) {
 			ar := api.Rate{
 				Start: r.Datetime.Local(),
 				End:   r.Datetime.Add(time.Hour).Local(),
-				Price: r.CarbonIntensity,
+				Value: r.CarbonIntensity,
 			}
 			data = append(data, ar)
 		}

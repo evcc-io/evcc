@@ -54,7 +54,7 @@ func (t *combined) Rates() (api.Rates, error) {
 				return nil, errors.New("combined tariffs must have the same period length")
 			}
 
-			rate.Price += r.Price
+			rate.Value += r.Value
 		}
 
 		res = append(res, rate)

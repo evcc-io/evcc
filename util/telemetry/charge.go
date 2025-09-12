@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
@@ -16,12 +17,12 @@ import (
 )
 
 const (
-	api            = "https://api.evcc.io"
-	enabledSetting = "telemetry"
+	api = "https://api.evcc.io"
 )
 
 var (
 	instanceID string
+	publisher  chan<- util.Param
 
 	mu                              sync.Mutex
 	updated                         time.Time
@@ -29,8 +30,15 @@ var (
 )
 
 func Enabled() bool {
-	enabled, _ := settings.Bool(enabledSetting)
+	enabled, _ := settings.Bool(keys.Telemetry)
 	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
+}
+
+// publish publishes the current telemetry enabled state
+func publish() {
+	if publisher != nil {
+		publisher <- util.Param{Key: keys.Telemetry, Val: Enabled()}
+	}
 }
 
 func Enable(enable bool) error {
@@ -39,21 +47,25 @@ func Enable(enable bool) error {
 			return errors.New("telemetry requires sponsorship")
 		}
 		if instanceID == "" {
-			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
+			return fmt.Errorf("instance id not set")
 		}
 	}
 
-	settings.SetBool(enabledSetting, enable)
+	settings.SetBool(keys.Telemetry, enable)
+	publish()
 
 	return nil
 }
 
-func Create(machineID string) {
+func Create(machineID string, valueChan chan<- util.Param) {
+	instanceID = machineID
+	publisher = valueChan
+
 	if machineID == "" {
-		machineID, _ = machine.ProtectedID("evcc-api")
+		instanceID = machine.ProtectedID("evcc-api")
 	}
 
-	instanceID = machineID
+	publish()
 }
 
 // UpdateChargeProgress uploads power and energy data every 30 seconds
@@ -66,7 +78,7 @@ func UpdateChargeProgress(log *util.Logger, power, greenShare float64) {
 	}
 
 	if err := upload(log, power, power*greenShare); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 
@@ -90,7 +102,7 @@ func Persist(log *util.Logger) {
 	}
 
 	if err := upload(log, 0, 0); err != nil {
-		log.ERROR.Printf("telemetry: upload failed: %v", err)
+		log.DEBUG.Printf("telemetry: upload failed: %v", err)
 	}
 }
 

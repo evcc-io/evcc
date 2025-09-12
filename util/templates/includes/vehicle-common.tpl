@@ -31,7 +31,7 @@ onIdentify:
 {{- if len .identifiers }}
 identifiers:
 {{- range .identifiers }}
-- {{ . }}
+- {{ quote . }}
 {{- end }}
 {{- end }}
 

@@ -63,5 +63,8 @@ type Response struct {
 		}
 		// LeftTime         float32 `json:"leftTime,omitempty"`
 		EstimatedMileage int64 `json:"estimatedMileage,omitempty"`
+
+		// overallTally
+		TotalMileage float64 `json:"totalMileage,omitempty"`
 	}
 }

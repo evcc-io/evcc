@@ -2,8 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
-// Copyright (c) 2022-2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -129,7 +128,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *ABLeMH) set(reg, val uint16) error {
@@ -215,11 +214,11 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	}
 
 	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
-	cur := uint16(current / 0.06)
+	curr := uint16(current / 0.06)
 
-	err := wb.set(ablRegAmpsConfig, cur)
+	err := wb.set(ablRegAmpsConfig, curr)
 	if err == nil {
-		wb.curr = cur
+		wb.curr = curr
 	}
 
 	return err

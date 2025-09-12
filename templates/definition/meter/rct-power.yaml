@@ -4,6 +4,8 @@ products:
     description:
       generic: Power
 capabilities: ["battery-control"]
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -22,7 +24,18 @@ params:
     advanced: true
   - name: cache
     advanced: true
-    default: 10s
+    default: 30s
+  - name: maxchargepower
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Leistung
+      en: External power
+    help:
+      de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
+      en: Query external power of all devices connected to S0
+    advanced: true
+    usages: ["pv"]
 render: |
   type: rct
   uri: {{ .host }}
@@ -31,3 +44,5 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
+  maxchargepower: {{ .maxchargepower }}
+  externalpower: {{ .externalpower }}

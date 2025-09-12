@@ -110,9 +110,12 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	} else {
 		go t.run(done)
 	}
-	err = <-done
 
-	return t, err
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return t, nil
 }
 
 func (t *Ostrom) getContracts() ([]ostrom.Contract, error) {
@@ -190,7 +193,7 @@ func (t *Ostrom) runStatic(done chan error) {
 			data[i] = api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
-				Price: price / 100.0,
+				Value: price / 100.0,
 			}
 		}
 
@@ -232,7 +235,7 @@ func (t *Ostrom) run(done chan error) {
 			data = append(data, api.Rate{
 				Start: ts,
 				End:   ts.Add(time.Hour),
-				Price: (val.Marketprice + val.AdditionalCost) / 100.0, // Both values include VAT
+				Value: (val.Marketprice + val.AdditionalCost) / 100.0, // Both values include VAT
 			})
 		}
 

@@ -46,14 +46,15 @@ func init() {
 	registry.Add("bosch-bpt", NewBoschBpts5HybridFromConfig)
 }
 
-//go:generate go tool decorate -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go tool decorate -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		URI   string
-		Usage string
-		Cache time.Duration
+		batteryCapacity `mapstructure:",squash"`
+		URI             string
+		Usage           string
+		Cache           time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -64,11 +65,11 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 		return nil, errors.New("missing usage")
 	}
 
-	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache)
+	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Cache)
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, error) {
+func NewBoschBpts5Hybrid(uri, usage string, capacity func() float64, cache time.Duration) (api.Meter, error) {
 	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
@@ -83,13 +84,13 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 		usage: strings.ToLower(usage),
 	}
 
-	// decorate api.BatterySoc
+	// decorate battery
 	var batterySoc func() (float64, error)
 	if usage == "battery" {
 		batterySoc = m.batterySoc
 	}
 
-	return decorateBoschBpts5Hybrid(m, batterySoc), nil
+	return decorateBoschBpts5Hybrid(m, batterySoc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface

@@ -8,29 +8,99 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/wrapper"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
-// GetCharger returns the loadpoint charger
-func (lp *Loadpoint) GetChargerName() string {
+func (lp *Loadpoint) isConfigurable() bool {
+	_, ok := lp.settings.(*settings.ConfigSettings)
+	return ok
+}
+
+// GetChargerRef returns the loadpoint charger
+func (lp *Loadpoint) GetChargerRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.ChargerRef
 }
 
+// SetChargerRef sets the loadpoint charger
+func (lp *Loadpoint) SetChargerRef(ref string) {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set charger ref: not configurable")
+		return
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.ChargerRef = ref
+	lp.settings.SetString(keys.Charger, ref)
+}
+
 // GetMeter returns the loadpoint meter
-func (lp *Loadpoint) GetMeterName() string {
+func (lp *Loadpoint) GetMeterRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.MeterRef
 }
 
+// SetMeter sets the loadpoint meter
+func (lp *Loadpoint) SetMeterRef(ref string) {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set meter ref: not configurable")
+		return
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.MeterRef = ref
+	lp.settings.SetString(keys.Meter, ref)
+}
+
 // GetCircuitName returns the loadpoint circuit
-func (lp *Loadpoint) GetCircuitName() string {
+func (lp *Loadpoint) GetCircuitRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.CircuitRef
 }
 
-// GetDefaultVehicle returns the loadpoint default vehicle
-func (lp *Loadpoint) GetDefaultVehicle() string {
+// SetCircuitRef sets the loadpoint circuit
+func (lp *Loadpoint) SetCircuitRef(ref string) {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set circuit ref: not configurable")
+		return
+	}
+
+	lp.log.DEBUG.Println("set circuit ref:", ref)
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.CircuitRef = ref
+	lp.settings.SetString(keys.Circuit, ref)
+}
+
+// GetDefaultVehicleRef returns the loadpoint default vehicle
+func (lp *Loadpoint) GetDefaultVehicleRef() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.VehicleRef
+}
+
+// SetDefaultVehicleRef returns the loadpoint default vehicle
+func (lp *Loadpoint) SetDefaultVehicleRef(ref string) {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set default vehicle ref: not configurable")
+		return
+	}
+
+	lp.log.DEBUG.Println("set default vehicle ref:", ref)
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.VehicleRef = ref
+	lp.settings.SetString(keys.DefaultVehicle, ref)
 }
 
 // GetTitle returns the loadpoint title
@@ -165,8 +235,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set priority:", prio)
-
-	if lp.Priority != prio {
+	if lp.priority != prio {
 		lp.setPriority(prio)
 	}
 }
@@ -196,16 +265,15 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
+	if physical := lp.getChargerPhysicalPhases(); physical != 0 && phases > physical {
+		return fmt.Errorf("cannot configure more phases than physically connected: %d > %d", phases, physical)
+	}
+
 	// set new default
 	lp.log.DEBUG.Println("set phases:", phases)
 
 	lp.Lock()
 	lp.setPhasesConfigured(phases)
-
-	// apply immediately if not 1p3p
-	if !lp.hasPhaseSwitching() {
-		lp.setPhases(phases)
-	}
 	lp.Unlock()
 
 	lp.requestUpdate()
@@ -275,19 +343,19 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 }
 
 // GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
+func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getPlanEnergy()
 }
 
 // getPlanEnergy returns plan target energy
-func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
-	return lp.planTime, lp.planEnergy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
+	return lp.planTime, lp.planPrecondition, lp.planEnergy
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) {
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -295,11 +363,15 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	// remove plan
 	if energy == 0 {
 		finishAt = time.Time{}
+		precondition = 0
 	}
 
 	lp.planTime = finishAt
+	lp.planPrecondition = precondition
 	lp.publish(keys.PlanTime, finishAt)
+	lp.publish(keys.PlanPrecondition, precondition)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
+	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -307,7 +379,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 }
 
 // SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -318,8 +390,8 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
-		lp.setPlanEnergy(finishAt, energy)
+	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) {
+		lp.setPlanEnergy(finishAt, precondition, energy)
 		lp.requestUpdate()
 	}
 
@@ -540,7 +612,8 @@ func (lp *Loadpoint) GetChargePower() float64 {
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.smartCostActive(rates) {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
+		lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 
@@ -557,7 +630,7 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	if lp.chargeCurrents == nil {
-		return lp.chargeCurrent
+		return lp.offeredCurrent
 	}
 	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 }
@@ -566,6 +639,11 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	return lp.getMinCurrent()
+}
+
+// getMinCurrent returns the max loadpoint current
+func (lp *Loadpoint) getMinCurrent() float64 {
 	return lp.minCurrent
 }
 
@@ -629,20 +707,6 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	return nil
 }
 
-// GetMinPower returns the min loadpoint power for a single phase
-func (lp *Loadpoint) GetMinPower() float64 {
-	lp.Lock()
-	defer lp.Unlock()
-	return Voltage * lp.effectiveMinCurrent()
-}
-
-// GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
-func (lp *Loadpoint) GetMaxPower() float64 {
-	lp.Lock()
-	defer lp.Unlock()
-	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
-}
-
 // IsFastChargingActive indicates if fast charging with maximum power is active
 func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.RLock()
@@ -673,25 +737,25 @@ func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 	}
 }
 
-// GetRemainingEnergy is the remaining charge energy in Wh
+// GetRemainingEnergy is the remaining charge energy in kWh
 func (lp *Loadpoint) GetRemainingEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.chargeRemainingEnergy
 }
 
-// SetRemainingEnergy sets the remaining charge energy in Wh
+// SetRemainingEnergy sets the remaining charge energy in kWh
 func (lp *Loadpoint) SetRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setRemainingEnergy(chargeRemainingEnergy)
 }
 
-// setRemainingEnergy sets the remaining charge energy in Wh (no mutex)
+// setRemainingEnergy sets the remaining charge energy in kWh (no mutex)
 func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
-		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy)
+		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy*1e3)
 	}
 }
 
@@ -712,6 +776,14 @@ func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
 
 	// disable auto-detect
 	lp.stopVehicleDetection()
+}
+
+// GetSoc returns the estimated vehicle soc in %
+func (lp *Loadpoint) GetSoc() float64 {
+	lp.vmu.RLock()
+	defer lp.vmu.RUnlock()
+
+	return lp.vehicleSoc
 }
 
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes
@@ -743,13 +815,30 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
 
-		if val == nil {
-			lp.settings.SetString(keys.SmartCostLimit, "")
-			lp.publish(keys.SmartCostLimit, nil)
-		} else {
-			lp.settings.SetFloat(keys.SmartCostLimit, *val)
-			lp.publish(keys.SmartCostLimit, *val)
-		}
+		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
+		lp.publish(keys.SmartCostLimit, val)
+	}
+}
+
+// GetSmartFeedInPriorityLimit gets the smart feed-in limit
+func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartFeedInPriorityLimit
+}
+
+// SetSmartFeedInPriorityLimit sets the smart cost feed-in
+func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+
+	if !ptrValueEqual(lp.smartFeedInPriorityLimit, val) {
+		lp.smartFeedInPriorityLimit = val
+
+		lp.settings.SetFloatPtr(keys.SmartFeedInPriorityLimit, val)
+		lp.publish(keys.SmartFeedInPriorityLimit, val)
 	}
 }
 

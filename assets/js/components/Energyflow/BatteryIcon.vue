@@ -19,10 +19,11 @@
 	</svg>
 </template>
 
-<script>
-import icon from "../../mixins/icon";
+<script lang="ts">
+import { defineComponent } from "vue";
+import icon from "@/mixins/icon";
 
-export default {
+export default defineComponent({
 	name: "BatteryIcon",
 	mixins: [icon],
 	props: {
@@ -36,5 +37,5 @@ export default {
 			return `M30 38H18v-${height}h12v${height}z`;
 		},
 	},
-};
+});
 </script>

@@ -26,7 +26,7 @@ func TestFixed(t *testing.T) {
 
 		for hour := 0; hour < 24; hour++ {
 			expect = append(expect, api.Rate{
-				Price: 0.3,
+				Value: 0.3,
 				Start: dayStart.Add(time.Hour * time.Duration(hour)),
 				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
@@ -45,7 +45,7 @@ func TestFixedSplitZones(t *testing.T) {
 			Price float64
 			Hours string
 		}{
-			{0.1, "0-5:30,21-0"},
+			{0.1, "0-5:30,20-21,21-0"},
 		},
 	})
 	require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestFixedSplitZones(t *testing.T) {
 		// 00:00-05:00 0.1
 		for hour := 0; hour < 5; hour++ {
 			expect = append(expect, api.Rate{
-				Price: 0.1,
+				Value: 0.1,
 				Start: dayStart.Add(time.Hour * time.Duration(hour)),
 				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
@@ -68,31 +68,31 @@ func TestFixedSplitZones(t *testing.T) {
 
 		// 05:00-05:30 0.1
 		expect = append(expect, api.Rate{
-			Price: 0.1,
+			Value: 0.1,
 			Start: dayStart.Add(5 * time.Hour),
 			End:   dayStart.Add(5*time.Hour + 30*time.Minute),
 		})
 
 		// 05:30-06:00 0.5
 		expect = append(expect, api.Rate{
-			Price: 0.5,
+			Value: 0.5,
 			Start: dayStart.Add(5*time.Hour + 30*time.Minute),
 			End:   dayStart.Add(6 * time.Hour),
 		})
 
-		// 06:00-21:00 0.5
-		for hour := 6; hour < 21; hour++ {
+		// 06:00-20:00 0.5
+		for hour := 6; hour < 20; hour++ {
 			expect = append(expect, api.Rate{
-				Price: 0.5,
+				Value: 0.5,
 				Start: dayStart.Add(time.Hour * time.Duration(hour)),
 				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
 		}
 
-		// 21:00-00:00 0.1
-		for hour := 21; hour < 24; hour++ {
+		// 20:00-21:00,21:00-00:00 0.1
+		for hour := 20; hour < 24; hour++ {
 			expect = append(expect, api.Rate{
-				Price: 0.1,
+				Value: 0.1,
 				Start: dayStart.Add(time.Hour * time.Duration(hour)),
 				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})

@@ -47,7 +47,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.Credentials.ID == "" {
-		return nil, errors.New("missing client id, see https://github.com/evcc-io/evcc/discussions/17501")
+		return nil, errors.New("missing client id, see https://docs.evcc.io/en/docs/devices/vehicles#tesla")
 	}
 
 	token, err := cc.Tokens.Token()

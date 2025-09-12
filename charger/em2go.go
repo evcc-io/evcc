@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -51,7 +51,6 @@ const (
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	em2GoRegSerial          = 38  // Chr[16] RO UTF16
-	em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	em2GoRegChargeDuration  = 78  // Uint32 RO 1s
 	em2GoRegSafeCurrent     = 87  // Uint16 WR 0.1A
 	em2GoRegCommTimeout     = 89  // Uint16 WR 1s
@@ -60,6 +59,9 @@ const (
 	em2GoRegChargeCommand   = 95  // Uint16 WR ENUM
 	em2GoRegVoltages        = 109 // Uint16 RO 0.1V
 	em2GoRegPhases          = 200 // Set charging phase 1 unsigned
+
+	//removed due to unreliable session energy when pausing or switching phases
+	//em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 )
 
 func init() {
@@ -71,8 +73,11 @@ func init() {
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Connector          int // TODO remove deprecated
+	}{
+		TcpSettings: modbus.TcpSettings{ID: 255},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -98,12 +103,16 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		log:        log,
-		conn:       conn,
-		current:    60,
-		workaround: false,
+		log:     log,
+		conn:    conn,
+		current: 60,
 	}
 
+	return wb.initialize()
+}
+
+// initialize performs common initialization for both Em2Go models
+func (wb *Em2Go) initialize() (api.Charger, error) {
 	var (
 		maxCurrent func(float64) error
 		phases1p3p func(int) error
@@ -132,7 +141,7 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		phasesG = wb.getPhases
 	}
 
-	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), err
+	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), nil
 }
 
 // Status implements the api.Charger interface
@@ -143,11 +152,15 @@ func (wb *Em2Go) Status() (api.ChargeStatus, error) {
 	}
 
 	switch binary.BigEndian.Uint16(b) {
-	case 1:
+	case 1: //Standby
 		return api.StatusA, nil
-	case 2, 3:
+	case
+		2, //Connected
+		3, //Starting
+		6: //Charging end
 		return api.StatusB, nil
-	case 4, 6:
+	case
+		4: //Charging
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
@@ -280,18 +293,6 @@ func (wb *Em2Go) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(em2GoRegVoltages)
 }
 
-var _ api.ChargeRater = (*Em2Go)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Em2Go) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargedEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10, nil
-}
-
 var _ api.ChargeTimer = (*Em2Go)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
@@ -363,7 +364,7 @@ func (wb *Em2Go) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMaxCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMaxCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMinCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Min. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegCableMaxCurrent, 1); err == nil {

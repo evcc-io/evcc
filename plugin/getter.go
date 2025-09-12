@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"strconv"
-
 	"github.com/spf13/cast"
 )
 
@@ -30,7 +28,7 @@ func (p *getter) FloatGetter() (func() (float64, error), error) {
 			return 0, err
 		}
 
-		f, err := strconv.ParseFloat(s, 64)
+		f, err := parseFloat(s)
 		if err != nil {
 			return 0, err
 		}
