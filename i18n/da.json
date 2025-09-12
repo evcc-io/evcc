@@ -547,13 +547,13 @@
       "tabTitle": "Live fællesskab"
     },
     "savings": {
-      "co2Saved": "{value} gemt",
+      "co2Saved": "{value} sparet",
       "co2Title": "CO₂ Udledning",
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
       "footerLong": "{percent} Solenergi",
       "footerShort": "{percent} Solenergi",
       "modalTitle": "Oversigt over ladeenergi",
-      "moneySaved": "{value} gemt",
+      "moneySaved": "{value} sparet",
       "percentGrid": "{grid} kWh elnettet",
       "percentSelf": "{self} kWh solenergi",
       "percentTitle": "Solenergi",
@@ -715,7 +715,7 @@
       "titleTargetCharge": "Afgang",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",
       "update": "Anvend",
-      "weekdays": "Dag"
+      "weekdays": "Dage"
     },
     "energyflow": {
       "battery": "Batteri",
