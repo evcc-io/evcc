@@ -35,6 +35,8 @@ params:
       en: https://www.solaxcloud.com/ -> Device -> Inverter (new site) or Support (old site), use the registration number
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   power:
@@ -71,4 +73,6 @@ render: |
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

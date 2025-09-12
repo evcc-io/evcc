@@ -19,6 +19,8 @@ params:
   - name: maxsoc
     type: int
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   {{- if eq .usage "battery" }}
   type: custom
@@ -37,4 +39,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

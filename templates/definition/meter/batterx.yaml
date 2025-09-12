@@ -13,6 +13,8 @@ params:
     default: 80
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: externalpv
     description:
       de: |
@@ -82,5 +84,7 @@ render: |
         - source: http
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=0 # Battery Discharging - OFF
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
   {{- end }}

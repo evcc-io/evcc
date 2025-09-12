@@ -25,6 +25,8 @@ params:
     default: 502
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -90,4 +92,6 @@ render: |
       type: holding
       decode: uint16
   capacity: {{ .capacity }} # Nutzbare Kapazität in kWh | Net capacity (kWh)
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

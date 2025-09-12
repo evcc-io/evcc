@@ -29,10 +29,11 @@ params:
     default: 120s
     usages: ["battery"]
     advanced: true
-  - name: maxdischargepower
-    default: 4000
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
+    default: 4000
 render: |
   type: custom
   power:
@@ -108,4 +109,5 @@ render: |
             source: error
             error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   {{- end }}

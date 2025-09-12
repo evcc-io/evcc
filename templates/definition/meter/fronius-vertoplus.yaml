@@ -18,11 +18,13 @@ params:
       en: "Meter address of primary or secondary meters. On the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201)."
       de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
     usages: ["grid"]
+  - name: capacity
+    advanced: true
   - name: maxacpower
   - name: maxchargerate
     advanced: true
-  - name: capacity
-    advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -247,4 +249,6 @@ render: |
             id: 1
             value: 124:0:OutWRte
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

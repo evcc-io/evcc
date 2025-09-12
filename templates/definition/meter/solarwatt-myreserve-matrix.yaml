@@ -12,6 +12,8 @@ params:
     default: 8080
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   power:
@@ -30,4 +32,6 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .SData.SoC
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

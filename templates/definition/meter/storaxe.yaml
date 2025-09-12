@@ -11,6 +11,8 @@ params:
     id: 2
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   power:
@@ -80,3 +82,5 @@ render: |
       type: input
       decode: int16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W

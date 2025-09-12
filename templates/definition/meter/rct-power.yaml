@@ -22,10 +22,11 @@ params:
     type: int
     default: 97
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: cache
     advanced: true
     default: 30s
-  - name: maxchargepower
   - name: externalpower
     type: bool
     description:
@@ -44,5 +45,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
-  maxchargepower: {{ .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   externalpower: {{ .externalpower }}

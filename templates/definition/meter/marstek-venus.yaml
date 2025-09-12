@@ -30,10 +30,10 @@ params:
     advanced: true
   - name: maxchargepower
     default: 2500
-    advanced: true
     help:
       en: 2500W is the maximum for Venus.
       de: 2500W ist das Maximum für Venus.
+  - name: maxdischargepower
   - name: work_mode_normal
     default: 1
     advanced: true
@@ -159,3 +159,4 @@ render: |
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   capacity: {{ .capacity }} # kWh
+  maxdischargepower: {{ .maxdischargepower }} # W

@@ -44,6 +44,8 @@ params:
   - name: maxsoc
     type: int
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: watchdog
     type: duration
     default: 60s
@@ -93,4 +95,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

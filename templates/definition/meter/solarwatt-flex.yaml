@@ -16,6 +16,8 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -76,4 +78,6 @@ render: |
       def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
       (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_work_released_total$")).state | parseSecondNumber / 1000) // 0
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

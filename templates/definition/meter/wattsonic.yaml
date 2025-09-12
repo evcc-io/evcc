@@ -20,6 +20,8 @@ params:
     advanced: true
   - name: maxsoc
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: delay
     default: 100ms
     advanced: true
@@ -122,4 +124,6 @@ render: |
       type: writeholding
       encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

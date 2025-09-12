@@ -18,6 +18,8 @@ params:
       de: Passwort für Benutzergruppe Benutzer
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
@@ -25,3 +27,5 @@ render: |
   password: {{ .password }} # optional
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W

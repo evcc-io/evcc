@@ -23,6 +23,8 @@ params:
     advanced: true
   - name: maxsoc
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -202,4 +204,6 @@ render: |
               type: writeholding
               decode: int16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

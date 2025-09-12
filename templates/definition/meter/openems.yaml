@@ -33,11 +33,12 @@ params:
       en: adjusted to the API timeout
     usages: ["battery"]
     advanced: true
-  - name: maxchargepower
-    default: 4200
-  - name: maxacpower
   - name: capacity
     advanced: true
+  - name: maxacpower
+  - name: maxchargepower
+    default: 4200
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
@@ -140,4 +141,5 @@ render: |
           body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

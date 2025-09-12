@@ -27,11 +27,12 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: maxchargepower
-    default: 10000
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+    default: 10000
+  - name: maxdischargepower
   - name: forceaccharging
     default: false
     advanced: true
@@ -277,4 +278,5 @@ render: |
                 type: writesingle
                 encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

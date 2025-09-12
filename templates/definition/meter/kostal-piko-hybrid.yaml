@@ -11,6 +11,8 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   {{- if eq .usage "grid" }}
   type: custom

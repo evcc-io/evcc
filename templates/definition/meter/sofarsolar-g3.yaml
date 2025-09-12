@@ -36,6 +36,8 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: defaultmode
     help:
       de: Gültige Werte sind 0 (Eigenbedarfsmodus), 1 (Nutzungszeitmodus), 2 (Zeitmodus), 4 (Peak-shaving Modus)
@@ -285,4 +287,6 @@ render: |
                   type: writemultiple
                   decode: bytes
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

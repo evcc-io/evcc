@@ -40,9 +40,11 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: int
     advanced: true
-  - name: maxacpower
   - name: capacity
     advanced: true
+  - name: maxacpower
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -53,4 +55,6 @@ render: |
   {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

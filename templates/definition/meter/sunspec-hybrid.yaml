@@ -14,6 +14,8 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
@@ -126,4 +128,6 @@ render: |
       - 124:ChaState
       - 802:SoC
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
