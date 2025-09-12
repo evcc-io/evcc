@@ -40,7 +40,51 @@ render: |
       type: holding
       decode: float32
     scale: 0.001
-  {{- end }}
+    currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35122 # R phase Grid current, A
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35127 # S phase Grid current, A
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35132 # T phase Grid current, A
+      type: holding
+      decode: uint16
+    scale: 0.1
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35121 # R phase Grid voltage, V
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35126 # S phase Grid voltage, V
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35131 # T phase Grid voltage, V
+      type: holding
+      decode: uint16
+    scale: 0.1
+    {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: calc
