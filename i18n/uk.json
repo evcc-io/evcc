@@ -547,7 +547,7 @@
       "tabTitle": "Жива спільнота"
     },
     "savings": {
-      "co2Saved": "{valve} збережено",
+      "co2Saved": "{value} збережено",
       "co2Title": "Викиди CO₂",
       "configurePriceCo2": "Дізнайтеся, як налаштувати дані про ціну та CO₂.",
       "footerLong": "{percent} сонячної енергії",
@@ -700,7 +700,7 @@
       "modalTitle": "Тарифний план",
       "none": "немає",
       "planNumber": "План {number}",
-      "preconditionDescription": "Зарядіть {тривалість} перед відправленням для попередньої підготовки акумулятора.",
+      "preconditionDescription": "Зарядіть {duration} перед відправленням для попередньої підготовки акумулятора.",
       "preconditionLong": "Пізня зарядка",
       "preconditionOptionAll": "все",
       "preconditionOptionNo": "ні",
@@ -815,7 +815,7 @@
     "targetCharge": {
       "activate": "Активувати",
       "co2Limit": "Ліміт CO₂ для {co2}",
-      "costLimitIgnore": "Налаштований {ліміт} буде ігноруватися протягом цього періоду.",
+      "costLimitIgnore": "Налаштований {limit} буде ігноруватися протягом цього періоду.",
       "currentPlan": "Активний план",
       "descriptionEnergy": "До якого часу {targetEnergy} повинен бути завантажений в транспортний засіб?",
       "descriptionSoc": "Коли автомобіль повинен бути заряджений на {targetSoc}?",

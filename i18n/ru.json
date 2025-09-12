@@ -2,7 +2,7 @@
   "batterySettings": {
     "batteryLevel": "Уровень заряда батареи",
     "bufferStart": {
-      "full": "когда почти полная",
+      "full": "когда на {soc}.",
       "never": "только при достаточном избытке"
     },
     "capacity": "{energy} из {total}",
@@ -11,12 +11,12 @@
     "disclaimerHint": "Примечание:",
     "disclaimerText": "Эти настройки влияют только на режим солнечной батареи. Поведение зарядки изменяется соответствующе.",
     "legendBottomName": "домашний приоритет",
-    "legendBottomSubline": "не используется для зарядки",
+    "legendBottomSubline": "пока не достигнет {soc}.",
     "legendMiddleName": "сначала автомобиль",
-    "legendMiddleSubline": "дом вторым",
+    "legendMiddleSubline": "когда домашняя батарея выше {soc}.",
     "legendTopAutostart": "запускается автоматически",
     "legendTopName": "зарядка с поддержкой от аккумулятора",
-    "legendTopSubline": "без перебоев",
+    "legendTopSubline": "когда домашняя батарея выше {soc}.",
     "modalTitle": "Настройки батареи"
   },
   "config": {
@@ -48,7 +48,7 @@
       "footerLong": "{percent} солнечной энергии",
       "footerShort": "{percent} солнечной",
       "modalTitle": "Обзор потребленной электроэнергии",
-      "percentGrid": "{self} кВт/ч из сети",
+      "percentGrid": "{grid} кВт/ч из сети",
       "percentSelf": "{self} кВт/ч солнечной",
       "percentTitle": "Солнечная энергия",
       "priceTitle": "Цена электроэнергии",
@@ -175,8 +175,8 @@
       "pvEnable": "Доступен избыток. Начинаю через {remaining}...",
       "scale1p": "Снижаю до одной фазы через {remaining}...",
       "scale3p": "Увеличиваю до трех фаз через {remaining}...",
-      "targetChargeActive": "Плановая зарядка активна...",
-      "targetChargePlanned": "Плановая зарядка начнется в {time}.",
+      "targetChargeActive": "Плановая зарядка активна. Ориентировочное завершение через {duration}.",
+      "targetChargePlanned": "Плановая зарядка начнется в {duration}.",
       "targetChargeWaitForVehicle": "Плановая зарядка готова. Ожидаю транспортное средство...",
       "waitForVehicle": "Готов. Ожидание транспортного средства..."
     },

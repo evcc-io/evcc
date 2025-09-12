@@ -110,7 +110,10 @@ function validateTranslations(): void {
       // Only check if source has placeholders
       if (sourcePlaceholders.length === 0) continue;
       
-      const targetPlaceholders = extractPlaceholders(targetFlat[key] || "");
+      // Skip if translation doesn't exist at all (fallback to English is fine)
+      if (!(key in targetFlat)) continue;
+      
+      const targetPlaceholders = extractPlaceholders(targetFlat[key]);
       
       if (!placeholdersMatch(sourcePlaceholders, targetPlaceholders)) {
         allErrors.push({
