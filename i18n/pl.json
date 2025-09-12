@@ -76,8 +76,6 @@
     },
     "deviceValue": {
       "amount": "Ilość",
-      "broker": "",
-      "bucket": "",
       "capacity": "Pojemność",
       "chargeStatus": "Status",
       "chargeStatusA": "nie połączony",
@@ -208,9 +206,6 @@
       "chargerError": {
         "charging": "Wymagana jest konfiguracja ładowarki.",
         "heating": "Wymagana jest konfiguracja urządzenia grzejnego."
-      },
-      "chargerLabel": {
-        "charging": ""
       },
       "phasesAutomaticHelp": "Ładowarka obsługuje automatyczne przełączanie między ładowaniem 1- i 3-fazowym. Na ekranie głównym możesz dostosować zachowywanie się faz podczas ładowania.",
       "phasesHelp": "Liczba podłączonych faz.",
