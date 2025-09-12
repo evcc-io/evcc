@@ -1,15 +1,28 @@
 #!/usr/bin/env tsx
 
 import { readFileSync, readdirSync, existsSync } from "fs";
-import { join, dirname, basename, extname } from "path";
+import { join, dirname, basename, extname, resolve } from "path";
 import { fileURLToPath } from "url";
-
-interface TranslationObject {
-  [key: string]: string | TranslationObject;
-}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Security: Validate that file path is within the i18n directory
+function validateFilePath(filePath: string): string {
+  const resolvedPath = resolve(filePath);
+  const resolvedBaseDir = resolve(__dirname);
+  
+  if (!resolvedPath.startsWith(resolvedBaseDir)) {
+    throw new Error(`Path traversal attempt detected: ${filePath}`);
+  }
+  
+  // Ensure it's a JSON file
+  if (extname(resolvedPath) !== ".json") {
+    throw new Error(`Invalid file type: ${filePath}`);
+  }
+  
+  return resolvedPath;
+}
 
 // Extract placeholders from a translation string (e.g., "{title}", "{soc}", etc.)
 function extractPlaceholders(text: string): string[] {
@@ -21,66 +34,62 @@ function extractPlaceholders(text: string): string[] {
   return unique.sort();
 }
 
-// Recursively collect all translation keys and their placeholders from nested objects
-function collectTranslations(obj: TranslationObject, prefix = ""): Map<string, string[]> {
-  const result = new Map<string, string[]>();
-  
-  for (const [key, value] of Object.entries(obj)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key;
-    
-    if (typeof value === "string") {
-      result.set(fullKey, extractPlaceholders(value));
-    } else if (typeof value === "object" && value !== null) {
-      const nested = collectTranslations(value, fullKey);
-      for (const [nestedKey, placeholders] of nested) {
-        result.set(nestedKey, placeholders);
-      }
+// Flatten nested translation object into dot-notation keys
+function flattenObject(obj: any, prefix = ""): Record<string, string> {
+  return Object.entries(obj).reduce((acc, [key, val]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (val && typeof val === "object") {
+      Object.assign(acc, flattenObject(val, path));
+    } else if (typeof val === "string") {
+      acc[path] = val;
     }
-  }
-  
-  return result;
+    return acc;
+  }, {} as Record<string, string>);
 }
 
-// Load and parse JSON translation file
-function loadTranslation(filePath: string): Map<string, string[]> {
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    const parsed = JSON.parse(content) as TranslationObject;
-    return collectTranslations(parsed);
-  } catch (error) {
-    console.error(`Error loading ${filePath}:`, error);
-    process.exit(1);
+// Compare placeholder arrays using Set equality for better performance
+function placeholdersMatch(a: string[], b: string[]): boolean {
+  const setA = new Set(a);
+  const setB = new Set(b);
+  if (setA.size !== setB.size) return false;
+  for (const placeholder of setA) {
+    if (!setB.has(placeholder)) return false;
   }
+  return true;
 }
 
-// Get all translation files in the directory
+// Load and parse JSON translation file safely
+function loadTranslationFile(filePath: string): Record<string, string> {
+  const validatedPath = validateFilePath(filePath);
+  const content = readFileSync(validatedPath, "utf-8");
+  const parsed = JSON.parse(content);
+  return flattenObject(parsed);
+}
+
+// Get all translation files in the directory safely
 function getTranslationFiles(): string[] {
   const files = readdirSync(__dirname)
-    .filter(file => extname(file) === ".json")
-    .map(file => join(__dirname, file));
+    .filter(file => {
+      // Only allow valid filename characters and JSON extension
+      return /^[a-zA-Z0-9_-]+\.json$/.test(file);
+    })
+    .map(file => validateFilePath(join(__dirname, file)));
   
   return files;
-}
-
-// Check if two placeholder arrays are equivalent
-function placeholdersMatch(source: string[], target: string[]): boolean {
-  if (source.length !== target.length) return false;
-  return source.every((placeholder, index) => placeholder === target[index]);
 }
 
 // Main validation function
 function validateTranslations(): void {
   console.log("🔍 Checking translation placeholder consistency...");
   
-  const sourceFile = join(__dirname, "en.json");
+  const sourceFile = validateFilePath(join(__dirname, "en.json"));
   
   if (!existsSync(sourceFile)) {
     console.error(`❌ Source file not found: ${sourceFile}`);
     process.exit(1);
   }
   
-  const sourceTranslations = loadTranslation(sourceFile);
-  
+  const sourceFlat = loadTranslationFile(sourceFile);
   const translationFiles = getTranslationFiles()
     .filter(file => basename(file) !== "en.json");
   
@@ -89,41 +98,51 @@ function validateTranslations(): void {
     process.exit(0);
   }
   
-  let hasErrors = false;
-  let totalErrors = 0;
+  const allErrors: Array<{file: string; key: string; expected: string[]; found: string[]}> = [];
   
   for (const file of translationFiles) {
     const lang = basename(file, ".json");
-    const targetTranslations = loadTranslation(file);
+    const targetFlat = loadTranslationFile(file);
     
-    const fileErrors: Array<{key: string, expected: string, found: string}> = [];
-    
-    for (const [key, sourcePlaceholders] of sourceTranslations) {
-      const targetPlaceholders = targetTranslations.get(key);
+    for (const [key, sourceStr] of Object.entries(sourceFlat)) {
+      const sourcePlaceholders = extractPlaceholders(sourceStr);
       
-      // Only check if translation exists AND source has placeholders
-      if (targetPlaceholders && sourcePlaceholders.length > 0 && !placeholdersMatch(sourcePlaceholders, targetPlaceholders)) {
-        hasErrors = true;
-        totalErrors++;
-        
-        const sourceStr = sourcePlaceholders.join(", ");
-        const targetStr = targetPlaceholders.join(", ") || "(none)";
-        fileErrors.push({key, expected: sourceStr, found: targetStr});
-      }
-    }
-    
-    if (fileErrors.length > 0) {
-      console.log(`\n📄 i18n/${lang}.json (${fileErrors.length} errors)`);
-      for (const error of fileErrors) {
-        console.log(`  ${error.key}`);
-        console.log(`    expected: ${error.expected}`);
-        console.log(`    found:    ${error.found}`);
+      // Only check if source has placeholders
+      if (sourcePlaceholders.length === 0) continue;
+      
+      const targetPlaceholders = extractPlaceholders(targetFlat[key] || "");
+      
+      if (!placeholdersMatch(sourcePlaceholders, targetPlaceholders)) {
+        allErrors.push({
+          file: lang,
+          key,
+          expected: sourcePlaceholders,
+          found: targetPlaceholders
+        });
       }
     }
   }
   
-  if (hasErrors) {
-    console.log(`\n💡 ${totalErrors} placeholder errors found.`);
+  // Group errors by file and output
+  const errorsByFile = new Map<string, typeof allErrors>();
+  for (const error of allErrors) {
+    if (!errorsByFile.has(error.file)) {
+      errorsByFile.set(error.file, []);
+    }
+    errorsByFile.get(error.file)!.push(error);
+  }
+  
+  for (const [lang, errors] of errorsByFile) {
+    console.log(`\n📄 i18n/${lang}.json (${errors.length} errors)`);
+    for (const error of errors) {
+      console.log(`  ${error.key}`);
+      console.log(`    expected: ${error.expected.join(", ")}`);
+      console.log(`    found:    ${error.found.join(", ") || "(none)"}`);
+    }
+  }
+  
+  if (allErrors.length > 0) {
+    console.log(`\n💡 ${allErrors.length} placeholder errors found.`);
     process.exit(1);
   } else {
     console.log("✅ All translations have correct placeholders!");
