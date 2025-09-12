@@ -33,6 +33,7 @@ type All struct {
 	Influx       Influx
 	EEBus        eebus.Config
 	HEMS         Hems
+	SHM          Shm
 	Messaging    Messaging
 	Meters       []config.Named
 	Chargers     []config.Named
@@ -69,6 +70,12 @@ func (c Hems) Redacted() any {
 	}{
 		Type: c.Type,
 	}
+}
+
+type Shm struct {
+	AllowControl bool   `json:"allowControl"`
+	VendorId     string `json:"vendorId"`
+	DeviceId     string `json:"deviceId"`
 }
 
 var _ api.Redactor = (*Mqtt)(nil)

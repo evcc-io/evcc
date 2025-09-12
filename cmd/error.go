@@ -24,6 +24,7 @@ const (
 	ClassJavascript
 	ClassGo
 	ClassHEMS
+	ClassSHM
 	ClassInflux
 	ClassMessenger
 	ClassSponsorship

@@ -308,6 +308,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		for key, fun := range map[string]func() any{
 			keys.Network: func() any { return new(globalconfig.Network) }, // has default
 			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
+			keys.Shm:     func() any { return new(globalconfig.Shm) },
 			keys.Influx:  func() any { return new(globalconfig.Influx) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}

@@ -10,6 +10,7 @@ const (
 	Influx             = "influx"
 	EEBus              = "eebus"
 	Hems               = "hems"
+	Shm                = "shm"
 	Messaging          = "messaging"
 	ModbusProxy        = "modbusproxy"
 	Tariffs            = "tariffs"
