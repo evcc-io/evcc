@@ -35,13 +35,7 @@ params:
     type: int
     advanced: true
   - name: maxchargepower
-    type: int
-    unit: W
-    advanced: true
   - name: maxdischargepower
-    type: int
-    unit: W
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
