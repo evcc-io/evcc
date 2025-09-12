@@ -46,16 +46,16 @@
       "template": "Producent",
       "titleAdd": {
         "charging": "Dodaj ładowarkę",
-        "heating": "Dodaj grzejnik"
+        "heating": "Dodaj podgrzewacz"
       },
       "titleEdit": {
         "charging": "Edytuj ładowarkę",
-        "heating": "Edytuj grzejnik"
+        "heating": "Edytuj podgrzewacz"
       },
       "type": {
         "custom": {
           "charging": "Ładowarka zdefiniowana przez użytkownika",
-          "heating": "Grzejnik zdefiniowany przez użytkownika"
+          "heating": "Podgrzewacz zdefiniowany przez użytkownika"
         },
         "heatpump": "Pompa ciepła zdefiniowana przez użytkownika",
         "sgready": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, all)",
@@ -96,7 +96,7 @@
       "energy": "Energia",
       "feedinPrice": "Cena do sieci",
       "gridPrice": "Cena z sieci",
-      "heaterTempLimit": "Limit ogrzewania",
+      "heaterTempLimit": "Limit podgrzewacza",
       "hemsActiveLimit": "Limit aktywny",
       "hemsType": "Komunikacja",
       "identifier": "Identyfikator RFID",
@@ -200,17 +200,17 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Dodaj ładowarkę",
-        "heating": "Dodaj ogrzewacz"
+        "heating": "Dodaj podgrzewacz"
       },
       "addMeter": "Dodaj dedykowany licznik energii",
       "cancel": "Anuluj",
       "chargerError": {
         "charging": "Wymagana jest konfiguracja ładowarki.",
-        "heating": "Wymagana jest konfiguracja urządzenia grzejnego."
+        "heating": "Wymagana jest konfiguracja podgrzewacza."
       },
       "chargerLabel": {
         "charging": "Ładowarka",
-        "heating": "Ogrzewacz"
+        "heating": "Podgrzewacz"
       },
       "chargingTitle": "Postępowanie",
       "defaultModeHelp": {
@@ -252,12 +252,21 @@
       "thresholdEnableHelpNegative": "Rozpocznij, gdy nadwyżka {surplus} będzie dostępna przez {delay}.",
       "thresholdEnableHelpZero": "Rozpocznij, gdy minimalna wymagana moc będzie osiągnięta przez {delay}.",
       "thresholdEnableLabel": "Pozwól na zasilanie z sieci",
+      "titleAdd": {
+        "unknown": "Dodaj ładowarkę lub podgrzewacz"
+      },
+      "titleEdit": {
+        "unknown": "Edytuj ładowarkę lub podgrzewacz"
+      },
+      "titleExample": {
+        "heating": "Pompa ciepła, podgrzewacz, itp."
+      },
       "titleLabel": "Nazwa",
       "vehiclesTitle": "Pojazdy"
     },
     "main": {
       "addGrid": "Dodaj licznik sieciowy",
-      "addLoadpoint": "Dodaj ładowarkę lub grzejnik",
+      "addLoadpoint": "Dodaj ładowarkę lub podgrzewacz",
       "addPvBattery": "Dodaj licznik energii słonecznej lub baterii",
       "addTariffs": "Dodaj taryfę",
       "addVehicle": "Dodaj pojazd",
@@ -464,7 +473,7 @@
       "departureTab": "Wyjazd",
       "goal": "Cel ładowania",
       "modalTitle": "Plan ładowania",
-      "none": "nic",
+      "none": "brak",
       "preconditionDescription": "Naładuj {duration} przed wyjazdem dla wstępnego kondycjonowania akumulatora.",
       "preconditionLong": "Późniejsze ładowanie",
       "preconditionOptionAll": "wszystko",
@@ -503,8 +512,8 @@
     "heatingStatus": {
       "charging": "Grzeje…",
       "connected": "Oczekuje.",
-      "vehicleLimit": "Limit grzałki",
-      "waitForVehicle": "Gotowe. Czekam na grzejnik…"
+      "vehicleLimit": "Limit podgrzewacza",
+      "waitForVehicle": "Gotowe. Czekam na podgrzewacz…"
     },
     "hemsWarning": {
       "description": "Obniżenie poboru energii, nieprzekraczające {limit}.",
