@@ -272,7 +272,7 @@
       "solarModeMaximum": "Maximale zonne-energie",
       "thresholdDisableDelayLabel": "Vertraging uitschakelen",
       "thresholdDisableHelpInvalid": "Gebruik alstublieft een positieve waarde.",
-      "thresholdDisableHelpPositive": "Stop wanneer er meer dan {stroom} van het net wordt gebruikt voor {vertraging}.",
+      "thresholdDisableHelpPositive": "Stop wanneer er meer dan {power} van het net wordt gebruikt voor {delay}.",
       "thresholdDisableHelpZero": "Stop wanneer het minimaal vereiste laadvermogen niet kan worden voldaan voor {delay}.",
       "thresholdDisableLabel": "Schakel netspanning uit",
       "thresholdEnableDelayLabel": "Vertraging inschakelen",

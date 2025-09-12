@@ -699,7 +699,7 @@
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
       "planNumber": "Planifkatioun {number}",
-      "preconditionDescription": "Luetzäit {Zeit} virum Fortfuere fir Batterie-Prekonditionéierung.",
+      "preconditionDescription": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
       "preconditionLong": "Verspéit Lueden",
       "preconditionOptionAll": "Alles",
       "preconditionOptionNo": "Nee",

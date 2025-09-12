@@ -724,7 +724,7 @@
       "batteryGridChargeActive": "Oplader fra elnettet",
       "batteryGridChargeLimit": "Oplader fra elnettet når",
       "batteryHold": "Batteri (låst)",
-      "batteryTooltip": "{energi} af {total} ({soc})",
+      "batteryTooltip": "{energy} af {total} ({soc})",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
       "gridImport": "Forbrug fra elnet",
       "homePower": "Forbrug",

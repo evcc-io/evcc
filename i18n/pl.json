@@ -601,7 +601,7 @@
       "planPeriodValue": "{start} do {end}",
       "planUnknown": "jeszcze nie wiadomo",
       "preview": "Podgląd planu",
-      "priceLimit": "limit ceny {cena}",
+      "priceLimit": "limit ceny {price}",
       "remove": "Usuń",
       "setTargetTime": "brak",
       "targetIsAboveLimit": "Skonfigurowany limit ładowania wynoszący {limit} będzie w tym okresie ignorowany.",
