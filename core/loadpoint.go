@@ -1233,14 +1233,22 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 func (lp *Loadpoint) fastCharging() error {
 	if lp.hasPhaseSwitching() {
 		maxPower := lp.EffectiveMaxPower()
-		minCurrent := lp.effectiveMinCurrent()
-		maxCurrent := lp.effectiveMaxCurrent()
 
-		// scale immediately
-		lp.phaseTimer = elapsed
+		// load management limit active
+		if lp.circuitMaxPower() < maxPower {
+			// scale immediately
+			lp.phaseTimer = elapsed
 
-		if scaledTo := lp.pvScalePhases(maxPower, minCurrent, maxCurrent); scaledTo != 0 {
-			lp.log.DEBUG.Printf("fast charging: scaled to %dp to match %.0fW max power", scaledTo, maxPower)
+			minCurrent := lp.effectiveMinCurrent()
+			maxCurrent := lp.effectiveMaxCurrent()
+
+			if scaledTo := lp.pvScalePhases(maxPower, minCurrent, maxCurrent); scaledTo != 0 {
+				lp.log.DEBUG.Printf("fast charging: scaled to %dp to match %.0fW max power", scaledTo, maxPower)
+			}
+		} else {
+			if err := lp.scalePhasesIfAvailable(3); err != nil {
+				return err
+			}
 		}
 	}
 
