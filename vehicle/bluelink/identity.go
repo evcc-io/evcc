@@ -42,6 +42,7 @@ type Config struct {
 	PushType          string
 	Cfb               string
 	LoginFormHost     string
+	Brand             string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -406,6 +407,9 @@ func (v *Identity) exchangeCodeKiaEURefreshToken(accCode string) (*oauth2.Token,
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	err := v.DoJSON(req, &token)
 
+	// manually set the refresh token
+	token.RefreshToken = accCode
+
 	return util.TokenWithExpiry(&token), err
 }
 
@@ -435,27 +439,57 @@ func (v *Identity) exchangeCodeKiaEU(accCode string) (*oauth2.Token, error) {
 
 // RefreshToken implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	headers := map[string]string{
-		"Authorization": "Basic " + v.config.BasicToken,
-		"Content-type":  "application/x-www-form-urlencoded",
-		// "User-Agent":    "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
-		"User-Agent": "okhttp/3.10.0",
-	}
-
-	data := url.Values{
-		"grant_type":    {"refresh_token"},
-		"redirect_uri":  {"https://www.getpostman.com/oauth2/callback"},
-		"refresh_token": {token.RefreshToken},
-	}
-
-	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
-
 	var res oauth2.Token
+	var err error
+	var uri string
+	var headers map[string]string
+	var data url.Values
+	switch v.config.Brand {
+	case "hyundai":
+		uri = v.config.URI + TokenURL
+		headers = map[string]string{
+			"Authorization": "Basic " + v.config.BasicToken,
+			"Content-type":  "application/x-www-form-urlencoded",
+			// "User-Agent":    "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+			"User-Agent": "okhttp/3.10.0",
+		}
+
+		data = url.Values{
+			"grant_type":    {"refresh_token"},
+			"redirect_uri":  {"https://www.getpostman.com/oauth2/callback"},
+			"refresh_token": {token.RefreshToken},
+		}
+
+	case "kia":
+		uri = v.config.LoginFormHost + "/auth/api/v2/user/oauth2/token"
+		headers = map[string]string{
+			"Content-type": "application/x-www-form-urlencoded",
+			"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+		}
+		data = url.Values{
+			"grant_type":    {"refresh_token"},
+			"refresh_token": {token.RefreshToken},
+			"client_id":     {v.config.CCSPServiceID},
+			"client_secret": {"secret"},
+		}
+	default:
+		err = errors.New("Unsupported brand")
+	}
+
+	// request token only if we didn't run unto the default branch
 	if err == nil {
-		err = v.DoJSON(req, &res)
+		req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
+
+		if err == nil {
+			err = v.DoJSON(req, &res)
+		}
+
+		// carry over the refresh token (if any)
+		res.RefreshToken = token.RefreshToken
 	}
 
 	return util.TokenWithExpiry(&res), err
+
 }
 
 func (v *Identity) Login(user, password, language, brand string) (err error) {
