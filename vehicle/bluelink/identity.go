@@ -477,19 +477,20 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	// request token only if we didn't run unto the default branch
-	if err == nil {
-		req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
-
-		if err == nil {
-			err = v.DoJSON(req, &res)
-		}
-
-		// carry over the refresh token (if any)
-		res.RefreshToken = token.RefreshToken
+	if err != nil {
+		return nil, err
 	}
 
-	return util.TokenWithExpiry(&res), err
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
+	if err != nil {
+		return nil, err
+	}
 
+	err = v.DoJSON(req, &res)
+	// carry over the refresh token (if any)
+	res.RefreshToken = token.RefreshToken
+
+	return util.TokenWithExpiry(&res), err
 }
 
 func (v *Identity) Login(user, password, language, brand string) (err error) {
