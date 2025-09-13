@@ -120,5 +120,6 @@ render: |
                     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C24
                     body: {{ if .maxchargepower }}{{ .maxchargepower }}{{ else }}99000{{ end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
