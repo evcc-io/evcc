@@ -141,5 +141,6 @@ render: |
           body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
