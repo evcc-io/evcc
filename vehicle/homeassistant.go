@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -31,23 +33,25 @@ func init() {
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
-		embed   `mapstructure:",squash"`
-		URI     string
-		Token   string
-		Sensors struct {
-			Soc        string // required
-			Range      string // optional
-			Status     string // optional
-			LimitSoc   string // optional
-			Odometer   string // optional
-			Climater   string // optional
-			FinishTime string // optional
-		}
-		Services struct {
-			Start  string `mapstructure:"start_charging"` // script.*  optional
-			Stop   string `mapstructure:"stop_charging"`  // script.*  optional
-			Wakeup string // script.*  optional
-		}
+		embed `mapstructure:",squash"`
+		URI   string
+		Token string
+
+		// Sensor entities
+		Soc           string // required
+		Range         string // optional
+		Status        string // optional
+		LimitSoc      string // optional
+		Odometer      string // optional
+		Climater      string // optional
+		FinishTime    string // optional
+		GetMaxCurrent string `mapstructure:"getMaxCurrent"` // optional
+
+		// Service entities
+		StartCharging string `mapstructure:"start_charging"` // script.*  optional
+		StopCharging  string `mapstructure:"stop_charging"`  // script.*  optional
+		Wakeup        string // script.*  optional
+		SetMaxCurrent string `mapstructure:"setMaxCurrent"` // script.*  optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -59,7 +63,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, errors.New("missing uri")
 	case cc.Token == "":
 		return nil, errors.New("missing token")
-	case cc.Sensors.Soc == "":
+	case cc.Soc == "":
 		return nil, errors.New("missing soc sensor")
 	}
 
@@ -67,7 +71,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		embed:  &cc.embed,
 		Helper: request.NewHelper(util.NewLogger("ha-vehicle").Redact(cc.Token)),
 		uri:    strings.TrimSuffix(cc.URI, "/"),
-		soc:    cc.Sensors.Soc,
+		soc:    cc.Soc,
 	}
 
 	res.Client.Transport = &transport.Decorator{
@@ -79,44 +83,54 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	// prepare optional feature functions with concise names
 	var (
-		limitSoc     func() (int64, error)
-		status       func() (api.ChargeStatus, error)
-		rng          func() (int64, error)
-		odo          func() (float64, error)
-		climater     func() (bool, error)
-		finish       func() (time.Time, error)
-		chargeEnable func(bool) error
-		wakeup       func() error
+		limitSoc      func() (int64, error)
+		status        func() (api.ChargeStatus, error)
+		rng           func() (int64, error)
+		odo           func() (float64, error)
+		climater      func() (bool, error)
+		finish        func() (time.Time, error)
+		chargeEnable  func(bool) error
+		wakeup        func() error
+		setMaxCurrent func(int64) error
+		getMaxCurrent func() (float64, error)
 	)
 
-	if cc.Sensors.LimitSoc != "" {
-		limitSoc = func() (int64, error) { return res.getIntSensor(cc.Sensors.LimitSoc) }
+	if cc.LimitSoc != "" {
+		limitSoc = func() (int64, error) { return res.getIntSensor(cc.LimitSoc) }
 	}
-	if cc.Sensors.Status != "" {
-		status = func() (api.ChargeStatus, error) { return res.status(cc.Sensors.Status) }
+	if cc.Status != "" {
+		status = func() (api.ChargeStatus, error) { return res.status(cc.Status) }
 	}
-	if cc.Sensors.Range != "" {
-		rng = func() (int64, error) { return res.getIntSensor(cc.Sensors.Range) }
+	if cc.Range != "" {
+		rng = func() (int64, error) { return res.getIntSensor(cc.Range) }
 	}
-	if cc.Sensors.Odometer != "" {
-		odo = func() (float64, error) { return res.getFloatSensor(cc.Sensors.Odometer) }
+	if cc.Odometer != "" {
+		odo = func() (float64, error) { return res.getFloatSensor(cc.Odometer) }
 	}
-	if cc.Sensors.Climater != "" {
-		climater = func() (bool, error) { return res.getBoolSensor(cc.Sensors.Climater) }
+	if cc.Climater != "" {
+		climater = func() (bool, error) { return res.getBoolSensor(cc.Climater) }
 	}
-	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return res.getTimeSensor(cc.Sensors.FinishTime) }
+	if cc.FinishTime != "" {
+		finish = func() (time.Time, error) { return res.getTimeSensor(cc.FinishTime) }
 	}
-	if cc.Services.Start != "" && cc.Services.Stop != "" {
+	if cc.GetMaxCurrent != "" {
+		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.GetMaxCurrent) }
+	}
+	if cc.StartCharging != "" && cc.StopCharging != "" {
 		chargeEnable = func(enable bool) error {
 			if enable {
-				return res.callScript(cc.Services.Start)
+				return res.callScript(cc.StartCharging)
 			}
-			return res.callScript(cc.Services.Stop)
+			return res.callScript(cc.StopCharging)
 		}
 	}
-	if cc.Services.Wakeup != "" {
-		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
+	if cc.Wakeup != "" {
+		wakeup = func() error { return res.callScript(cc.Wakeup) }
+	}
+	if cc.SetMaxCurrent != "" {
+		setMaxCurrent = func(current int64) error {
+			return res.callScriptWithCurrent(cc.SetMaxCurrent, current)
+		}
 	}
 
 	// decorate all features
@@ -127,8 +141,8 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		rng,
 		odo,
 		climater,
-		nil, // maxCurrent setter not implemented
-		nil, // getMaxCurrent getter not implemented
+		setMaxCurrent,
+		getMaxCurrent,
 		finish,
 		wakeup,
 		chargeEnable,
@@ -159,10 +173,38 @@ func (v *HomeAssistant) getState(entity string) (string, error) {
 
 func (v *HomeAssistant) callScript(script string) error {
 	// All configured services are scripts, so always use script.turn_on
-	payload := fmt.Sprintf(`{"entity_id": "%s"}`, script)
+	payload := map[string]string{
+		"entity_id": script,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
 	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
-	req, _ := request.New(http.MethodPost, uri, strings.NewReader(payload))
-	_, err := v.DoBody(req)
+	req, _ := request.New(http.MethodPost, uri, bytes.NewReader(body))
+	_, err = v.DoBody(req)
+	return err
+}
+
+func (v *HomeAssistant) callScriptWithCurrent(script string, current int64) error {
+	// Call script with current parameter
+	payload := map[string]interface{}{
+		"entity_id": script,
+		"variables": map[string]int64{
+			"current": current,
+		},
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	uri := fmt.Sprintf("%s/api/services/script/turn_on", v.uri)
+	req, _ := request.New(http.MethodPost, uri, bytes.NewReader(body))
+	_, err = v.DoBody(req)
 	return err
 }
 

@@ -84,20 +84,32 @@ params:
       en: Service to wake up vehicle
     example: "script.vehicle_wakeup"
     type: string
+  - name: getMaxCurrent
+    description:
+      de: Entität zum Lesen des aktuellen Ladestroms
+      en: Entity to read current charging current
+    example: "number.vehicle_get_max_current"
+    type: string
+  - name: setMaxCurrent
+    description:
+      de: Service zum Setzen des Ladestroms
+      en: Service to set charging current
+    example: "script.vehicle_set_max_current"
+    type: string
 render: |
   type: homeassistant
   {{ include "vehicle-common" . }}
   uri: {{ .uri }}
   token: {{ .token }}
-  sensors:
-    soc: {{ .soc }}
-    range: {{ .range }}
-    status: {{ .status }}
-    limitSoc: {{ .limitSoc }}
-    odometer: {{ .odometer }}
-    climater: {{ .climater }}
-    finishTime: {{ .finishTime }}
-  services:
-    start_charging: {{ .start_charging }}
-    stop_charging: {{ .stop_charging }}
-    wakeup: {{ .wakeup }}
+  soc: {{ .soc }}
+  range: {{ .range }}
+  status: {{ .status }}
+  limitSoc: {{ .limitSoc }}
+  odometer: {{ .odometer }}
+  climater: {{ .climater }}
+  finishTime: {{ .finishTime }}
+  getMaxCurrent: {{ .getMaxCurrent }}
+  start_charging: {{ .start_charging }}
+  stop_charging: {{ .stop_charging }}
+  wakeup: {{ .wakeup }}
+  setMaxCurrent: {{ .setMaxCurrent }}
