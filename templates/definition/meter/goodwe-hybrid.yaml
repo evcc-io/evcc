@@ -84,7 +84,7 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
-    {{- end }}
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: calc
