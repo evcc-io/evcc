@@ -159,4 +159,5 @@ render: |
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
