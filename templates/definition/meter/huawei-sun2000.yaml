@@ -278,5 +278,6 @@ render: |
                 type: writesingle
                 encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
