@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
-      "title": "Management vun der Belaaschtung"
+      "title": "Management vun der Belaaschtung",
+      "usableMeters": "Verwendbar Zielerreferenzen"
     },
     "control": {
       "description": "Normalerweis sinn d'Standardwäerter gutt. Veränner se nëmmen wann s du weess wat s du mëss.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Präis fir anzespeisen",
       "gridPrice": "Netz Präis",
       "heaterTempLimit": "Limitt vun der Heizung",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktiivt Limit",
+      "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
       "no": "nee",
       "odometer": "Kilometerzäler",
@@ -123,6 +125,10 @@
       "A": "A (net verbonnen)",
       "B": "B (verbonnen)",
       "C": "C (luet)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarte Verbraucher",
@@ -176,7 +182,7 @@
       "titleEdit": "Netzzieler beaarbechten"
     },
     "hems": {
-      "description": "evcc mat engem aneren Heem Energiemanagement System verbannen.",
+      "description": "Leeschtungsbegrenzung duerch extern Systemer (bspw. Steierboxen, § 14a EnWG). Setzt eng Gestioun vun der Charge viraus.",
       "title": "HEMS"
     },
     "icon": {
@@ -430,13 +436,17 @@
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
       "descriptionToken": "Du kriss den Token vun {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
+      "enterYourToken": "Token aginn",
       "error": "De Sponsortoken ass ongülteg.",
+      "invalid": "ongülteg",
       "labelToken": "Sponsor-Token",
       "title": "Sponsoring",
       "tokenRequired": "Du muss ee Sponsortoken konfiguréieren, éier dëst Gerät kann erstallt ginn.",
       "tokenRequiredLearnMore": "Méi Informatiounen.",
       "tokenRequiredShort": "Kee Sponsortoken konfiguréiert.",
-      "trialToken": "Testtoken"
+      "trialToken": "Testtoken",
+      "viaYaml": "iwwer evcc.yaml",
+      "yourToken": "Däin Token"
     },
     "system": {
       "backupRestore": {
@@ -689,7 +699,7 @@
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
       "planNumber": "Planifkatioun {number}",
-      "preconditionDescription": "Luetzäit {Zeit} virum Fortfuere fir Batterie-Prekonditionéierung.",
+      "preconditionDescription": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
       "preconditionLong": "Verspéit Lueden",
       "preconditionOptionAll": "Alles",
       "preconditionOptionNo": "Nee",
@@ -718,6 +728,7 @@
       "gridImport": "Verbrauch vum Stroumnetz",
       "homePower": "Verbrauch",
       "loadpoints": "Wallbox | Wallbox | {count} Wallboxen",
+      "loadpointsLimit": "{limit} Limitt",
       "noEnergy": "Keng Moossdaten",
       "pv": "Solaranlag",
       "pvExport": "Export an d'Stroumnetz",
@@ -729,6 +740,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Limitt vun der Heizung",
       "waitForVehicle": "Prett. Waarden op d'Heizung…"
+    },
+    "hemsWarning": {
+      "description": "Reduzéier d'Luedleeschtung, fir {limit} net ze iwwerschreiden.",
+      "title": "Extern Begrenzung:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Präis",
@@ -810,7 +825,7 @@
       "onlyInPvMode": "Luedplanifikatioun ass nëmmen am PV-Modus aktiv.",
       "planDuration": "Dauer vum Oplueden",
       "planPeriodLabel": "Zäitraum",
-      "planPeriodValue": "{Start} bis {end}",
+      "planPeriodValue": "{start} bis {end}",
       "planUnknown": "nach net bekannt",
       "preview": "Virschau vun der Planifikatioun",
       "priceLimit": "Präisgrenz vu {price}",
@@ -875,7 +890,7 @@
       "scale1p": "Reduktioun op eng eenzeg Phase.",
       "scale3p": "Erhéije geschwënn op dräi Phasen.",
       "targetChargeActive": "Luedplanung aktiv. Ageschate Schluss an {duration}.",
-      "targetChargePlanned": "Luedpladung fänkt un an {time} un.",
+      "targetChargePlanned": "Luedpladung fänkt un an {duration} un.",
       "targetChargeWaitForVehicle": "Luedplang ass prett. Waarden op d'Gefier…",
       "vehicleLimit": "Limitt vum Gefier",
       "vehicleLimitReached": "Limitt vum Gefier erreecht.",

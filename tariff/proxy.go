@@ -2,7 +2,9 @@ package tariff
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"slices"
 	"sync"
 	"time"
@@ -14,7 +16,8 @@ import (
 
 // CachingProxy wraps a tariff with caching
 type CachingProxy struct {
-	mu sync.Mutex
+	mu   sync.Mutex
+	hash [32]byte
 
 	key    string
 	ctx    context.Context
@@ -165,6 +168,12 @@ func (p *CachingProxy) cacheGet(until time.Time) (*cached, error) {
 }
 
 func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
+	hash := sha256.Sum256(fmt.Append(nil, rates))
+	if hash == p.hash {
+		return nil
+	}
+
+	p.hash = hash
 	return cachePut(p.key, typ, rates)
 }
 

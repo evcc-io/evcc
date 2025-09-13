@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
-      "title": "Gestion de la charge"
+      "title": "Gestion de la charge",
+      "usableMeters": "Références des compteurs utilisables"
     },
     "control": {
       "description": "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Prix de revente",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
-      "hemsType": "Système",
+      "hemsActiveLimit": "Limite active",
+      "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "no": "non",
       "odometer": "Kilométrage",
@@ -123,6 +125,10 @@
       "A": "A (non connecté)",
       "B": "B (connecté)",
       "C": "C (en charge)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relai"
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
@@ -176,7 +182,7 @@
       "titleEdit": "Modifier le compteur pour réseau"
     },
     "hems": {
-      "description": "Connecter evcc à un autre Système de Gestion d’Energie Domestique.",
+      "description": "Limitation de la puissance par un système externe (par exemple contrôleur EnWG 14a). Nécessite de configurer la gestion de charge.",
       "title": "SGED"
     },
     "icon": {
@@ -273,12 +279,12 @@
       "thresholdDisableDelayLabel": "Délai de désactivation",
       "thresholdDisableHelpInvalid": "Veuillez entrer une valeur positive.",
       "thresholdDisableHelpPositive": "Arrêter lorsque plus de {power} est utilisé depuis le réseau depuis {delay}.",
-      "thresholdDisableHelpZero": "Arrêter lorsque la puissance minimale requise ne peut être assurée pendant {délai}.",
+      "thresholdDisableHelpZero": "Arrêter lorsque la puissance minimale requise ne peut être assurée pendant {delay}.",
       "thresholdDisableLabel": "Seuil de désactivation (W)",
       "thresholdEnableDelayLabel": "Délai d’activation",
       "thresholdEnableHelpInvalid": "Veuillez utiliser une valeur négative.",
       "thresholdEnableHelpNegative": "Démarrer lorsqu’un surplus de {surplus} est disponible depuis {delay}.",
-      "thresholdEnableHelpZero": "Démarrer lorsque la puissance minimale requise peut être assurée pendant {délai}.",
+      "thresholdEnableHelpZero": "Démarrer lorsque la puissance minimale requise peut être assurée pendant {delay}.",
       "thresholdEnableLabel": "Seuil d’activation (W)",
       "titleAdd": {
         "charging": "Ajouter point de charge",
@@ -438,7 +444,7 @@
       "tokenRequired": "Vous devez configurer un jeton de sponsor avant de pouvoir créer cet appareil.",
       "tokenRequiredLearnMore": "Plus d’information.",
       "tokenRequiredShort": "Aucun jeton de parrainage n'est configuré.",
-      "trialToken": "Jeton d’essai",
+      "trialToken": "jeton d’essai",
       "viaYaml": "via evcc.yaml",
       "yourToken": "Votre jeton"
     },
@@ -625,7 +631,7 @@
   "header": {
     "about": "À propos",
     "authProviders": {
-      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {titre} ?",
+      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
@@ -722,6 +728,7 @@
       "gridImport": "Utilisation du réseau",
       "homePower": "Consommation",
       "loadpoints": "Recharge| Recharge | {count} chargeurs",
+      "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
       "pvExport": "Injection",
@@ -733,6 +740,10 @@
       "connected": "En attente.",
       "vehicleLimit": "Limite de chauffage",
       "waitForVehicle": "Prêt. En attente du chauffage…"
+    },
+    "hemsWarning": {
+      "description": "Réduire la charge pour ne pas dépasser {limit}.",
+      "title": "Limite externe :"
     },
     "loadpoint": {
       "avgPrice": "Prix ⌀",
@@ -802,7 +813,7 @@
     "startConfiguration": "Commençons la configuration",
     "targetCharge": {
       "activate": "Activer",
-      "co2Limit": "Limite de CO₂ {co2]",
+      "co2Limit": "Limite de CO₂ {co2}",
       "costLimitIgnore": "La limite configurée {limit} sera ignorée durant cette période.",
       "currentPlan": "Plan actif",
       "descriptionEnergy": "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy} ?",
