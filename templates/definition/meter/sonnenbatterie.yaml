@@ -132,5 +132,6 @@ render: |
           - Auth-Token: {{ .token }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
