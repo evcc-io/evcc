@@ -106,4 +106,6 @@ render: |
       type: holding
       decode: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
