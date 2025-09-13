@@ -1,0 +1,29 @@
+interval: 0.1s
+
+loadpoints:
+  - title: Loadpoint
+    charger: charger
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        false
+    status:
+      source: js
+      script: |
+        "B"
+    maxcurrent:
+      source: js
+      script:
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.4 # EUR/kWh

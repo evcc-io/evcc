@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -32,13 +31,16 @@ func Now(t api.Tariff) (float64, error) {
 }
 
 func Forecast(t api.Tariff) api.Rates {
-	staticTariffs := []api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic}
-	if t != nil && !slices.Contains(staticTariffs, t.Type()) {
-		if rr, err := t.Rates(); err == nil {
-			return rr
-		}
+	if t == nil {
+		return nil
 	}
-	return nil
+
+	rr, err := t.Rates()
+	if err != nil {
+		return nil
+	}
+
+	return rr
 }
 
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
