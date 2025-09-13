@@ -112,4 +112,5 @@ render: |
                 type: writemultiple
                 decode: uint32
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
