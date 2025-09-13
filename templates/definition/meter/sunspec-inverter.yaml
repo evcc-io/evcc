@@ -11,6 +11,8 @@ params:
     choice: ["tcpip", "rs485"]
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -162,4 +164,6 @@ render: |
       - 124:ChaState
       - 802:SoC
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

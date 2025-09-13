@@ -19,6 +19,8 @@ params:
     id: 64
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: watchdog
     type: duration
     default: 240s
@@ -90,4 +92,6 @@ render: |
               type: writemultiple
               encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

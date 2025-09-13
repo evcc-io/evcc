@@ -25,6 +25,8 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: user
     default: customer
     description:
@@ -115,4 +117,6 @@ render: |
           error: ErrNotAvailable
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

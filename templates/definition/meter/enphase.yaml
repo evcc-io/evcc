@@ -20,6 +20,8 @@ params:
       de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: cache
     advanced: true
     default: 1s
@@ -149,4 +151,6 @@ render: |
     cache: {{ .cache }}
     jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
