@@ -43,15 +43,25 @@ params:
     default: 1h
     advanced: true
 render: |
+  {{- define "buildItemParams" -}}
+    {{- if .item -}}
+      {{- printf "&item=%s" .item -}}
+      {{- if .id -}}
+        {{- printf "&id=%s" .id -}}
+      {{- else if .uniquetoken -}}
+        {{- printf "&token=%s" (unquote .uniquetoken) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
   type: custom
   tariff: solar
   forecast:
     source: http
-    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}{{ if .uniquetoken }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ end }}&algorithm={{ .algorithm }}&type=hourly
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&algorithm={{ .algorithm }}&access-token={{ .token }}{{ template "buildItemParams" . }}
     jq: |
       [ .data | to_entries.[] | {
         "start": (.key | tonumber | strftime("%FT%TZ") ),
         "end": (.key | tonumber + 3600 | strftime("%FT%TZ")  ) ,
-        "value": (.value.[0]*1000)
+        "value": (.value.[0]*1000) # returned value unit is always kW
       } ] | tostring
   interval: {{ .interval }}
