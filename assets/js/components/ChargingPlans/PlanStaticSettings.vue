@@ -245,7 +245,7 @@ export default defineComponent({
 				this.fmtPercentage,
 				"-",
 				this.socPerKwh,
-				this.selectedEnergy
+				Number(this.selectedEnergy)
 			);
 			// remove the first entry (0)
 			return options.slice(1);
