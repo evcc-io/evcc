@@ -676,7 +676,7 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 }
 
 // setup SHM
-func configureSHM(conf *globalconfig.Shm, site *core.Site, httpd *server.HTTPd) error {
+func configureSHM(conf *shm.Config, site *core.Site, httpd *server.HTTPd) error {
 	if settings.Exists(keys.Shm) {
 		if err := settings.Json(keys.Shm, &conf); err != nil {
 			return err
