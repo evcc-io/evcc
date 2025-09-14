@@ -175,7 +175,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 
 		bo := backoff.NewExponentialBackOff(
 			backoff.WithInitialInterval(10*time.Second),
-			backoff.WithMaxInterval(5*time.Minute),
+			backoff.WithMaxInterval(10*time.Minute),
 			backoff.WithMaxElapsedTime(0),
 		)
 
