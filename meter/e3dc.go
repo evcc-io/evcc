@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	// "fmt"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -145,6 +147,7 @@ func (m *E3dc) retryMessages(msgs []rscp.Message) ([]rscp.Message, error) {
 func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any) (T, error)) (T, bool, error) {
 	var zero T
 
+	// fmt.Printf("\nentry with\n%#v\n", msg)
 	if msg.DataType != rscp.Container {
 		if msg.Tag == wantedTag {
 			v, err := rscpValue(msg, fun)
@@ -153,16 +156,14 @@ func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any
 			}
 			return v, true, nil
 		}
-	} else {
-		if nestedMessage, ok := msg.Value.([]rscp.Message); ok {
-			for _, m := range nestedMessage {
-				// ok == tag found
-				if val, ok, err := extractValueByTag(m, wantedTag, fun); ok {
-					return val, ok, err
-				}
+		return zero, false, nil
+	} 
+	if nestedMessage, ok := msg.Value.([]rscp.Message); ok {
+		for _, m := range nestedMessage {
+			// ok == tag found
+			if v, ok, err := extractValueByTag(m, wantedTag, fun); ok {
+				return v, ok, err
 			}
-		} else {
-			return zero, false, nil
 		}
 	}
 
@@ -352,24 +353,11 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 		if !found || err != nil {
 			return 0, 0, 0, err
 		}
-		var currentL1, currentL2, currentL3 float64
-		if voltageL1 != 0 {
-			currentL1 = powerL1 / voltageL1
-		} else {
-			return 0, 0, 0, nil
-		}
-		if voltageL2 != 0 {
-			currentL2 = powerL2 / voltageL2
-		} else {
-			return 0, 0, 0, nil
-		}
-		if voltageL3 != 0 {
-			currentL3 = powerL3 / voltageL3
-		} else {
+		if voltageL1 == 0 || voltageL2 == 0 || voltageL3 == 0 {
 			return 0, 0, 0, nil
 		}
 
-		return currentL1, currentL2, currentL3, nil
+		return powerL1/voltageL1, powerL2/voltageL2, powerL3/voltageL3, nil
 
 	default:
 		return 0, 0, 0, api.ErrNotAvailable
