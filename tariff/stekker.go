@@ -43,10 +43,10 @@ const stekkerURI = "https://stekker.app/epex-forecast"
 
 // NewStekkerFromConfig creates provider from config
 func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
+	var cc struct {
 		embed  `mapstructure:",squash"`
 		Region string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
