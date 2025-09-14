@@ -70,7 +70,7 @@ func (t *Stekker) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerUri, t.region)
+		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, t.region)
 
 		resp, err := client.Get(url)
 		if err != nil {
@@ -87,12 +87,13 @@ func (t *Stekker) run(done chan error) {
 		}
 
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
-		resp.Body.Close()
 		if err != nil {
+			resp.Body.Close()
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println("parse error:", err)
 			continue
 		}
+		resp.Body.Close()
 
 		val, ok := doc.Find("[data-epex-forecast-graph-data-value]").Attr("data-epex-forecast-graph-data-value")
 		if !ok {
@@ -138,7 +139,7 @@ func (t *Stekker) run(done chan error) {
 				res = append(res, api.Rate{
 					Start: start,
 					End:   end,
-					Value: t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh with adjustments
+					Value: t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh
 				})
 			}
 		}
