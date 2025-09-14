@@ -452,7 +452,7 @@ export default defineComponent({
 			const options = this.bufferStartOptions.map((option) => option.value);
 			const index = options.findIndex((value) => this.bufferStartSoc >= value);
 			const nextIndex = index === 0 ? options.length - 1 : index - 1;
-			this.setBufferStartSoc(options[nextIndex]);
+			this.setBufferStartSoc(options[nextIndex]!);
 		},
 		async setBufferStartSoc(soc: number) {
 			this.selectedBufferStartSoc = soc;

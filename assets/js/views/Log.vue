@@ -164,7 +164,8 @@ export default defineComponent({
 				occurrences.set(key, count + 1);
 				key = `${key}-${count + 1}`;
 
-				const className = `log log-${levelMatcher.exec(line)?.[1].toLowerCase() || "none"}`;
+				const match = levelMatcher.exec(line)?.[1];
+				const className = `log log-${match?.toLowerCase() || "none"}`;
 
 				return { key, className, line };
 			});

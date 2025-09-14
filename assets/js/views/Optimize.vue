@@ -184,11 +184,11 @@ export default defineComponent({
 			if (!this.evopt?.res.batteries) return [];
 
 			return this.evopt.res.batteries.map(
-				(_, index) => colors.palette[index % colors.palette.length]
+				(_, index) => colors.palette[index % colors.palette.length] || ""
 			);
 		},
 		dimmedBatteryColors() {
-			return this.batteryColors.map((color) => this.dimColorBy25Percent(color));
+			return (this.batteryColors || []).map((color) => this.dimColorBy25Percent(color));
 		},
 		formattedRequest() {
 			return this.evopt?.req ? formatCompactJson(this.evopt.req) : "";
