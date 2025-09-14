@@ -28,7 +28,6 @@ var supportedRegions = []string{
 type Stekker struct {
 	*embed
 	region string
-	uri    string
 	log    *util.Logger
 	data   *util.Monitor[api.Rates]
 }
