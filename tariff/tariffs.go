@@ -30,7 +30,8 @@ func Now(t api.Tariff) (float64, error) {
 	return r.Value, err
 }
 
-func Forecast(t api.Tariff) api.Rates {
+// Rates returns the tariffs rates if not nil
+func Rates(t api.Tariff) api.Rates {
 	if t == nil {
 		return nil
 	}
