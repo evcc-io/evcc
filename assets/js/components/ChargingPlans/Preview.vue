@@ -14,7 +14,7 @@
 					</div>
 				</div>
 			</div>
-			<div v-if="hasTariff" class="text-end">
+			<div v-if="hasTariff" class="text-end" data-testid="tariff-value">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else-if="isCo2">{{ $t("main.targetChargePlan.co2Label") }}</span>
