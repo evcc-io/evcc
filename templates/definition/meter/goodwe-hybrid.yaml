@@ -62,28 +62,6 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
-  voltages:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 35121 # R phase Grid voltage, V
-      type: holding
-      decode: uint16
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 35126 # S phase Grid voltage, V
-      type: holding
-      decode: uint16
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 35131 # T phase Grid voltage, V
-      type: holding
-      decode: uint16
-    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
