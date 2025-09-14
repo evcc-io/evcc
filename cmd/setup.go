@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
 	"github.com/evcc-io/evcc/plugin/javascript"
@@ -674,6 +675,21 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	return nil
 }
 
+// setup SHM
+func configureSHM(conf *shm.Config, site *core.Site, httpd *server.HTTPd) error {
+	if settings.Exists(keys.Shm) {
+		if err := settings.Json(keys.Shm, &conf); err != nil {
+			return err
+		}
+	}
+
+	if err := shm.NewFromConfig(*conf, site, httpd.Addr, httpd.Router()); err != nil {
+		return fmt.Errorf("failed configuring shm: %w", err)
+	}
+
+	return nil
+}
+
 // setup javascript
 func configureJavascript(conf []globalconfig.Javascript) error {
 	for _, cc := range conf {
@@ -695,7 +711,7 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
 		*conf = globalconfig.Hems{}
@@ -713,7 +729,7 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd
 		return fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site, httpd)
+	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
 	}

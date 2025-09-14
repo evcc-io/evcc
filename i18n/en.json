@@ -77,6 +77,7 @@
       "title": "Control behavior"
     },
     "deviceValue": {
+      "allowControl": "Allow control",
       "amount": "Amount",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -430,6 +431,20 @@
       "meter": "Solar & Battery",
       "system": "System",
       "vehicles": "Vehicles"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc comes with integration for the SMA Sunny Home Manager 2.0. When run in the same network your Sunny Home Manager interface should prompt you to add evcc. Everything should work out of the box without need for adjustments here.",
+      "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
+      "descriptionIdPattern": "Identifier pattern",
+      "descriptionIds": "In Sunny Home Manager every device (charging point, ..) needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL to check your current identifiers.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 characters HEX string. General prefix of all entities.",
+      "labelAllowControl": "Accept global power limit requests from SHM.",
+      "labelControl": "Allow control",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager 2.0"
     },
     "sponsor": {
       "addToken": "Enter token",
