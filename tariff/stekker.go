@@ -58,7 +58,6 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Stekker{
 		embed:  &cc.embed,
 		region: cc.Region,
-		uri:    stekkerURI,
 		log:    util.NewLogger("stekker"),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
