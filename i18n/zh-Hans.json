@@ -794,7 +794,7 @@
       "scale1p": "准备切换为单相充电。",
       "scale3p": "准备切换为三相充电。",
       "targetChargeActive": "充电计划已激活。预计在 {duration} 内完成。",
-      "targetChargePlanned": "充电计划将于 {duration} 后开始（{time}）。",
+      "targetChargePlanned": "充电计划将于 {duration} 后开始。",
       "targetChargeWaitForVehicle": "充电计划准备就绪。等待车辆连接…",
       "vehicleLimit": "车辆充电上限",
       "vehicleLimitReached": "已达到车辆充电上限 {soc}。",
