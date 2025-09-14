@@ -70,7 +70,7 @@ func (t *Stekker) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", t.uri, t.region)
+		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerUri, t.region)
 
 		resp, err := client.Get(url)
 		if err != nil {
