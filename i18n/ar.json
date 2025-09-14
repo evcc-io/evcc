@@ -2,16 +2,16 @@
   "batterySettings": {
     "batteryLevel": "مستوى البطارية",
     "bufferStart": {
-      "full": "عندما أوشكت على الامتلاء",
+      "full": "عندما أوشكت على الامتلاء {soc}.",
       "never": "فقط مع فائض كافٍ"
     },
     "legendBottomName": "أولوية المنزل",
-    "legendBottomSubline": "لا تستخدم للشحن",
+    "legendBottomSubline": "حتى تصل إلى {soc}.",
     "legendMiddleName": "السيارة أولا",
-    "legendMiddleSubline": "المنزل الثاني",
+    "legendMiddleSubline": "عندما تكون بطارية المنزل فوق {soc}.",
     "legendTopAutostart": "يبدأ تلقائيًا",
     "legendTopName": "بطارية تدعم الشحن",
-    "legendTopSubline": "بدون انقطاع",
+    "legendTopSubline": "عندما تكون بطارية المنزل فوق {soc}.",
     "modalTitle": "إعدادات البطارية"
   },
   "config": {

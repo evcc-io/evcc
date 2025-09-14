@@ -481,7 +481,7 @@
       "today": "Danes",
       "tomorrow": "Jutri"
     },
-    "solarAdjust": "Prilagodite sončno napoved na podlagi dejanskih podatkov o proizvodnji.",
+    "solarAdjust": "Prilagodite sončno napoved na podlagi dejanskih podatkov o proizvodnji {percent}.",
     "type": {
       "co2": "CO₂",
       "price": "Cena",
@@ -729,7 +729,7 @@
       "scale1p": "Zmanjšanje na 1-fazno napajanje kmalu...",
       "scale3p": "Povečanje na 3-fazno napajanje kmalu...",
       "targetChargeActive": "Ciljno polnjenje je aktivno, predviden konec {duration}.",
-      "targetChargePlanned": "Ciljno polnjenje se začne ob {time}.",
+      "targetChargePlanned": "Ciljno polnjenje se začne čez {duration}.",
       "targetChargeWaitForVehicle": "Ciljno polnjenje je pripravljeno. Čakam na vozilo ...",
       "vehicleLimit": "Omejitev vozila",
       "vehicleLimitReached": "Omejitev vozila dosežena.",
