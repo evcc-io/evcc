@@ -487,8 +487,10 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	err = v.DoJSON(req, &res)
-	// carry over the refresh token (if any)
-	res.RefreshToken = token.RefreshToken
+	// carry over the old refresh token (if any and not populated already)
+	if res.RefreshToken == "" && token.RefreshToken != "" {
+		res.RefreshToken = token.RefreshToken
+	}
 
 	return util.TokenWithExpiry(&res), err
 }
