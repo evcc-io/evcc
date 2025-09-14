@@ -149,15 +149,16 @@ func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any
 		if msg.Tag == wantedTag {
 			v, err := rscpValue(msg, fun)
 			if err != nil {
-				return zero, true, err
+				return zero, false, err
 			}
 			return v, true, nil
 		}
 	} else {
 		if nestedMessage, ok := msg.Value.([]rscp.Message); ok {
 			for _, m := range nestedMessage {
-				if val, found, err := extractValueByTag(m, wantedTag, fun); found {
-					return val, true, err
+				// ok == tag found
+				if val, ok, err := extractValueByTag(m, wantedTag, fun); ok {
+					return val, ok, err
 				}
 			}
 		} else {
@@ -235,17 +236,17 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L1,
 					DataType: rscp.None,
-					Value:    nil,
+					// Value:    nil,
 				},
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L2,
 					DataType: rscp.None,
-					Value:    nil,
+					// Value:    nil,
 				},
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L3,
 					DataType: rscp.None,
-					Value:    nil,
+					// Value:    nil,
 				},
 			},
 		})
@@ -388,7 +389,7 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 		return 0, api.ErrNotAvailable
 
 	case templates.UsagePV:
-		for p := 0; p < 3; p++ {
+		for phase := range 3 {
 			res, err := m.retryMessage(rscp.Message{
 				Tag:      rscp.PVI_REQ_DATA,
 				DataType: rscp.Container,
@@ -401,7 +402,7 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 					{
 						Tag:      rscp.PVI_REQ_AC_ENERGY_ALL,
 						DataType: rscp.UInt16,
-						Value:    uint16(p), // phase
+						Value:    uint16(phase), // phase
 					},
 				},
 			})
@@ -410,11 +411,10 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 			}
 
 			val, found, err := extractValueByTag(*res, rscp.PVI_VALUE, cast.ToFloat64E)
-			if found {
-				energyPerPhase[p] = val
-			} else {
+			if !found {
 				return 0, err
 			}
+			energyPerPhase[phase] = val
 		}
 
 		return (energyPerPhase[0] + energyPerPhase[1] + energyPerPhase[2]) / 1000, nil // Wh -> kWh
