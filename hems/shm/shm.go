@@ -100,16 +100,15 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	if err == nil {
 		s.port, err = strconv.Atoi(port)
 	}
+	if err != nil {
+		return err
+	}
 
 	s.hostURI = s.callbackURI()
 
 	s.handlers(router)
 
-	if err != nil {
-		return err
-	}
-
-	go s.Run()
+	go s.run()
 	return nil
 }
 
@@ -118,8 +117,8 @@ func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
 	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
-// Run executes the SEMP runtime
-func (s *SEMP) Run() {
+// run executes the SEMP runtime
+func (s *SEMP) run() {
 	if s.closeC != nil {
 		panic("already running")
 	}
@@ -162,19 +161,6 @@ ANNOUNCE:
 	}
 
 	close(s.doneC)
-}
-
-// Stop stops the SEMP runtime
-func (s *SEMP) Stop() {
-	if s.closeC == nil {
-		panic("not running")
-	}
-	close(s.closeC)
-}
-
-// Done returns the done channel. The channel is closed after byebye has been sent.
-func (s *SEMP) Done() chan struct{} {
-	return s.doneC
 }
 
 func (s *SEMP) callbackURI() string {
