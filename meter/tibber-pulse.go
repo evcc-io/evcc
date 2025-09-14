@@ -174,7 +174,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		var reconnectCount int
 
 		bo := backoff.NewExponentialBackOff(
-			backoff.WithInitialInterval(10*time.Second),
+			backoff.WithInitialInterval(30*time.Second),
 			backoff.WithMaxInterval(10*time.Minute),
 			backoff.WithMaxElapsedTime(0),
 		)
