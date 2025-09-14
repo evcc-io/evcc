@@ -94,8 +94,8 @@ func (t *Stekker) run(done chan error) {
 			continue
 		}
 
-		val, exists := doc.Find("[data-epex-forecast-graph-data-value]").Attr("data-epex-forecast-graph-data-value")
-		if !exists {
+		val, ok := doc.Find("[data-epex-forecast-graph-data-value]").Attr("data-epex-forecast-graph-data-value")
+		if !ok {
 			once.Do(func() { done <- fmt.Errorf("no forecast attribute found") })
 			t.log.ERROR.Println("no forecast attribute found")
 			continue
