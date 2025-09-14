@@ -60,8 +60,8 @@ func (m *Accumulator) NegEnergy() float64 {
 	return m.Neg
 }
 
-// AddPosMeterTotal adds the difference to the last total meter value in kWh
-func (m *Accumulator) AddPosMeterTotal(v float64) {
+// SetImportMeterTotal adds the difference to the last total meter value in kWh
+func (m *Accumulator) SetImportMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
 		m.posMeter = lo.ToPtr(v)
@@ -74,8 +74,8 @@ func (m *Accumulator) AddPosMeterTotal(v float64) {
 	m.Pos += v - *m.posMeter
 }
 
-// AddNegMeterTotal adds the difference to the last total meter value in kWh
-func (m *Accumulator) AddNegMeterTotal(v float64) {
+// SetExportMeterTotal adds the difference to the last total meter value in kWh
+func (m *Accumulator) SetExportMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
 		m.negMeter = lo.ToPtr(v)
@@ -88,8 +88,8 @@ func (m *Accumulator) AddNegMeterTotal(v float64) {
 	m.Neg += v - *m.negMeter
 }
 
-// AddPosEnergy adds the given energy in kWh to the positive meter
-func (m *Accumulator) AddPosEnergy(v float64) {
+// AddImportEnergy adds the given energy in kWh to the positive meter
+func (m *Accumulator) AddImportEnergy(v float64) {
 	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
@@ -99,8 +99,8 @@ func (m *Accumulator) AddPosEnergy(v float64) {
 	m.Pos += v
 }
 
-// AddNegEnergy adds the given energy in kWh to the negative meter
-func (m *Accumulator) AddNegEnergy(v float64) {
+// AddExportEnergy adds the given energy in kWh to the negative meter
+func (m *Accumulator) AddExportEnergy(v float64) {
 	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
@@ -113,8 +113,8 @@ func (m *Accumulator) AddNegEnergy(v float64) {
 // AddPower adds the given power in W, calculating the energy based on the time since the last update
 func (m *Accumulator) AddPower(v float64) {
 	if v >= 0 {
-		m.AddPosEnergy(v * m.clock.Since(m.updated).Hours() / 1e3)
+		m.AddImportEnergy(v * m.clock.Since(m.updated).Hours() / 1e3)
 	} else {
-		m.AddNegEnergy(-v * m.clock.Since(m.updated).Hours() / 1e3)
+		m.AddExportEnergy(-v * m.clock.Since(m.updated).Hours() / 1e3)
 	}
 }

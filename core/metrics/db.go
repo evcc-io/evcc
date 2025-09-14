@@ -11,8 +11,8 @@ type meter struct {
 	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
 	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"`
 	Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Pos       float64   `json:"pos" gorm:"column:pos"`
-	Neg       float64   `json:"neg" gorm:"column:neg"`
+	Import    float64   `json:"import" gorm:"column:import"`
+	Export    float64   `json:"export" gorm:"column:export"`
 }
 
 type entity struct {
@@ -74,12 +74,12 @@ func Init() error {
 }
 
 // persist stores 15min consumption in Wh
-func persist(entity entity, ts time.Time, pos, neg float64) error {
+func persist(entity entity, ts time.Time, imprt, export float64) error {
 	return db.Instance.Create(&meter{
 		Entity:    entity,
 		Timestamp: ts.Truncate(15 * time.Minute),
-		Pos:       pos,
-		Neg:       neg,
+		Import:    imprt,
+		Export:    export,
 	}).Error
 }
 

@@ -15,11 +15,11 @@ func TestMeterEnergyMeterTotal(t *testing.T) {
 
 	me := &Accumulator{clock: clock}
 
-	me.AddPosMeterTotal(10)
+	me.SetImportMeterTotal(10)
 	assert.Equal(t, 0.0, me.PosEnergy())
-	me.AddPosMeterTotal(11)
+	me.SetImportMeterTotal(11)
 	assert.Equal(t, 1.0, me.PosEnergy())
-	me.AddPosMeterTotal(11)
+	me.SetImportMeterTotal(11)
 	assert.Equal(t, 1.0, me.PosEnergy())
 }
 

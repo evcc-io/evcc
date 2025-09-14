@@ -604,7 +604,7 @@ func (site *Site) updatePvMeters() {
 		prev := site.pvEnergy[name].PosEnergy()
 		if mm[i].Energy > 0 {
 			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
-			site.pvEnergy[name].AddPosMeterTotal(mm[i].Energy)
+			site.pvEnergy[name].SetImportMeterTotal(mm[i].Energy)
 		} else {
 			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)

@@ -82,27 +82,27 @@ func (c *Collector) Profile(from time.Time) (*[96]float64, error) {
 	return profile(c.entity, from)
 }
 
-func (c *Collector) AddPosEnergy(v float64) error {
+func (c *Collector) AddImportEnergy(v float64) error {
 	return c.process(func() {
-		c.accu.AddPosEnergy(v)
+		c.accu.AddImportEnergy(v)
 	})
 }
 
-func (c *Collector) AddNegEnergy(v float64) error {
+func (c *Collector) AddExportEnergy(v float64) error {
 	return c.process(func() {
-		c.accu.AddNegEnergy(v)
+		c.accu.AddExportEnergy(v)
 	})
 }
 
-func (c *Collector) AddPosMeterTotal(v float64) error {
+func (c *Collector) SetImportMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddPosMeterTotal(v)
+		c.accu.SetImportMeterTotal(v)
 	})
 }
 
-func (c *Collector) AddNegMeterTotal(v float64) error {
+func (c *Collector) SetExportMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddNegMeterTotal(v)
+		c.accu.SetExportMeterTotal(v)
 	})
 }
 

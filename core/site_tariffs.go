@@ -156,7 +156,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		energy, fcstUpdated.Truncate(time.Second), time.Now().Truncate(time.Second),
 	)
 
-	site.fcstEnergy.AddPosEnergy(energy)
+	site.fcstEnergy.AddImportEnergy(energy)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.PosEnergy())
 
 	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *metrics.Accumulator) float64 {
