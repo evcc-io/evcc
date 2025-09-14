@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
@@ -50,8 +49,14 @@ type SEMP struct {
 	site         site.API
 }
 
+type Config struct {
+	AllowControl bool   `json:"allowControl"`
+	VendorId     string `json:"vendorId"`
+	DeviceId     string `json:"deviceId"`
+}
+
 // NewFromConfig creates a new SEMP instance from configuration and starts it
-func NewFromConfig(cfg globalconfig.Shm, site site.API, addr string, router *mux.Router) error {
+func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
 	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"

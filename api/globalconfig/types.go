@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -33,7 +34,7 @@ type All struct {
 	Influx       Influx
 	EEBus        eebus.Config
 	HEMS         Hems
-	SHM          Shm
+	SHM          shm.Config
 	Messaging    Messaging
 	Meters       []config.Named
 	Chargers     []config.Named
@@ -70,12 +71,6 @@ func (c Hems) Redacted() any {
 	}{
 		Type: c.Type,
 	}
-}
-
-type Shm struct {
-	AllowControl bool   `json:"allowControl"`
-	VendorId     string `json:"vendorId"`
-	DeviceId     string `json:"deviceId"`
 }
 
 var _ api.Redactor = (*Mqtt)(nil)
