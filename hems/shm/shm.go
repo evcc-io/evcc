@@ -38,8 +38,6 @@ var serverName = "EVCC SEMP Server " + util.Version
 // SEMP is the SMA SEMP server
 type SEMP struct {
 	log          *util.Logger
-	closeC       chan struct{}
-	doneC        chan struct{}
 	controllable bool
 	vid          string
 	did          []byte
@@ -85,7 +83,6 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	}
 
 	s := &SEMP{
-		doneC:        make(chan struct{}),
 		log:          util.NewLogger("semp"),
 		site:         site,
 		uid:          uid.String(),
@@ -119,11 +116,6 @@ func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
 
 // run executes the SEMP runtime
 func (s *SEMP) run() {
-	if s.closeC != nil {
-		panic("already running")
-	}
-	s.closeC = make(chan struct{})
-
 	uid := "uuid:" + s.uid
 
 	var ads []*ssdp.Advertiser
@@ -140,27 +132,13 @@ func (s *SEMP) run() {
 		ads = append(ads, ad)
 	}
 
-ANNOUNCE:
-	for tick := time.Tick(maxAge * time.Second / 2); ; {
-		select {
-		case <-tick:
-			for _, ad := range ads {
-				if err := ad.Alive(); err != nil {
-					s.log.ERROR.Println(err)
-				}
+	for range time.Tick(maxAge * time.Second / 2) {
+		for _, ad := range ads {
+			if err := ad.Alive(); err != nil {
+				s.log.ERROR.Println(err)
 			}
-		case <-s.closeC:
-			break ANNOUNCE
 		}
 	}
-
-	for _, ad := range ads {
-		if err := ad.Bye(); err != nil {
-			s.log.ERROR.Println(err)
-		}
-	}
-
-	close(s.doneC)
 }
 
 func (s *SEMP) callbackURI() string {
