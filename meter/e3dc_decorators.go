@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error, maxACPowerGetter func() float64) api.Meter {
+func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error, maxACPowerGetter func() float64, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Meter {
 	switch {
-	case battery == nil && maxACPowerGetter == nil:
+	case battery == nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return base
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -22,7 +22,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -37,7 +37,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -52,7 +52,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -71,7 +71,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery == nil && maxACPowerGetter != nil:
+	case battery == nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.MaxACPowerGetter
@@ -82,7 +82,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -97,7 +97,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -116,7 +116,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -135,7 +135,7 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -155,6 +155,1136 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter == nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && maxACPowerGetter != nil && phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MaxACPowerGetter
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhaseCurrents: &decorateE3dcPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateE3dcPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateE3dcPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
 			},
 		}
 	}
@@ -192,4 +1322,28 @@ type decorateE3dcMaxACPowerGetterImpl struct {
 
 func (impl *decorateE3dcMaxACPowerGetterImpl) MaxACPower() float64 {
 	return impl.maxACPowerGetter()
+}
+
+type decorateE3dcPhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decorateE3dcPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
+}
+
+type decorateE3dcPhasePowersImpl struct {
+	phasePowers func() (float64, float64, float64, error)
+}
+
+func (impl *decorateE3dcPhasePowersImpl) Powers() (float64, float64, float64, error) {
+	return impl.phasePowers()
+}
+
+type decorateE3dcPhaseVoltagesImpl struct {
+	phaseVoltages func() (float64, float64, float64, error)
+}
+
+func (impl *decorateE3dcPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
+	return impl.phaseVoltages()
 }
