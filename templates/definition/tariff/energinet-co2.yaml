@@ -19,7 +19,7 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}
+    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now
     jq: |
       [.records[]
         | {
