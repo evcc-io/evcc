@@ -29,17 +29,14 @@ params:
     advanced: true
 render: |
   type: custom
-  # sunspec model 20x (int+sf)/ 21x (float) meter
+  # ????? sunspec model 20x (int+sf)/ 21x (float) meter ????
   {{- if eq .usage "grid" }}
   power:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
-      - 201:W
-      - 211:W
-      - 203:W
-      - 213:W
+      - 1:W
   energy:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
