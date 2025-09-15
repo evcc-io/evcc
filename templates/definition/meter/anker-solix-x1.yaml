@@ -1,8 +1,8 @@
 template: anker-solix-x1
 products:
-  - brand: Anker # SW: 1.0.10.2
+  - brand: Anker
     description:
-      generic: Solix X1 (X1-H(5-12)K-T)
+      generic: Solix X1 (H 5-12 K-T)
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -14,16 +14,9 @@ params:
     help:
       en: Modbus (TCP (only LAN)/ RTU) activation in AnkerSOLIX Installer App per Bluetooth (Start-up -> System Configuration)
       de: Modbus (TCP (nur LAN)/ RTU) aktivierung in AnkerSOLIX Installer App mit Bluetooth (Inbetriebnahme -> Systemkonfiguration)
-  # battery control
-  - name: minsoc # needed?
-    type: int
-    advanced: true
-  - name: maxsoc # needed?
-    type: int
-    advanced: true
   - name: maxchargepower
+    type: int
     default: 4200
-    advanced: true
     help:
       en: Per battery 3 kW, limited by maxacpower (System setting 5 - 12 kW).
       de: Pro Batterie 3 kW, limitiert durch maxacpower (System Einstellung 5 - 12 kW).
@@ -31,7 +24,7 @@ params:
     advanced: true
 render: |
   type: custom
-  # Anker SOLIX X1 Series Modbus Protocol Version: V 1.0.0 Date: 2025-08-07
+  # Anker SOLIX X1 Series Modbus Protocol Version: V 1.0.0 Date: 2025-08-07 # SW: 1.0.10.2
   {{- if eq .usage "grid" }}
   power:
     source: modbus
@@ -45,76 +38,76 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10656 # Meter: Total Forward Active Energy
+      address: 10656 # Meter: Total Forward Active Energy (Total Purchased Energy 10030)
       type: holding
       decode: uint32s
-    scale: 0.01
+    scale: 1
   currents:
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10635 # Meter: Phase A Current
-        type: holding
-        decode: int16
-      scale: 0.01
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10636 # Meter: Phase B Current
-        type: holding
-        decode: int16
-      scale: 0.01
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10637 # Meter: Phase C Current
-        type: holding
-        decode: int16
-      scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10635 # Meter: Phase A Current
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10636 # Meter: Phase B Current
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10637 # Meter: Phase C Current
+      type: holding
+      decode: int16
+    scale: 0.01
   voltages:
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10632 # Meter: Phase A Voltage
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10633 # Meter: Phase B Voltage
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10634 # Meter: Phase C Voltage
-        type: holding
-        decode: uint16
-      scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10632 # Meter: Phase A Voltage
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10633 # Meter: Phase B Voltage
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10634 # Meter: Phase C Voltage
+      type: holding
+      decode: uint16
+    scale: 0.1
   powers:
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10638 # Meter: Phase A Power
-        type: holding
-        decode: int32s
-      scale: 1
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10640 # Meter: Phase B Power
-        type: holding
-        decode: int32s
-      scale: 1
-    - source: modbus
-      {{- include "modbus" . | indent 2 }}
-      register:
-        address: 10642 # Meter: Phase C Power
-        type: holding
-        decode: int32s
-      scale: 1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10638 # Meter: Phase A Power
+      type: holding
+      decode: int32s
+    scale: 1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10640 # Meter: Phase B Power
+      type: holding
+      decode: int32s
+    scale: 1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10642 # Meter: Phase C Power
+      type: holding
+      decode: int32s
+    scale: 1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -132,15 +125,7 @@ render: |
       address: 10018 # Total PV Energy Generation PCS (Total PV Energy Generation PV Information 10187)
       type: holding
       decode: uint32s
-    scale: 1
-  maxacpower: # W
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 10126 # Maximum Active Power PCS Basic Information
-      type: holding
-      decode: int32s
-    scale: 1
+    scale: 0.01
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -158,15 +143,15 @@ render: |
       address: 10022 # Total Battery Charge Energy System Summary
       type: holding
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10016 # SOC (Integrated SOC for all batteries in the plant)
+      address: 10014 # SOC (Integrated SOC for all batteries in the plant)
       type: holding
       decode: uint16
-    scale: 0.1
+    scale: 1
   batterymode:
     source: switch
     switch:
@@ -178,29 +163,7 @@ render: |
           value: 0
           set:
             source: modbus
-            {{- include "modbus" . | indent 6 }}
-            register:
-            address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
-              type: writesingle
-              decode: uint16
-        - source: const
-          value: 0 # W 
-          set:
-            - source: modbus
-              {{- include "modbus" . | indent 6 }}
-              register:
-                address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
-                type: writemultiple
-                decode: int32s
-    - case: 2 # hold
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: 3
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 6 }}
+            {{- include "modbus" . | indent 10}}
             register:
               address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
               type: writesingle
@@ -209,7 +172,29 @@ render: |
           value: 0 # W 
           set:
             source: modbus
-            {{- include "modbus" . | indent 6 }}
+            {{- include "modbus" . | indent 10}}
+            register:
+              address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
+              type: writemultiple
+              decode: int32s
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10}}
+            register:
+              address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # W 
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10}}
             register:
               address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
               type: writemultiple
@@ -221,27 +206,20 @@ render: |
         - source: const
           value: 3
           set:
-            - source: modbus
-              {{- include "modbus" . | indent 6 }}
-              register:
-                address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
-                type: writesingle
-                decode: uint16
+            source: modbus
+            {{- include "modbus" . | indent 10}}
+            register:
+              address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
+              type: writesingle
+              decode: uint16
         - source: const
-          value: -{{ .maxchargepower }} # % 
+          value: -{{ .maxchargepower }} # W
           set:
-            - source: modbus
-              {{- include "modbus" . | indent 6 }}
-              register:
-                address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
-                type: writemultiple
-                decode: int32s
-  capacity: # kWh
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 10250 # Rated Capacity (Integrated Rated Capacity for all batteries in the plant)
-      type: holding
-      decode: uint32s
-    scale: 0.1
+            source: modbus
+            {{- include "modbus" . | indent 10}}
+            register:
+              address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
+              type: writemultiple
+              decode: int32s
+  capacity: {{ .capacity }} # kWh
   {{- end }}
