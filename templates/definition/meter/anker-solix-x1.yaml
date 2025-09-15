@@ -25,7 +25,7 @@ params:
     advanced: true
 render: |
   type: custom
-  # ????? sunspec model 20x (int+sf)/ 21x (float) meter ????
+  # 
   {{- if eq .usage "grid" }}
   power:
     source: modbus
@@ -41,7 +41,7 @@ render: |
     register:
       address: 10656 # Meter: Total Forward Active Energy
       type: holding
-      decode: int32s
+      decode: uint32s
     scale: 0.01
   currents:
     - source: modbus
@@ -112,30 +112,29 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: calc
-    add:
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: 1
-      value: 160:1:DCW # mppt 1
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: 1
-      value: 160:2:DCW # mppt 2
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10183 # Total PV Power PCS PV Information (PV Power 10002 System Summary)
+      type: holding
+      decode: uint32s
+    scale: 1
   energy:
-    source: calc
-    add:
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: 1
-      value: 160:1:DCWH # mppt 1
-      scale: 0.001
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: 1
-      value: 160:2:DCWH # mppt 2
-      scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10187 # Total PV Energy Generation PCS PV Information (Total PV Energy Generation PCS 10018 System Summary)
+      type: holding
+      decode: uint32s
+    scale: 1
+  maxacpower: # W
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10126 # Maximum Active Power PCS Basic Information
+      type: holding
+      decode: int32s
+    scale: 1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
