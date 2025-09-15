@@ -120,13 +120,13 @@ export default defineComponent({
 			);
 		},
 		label() {
-			return this.$t(`main.loadpoint.${this.selectedOption.key}`);
+			return this.$t(`main.loadpoint.${this.selectedOption?.key || ""}`);
 		},
 		value() {
-			return this.selectedOption.value;
+			return this.selectedOption?.value;
 		},
 		valueSm() {
-			return this.selectedOption.valueSm;
+			return this.selectedOption?.valueSm;
 		},
 		showSm() {
 			return this.valueSm !== undefined;

@@ -49,9 +49,14 @@ type MaxACPowerGetter interface {
 	MaxACPower() float64
 }
 
-// BatteryMaxPowerGetter provides max AC charge- and discharge power in W
-type BatteryMaxPowerGetter interface {
-	GetMaxChargeDischargePower() (float64, float64)
+// BatteryPowerLimiter provides max AC charge- and discharge power in W
+type BatteryPowerLimiter interface {
+	GetPowerLimits() (charge, discharge float64)
+}
+
+// BatterySocLimiter provides min/max battery soc in %
+type BatterySocLimiter interface {
+	GetSocLimits() (min, max float64)
 }
 
 // ChargeState provides current charging status

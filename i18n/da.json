@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki.",
-      "title": "Belastningsstyring"
+      "title": "Belastningsstyring",
+      "usableMeters": "Gyldige målerreferencer"
     },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Indfødningstarif",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktiv begrænsning",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
       "no": "nej",
       "odometer": "Kilometertæller",
@@ -123,6 +125,10 @@
       "A": "A (ikke forbundet)",
       "B": "B (forbundet)",
       "C": "C (oplader)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
@@ -176,7 +182,7 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
-      "description": "Tilslut evcc til et andet energistyringssystem i hjemmet.",
+      "description": "Effektbegrænsning fra eksterne systemer (fx EnWG 14a-styringer). Kræver konfiguration af belastningsstyring.",
       "title": "HEMS"
     },
     "icon": {
@@ -438,7 +444,7 @@
       "tokenRequired": "Du skal konfigurere et sponsortoken, før du kan oprette denne enhed.",
       "tokenRequiredLearnMore": "Lær mere.",
       "tokenRequiredShort": "Der er ingen sponsor token konfiguret.",
-      "trialToken": "Test token",
+      "trialToken": "afprøvningstoken",
       "viaYaml": "via evcc.yaml",
       "yourToken": "Dit token"
     },
@@ -463,7 +469,7 @@
           "sessions": "Opladningssessioner",
           "sessionsDescription": "Sletter din opladningshistorik.",
           "settings": "Konfiguration og indstillinger",
-          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester og opladsningsplaner mm.",
+          "settingsDescription": "Sletter alle konfigurerede enheder, tjenester, abonnementer osv.",
           "title": "Nulstil"
         },
         "restore": {
@@ -541,13 +547,13 @@
       "tabTitle": "Live fællesskab"
     },
     "savings": {
-      "co2Saved": "{value} gemt",
+      "co2Saved": "{value} sparet",
       "co2Title": "CO₂ Udledning",
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
       "footerLong": "{percent} Solenergi",
       "footerShort": "{percent} Solenergi",
       "modalTitle": "Oversigt over ladeenergi",
-      "moneySaved": "{value} gemt",
+      "moneySaved": "{value} sparet",
       "percentGrid": "{grid} kWh elnettet",
       "percentSelf": "{self} kWh solenergi",
       "percentTitle": "Solenergi",
@@ -709,7 +715,7 @@
       "titleTargetCharge": "Afgang",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",
       "update": "Anvend",
-      "weekdays": "Dag"
+      "weekdays": "Dage"
     },
     "energyflow": {
       "battery": "Batteri",
@@ -718,11 +724,12 @@
       "batteryGridChargeActive": "Oplader fra elnettet",
       "batteryGridChargeLimit": "Oplader fra elnettet når",
       "batteryHold": "Batteri (låst)",
-      "batteryTooltip": "{energi} af {total} ({soc})",
+      "batteryTooltip": "{energy} af {total} ({soc})",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
       "gridImport": "Forbrug fra elnet",
       "homePower": "Forbrug",
       "loadpoints": "Oplader| Oplader | {count} opladere",
+      "loadpointsLimit": "{limit} begrænsning",
       "noEnergy": "Ingen målerdata",
       "pv": "Solcelleanlæg",
       "pvExport": "Eksport til elnet",
@@ -734,6 +741,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Opvarmning begrænsning",
       "waitForVehicle": "Klar. Venter på varmelegeme…"
+    },
+    "hemsWarning": {
+      "description": "Opladningen reduceres for ikke at overskride {limit}.",
+      "title": "Ekstern begrænsning:"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",

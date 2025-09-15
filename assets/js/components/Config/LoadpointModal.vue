@@ -706,9 +706,9 @@ export default {
 				key?: number;
 				name: string;
 			}[];
-			result[0].name = "0 (default)";
-			result[0].key = undefined;
-			result[10].name = "10 (highest)";
+			result[0]!.name = "0 (default)";
+			result[0]!.key = undefined;
+			result[10]!.name = "10 (highest)";
 			return result;
 		},
 		phasesOptions() {
