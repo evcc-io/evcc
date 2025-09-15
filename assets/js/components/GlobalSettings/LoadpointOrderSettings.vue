@@ -197,7 +197,7 @@ export default defineComponent({
 
 .loadpoint-item--dragging {
 	opacity: 0.8;
-	transform: scale(1.02);
+	transform: scale(1.02) rotate(0deg);
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 	z-index: 10;
 }
