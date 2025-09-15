@@ -77,6 +77,7 @@
       "title": "Regelverhalten"
     },
     "deviceValue": {
+      "allowControl": "Steuerung erlauben",
       "amount": "Anzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -99,7 +100,8 @@
       "feedinPrice": "Einspeisevergütung",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktives Limit",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "no": "Nein",
       "odometer": "Kilometerstand",
@@ -124,6 +126,10 @@
       "A": "A (nicht verbunden)",
       "B": "B (verbunden)",
       "C": "C (lädt)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
@@ -177,7 +183,7 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
-      "description": "evcc mit einem anderen Heimenergiemanagementsystem verbinden.",
+      "description": "Leistungsbegrenzung durch externe Systeme (bspw. Steuerboxen, § 14a EnWG). Setzt Lastmanagementkonfiguration voraus.",
       "title": "HEMS"
     },
     "icon": {
@@ -425,6 +431,20 @@
       "meter": "PV & Batterie",
       "system": "System",
       "vehicles": "Fahrzeuge"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc verfügt über eine Integration für den SMA Sunny Home Manager 2.0. Bei Betrieb im selben Netzwerk sollte deine Sunny Home Manager-Oberfläche dich auffordern, evcc hinzuzufügen. Es sind keine weiteren Anpassungen erforderlich.",
+      "descriptionDeviceId": "12-stelliger HEX-String. Präfix für alle Geräte (Ladepunkt, ..).",
+      "descriptionIdPattern": "Kennungsmuster",
+      "descriptionIds": "Im Sunny Home Manager benötigt jedes Gerät (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, können sich diese Kennungen ändern. Um den Verlauf beizubehalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL, um deine aktuellen Kennungen zu überprüfen.",
+      "descriptionSempUrl": "SEMP-URL",
+      "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten.",
+      "labelAllowControl": "Globale Leistungsbegrenzungsanfragen von SHM akzeptieren.",
+      "labelControl": "Steuerung erlauben",
+      "labelDeviceId": "Geräte-ID",
+      "labelVendorId": "Hersteller-ID",
+      "title": "SMA Sunny Home Manager 2.0"
     },
     "sponsor": {
       "addToken": "Token eingeben",
@@ -721,6 +741,7 @@
       "gridImport": "Netzbezug",
       "homePower": "Verbrauch",
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
+      "loadpointsLimit": "{limit} Limit",
       "noEnergy": "Keine Messwerte",
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
@@ -732,6 +753,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit. Warte auf Heizung …"
+    },
+    "hemsWarning": {
+      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
+      "title": "Externe Begrenzung:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",

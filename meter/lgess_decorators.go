@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery func() (float64, error), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
+func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), batteryCapacity func() float64, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
 	case battery == nil && meterEnergy == nil:
 		return base
@@ -22,7 +22,7 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*LgEss
 			api.Battery
@@ -33,7 +33,7 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*LgEss
 			api.Battery
@@ -48,41 +48,7 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil:
-		return &struct {
-			*LgEss
-			api.Battery
-			api.BatteryController
-		}{
-			LgEss: base,
-			Battery: &decorateLgEssBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateLgEssBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil:
-		return &struct {
-			*LgEss
-			api.Battery
-			api.BatteryController
-			api.MeterEnergy
-		}{
-			LgEss: base,
-			Battery: &decorateLgEssBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateLgEssBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			MeterEnergy: &decorateLgEssMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*LgEss
 			api.Battery
@@ -97,7 +63,7 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*LgEss
 			api.Battery
@@ -116,7 +82,117 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatterySocLimiter
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decorateLgEssMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryCapacity
+			api.BatterySocLimiter
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateLgEssBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryCapacity
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateLgEssBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decorateLgEssMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && meterEnergy == nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryController
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateLgEssBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && meterEnergy != nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateLgEssBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateLgEssMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*LgEss
 			api.Battery
@@ -135,7 +211,7 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*LgEss
 			api.Battery
@@ -152,6 +228,98 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 			BatteryController: &decorateLgEssBatteryControllerImpl{
 				batteryController: batteryController,
+			},
+			MeterEnergy: &decorateLgEssMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateLgEssBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateLgEssBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decorateLgEssMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateLgEssBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateLgEssBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*LgEss
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			LgEss: base,
+			Battery: &decorateLgEssBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateLgEssBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateLgEssBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateLgEssBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
 			},
 			MeterEnergy: &decorateLgEssMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -184,6 +352,14 @@ type decorateLgEssBatteryControllerImpl struct {
 
 func (impl *decorateLgEssBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
 	return impl.batteryController(p0)
+}
+
+type decorateLgEssBatterySocLimiterImpl struct {
+	batterySocLimiter func() (float64, float64)
+}
+
+func (impl *decorateLgEssBatterySocLimiterImpl) GetSocLimits() (float64, float64) {
+	return impl.batterySocLimiter()
 }
 
 type decorateLgEssMeterEnergyImpl struct {

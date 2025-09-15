@@ -2,19 +2,19 @@
   "batterySettings": {
     "batteryLevel": "Ladenivå",
     "bufferStart": {
-      "full": "når det er nesten fullt",
+      "full": "når det er på {soc}.",
       "never": "bare med nok PV-overskudd"
     },
     "capacity": "{energy} av {total}",
     "disclaimerHint": "Merk:",
     "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
     "legendBottomName": "Hjemmelading har prioritet",
-    "legendBottomSubline": "ikke bruk til lading",
+    "legendBottomSubline": "til det når {soc}.",
     "legendMiddleName": "kjøretøy først",
-    "legendMiddleSubline": "hjemme etterpå",
+    "legendMiddleSubline": "når hjemmebatteriet er over {soc}.",
     "legendTopAutostart": "starter automatisk",
     "legendTopName": "batteriassistert lading",
-    "legendTopSubline": "uten avbrudd",
+    "legendTopSubline": "når hjemmebatteriet er over {soc}.",
     "modalTitle": "Batteriinnstillinger"
   },
   "config": {
@@ -66,7 +66,7 @@
       "footerLong": "{percent} solcelleenergi",
       "footerShort": "{percent} solenergi",
       "modalTitle": "Oversikt over ladeenergi",
-      "percentGrid": "{self} kWh lysnett",
+      "percentGrid": "{grid} kWh lysnett",
       "percentSelf": "{self} kWt sol",
       "percentTitle": "Solenergi",
       "priceTitle": "Kraftpris",
@@ -253,8 +253,8 @@
       "pvEnable": "Overskudd tilgjengelig. Starter om {remaining}...",
       "scale1p": "Reduserer til 1-fase strøm i {remaining}...",
       "scale3p": "Øker til 3-fase strøm i {remaining}...",
-      "targetChargeActive": "Målladning aktiv ...",
-      "targetChargePlanned": "Mållading starter på {time}.",
+      "targetChargeActive": "Målladning aktiv. Estimert ferdig om {duration}.",
+      "targetChargePlanned": "Mållading starter på {duration}.",
       "targetChargeWaitForVehicle": "Mållading klar. Venter på kjøretøy...",
       "vehicleLimitReached": "Kjøretøygrense på {soc} nådd.",
       "waitForVehicle": "Klar. Venter på kjøretøy..."
@@ -298,7 +298,7 @@
       "odometer": "Kilometerstand",
       "vehicle": "Kjøretøy"
     },
-    "csvPeriod": "Last ned (måned) CSV",
+    "csvPeriod": "Last ned {period} CSV",
     "csvTotal": "Last ned total CSV",
     "date": "Start",
     "energy": "Oppladet",

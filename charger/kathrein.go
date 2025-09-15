@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -115,6 +115,7 @@ const (
 	kathreinRegGrantedPower     = 0x0066 // uint16 Granted charging power [1380 … 22080] @230VAC (W)
 	kathreinRegChargingDuration = 0x0067 // uint32 Duration Charging (s)
 	kathreinRegChargingEnergy   = 0x0069 // uint32 Energy Charging Energy (per charging session) (Wh)
+	kathreinRegRfid             = 0x0070 // String RFID tag Info
 
 	// EMS-Control - Control register (uint16)
 	//   0x8000 : Enable EMS-Control
@@ -396,6 +397,22 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	default:
 		return 0, nil
 	}
+}
+
+var _ api.Identifier = (*Kathrein)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *Kathrein) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 16)
+	if err != nil {
+		return "", err
+	}
+
+	if string(b) == "VOID" {
+		return "", nil
+	}
+
+	return string(b), nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)

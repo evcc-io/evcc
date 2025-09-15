@@ -13,7 +13,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
-	"github.com/evcc-io/evcc/hems/semp"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
@@ -277,7 +277,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding
 // configureSMAHems asks the user if he wants to add the SMA HEMS
 func (c *CmdConfigure) configureSMAHems() {
 	// check if the system provides a machine-id
-	if _, err := semp.UniqueDeviceID(); err != nil {
+	if _, err := shm.UniqueDeviceID(); err != nil {
 		return
 	}
 

@@ -77,6 +77,7 @@
       "title": "Control behavior"
     },
     "deviceValue": {
+      "allowControl": "Allow control",
       "amount": "Amount",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -99,7 +100,8 @@
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Active limit",
+      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "no": "no",
       "odometer": "Odometer",
@@ -124,6 +126,10 @@
       "A": "A (not connected)",
       "B": "B (connected)",
       "C": "C (charging)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart consumer",
@@ -177,7 +183,7 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
-      "description": "Connect evcc to another home energy management system.",
+      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
       "title": "HEMS"
     },
     "icon": {
@@ -425,6 +431,20 @@
       "meter": "Solar & Battery",
       "system": "System",
       "vehicles": "Vehicles"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc comes with integration for the SMA Sunny Home Manager 2.0. When run in the same network your Sunny Home Manager interface should prompt you to add evcc. Everything should work out of the box without need for adjustments here.",
+      "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
+      "descriptionIdPattern": "Identifier pattern",
+      "descriptionIds": "In Sunny Home Manager every device (charging point, ..) needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL to check your current identifiers.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 characters HEX string. General prefix of all entities.",
+      "labelAllowControl": "Accept global power limit requests from SHM.",
+      "labelControl": "Allow control",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager 2.0"
     },
     "sponsor": {
       "addToken": "Enter token",
@@ -721,6 +741,7 @@
       "gridImport": "Grid use",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",
       "pvExport": "Grid export",
@@ -732,6 +753,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready. Waiting for heater…"
+    },
+    "hemsWarning": {
+      "description": "Reduced charging to not exceed {limit}.",
+      "title": "External limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
