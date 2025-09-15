@@ -1,6 +1,6 @@
 template: anker-solix-x1
 products:
-  - brand: Anker
+  - brand: Anker # SW: 1.0.10.2
     description:
       generic: Solix X1 (X1-H(5-12)K-T)
 capabilities: ["battery-control"]
@@ -12,8 +12,8 @@ params:
     choice: ["rs485", "tcpip"]
     id: 1
     help:
-      en: Modbus (TCP/ RTU) activated in AnkerSOLIX Installer App per Bluetooth (Start-up -> System Configuration)
-      de: Modbus (TCP/ RTU) aktiviert in AnkerSOLIX Installer App mit Bluetooth (Inbetriebnahme -> Systemkonfiguration)
+      en: Modbus (TCP (only LAN)/ RTU) activation in AnkerSOLIX Installer App per Bluetooth (Start-up -> System Configuration)
+      de: Modbus (TCP (nur LAN)/ RTU) aktivierung in AnkerSOLIX Installer App mit Bluetooth (Inbetriebnahme -> Systemkonfiguration)
   # battery control
   - name: minsoc # needed?
     type: int
