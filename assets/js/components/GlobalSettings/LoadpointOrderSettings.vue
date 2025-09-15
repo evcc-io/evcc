@@ -20,6 +20,9 @@
 				@touchmove="onTouchMove($event)"
 				@touchend="onTouchEnd($event)"
 			>
+				<div class="drag-handle me-2">
+					<shopicon-regular-menu></shopicon-regular-menu>
+				</div>
 				<div class="flex-grow-1">
 					{{ item.title }}
 				</div>
@@ -52,6 +55,7 @@
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/menu";
 import { defineComponent, type PropType } from "vue";
 import type { LoadpointCompact } from "@/types/evcc";
 import {
@@ -205,6 +209,21 @@ export default defineComponent({
 .form-check {
 	display: flex;
 	align-items: center;
+}
+
+.drag-handle {
+	color: var(--bs-secondary);
+	opacity: 0.7;
+	transition: opacity var(--evcc-transition-fast) ease-in-out;
+	cursor: grab;
+}
+
+.drag-handle:active {
+	cursor: grabbing;
+}
+
+.loadpoint-item:hover .drag-handle {
+	opacity: 1;
 }
 
 .loadpoint-list:empty + .text-muted {
