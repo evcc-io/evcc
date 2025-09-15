@@ -202,6 +202,11 @@ export default defineComponent({
 	margin-top: 0;
 }
 
+.form-check {
+	display: flex;
+	align-items: center;
+}
+
 .loadpoint-list:empty + .text-muted {
 	display: block;
 }
