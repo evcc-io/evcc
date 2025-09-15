@@ -29,97 +29,86 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 10644 # Meter: Total Active Power
       type: holding
-      decode: int32
+      decode: int32s
     scale: 1
   energy:
-    source: sunspec
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
-    value:
-      - 201:TotWhImp
-      - 211:TotWhImp
-      - 203:TotWhImp
-      - 213:TotWhImp
-    scale: 0.001
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10656 # Meter: Total Forward Active Energy
+      type: holding
+      decode: int32s
+    scale: 0.01
   currents:
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:AphA
-        - 211:AphA
-        - 203:AphA
-        - 213:AphA
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:AphB
-        - 211:AphB
-        - 203:AphB
-        - 213:AphB
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:AphC
-        - 211:AphC
-        - 203:AphC
-        - 213:AphC
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10635 # Meter: Phase A Current
+        type: holding
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10636 # Meter: Phase B Current
+        type: holding
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10637 # Meter: Phase C Current
+        type: holding
+        decode: int16
+      scale: 0.01
   voltages:
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:PhVphA
-        - 211:PhVphA
-        - 203:PhVphA
-        - 213:PhVphA
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:PhVphB
-        - 211:PhVphB
-        - 203:PhVphB
-        - 213:PhVphB
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:PhVphC
-        - 211:PhVphC
-        - 203:PhVphC
-        - 213:PhVphC
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10632 # Meter: Phase A Voltage
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10633 # Meter: Phase B Voltage
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10634 # Meter: Phase C Voltage
+        type: holding
+        decode: uint16
+      scale: 0.1
   powers:
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:WphA
-        - 211:WphA
-        - 203:WphA
-        - 213:WphA
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:WphB
-        - 211:WphB
-        - 203:WphB
-        - 213:WphB
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      value:
-        - 201:WphC
-        - 211:WphC
-        - 203:WphC
-        - 213:WphC
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10638 # Meter: Phase A Power
+        type: holding
+        decode: int32s
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10640 # Meter: Phase B Power
+        type: holding
+        decode: int32s
+      scale: 1
+    - source: modbus
+      {{- include "modbus" . | indent 2 }}
+      register:
+        address: 10642 # Meter: Phase C Power
+        type: holding
+        decode: int32s
+      scale: 1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
