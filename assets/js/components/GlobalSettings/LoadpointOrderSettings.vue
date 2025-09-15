@@ -187,7 +187,6 @@ export default defineComponent({
 	transition: all var(--evcc-transition-fast) ease-in-out;
 }
 
-
 .loadpoint-item--hidden {
 	opacity: 0.6;
 }
