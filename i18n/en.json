@@ -434,17 +434,17 @@
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
-      "description": "evcc comes with integration for the SMA Sunny Home Manager 2.0. When run in the same network your Sunny Home Manager interface should prompt you to add evcc. Everything should work out of the box without need for adjustments here.",
+      "description": "evcc is equipped with integration for the SMA Sunny Home Manager (SHM) via SEMP protocol. If it is running on the same network, after logging into your Sunny Portal account, you should automatically be offered to add all chargers configured in evcc as newly discovered devices. Everything should be ready to use immediately, without any adjustments required below.",
       "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
       "descriptionIdPattern": "Identifier pattern",
-      "descriptionIds": "In Sunny Home Manager every device (charging point, ..) needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL to check your current identifiers.",
+      "descriptionIds": "In Sunny Portal every device (charging point, ..) needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL (/semp) to check your current identifiers.",
       "descriptionSempUrl": "SEMP URL",
-      "descriptionVendorId": "8 characters HEX string. General prefix of all entities.",
-      "labelAllowControl": "Accept global power limit requests from SHM.",
+      "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
+      "labelAllowControl": "Accept additional power limit recommendations from SHM.",
       "labelControl": "Allow control",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Vendor ID",
-      "title": "SMA Sunny Home Manager 2.0"
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Enter token",
