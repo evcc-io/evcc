@@ -462,7 +462,7 @@
       "today": "Dzisiaj",
       "tomorrow": "Jutro"
     },
-    "solarAdjust": "Dostosuj prognozę nasłonecznienia na podstawie rzeczywistych danych produkcyjnych{procent}.",
+    "solarAdjust": "Dostosuj prognozę nasłonecznienia na podstawie rzeczywistych danych produkcyjnych{percent}.",
     "type": {
       "price": "Cena",
       "solar": "Słońce"
