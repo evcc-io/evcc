@@ -8,7 +8,10 @@
 				v-for="(item, index) in displayList"
 				:key="item.index"
 				class="loadpoint-item d-flex align-items-center p-2 mb-2 border rounded"
-				:class="{ 'loadpoint-item--hidden': !item.visible, 'loadpoint-item--dragging': draggedIndex === index }"
+				:class="{
+					'loadpoint-item--hidden': !item.visible,
+					'loadpoint-item--dragging': draggedIndex === index,
+				}"
 				draggable="true"
 				@dragstart="onDragStart(index, $event)"
 				@dragover.prevent
@@ -126,12 +129,12 @@ export default defineComponent({
 			if (this.isDragging) {
 				// Find the element under the touch point
 				const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-				const targetItem = elementBelow?.closest('.loadpoint-item');
-				
+				const targetItem = elementBelow?.closest(".loadpoint-item");
+
 				if (targetItem) {
-					const items = Array.from(this.$el.querySelectorAll('.loadpoint-item'));
+					const items = Array.from(this.$el.querySelectorAll(".loadpoint-item"));
 					const targetIndex = items.indexOf(targetItem);
-					
+
 					if (targetIndex !== -1 && targetIndex !== this.draggedIndex) {
 						this.reorderItems(targetIndex);
 					}
@@ -156,7 +159,7 @@ export default defineComponent({
 				return;
 			}
 
-			const newOrder = [...this.displayList.map(item => item.index)];
+			const newOrder = [...this.displayList.map((item) => item.index)];
 			const draggedItem = newOrder.splice(this.draggedIndex, 1)[0];
 			newOrder.splice(targetIndex, 0, draggedItem);
 
@@ -190,7 +193,6 @@ export default defineComponent({
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 	z-index: 10;
 }
-
 
 .form-check-input {
 	margin-top: 0;
