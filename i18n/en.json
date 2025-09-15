@@ -1022,6 +1022,12 @@
       "auto": "Automatic",
       "label": "Language"
     },
+    "loadpoints": {
+      "help": "Drag to reorder loadpoints and use switches to show or hide them.",
+      "hidden": "Hidden",
+      "label": "Loadpoint Order & Visibility",
+      "visible": "Visible"
+    },
     "sponsorToken": {
       "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",
       "getNew": "Grab a fresh one",

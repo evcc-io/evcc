@@ -1022,6 +1022,12 @@
       "auto": "Automatisch",
       "label": "Sprache"
     },
+    "loadpoints": {
+      "help": "Ziehe, um Ladepunkte neu anzuordnen und verwende Schalter, um sie ein- oder auszublenden.",
+      "hidden": "Ausgeblendet",
+      "label": "Ladepunkt Reihenfolge & Sichtbarkeit",
+      "visible": "Sichtbar"
+    },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
       "getNew": "Hol dir ein Neues",

@@ -4,7 +4,7 @@
 		:title="$t('settings.title')"
 		data-testid="global-settings-modal"
 	>
-		<UserInterfaceSettings :sponsor="sponsor" :telemetry="telemetry" />
+		<UserInterfaceSettings :sponsor="sponsor" :telemetry="telemetry" :loadpoints="loadpoints" />
 	</GenericModal>
 </template>
 
@@ -12,7 +12,7 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import UserInterfaceSettings from "./UserInterfaceSettings.vue";
-import type { Sponsor } from "@/types/evcc";
+import type { Sponsor, LoadpointCompact } from "@/types/evcc";
 
 export default defineComponent({
 	name: "GlobalSettingsModal",
@@ -20,6 +20,7 @@ export default defineComponent({
 	props: {
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		telemetry: Boolean,
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 	},
 });
 </script>

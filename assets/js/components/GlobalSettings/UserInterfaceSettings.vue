@@ -92,6 +92,13 @@
 				{{ $t("settings.fullscreen.enter") }}
 			</button>
 		</FormRow>
+		<FormRow
+			v-if="loadpoints.length > 1"
+			id="loadpointOrder"
+			:label="$t('settings.loadpoints.label')"
+		>
+			<LoadpointOrderSettings :loadpoints="loadpoints" />
+		</FormRow>
 	</div>
 </template>
 
@@ -99,6 +106,7 @@
 import TelemetrySettings from "../TelemetrySettings.vue";
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import LoadpointOrderSettings from "./LoadpointOrderSettings.vue";
 import {
 	getLocalePreference,
 	setLocalePreference,
@@ -110,17 +118,18 @@ import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { LENGTH_UNIT, THEME, type Sponsor } from "@/types/evcc";
+import { LENGTH_UNIT, THEME, type Sponsor, type LoadpointCompact } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
-	components: { TelemetrySettings, FormRow, SelectGroup },
+	components: { TelemetrySettings, FormRow, SelectGroup, LoadpointOrderSettings },
 	props: {
 		sponsor: Object as PropType<Sponsor>,
 		telemetry: Boolean,
+		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 	},
 	data() {
 		return {
