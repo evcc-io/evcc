@@ -18,9 +18,11 @@ params:
   - name: maxsoc
     type: int
     advanced: true
-  - name: maxacpower
   - name: maxchargepower
     advanced: true
+    help:
+      en: Per battery 3 kW, limited by maxacpower (System setting 5 - 12 kW).
+      de: Pro Batterie 3 kW, limitiert durch maxacpower (System setting 5 -12 kW).
   - name: capacity
     advanced: true
 render: |
@@ -171,12 +173,12 @@ render: |
         - source: const
           value: 0
           set:
-            - source: modbus
-              {{- include "modbus" . | indent 6 }}
-              register:
-                address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
-                type: writesingle
-                decode: uint16
+            source: modbus
+            {{- include "modbus" . | indent 6 }}
+            register:
+            address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
+              type: writesingle
+              decode: uint16
         - source: const
           value: 0 # W 
           set:
