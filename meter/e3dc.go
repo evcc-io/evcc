@@ -258,15 +258,15 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 
 		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 value not found")
 		}
 		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 value not found")
 		}
 		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 value not found")
 		}
 		return voltageL1, voltageL2, voltageL3, nil
 
@@ -331,27 +331,27 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 
 		powerL1, ok := extractValueByTag(*res, rscp.PM_POWER_L1, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_POWER_L1 value not found")
 		}
 		powerL2, ok := extractValueByTag(*res, rscp.PM_POWER_L2, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_POWER_L2 value not found")
 		}
 		powerL3, ok := extractValueByTag(*res, rscp.PM_POWER_L3, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_POWER_L3 value not found")
 		}
 		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 value not found")
 		}
 		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 value not found")
 		}
 		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
 		if !ok {
-			return 0, 0, 0, err
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L3 value not found")
 		}
 		if voltageL1 == 0 || voltageL2 == 0 || voltageL3 == 0 {
 			return 0, 0, 0, nil
@@ -400,7 +400,7 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 
 			val, ok := extractValueByTag(*res, rscp.PVI_VALUE, cast.ToFloat64E)
 			if !ok {
-				return 0, err
+				return 0, errors.New("PVI_VALUE value not found")
 			}
 			energyPerPhase[phase] = val
 		}
