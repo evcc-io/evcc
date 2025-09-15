@@ -187,9 +187,6 @@ export default defineComponent({
 	transition: all var(--evcc-transition-fast) ease-in-out;
 }
 
-.loadpoint-item:hover {
-	background-color: var(--bs-secondary-bg);
-}
 
 .loadpoint-item--hidden {
 	opacity: 0.6;
