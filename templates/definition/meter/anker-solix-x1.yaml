@@ -161,7 +161,17 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
-  batterymode: # model 124
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 46609 # limit soc
+        type: writesingle
+        decode: uint16
+  batterymode:
     source: switch
     switch:
     - case: 1 # normal
@@ -225,5 +235,14 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  capacity: # kWh
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10250 # Rated Capacity (Integrated Rated Capacity for all batteries in the plant)
+      type: holding
+      decode: uint32s
+    scale: 0.1
   {{- end }}
