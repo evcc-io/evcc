@@ -144,7 +144,7 @@ func (m *E3dc) retryMessages(msgs []rscp.Message) ([]rscp.Message, error) {
 	return m.conn.SendMultiple(msgs)
 }
 
-func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any) (T, error)) (T, bool, error) {
+func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any) (T, error)) (T, bool) {
 	var zero T
 
 	// fmt.Printf("\nentry with\n%#v\n", msg)
@@ -152,22 +152,22 @@ func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any
 		if msg.Tag == wantedTag {
 			v, err := rscpValue(msg, fun)
 			if err != nil {
-				return zero, false, err
+				return zero, false
 			}
-			return v, true, nil
+			return v, true
 		}
-		return zero, false, nil
+		return zero, false
 	} 
 	if nestedMessage, ok := msg.Value.([]rscp.Message); ok {
 		for _, m := range nestedMessage {
 			// ok == tag found
-			if v, ok, err := extractValueByTag(m, wantedTag, fun); ok {
-				return v, ok, err
+			if v, ok := extractValueByTag(m, wantedTag, fun); ok {
+				return v, ok
 			}
 		}
 	}
 
-	return zero, false, nil
+	return zero, false
 }
 
 var _ api.Meter = (*E3dc)(nil)
@@ -256,16 +256,16 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		voltageL1, found, err := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
-		if !found || err != nil {
+		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		voltageL2, found, err := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
-		if !found || err != nil {
+		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		voltageL3, found, err := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
-		if !found || err != nil {
+		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
 		return voltageL1, voltageL2, voltageL3, nil
@@ -329,28 +329,28 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		powerL1, found, err := extractValueByTag(*res, rscp.PM_POWER_L1, cast.ToFloat64E)
-		if !found || err != nil {
+		powerL1, ok := extractValueByTag(*res, rscp.PM_POWER_L1, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		powerL2, found, err := extractValueByTag(*res, rscp.PM_POWER_L2, cast.ToFloat64E)
-		if !found || err != nil {
+		powerL2, ok := extractValueByTag(*res, rscp.PM_POWER_L2, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		powerL3, found, err := extractValueByTag(*res, rscp.PM_POWER_L3, cast.ToFloat64E)
-		if !found || err != nil {
+		powerL3, ok := extractValueByTag(*res, rscp.PM_POWER_L3, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		voltageL1, found, err := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
-		if !found || err != nil {
+		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		voltageL2, found, err := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
-		if !found || err != nil {
+		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
-		voltageL3, found, err := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
-		if !found || err != nil {
+		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
+		if !ok {
 			return 0, 0, 0, err
 		}
 		if voltageL1 == 0 || voltageL2 == 0 || voltageL3 == 0 {
@@ -398,8 +398,8 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 				return 0, err
 			}
 
-			val, found, err := extractValueByTag(*res, rscp.PVI_VALUE, cast.ToFloat64E)
-			if !found {
+			val, ok := extractValueByTag(*res, rscp.PVI_VALUE, cast.ToFloat64E)
+			if !ok {
 				return 0, err
 			}
 			energyPerPhase[phase] = val
