@@ -19,7 +19,7 @@ params:
     type: int
     advanced: true
   - name: maxacpower
-  - name: maxchargerate
+  - name: maxchargepower
     advanced: true
   - name: capacity
     advanced: true
@@ -175,7 +175,7 @@ render: |
               {{- include "modbus" . | indent 6 }}
               register:
                 address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
-                type: write
+                type: writesingle
                 decode: uint16
         - source: const
           value: 0 # W 
@@ -183,8 +183,8 @@ render: |
             - source: modbus
               {{- include "modbus" . | indent 6 }}
               register:
-                address: 10064 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
-                type: write
+                address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
+                type: writemultiple
                 decode: int32s
     - case: 2 # hold
       set:
@@ -197,7 +197,7 @@ render: |
             {{- include "modbus" . | indent 6 }}
             register:
               address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
-              type: write
+              type: writesingle
               decode: uint16
         - source: const
           value: 0 # W 
@@ -205,34 +205,31 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 6 }}
             register:
-              address: 10064 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
-              type: write
+              address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
+              type: writemultiple
               decode: int32s
     - case: 3 # charge
       set:
         source: sequence
         set:
         - source: const
-          value: 1 # off
+          value: 3
           set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:ChaGriSet
+            - source: modbus
+              {{- include "modbus" . | indent 6 }}
+              register:
+                address: 10064 # Work Mode (0: Self-consumption; 1: TOU; 2: Backup only; 3: 3rd party control (VPP, etc); 4. User-Defined; 5. Socket Aggregation)
+                type: writesingle
+                decode: uint16
         - source: const
-          value: 2
+          value: -{{ .maxchargepower }} # % 
           set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:StorCtl_Mod
-        - source: const
-          value: -{{ .maxchargerate }} # %
-          set:
-            source: sunspec
-            uri: {{ .host }}:{{ .port }}
-            id: 1
-            value: 124:0:OutWRte
+            - source: modbus
+              {{- include "modbus" . | indent 6 }}
+              register:
+                address: 10071 # Battery Charge/Dischage Control (Positive: Discharging. Negative: Charging. Only valid when the work mode is 3rd party control)
+                type: writemultiple
+                decode: int32s
   capacity: # kWh
     source: modbus
     {{- include "modbus" . | indent 2 }}
