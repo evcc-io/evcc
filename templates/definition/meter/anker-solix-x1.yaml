@@ -19,10 +19,11 @@ params:
     type: int
     advanced: true
   - name: maxchargepower
+    default: 4200
     advanced: true
     help:
       en: Per battery 3 kW, limited by maxacpower (System setting 5 - 12 kW).
-      de: Pro Batterie 3 kW, limitiert durch maxacpower (System setting 5 -12 kW).
+      de: Pro Batterie 3 kW, limitiert durch maxacpower (System Einstellung 5 - 12 kW).
   - name: capacity
     advanced: true
 render: |
