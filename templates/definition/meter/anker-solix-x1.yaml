@@ -11,6 +11,9 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     id: 1
+    help:
+      en: Modbus (TCP/ RTU) activated in AnkerSOLIX Installer App per Bluetooth (Start-up -> System Configuration)
+      de: Modbus (TCP/ RTU) aktiviert in AnkerSOLIX Installer App mit Bluetooth (Inbetriebnahme -> Systemkonfiguration)
   # battery control
   - name: minsoc # needed?
     type: int
