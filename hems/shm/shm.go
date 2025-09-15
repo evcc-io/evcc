@@ -26,7 +26,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
+	sempDeviceId     = "F-%s-%.12X-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -55,11 +55,18 @@ type Config struct {
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
 func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
-	vendorId := cfg.VendorId
+	vendorId := strings.ToUpper(cfg.VendorId)
 	if vendorId == "" {
 		vendorId = "28081973"
-	} else if len(vendorId) != 8 {
-		return fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
+	} else {
+		vid, err := hex.DecodeString(cfg.VendorId)
+		if err != nil {
+			return fmt.Errorf("vendor id: %w", err)
+		}
+
+		if len(vid) != 8 {
+			return fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
+		}
 	}
 
 	uid, err := uuid.NewUUID()
