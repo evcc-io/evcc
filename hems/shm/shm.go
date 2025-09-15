@@ -59,12 +59,11 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	if vendorId == "" {
 		vendorId = "28081973"
 	} else {
-		vid, err := hex.DecodeString(cfg.VendorId)
-		if err != nil {
+		if _, err := hex.DecodeString(cfg.VendorId); err != nil {
 			return fmt.Errorf("vendor id: %w", err)
 		}
 
-		if len(vid) != 8 {
+		if len(cfg.VendorId) != 8 {
 			return fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
 		}
 	}
