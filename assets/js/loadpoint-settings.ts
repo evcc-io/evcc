@@ -91,7 +91,8 @@ const getOrderedVisibleLoadpoints = <T>(loadpoints: T[]): T[] => {
 
   return loadpointSettings.order
     .filter((index) => index < loadpoints.length && getLoadpointVisibility(index))
-    .map((index) => loadpoints[index]);
+    .map((index) => loadpoints[index])
+    .filter((item): item is T => item !== undefined);
 };
 
 const getLoadpointDisplayList = <T extends { title?: string }>(
@@ -103,12 +104,18 @@ const getLoadpointDisplayList = <T extends { title?: string }>(
 
   return loadpointSettings.order
     .filter((index) => index < loadpoints.length)
-    .map((index) => ({
-      index,
-      visible: getLoadpointVisibility(index),
-      title: loadpoints[index].title || `Loadpoint ${index + 1}`,
-      originalData: loadpoints[index],
-    }));
+    .map((index) => {
+      const loadpoint = loadpoints[index];
+      if (!loadpoint) {
+        throw new Error(`Loadpoint at index ${index} is undefined`);
+      }
+      return {
+        index,
+        visible: getLoadpointVisibility(index),
+        title: loadpoint.title || `Loadpoint ${index + 1}`,
+        originalData: loadpoint,
+      };
+    });
 };
 
 export {

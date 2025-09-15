@@ -99,9 +99,10 @@ export default defineComponent({
 
 			const newOrder = [...this.displayList.map((item) => item.index)];
 			const draggedItem = newOrder.splice(this.draggedIndex, 1)[0];
-			newOrder.splice(targetIndex, 0, draggedItem);
-
-			setLoadpointOrder(newOrder);
+			if (draggedItem !== undefined) {
+				newOrder.splice(targetIndex, 0, draggedItem);
+				setLoadpointOrder(newOrder);
+			}
 			this.draggedIndex = -1;
 		},
 		updateVisibility(loadpointIndex: number, visible: boolean) {
@@ -109,7 +110,7 @@ export default defineComponent({
 		},
 		onTouchStart(index: number, event: TouchEvent) {
 			this.draggedIndex = index;
-			this.touchStartY = event.touches[0].clientY;
+			this.touchStartY = event.touches[0]?.clientY || 0;
 			this.touchStartTime = Date.now();
 			this.isDragging = false;
 		},
@@ -118,6 +119,8 @@ export default defineComponent({
 
 			event.preventDefault();
 			const touch = event.touches[0];
+			if (!touch) return;
+
 			const moveDistance = Math.abs(touch.clientY - this.touchStartY);
 			const moveTime = Date.now() - this.touchStartTime;
 
@@ -131,7 +134,7 @@ export default defineComponent({
 				const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
 				const targetItem = elementBelow?.closest(".loadpoint-item");
 
-				if (targetItem) {
+				if (targetItem && this.$el) {
 					const items = Array.from(this.$el.querySelectorAll(".loadpoint-item"));
 					const targetIndex = items.indexOf(targetItem);
 
@@ -161,10 +164,11 @@ export default defineComponent({
 
 			const newOrder = [...this.displayList.map((item) => item.index)];
 			const draggedItem = newOrder.splice(this.draggedIndex, 1)[0];
-			newOrder.splice(targetIndex, 0, draggedItem);
-
-			setLoadpointOrder(newOrder);
-			this.draggedIndex = targetIndex;
+			if (draggedItem !== undefined) {
+				newOrder.splice(targetIndex, 0, draggedItem);
+				setLoadpointOrder(newOrder);
+				this.draggedIndex = targetIndex;
+			}
 		},
 	},
 });
