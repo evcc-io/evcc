@@ -12,10 +12,10 @@ params:
     choice: ["rs485", "tcpip"]
     id: 1
   # battery control
-  - name: minsoc
+  - name: minsoc # needed?
     type: int
     advanced: true
-  - name: maxsoc
+  - name: maxsoc # needed?
     type: int
     advanced: true
   - name: maxchargepower
