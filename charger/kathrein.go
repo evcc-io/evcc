@@ -417,6 +417,16 @@ var _ api.Identifier = (*Kathrein)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Kathrein) Identify() (string, error) {
+	s, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
+	if err != nil {
+		return "", err
+	}
+
+	state := binary.BigEndian.Uint16(s)
+	if state < 3 || state > 6 {
+		return "", nil
+	}
+
 	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 16)
 	if err != nil {
 		return "", err
