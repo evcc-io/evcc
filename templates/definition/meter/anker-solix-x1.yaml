@@ -115,7 +115,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10183 # Total PV Power PCS PV Information (PV Power 10002 System Summary)
+      address: 10002 # PV Power PCS  (Total PV Power PV Information 10183)
       type: holding
       decode: uint32s
     scale: 1
@@ -123,7 +123,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10187 # Total PV Energy Generation PCS PV Information (Total PV Energy Generation PCS 10018 System Summary)
+      address: 10018 # Total PV Energy Generation PCS (Total PV Energy Generation PV Information 10187)
       type: holding
       decode: uint32s
     scale: 1
@@ -138,23 +138,21 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: calc
-    add:
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: 1
-      value: 160:3:DCW # mppt 3 charge
-      scale: -1
-    - source: sunspec
-      uri: {{ .host }}:{{ .port }}
-      id: 1
-      value: 160:4:DCW # mppt 4 discharge
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10008 # Battery Power PCS (The sum of the charging and discharging power of all batteries in the plant. Positive: Discharging; Negative: Charging // Battery Power 10254)
+      type: holding
+      decode: int32s
+    scale: 1
   energy:
-    source: sunspec
-    uri: {{ .host }}:{{ .port }}
-    id: 1
-    value: 160:4:DCWH # mppt 4 (discharge)
-    scale: 0.001
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10022 # Total Battery Charge Energy System Summary
+      type: holding
+      decode: uint32s
+    scale: 0.1
   soc:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
