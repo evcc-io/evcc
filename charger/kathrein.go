@@ -399,6 +399,20 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*Kathrein)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Kathrein) StatusReason() (api.Reason, error) {
+	res := api.ReasonUnknown
+
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
+	if err == nil && binary.BigEndian.Uint16(b) == 2 {
+		res = api.ReasonWaitingForAuthorization
+	}
+
+	return res, err
+}
+
 var _ api.Identifier = (*Kathrein)(nil)
 
 // Identify implements the api.Identifier interface
