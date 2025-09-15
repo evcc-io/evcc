@@ -28,7 +28,7 @@ params:
     advanced: true
 render: |
   type: custom
-  # 
+  # Anker SOLIX X1 Series Modbus Protocol Version: V 1.0.0 Date: 2025-08-07
   {{- if eq .usage "grid" }}
   power:
     source: modbus
