@@ -432,10 +432,6 @@ func (wb *Kathrein) Identify() (string, error) {
 		return "", err
 	}
 
-	if string(b) == "VOID" {
-		return "", nil
-	}
-
 	return string(b), nil
 }
 
