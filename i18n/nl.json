@@ -76,6 +76,7 @@
       "title": "Regelgedrag"
     },
     "deviceValue": {
+      "allowControl": "Besturing toestaan",
       "amount": "Aantal",
       "broker": "Agent",
       "bucket": "Bucket",
@@ -123,6 +124,10 @@
       "A": "A (niet aangesloten)",
       "B": "B (aangesloten)",
       "C": "C (opladen)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Slimme verbruiker",
@@ -424,6 +429,9 @@
       "meter": "Zonnepanelen & accu",
       "system": "Systeem",
       "vehicles": "Voertuigen"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Token invoeren",
