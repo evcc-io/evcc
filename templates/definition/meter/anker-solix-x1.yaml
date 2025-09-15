@@ -154,10 +154,13 @@ render: |
       decode: uint32s
     scale: 0.1
   soc:
-    source: sunspec
-    uri: {{ .host }}:{{ .port }}
-    id: 1
-    value: 124:0:ChaState
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10016 # SOC (Integrated SOC for all batteries in the plant)
+      type: holding
+      decode: uint16
+    scale: 0.1
   batterymode: # model 124
     source: switch
     switch:
