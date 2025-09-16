@@ -93,7 +93,12 @@ async function _start(config?: string, flags: string | string[] = []) {
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: STARTUP_TIMEOUT });
+  await waitOn({
+    resources: [`tcp:${port}`],
+    reverse: true,
+    log: LOG_ENABLED,
+    timeout: STARTUP_TIMEOUT,
+  });
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
