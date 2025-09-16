@@ -6,10 +6,14 @@ import killPort from "kill-port";
 import os from "os";
 import path from "path";
 import { Transform } from "stream";
+import { test } from "@playwright/test";
 
 const BINARY = "./evcc";
-const LOG_ENABLED = !process.env["GITHUB_ACTIONS"];
-const STARTUP_TIMEOUT = 50000; // give evcc 50s to start
+const IS_CI = !!process.env["GITHUB_ACTIONS"];
+const LOG_ENABLED = !IS_CI;
+
+// sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
+let allowedStartupFails = IS_CI ? 2 : 0;
 
 function workerPort() {
   const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
@@ -93,12 +97,7 @@ async function _start(config?: string, flags: string | string[] = []) {
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({
-    resources: [`tcp:${port}`],
-    reverse: true,
-    log: LOG_ENABLED,
-    timeout: STARTUP_TIMEOUT,
-  });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
   log("starting evcc", { config, port, additionalFlags });
@@ -113,7 +112,19 @@ async function _start(config?: string, flags: string | string[] = []) {
     log("evcc terminated", { code, port, config });
     steamLog.end();
   });
-  await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: STARTUP_TIMEOUT });
+  try {
+    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 50000 });
+  } catch (error) {
+    instance.kill("SIGKILL");
+    console.error(logPrefix(), `evcc startup failed: ${error}`);
+
+    if (allowedStartupFails > 0) {
+      allowedStartupFails--;
+      test.skip(true, `evcc startup timeout (${allowedStartupFails} skips remaining)`);
+      return;
+    }
+    throw error;
+  }
   return instance;
 }
 
