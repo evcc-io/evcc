@@ -506,10 +506,11 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 		// code, err = v.brandLoginKiaEU(user, password)
 		// if err == nil {
 		var token *oauth2.Token
-		if token, err = v.exchangeCodeKiaEURefreshToken(password); err == nil {
+		token, err = v.exchangeCodeKiaEURefreshToken(password)
+		if err == nil {
 			v.TokenSource = oauth.RefreshTokenSource(token, v)
+			v.deviceID, err = v.getDeviceID()
 		}
-		v.deviceID, err = v.getDeviceID()
 		// }
 	case "hyundai":
 		v.deviceID, err = v.getDeviceID()

@@ -431,6 +431,9 @@
       "system": "System",
       "vehicles": "Gefierer"
     },
+    "shm": {
+      "title": "SMA Sunny Home Manager 2.0"
+    },
     "sponsor": {
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
