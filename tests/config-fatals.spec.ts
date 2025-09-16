@@ -106,6 +106,7 @@ test.describe("fatal config handling", async () => {
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
+    await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await page.waitForLoadState("networkidle");

@@ -7,7 +7,7 @@ import { spawn } from "child_process";
 import { Transform } from "stream";
 import type { Page } from "@playwright/test";
 
-const LOG_ENABLED = false;
+const LOG_ENABLED = !process.env["GITHUB_ACTIONS"];
 
 function workerPort() {
   const index = parseInt(process.env["TEST_WORKER_INDEX"] ?? "-1");
