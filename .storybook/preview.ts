@@ -1,4 +1,4 @@
-import { Preview, setup } from "@storybook/vue3";
+import { type Preview, setup } from "@storybook/vue3";
 import "bootstrap/dist/css/bootstrap.min.css";
 import smoothscroll from "smoothscroll-polyfill";
 import setupI18n from "../assets/js/i18n";
