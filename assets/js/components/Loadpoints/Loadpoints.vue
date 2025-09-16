@@ -14,7 +14,7 @@
 			>
 				<Loadpoint
 					v-bind="loadpoint"
-					:id="index + 1"
+					:id="loadpoint.id"
 					data-testid="loadpoint"
 					:vehicles="vehicles"
 					:smartCostType="smartCostType"
@@ -70,7 +70,10 @@ export default defineComponent({
 	name: "Loadpoints",
 	components: { Loadpoint },
 	props: {
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: {
+			type: Array as PropType<Array<LoadpointCompact & { id: number }>>,
+			default: () => [],
+		},
 		vehicles: { type: Array as PropType<Vehicle[]> },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,

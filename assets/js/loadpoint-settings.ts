@@ -84,15 +84,15 @@ const setLoadpointVisibility = (index: number, visible: boolean) => {
   loadpointSettings.visibility[index] = visible;
 };
 
-const getOrderedVisibleLoadpoints = <T>(loadpoints: T[]): T[] => {
+const getOrderedVisibleLoadpoints = <T>(loadpoints: T[]): Array<T & { id: number }> => {
   if (loadpoints.length === 0) return [];
 
   initializeLoadpointSettings(loadpoints.length);
 
   return loadpointSettings.order
     .filter((index) => index < loadpoints.length && getLoadpointVisibility(index))
-    .map((index) => loadpoints[index])
-    .filter((item): item is T => item !== undefined);
+    .map((index) => ({ ...loadpoints[index], id: index + 1 }))
+    .filter((item): item is T & { id: number } => item !== undefined);
 };
 
 const getLoadpointDisplayList = <T extends { title?: string }>(
