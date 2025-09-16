@@ -1,8 +1,6 @@
 import { Config } from "@jest/types";
 
-const config: Config.InitialOptions = {
+export default {
   preset: "@vue/cli-plugin-unit-jest/presets/no-babel",
   testMatch: ["**/*.spec.ts"],
-};
-
-export default config;
+} satisfies Config.InitialOptions;

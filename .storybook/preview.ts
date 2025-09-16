@@ -9,7 +9,7 @@ smoothscroll.polyfill();
 watchThemeChanges();
 
 // Setup global parameters
-const preview: Preview = {
+export default {
   parameters: {
     controls: {
       matchers: {
@@ -31,7 +31,7 @@ const preview: Preview = {
       ],
     },
   },
-};
+} satisfies Preview;
 
 setup((app) => {
   app.config.globalProperties.$hiddenFeatures = () => true;
@@ -43,5 +43,3 @@ setup((app) => {
     template: '<a :href="to"><slot /></a>',
   });
 });
-
-export default preview;

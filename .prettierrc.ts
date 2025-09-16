@@ -1,9 +1,7 @@
-import { Config } from "prettier";
+import { type Config } from "prettier";
 
-const config: Config = {
+export default {
   printWidth: 100,
   trailingComma: "es5",
   plugins: ["prettier-plugin-sh"],
-};
-
-export default config;
+} satisfies Config;
