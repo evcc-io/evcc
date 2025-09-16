@@ -33,6 +33,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 		PushType:          "GCM",
 		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
+		Brand:             "hyundai",
 		// for oauth2??
 		// LoginFormHost:     "https://idpconnect-eu.hyundai.com",
 		// AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
@@ -54,6 +55,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		PushType:          "APNS",
 		Cfb:               "wLTVxwidmH8CfJYBWSnHD6E0huk0ozdiuygB4hLkM5XCgzAL1Dk5sE36d/bx5PFMbZs=",
 		LoginFormHost:     "https://idpconnect-eu.kia.com",
+		Brand:             "kia",
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)

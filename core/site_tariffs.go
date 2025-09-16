@@ -106,14 +106,14 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		Planner api.Rates     `json:"planner,omitempty"`
 		Solar   *solarDetails `json:"solar,omitempty"`
 	}{
-		Co2:     tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Forecast(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
+		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
+		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
 	}
 
-	// calculate adjusted solar forecast
-	if solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
+	// calculate adjusted solar rates
+	if solar := tariff.Rates(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
