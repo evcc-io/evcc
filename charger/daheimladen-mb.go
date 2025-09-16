@@ -172,6 +172,7 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 
 	switch s {
 	case 1: // Standby (A)
+		wb.phases = 3
 		return api.StatusA, nil
 	case 2: // Connect (B1)
 		return api.StatusB, nil
@@ -319,6 +320,20 @@ func (wb *DaheimLadenMB) getPhases() (int, error) {
 	}
 
 	return int(wb.phases), nil
+}
+
+var _ api.Identifier = (*DaheimLadenMB)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *DaheimLadenMB) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if err != nil {
+		return "", err
+	}
+
+	s, _ := utf16BEBytesAsString(b)
+
+	return s, nil
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)
