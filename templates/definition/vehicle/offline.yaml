@@ -9,10 +9,12 @@ requirements:
 group: generic
 params:
   - preset: vehicle-common
+  - preset: vehicle-features
 render: |
   type: custom
   features: ["offline"]
   {{- include "vehicle-common" . }}
+  {{- include "vehicle-features" . }}
   soc:
     source: const
     value: 0
