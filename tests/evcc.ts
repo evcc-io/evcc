@@ -9,7 +9,7 @@ import { Transform } from "stream";
 
 const BINARY = "./evcc";
 const LOG_ENABLED = !process.env["GITHUB_ACTIONS"];
-const STARTUP_TIMEOUT = 60000; // 60 seconds for evcc startup operations
+const STARTUP_TIMEOUT = 50000; // give evcc 50s to start
 
 function workerPort() {
   const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
