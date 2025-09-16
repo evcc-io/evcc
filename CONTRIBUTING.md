@@ -159,3 +159,8 @@ Please open a GitHub pull request in the respective repository.
 - Documentation: [evcc-io/docs](https://github.com/evcc-io/docs)
 - Website: [evcc-io/evcc.io](https://github.com/evcc-io/evcc.io)
 - iOS/Android App: [evcc-io/app](https://github.com/evcc-io/app)
+
+## License
+
+By contributing to evcc, you agree that your contributions will be licensed under the existing license terms that apply to the respective parts of the project.
+This constitutes an implicit Contributor License Agreement (CLA), following GitHub's standard practice where contributions are made under the same terms as the project license.
