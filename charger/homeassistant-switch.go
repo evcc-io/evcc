@@ -55,7 +55,12 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		return nil, errors.New("missing switch entity")
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
+	var meterFunc func() (float64, error)
+	if powerEntity != "" {
+		meterFunc = c.currentPower
+	}
+
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, meterFunc, standbypower)
 	c.Helper.Client.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Authorization": "Bearer " + token,
@@ -64,7 +69,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Base: c.Helper.Client.Transport,
 	}
 
-	return decorateHomeAssistantSwitch(c, c.currentPower), nil
+	return decorateHomeAssistantSwitch(c, meterFunc), nil
 }
 
 // Enabled implements the api.Charger interface
@@ -98,10 +103,6 @@ func (c *HomeAssistantSwitch) Enable(enable bool) error {
 
 // currentPower implements the api.Meter interface (optional)
 func (c *HomeAssistantSwitch) currentPower() (float64, error) {
-	if c.powerEntity == "" {
-		return 0, api.ErrNotAvailable
-	}
-
 	var res struct {
 		State float64 `json:"state,string"`
 	}

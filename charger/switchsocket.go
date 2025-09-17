@@ -121,6 +121,10 @@ func (c *switchSocket) Status() (api.ChargeStatus, error) {
 	}
 
 	// standby power mode
+	if c.currentPower == nil {
+		return res, nil
+	}
+
 	power, err := c.currentPower()
 	if power > c.standbypower {
 		res = api.StatusC
@@ -154,6 +158,11 @@ func (c *switchSocket) CurrentPower() (float64, error) {
 			power = -c.standbypower
 		}
 		return power, err
+	}
+
+	// no power measurement available
+	if c.currentPower == nil {
+		return 0, nil
 	}
 
 	// ignore power in standby mode
