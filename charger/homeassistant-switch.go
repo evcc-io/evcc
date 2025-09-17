@@ -98,6 +98,10 @@ func (c *HomeAssistantSwitch) Enable(enable bool) error {
 
 // currentPower implements the api.Meter interface (optional)
 func (c *HomeAssistantSwitch) currentPower() (float64, error) {
+	if c.powerEntity == "" {
+		return 0, api.ErrNotAvailable
+	}
+
 	var res struct {
 		State float64 `json:"state,string"`
 	}
