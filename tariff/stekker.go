@@ -58,7 +58,7 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	if err := cc.init(); err != nil {
 		return nil, err
 	}
-	
+
 	t := &Stekker{
 		embed:  &cc.embed,
 		region: cc.Region,
