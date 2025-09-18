@@ -24,7 +24,7 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI      string
+		BaseURL  string
 		Token    string
 		Power    string
 		Energy   string
@@ -40,7 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	conn, err := homeassistant.NewConnection(cc.URI, cc.Token)
+	conn, err := homeassistant.NewConnection(cc.BaseURL, cc.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -53,30 +53,32 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 
 	// Set up phase currents (optional)
 	if len(cc.Currents) > 0 {
-		if len(cc.Currents) != 3 {
-			return nil, errors.New("currents must contain exactly 3 entities for L1, L2, L3")
+		currents, err := homeassistant.ValidatePhaseEntities(cc.Currents, "currents")
+		if err != nil {
+			return nil, err
 		}
-		m.currents = [3]string{cc.Currents[0], cc.Currents[1], cc.Currents[2]}
+		m.currents = currents
 	}
 
 	// Set up phase voltages (optional)
 	if len(cc.Voltages) > 0 {
-		if len(cc.Voltages) != 3 {
-			return nil, errors.New("voltages must contain exactly 3 entities for L1, L2, L3")
+		voltages, err := homeassistant.ValidatePhaseEntities(cc.Voltages, "voltages")
+		if err != nil {
+			return nil, err
 		}
-		m.voltages = [3]string{cc.Voltages[0], cc.Voltages[1], cc.Voltages[2]}
+		m.voltages = voltages
 	}
 
 	return m, nil
 }
 
 // NewHomeAssistant creates HomeAssistant meter
-func NewHomeAssistant(uri, token, power, energy string, currents, voltages [3]string) (*HomeAssistant, error) {
+func NewHomeAssistant(baseURL, token, power, energy string, currents, voltages [3]string) (*HomeAssistant, error) {
 	if power == "" {
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	conn, err := homeassistant.NewConnection(uri, token)
+	conn, err := homeassistant.NewConnection(baseURL, token)
 	if err != nil {
 		return nil, err
 	}
