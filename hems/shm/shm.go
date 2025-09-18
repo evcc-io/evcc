@@ -1,4 +1,4 @@
-package semp
+package shm
 
 import (
 	"encoding/binary"
@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/google/uuid"
@@ -27,7 +26,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
+	sempDeviceId     = "F-%s-%.12X-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -39,8 +38,6 @@ var serverName = "EVCC SEMP Server " + util.Version
 // SEMP is the SMA SEMP server
 type SEMP struct {
 	log          *util.Logger
-	closeC       chan struct{}
-	doneC        chan struct{}
 	controllable bool
 	vid          string
 	did          []byte
@@ -50,65 +47,72 @@ type SEMP struct {
 	site         site.API
 }
 
-// New generates SEMP Gateway listening at /semp endpoint
-func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP, error) {
-	cc := struct {
-		VendorID     string
-		DeviceID     string
-		AllowControl bool
-	}{
-		VendorID: "28081973",
-	}
+type Config struct {
+	AllowControl bool   `json:"allowControl"`
+	VendorId     string `json:"vendorId"`
+	DeviceId     string `json:"deviceId"`
+}
 
-	if err := util.DecodeOther(conf, &cc); err != nil {
-		return nil, err
+// NewFromConfig creates a new SEMP instance from configuration and starts it
+func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
+	vendorId := strings.ToUpper(cfg.VendorId)
+	if vendorId == "" {
+		vendorId = "28081973"
+	} else {
+		if _, err := hex.DecodeString(cfg.VendorId); err != nil {
+			return fmt.Errorf("vendor id: %w", err)
+		}
+
+		if len(cfg.VendorId) != 8 {
+			return fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
+		}
 	}
 
 	uid, err := uuid.NewUUID()
 	if err != nil {
-		return nil, err
-	}
-
-	if len(cc.VendorID) != 8 {
-		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
+		return err
 	}
 
 	var did []byte
-	if cc.DeviceID == "" {
+	if cfg.DeviceId == "" {
 		if did, err = UniqueDeviceID(); err != nil {
-			return nil, fmt.Errorf("creating device id: %w", err)
+			return fmt.Errorf("creating device id: %w", err)
 		}
 	} else {
-		if did, err = hex.DecodeString(cc.DeviceID); err != nil {
-			return nil, fmt.Errorf("device id: %w", err)
+		if did, err = hex.DecodeString(cfg.DeviceId); err != nil {
+			return fmt.Errorf("device id: %w", err)
 		}
 	}
 
 	if len(did) != 6 {
-		return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
+		return fmt.Errorf("invalid device id: %v. Must be 12 characters HEX string", cfg.DeviceId)
 	}
 
 	s := &SEMP{
-		doneC:        make(chan struct{}),
 		log:          util.NewLogger("semp"),
 		site:         site,
 		uid:          uid.String(),
-		vid:          cc.VendorID,
+		vid:          vendorId,
 		did:          did,
-		controllable: cc.AllowControl,
+		controllable: cfg.AllowControl,
 	}
 
 	// find external port
-	_, port, err := net.SplitHostPort(httpd.Addr)
+	// TODO refactor network config
+	_, port, err := net.SplitHostPort(addr)
 	if err == nil {
 		s.port, err = strconv.Atoi(port)
+	}
+	if err != nil {
+		return err
 	}
 
 	s.hostURI = s.callbackURI()
 
-	s.handlers(httpd.Router())
+	s.handlers(router)
 
-	return s, err
+	go s.run()
+	return nil
 }
 
 func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
@@ -116,13 +120,8 @@ func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
 	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
-// Run executes the SEMP runtime
-func (s *SEMP) Run() {
-	if s.closeC != nil {
-		panic("already running")
-	}
-	s.closeC = make(chan struct{})
-
+// run executes the SEMP runtime
+func (s *SEMP) run() {
 	uid := "uuid:" + s.uid
 
 	var ads []*ssdp.Advertiser
@@ -139,40 +138,13 @@ func (s *SEMP) Run() {
 		ads = append(ads, ad)
 	}
 
-ANNOUNCE:
-	for tick := time.Tick(maxAge * time.Second / 2); ; {
-		select {
-		case <-tick:
-			for _, ad := range ads {
-				if err := ad.Alive(); err != nil {
-					s.log.ERROR.Println(err)
-				}
+	for range time.Tick(maxAge * time.Second / 2) {
+		for _, ad := range ads {
+			if err := ad.Alive(); err != nil {
+				s.log.ERROR.Println(err)
 			}
-		case <-s.closeC:
-			break ANNOUNCE
 		}
 	}
-
-	for _, ad := range ads {
-		if err := ad.Bye(); err != nil {
-			s.log.ERROR.Println(err)
-		}
-	}
-
-	close(s.doneC)
-}
-
-// Stop stops the SEMP runtime
-func (s *SEMP) Stop() {
-	if s.closeC == nil {
-		panic("not running")
-	}
-	close(s.closeC)
-}
-
-// Done returns the done channel. The channel is closed after byebye has been sent.
-func (s *SEMP) Done() chan struct{} {
-	return s.doneC
 }
 
 func (s *SEMP) callbackURI() string {
@@ -189,7 +161,6 @@ func (s *SEMP) callbackURI() string {
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }
@@ -233,7 +204,7 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 		Device: Device{
 			DeviceType:      sempGateway,
 			FriendlyName:    "evcc",
-			Manufacturer:    "github.com/evcc-io/evcc",
+			Manufacturer:    "evcc.io",
 			ModelName:       serverName,
 			PresentationURL: s.hostURI,
 			UDN:             uid,
