@@ -64,7 +64,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
 import type { LoadpointCompact, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
-import type { DisplayLoadpoint } from "@/loadpoint-settings";
+import type { DisplayLoadpoint } from "@/loadpoint-display";
 
 export default defineComponent({
 	name: "Loadpoints",

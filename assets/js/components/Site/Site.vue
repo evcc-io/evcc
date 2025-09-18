@@ -99,7 +99,7 @@ import type {
 	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
-import { convertToDisplayLoadpoints, filterAndSortDisplayLoadpoints } from "@/loadpoint-settings";
+import { convertToDisplayLoadpoints, filterAndSortDisplayLoadpoints } from "@/loadpoint-display";
 
 export default defineComponent({
 	name: "Site",

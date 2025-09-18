@@ -54,7 +54,7 @@ import {
 	setLoadpointOrder,
 	setLoadpointVisibility,
 	type LoadpointDisplayItem,
-} from "@/loadpoint-settings";
+} from "@/loadpoint-display";
 import dragDropMixin from "@/mixins/dragDrop";
 import DragDropItem from "@/components/DragDrop/DragDropItem.vue";
 
