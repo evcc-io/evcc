@@ -47,8 +47,8 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 			MaxSoc: 95,
 		},
 		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    5000, # Please refer to the LG datasheet for your storage system for exact values.
-			MaxDischargePower: 5000, # Please refer to the LG datasheet for your storage system for exact values.
+			MaxChargePower:    5000,
+			MaxDischargePower: 5000,
 		},
 		Cache: time.Second,
 	}
