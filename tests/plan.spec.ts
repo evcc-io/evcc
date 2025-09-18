@@ -557,6 +557,7 @@ test.describe("repeating", async () => {
     // activate
     await modal.getByTestId("repeating-plan-time").fill("02:22");
     await modal.getByTestId("repeating-plan-active").click();
+    await page.waitForLoadState("networkidle");
 
     // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
