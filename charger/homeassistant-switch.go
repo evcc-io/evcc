@@ -55,12 +55,12 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		return nil, errors.New("missing switch entity")
 	}
 
-	var meterFunc func() (float64, error)
+	var power func() (float64, error)
 	if powerEntity != "" {
-		meterFunc = c.currentPower
+		power = c.currentPower
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, meterFunc, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, power, standbypower)
 	c.Helper.Client.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Authorization": "Bearer " + token,
