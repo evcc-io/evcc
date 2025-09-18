@@ -97,7 +97,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		}
 	}
 
-	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, setBatteryMode), nil
+	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, batteryPowerLimiter, setBatteryMode), nil
 }
 
 // CurrentPower implements the api.Meter interface
