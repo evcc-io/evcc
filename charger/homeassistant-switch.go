@@ -69,7 +69,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Base: c.Helper.Client.Transport,
 	}
 
-	return decorateHomeAssistantSwitch(c, meterFunc), nil
+	return decorateHomeAssistantSwitch(c, power), nil
 }
 
 // Enabled implements the api.Charger interface
