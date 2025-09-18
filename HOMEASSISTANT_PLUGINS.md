@@ -17,7 +17,7 @@ The Home Assistant plugins eliminate the need for repetitive HTTP configurations
 ### Home Assistant Charger Plugin
 
 - **Type**: `homeassistant`
-- **Interfaces**: `api.Charger`, `api.Meter`, `api.MeterEnergy`, `api.PhaseCurrents`, `api.CurrentGetter`
+- **Interfaces**: `api.Charger`, `api.Meter`, `api.MeterEnergy`, `api.PhaseCurrents`, `api.PhaseVoltages`, `api.CurrentGetter`
 - **Purpose**: Control charging stations through Home Assistant switches and read their status
 
 ## Configuration
@@ -28,7 +28,7 @@ The Home Assistant plugins eliminate the need for repetitive HTTP configurations
 meters:
   - name: grid_meter
     type: homeassistant
-    uri: http://homeassistant:8123          # Required: Home Assistant base URL
+    baseurl: http://homeassistant:8123      # Required: Home Assistant base URL
     token: eyJ...                           # Required: Long-lived access token
     power: sensor.grid_power                # Required: Power sensor entity ID
     energy: sensor.grid_energy              # Optional: Energy sensor entity ID
@@ -48,7 +48,7 @@ meters:
 chargers:
   - name: wallbox
     type: homeassistant
-    uri: http://homeassistant:8123          # Required: Home Assistant base URL
+    baseurl: http://homeassistant:8123      # Required: Home Assistant base URL
     token: eyJ...                           # Required: Long-lived access token
     status: sensor.wallbox_status           # Required: Status sensor entity ID
     enabled: binary_sensor.wallbox_enabled # Required: Enabled state sensor entity ID
@@ -59,6 +59,10 @@ chargers:
       - sensor.wallbox_current_l1
       - sensor.wallbox_current_l2
       - sensor.wallbox_current_l3
+    voltages:                               # Optional: Voltage sensors for L1, L2, L3
+      - sensor.wallbox_voltage_l1
+      - sensor.wallbox_voltage_l2
+      - sensor.wallbox_voltage_l3
     maxcurrent: number.wallbox_max_current  # Optional: Max current setting entity ID
 ```
 
@@ -98,6 +102,7 @@ Provides common functionality:
 Both plugins implement optional interfaces:
 - **Energy metering**: Implement if energy sensor is configured
 - **Phase measurements**: Implement if current/voltage sensors are configured
+- **Phase voltages**: Implement if voltage sensors are configured
 - **Current control**: Implement if max current entity is configured (charger only)
 
 ## Benefits
@@ -140,7 +145,7 @@ meters:
 meters:
   - name: grid
     type: homeassistant
-    uri: http://homeassistant:8123
+    baseurl: http://homeassistant:8123
     token: eyJ...
     power: sensor.grid_power
     energy: sensor.grid_energy

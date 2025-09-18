@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -22,9 +21,9 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(uri, token string) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
+func NewConnection(baseURL, token string) (*Connection, error) {
+	if baseURL == "" {
+		return nil, errors.New("missing baseURL")
 	}
 	if token == "" {
 		return nil, errors.New("missing token")
@@ -33,7 +32,7 @@ func NewConnection(uri, token string) (*Connection, error) {
 	log := util.NewLogger("homeassistant")
 	c := &Connection{
 		Helper: request.NewHelper(log.Redact(token)),
-		uri:    strings.TrimSuffix(uri, "/"),
+		uri:    strings.TrimSuffix(baseURL, "/"),
 	}
 
 	// Set up authentication headers
@@ -169,6 +168,14 @@ func (c *Connection) GetPhaseStates(entities [3]string) (float64, float64, float
 	return l1, l2, l3, nil
 }
 
+// ValidatePhaseEntities validates that phase entity arrays contain exactly 3 entities
+func ValidatePhaseEntities(entities []string, entityType string) ([3]string, error) {
+	if len(entities) != 3 {
+		return [3]string{}, fmt.Errorf("%s must contain exactly 3 entities for L1, L2, L3", entityType)
+	}
+	return [3]string{entities[0], entities[1], entities[2]}, nil
+}
+
 // ParseChargeStatus maps Home Assistant states to EVCC charge status
 func ParseChargeStatus(state string) (api.ChargeStatus, error) {
 	statusMap := map[string]api.ChargeStatus{
@@ -210,19 +217,3 @@ func ParseChargeStatus(state string) (api.ChargeStatus, error) {
 	return api.StatusNone, fmt.Errorf("unknown charge status: %s", state)
 }
 
-// GetStateWithTimeout retrieves state with retry logic
-func (c *Connection) GetStateWithTimeout(entity string, timeout time.Duration) (string, error) {
-	start := time.Now()
-	for {
-		state, err := c.GetState(entity)
-		if err == nil {
-			return state, nil
-		}
-
-		if time.Since(start) > timeout {
-			return "", fmt.Errorf("timeout getting state for %s: %w", entity, err)
-		}
-
-		time.Sleep(time.Second)
-	}
-}

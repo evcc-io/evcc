@@ -18,6 +18,7 @@ type HomeAssistant struct {
 	power      string
 	energy     string
 	currents   [3]string
+	voltages   [3]string
 	maxcurrent string
 }
 
@@ -28,7 +29,7 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI        string
+		BaseURL    string
 		Token      string
 		Status     string   // required - sensor for charge status
 		Enabled    string   // required - sensor for enabled state
@@ -36,6 +37,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, erro
 		Power      string   // optional - power sensor
 		Energy     string   // optional - energy sensor
 		Currents   []string // optional - current sensors for L1, L2, L3
+		Voltages   []string // optional - voltage sensors for L1, L2, L3
 		MaxCurrent string   // optional - number entity for setting max current
 	}{}
 
@@ -53,7 +55,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, erro
 		return nil, errors.New("missing enable switch entity")
 	}
 
-	conn, err := homeassistant.NewConnection(cc.URI, cc.Token)
+	conn, err := homeassistant.NewConnection(cc.BaseURL, cc.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -70,10 +72,20 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, erro
 
 	// Set up phase currents (optional)
 	if len(cc.Currents) > 0 {
-		if len(cc.Currents) != 3 {
-			return nil, errors.New("currents must contain exactly 3 entities for L1, L2, L3")
+		currents, err := homeassistant.ValidatePhaseEntities(cc.Currents, "currents")
+		if err != nil {
+			return nil, err
 		}
-		c.currents = [3]string{cc.Currents[0], cc.Currents[1], cc.Currents[2]}
+		c.currents = currents
+	}
+
+	// Set up phase voltages (optional)
+	if len(cc.Voltages) > 0 {
+		voltages, err := homeassistant.ValidatePhaseEntities(cc.Voltages, "voltages")
+		if err != nil {
+			return nil, err
+		}
+		c.voltages = voltages
 	}
 
 	return c, nil
@@ -155,4 +167,14 @@ func (c *HomeAssistant) GetMaxCurrent() (float64, error) {
 
 	// Return value as integer amperes
 	return math.Round(value), nil
+}
+
+var _ api.PhaseVoltages = (*HomeAssistant)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *HomeAssistant) Voltages() (float64, float64, float64, error) {
+	if c.voltages[0] == "" {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	return c.conn.GetPhaseStates(c.voltages)
 }
