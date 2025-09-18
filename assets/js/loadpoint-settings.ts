@@ -1,4 +1,5 @@
 import { reactive, watch } from "vue";
+import type { LoadpointCompact } from "@/types/evcc";
 
 export interface LoadpointDisplay {
   index: number;
@@ -7,8 +8,15 @@ export interface LoadpointDisplay {
 
 export interface LoadpointDisplayItem extends LoadpointDisplay {
   title: string;
-  originalData: any;
+  originalData: DisplayLoadpoint;
 }
+
+export type LoadpointWithId = LoadpointCompact & { id: number };
+
+export type DisplayLoadpoint = LoadpointCompact & {
+  id: number;
+  displayTitle: string;
+};
 
 interface LoadpointSettings {
   order: number[];
@@ -84,38 +92,56 @@ const setLoadpointVisibility = (index: number, visible: boolean) => {
   loadpointSettings.visibility[index] = visible;
 };
 
-const getOrderedVisibleLoadpoints = <T>(loadpoints: T[]): Array<T & { id: number }> => {
-  if (loadpoints.length === 0) return [];
-
-  initializeLoadpointSettings(loadpoints.length);
-
-  return loadpointSettings.order
-    .filter((index) => index < loadpoints.length && getLoadpointVisibility(index))
-    .map((index) => ({ ...loadpoints[index], id: index + 1 }))
-    .filter((item): item is T & { id: number } => item !== undefined);
+const convertToDisplayLoadpoints = (loadpoints: LoadpointCompact[]): DisplayLoadpoint[] => {
+  return loadpoints.map((loadpoint, index) => ({
+    ...loadpoint,
+    id: index + 1,
+    displayTitle: loadpoint.title || "Charging point", // Using hardcoded fallback for now, could use i18n later
+  }));
 };
 
-const getLoadpointDisplayList = <T extends { title?: string }>(
-  loadpoints: T[]
-): Array<LoadpointDisplayItem & { originalData: T }> => {
-  if (loadpoints.length === 0) return [];
+const filterAndSortDisplayLoadpoints = (
+  displayLoadpoints: DisplayLoadpoint[]
+): DisplayLoadpoint[] => {
+  if (displayLoadpoints.length === 0) return [];
 
-  initializeLoadpointSettings(loadpoints.length);
+  initializeLoadpointSettings(displayLoadpoints.length);
 
   return loadpointSettings.order
-    .filter((index) => index < loadpoints.length)
+    .filter((index) => index < displayLoadpoints.length && getLoadpointVisibility(index))
+    .map((index) => displayLoadpoints[index])
+    .filter((item): item is DisplayLoadpoint => item !== undefined);
+};
+
+const getDisplayLoadpointList = (displayLoadpoints: DisplayLoadpoint[]): LoadpointDisplayItem[] => {
+  if (displayLoadpoints.length === 0) return [];
+
+  initializeLoadpointSettings(displayLoadpoints.length);
+
+  return loadpointSettings.order
+    .filter((index) => index < displayLoadpoints.length)
     .map((index) => {
-      const loadpoint = loadpoints[index];
+      const loadpoint = displayLoadpoints[index];
       if (!loadpoint) {
         throw new Error(`Loadpoint at index ${index} is undefined`);
       }
       return {
         index,
         visible: getLoadpointVisibility(index),
-        title: loadpoint.title || `Loadpoint ${index + 1}`,
+        title: loadpoint.displayTitle,
         originalData: loadpoint,
       };
     });
+};
+
+const getOrderedVisibleLoadpoints = (loadpoints: LoadpointCompact[]): LoadpointWithId[] => {
+  const displayLoadpoints = convertToDisplayLoadpoints(loadpoints);
+  return filterAndSortDisplayLoadpoints(displayLoadpoints);
+};
+
+const getLoadpointDisplayList = (loadpoints: LoadpointCompact[]): LoadpointDisplayItem[] => {
+  const displayLoadpoints = convertToDisplayLoadpoints(loadpoints);
+  return getDisplayLoadpointList(displayLoadpoints);
 };
 
 export {
@@ -125,6 +151,9 @@ export {
   setLoadpointOrder,
   getLoadpointVisibility,
   setLoadpointVisibility,
+  convertToDisplayLoadpoints,
+  filterAndSortDisplayLoadpoints,
+  getDisplayLoadpointList,
   getOrderedVisibleLoadpoints,
   getLoadpointDisplayList,
 };

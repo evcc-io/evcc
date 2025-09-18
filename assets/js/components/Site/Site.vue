@@ -99,7 +99,7 @@ import type {
 	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
-import { getOrderedVisibleLoadpoints } from "@/loadpoint-settings";
+import { convertToDisplayLoadpoints, filterAndSortDisplayLoadpoints } from "@/loadpoint-settings";
 
 export default defineComponent({
 	name: "Site",
@@ -167,7 +167,8 @@ export default defineComponent({
 	},
 	computed: {
 		orderedVisibleLoadpoints() {
-			return getOrderedVisibleLoadpoints(this.loadpoints);
+			const displayLoadpoints = convertToDisplayLoadpoints(this.loadpoints);
+			return filterAndSortDisplayLoadpoints(displayLoadpoints);
 		},
 		batteryConfigured() {
 			return this.battery?.length > 0;
@@ -182,7 +183,7 @@ export default defineComponent({
 			return this.collectProps(Energyflow);
 		},
 		loadpointTitles() {
-			return this.orderedVisibleLoadpoints.map((lp) => lp.title);
+			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
 		},
 		loadpointsCompact() {
 			return this.loadpoints.map((lp, index) => {
