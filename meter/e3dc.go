@@ -43,6 +43,10 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		DischargeLimit  uint32
 		Timeout         time.Duration
 	}{
+		batteryPowerLimits: batteryPowerLimits{
+			MaxChargePower:    4600,
+			MaxDischargePower: 4600,
+		},
 		Timeout: request.Timeout,
 	}
 
@@ -56,11 +60,6 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	port, _ := strconv.Atoi(port_)
-
-	batteryPowerLimits: batteryPowerLimits{
-		MaxChargePower:    4600,
-		MaxDischargePower: 4600,
-	}
 
 	cfg := rscp.ClientConfig{
 		Address:           host,
@@ -117,7 +116,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		batteryPowerLimiter = batteryPowerLimits.Decorator()
 	}
 
-	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, maxacpower, batteryPowerLimiter), nil
+	return decorateE3dc(m, batterySoc, batteryCapacity, batteryPowerLimiter, batteryMode, maxacpower), nil
 }
 
 // retryMessage executes a single message request with retry
