@@ -54,7 +54,7 @@ render: |
       address: 21   # Monthly power generation
       type: holding
       decode: uint32
-    scale: 0.01
+    scale: 0.01  # Modbus value is given in 0.01 kWh
   maxacpower: 0   # Da nur DC
   {{- end }}
 
@@ -82,28 +82,28 @@ render: |
         address: 3   # PV1 power
         type: holding
         decode: uint16
-      scale: -1
+      scale: -1  # Substract PV power to calc battery charge
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 6   # PV2 power
         type: holding
         decode: uint16
-      scale: -1
+      scale: -1  # Substract PV power to calc battery charge
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 9   # PV3 power
         type: holding
         decode: uint16
-      scale: -1
+      scale: -1  # Substract PV power to calc battery charge
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 12  # PV4 power
         type: holding
         decode: uint16
-      scale: -1
+      scale: -1  # Substract PV power to calc battery charge
  
   energy:
     source: modbus
