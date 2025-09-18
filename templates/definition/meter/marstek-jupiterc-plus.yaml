@@ -104,7 +104,6 @@ render: |
         type: holding
         decode: uint16
       scale: -1  # Substract PV power to calc battery charge
- 
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
