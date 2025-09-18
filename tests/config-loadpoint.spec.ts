@@ -475,6 +475,7 @@ power:
     await expect(meterRestResult).toContainText(["Power", "5.0 kW"].join(""));
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
+    await expectModalVisible(lpModal);
 
     // create
     await lpModal.getByRole("button", { name: "Save" }).click();

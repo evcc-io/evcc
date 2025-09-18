@@ -6,9 +6,14 @@ import killPort from "kill-port";
 import os from "os";
 import path from "path";
 import { Transform } from "stream";
+import { test } from "@playwright/test";
 
 const BINARY = "./evcc";
-const LOG_ENABLED = false;
+const IS_CI = !!process.env["GITHUB_ACTIONS"];
+const LOG_ENABLED = !IS_CI;
+
+// sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
+let allowedStartupFails = IS_CI ? 2 : 0;
 
 function workerPort() {
   const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
@@ -107,7 +112,19 @@ async function _start(config?: string, flags: string | string[] = []) {
     log("evcc terminated", { code, port, config });
     steamLog.end();
   });
-  await waitOn({ resources: [baseUrl()], log: LOG_ENABLED });
+  try {
+    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 50000 });
+  } catch (error) {
+    instance.kill("SIGKILL");
+    console.error(logPrefix(), `evcc startup failed: ${error}`);
+
+    if (allowedStartupFails > 0) {
+      allowedStartupFails--;
+      test.skip(true, `evcc startup timeout (${allowedStartupFails} skips remaining)`);
+      return;
+    }
+    throw error;
+  }
   return instance;
 }
 

@@ -55,6 +55,10 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, fmt.Errorf("unsupported region: %s", cc.Region)
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Stekker{
 		embed:  &cc.embed,
 		region: cc.Region,

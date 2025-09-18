@@ -28,8 +28,8 @@ export async function closeTopNavigation(page: Page): Promise<void> {
 }
 
 export async function expectTopNavigationOpened(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByTestId("topnavigation-dropdown")).toBeVisible();
+  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
 }
 
 export async function expectTopNavigationClosed(page: Page): Promise<void> {
