@@ -55,7 +55,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 
 	// standbypower < 0 ensures that currentPower is never used by the switch socket if not present
 	if powerEntity == "" && standbypower >= 0 {
-		return nil, errors.New("missing either power or negative standbypower")
+		return nil, errors.New("missing either power entity or negative standbypower")
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
