@@ -1,7 +1,7 @@
 <template>
 	<div class="container mx-0 px-0">
 		<div class="small text-muted mb-3">
-			{{ $t("settings.device.info") }}
+			{{ isApp() ? $t("settings.device.infoApp") : $t("settings.device.infoBrowser") }}
 		</div>
 		<FormRow id="settingsDesign" :label="$t('settings.theme.label')">
 			<SelectGroup
@@ -184,6 +184,7 @@ export default defineComponent({
 		document.removeEventListener("fullscreenchange", this.fullscreenChange);
 	},
 	methods: {
+		isApp,
 		enterFullscreen() {
 			document.documentElement.requestFullscreen();
 		},

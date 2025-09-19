@@ -1039,7 +1039,9 @@
   },
   "settings": {
     "device": {
-      "info": "Settings you make here are only for this device/browser."
+      "info": "Settings you make here are only for this device/browser.",
+      "infoApp": "Settings you make here are only for this app.",
+      "infoBrowser": "Settings you make here are only for this browser."
     },
     "fullscreen": {
       "enter": "Enter fullscreen",

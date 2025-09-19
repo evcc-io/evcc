@@ -1039,7 +1039,9 @@
   },
   "settings": {
     "device": {
-      "info": "Einstellungen, die du hier vornimmst, gelten nur für dieses Gerät/diesen Browser."
+      "info": "Einstellungen, die du hier vornimmst, gelten nur für dieses Gerät/diesen Browser.",
+      "infoApp": "Einstellungen, die du hier vornimmst, gelten nur für diese App.",
+      "infoBrowser": "Einstellungen, die du hier vornimmst, gelten nur für diesen Browser."
     },
     "fullscreen": {
       "enter": "Vollbild starten",
