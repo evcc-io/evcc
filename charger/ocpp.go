@@ -74,7 +74,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 
 		ForcePowerCtrl      bool
 		StackLevelZero      *bool
-		ProfileKindRelative *bool
+		ProfileKindRelative bool
 		RemoteStart         bool
 	}{
 		Connector:      1,
@@ -87,7 +87,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
-	profileKindRelative := cc.ProfileKindRelative != nil && *cc.ProfileKindRelative
+	profileKindRelative := cc.ProfileKindRelative
 
 	c, err := NewOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
@@ -187,10 +187,11 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
-		log:            log,
-		cp:             cp,
-		conn:           conn,
-		stackLevelZero: stackLevelZero,
+		log:                 log,
+		cp:                  cp,
+		conn:                conn,
+		stackLevelZero:      stackLevelZero,
+		profileKindRelative: profileKindRelative,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -328,28 +329,20 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		}
 	}
 
-	var res *types.ChargingProfile
+	res := &types.ChargingProfile{
+		ChargingProfileId:      c.cp.ChargingProfileId,
+		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
+		ChargingSchedule: &types.ChargingSchedule{
+			ChargingRateUnit:       c.cp.ChargingRateUnit,
+			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
+		},
+	}
+
 	if c.profileKindRelative {
-		res = &types.ChargingProfile{
-			ChargingProfileId:      c.cp.ChargingProfileId,
-			ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
-			ChargingProfileKind:    types.ChargingProfileKindRelative,
-			ChargingSchedule: &types.ChargingSchedule{
-				ChargingRateUnit:       c.cp.ChargingRateUnit,
-				ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
-			},
-		}
+		res.ChargingProfileKind = types.ChargingProfileKindRelative
 	} else {
-		res = &types.ChargingProfile{
-			ChargingProfileId:      c.cp.ChargingProfileId,
-			ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
-			ChargingProfileKind:    types.ChargingProfileKindAbsolute,
-			ChargingSchedule: &types.ChargingSchedule{
-				StartSchedule:          types.NewDateTime(time.Now().Add(-time.Minute)),
-				ChargingRateUnit:       c.cp.ChargingRateUnit,
-				ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
-			},
-		}
+		res.ChargingProfileKind = types.ChargingProfileKindAbsolute
+		res.ChargingSchedule.StartSchedule = types.NewDateTime(time.Now().Add(-time.Minute))
 	}
 
 	if !c.stackLevelZero {
