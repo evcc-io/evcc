@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateBoschBpts5Hybrid(base api.Meter, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateBoschBpts5Hybrid(base api.Meter, battery func() (float64, error), batteryCapacity func() float64, batteryPowerLimiter func() (float64, float64)) api.Meter {
 	switch {
 	case battery == nil:
 		return base
 
-	case battery != nil && batteryCapacity == nil:
+	case battery != nil && batteryCapacity == nil && batteryPowerLimiter == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -22,7 +22,7 @@ func decorateBoschBpts5Hybrid(base api.Meter, battery func() (float64, error), b
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil:
+	case battery != nil && batteryCapacity != nil && batteryPowerLimiter == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -34,6 +34,40 @@ func decorateBoschBpts5Hybrid(base api.Meter, battery func() (float64, error), b
 			},
 			BatteryCapacity: &decorateBoschBpts5HybridBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryPowerLimiter != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryPowerLimiter
+		}{
+			Meter: base,
+			Battery: &decorateBoschBpts5HybridBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateBoschBpts5HybridBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryPowerLimiter != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+		}{
+			Meter: base,
+			Battery: &decorateBoschBpts5HybridBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateBoschBpts5HybridBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateBoschBpts5HybridBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
 			},
 		}
 	}
@@ -55,4 +89,12 @@ type decorateBoschBpts5HybridBatteryCapacityImpl struct {
 
 func (impl *decorateBoschBpts5HybridBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
+}
+
+type decorateBoschBpts5HybridBatteryPowerLimiterImpl struct {
+	batteryPowerLimiter func() (float64, float64)
+}
+
+func (impl *decorateBoschBpts5HybridBatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
+	return impl.batteryPowerLimiter()
 }

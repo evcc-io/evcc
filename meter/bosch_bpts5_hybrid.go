@@ -46,15 +46,22 @@ func init() {
 	registry.Add("bosch-bpt", NewBoschBpts5HybridFromConfig)
 }
 
-//go:generate go tool decorate -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)"
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
-		batteryCapacity `mapstructure:",squash"`
-		URI             string
-		Usage           string
-		Cache           time.Duration
+	cc := struct {
+		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		URI                string
+		Usage              string
+		Cache              time.Duration
+	}{
+		batteryPowerLimits: batteryPowerLimits{
+			MaxChargePower:    5000,
+			MaxDischargePower: 5000,
+		},
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,11 +72,11 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 		return nil, errors.New("missing usage")
 	}
 
-	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Cache)
+	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.batteryPowerLimits, cc.Cache)
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(uri, usage string, capacity func() float64, cache time.Duration) (api.Meter, error) {
+func NewBoschBpts5Hybrid(uri, usage string, capacity func() float64, batteryPowerLimits batteryPowerLimits, cache time.Duration) (api.Meter, error) {
 	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
@@ -86,11 +93,13 @@ func NewBoschBpts5Hybrid(uri, usage string, capacity func() float64, cache time.
 
 	// decorate battery
 	var batterySoc func() (float64, error)
+	var batteryPowerLimiter func() (float64, float64)
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+		batteryPowerLimiter = batteryPowerLimits.Decorator()
 	}
 
-	return decorateBoschBpts5Hybrid(m, batterySoc, capacity), nil
+	return decorateBoschBpts5Hybrid(m, batterySoc, capacity, batteryPowerLimiter), nil
 }
 
 // CurrentPower implements the api.Meter interface
