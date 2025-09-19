@@ -41,6 +41,7 @@ render: |
       decode: float32
     scale: 0.001
   currents:
+<<<<<<< HEAD
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -63,6 +64,58 @@ render: |
       decode: uint16
     scale: 0.1
   {{- end }}
+=======
+    - source: calc
+      mul:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 36055 # Meter Current R, A
+          type: holding
+          decode: uint16
+        scale: -0.1
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 36010 # Meter Power Factor_R
+          type: holding
+          decode: int16
+        scale: 0.001
+    - source: calc
+      mul:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 36056 # Meter Current S, A
+          type: holding
+          decode: uint16
+        scale: -0.1
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 36011 # Meter Power Factor_S
+          type: holding
+          decode: int16
+        scale: 0.001
+    - source: calc
+      mul:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 36057 # Meter Current T, A  
+          type: holding
+          decode: uint16
+        scale: -0.1
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 36012 # Meter Power Factor_T
+          type: holding
+          decode: int16
+        scale: 0.001
+  {{- end }
+  }
+>>>>>>> 74cab5b5 (change goodwe-hybrid template to calculate the correct currents based on current and power factor)
   {{- if eq .usage "pv" }}
   power:
     source: calc
