@@ -7,10 +7,61 @@
 					<p class="text-muted">{{ $t("issue.description") }}</p>
 				</div>
 
-				<form @submit.prevent="handleFormSubmit">
+				<!-- Help Type Selection -->
+				<div class="mb-5">
+					<h5 class="mb-3">{{ $t("issue.helpType.title") }}</h5>
+					<div class="row g-3">
+						<div class="col-12 col-md-6">
+							<div class="form-check">
+								<input
+									id="helpTypeHelp"
+									v-model="helpType"
+									type="radio"
+									value="discussion"
+									class="form-check-input"
+									name="helpType"
+								/>
+								<label for="helpTypeHelp" class="form-check-label">
+									<strong>{{ $t("issue.helpType.discussion") }}</strong>
+									<br />
+									<small class="text-muted">{{
+										$t("issue.helpType.discussionDescription")
+									}}</small>
+								</label>
+							</div>
+						</div>
+						<div class="col-12 col-md-6">
+							<div class="form-check">
+								<input
+									id="helpTypeBug"
+									v-model="helpType"
+									type="radio"
+									value="issue"
+									class="form-check-input"
+									name="helpType"
+								/>
+								<label for="helpTypeBug" class="form-check-label">
+									<strong>{{ $t("issue.helpType.issue") }}</strong>
+									<br />
+									<small class="text-muted">{{
+										$t("issue.helpType.issueDescription")
+									}}</small>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<form v-if="helpType" @submit.prevent="handleFormSubmit">
 					<!-- Essential Form Section -->
 					<div class="d-flex justify-content-between align-items-center mb-4">
-						<h4>{{ $t("issue.subTitle") }}</h4>
+						<h4>
+							{{
+								helpType === "discussion"
+									? $t("issue.subTitle")
+									: $t("issue.subTitleIssue")
+							}}
+						</h4>
 					</div>
 
 					<!-- Two Column Layout -->
@@ -44,15 +95,24 @@
 								></textarea>
 							</div>
 							<div class="mb-4">
-								<label for="stepsToReproduce" class="form-label"
-									>{{ $t("issue.stepsToReproduce") }} *</label
-								>
+								<label for="stepsToReproduce" class="form-label">
+									{{
+										helpType === "discussion"
+											? $t("issue.additionalContext")
+											: $t("issue.stepsToReproduce")
+									}}
+									*
+								</label>
 								<textarea
 									id="stepsToReproduce"
 									v-model="issue.steps"
 									class="form-control"
 									rows="6"
-									:placeholder="$t('issue.stepsToReproducePlaceholder')"
+									:placeholder="
+										helpType === 'discussion'
+											? $t('issue.additionalContextPlaceholder')
+											: $t('issue.stepsToReproducePlaceholder')
+									"
 									required
 								></textarea>
 							</div>
@@ -89,6 +149,7 @@
 								:included="sections.yamlConfig.included"
 								:title="$t('issue.additional.yamlConfig')"
 								:content="sections.yamlConfig.content"
+								:helpType="helpType"
 								@update:included="sections.yamlConfig.included = $event"
 								@update:content="sections.yamlConfig.content = $event"
 							>
@@ -108,6 +169,7 @@
 								:included="sections.uiConfig.included"
 								:title="$t('issue.additional.uiConfig')"
 								:content="sections.uiConfig.content"
+								:helpType="helpType"
 								@update:included="sections.uiConfig.included = $event"
 								@update:content="sections.uiConfig.content = $event"
 							>
@@ -128,6 +190,7 @@
 								:included="sections.logs.included"
 								:title="$t('issue.additional.logs')"
 								:content="sections.logs.content"
+								:helpType="helpType"
 								@update:included="sections.logs.included = $event"
 								@update:content="sections.logs.content = $event"
 							>
@@ -197,6 +260,7 @@
 								:included="sections.state.included"
 								:title="$t('issue.additional.state')"
 								:content="sections.state.content"
+								:helpType="helpType"
 								@update:included="sections.state.included = $event"
 								@update:content="sections.state.content = $event"
 							>
@@ -213,8 +277,8 @@
 
 					<!-- Essential Section Actions -->
 					<div class="d-flex justify-content-end gap-3 mb-5">
-						<button type="submit" class="btn btn-primary">
-							{{ $t("issue.createIssueButton") }}
+						<button type="submit" class="btn" :class="buttonClass">
+							{{ buttonText }}
 						</button>
 					</div>
 				</form>
@@ -235,16 +299,27 @@
 
 			<!-- Step 1: Create Basic Issue -->
 			<div class="mb-4">
-				<h6 class="mb-2">{{ $t("issue.summary.stepOne") }}</h6>
+				<h6 class="mb-2">
+					{{
+						helpType === "discussion"
+							? $t("issue.summary.stepOneDiscussion")
+							: $t("issue.summary.stepOneIssue")
+					}}
+				</h6>
 				<p class="text-muted small mb-3">{{ $t("issue.summary.step1Description") }}</p>
 				<div class="d-flex justify-content-start">
 					<a
-						:href="githubIssueUrl"
+						:href="githubUrl"
 						target="_blank"
-						class="btn btn-primary"
+						class="btn"
+						:class="buttonClass"
 						@click="clearSessionStorage"
 					>
-						{{ $t("issue.summary.confirmationButton") }}
+						{{
+							helpType === "discussion"
+								? $t("issue.summary.confirmationButtonDiscussion")
+								: $t("issue.summary.confirmationButtonIssue")
+						}}
 					</a>
 				</div>
 			</div>
@@ -260,7 +335,12 @@
 						<template #default="{ copy, copied, copying }">
 							<button
 								type="button"
-								class="btn btn-primary"
+								class="btn"
+								:class="
+									helpType === 'discussion'
+										? 'btn-outline-success'
+										: 'btn-outline-danger'
+								"
 								:disabled="copying"
 								@click="copy"
 							>
@@ -301,6 +381,9 @@ import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 
+// Type definitions
+export type HelpType = "discussion" | "issue";
+
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
 	"battery",
@@ -333,6 +416,9 @@ export default defineComponent({
 	},
 	data() {
 		return {
+			// Help type selection
+			helpType: (sessionStorage.getItem("issue.helpType") as HelpType) || "discussion",
+
 			// Essential form data
 			issue: {
 				title: sessionStorage.getItem("issue.title") || "",
@@ -409,14 +495,20 @@ export default defineComponent({
 			const url = window.location.href.split("#")[0];
 			return `${url}api/state`;
 		},
-		githubIssueUrl(): string {
-			const minimalBody = `## Issue Description
+		githubUrl(): string {
+			const encodedTitle = encodeURIComponent(this.issue.title);
+			const isDiscussion = this.helpType === "discussion";
+
+			const mainSection = isDiscussion ? "## Description" : "## Issue Description";
+			const stepsSection = isDiscussion ? "## Additional Context" : "## Steps to Reproduce";
+
+			const body = `${mainSection}
 
 ${this.issue.description}
 
 ${
 	this.issue.steps
-		? `## Steps to Reproduce
+		? `${stepsSection}
 
 ${this.issue.steps}
 
@@ -428,9 +520,22 @@ ${this.issue.steps}
 
 ${this.versionString}`;
 
-			const encodedTitle = encodeURIComponent(this.issue.title);
-			const encodedBody = encodeURIComponent(minimalBody);
-			return `https://github.com/evcc-io/evcc/issues/new?title=${encodedTitle}&body=${encodedBody}`;
+			const encodedBody = encodeURIComponent(body);
+			const baseUrl = isDiscussion
+				? "https://github.com/evcc-io/evcc/discussions/new?category=need-help"
+				: "https://github.com/evcc-io/evcc/issues/new";
+
+			return `${baseUrl}&title=${encodedTitle}&body=${encodedBody}`;
+		},
+
+		buttonClass(): string {
+			return this.helpType === "discussion" ? "btn-success" : "btn-danger";
+		},
+
+		buttonText(): string {
+			return this.helpType === "discussion"
+				? this.$t("issue.createDiscussionButton")
+				: this.$t("issue.createIssueButton");
 		},
 	},
 	watch: {
@@ -451,6 +556,9 @@ ${this.versionString}`;
 		},
 		"issue.steps"(newValue: string) {
 			sessionStorage.setItem("issue.steps", newValue);
+		},
+		helpType(newValue: string) {
+			sessionStorage.setItem("issue.helpType", newValue);
 		},
 	},
 	async mounted() {
@@ -624,6 +732,7 @@ ${this.versionString}`;
 			sessionStorage.removeItem("issue.title");
 			sessionStorage.removeItem("issue.description");
 			sessionStorage.removeItem("issue.steps");
+			sessionStorage.removeItem("issue.helpType");
 		},
 	},
 });

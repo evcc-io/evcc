@@ -697,8 +697,18 @@
       "yamlConfig": "Konfiguration (YAML)",
       "yamlConfigDescription": "Deine komplette Konfigurationsdatei."
     },
+    "additionalContext": "Zusätzlicher Kontext",
+    "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
+    "createDiscussionButton": "GitHub Diskussion starten...",
     "createIssueButton": "GitHub Issue erstellen...",
-    "description": "Du hast ein Verhalten bemerkt, das wie ein Fehler aussieht? Nutze diese Seite um ein GitHub-Issue zu erstellen. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "helpType": {
+      "discussion": "Brauche Hilfe bei meiner Einrichtung",
+      "discussionDescription": "Community-Diskussionen bieten Antworten.",
+      "issue": "Habe einen Fehler gefunden",
+      "issueDescription": "Ich bin sicher, dass etwas kaputt ist und repariert werden muss.",
+      "title": "Um welches Problem geht es?"
+    },
     "issueDescription": "Beschreibung",
     "issueDescriptionPlaceholder": "Beschreibe was du erwartet hattest und was tatsächlich passiert ist...",
     "issueTitle": "Titel",
@@ -706,16 +716,19 @@
     "stepsToReproduce": "Schritte zur Reproduktion",
     "stepsToReproducePlaceholder": "1. Gehe zu...\n2. Klicke auf...\n3. Siehe Fehler...",
     "subTitle": "Beschreibe dein Problem",
+    "subTitleIssue": "Beschreibe das Problem",
     "summary": {
-      "confirmationButton": "GitHub Issue erstellen",
+      "confirmationButtonDiscussion": "GitHub Diskussion starten",
+      "confirmationButtonIssue": "GitHub Issue erstellen",
       "copied": "Kopiert!",
       "copyButton": "Zusätzliche Informationen kopieren",
       "instructions": "Aufgrund von GitHubs URL-Größenbeschränkungen ist dies ein zweistufiger Prozess:",
-      "step1Description": "Klicke den Button unten, um ein grundlegendes GitHub-Issue mit Titel, Beschreibung und Schritten zu erstellen.",
-      "step2Description": "Nach der Erstellung des Issues, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Issue einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
-      "stepOne": "Schritt 1: Basis-Issue erstellen",
+      "step1Description": "Klicke den Button unten, um einen grundlegenden GitHub-Eintrag mit Titel, Beschreibung und Details zu erstellen.",
+      "step2Description": "Nach der Erstellung des Eintrags, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Formular einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "stepOneDiscussion": "Schritt 1: Basis-Diskussion erstellen",
+      "stepOneIssue": "Schritt 1: Basis-Issue erstellen",
       "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
-      "title": "GitHub Issue-Zusammenfassung"
+      "title": "GitHub Problem-Zusammenfassung"
     },
     "title": "Problem melden",
     "version": "Version"

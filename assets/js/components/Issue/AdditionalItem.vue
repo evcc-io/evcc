@@ -17,6 +17,7 @@
 					:id="id"
 					v-model="isIncluded"
 					class="form-check-input"
+					:class="switchClass"
 					type="checkbox"
 					role="switch"
 				/>
@@ -36,7 +37,6 @@
 			:title="title"
 			size="lg"
 			:autofocus="false"
-			@open="modalOpened"
 			@closed="modalClosed"
 		>
 			<!-- Custom controls slot inside modal -->
@@ -69,9 +69,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
 import GenericModal from "../Helper/GenericModal.vue";
+import type { HelpType } from "@/views/Issue.vue";
 
 export default defineComponent({
 	name: "IssueAdditionalItem",
@@ -84,6 +85,7 @@ export default defineComponent({
 		included: { type: Boolean, required: true },
 		content: { type: String, default: "" },
 		description: { type: String, default: "" },
+		helpType: { type: String as PropType<HelpType> },
 	},
 	emits: ["update:included", "update:content"],
 	data() {
@@ -111,10 +113,12 @@ export default defineComponent({
 		hasChanges(): boolean {
 			return this.localContent !== this.content;
 		},
+		switchClass(): string {
+			return this.included && this.helpType === "issue" ? "bg-danger border-danger" : "";
+		},
 	},
 	watch: {
 		content(newContent: string) {
-			// Always update local content when parent content changes
 			this.localContent = newContent;
 		},
 	},
@@ -125,9 +129,6 @@ export default defineComponent({
 			if (modalElement) {
 				Modal.getOrCreateInstance(modalElement).show();
 			}
-		},
-		modalOpened() {
-			// Called when modal opens
 		},
 		modalClosed() {
 			// Reset local content if there are unsaved changes
