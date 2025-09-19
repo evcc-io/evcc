@@ -18,16 +18,21 @@ func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
-//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)"
 
 // TODO deprecated remove
 
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity `mapstructure:",squash"`
-		URI, Usage      string
-		Timeout         time.Duration
+		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		URI, Usage         string
+		Timeout            time.Duration
 	}{
+		batteryPowerLimits: batteryPowerLimits{
+			MaxChargePower:    4600,
+			MaxDischargePower: 4600,
+		},
 		Timeout: request.Timeout,
 	}
 
@@ -35,10 +40,10 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Timeout)
+	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.batteryPowerLimits, cc.Timeout)
 }
 
-func NewGoodWeWiFi(uri, usage string, capacity func() float64, timeout time.Duration) (api.Meter, error) {
+func NewGoodWeWiFi(uri, usage string, capacity func() float64, batteryPowerLimits batteryPowerLimits, timeout time.Duration) (api.Meter, error) {
 	instance, err := goodwe.Instance(util.NewLogger("goodwe-wifi"))
 	if err != nil {
 		return nil, err
@@ -56,15 +61,16 @@ func NewGoodWeWiFi(uri, usage string, capacity func() float64, timeout time.Dura
 
 	// decorate battery
 	var (
-		batterySoc      func() (float64, error)
-		batteryCapacity func() float64
+		batterySoc          func() (float64, error)
+		batteryCapacity     func() float64
+		batteryPowerLimiter func() (float64, float64)
 	)
 	if usage == "battery" {
 		batterySoc = res.batterySoc
 		batteryCapacity = capacity
 	}
 
-	return decorateGoodWeWifi(res, batterySoc, batteryCapacity), nil
+	return decorateGoodWeWifi(res, batterySoc, batteryCapacity, batteryPowerLimiter), nil
 }
 
 func (m *goodWeWiFi) CurrentPower() (float64, error) {

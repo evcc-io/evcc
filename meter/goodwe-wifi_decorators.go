@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batteryCapacity func() float64, batteryPowerLimiter func() (float64, float64)) api.Meter {
 	switch {
 	case battery == nil:
 		return base
 
-	case battery != nil && batteryCapacity == nil:
+	case battery != nil && batteryCapacity == nil && batteryPowerLimiter == nil:
 		return &struct {
 			*goodWeWiFi
 			api.Battery
@@ -22,7 +22,7 @@ func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batte
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil:
+	case battery != nil && batteryCapacity != nil && batteryPowerLimiter == nil:
 		return &struct {
 			*goodWeWiFi
 			api.Battery
@@ -34,6 +34,40 @@ func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batte
 			},
 			BatteryCapacity: &decorateGoodWeWifiBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryPowerLimiter != nil:
+		return &struct {
+			*goodWeWiFi
+			api.Battery
+			api.BatteryPowerLimiter
+		}{
+			goodWeWiFi: base,
+			Battery: &decorateGoodWeWifiBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateGoodWeWifiBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryPowerLimiter != nil:
+		return &struct {
+			*goodWeWiFi
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+		}{
+			goodWeWiFi: base,
+			Battery: &decorateGoodWeWifiBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateGoodWeWifiBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateGoodWeWifiBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
 			},
 		}
 	}
@@ -55,4 +89,12 @@ type decorateGoodWeWifiBatteryCapacityImpl struct {
 
 func (impl *decorateGoodWeWifiBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
+}
+
+type decorateGoodWeWifiBatteryPowerLimiterImpl struct {
+	batteryPowerLimiter func() (float64, float64)
+}
+
+func (impl *decorateGoodWeWifiBatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
+	return impl.batteryPowerLimiter()
 }
