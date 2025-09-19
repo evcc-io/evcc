@@ -44,11 +44,7 @@ params:
     type: int
     advanced: true
   - name: maxchargepower
-    type: int
-    advanced: true
   - name: maxdischargepower
-    type: int
-    advanced: true
 render: |
   type: powerwall
   uri: {{ .host }}
