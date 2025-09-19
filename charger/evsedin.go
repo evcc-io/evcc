@@ -29,7 +29,7 @@ func init() {
 	registry.AddCtx("evsedin", NewEvseDINFromConfig)
 }
 
-// http://evracing.cz/evse/evse-wallbox/evse-wb-din_latest.pdf
+// https://www.evracing.cz/user/documents/upload/EVSE-WB-DIN_latest.pdf
 
 // NewEvseDINFromConfig creates an EVSE DIN charger from generic config
 func NewEvseDINFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {

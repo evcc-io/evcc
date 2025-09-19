@@ -1,8 +1,8 @@
 template: ocpp
 products:
   - description:
-      de: OCPP 1.6J kompatibel (Smart Charging)
-      en: OCPP 1.6J compatible (Smart Charging)
+      de: OCPP 1.6J kompatibel
+      en: OCPP 1.6J compatible
 group: generic
 capabilities: ["mA", "rfid", "1p3p"]
 requirements:

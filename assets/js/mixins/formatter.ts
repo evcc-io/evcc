@@ -90,7 +90,7 @@ export default defineComponent({
     fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
-    fmtNumber(number: number, decimals: number, unit?: string) {
+    fmtNumber(number: number, decimals: number | undefined, unit?: string) {
       const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style,
@@ -199,7 +199,8 @@ export default defineComponent({
           const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
             numeric: "auto",
           });
-          return rtf.formatToParts(1, "day")[0].value;
+          const part = rtf.formatToParts(1, "day")[0];
+          return part?.value || "";
         } catch (e) {
           console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
           return "tomorrow";

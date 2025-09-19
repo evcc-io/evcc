@@ -19,10 +19,14 @@
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
+			<HemsWarning :circuits="circuits" />
 			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
-			<div v-if="fatal" class="flex-grow-1 align-items-center d-flex justify-content-center">
+			<div
+				v-if="hasFatalError"
+				class="flex-grow-1 align-items-center d-flex justify-content-center"
+			>
 				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
 			</div>
 			<div
@@ -50,8 +54,11 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
+				:smartCostAvailable="smartCostAvailable"
+				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
+				:tariffFeedIn="tariffFeedIn"
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
@@ -71,6 +78,7 @@ import "@h2d2/shopicons/es/regular/arrowup";
 import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
+import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
@@ -78,14 +86,17 @@ import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	Auth,
+	AuthProviders,
 	Battery,
 	CURRENCY,
 	Forecast,
 	LoadpointCompact,
 	Notification,
+	Circuit,
 	SMART_COST_TYPE,
 	Sponsor,
+	FatalError,
+	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
 
@@ -95,6 +106,7 @@ export default defineComponent({
 		Loadpoints,
 		Energyflow,
 		Footer,
+		HemsWarning,
 		Notifications,
 		TopNavigation: Navigation,
 		WelcomeIcons,
@@ -126,10 +138,8 @@ export default defineComponent({
 		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Object,
-
-		auth: { type: Object as PropType<Auth>, default: () => ({ vehicles: {} }) },
-
-		currency: { type: String as PropType<CURRENCY>, required: true },
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY> },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -146,8 +156,13 @@ export default defineComponent({
 		uploadProgress: Number,
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
-		fatal: Object,
+		smartCostAvailable: Boolean,
+		smartFeedInPriorityAvailable: Boolean,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
+		circuits: Object as PropType<Record<string, Circuit>>,
+		telemetry: Boolean,
+		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
 		batteryConfigured() {
@@ -185,7 +200,7 @@ export default defineComponent({
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation() {
-			return { vehicleLogins: this.auth.vehicles, ...this.collectProps(Navigation) };
+			return this.collectProps(Navigation);
 		},
 		showParkingLot() {
 			// work in progess
@@ -211,8 +226,12 @@ export default defineComponent({
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
+					telemetry: this.telemetry,
 				},
 			};
+		},
+		hasFatalError() {
+			return this.fatal.length > 0;
 		},
 	},
 	methods: {

@@ -19,13 +19,11 @@ func isRS485(model string) bool {
 }
 
 // rs485FindDeviceOp checks is RS485 device supports operation
-func rs485FindDeviceOp(device *rs485.RS485, name string) (op rs485.Operation, err error) {
+func rs485FindDeviceOp(ops []rs485.Operation, name string) (op rs485.Operation, err error) {
 	measurement, err := meters.MeasurementString(name)
 	if err != nil {
 		return rs485.Operation{}, fmt.Errorf("invalid measurement: %s", name)
 	}
-
-	ops := device.Producer().Produce()
 
 	for _, op := range ops {
 		if op.IEC61850 == measurement {

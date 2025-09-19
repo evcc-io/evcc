@@ -76,13 +76,19 @@ render: |
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 30773 # SMA Modbus Profile: DcMs.Watt [1]
+          address: 30773 # SMA Modbus Profile: DcMs.Watt [0]
           type: holding
           decode: int32nan
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 30961 # SMA Modbus Profile: DcMs.Watt [2]
+          address: 30961 # SMA Modbus Profile: DcMs.Watt [1]
+          type: holding
+          decode: int32nan
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 30967 # SMA Modbus Profile: DcMs.Watt [2]
           type: holding
           decode: int32nan
   energy:

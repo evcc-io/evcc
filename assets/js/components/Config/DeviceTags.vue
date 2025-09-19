@@ -29,6 +29,8 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
 const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
 
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+
 export default {
 	name: "DeviceTags",
 	mixins: [formatter],
@@ -37,11 +39,11 @@ export default {
 	},
 	computed: {
 		entries() {
-			return Object.entries(this.tags).map(
-				([name, { value, error, warning, muted, options }]) => {
+			return Object.entries(this.tags)
+				.filter(([name]) => !HIDDEN_TAGS.includes(name))
+				.map(([name, { value, error, warning, muted, options }]) => {
 					return { name, value, error, warning, muted, options };
-				}
-			);
+				});
 		},
 	},
 	methods: {
@@ -53,6 +55,7 @@ export default {
 			switch (name) {
 				case "power":
 				case "solarForecast":
+				case "hemsActiveLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "capacity":
@@ -74,7 +77,7 @@ export default {
 				case "phasePowers":
 					return value.map((v) => this.fmtW(v, POWER_UNIT.KW, false)).join(" · ") + " kW";
 				case "chargeStatus":
-					return this.$t(`config.deviceValue.chargeStatus${value}`);
+					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
 				case "gridPrice":
 				case "feedinPrice":
 					return this.fmtPricePerKWh(value, options.currency, true);
@@ -89,9 +92,12 @@ export default {
 				case "singlePhase":
 				case "enabled":
 				case "configured":
+				case "allowControl":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
+				case "hemsType":
+					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},

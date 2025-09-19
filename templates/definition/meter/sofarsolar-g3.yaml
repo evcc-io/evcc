@@ -14,8 +14,8 @@ products:
       generic: SOFAR 5…24KTL-G3
 requirements:
   description:
-    de: Zu den Details wie man den Wechselrichter verbindet siehe https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/.
-    en: For more details on how to establish a connection to the inverter see https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/.
+    de: Zu den Details wie man den Wechselrichter verbindet siehe die [Sofar Solar Installations Anleitung von homeassistant-solax-modbus](https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/).
+    en: For more details on how to establish a connection to the inverter see the [Sofar Solar installation doc of homeassistant-solax-modbus](https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/).
 capabilities: ["battery-control"]
 params:
   - name: usage

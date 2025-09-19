@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -89,6 +90,9 @@ func init() {
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
 
+	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
+	bind(rootCmd, "mcp")
+
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
 
@@ -136,13 +140,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-			log.INFO.Println("config file missing, create configuration using config UI")
-			// evcc.yaml not found, use default configuration
-			if err := viper.UnmarshalExact(&conf); err != nil {
-				log.FATAL.Fatalf("failed to unmarshal default configuration: %v", err)
-			}
-		} else {
+		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); cfgErr != nil {
 			// evcc.yaml found, might have errors
 			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 		}
@@ -158,7 +156,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -191,7 +189,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup telemetry
 	if err == nil {
-		telemetry.Create(conf.Plant)
+		telemetry.Create(conf.Plant, valueChan)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
 		}
@@ -254,9 +252,24 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureMDNS(conf.Network)
 	}
 
+	// start SHM server
+	if err == nil {
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+	}
+
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
+	}
+
+	// setup MCP
+	if viper.GetBool("mcp") {
+		router := httpd.Router()
+
+		var handler http.Handler
+		if handler, err = mcp.NewHandler(router); err == nil {
+			router.PathPrefix("/mcp").Handler(handler)
+		}
 	}
 
 	// setup messaging
@@ -269,6 +282,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
 	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
@@ -304,12 +318,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}()
 
 	// allow web access for vehicles
-	configureAuth(httpd.Router())
+	configureAuth(httpd.Router(), valueChan)
 
 	authObject := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
 		authObject.SetAuthMode(auth.Disabled)
+		valueChan <- util.Param{Key: keys.AuthDisabled, Val: true}
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
@@ -344,9 +359,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		// improve error message
-		err = wrapFatalError(err)
-		valueChan <- util.Param{Key: keys.Fatal, Val: err}
+		if uw, ok := err.(interface{ Unwrap() []error }); ok {
+			valueChan <- util.Param{Key: keys.Fatal, Val: uw.Unwrap()}
+		} else {
+			valueChan <- util.Param{Key: keys.Fatal, Val: []error{wrapFatalError(err)}}
+		}
 
 		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)

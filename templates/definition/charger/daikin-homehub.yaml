@@ -4,6 +4,16 @@ products:
     description:
       generic: HomeHub (SG Ready)
 group: heating
+requirements:
+  description:
+    de: |
+      Funktioniert mit Altherma 3 Versionen 0775, 0793, 0223, 0774, 29C1.
+
+      In Kombination mit einem im Modus 3 (Modbus TCP/IP) konfigurierten HomeHub (EKRHH).
+    en: |
+      Works with Altherma 3 versions 0775, 0793, 0223, 0774, 29C1.
+
+      In combination with a HomeHub (EKRHH) configured in mode 3 (Modbus TCP/IP).
 params:
   - name: modbus
     choice: ["tcpip"]

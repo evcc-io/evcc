@@ -33,18 +33,21 @@ const app = createApp(
         if (this.offline) return;
         if (!msg.level) msg.level = "error";
         const now = new Date();
-        const latestMsg = this.notifications[0];
-        if (latestMsg && latestMsg.message === msg.message && latestMsg.lp === msg.lp) {
-          latestMsg.count++;
-          latestMsg.time = now;
+        const existingMsg = this.notifications.find(
+          (n) => n.message === msg.message && n.lp === msg.lp
+        );
+        if (existingMsg) {
+          existingMsg.count++;
+          existingMsg.time = now;
+          // move to front
+          this.notifications = [
+            existingMsg,
+            ...this.notifications.filter((n) => n !== existingMsg),
+          ];
         } else {
           this.notifications = [
-            {
-              ...msg,
-              count: 1,
-              time: now,
-            },
-            ...this.notifications,
+            { ...msg, count: 1, time: now },
+            ...this.notifications.slice(0, 14), // keep only last 15
           ];
         }
       },

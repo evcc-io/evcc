@@ -35,7 +35,7 @@ func asBytes(u []uint16) []byte {
 
 func (h *handler) logResult(op string, b []byte, err error) {
 	if err == nil {
-		h.log.TRACE.Printf(op+": %0x", b)
+		h.log.TRACE.Printf(op+": % 0x", b)
 	} else {
 		h.log.TRACE.Printf(op+": %v", err)
 	}

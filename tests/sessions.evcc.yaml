@@ -1,0 +1,36 @@
+interval: 0.1s
+
+site:
+  title: Sessions
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 200
+
+loadpoints:
+  - title: Carport
+    charger: charger1
+    vehicle: tesla
+  - title: Garage
+    charger: charger2
+    vehicle: egolf
+
+vehicles:
+  - name: tesla
+    title: weißes Model 3
+  - name: egolf
+    title: blauer e-Golf
+
+chargers:
+  - name: charger1
+    type: template
+    template: demo-charger
+    status: B
+  - name: charger2
+    type: template
+    template: demo-charger
+    status: B

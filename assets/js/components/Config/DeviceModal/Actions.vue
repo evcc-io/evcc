@@ -1,6 +1,11 @@
 <template>
 	<div>
-		<TestResult v-if="testState" v-bind="testState" @test="$emit('test')" />
+		<TestResult
+			v-if="testState"
+			v-bind="testState"
+			:sponsor-token-required="sponsorTokenRequired"
+			@test="$emit('test')"
+		/>
 
 		<div class="my-4 d-flex justify-content-between">
 			<button

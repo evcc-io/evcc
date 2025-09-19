@@ -43,7 +43,7 @@ func Instance(log *util.Logger) (*Server, error) {
 	go instance.listen()
 	go instance.readData()
 
-	return instance, err
+	return instance, nil
 }
 
 func (m *Server) AddInverter(ip string, timeout time.Duration) *util.Monitor[Inverter] {

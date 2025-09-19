@@ -92,9 +92,6 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
-		if _, ok := meter.(api.Meter); !ok {
-			panic("not a meter: battery")
-		}
 
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
@@ -106,8 +103,8 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	return nil
 }
 
-func (site *Site) plannerRates() (api.Rates, error) {
-	tariff := site.GetTariff(api.TariffUsagePlanner)
+func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
+	tariff := site.GetTariff(usage)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
 		return nil, nil
 	}

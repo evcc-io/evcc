@@ -44,8 +44,12 @@
       "ocppLabel": "URL strežnika OCPP",
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
-      "titleAdd": "Dodaj polnilnik",
-      "titleEdit": "Uredi polnilec"
+      "titleAdd": {
+        "charging": "Dodaj polnilnik"
+      },
+      "titleEdit": {
+        "charging": "Uredi polnilec"
+      }
     },
     "circuits": {
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
@@ -174,10 +178,14 @@
       "v2Support": "Nazaj na InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Dodaj polnilnik",
+      "addCharger": {
+        "charging": "Dodaj polnilnik"
+      },
       "addMeter": "Dodaj namenski merilnik za polnilnico",
       "cancel": "Prekliči",
-      "chargerLabel": "Polnilnica",
+      "chargerLabel": {
+        "charging": "Polnilnica"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
       "chargerPower22kw": "22 kW",
@@ -188,7 +196,9 @@
       "chargingTitle": "Polnjenje",
       "circuitLabel": "Krog",
       "circuitUnassigned": "nedodeljeno",
-      "defaultModeHelp": "Način polnjenja pri priklopu vozila.",
+      "defaultModeHelp": {
+        "charging": "Način polnjenja pri priklopu vozila."
+      },
       "defaultModeHelpKeep": "Ohrani zadnji izbrani način polnjenja.",
       "defaultModeLabel": "Privzeti način",
       "delete": "Izbriši",
@@ -236,9 +246,6 @@
       "thresholdEnableHelpNegative": "Začnite polniti, ko bo {surplus} presežek na voljo za {delay}.",
       "thresholdEnableHelpZero": "Začni, ko je na voljo minimalni presežek polnilne moči za {delay}.",
       "thresholdEnableLabel": "Omogoči polnjenje iz omrežja",
-      "titleAdd": "Dodaj polnilno mesto",
-      "titleEdit": "Uredi polnilno mesto",
-      "titleExample": "Garaža, nadstrešek za avto itd.",
       "titleLabel": "Ime",
       "vehicleAutoDetection": "samodejno zaznavanje",
       "vehicleHelpAutoDetection": "Samodejno izbere najbolj verjetno vozilo. Možen je ročni popravek.",
@@ -339,7 +346,7 @@
       "addToken": "Vnesite žeton",
       "changeToken": "Spremeni žeton",
       "description": "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov.",
-      "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje.",
+      "descriptionToken": "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje {trialToken}.",
       "error": "Sponzorski žeton ni veljaven.",
       "labelToken": "Sponzorski žeton",
       "title": "Sponzorstvo",
@@ -474,7 +481,7 @@
       "today": "Danes",
       "tomorrow": "Jutri"
     },
-    "solarAdjust": "Prilagodite sončno napoved na podlagi dejanskih podatkov o proizvodnji.",
+    "solarAdjust": "Prilagodite sončno napoved na podlagi dejanskih podatkov o proizvodnji {percent}.",
     "type": {
       "co2": "CO₂",
       "price": "Cena",
@@ -722,7 +729,7 @@
       "scale1p": "Zmanjšanje na 1-fazno napajanje kmalu...",
       "scale3p": "Povečanje na 3-fazno napajanje kmalu...",
       "targetChargeActive": "Ciljno polnjenje je aktivno, predviden konec {duration}.",
-      "targetChargePlanned": "Ciljno polnjenje se začne ob {time}.",
+      "targetChargePlanned": "Ciljno polnjenje se začne čez {duration}.",
       "targetChargeWaitForVehicle": "Ciljno polnjenje je pripravljeno. Čakam na vozilo ...",
       "vehicleLimit": "Omejitev vozila",
       "vehicleLimitReached": "Omejitev vozila dosežena.",
@@ -888,7 +895,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} od {total}",
+    "activeHours": "{active} od {total}",
     "activeHoursLabel": "Aktivne ure",
     "applyToAll": "Uporabi povsod?",
     "batteryDescription": "Napolni domačo baterijo z energijo iz omrežja.",

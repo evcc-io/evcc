@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 evcc
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -122,7 +122,7 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
-	return decoratePeblar(wb, phasesS, phasesG), err
+	return decoratePeblar(wb, phasesS, phasesG), nil
 }
 
 // Status implements the api.Charger interface

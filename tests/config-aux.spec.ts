@@ -22,7 +22,7 @@ test.afterEach(async () => {
 test.describe("aux meter", async () => {
   test("create and remove aux meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("aux")).toHaveCount(0);
 
@@ -67,7 +67,7 @@ test.describe("aux meter", async () => {
 
   test("user-defined meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const modal = page.getByTestId("meter-modal");
@@ -160,7 +160,7 @@ energy:
 
   test("user-defined meter with errors", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
 

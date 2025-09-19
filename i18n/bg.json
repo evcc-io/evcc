@@ -44,8 +44,12 @@
       "ocppLabel": "Адрес на OCPP сървъра",
       "switchsockets": "Контакти с прекъсвач",
       "template": "Производител",
-      "titleAdd": "Добави зарядно",
-      "titleEdit": "Промени зарядно"
+      "titleAdd": {
+        "charging": "Добави зарядно"
+      },
+      "titleEdit": {
+        "charging": "Промени зарядно"
+      }
     },
     "circuits": {
       "description": "Гарантира, че сумата от всички точки на натоварване, свързани към една верига, не надвишава конфигурираните граници на мощност и ток. Веригите могат да бъдат вложени, за да се изгради йерархия.",
@@ -172,11 +176,17 @@
       "v2Support": "Назад към InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Добави зарядно",
+      "addCharger": {
+        "charging": "Добави зарядно"
+      },
       "addMeter": "Добави електромер за зарядното",
       "cancel": "Откажи",
-      "chargerError": "Необходимо е да конфигурирате зарядното.",
-      "chargerLabel": "Зарядно",
+      "chargerError": {
+        "charging": "Необходимо е да конфигурирате зарядното."
+      },
+      "chargerLabel": {
+        "charging": "Зарядно"
+      },
       "chargerPower11kw": "11 кВт",
       "chargerPower11kwHelp": "Ще бъде използван ток в диапазона от 6 до 16 А.",
       "chargerPower22kw": "22 кВт",
@@ -187,7 +197,9 @@
       "chargingTitle": "Зарежда",
       "circuitLabel": "Верига",
       "circuitUnassigned": "неразпределен",
-      "defaultModeHelp": "Режим на зареждане при свързване с автомобила.",
+      "defaultModeHelp": {
+        "charging": "Режим на зареждане при свързване с автомобила."
+      },
       "defaultModeHelpKeep": "Запазва последно избрания режим на зареждане.",
       "defaultModeLabel": "Режим по подразбиране",
       "delete": "Изтрий",
@@ -236,9 +248,6 @@
       "thresholdEnableHelpNegative": "Започни зареждането, след като има {surplus} излищък за {delay}.",
       "thresholdEnableHelpZero": "Започни, когато минималната мощност на зарежда от излишък е достъпна за {delay}.",
       "thresholdEnableLabel": "Активирай мощност от мрежата",
-      "titleAdd": "Добави зарядна станция",
-      "titleEdit": "Промени зарядна станция",
-      "titleExample": "Гараж, Навес, итн.",
       "titleLabel": "Название",
       "vehicleAutoDetection": "автоматично намиране",
       "vehicleHelpAutoDetection": "Автоматично избиране на най-подходящия автомобил. Ръчната промяна е възможна.",
@@ -368,7 +377,7 @@
       "addToken": "Въведете спонсорски токен",
       "changeToken": "Промяна на спонсорския токен",
       "description": "Моделът за спонсорство ни помага да поддържаме проекта и устойчиво да изграждаме нови и вълнуващи функции. Като спонсор получавате достъп до всички реализации на зарядни устройства.",
-      "descriptionToken": "Получавате токена от {url}. Ние също предлагаме пробен токен за тестване.",
+      "descriptionToken": "Получавате токена от {url}. Ние също предлагаме пробен токен за тестване {trialToken}.",
       "error": "Спонсорският токен не е валиден.",
       "labelToken": "Спонсорски токен",
       "title": "Спонсорство",
@@ -760,7 +769,7 @@
       "cheapEnergyNextStart": "Евтината енергия в {duration}",
       "cheapEnergySet": "Лимитът на цената е зададен.",
       "cleanEnergyCharging": "Налична е чиста енергия.",
-      "cleanEnergyNextStart": "Чиста енергия в {продължителност}.",
+      "cleanEnergyNextStart": "Чиста енергия в {duration}.",
       "cleanEnergySet": "Лимитът на CO₂ е зададен.",
       "climating": "Открито е предварително кондициониране.",
       "connected": "Превозното средство е свързано",
@@ -944,7 +953,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} от {total}",
+    "activeHours": "{active} от {total}",
     "activeHoursLabel": "Активни часове",
     "applyToAll": "Приложи навсякъде?",
     "batteryDescription": "Зарежда домашната батерия с енергия от мрежата.",

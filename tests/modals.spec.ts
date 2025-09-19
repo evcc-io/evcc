@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorConfig } from "./simulator";
+import { openTopNavigation, expectTopNavigationClosed, closeTopNavigation } from "./utils";
 
 const BASICS_CONFIG = "basics.evcc.yaml";
 
@@ -28,7 +29,7 @@ test.describe("Basics", async () => {
       await page.goto(route.path);
 
       await expect(page.getByRole("heading", { name: route.title || title })).toBeVisible();
-      await page.getByTestId("topnavigation-button").click();
+      await openTopNavigation(page);
       await expect(page.getByRole("button", { name: "User Interface" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Home Battery" })).not.toBeVisible();
       await expect(page.getByRole("button", { name: "Need help?" })).toBeVisible();
@@ -39,8 +40,9 @@ test.describe("Basics", async () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: "Hello World" })).toBeVisible();
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("button", { name: "Need help?" }).click();
+    await expectTopNavigationClosed(page);
 
     await expect(page.getByRole("heading", { name: "Need help?" })).toBeVisible();
   });
@@ -48,8 +50,9 @@ test.describe("Basics", async () => {
   test("User Interface", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Hello World" })).toBeVisible();
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("button", { name: "User Interface" }).click();
+    await expectTopNavigationClosed(page);
 
     await expect(page.getByRole("heading", { name: "User Interface" })).toBeVisible();
   });
@@ -73,18 +76,20 @@ test.describe("Advanced", async () => {
       await page.goto(route.path);
 
       await expect(page.getByRole("heading", { name: route.title || title })).toBeVisible();
-      await page.getByTestId("topnavigation-button").click();
+      await openTopNavigation(page);
       await expect(page.getByRole("button", { name: "User Interface" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Home Battery" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Need help?" })).toBeVisible();
+      await closeTopNavigation(page);
     }
   });
 
   test("Home Battery from top navigation", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("button", { name: "Home Battery" }).click();
+    await expectTopNavigationClosed(page);
 
     await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
   });

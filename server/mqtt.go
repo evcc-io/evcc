@@ -211,6 +211,11 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 				lp.SetSmartCostLimit(limit)
 			}
 		}))},
+		{"smartFeedInPriorityLimit", floatPtrSetter(pass(func(limit *float64) {
+			for _, lp := range site.Loadpoints() {
+				lp.SetSmartFeedInPriorityLimit(limit)
+			}
+		}))},
 		{"batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
 		{"batteryMode", ptrSetter(api.BatteryModeString, pass(func(m *api.BatteryMode) {
 			if m == nil {
@@ -241,6 +246,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"enableDelay", durationSetter(pass(lp.SetEnableDelay))},
 		{"disableDelay", durationSetter(pass(lp.SetDisableDelay))},
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
+		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
 		{"planEnergy", func(payload string) error {
 			var plan struct {

@@ -257,7 +257,8 @@ export default defineComponent({
 							return context.dataset.borderColor;
 						},
 						align({ chart, dataset, dataIndex }: Context) {
-							const { min, max } = chart.scales["x"];
+							const scale = chart.scales["x"] as any;
+							const { min, max } = scale;
 							// @ts-expect-error no-explicit-any
 							const time = new Date(dataset.data[dataIndex]?.x).getTime();
 
@@ -477,12 +478,12 @@ export default defineComponent({
 		},
 		maxIndex(slots: ForecastSlot[] = []) {
 			return slots.reduce((max, slot, index) => {
-				return slot.value > slots[max].value ? index : max;
+				return slot.value > (slots[max]?.value || 0) ? index : max;
 			}, 0);
 		},
 		minIndex(slots: ForecastSlot[] = []) {
 			return slots.reduce((min, slot, index) => {
-				return slot.value < slots[min].value ? index : min;
+				return slot.value < (slots[min]?.value || 0) ? index : min;
 			}, 0);
 		},
 		maxValue(slots: ForecastSlot[] = []) {
@@ -493,7 +494,7 @@ export default defineComponent({
 		},
 		maxEntryIndex(entries: TimeseriesEntry[] = []) {
 			return entries.reduce((max, entry, index) => {
-				return entry.val > entries[max].val ? index : max;
+				return entry.val > (entries[max]?.val || 0) ? index : max;
 			}, 0);
 		},
 		yScaleOptions(type: ForecastType) {

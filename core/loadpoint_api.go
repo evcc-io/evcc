@@ -265,6 +265,10 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
+	if physical := lp.getChargerPhysicalPhases(); physical != 0 && phases > physical {
+		return fmt.Errorf("cannot configure more phases than physically connected: %d > %d", phases, physical)
+	}
+
 	// set new default
 	lp.log.DEBUG.Println("set phases:", phases)
 
@@ -608,7 +612,8 @@ func (lp *Loadpoint) GetChargePower() float64 {
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.smartCostActive(rates) {
+	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
+		lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 
@@ -732,25 +737,25 @@ func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 	}
 }
 
-// GetRemainingEnergy is the remaining charge energy in Wh
+// GetRemainingEnergy is the remaining charge energy in kWh
 func (lp *Loadpoint) GetRemainingEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.chargeRemainingEnergy
 }
 
-// SetRemainingEnergy sets the remaining charge energy in Wh
+// SetRemainingEnergy sets the remaining charge energy in kWh
 func (lp *Loadpoint) SetRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setRemainingEnergy(chargeRemainingEnergy)
 }
 
-// setRemainingEnergy sets the remaining charge energy in Wh (no mutex)
+// setRemainingEnergy sets the remaining charge energy in kWh (no mutex)
 func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
-		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy)
+		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy*1e3)
 	}
 }
 
@@ -771,6 +776,14 @@ func (lp *Loadpoint) SetVehicle(vehicle api.Vehicle) {
 
 	// disable auto-detect
 	lp.stopVehicleDetection()
+}
+
+// GetSoc returns the estimated vehicle soc in %
+func (lp *Loadpoint) GetSoc() float64 {
+	lp.vmu.RLock()
+	defer lp.vmu.RUnlock()
+
+	return lp.vehicleSoc
 }
 
 // StartVehicleDetection allows triggering vehicle detection for debugging purposes
@@ -804,6 +817,28 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+	}
+}
+
+// GetSmartFeedInPriorityLimit gets the smart feed-in limit
+func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartFeedInPriorityLimit
+}
+
+// SetSmartFeedInPriorityLimit sets the smart cost feed-in
+func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+
+	if !ptrValueEqual(lp.smartFeedInPriorityLimit, val) {
+		lp.smartFeedInPriorityLimit = val
+
+		lp.settings.SetFloatPtr(keys.SmartFeedInPriorityLimit, val)
+		lp.publish(keys.SmartFeedInPriorityLimit, val)
 	}
 }
 

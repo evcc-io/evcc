@@ -30,11 +30,7 @@ func NewGroupeEFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data: util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *GroupeE) run(done chan error) {

@@ -8,6 +8,9 @@ products:
       generic: AC•THOR 9s
 group: heating
 requirements:
+  description:
+    de: Über das lokale Webinterface des AC•THOR muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
+    en: Use the local web interface of AC•THOR to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
   evcc: ["sponsorship"]
 params:
   - name: modbus

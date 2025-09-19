@@ -61,12 +61,29 @@ func TestProductUpdate_IgnoreOutdatedProductUpdate(t *testing.T) {
 	assert.Equal(t, 2, e.opMode)
 }
 
-func TestProductUpdate_InitialStateCheck(t *testing.T) {
-	now := time.Now().UTC().Truncate(0) //truncate removes sub nanos
+func TestProductUpdate_IgnoreZeroSessionEnergy(t *testing.T) {
+	e := newEasee()
 
+	now := time.Now().UTC().Truncate(0)
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, now, easee.Double, "20"))
+
+	assert.Equal(t, now, e.obsTime[easee.SESSION_ENERGY])
+	assert.Equal(t, float64(20), e.sessionEnergy)
+
+	t2 := time.Now().UTC().Truncate(0)
+	e.ProductUpdate(createPayload(easee.SESSION_ENERGY, t2, easee.Double, "0.0"))
+
+	//expect observation timestamp updated, value however not
+	assert.Equal(t, t2, e.obsTime[easee.SESSION_ENERGY])
+	assert.Equal(t, float64(20), e.sessionEnergy)
+}
+
+func TestProductUpdate_LifetimeEnergyAndSessionStartEnergy(t *testing.T) {
 	e := newEasee()
 
 	assert.False(t, e.optionalStatePresent())
+
+	now := time.Now().UTC().Truncate(0) //truncate removes sub nanos
 
 	tc := []struct {
 		obsId           easee.ObservationID

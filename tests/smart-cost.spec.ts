@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, simulatorUrl, simulatorConfig } from "./simulator";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorUrl,
+  simulatorConfig,
+  simulatorApply,
+} from "./simulator";
 
 test.use({ baseURL: baseUrl() });
 
@@ -19,7 +25,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByTestId("loadpoint0").getByLabel("Power").fill("6000");
   await page.getByTestId("loadpoint0").getByText("C (charging)").click();
   await page.getByTestId("loadpoint0").getByText("Enabled").check();
-  await page.getByRole("button", { name: "Apply changes" }).click();
+  await simulatorApply(page);
 });
 
 test.describe("smart cost limit", async () => {

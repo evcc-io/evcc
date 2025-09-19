@@ -13,7 +13,7 @@ const auth = reactive({
 });
 
 export async function updateAuthStatus() {
-  if (store.state.offline || isSystemError(store.state.fatal)) {
+  if (store.state.offline || isSystemError(store.state.fatal ?? [])) {
     // system not ready, skip auth check
     return;
   }
@@ -89,7 +89,7 @@ watch(
   (configured) => {
     console.log("configured", configured);
     const modal = Modal.getOrCreateInstance(
-      document.getElementById("passwordModal") as HTMLElement
+      document.getElementById("passwordSetupModal") as HTMLElement
     );
     if (configured) {
       modal.hide();

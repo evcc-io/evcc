@@ -1,5 +1,5 @@
 <template>
-	<li class="root round-box" :class="{ 'round-box--error': error }">
+	<div class="root round-box" :class="{ 'round-box--error': error }">
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
@@ -27,7 +27,7 @@
 		</div>
 		<hr class="my-3 divide" />
 		<slot name="tags" />
-	</li>
+	</div>
 </template>
 
 <script>

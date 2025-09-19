@@ -11,6 +11,9 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
+  - name: schema
+    default: http
+    advanced: true
   - name: token
     help:
       en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
@@ -25,7 +28,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -36,7 +39,7 @@ render: |
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
   currents:
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -46,7 +49,7 @@ render: |
       cache: {{ .cache }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 1 )) then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -56,7 +59,7 @@ render: |
       cache: {{ .cache }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 2 )) then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -69,7 +72,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -80,7 +83,7 @@ render: |
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").wNow else .production[] | select(.type == "inverters").wNow end
   energy:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -92,7 +95,7 @@ render: |
     scale: 0.001
   currents:
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -102,7 +105,7 @@ render: |
       cache: {{ .cache }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 1 )) then .production[] | select(.measurementType == "production").lines[0].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -112,7 +115,7 @@ render: |
       cache: {{ .cache }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 2 )) then .production[] | select(.measurementType == "production").lines[1].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -125,7 +128,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -136,7 +139,7 @@ render: |
     jq: .storage[] | .wNow
   soc:
     source: http
-    uri: http://{{ .host }}/ivp/ensemble/inventory
+    uri: {{ .schema }}://{{ .host }}/ivp/ensemble/inventory
     {{- if .token }}
     auth:
       type: bearer

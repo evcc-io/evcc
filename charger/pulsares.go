@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -124,7 +124,7 @@ func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, 
 		go wb.heartbeat(ctx, t/2)
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *Pulsares) heartbeat(ctx context.Context, timeout time.Duration) {

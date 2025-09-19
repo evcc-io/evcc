@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply, andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -181,7 +181,7 @@ func NewOCPP(ctx context.Context,
 		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, idTag, meterInterval)
+	conn, err := ocpp.NewConnector(ctx, log, connector, cp, idTag, meterInterval)
 	if err != nil {
 		return nil, err
 	}

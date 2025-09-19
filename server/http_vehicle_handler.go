@@ -36,7 +36,7 @@ func minSocHandler(site site.API) http.HandlerFunc {
 			Soc: v.GetMinSoc(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -65,7 +65,7 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 			Soc: v.GetLimitSoc(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -116,7 +116,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			Time:         ts,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -146,7 +146,7 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		jsonResult(w, plansWrapper)
+		jsonWrite(w, plansWrapper)
 	}
 }
 
@@ -167,6 +167,6 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 		}
 
 		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }

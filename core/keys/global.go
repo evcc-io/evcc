@@ -10,6 +10,7 @@ const (
 	Influx             = "influx"
 	EEBus              = "eebus"
 	Hems               = "hems"
+	Shm                = "shm"
 	Messaging          = "messaging"
 	ModbusProxy        = "modbusproxy"
 	Tariffs            = "tariffs"
@@ -19,4 +20,6 @@ const (
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	DemoMode           = "demoMode"
+	AuthDisabled       = "authDisabled"
+	AuthProviders      = "authProviders"
 )

@@ -3,11 +3,11 @@ package api
 import (
 	"context"
 	"io"
-	"net/http"
+	"net/url"
 	"time"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -47,6 +47,16 @@ type BatteryCapacity interface {
 // MaxACPowerGetter provides max AC power in W
 type MaxACPowerGetter interface {
 	MaxACPower() float64
+}
+
+// BatteryPowerLimiter provides max AC charge- and discharge power in W
+type BatteryPowerLimiter interface {
+	GetPowerLimits() (charge, discharge float64)
+}
+
+// BatterySocLimiter provides min/max battery soc in %
+type BatterySocLimiter interface {
+	GetSocLimits() (min, max float64)
 }
 
 // ChargeState provides current charging status
@@ -193,9 +203,11 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	HandleCallback(r *http.Request)
-	HandleLogout(r *http.Request)
-	AuthCodeURL(state string) string
+	Login(state string) string
+	Logout() error
+	HandleCallback(responseValues url.Values) error
+	Authenticated() bool
+	DisplayName() string
 }
 
 // IconDescriber optionally provides an icon

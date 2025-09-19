@@ -4,12 +4,13 @@ import type { ServerResponse } from "http";
 
 let state = {
   site: {
-    grid: { power: 0 },
+    grid: { power: 0, energy: 0 },
     pv: { power: 0, energy: 0 },
     battery: { power: 0, soc: 0 },
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
+  hems: { relay: false },
 };
 
 const loggingMiddleware = (
@@ -49,10 +50,13 @@ const openemsMiddleware = (
 ) => {
   const endpoints = {
     "/rest/channel/_sum/GridActivePower": { value: state.site.grid.power },
+    "/rest/channel/_sum/GridBuyActiveEnergy": { value: state.site.grid.energy },
     "/rest/channel/_sum/ProductionActivePower": { value: state.site.pv.power },
+    "/rest/channel/_sum/ProductionActiveEnergy": { value: state.site.pv.energy },
     "/rest/channel/_sum/EssDischargePower": { value: state.site.battery.power },
     "/rest/channel/_sum/EssSoc": { value: state.site.battery.soc },
   };
+
   const endpoint = endpoints[req.originalUrl as keyof typeof endpoints];
   if (req.method === "GET" && endpoint) {
     console.log("[simulator] GET", req.originalUrl);
@@ -68,7 +72,8 @@ const teslaloggerMiddleware = (
   next: Connect.NextFunction
 ) => {
   if (req.method === "GET" && req.originalUrl && req.originalUrl.startsWith("/currentjson/")) {
-    const id = parseInt(req.originalUrl.split("/")[2]);
+    const idPart = req.originalUrl.split("/")[2];
+    const id = idPart ? parseInt(idPart) : 0;
     const vehicle = state.vehicles[id - 1];
     if (!vehicle) {
       res.statusCode = 404;
@@ -100,7 +105,7 @@ const shellyMiddleware = (
     res.end(JSON.stringify({ gen: 2 }));
   } else if (req.originalUrl === "/rpc/Shelly.ListMethods") {
     res.end(JSON.stringify({ methods: ["Switch.GetStatus"] }));
-  } else if (req.originalUrl === "/rpc/Switch.GetStatus?id=0") {
+  } else if (req.originalUrl === "/rpc/Switch.GetStatus") {
     res.end(
       JSON.stringify({
         apower: state.site.pv.power,

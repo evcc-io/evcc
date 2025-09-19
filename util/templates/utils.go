@@ -8,12 +8,17 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 func yamlQuote(value string) string {
 	if value == "" {
 		return value
+	}
+
+	// quote multi-line strings with "" and convert line breaks to literal \n
+	if strings.Contains(value, "\n") {
+		return `"` + strings.ReplaceAll(value, "\n", "\\n") + `"`
 	}
 
 	input := fmt.Sprintf("key: %s", value)

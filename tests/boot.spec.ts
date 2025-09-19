@@ -23,7 +23,7 @@ test.describe("boost", async () => {
   });
 
   test("activate boost in solar mode", async ({ page }) => {
-    await enableExperimental(page);
+    await enableExperimental(page, false);
     await expect(page.getByTestId("vehicle-status-batteryboost")).not.toBeVisible();
     await page
       .getByTestId("mode")
@@ -42,7 +42,7 @@ test.describe("boost", async () => {
   });
 
   test("disabled in fast mode", async ({ page }) => {
-    await enableExperimental(page);
+    await enableExperimental(page, false);
     await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
     await page.getByTestId("loadpoint-settings-button").nth(1).click();
     const modal = page.getByTestId("loadpoint-settings-modal");

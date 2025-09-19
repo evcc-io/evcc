@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -30,9 +30,10 @@ import (
 
 // DaheimLadenMB charger implementation
 type DaheimLadenMB struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
+	log    *util.Logger
+	conn   *modbus.Connection
+	curr   uint16
+	phases uint16
 }
 
 const (
@@ -56,6 +57,7 @@ const (
 	// PRO only
 	dlRegPhaseSwitchState   = 184
 	dlRegPhaseSwitchControl = 186
+	dlRegPhaseSwitchAction  = 188
 )
 
 func init() {
@@ -93,9 +95,10 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (a
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLadenMB{
-		log:  log,
-		conn: conn,
-		curr: 60, // assume min current
+		log:    log,
+		conn:   conn,
+		curr:   60, // assume min current
+		phases: 3,  // assume 3p
 	}
 
 	// get initial state from charger
@@ -175,11 +178,11 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	case 3: // Start-up State (B2)
 		return api.StatusB, nil
 	case 4: // Charging (C)
-		enabled, err := wb.Enabled()
-		if !enabled {
+		power, err := wb.CurrentPower()
+		if power == 0 {
 			return api.StatusB, err
 		}
-		return api.StatusC, nil
+		return api.StatusC, err
 	case 5: // Start-UP Fail (B2)
 		return api.StatusB, nil
 	case 6: // Session Terminated by EVSE
@@ -202,6 +205,9 @@ func (wb *DaheimLadenMB) Enable(enable bool) error {
 	if enable {
 		current = wb.curr
 	}
+
+	// break to avoid too fast commands
+	time.Sleep(time.Second)
 
 	return wb.setCurrent(current)
 }
@@ -289,17 +295,30 @@ func (wb *DaheimLadenMB) phases1p3p(phases int) error {
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
 	_, err := wb.conn.WriteMultipleRegisters(dlRegPhaseSwitchControl, 1, b)
+	if err == nil {
+		wb.phases = uint16(phases)
+	}
 	return err
 }
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *DaheimLadenMB) getPhases() (int, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchAction, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	return int(binary.BigEndian.Uint16(b)), nil
+	// 0=standby, 1=changing, 2=changed
+	if binary.BigEndian.Uint16(b) != 1 {
+		b, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		wb.phases = binary.BigEndian.Uint16(b)
+	}
+
+	return int(wb.phases), nil
 }
 
 var _ api.Diagnosis = (*DaheimLadenMB)(nil)

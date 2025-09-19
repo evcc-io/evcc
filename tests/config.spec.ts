@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import {
+  enableExperimental,
+  expectModalHidden,
+  expectModalVisible,
+  openTopNavigation,
+  expectTopNavigationClosed,
+} from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -16,8 +22,9 @@ test.afterAll(async () => {
 test.describe("basics", async () => {
   test("navigation to config", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("link", { name: "Configuration" }).click();
+    await expectTopNavigationClosed(page);
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
 });
@@ -30,7 +37,7 @@ test.describe("general", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();

@@ -78,6 +78,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: true,
       },
       {
+        path: "/optimize",
+        component: () => import("./views/Optimize.vue"),
+        props: true,
+      },
+      {
         path: "/log",
         component: () => import("./views/Log.vue"),
         beforeEnter: ensureAuth,

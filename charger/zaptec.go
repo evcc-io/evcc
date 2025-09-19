@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -48,20 +48,22 @@ type Zaptec struct {
 	version    int
 	enabled    bool
 	priority   bool
+	passive    bool
 }
 
 func init() {
-	registry.Add("zaptec", NewZaptecFromConfig)
+	registry.AddCtx("zaptec", NewZaptecFromConfig)
 }
 
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
-func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewZaptecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User, Password string
 		Id             string
 		Priority       bool
+		Passive        bool
 		Cache          time.Duration
 	}{
 		Cache: time.Second,
@@ -75,11 +77,11 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)
+	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
+func NewZaptec(ctx context.Context, user, password, id string, priority bool, passive bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -90,6 +92,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		Helper:   request.NewHelper(log),
 		log:      log,
 		priority: priority,
+		passive:  passive,
 	}
 
 	// setup cached values
@@ -102,7 +105,7 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		return res, err
 	}, cache)
 
-	provider, err := oidc.NewProvider(context.Background(), zaptec.ApiURL+"/")
+	provider, err := oidc.NewProvider(ctx, zaptec.ApiURL+"/")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
 	}
@@ -115,19 +118,19 @@ func NewZaptec(user, password, id string, priority bool, cache time.Duration) (a
 		},
 	}
 
-	ctx := context.WithValue(
-		context.Background(),
+	oauthCtx := context.WithValue(
+		ctx,
 		oauth2.HTTPClient,
 		c.Client,
 	)
 
-	token, err := oc.PasswordCredentialsToken(ctx, user, password)
+	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
 	if err != nil {
 		return nil, err
 	}
 
 	c.Transport = &oauth2.Transport{
-		Source: oc.TokenSource(context.Background(), token),
+		Source: oc.TokenSource(ctx, token),
 		Base:   c.Transport,
 	}
 
@@ -235,6 +238,13 @@ func (c *Zaptec) Enable(enable bool) error {
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
+	if c.passive {
+		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil {
+			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current fields set")
+			return nil
+		}
+	}
+
 	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.instance.Id)
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)

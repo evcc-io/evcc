@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023-2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -121,7 +121,7 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	// failsafe
 	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
 
-	return decorateMennekesCompact(wb, phasesS), err
+	return decorateMennekesCompact(wb, phasesS), nil
 }
 
 func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {

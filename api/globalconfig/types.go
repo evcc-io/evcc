@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -20,6 +21,7 @@ type All struct {
 	SponsorToken string
 	Plant        string // telemetry plant id
 	Telemetry    bool
+	Mcp          bool
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string
@@ -32,6 +34,7 @@ type All struct {
 	Influx       Influx
 	EEBus        eebus.Config
 	HEMS         Hems
+	SHM          shm.Config
 	Messaging    Messaging
 	Meters       []config.Named
 	Chargers     []config.Named

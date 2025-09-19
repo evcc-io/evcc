@@ -25,7 +25,7 @@
 					href="#"
 					@click.prevent="showGridTab"
 				>
-					{{ $t("batterySettings.gridChargeTab") }} 🧪
+					{{ $t("batterySettings.gridChargeTab") }}
 				</a>
 			</li>
 		</ul>
@@ -244,7 +244,10 @@
 		<SmartCostLimit
 			v-if="isModalVisible"
 			v-show="gridTabActive"
-			v-bind="smartCostLimitProps"
+			:current-limit="batteryGridChargeLimit"
+			:smart-cost-type="smartCostType"
+			:currency="currency"
+			:tariff="gridChargeTariff"
 			:possible="gridChargePossible"
 		/>
 	</GenericModal>
@@ -260,9 +263,9 @@ import GenericModal from "../Helper/GenericModal.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import collector from "@/mixins/collector.js";
 import api from "@/api";
-import smartCostAvailable from "@/utils/smartCostAvailable";
 import { defineComponent, type PropType } from "vue";
-import type { Battery, SelectOption, SMART_COST_TYPE } from "@/types/evcc";
+import type { Battery, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
+import { SMART_COST_TYPE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "BatterySettingsModal",
@@ -276,9 +279,11 @@ export default defineComponent({
 		batteryDischargeControl: Boolean,
 		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		batteryGridChargeLimit: { type: Number, default: null },
+		smartCostAvailable: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		tariffGrid: Number,
-		currency: String,
+		currency: String as PropType<CURRENCY>,
+		forecast: Object as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -308,12 +313,13 @@ export default defineComponent({
 			return this.battery.some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
-			return (
-				this.controllable &&
-				this.isModalVisible &&
-				this.smartCostAvailable &&
-				this.$hiddenFeatures()
-			);
+			return this.controllable && this.isModalVisible && this.smartCostAvailable;
+		},
+		gridChargeTariff() {
+			if (this.smartCostType === SMART_COST_TYPE.CO2) {
+				return this.forecast?.co2;
+			}
+			return this.forecast?.grid;
 		},
 		bufferOptions() {
 			const options = [];
@@ -383,15 +389,6 @@ export default defineComponent({
 					return `${name}${formattedEnergy}${formattedSoc}`;
 				});
 		},
-		smartCostLimitProps() {
-			return {
-				...this.collectProps(SmartCostLimit),
-				smartCostLimit: this.batteryGridChargeLimit,
-			};
-		},
-		smartCostAvailable() {
-			return smartCostAvailable(this.smartCostType);
-		},
 	},
 	watch: {
 		prioritySoc(soc) {
@@ -455,7 +452,7 @@ export default defineComponent({
 			const options = this.bufferStartOptions.map((option) => option.value);
 			const index = options.findIndex((value) => this.bufferStartSoc >= value);
 			const nextIndex = index === 0 ? options.length - 1 : index - 1;
-			this.setBufferStartSoc(options[nextIndex]);
+			this.setBufferStartSoc(options[nextIndex]!);
 		},
 		async setBufferStartSoc(soc: number) {
 			this.selectedBufferStartSoc = soc;

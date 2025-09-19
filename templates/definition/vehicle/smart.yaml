@@ -1,4 +1,5 @@
 template: smart
+deprecated: true
 products:
   - brand: Smart
     description:
@@ -6,9 +7,9 @@ products:
 requirements:
   description:
     de: |
-      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden. Am 31.12.2024 hat Mercedes den Online-Zugang und die App für den Smart EQ deaktiviert. Daher ist keine Einbindung in EVCC mehr möglich.
     en: |
-      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`. On December 31, 2024, Mercedes disabled the online access and the app for the Smart EQ. Therefore, integration into EVCC is no longer possible.
 params:
   - preset: vehicle-common
   - name: user

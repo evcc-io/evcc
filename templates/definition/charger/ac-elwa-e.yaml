@@ -1,0 +1,24 @@
+template: ac-elwa-e
+products:
+  - brand: my-PV
+    description:
+      generic: AC ELWA-E
+group: heating
+requirements:
+  description:
+    de: Für den Heizstab von my-PV ohne Display. Über das lokale Webinterface des AC ELWA-E muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
+    en: For the heating rod from my-PV without a display. Use the local web interface of AC ELWA-E to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: scale
+    type: float
+    default: 1
+    description:
+      en: "Scale factor for power limit"
+      de: "Skalierungsfaktor der Leistungsvorgabe"
+render: |
+  type: ac-elwa-e
+  {{- include "modbus" . }}
+  scale: {{ .scale }}

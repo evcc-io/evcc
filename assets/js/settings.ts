@@ -58,7 +58,6 @@ function saveArray(key: string) {
 }
 
 export interface Settings {
-  telemetry: boolean;
   locale: keyof typeof LOCALES | null;
   theme: THEME | null;
   unit: string;
@@ -78,7 +77,6 @@ export interface Settings {
 }
 
 const settings: Settings = reactive({
-  telemetry: false,
   locale: read(SETTINGS_LOCALE),
   theme: read(SETTINGS_THEME),
   unit: read(SETTINGS_UNIT),

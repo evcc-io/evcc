@@ -545,10 +545,10 @@ input::-webkit-datetime-edit {
 .form-control {
 	color: var(--evcc-default-text);
 }
-.form-control:disabled,
-.form-control:read-only,
-.dark .form-control:disabled,
-.dark .form-control:read-only {
+input.form-control:disabled,
+input.form-control:read-only,
+.dark input.form-control:disabled,
+.dark input.form-control:read-only {
 	background-color: var(--evcc-gray-10);
 	color: var(--bs-default-text);
 	opacity: 1;
