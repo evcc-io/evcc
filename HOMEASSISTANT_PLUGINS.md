@@ -32,11 +32,11 @@ meters:
     token: eyJ...                           # Required: Long-lived access token
     power: sensor.grid_power                # Required: Power sensor entity ID
     energy: sensor.grid_energy              # Optional: Energy sensor entity ID
-    currents:                               # Optional: Current sensors for L1, L2, L3
+    currents:                               # Optional: Current sensors (1 for single-phase, 3 for three-phase)
       - sensor.grid_current_l1
       - sensor.grid_current_l2
       - sensor.grid_current_l3
-    voltages:                               # Optional: Voltage sensors for L1, L2, L3
+    voltages:                               # Optional: Voltage sensors (1 for single-phase, 3 for three-phase)
       - sensor.grid_voltage_l1
       - sensor.grid_voltage_l2
       - sensor.grid_voltage_l3
@@ -55,11 +55,11 @@ chargers:
     enable: switch.wallbox_enable           # Required: Enable/disable switch entity ID
     power: sensor.wallbox_power             # Optional: Power sensor entity ID
     energy: sensor.wallbox_energy           # Optional: Energy sensor entity ID
-    currents:                               # Optional: Current sensors for L1, L2, L3
+    currents:                               # Optional: Current sensors (1 for single-phase, 3 for three-phase)
       - sensor.wallbox_current_l1
       - sensor.wallbox_current_l2
       - sensor.wallbox_current_l3
-    voltages:                               # Optional: Voltage sensors for L1, L2, L3
+    voltages:                               # Optional: Voltage sensors (1 for single-phase, 3 for three-phase)
       - sensor.wallbox_voltage_l1
       - sensor.wallbox_voltage_l2
       - sensor.wallbox_voltage_l3
@@ -104,6 +104,12 @@ Both plugins implement optional interfaces:
 - **Phase measurements**: Implement if current/voltage sensors are configured
 - **Phase voltages**: Implement if voltage sensors are configured
 - **Current control**: Implement if max current entity is configured (charger only)
+
+### Single-Phase vs Three-Phase
+
+The plugins support both single-phase and three-phase installations:
+- **Single-phase**: Provide 1 entity in `currents`/`voltages` arrays
+- **Three-phase**: Provide 3 entities in `currents`/`voltages` arrays for L1, L2, L3
 
 ## Benefits
 
