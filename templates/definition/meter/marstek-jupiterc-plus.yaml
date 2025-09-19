@@ -3,7 +3,6 @@ products:
   - brand: Marstek
     description:
       generic: Jupiter C Plus Battery Storage
-capabilities: []
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -16,7 +15,6 @@ params:
     help:
       de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
       en: Base unit 2.56 kWh, each extension plus 2.56 kWh
-
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -57,7 +55,6 @@ render: |
     scale: 0.01  # Modbus value is given in 0.01 kWh
   maxacpower: 0   # Da nur DC
   {{- end }}
-
   {{- if eq .usage "battery" }}
   soc:
     source: modbus
@@ -66,7 +63,6 @@ render: |
       address: 16  # Battery SOC
       type: holding
       decode: uint16
-
   power:
     source: calc
     add:
