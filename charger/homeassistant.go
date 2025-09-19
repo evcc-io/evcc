@@ -29,16 +29,16 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		BaseURL    string
-		Token      string
-		Status     string   // required - sensor for charge status
-		Enabled    string   // required - sensor for enabled state
-		Enable     string   // required - switch/input_boolean for enable/disable
-		Power      string   // optional - power sensor
-		Energy     string   // optional - energy sensor
-		Currents   []string // optional - current sensors for L1, L2, L3
-		Voltages   []string // optional - voltage sensors for L1, L2, L3
-		MaxCurrent string   // optional - number entity for setting max current
+		BaseURL    string   `mapstructure:"baseurl"`
+		Token      string   `mapstructure:"token"`
+		Status     string   `mapstructure:"status"`     // required - sensor for charge status
+		Enabled    string   `mapstructure:"enabled"`    // required - sensor for enabled state
+		Enable     string   `mapstructure:"enable"`     // required - switch/input_boolean for enable/disable
+		Power      string   `mapstructure:"power"`      // optional - power sensor
+		Energy     string   `mapstructure:"energy"`     // optional - energy sensor
+		Currents   []string `mapstructure:"currents"`   // optional - current sensors for L1, L2, L3
+		Voltages   []string `mapstructure:"voltages"`   // optional - voltage sensors for L1, L2, L3
+		MaxCurrent string   `mapstructure:"maxcurrent"` // optional - number entity for setting max current
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

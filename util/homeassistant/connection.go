@@ -168,49 +168,57 @@ func (c *Connection) GetPhaseStates(entities [3]string) (float64, float64, float
 	return l1, l2, l3, nil
 }
 
-// ValidatePhaseEntities validates that phase entity arrays contain exactly 3 entities
+// ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
 func ValidatePhaseEntities(entities []string, entityType string) ([3]string, error) {
-	if len(entities) != 3 {
-		return [3]string{}, fmt.Errorf("%s must contain exactly 3 entities for L1, L2, L3", entityType)
+	switch len(entities) {
+	case 1:
+		// Single-phase: use the same entity for all phases
+		return [3]string{entities[0], entities[0], entities[0]}, nil
+	case 3:
+		// Three-phase: use each entity for its respective phase
+		return [3]string{entities[0], entities[1], entities[2]}, nil
+	default:
+		return [3]string{}, fmt.Errorf("%s must contain either 1 entity (single-phase) or 3 entities (three-phase L1, L2, L3), got %d", entityType, len(entities))
 	}
-	return [3]string{entities[0], entities[1], entities[2]}, nil
+}
+
+// chargeStatusMap maps Home Assistant states to EVCC charge status
+var chargeStatusMap = map[string]api.ChargeStatus{
+	// Status C - Charging
+	"c":        api.StatusC,
+	"charging": api.StatusC,
+	"on":       api.StatusC,
+	"true":     api.StatusC,
+	"active":   api.StatusC,
+	"1":        api.StatusC,
+
+	// Status B - Connected/Ready
+	"b":                  api.StatusB,
+	"connected":          api.StatusB,
+	"ready":              api.StatusB,
+	"plugged":            api.StatusB,
+	"charging_completed": api.StatusB,
+	"initialising":       api.StatusB,
+	"preparing":          api.StatusB,
+	"2":                  api.StatusB,
+
+	// Status A - Disconnected
+	"a":                   api.StatusA,
+	"disconnected":        api.StatusA,
+	"off":                 api.StatusA,
+	"none":                api.StatusA,
+	"unavailable":         api.StatusA,
+	"unknown":             api.StatusA,
+	"notreadyforcharging": api.StatusA,
+	"not_plugged":         api.StatusA,
+	"0":                   api.StatusA,
 }
 
 // ParseChargeStatus maps Home Assistant states to EVCC charge status
 func ParseChargeStatus(state string) (api.ChargeStatus, error) {
-	statusMap := map[string]api.ChargeStatus{
-		// Status C - Charging
-		"c":        api.StatusC,
-		"charging": api.StatusC,
-		"on":       api.StatusC,
-		"true":     api.StatusC,
-		"active":   api.StatusC,
-		"1":        api.StatusC,
-
-		// Status B - Connected/Ready
-		"b":                  api.StatusB,
-		"connected":          api.StatusB,
-		"ready":              api.StatusB,
-		"plugged":            api.StatusB,
-		"charging_completed": api.StatusB,
-		"initialising":       api.StatusB,
-		"preparing":          api.StatusB,
-		"2":                  api.StatusB,
-
-		// Status A - Disconnected
-		"a":                   api.StatusA,
-		"disconnected":        api.StatusA,
-		"off":                 api.StatusA,
-		"none":                api.StatusA,
-		"unavailable":         api.StatusA,
-		"unknown":             api.StatusA,
-		"notreadyforcharging": api.StatusA,
-		"not_plugged":         api.StatusA,
-		"0":                   api.StatusA,
-	}
 
 	normalized := strings.ToLower(strings.TrimSpace(state))
-	if status, ok := statusMap[normalized]; ok {
+	if status, ok := chargeStatusMap[normalized]; ok {
 		return status, nil
 	}
 
