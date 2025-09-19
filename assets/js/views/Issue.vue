@@ -638,12 +638,16 @@ ${this.versionString}`;
 
 		async loadUiConfig() {
 			try {
-				const endpoints = [
-					"config/site",
+				const deviceEndpoints = [
 					"config/loadpoints",
 					"config/devices/charger",
 					"config/devices/meter",
 					"config/devices/vehicle",
+				];
+
+				const endpoints = [
+					"config/site",
+					...deviceEndpoints,
 					"config/circuits",
 					"config/eebus",
 					"config/hems",
@@ -659,7 +663,16 @@ ${this.versionString}`;
 						const response = await api.get(endpoint);
 						if (response.data && Object.keys(response.data).length > 0) {
 							const key = endpoint.replace("config/", "").replace("devices/", "");
-							configs[key] = response.data;
+							let data = response.data;
+
+							// Filter out entries without id property for device endpoints
+							if (deviceEndpoints.includes(endpoint)) {
+								if (Array.isArray(data)) {
+									data = data.filter((e) => e.id);
+								}
+							}
+
+							configs[key] = data;
 						}
 					} catch (error) {
 						console.error(`Failed to fetch ${endpoint}:`, error);
