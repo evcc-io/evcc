@@ -109,7 +109,7 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
-	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 1000, err
+	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
 var _ api.PhaseCurrents = (*SMA)(nil)
