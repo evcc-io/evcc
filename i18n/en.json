@@ -507,6 +507,10 @@
       "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
       "title": "Tariffs"
     },
+    "telemetry": {
+      "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
+      "title": "Telemetry"
+    },
     "title": {
       "description": "Displayed on main screen and browser tab.",
       "label": "Title",
@@ -1034,6 +1038,9 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "device": {
+      "info": "Settings you make here are only for this device/browser."
+    },
     "fullscreen": {
       "enter": "Enter fullscreen",
       "exit": "Exit fullscreen",

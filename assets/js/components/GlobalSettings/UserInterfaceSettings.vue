@@ -1,5 +1,8 @@
 <template>
 	<div class="container mx-0 px-0">
+		<div class="small text-muted mb-3">
+			{{ $t("settings.device.info") }}
+		</div>
 		<FormRow id="settingsDesign" :label="$t('settings.theme.label')">
 			<SelectGroup
 				id="settingsDesign"
@@ -57,13 +60,6 @@
 				equal-width
 			/>
 		</FormRow>
-		<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
-			<TelemetrySettings
-				:sponsorActive="sponsor && !!sponsor.name"
-				:telemetry="telemetry"
-				class="mt-1 mb-0"
-			/>
-		</FormRow>
 		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
 			<div class="form-check form-switch my-1">
 				<input
@@ -103,7 +99,6 @@
 </template>
 
 <script lang="ts">
-import TelemetrySettings from "../TelemetrySettings.vue";
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import LoadpointOrderSettings from "./LoadpointOrderSettings.vue";
@@ -118,17 +113,15 @@ import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { LENGTH_UNIT, THEME, type Sponsor, type LoadpointCompact } from "@/types/evcc";
+import { LENGTH_UNIT, THEME, type LoadpointCompact } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
-	components: { TelemetrySettings, FormRow, SelectGroup, LoadpointOrderSettings },
+	components: { FormRow, SelectGroup, LoadpointOrderSettings },
 	props: {
-		sponsor: Object as PropType<Sponsor>,
-		telemetry: Boolean,
 		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
 	},
 	data() {

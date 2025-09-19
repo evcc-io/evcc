@@ -507,6 +507,10 @@
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
       "title": "Tarife"
     },
+    "telemetry": {
+      "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
       "label": "Titel",
@@ -1034,6 +1038,9 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "device": {
+      "info": "Einstellungen, die du hier vornimmst, gelten nur für dieses Gerät/diesen Browser."
+    },
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
