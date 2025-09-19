@@ -35,13 +35,13 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		batteryCapacity    `mapstructure:",squash"`
 		pvMaxACPower       `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
-		Usage           templates.Usage
-		Uri             string
-		User            string
-		Password        string
-		Key             string
-		DischargeLimit  uint32
-		Timeout         time.Duration
+		Usage              templates.Usage
+		Uri                string
+		User               string
+		Password           string
+		Key                string
+		DischargeLimit     uint32
+		Timeout            time.Duration
 	}{
 		batteryPowerLimits: batteryPowerLimits{
 			MaxChargePower:    4600,
@@ -103,9 +103,9 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 
 	// decorate battery
 	var (
-		batteryCapacity func() float64
-		batterySoc      func() (float64, error)
-		batteryMode     func(api.BatteryMode) error
+		batteryCapacity     func() float64
+		batterySoc          func() (float64, error)
+		batteryMode         func(api.BatteryMode) error
 		batteryPowerLimiter func() (float64, float64)
 	)
 
