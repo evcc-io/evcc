@@ -15,6 +15,8 @@ params:
     help:
       de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
       en: Base unit 2.56 kWh, each extension plus 2.56 kWh
+  - name: maxacpower
+    default: 800 # W
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -24,43 +26,35 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 3   # PV1 power
+        address: 3 # PV1 power
         type: holding
         decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 6   # PV2 power
+        address: 6 # PV2 power
         type: holding
         decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 9   # PV3 power
+        address: 9 # PV3 power
         type: holding
         decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 12  # PV4 power
+        address: 12 # PV4 power
         type: holding
         decode: uint16
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 21   # Monthly power generation
-      type: holding
-      decode: uint32
-    scale: 0.01  # Modbus value is given in 0.01 kWh
-  maxacpower: 0   # Da nur DC
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 16  # Battery SOC
+      address: 16 # Battery SOC
       type: holding
       decode: uint16
   power:
@@ -69,44 +63,36 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 13  # grid power
+        address: 13 # AC output power
         type: holding
         decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 3   # PV1 power
+        address: 3 # PV1 power
         type: holding
         decode: uint16
-      scale: -1  # Substract PV power to calc battery charge
+      scale: -1 # Substract PV power to calc battery charge
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 6   # PV2 power
+        address: 6 # PV2 power
         type: holding
         decode: uint16
-      scale: -1  # Substract PV power to calc battery charge
+      scale: -1 # Substract PV power to calc battery charge
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 9   # PV3 power
+        address: 9 # PV3 power
         type: holding
         decode: uint16
-      scale: -1  # Substract PV power to calc battery charge
+      scale: -1 # Substract PV power to calc battery charge
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 12  # PV4 power
+        address: 12 # PV4 power
         type: holding
         decode: uint16
-      scale: -1  # Substract PV power to calc battery charge
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 25  # Monthly grid-connected electricity
-      type: holding
-      decode: uint16
-    scale: 0.01
+      scale: -1 # Substract PV power to calc battery charge
   capacity: {{ .capacity }} # kWh
   {{- end }}
