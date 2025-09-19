@@ -180,12 +180,12 @@ func ValidatePhaseEntities(entities []string, entityType string) ([3]string, err
 func ParseChargeStatus(state string) (api.ChargeStatus, error) {
 	statusMap := map[string]api.ChargeStatus{
 		// Status C - Charging
-		"c":                  api.StatusC,
-		"charging":           api.StatusC,
-		"on":                 api.StatusC,
-		"true":               api.StatusC,
-		"active":             api.StatusC,
-		"1":                  api.StatusC,
+		"c":        api.StatusC,
+		"charging": api.StatusC,
+		"on":       api.StatusC,
+		"true":     api.StatusC,
+		"active":   api.StatusC,
+		"1":        api.StatusC,
 
 		// Status B - Connected/Ready
 		"b":                  api.StatusB,
@@ -198,15 +198,15 @@ func ParseChargeStatus(state string) (api.ChargeStatus, error) {
 		"2":                  api.StatusB,
 
 		// Status A - Disconnected
-		"a":                     api.StatusA,
-		"disconnected":          api.StatusA,
-		"off":                   api.StatusA,
-		"none":                  api.StatusA,
-		"unavailable":           api.StatusA,
-		"unknown":               api.StatusA,
-		"notreadyforcharging":   api.StatusA,
-		"not_plugged":           api.StatusA,
-		"0":                     api.StatusA,
+		"a":                   api.StatusA,
+		"disconnected":        api.StatusA,
+		"off":                 api.StatusA,
+		"none":                api.StatusA,
+		"unavailable":         api.StatusA,
+		"unknown":             api.StatusA,
+		"notreadyforcharging": api.StatusA,
+		"not_plugged":         api.StatusA,
+		"0":                   api.StatusA,
 	}
 
 	normalized := strings.ToLower(strings.TrimSpace(state))
@@ -216,4 +216,3 @@ func ParseChargeStatus(state string) (api.ChargeStatus, error) {
 
 	return api.StatusNone, fmt.Errorf("unknown charge status: %s", state)
 }
-

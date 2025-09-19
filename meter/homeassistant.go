@@ -10,9 +10,9 @@ import (
 
 // HomeAssistant meter implementation
 type HomeAssistant struct {
-	conn   *homeassistant.Connection
-	power  string
-	energy string
+	conn     *homeassistant.Connection
+	power    string
+	energy   string
 	currents [3]string
 	voltages [3]string
 }
