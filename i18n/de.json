@@ -155,7 +155,9 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Übernehmen & schließen",
       "cancel": "Abbrechen",
+      "close": "Schließen",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
@@ -169,6 +171,7 @@
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
+      "required": "erforderlich",
       "save": "Speichern",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
@@ -676,6 +679,46 @@
     "restartButton": "Neu starten",
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
+  },
+  "issue": {
+    "additional": {
+      "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
+      "include": "einbeziehen",
+      "lines": "Zeilen",
+      "logs": "Logs",
+      "logsDescription": "Aktuelle Log-Einträge, die bei der Identifizierung des Problems helfen können.",
+      "showDetails": "Details anzeigen",
+      "source": "Quelle",
+      "state": "Zustand",
+      "stateDescription": "Kompletter Laufzeitzustand inklusive Ladepunkt-, Geräte- und Energieinformationen. Nur auf Nachfrage hinzufügen.",
+      "title": "Zusätzliche Informationen",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationseinstellungen, die über die Web-Oberfläche vorgenommen wurden.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Deine komplette Konfigurationsdatei."
+    },
+    "createIssueButton": "GitHub Issue erstellen...",
+    "description": "Du hast ein Verhalten bemerkt, das wie ein Fehler aussieht? Nutze diese Seite um ein GitHub-Issue zu erstellen. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "issueDescription": "Beschreibung",
+    "issueDescriptionPlaceholder": "Beschreibe was du erwartet hattest und was tatsächlich passiert ist...",
+    "issueTitle": "Titel",
+    "issueTitlePlaceholder": "Kurze Beschreibung des Problems",
+    "stepsToReproduce": "Schritte zur Reproduktion",
+    "stepsToReproducePlaceholder": "1. Gehe zu...\n2. Klicke auf...\n3. Siehe Fehler...",
+    "subTitle": "Beschreibe dein Problem",
+    "summary": {
+      "confirmationButton": "GitHub Issue erstellen",
+      "copied": "Kopiert!",
+      "copyButton": "Zusätzliche Informationen kopieren",
+      "instructions": "Aufgrund von GitHubs URL-Größenbeschränkungen ist dies ein zweistufiger Prozess:",
+      "step1Description": "Klicke den Button unten, um ein grundlegendes GitHub-Issue mit Titel, Beschreibung und Schritten zu erstellen.",
+      "step2Description": "Nach der Erstellung des Issues, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Issue einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "stepOne": "Schritt 1: Basis-Issue erstellen",
+      "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
+      "title": "GitHub Issue-Zusammenfassung"
+    },
+    "title": "Problem melden",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Nach Bereich filtern",

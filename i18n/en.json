@@ -155,7 +155,9 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Apply & close",
       "cancel": "Cancel",
+      "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
@@ -169,6 +171,7 @@
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
+      "required": "required",
       "save": "Save",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
@@ -676,6 +679,46 @@
     "restartButton": "Restart",
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
+  },
+  "issue": {
+    "additional": {
+      "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
+      "include": "include",
+      "lines": "lines",
+      "logs": "Logs",
+      "logsDescription": "Recent log entries that may help identify the issue.",
+      "showDetails": "show details",
+      "source": "Source",
+      "state": "State",
+      "stateDescription": "Complete runtime state including charging point, device, and energy information. Include only if requested.",
+      "title": "Additional Information",
+      "uiConfig": "Configuration (UI)",
+      "uiConfigDescription": "Configuration settings made through the web interface.",
+      "yamlConfig": "Configuration (YAML)",
+      "yamlConfigDescription": "Your complete configuration file."
+    },
+    "createIssueButton": "Create GitHub Issue...",
+    "description": "You've noticed a behavior that looks like an error? Use this page to create a GitHub issue. Provide enough detail to help us understand and reproduce the issue, while keeping your description concise, clear and easy to follow.",
+    "issueDescription": "Description",
+    "issueDescriptionPlaceholder": "Describe what you expected to happen and what actually happened...",
+    "issueTitle": "Title",
+    "issueTitlePlaceholder": "Brief description of the problem",
+    "stepsToReproduce": "Steps to reproduce",
+    "stepsToReproducePlaceholder": "1. Go to...\n2. Click on...\n3. See error...",
+    "subTitle": "Describe Your Issue",
+    "summary": {
+      "confirmationButton": "Create GitHub Issue",
+      "copied": "Copied!",
+      "copyButton": "Copy additional information",
+      "instructions": "Due to GitHub's URL size limitations, this is a two-step process:",
+      "step1Description": "Click the button below to create a basic GitHub issue with your title, description, and steps.",
+      "step2Description": "After creating the issue, return here to copy the additional information below and paste it into your GitHub issue. Sensitive data has been redacted, but please double-check before sharing.",
+      "stepOne": "Step 1: Create basic issue",
+      "stepTwo": "Step 2: Copy additional information",
+      "title": "GitHub Issue Summary"
+    },
+    "title": "Report Issue",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filter by area",
