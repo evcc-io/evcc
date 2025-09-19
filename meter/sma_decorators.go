@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity func() float64, batteryPowerLimiter func() (float64, float64)) api.Meter {
 	switch {
 	case battery == nil:
 		return base
 
-	case battery != nil && batteryCapacity == nil:
+	case battery != nil && batteryCapacity == nil && batteryPowerLimiter == nil:
 		return &struct {
 			*SMA
 			api.Battery
@@ -22,7 +22,7 @@ func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity fun
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil:
+	case battery != nil && batteryCapacity != nil && batteryPowerLimiter == nil:
 		return &struct {
 			*SMA
 			api.Battery
@@ -34,6 +34,40 @@ func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity fun
 			},
 			BatteryCapacity: &decorateSMABatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryPowerLimiter != nil:
+		return &struct {
+			*SMA
+			api.Battery
+			api.BatteryPowerLimiter
+		}{
+			SMA: base,
+			Battery: &decorateSMABatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateSMABatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryPowerLimiter != nil:
+		return &struct {
+			*SMA
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+		}{
+			SMA: base,
+			Battery: &decorateSMABatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateSMABatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateSMABatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
 			},
 		}
 	}
@@ -55,4 +89,12 @@ type decorateSMABatteryCapacityImpl struct {
 
 func (impl *decorateSMABatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
+}
+
+type decorateSMABatteryPowerLimiterImpl struct {
+	batteryPowerLimiter func() (float64, float64)
+}
+
+func (impl *decorateSMABatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
+	return impl.batteryPowerLimiter()
 }

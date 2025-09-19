@@ -24,16 +24,21 @@ func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go tool decorate -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)"
 
 // NewSMAFromConfig creates an SMA meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity          `mapstructure:",squash"`
+		batteryPowerLimits       `mapstructure:",squash"`
 		URI, Password, Interface string
 		Serial                   uint32
 		Scale                    float64 // power only
 	}{
+		batteryPowerLimits: batteryPowerLimits{
+			MaxChargePower:    4600,
+			MaxDischargePower: 4600,
+		},
 		Password: "0000",
 		Scale:    1,
 	}
@@ -42,11 +47,11 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.batteryCapacity.Decorator())
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.batteryCapacity.Decorator(), cc.batteryPowerLimits)
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity func() float64) (api.Meter, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity func() float64, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
 	sm := &SMA{
 		uri:   uri,
 		scale: scale,
@@ -84,6 +89,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity 
 
 	// decorate api.Battery in case of inverter
 	var soc func() (float64, error)
+	var batteryPowerLimiter func() (float64, float64)
 	if !sm.device.IsEnergyMeter() {
 		vals, err := sm.device.Values()
 		if err != nil {
@@ -92,10 +98,11 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity 
 
 		if _, ok := vals[sunny.BatteryCharge]; ok {
 			soc = sm.soc
+			batteryPowerLimiter = batteryPowerLimits.Decorator()
 		}
 	}
 
-	return decorateSMA(sm, soc, capacity), nil
+	return decorateSMA(sm, soc, capacity, batteryPowerLimiter), nil
 }
 
 // CurrentPower implements the api.Meter interface

@@ -113,6 +113,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	if usage == "battery" {
 		batterySoc = m.batterySoc
 		batterySocLimiter = batterySocLimits.Decorator()
+		batteryPowerLimiter = batteryPowerLimits.Decorator()
 
 		batteryMode = func(mode api.BatteryMode) error {
 			if mode != api.BatteryNormal {
