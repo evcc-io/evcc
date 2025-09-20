@@ -133,6 +133,9 @@ test("update password", async ({ page }) => {
   await page.getByRole("button", { name: "Logout" }).click();
   await expectTopNavigationClosed(page);
 
+  // should be redirected to home page after logout
+  await expect(page).toHaveURL("/#/");
+
   // login modal
   await openTopNavigation(page);
   await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();

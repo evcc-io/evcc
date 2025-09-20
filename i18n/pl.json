@@ -12,15 +12,15 @@
     "disclaimerHint": "Uwaga:",
     "disclaimerText": "Te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany.",
     "gridChargeTab": "Ładowanie z sieci",
-    "legendBottomName": "Daj priorytet ładowaniu akumulatora domowego",
+    "legendBottomName": "Daj priorytet ładowaniu domowemu magazynowi energii",
     "legendBottomSubline": "aż osiągnie {soc}.",
     "legendMiddleName": "Ustaw priorytet ładowaniu pojazdów",
-    "legendMiddleSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
+    "legendMiddleSubline": "gdy poziom naładowania domowego magazynu energii jest wyższy niż {soc}.",
     "legendTopAutostart": "Rozpocznij automatycznie",
-    "legendTopName": "Ładowanie pojazdu z wykorzystaniem akumulatora domowego",
-    "legendTopSubline": "gdy poziom naładowania akumulatora domowego jest wyższy niż {soc}.",
-    "modalTitle": "Akumulator domowy",
-    "usageTab": "Użycie akumulatora"
+    "legendTopName": "Ładowanie pojazdu z wykorzystaniem domowego magazynu energii",
+    "legendTopSubline": "gdy poziom naładowania domowego magazynu energii jest wyższy niż {soc}.",
+    "modalTitle": "Domowy magazyn energii",
+    "usageTab": "Użycie magazynu"
   },
   "config": {
     "aux": {
@@ -29,8 +29,8 @@
       "titleEdit": "Edytuj samoregulujące się urządzenie konsumujące"
     },
     "battery": {
-      "titleAdd": "Dodaj akumulator",
-      "titleEdit": "Edytuj akumulator"
+      "titleAdd": "Dodaj magazyn energii",
+      "titleEdit": "Edytuj magazyn energii"
     },
     "charge": {
       "titleAdd": "Dodaj licznik ładowania",
@@ -42,7 +42,7 @@
       "heatingdevices": "Urządzenia grzewcze",
       "ocppHelp": "Skopiuj ten adres do konfiguracji twojej ładowarki.",
       "ocppLabel": "Adres URL serwera OCPP",
-      "switchsockets": "Przełączalne gniazdka",
+      "switchsockets": "Gniazdka przełączalne",
       "template": "Producent",
       "titleAdd": {
         "charging": "Dodaj ładowarkę",
@@ -60,7 +60,7 @@
         "heatpump": "Pompa ciepła zdefiniowana przez użytkownika",
         "sgready": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, all)",
         "sgready-boost": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, boost)",
-        "switchsocket": "Gniazdo przełącznika zdefiniowane przez użytkownika"
+        "switchsocket": "Gniazdo przełączalne zdefiniowane przez użytkownika"
       }
     },
     "circuits": {
@@ -71,10 +71,10 @@
     "control": {
       "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
       "descriptionInterval": "Cykl aktualizacji pętli sterowania w sekundach. Określa częstotliwość odczytu danych z licznika przez evcc, regulacji mocy ładowania i aktualizacji interfejsu użytkownika. Krótkie przerwy (<30 s) mogą powodować oscylacje i niepożądane zachowania.",
-      "descriptionResidualPower": "Przesuwa punkt pracy pętli sterowania. Jeśli masz domowy akumulator, zaleca się ustawienie wartości 100 W. Dzięki temu akumulator będzie miał niewielki priorytet nad zasilaniem z sieci.",
+      "descriptionResidualPower": "Przesuwa punkt pracy pętli sterowania. Jeśli masz domowy magazyn energii, zaleca się ustawienie wartości 100 W. Dzięki temu magazyn energii będzie miał niewielki priorytet nad zasilaniem z sieci.",
       "labelInterval": "Interwał aktualizacji",
       "labelResidualPower": "Moc resztkowa",
-      "title": "Kontrola zachowania"
+      "title": "Sposób postępowania"
     },
     "deviceValue": {
       "amount": "Ilość",
@@ -85,7 +85,7 @@
       "chargeStatusC": "ładowanie",
       "chargeStatusE": "brak zasilania",
       "chargeStatusF": "błąd",
-      "chargedEnergy": "Użyta energia",
+      "chargedEnergy": "Zużyta energia",
       "co2": "CO₂ sieci",
       "configured": "Skonfigurowany",
       "controllable": "Sterowalny",
@@ -123,6 +123,10 @@
       "A": "A (niepodłączony)",
       "B": "B (podłączony)",
       "C": "C (ładowanie)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "przez EEBus",
+      "relay": "przez Relay"
     },
     "devices": {
       "auxMeter": "Inteligentne urządzenie konsumujące",
@@ -212,6 +216,10 @@
         "charging": "Ładowarka",
         "heating": "Podgrzewacz"
       },
+      "chargerPower11kwHelp": "Użyty zakres prądu będzie wynosił od 6 do 16 A.",
+      "chargerPower22kwHelp": "Użyty zakres prądu będzie wynosił od 6 do 32 A.",
+      "chargerPowerCustom": "inny",
+      "chargerPowerCustomHelp": "Zdefiniuj niestandardowy zakres prądu.",
       "chargingTitle": "Postępowanie",
       "defaultModeHelp": {
         "charging": "Tryb ładowania po podłączeniu pojazdu."
@@ -287,7 +295,8 @@
       "delete": "Usuń",
       "generic": "Integracje podstawowe",
       "option": {
-        "battery": "Dodaj licznik akumulatora domowego",
+        "aux": "Dodaj samoregulujące się urządzenie konsumujące",
+        "battery": "Dodaj licznik magazynu energii",
         "ext": "Dodaj zewnętrzny licznik",
         "pv": "Dodaj licznik energii słonecznej"
       },
@@ -297,6 +306,7 @@
       "validateSave": "Sprawdź i zapisz"
     },
     "mqtt": {
+      "labelCheckInsecure": "Zezwalaj na certyfikaty podpisane samodzielnie",
       "labelClientId": "ID klienta",
       "labelPassword": "Hasło",
       "title": "MQTT"
@@ -330,7 +340,7 @@
       "grid": "Sieć energetyczna",
       "integrations": "Integracje",
       "loadpoints": "Ładowanie i ogrzewanie",
-      "meter": "Fotowoltaika i akumulator",
+      "meter": "Fotowoltaika i magazyn energii",
       "vehicles": "Pojazdy"
     },
     "sponsor": {
@@ -370,7 +380,7 @@
       "greenEnergySub2": "od października 2022",
       "greenShare": "Energii słonecznej",
       "greenShareSub1": "zasilanie jest dostarczone przez",
-      "greenShareSub2": "słońce i domowe akumulatory energii",
+      "greenShareSub2": "słońce i magazyn energii",
       "power": "Moc ładowania",
       "powerSub1": "{activeClients} z {totalClients} uczestników",
       "powerSub2": "ładuje się…",
@@ -421,16 +431,41 @@
       "optInSponsorship": "Wymagany sponsoring."
     },
     "version": {
-      "availableLong": "nowa wersja dostępna",
+      "availableLong": "dostępna nowa wersja",
       "modalCancel": "Anuluj",
       "modalDownload": "Pobierz",
       "modalInstalledVersion": "Zainstalowana wersja",
       "modalNoReleaseNotes": "Brak dostępnych notatek. Więcej informacji o nowej wersji:",
-      "modalTitle": "Nowa wersja dostępna",
+      "modalTitle": "Dostępna nowa wersja",
       "modalUpdate": "Instaluj",
       "modalUpdateNow": "Instaluj teraz",
-      "modalUpdateStarted": "Nowa wersja evcc uruchomi się…",
+      "modalUpdateStarted": "Nowa wersja evcc uruchamia się…",
       "modalUpdateStatusStart": "Instalacja rozpoczęta:"
+    }
+  },
+  "forecast": {
+    "co2": {
+      "average": "Średnia",
+      "lowestHour": "Najczystsze godziny",
+      "range": "Zakres"
+    },
+    "modalTitle": "Prognoza",
+    "price": {
+      "average": "Średnia",
+      "lowestHour": "Najtańsza godzina",
+      "range": "Zakres"
+    },
+    "solar": {
+      "dayAfterTomorrow": "Pojutrze",
+      "partly": "częściowo",
+      "remaining": "pozostało",
+      "today": "Dzisiaj",
+      "tomorrow": "Jutro"
+    },
+    "solarAdjust": "Dostosuj prognozę nasłonecznienia na podstawie rzeczywistych danych produkcyjnych{percent}.",
+    "type": {
+      "price": "Cena",
+      "solar": "Słońce"
     }
   },
   "header": {
@@ -451,7 +486,7 @@
     "issueDescription": "Znalazłeś dziwne lub niewłaściwe zachowanie?",
     "logsButton": "Pokaż logi",
     "logsDescription": "Sprawdź logi pod kątem błędów.",
-    "modalTitle": "Potrzebuję pomocy?",
+    "modalTitle": "Potrzeba pomocy?",
     "primaryActions": "Coś nie działa tak, jak powinno? To dobre miejsca, aby uzyskać pomoc.",
     "restart": {
       "cancel": "Anuluj",
@@ -493,11 +528,11 @@
     },
     "energyflow": {
       "battery": "Akumulator",
-      "batteryCharge": "Ładowanie akumulatora",
-      "batteryDischarge": "Rozładowywanie akumulatora",
+      "batteryCharge": "Ładowanie magazynu energii",
+      "batteryDischarge": "Rozładowywanie magazynu energii",
       "batteryGridChargeActive": "ładowanie z sieci aktywne",
       "batteryGridChargeLimit": "ładowanie z sieci gdy",
-      "batteryHold": "Akumulator (locked)",
+      "batteryHold": "Magazyn energii (chroniony)",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecastTooltip": "prognoza: pozostała dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
@@ -521,7 +556,7 @@
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
-      "charged": "Naładowano",
+      "charged": "Zużyto",
       "co2": "⌀ CO₂",
       "duration": "Czas trwania",
       "fallbackName": "Punkt odbioru energii",
@@ -535,12 +570,12 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Szybkie ładowanie z akumulatora domowego.",
+        "description": "Szybkie ładowanie z domowego magazynu energii.",
         "label": "Doładowanie akumulatora",
         "mode": "Dostępne tylko w trybie słonce i min+słońce.",
         "once": "Doładowanie aktywne dla tej sesji ładowania."
       },
-      "batteryUsage": "Akumulator domowy",
+      "batteryUsage": "Domowy magazyn energii",
       "currents": "Prąd ładowania",
       "default": "domyślny",
       "disclaimerHint": "Uwaga:",
@@ -654,7 +689,7 @@
       "connected": "Połączony.",
       "disconnectRequired": "Sesja zakończona. Proszę ponownie się połączyć.",
       "disconnected": "Rozłączony.",
-      "feedinPriorityNextStart": "Wysokie stawki za energię elektryczną dostarczonaś do sieci zaczynają obowiązywać za {duration}.",
+      "feedinPriorityNextStart": "Wysokie stawki za energię elektryczną dostarczaną do sieci zaczynają obowiązywać za {duration}.",
       "feedinPriorityPausing": "Wstrzymano ładowanie słoneczne w celu zwiększenia dostarczania energii do sieci.",
       "finished": "Zakończone.",
       "minCharge": "Minimalne ładowanie do {soc}.",
@@ -720,7 +755,7 @@
       "avgPriceByGroup": "⌀ Cena {byGroup}",
       "byGroupLoadpoint": "według punktu ładowania",
       "byGroupVehicle": "według pojazdu",
-      "energy": "Załadowana energia",
+      "energy": "Zużyta energia",
       "energyGrouped": "Energia słoneczna a energia z sieci",
       "energyGroupedByGroup": "Energia {byGroup}",
       "energySubSolar": "{value} słońce",
@@ -752,7 +787,7 @@
     "csvPeriod": "Pobierz plik {period} CSV",
     "csvTotal": "Pobierz plik CSV",
     "date": "Rozpoczęcie",
-    "energy": "Energia",
+    "energy": "Zużycie",
     "filter": {
       "allLoadpoints": "wszystkie punkty ładowania",
       "allVehicles": "wszystkie pojazdy",
@@ -813,7 +848,7 @@
       "label": "Telemetria"
     },
     "theme": {
-      "auto": "systemu",
+      "auto": "systemowy",
       "dark": "ciemny",
       "label": "Wygląd",
       "light": "jasny"
@@ -832,7 +867,7 @@
     "activeHours": "{active} z {total}",
     "activeHoursLabel": "Aktywne godziny",
     "applyToAll": "Aplikować wszędzie?",
-    "batteryDescription": "Ładuje akumulator domowy energią z sieci.",
+    "batteryDescription": "Ładuje domowy magazyn energii prądem z sieci.",
     "cheapTitle": "Tanie ładowanie z sieci",
     "cleanTitle": "Czyste ładowanie z sieci",
     "co2Label": "Emisja CO₂",

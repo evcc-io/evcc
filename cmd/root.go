@@ -252,9 +252,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureMDNS(conf.Network)
 	}
 
+	// start SHM server
+	if err == nil {
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+	}
+
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
 	}
 
 	// setup MCP
@@ -277,6 +282,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
 	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
