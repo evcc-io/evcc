@@ -17,7 +17,7 @@ export function generateGitHubContent(issue: IssueData, sections: Sections): Git
   let body = generateBody(issue, additional);
 
   // Check if it fits within the limit
-  if (body.length <= MAX_BODY_LENGTH) {
+  if (encodeURIComponent(issue.title + body).length <= MAX_BODY_LENGTH) {
     return { body };
   }
 

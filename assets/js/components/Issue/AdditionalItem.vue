@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5">
+	<div class="mb-5" :data-testid="`${id}-additional-item`">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<div class="d-flex align-items-baseline gap-2">
 				<strong>{{ title }}</strong>
@@ -37,6 +37,7 @@
 			:title="title"
 			size="lg"
 			:autofocus="false"
+			:data-testid="`${id}-modal`"
 			@closed="modalClosed"
 		>
 			<!-- Custom controls slot inside modal -->

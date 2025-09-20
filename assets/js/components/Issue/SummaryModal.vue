@@ -1,6 +1,7 @@
 <template>
 	<GenericModal
 		id="issueSummaryModal"
+		data-testid="issue-summary-modal"
 		:title="$t('issue.summary.title')"
 		:size="isTwoStepMode ? 'lg' : 'md'"
 		:autofocus="false"
@@ -70,7 +71,7 @@
 					:rows="additionalRows"
 					readonly
 					style="white-space: pre; overflow-wrap: normal"
-					:placeholder="$t('issue.additional.combinedPlaceholder')"
+					data-testid="issue-summary-modal-textarea"
 				></textarea>
 			</div>
 		</div>
