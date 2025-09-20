@@ -77,6 +77,7 @@
       "title": "Kontrollverhalen"
     },
     "deviceValue": {
+      "allowControl": "Steierung erlaben",
       "amount": "Unzahl",
       "broker": "Broker",
       "bucket": "Eemer",
@@ -432,7 +433,18 @@
       "vehicles": "Gefierer"
     },
     "shm": {
-      "title": "SMA Sunny Home Manager 2.0"
+      "cardTitle": "Sunny Home Manager",
+      "description": "Den evcc ass mat enger Integratioun fir den SMA Sunny Home Manager (SHM) iwwert den SEMP-Protokoll ausgestatt. Wann den SHM am selwechte Netzwierk leeft, sollt Dir no der Aschreiwung an Ärem Sunny Portal-Kont automatesch d'Méiglechkeet kréien, all an evcc konfiguréiert Luedpunkten als nei detektéiert Laaschten derbäizesetzen. Alles sollt direkt gebrauchsfäeg sinn, ouni weider Upassungen.",
+      "descriptionDeviceId": "12-stellegen HEX-String. Präfix fir all Geräter (Luedpunkt, ..).",
+      "descriptionIdPattern": "Identifikatiounsmuster",
+      "descriptionIds": "Am Sunny Portal brauch all Ladung (Luedpunkt, etc.) eng eenzegaarteg Identifikatioun. evcc generéiert eng eenzegaarteg Identifikatioun, déi op Ärer Hardware baséiert. Wann Dir evcc op aner Hardware migréiert, kann dësen Identifikator sech änneren. Fir den Historique ze späicheren, kënnt Dir déi generéiert Identifikatoren hei iwwerschreiwen. Maacht d'SEMP URL op (/semp) fir Är aktuell Identifikatoren ze kontrolléieren.",
+      "descriptionSempUrl": "SEMP-URL",
+      "descriptionVendorId": "8-stellegen HEX-String. Allgemenge Präfix fir all Entiéiten. Standardméisseg verwennt evcc seng eegen intern Hiersteller-ID.",
+      "labelAllowControl": "Zousätzlech Recommandatioune fir d'Leeschtungslimit vun SHM z'akzeptéieren.",
+      "labelControl": "Steierung erlaben",
+      "labelDeviceId": "Geräter-ID",
+      "labelVendorId": "Hiersteller-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Token aginn",
