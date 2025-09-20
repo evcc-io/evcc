@@ -79,6 +79,13 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
+	if len(solar) == 0 {
+		solar = make(api.Rates, len(grid))
+		for i, rate := range grid {
+			solar[i] = api.Rate{Start: rate.Start, End: rate.End, Value: 0}
+		}
+	}
+
 	minLen := lo.Min([]int{len(grid), len(feedIn), len(solar)})
 	if minLen < 8 {
 		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
@@ -136,6 +143,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			DMax:           0,
 			SMin:           0,
 			PA:             pa,
+			Name:           "unknown_vehicle",
+			Type:           string(batteryTypeVehicle),
 		}
 
 		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
@@ -172,6 +181,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			for _, dev := range config.Vehicles().Devices() {
 				if dev.Instance() == v {
 					detail.Name = dev.Config().Name
+					bat.Name = dev.Config().Name
 				}
 			}
 		}
@@ -224,6 +234,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
+			Name:     dev.Config().Name,
+			Type:     string(batteryTypeBattery),
 		}
 
 		instance := dev.Instance()
