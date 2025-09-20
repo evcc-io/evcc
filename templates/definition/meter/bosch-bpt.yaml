@@ -14,8 +14,12 @@ params:
   - name: uri
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: bosch-bpt
   usage: {{ .usage }}
   uri: {{ .uri }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W

@@ -26,6 +26,8 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: includegenport
     type: bool
     advanced: true
@@ -307,4 +309,6 @@ render: |
               type: writemultiple
               decode: int32s  
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

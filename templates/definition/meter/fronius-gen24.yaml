@@ -25,11 +25,13 @@ params:
     description:
       generic: Integer
     deprecated: true
+  - name: capacity
+    advanced: true
   - name: maxacpower
   - name: maxchargerate
     advanced: true
-  - name: capacity
-    advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -245,4 +247,6 @@ render: |
             id: 1
             value: 124:0:OutWRte
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

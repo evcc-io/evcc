@@ -27,6 +27,8 @@ params:
   - name: capacity
     default: 2
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: timeout
 render: |
   type: zendure
@@ -34,4 +36,6 @@ render: |
   region: {{ .region }}
   account: {{ .account }}
   serial: {{ .serial }}
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   timeout: {{ .timeout }}

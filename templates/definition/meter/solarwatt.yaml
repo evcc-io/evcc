@@ -17,6 +17,8 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -53,4 +55,6 @@ render: |
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
     jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | (.tagValues.WorkReleased.value // 0) / 1000
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

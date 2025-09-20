@@ -28,19 +28,20 @@ func init() {
 	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
-//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
+//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity `mapstructure:",squash"`
-		pvMaxACPower    `mapstructure:",squash"`
-		Usage           templates.Usage
-		Uri             string
-		User            string
-		Password        string
-		Key             string
-		DischargeLimit  uint32
-		Timeout         time.Duration
+		batteryCapacity    `mapstructure:",squash"`
+		pvMaxACPower       `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		Usage              templates.Usage
+		Uri                string
+		User               string
+		Password           string
+		Key                string
+		DischargeLimit     uint32
+		Timeout            time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -67,12 +68,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batteryPowerLimits)
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, capacity, maxacpower func() float64) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, capacity, maxacpower func() float64, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -98,18 +99,20 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 
 	// decorate battery
 	var (
-		batteryCapacity func() float64
-		batterySoc      func() (float64, error)
-		batteryMode     func(api.BatteryMode) error
+		batteryCapacity     func() float64
+		batterySoc          func() (float64, error)
+		batteryMode         func(api.BatteryMode) error
+		batteryPowerLimiter func() (float64, float64)
 	)
 
 	if usage == templates.UsageBattery {
 		batteryCapacity = capacity
 		batterySoc = m.batterySoc
 		batteryMode = m.setBatteryMode
+		batteryPowerLimiter = batteryPowerLimits.Decorator()
 	}
 
-	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, maxacpower), nil
+	return decorateE3dc(m, batterySoc, batteryCapacity, batteryPowerLimiter, batteryMode, maxacpower), nil
 }
 
 // retryMessage executes a single message request with retry
