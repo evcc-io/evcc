@@ -47,6 +47,7 @@ export default defineComponent({
 		uncloseable: Boolean,
 		fade: String,
 		size: String,
+		autofocus: { type: Boolean, default: true },
 	},
 	emits: ["open", "opened", "close", "closed"],
 	data() {
@@ -95,13 +96,16 @@ export default defineComponent({
 		handleShown() {
 			console.log(this.dataTestid, "> shown");
 			this.$emit("opened");
-			// focus first input or select
-			this.$nextTick(() => {
-				const firstInput = this.$refs["modalBody"]?.querySelector("input, select, button");
-				if (firstInput instanceof HTMLElement) {
-					firstInput.focus();
-				}
-			});
+			// focus first input or select if autofocus is enabled
+			if (this.autofocus) {
+				this.$nextTick(() => {
+					const firstInput =
+						this.$refs["modalBody"]?.querySelector("input, select, button");
+					if (firstInput instanceof HTMLElement) {
+						firstInput.focus();
+					}
+				});
+			}
 			this.isModalVisible = true;
 		},
 		handleHide() {

@@ -3,11 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"net"
 	"os"
-	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -52,33 +49,12 @@ func unwrap(err error) (res []string) {
 	return
 }
 
-var redactSecrets = []string{
-	"mac",                   // infrastructure
-	"sponsortoken", "plant", // global settings
-	"apikey", "user", "password", "pin", // users
-	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
-	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
-	"app", "chats", "recipients", // push messaging
-	"vin",               // vehicles
-	"lat", "lon", "zip", // solar forecast
-}
-
-// redact redacts a configuration string
 func redact(src string) string {
-	return regexp.
-		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(redactSecrets, "|"))).
-		ReplaceAllString(src, "$1: *****")
+	return util.RedactConfigString(src)
 }
 
 func redactMap(src map[string]any) map[string]any {
-	res := maps.Clone(src)
-	for k := range res {
-		if slices.Contains(redactSecrets, k) {
-			res[k] = "*****"
-		}
-	}
-
-	return res
+	return util.RedactConfigMap(src)
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating

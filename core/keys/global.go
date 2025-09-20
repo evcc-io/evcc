@@ -15,6 +15,8 @@ const (
 	ModbusProxy        = "modbusproxy"
 	Tariffs            = "tariffs"
 	Version            = "version"
+	Config             = "config"
+	Database           = "database"
 	Fatal              = "fatal"
 	Startup            = "startup"
 	Plant              = "plant"
