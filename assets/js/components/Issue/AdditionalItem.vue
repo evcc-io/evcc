@@ -72,7 +72,7 @@
 import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
 import GenericModal from "../Helper/GenericModal.vue";
-import type { HelpType } from "@/views/Issue.vue";
+import type { HelpType } from "./types";
 
 export default defineComponent({
 	name: "IssueAdditionalItem",

@@ -699,8 +699,8 @@
     },
     "additionalContext": "Zusätzlicher Kontext",
     "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
-    "createDiscussionButton": "GitHub Diskussion starten...",
-    "createIssueButton": "GitHub Issue erstellen...",
+    "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonIssue": "GitHub Issue erstellen...",
     "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
@@ -710,12 +710,9 @@
       "title": "Um welches Problem geht es?"
     },
     "issueDescription": "Beschreibung",
-    "issueDescriptionPlaceholder": "Beschreibe was du erwartet hattest und was tatsächlich passiert ist...",
     "issueTitle": "Titel",
-    "issueTitlePlaceholder": "Kurze Beschreibung des Problems",
     "stepsToReproduce": "Schritte zur Reproduktion",
-    "stepsToReproducePlaceholder": "1. Gehe zu...\n2. Klicke auf...\n3. Siehe Fehler...",
-    "subTitle": "Beschreibe dein Problem",
+    "subTitleDiscussion": "Beschreibe dein Problem",
     "subTitleIssue": "Beschreibe das Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussion starten",
@@ -723,6 +720,7 @@
       "copied": "Kopiert!",
       "copyButton": "Zusätzliche Informationen kopieren",
       "instructions": "Aufgrund von GitHubs URL-Größenbeschränkungen ist dies ein zweistufiger Prozess:",
+      "singleStepDescription": "Klicke den Button unten, um GitHub mit einem vorausgefüllten Formular mit deinen Problemdetails zu öffnen. Sensible Daten wurden automatisch entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
       "step1Description": "Klicke den Button unten, um einen grundlegenden GitHub-Eintrag mit Titel, Beschreibung und Details zu erstellen.",
       "step2Description": "Nach der Erstellung des Eintrags, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Formular einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
       "stepOneDiscussion": "Schritt 1: Basis-Diskussion erstellen",

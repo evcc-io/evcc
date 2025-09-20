@@ -24,9 +24,9 @@
 								<label for="helpTypeHelp" class="form-check-label">
 									<strong>{{ $t("issue.helpType.discussion") }}</strong>
 									<br />
-									<small class="text-muted">{{
-										$t("issue.helpType.discussionDescription")
-									}}</small>
+									<small class="text-muted">
+										{{ $t("issue.helpType.discussionDescription") }}
+									</small>
 								</label>
 							</div>
 						</div>
@@ -43,9 +43,9 @@
 								<label for="helpTypeBug" class="form-check-label">
 									<strong>{{ $t("issue.helpType.issue") }}</strong>
 									<br />
-									<small class="text-muted">{{
-										$t("issue.helpType.issueDescription")
-									}}</small>
+									<small class="text-muted">
+										{{ $t("issue.helpType.issueDescription") }}
+									</small>
 								</label>
 							</div>
 						</div>
@@ -56,11 +56,7 @@
 					<!-- Essential Form Section -->
 					<div class="d-flex justify-content-between align-items-center mb-4">
 						<h4>
-							{{
-								helpType === "discussion"
-									? $t("issue.subTitle")
-									: $t("issue.subTitleIssue")
-							}}
+							{{ $tt("issue.subTitle") }}
 						</h4>
 					</div>
 
@@ -69,57 +65,48 @@
 						<!-- Left Column: Form Fields -->
 						<div class="col-12 col-lg-6">
 							<div class="mb-4">
-								<label for="issueTitle" class="form-label"
-									>{{ $t("issue.issueTitle") }} *</label
-								>
+								<label for="issueTitle" class="form-label">
+									{{ $t("issue.issueTitle") }} *
+								</label>
 								<input
 									id="issueTitle"
 									v-model="issue.title"
 									type="text"
 									class="form-control"
-									:placeholder="$t('issue.issueTitlePlaceholder')"
+									placeholder="Brief description of the problem"
 									required
 								/>
 							</div>
 							<div class="mb-4">
-								<label for="issueDescription" class="form-label"
-									>{{ $t("issue.issueDescription") }} *</label
-								>
+								<label for="issueDescription" class="form-label">
+									{{ $t("issue.issueDescription") }} *
+								</label>
 								<textarea
 									id="issueDescription"
 									v-model="issue.description"
 									class="form-control"
 									rows="6"
-									:placeholder="$t('issue.issueDescriptionPlaceholder')"
+									placeholder="Describe what you expected to happen and what actually happened..."
 									required
 								></textarea>
 							</div>
 							<div class="mb-4">
 								<label for="stepsToReproduce" class="form-label">
-									{{
-										helpType === "discussion"
-											? $t("issue.additionalContext")
-											: $t("issue.stepsToReproduce")
-									}}
-									*
+									{{ $t("issue.stepsToReproduce") }} *
 								</label>
 								<textarea
 									id="stepsToReproduce"
 									v-model="issue.steps"
 									class="form-control"
 									rows="6"
-									:placeholder="
-										helpType === 'discussion'
-											? $t('issue.additionalContextPlaceholder')
-											: $t('issue.stepsToReproducePlaceholder')
-									"
+									placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."
 									required
 								></textarea>
 							</div>
 							<div class="mb-4">
-								<label for="version" class="form-label">{{
-									$t("issue.version")
-								}}</label>
+								<label for="version" class="form-label">
+									{{ $t("issue.version") }}
+								</label>
 								<input
 									id="version"
 									v-model="versionString"
@@ -176,10 +163,10 @@
 								<template #description>
 									<p class="text-muted small">
 										{{ $t("issue.additional.uiConfigDescription") }}<br />
-										<span v-if="databasePath"
-											>{{ $t("issue.additional.source") }}:
-											<code>{{ databasePath }}</code></span
-										>
+										<span v-if="databasePath">
+											{{ $t("issue.additional.source") }}:
+											<code>{{ databasePath }}</code>
+										</span>
 									</p>
 								</template>
 							</IssueAdditionalItem>
@@ -236,9 +223,9 @@
 													min="0"
 													step="25"
 												/>
-												<span class="input-group-text">{{
-													$t("issue.additional.lines")
-												}}</span>
+												<span class="input-group-text">
+													{{ $t("issue.additional.lines") }}
+												</span>
 											</div>
 										</div>
 										<div class="flex-grow-1">
@@ -292,21 +279,23 @@
 			size="lg"
 			:autofocus="false"
 		>
-			<!-- Instructions -->
-			<div class="alert alert-secondary mb-4">
+			<!-- Instructions (only shown in two-step mode) -->
+			<div v-if="isTwoStepMode" class="alert alert-secondary mb-4">
 				<strong>{{ $t("issue.summary.instructions") }}</strong>
 			</div>
 
-			<!-- Step 1: Create Basic Issue -->
-			<div class="mb-4">
-				<h6 class="mb-2">
-					{{
-						helpType === "discussion"
-							? $t("issue.summary.stepOneDiscussion")
-							: $t("issue.summary.stepOneIssue")
-					}}
+			<!-- Step 1: Create Issue -->
+			<div :class="{ 'mb-4': isTwoStepMode }">
+				<h6 v-if="isTwoStepMode" class="mb-2">
+					{{ $tt("issue.summary.stepOne") }}
 				</h6>
-				<p class="text-muted small mb-3">{{ $t("issue.summary.step1Description") }}</p>
+				<p class="text-muted small mb-3">
+					{{
+						isTwoStepMode
+							? $t("issue.summary.step1Description")
+							: $t("issue.summary.singleStepDescription")
+					}}
+				</p>
 				<div class="d-flex justify-content-start">
 					<a
 						:href="githubUrl"
@@ -315,19 +304,15 @@
 						:class="buttonClass"
 						@click="clearSessionStorage"
 					>
-						{{
-							helpType === "discussion"
-								? $t("issue.summary.confirmationButtonDiscussion")
-								: $t("issue.summary.confirmationButtonIssue")
-						}}
+						{{ $tt("issue.summary.confirmationButton") }}
 					</a>
 				</div>
 			</div>
 
-			<hr class="my-4" />
+			<hr v-if="isTwoStepMode" class="my-4" />
 
-			<!-- Step 2: Copy Additional Information -->
-			<div class="mb-4">
+			<!-- Step 2: Copy Additional Information (only shown in two-step mode) -->
+			<div v-if="isTwoStepMode" class="mb-4">
 				<h6 class="mb-2">{{ $t("issue.summary.stepTwo") }}</h6>
 				<p class="text-muted small mb-3">{{ $t("issue.summary.step2Description") }}</p>
 				<div class="d-flex justify-content-start mb-4">
@@ -380,9 +365,10 @@ import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
-
-// Type definitions
-export type HelpType = "discussion" | "issue";
+import { generateGitHubContent, generateGitHubUrl } from "@/components/Issue/template";
+import type { GitHubContent } from "@/components/Issue/types";
+import { formatJson } from "@/components/Issue/format";
+import type { HelpType } from "@/components/Issue/types";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
@@ -452,35 +438,19 @@ export default defineComponent({
 		databasePath(): string | undefined {
 			return store.state.database;
 		},
+		githubContentResult(): GitHubContent {
+			const issueData = { ...this.issue, version: this.versionString };
+			return generateGitHubContent(issueData, this.sections);
+		},
 		summaryDetails(): string {
-			let output = "";
-
-			if (this.sections.yamlConfig.included) {
-				const compactConfig = this.sections.yamlConfig.content
-					.split("\n")
-					.filter((line: string) => line.trim() !== "")
-					.join("\n");
-				output += `## Configuration (evcc.yaml)\n\n\`\`\`yaml\n${compactConfig}\n\`\`\`\n\n`;
-			}
-
-			if (this.sections.uiConfig.included) {
-				output += `## Configuration (UI)\n\n\`\`\`json5\n${this.sections.uiConfig.content}\n\`\`\`\n\n`;
-			}
-
-			if (this.sections.state.included) {
-				output += `## System State\n\n\`\`\`json5\n${this.sections.state.content}\n\`\`\`\n\n`;
-			}
-
-			if (this.sections.logs.included) {
-				output += `## Logs\n\n\`\`\`\n${this.sections.logs.content}\n\`\`\`\n\n`;
-			}
-
-			return output.trim() || "No additional details selected";
+			return this.githubContentResult.additional || "No additional details selected";
+		},
+		isTwoStepMode(): boolean {
+			return !!this.githubContentResult.additional;
 		},
 		summaryDetailsRows(): number {
-			const content = this.summaryDetails;
-			const lines = content.split("\n").length;
-			return Math.max(26, lines); // Min 3 rows, exact line count
+			const lines = this.summaryDetails.split("\n").length;
+			return Math.max(26, lines);
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
@@ -496,46 +466,15 @@ export default defineComponent({
 			return `${url}api/state`;
 		},
 		githubUrl(): string {
-			const encodedTitle = encodeURIComponent(this.issue.title);
-			const isDiscussion = this.helpType === "discussion";
-
-			const mainSection = isDiscussion ? "## Description" : "## Issue Description";
-			const stepsSection = isDiscussion ? "## Additional Context" : "## Steps to Reproduce";
-
-			const body = `${mainSection}
-
-${this.issue.description}
-
-${
-	this.issue.steps
-		? `${stepsSection}
-
-${this.issue.steps}
-
-`
-		: ""
-}⚠️  RETURN TO EVCC TAB → COPY STEP 2 → PASTE HERE
-
-## Version
-
-${this.versionString}`;
-
-			const encodedBody = encodeURIComponent(body);
-			const baseUrl = isDiscussion
-				? "https://github.com/evcc-io/evcc/discussions/new?category=need-help"
-				: "https://github.com/evcc-io/evcc/issues/new";
-
-			return `${baseUrl}&title=${encodedTitle}&body=${encodedBody}`;
+			const issueData = { ...this.issue, version: this.versionString };
+			const content = generateGitHubContent(issueData, this.sections);
+			return generateGitHubUrl(this.helpType, this.issue.title, content.body);
 		},
-
 		buttonClass(): string {
 			return this.helpType === "discussion" ? "btn-success" : "btn-danger";
 		},
-
 		buttonText(): string {
-			return this.helpType === "discussion"
-				? this.$t("issue.createDiscussionButton")
-				: this.$t("issue.createIssueButton");
+			return this.$tt("issue.createButton");
 		},
 	},
 	watch: {
@@ -569,55 +508,10 @@ ${this.versionString}`;
 		this.updateAreas();
 	},
 	methods: {
-		formatJson(obj: any): string {
-			if (!obj || typeof obj !== "object") {
-				return JSON.stringify(obj, null, 2);
-			}
-
-			const lines: string[] = [];
-
-			for (const [key, value] of Object.entries(obj)) {
-				let valueStr: string;
-
-				// Check if this key should be expanded (only if not empty)
-				if (
-					EXPAND_KEYS.includes(key) &&
-					(Array.isArray(value) || (typeof value === "object" && value !== null))
-				) {
-					if (Array.isArray(value)) {
-						if (value.length === 0) {
-							// Keep empty arrays compact
-							valueStr = "[]";
-						} else {
-							const arrayItems = value.map((item) => {
-								const itemStr = JSON.stringify(item);
-								return `    ${itemStr.replace(/\\n/g, "\n")}`;
-							});
-							valueStr = `[\n${arrayItems.join(",\n")}\n  ]`;
-						}
-					} else {
-						// Object expansion
-						const objEntries = Object.entries(value);
-						if (objEntries.length === 0) {
-							// Keep empty objects compact
-							valueStr = "{}";
-						} else {
-							const objItems = objEntries.map(([k, v]) => {
-								const itemStr = JSON.stringify(v);
-								return `    ${JSON.stringify(k)}: ${itemStr.replace(/\\n/g, "\n")}`;
-							});
-							valueStr = `{\n${objItems.join(",\n")}\n  }`;
-						}
-					}
-				} else {
-					// Single line for everything else
-					valueStr = JSON.stringify(value).replace(/\\n/g, "\n");
-				}
-
-				lines.push(`  ${JSON.stringify(key)}: ${valueStr}`);
-			}
-
-			return `{\n${lines.join(",\n")}\n}`;
+		// Type-dependent translation helper
+		$tt(key: string): string {
+			const suffix = this.helpType === "discussion" ? "Discussion" : "Issue";
+			return this.$t(`${key}${suffix}`);
 		},
 
 		async loadYamlConfig() {
@@ -679,7 +573,7 @@ ${this.versionString}`;
 					}
 				}
 
-				this.sections.uiConfig.content = this.formatJson(configs);
+				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {
 				console.error("Failed to fetch API config:", error);
 				this.sections.uiConfig.content = "Failed to load API configuration";
@@ -695,20 +589,11 @@ ${this.versionString}`;
 				};
 
 				const response = await api.get("/system/log", { params });
-
-				if (Array.isArray(response.data)) {
-					const filteredLogs = response.data
-						.filter((entry) => entry && entry.trim())
-						.map((entry) => entry.trim());
-
-					if (filteredLogs.length === 0) {
-						this.sections.logs.content = "";
-					} else {
-						this.sections.logs.content = filteredLogs.join("\n");
-					}
-				} else {
-					this.sections.logs.content = String(response.data);
-				}
+				const logs = response.data || [];
+				this.sections.logs.content = logs
+					.filter((entry: string) => entry && entry.trim())
+					.map((entry: string) => entry.trim())
+					.join("\n");
 			} catch (error) {
 				console.error("Failed to fetch logs:", error);
 				this.sections.logs.content = "Failed to load logs";
@@ -727,7 +612,7 @@ ${this.versionString}`;
 		async loadState() {
 			try {
 				const response = await api.get("state");
-				this.sections.state.content = this.formatJson(response.data);
+				this.sections.state.content = formatJson(response.data, EXPAND_KEYS);
 			} catch (error) {
 				console.error("Failed to fetch state:", error);
 				this.sections.state.content = "Failed to load system state";
