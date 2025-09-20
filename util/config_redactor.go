@@ -20,11 +20,11 @@ var configRedactSecrets = []string{
 	"lat", "lon", "zip", // solar forecast
 }
 
+var configRedactRegex = regexp.MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(configRedactSecrets, "|")))
+
 // RedactConfigString redacts a configuration string by replacing sensitive values with *****
 func RedactConfigString(src string) string {
-	return regexp.
-		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(configRedactSecrets, "|"))).
-		ReplaceAllString(src, "$1: *****")
+	return configRedactRegex.ReplaceAllString(src, "$1: *****")
 }
 
 // RedactConfigMap redacts sensitive keys in a configuration map
