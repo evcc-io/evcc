@@ -30,12 +30,12 @@ import (
 
 // DaheimLadenMB charger implementation
 type DaheimLadenMB struct {
-	log    			*util.Logger
-	conn   			*modbus.Connection
-	curr   			uint16
-	phases 			uint16
-	connState 		uint16
-	hasPhaseSwap	bool
+	log    		 *util.Logger
+	conn   		 *modbus.Connection
+	curr   		 uint16
+	phases 		 uint16
+	connState 	 uint16
+	hasPhaseSwap bool
 }
 
 const (
