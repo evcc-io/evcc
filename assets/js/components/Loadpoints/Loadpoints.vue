@@ -14,7 +14,6 @@
 			>
 				<Loadpoint
 					v-bind="loadpoint"
-					:id="index + 1"
 					data-testid="loadpoint"
 					:vehicles="vehicles"
 					:smartCostType="smartCostType"
@@ -65,12 +64,16 @@ import "@h2d2/shopicons/es/filled/lightning";
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
 import type { LoadpointCompact, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
+import type { DisplayLoadpoint } from "@/loadpoint-display";
 
 export default defineComponent({
 	name: "Loadpoints",
 	components: { Loadpoint },
 	props: {
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: {
+			type: Array as PropType<DisplayLoadpoint[]>,
+			default: () => [],
+		},
 		vehicles: { type: Array as PropType<Vehicle[]> },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,

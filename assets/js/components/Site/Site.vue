@@ -51,7 +51,7 @@
 			<Loadpoints
 				v-else-if="loadpoints.length > 0"
 				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="loadpoints"
+				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
 				:smartCostAvailable="smartCostAvailable"
@@ -99,6 +99,7 @@ import type {
 	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
+import { convertToDisplayLoadpoints, filterAndSortDisplayLoadpoints } from "@/loadpoint-display";
 
 export default defineComponent({
 	name: "Site",
@@ -165,6 +166,10 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		orderedVisibleLoadpoints() {
+			const displayLoadpoints = convertToDisplayLoadpoints(this.loadpoints);
+			return filterAndSortDisplayLoadpoints(displayLoadpoints);
+		},
 		batteryConfigured() {
 			return this.battery?.length > 0;
 		},
@@ -178,7 +183,7 @@ export default defineComponent({
 			return this.collectProps(Energyflow);
 		},
 		loadpointTitles() {
-			return this.loadpoints.map((lp) => lp.title);
+			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
 		},
 		loadpointsCompact() {
 			return this.loadpoints.map((lp, index) => {

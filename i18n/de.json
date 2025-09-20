@@ -507,6 +507,10 @@
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
       "title": "Tarife"
     },
+    "telemetry": {
+      "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
       "label": "Titel",
@@ -1034,6 +1038,11 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "device": {
+      "info": "Einstellungen, die du hier vornimmst, gelten nur für dieses Gerät/diesen Browser.",
+      "infoApp": "Einstellungen, die du hier vornimmst, gelten nur für diese App.",
+      "infoBrowser": "Einstellungen, die du hier vornimmst, gelten nur für diesen Browser."
+    },
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
@@ -1046,6 +1055,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Sprache"
+    },
+    "loadpoints": {
+      "help": "Ziehe, um Ladepunkte neu anzuordnen und verwende Schalter, um sie ein- oder auszublenden.",
+      "hidden": "Ausgeblendet",
+      "label": "Ladepunkt Reihenfolge & Sichtbarkeit",
+      "visible": "Sichtbar"
     },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
