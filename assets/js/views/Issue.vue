@@ -273,84 +273,13 @@
 		</div>
 
 		<!-- Issue Summary Modal -->
-		<GenericModal
-			id="issueSummaryModal"
-			:title="$t('issue.summary.title')"
-			size="lg"
-			:autofocus="false"
-		>
-			<!-- Instructions (only shown in two-step mode) -->
-			<div v-if="isTwoStepMode" class="alert alert-secondary mb-4">
-				<strong>{{ $t("issue.summary.instructions") }}</strong>
-			</div>
-
-			<!-- Step 1: Create Issue -->
-			<div :class="{ 'mb-4': isTwoStepMode }">
-				<h6 v-if="isTwoStepMode" class="mb-2">
-					{{ $tt("issue.summary.stepOne") }}
-				</h6>
-				<p class="text-muted small mb-3">
-					{{
-						isTwoStepMode
-							? $t("issue.summary.step1Description")
-							: $t("issue.summary.singleStepDescription")
-					}}
-				</p>
-				<div class="d-flex justify-content-start">
-					<a
-						:href="githubUrl"
-						target="_blank"
-						class="btn"
-						:class="buttonClass"
-						@click="clearSessionStorage"
-					>
-						{{ $tt("issue.summary.confirmationButton") }}
-					</a>
-				</div>
-			</div>
-
-			<hr v-if="isTwoStepMode" class="my-4" />
-
-			<!-- Step 2: Copy Additional Information (only shown in two-step mode) -->
-			<div v-if="isTwoStepMode" class="mb-4">
-				<h6 class="mb-2">{{ $t("issue.summary.stepTwo") }}</h6>
-				<p class="text-muted small mb-3">{{ $t("issue.summary.step2Description") }}</p>
-				<div class="d-flex justify-content-start mb-4">
-					<CopyButton :content="summaryDetails" :targetElement="$refs['summaryTextarea']">
-						<template #default="{ copy, copied, copying }">
-							<button
-								type="button"
-								class="btn"
-								:class="
-									helpType === 'discussion'
-										? 'btn-outline-success'
-										: 'btn-outline-danger'
-								"
-								:disabled="copying"
-								@click="copy"
-							>
-								{{
-									copied
-										? $t("issue.summary.copied")
-										: $t("issue.summary.copyButton")
-								}}
-							</button>
-						</template>
-					</CopyButton>
-				</div>
-				<div class="mb-2">
-					<textarea
-						ref="summaryTextarea"
-						:value="summaryDetails"
-						class="form-control font-monospace border-secondary textarea--tiny"
-						:rows="summaryDetailsRows"
-						readonly
-						style="white-space: pre; overflow-wrap: normal"
-						:placeholder="$t('issue.additional.combinedPlaceholder')"
-					></textarea>
-				</div>
-			</div>
-		</GenericModal>
+		<SummaryModal
+			:help-type="helpType"
+			:button-class="buttonClass"
+			:issue-data="issueData"
+			:sections="sections"
+			@submitted="clearSessionStorage"
+		/>
 	</div>
 </template>
 
@@ -359,16 +288,13 @@ import { defineComponent } from "vue";
 import TopHeader from "@/components/Top/Header.vue";
 import MultiSelect from "@/components/Helper/MultiSelect.vue";
 import IssueAdditionalItem from "@/components/Issue/AdditionalItem.vue";
-import GenericModal from "@/components/Helper/GenericModal.vue";
-import CopyButton from "@/components/Helper/CopyButton.vue";
+import SummaryModal from "@/components/Issue/SummaryModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
-import { generateGitHubContent, generateGitHubUrl } from "@/components/Issue/template";
-import type { GitHubContent } from "@/components/Issue/types";
 import { formatJson } from "@/components/Issue/format";
-import type { HelpType } from "@/components/Issue/types";
+import type { HelpType, IssueData } from "@/components/Issue/types";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
@@ -397,8 +323,7 @@ export default defineComponent({
 		TopHeader,
 		MultiSelect,
 		IssueAdditionalItem,
-		GenericModal,
-		CopyButton,
+		SummaryModal,
 	},
 	data() {
 		return {
@@ -438,19 +363,8 @@ export default defineComponent({
 		databasePath(): string | undefined {
 			return store.state.database;
 		},
-		githubContentResult(): GitHubContent {
-			const issueData = { ...this.issue, version: this.versionString };
-			return generateGitHubContent(issueData, this.sections);
-		},
-		summaryDetails(): string {
-			return this.githubContentResult.additional || "No additional details selected";
-		},
-		isTwoStepMode(): boolean {
-			return !!this.githubContentResult.additional;
-		},
-		summaryDetailsRows(): number {
-			const lines = this.summaryDetails.split("\n").length;
-			return Math.max(26, lines);
+		issueData(): IssueData {
+			return { ...this.issue, version: this.versionString };
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
@@ -464,11 +378,6 @@ export default defineComponent({
 		apiStateUrl(): string {
 			const url = window.location.href.split("#")[0];
 			return `${url}api/state`;
-		},
-		githubUrl(): string {
-			const issueData = { ...this.issue, version: this.versionString };
-			const content = generateGitHubContent(issueData, this.sections);
-			return generateGitHubUrl(this.helpType, this.issue.title, content.body);
 		},
 		buttonClass(): string {
 			return this.helpType === "discussion" ? "btn-success" : "btn-danger";
