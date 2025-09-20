@@ -43,10 +43,6 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		DischargeLimit     uint32
 		Timeout            time.Duration
 	}{
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
 		Timeout: request.Timeout,
 	}
 

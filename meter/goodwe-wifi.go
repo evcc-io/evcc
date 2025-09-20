@@ -29,10 +29,6 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 		URI, Usage         string
 		Timeout            time.Duration
 	}{
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
 		Timeout: request.Timeout,
 	}
 

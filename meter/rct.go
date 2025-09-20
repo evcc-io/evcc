@@ -50,10 +50,6 @@ func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Me
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
 		MaxChargePower: 10000,
 		Cache:          30 * time.Second,
 	}

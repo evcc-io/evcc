@@ -46,10 +46,6 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    5000,
-			MaxDischargePower: 5000,
-		},
 		Cache: time.Second,
 	}
 

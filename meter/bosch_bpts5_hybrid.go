@@ -57,10 +57,6 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 		Usage              string
 		Cache              time.Duration
 	}{
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    5000,
-			MaxDischargePower: 5000,
-		},
 		Cache: time.Second,
 	}
 

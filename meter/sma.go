@@ -35,10 +35,6 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Serial                   uint32
 		Scale                    float64 // power only
 	}{
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
 		Password: "0000",
 		Scale:    1,
 	}
