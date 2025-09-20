@@ -191,7 +191,7 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 			if wb.hasPhaseSwap {
 				wb.phases = 3
 			} 
-                                                                 wb.connState = connState
+            wb.connState = connState
 		}
 	} else {
 		wb.log.TRACE.Println("read connector state:", err)
