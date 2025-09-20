@@ -53,22 +53,22 @@ render: |
     register:
       address: 10635 # Meter: Phase A Current
       type: holding
-      decode: int16
-    scale: 0.01
+      decode: uint16s
+    scale: 0.00001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 10636 # Meter: Phase B Current
       type: holding
-      decode: int16
-    scale: 0.01
+      decode: uint16s
+    scale: 0.00001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 10637 # Meter: Phase C Current
       type: holding
-      decode: int16
-    scale: 0.01
+      decode: uint16s
+    scale: 0.00001
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
