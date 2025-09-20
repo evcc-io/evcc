@@ -30,10 +30,12 @@ import (
 
 // DaheimLadenMB charger implementation
 type DaheimLadenMB struct {
-	log    *util.Logger
-	conn   *modbus.Connection
-	curr   uint16
-	phases uint16
+	log    			*util.Logger
+	conn   			*modbus.Connection
+	curr   			uint16
+	phases 			uint16
+	connState 		uint16
+	hasPhaseSwap	bool
 }
 
 const (
@@ -118,7 +120,20 @@ func NewDaheimLadenMB(ctx context.Context, uri string, id uint8, phases bool) (a
 	if u := binary.BigEndian.Uint16(b); u > 0 {
 		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
-
+	// initial connector state lesen (0 = not connected, 1 = connected)
+	if cb, err := wb.conn.ReadHoldingRegisters(dlRegConnectorState, 1); err == nil {
+		wb.connState = binary.BigEndian.Uint16(cb)
+	} else {
+		wb.log.TRACE.Println("init read connector state:", err)
+	}
+	// check if phase switch register exists (Register 184)
+	if pb, err := wb.conn.ReadHoldingRegisters(dlRegPhaseSwitchState, 1); err == nil {
+		wb.hasPhaseSwap = true
+		wb.phases = binary.BigEndian.Uint16(pb)
+	} else {
+		wb.hasPhaseSwap = false
+		wb.log.TRACE.Println("phase switch register unavailable:", err)
+	}
 	var phases1p3p func(int) error
 	var phasesG func() (int, error)
 	if phases {
@@ -167,9 +182,20 @@ func (wb *DaheimLadenMB) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-
 	s := binary.BigEndian.Uint16(b)
-
+	// connector state lesen und auf Änderung prüfen (0 = nicht verbunden, 1 = verbunden)
+	if cb, err := wb.conn.ReadHoldingRegisters(dlRegConnectorState, 1); err == nil {
+		connState := binary.BigEndian.Uint16(cb)
+		if connState != wb.connState {
+			// Connector hat gewechselt -> wenn Wallbox Phasenumschaltung unterstützt, dann phases=3
+			if wb.hasPhaseSwap {
+				wb.phases = 3
+			} 
+                                                                 wb.connState = connState
+		}
+	} else {
+		wb.log.TRACE.Println("read connector state:", err)
+	}
 	switch s {
 	case 1: // Standby (A)
 		return api.StatusA, nil
