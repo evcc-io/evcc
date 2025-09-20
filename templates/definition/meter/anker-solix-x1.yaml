@@ -16,7 +16,7 @@ params:
       de: Modbus (TCP (nur LAN)/ RTU) aktivierung in AnkerSOLIX Installer App mit Bluetooth (Inbetriebnahme -> Systemkonfiguration)
   - name: maxchargepower
     type: int
-    default: 4200
+    default: 3000
     help:
       en: Per battery 3 kW, limited by maxacpower (System setting 5 - 12 kW).
       de: Pro Batterie 3 kW, limitiert durch maxacpower (System Einstellung 5 - 12 kW).
