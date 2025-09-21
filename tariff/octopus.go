@@ -34,13 +34,13 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region          string
-		Tariff          string // DEPRECATED: use ProductCode
-		ProductCode     string
-		DirectDebit     bool
-		ApiKey          string
-		AccountNumber   string
-		TariffDirection string
+		Region        string
+		Tariff        string // DEPRECATED: use ProductCode
+		ProductCode   string
+		DirectDebit   bool
+		ApiKey        string
+		AccountNumber string
+		TariffType    string
 	}
 
 	logger := util.NewLogger("octopus")
@@ -62,7 +62,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
 		}
-		if cc.TariffDirection != string(octoGql.TariffDirectionImport) {
+		if cc.TariffType != string(octoGql.TariffDirectionImport) {
 			// Throw a WARN if it appears the user has set the key when it's not necessary to do so
 			logger.WARN.Print("The 'tariffType' key is ignored when using product code")
 		}
@@ -81,11 +81,16 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		paymentMethod = octoRest.RatePaymentMethodNotDirectDebit
 	}
 
-	tariffDirection := octoGql.TariffDirectionImport
+	var tariffDirection octoGql.TariffDirection
 	// Opting not to do this with an enum lookup - it would be a bit overkill.
-	// instead just do a string cast
-	if cc.TariffDirection == string(octoGql.TariffDirectionExport) {
+	// instead just do string cast
+	switch cc.TariffType {
+	case string(octoGql.TariffDirectionImport):
+		tariffDirection = octoGql.TariffDirectionImport
+	case string(octoGql.TariffDirectionExport):
 		tariffDirection = octoGql.TariffDirectionExport
+	default:
+		return nil, errors.New("invalid tariff type")
 	}
 
 	t := &Octopus{
