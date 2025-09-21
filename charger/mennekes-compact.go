@@ -286,7 +286,7 @@ func (wb *MennekesCompact) phases1p3p(phases int) error {
 		u = 1
 	}
 
-	return mustDisable(wb, func() error {
+	return whenDisabled(wb, func() error {
 		_, err := wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, u)
 		return err
 	})
