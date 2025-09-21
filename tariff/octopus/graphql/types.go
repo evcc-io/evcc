@@ -38,6 +38,11 @@ func (d *tariffData) TariffCode() string {
 	return d.standardTariff.TariffCode
 }
 
+// IsExport is a shortcut function for determining whether the given tariff is for export, regardless of tariff type.
+func (d *tariffData) IsExport() bool {
+	return d.standardTariff.IsExport
+}
+
 type tariffType struct {
 	Id                   string
 	DisplayName          string
@@ -45,6 +50,9 @@ type tariffType struct {
 	ProductCode          string
 	StandingCharge       float32
 	PreVatStandingCharge float32
+	IsExport             bool
+	// UnitRate             float32
+	// UnitRateEpgApplied   bool
 }
 
 type tariffTypeWithTariffCode struct {
