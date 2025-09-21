@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 )
@@ -161,4 +163,19 @@ func (lp *Loadpoint) getChargerPhysicalPhases() int {
 func (lp *Loadpoint) hasPhaseSwitching() bool {
 	_, ok := lp.charger.(api.PhaseSwitcher)
 	return ok
+}
+
+// checkChargerPhaseReconfiguration checks for charger-internal phase reconfiguration
+// and updates the phase configuration if necessary
+func (lp *Loadpoint) checkChargerPhaseReconfiguration() {
+	if pg, ok := lp.charger.(api.PhaseGetter); ok {
+		if chargerPhases, err := pg.GetPhases(); err == nil {
+			if chargerPhases > 0 && chargerPhases != lp.GetPhases() {
+				lp.log.INFO.Printf("detected charger phase reconfiguration: %dp -> %dp", lp.GetPhases(), chargerPhases)
+				lp.SetPhases(chargerPhases)
+			}
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charger get phases: %v", err)
+		}
+	}
 }
