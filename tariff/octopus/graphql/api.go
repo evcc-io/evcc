@@ -3,6 +3,7 @@ package graphql
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -174,7 +175,7 @@ func (c *OctopusGraphQLClient) TariffCode(direction TariffDirection) (string, er
 	}
 
 	if tariffCode == "" {
-		return "", errors.New("no appropriate electricity agreement found")
+		return "", errors.New(fmt.Sprint("no electricity agreement found of type", direction))
 	}
 
 	c.log.TRACE.Println("GraphQL: tariff code found:", tariffCode)
