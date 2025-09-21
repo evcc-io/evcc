@@ -682,3 +682,13 @@ input::-webkit-date-and-time-value {
 		text-overflow: ellipsis;
 	}
 }
+
+.textarea--tiny {
+	font-size: 8px;
+}
+
+@media (min-width: 576px) {
+	.textarea--tiny {
+		font-size: 0.875em;
+	}
+}
