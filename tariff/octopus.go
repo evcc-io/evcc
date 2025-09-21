@@ -22,6 +22,7 @@ type Octopus struct {
 	apikey        string
 	accountnumber string
 	paymentMethod string
+	export        bool
 	data          *util.Monitor[api.Rates]
 }
 
@@ -39,6 +40,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		DirectDebit   bool
 		ApiKey        string
 		AccountNumber string
+		Export        bool
 	}
 
 	logger := util.NewLogger("octopus")
@@ -59,6 +61,9 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}
 		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
+		}
+		if cc.Export {
+			logger.WARN.Print("The 'export' key is ignored when using product code")
 		}
 	} else {
 		// ApiKey validators
@@ -81,6 +86,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		apikey:        cc.ApiKey,
 		accountnumber: cc.AccountNumber,
 		paymentMethod: paymentMethod,
+		export:        cc.Export,
 		data:          util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -101,7 +107,7 @@ func (t *Octopus) run(done chan error) {
 			t.log.ERROR.Println(err)
 			return
 		}
-		tariffCode, err := gqlCli.TariffCode()
+		tariffCode, err := gqlCli.TariffCode(t.export)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

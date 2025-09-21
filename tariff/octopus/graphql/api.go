@@ -131,8 +131,9 @@ func (c *OctopusGraphQLClient) AccountNumber() (accountNumber string, err error)
 	return c.accountNumber, nil
 }
 
-// TariffCode queries the Tariff Code of the first IMPORT Electricity Agreement active on the account.
-func (c *OctopusGraphQLClient) TariffCode() (string, error) {
+// TariffCode queries the Tariff Code of the first valid Electricity Agreement active on the account.
+// If export is set to false, return the first IMPORT tariff. If true, return the first EXPORT tariff.
+func (c *OctopusGraphQLClient) TariffCode(export bool) (string, error) {
 	// Update refresh token (if necessary)
 	if err := c.refreshToken(); err != nil {
 		return "", err
@@ -162,11 +163,11 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	//
 	//}
 
-	// Filter out any export tariffs; select the first import tariff.
+	// Filter out any inappropriate tariffs; select the first tariff that aligns with our configuration.
 	var tariffCode string
 	for _, agreement := range q.Account.ElectricityAgreements {
-		if agreement.Tariff.IsExport() {
-			c.log.TRACE.Println("GraphQL: filtering export tariff", agreement.Tariff.TariffCode())
+		if agreement.Tariff.IsExport() != export {
+			c.log.TRACE.Println("GraphQL: filtering tariff with incorrect import/export type:", agreement.Tariff.TariffCode())
 			continue
 		}
 		tariffCode = agreement.Tariff.TariffCode()
