@@ -57,11 +57,11 @@ func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, essType, cc.batteryPowerLimits)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits, essType)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, essType lgpcs.Model, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, essType lgpcs.Model) (api.Meter, error) {
 	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
 	if err != nil {
 		return nil, err
