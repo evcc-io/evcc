@@ -2,8 +2,8 @@ template: vehicle-api
 group: generic
 products:
   - description:
-      de: Steuerung über Fahrzeug-API
-      en: Charge using vehicle API
+      de: Fahrzeug-API Ladesteuerung
+      en: Vehicle API-only charger
 requirements:
   description:
     en: |
