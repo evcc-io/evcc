@@ -1,0 +1,158 @@
+# open evcc at http://evcc.local:7070
+network:
+  schema: http
+  host: evcc.local # .local suffix announces the hostname on MDNS
+  port: 7070
+
+log: debug
+levels:
+  cache: error
+
+# unique installation id
+#plant: c87d99735c1f49513d41db22a391253b73faa86cbc270a67ab7542cf7d737ec6
+
+database:
+  type: sqlite
+  dsn: /var/lib/evcc/evcc.db
+
+interval: 30s # control cycle interval
+
+#sponsortoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJldmNjLmlvIiwic3ViIjoiZjFuY2g4NyIsImV4cCI6MTgzNzAwNDQwMCwiaWF0IjoxNzQyMzk2NDAwLCJzcmMiOiJnaCJ9.d4SAPZAP7GoVcsc1QIQGNzwMj-a501l-SyCHZ6xkeA0
+mqtt:
+  broker: 192.168.1.51:1883
+  topic: growatt
+  user: pmqtt
+  password: Quoka123#
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.2729 # EUR/kWh
+
+  feedin:
+    type: fixed
+    price: 0.07
+
+telemetry: false
+
+meters:
+- name: tasmota
+  type: template
+  template: tasmota-sml
+  usage: grid
+  host: 192.168.1.191
+
+- name: pv_huawei
+  type: template
+  template: huawei-dongle-powersensor
+  id: 1
+  host: 192.168.1.30
+  port: 502
+  usage: pv
+  storageunit: 1
+  modbus: tcpip
+  timeout: 15s
+
+- name: battery_huawei
+  type: template
+  template: huawei-dongle-powersensor
+  id: 1
+  host: 192.168.1.30
+  port: 502
+  usage: battery
+  storageunit: 1
+  modbus: tcpip
+  timeout: 15s
+
+chargers:
+- name: schneider_wallbox
+  type: template
+  template: schneider-evlink-v3
+  id: 255
+  host: 192.168.1.83
+  port: 502
+  modbus: tcpip
+
+- name: avalon_1241
+  type: template
+  template: avalonq
+  host: 192.168.1.130  # Ihre Miner IP
+  title: "AvalonMiner 1241"
+    
+- name: avalon_1246
+  type: template
+  template: avalonq
+  host: 192.168.1.131  # Ihre Miner IP
+  title: "AvalonMiner 1246"
+    
+- name: avalon_1066
+  type: template
+  template: avalonq
+  host: 192.168.1.132  # Ihre Miner IP
+  title: "AvalonMiner 1066"
+
+vehicles:
+- name: MG4
+  type: template
+  template: mg
+  user: s.gerwald@googlemail.com
+  password: Quoka123
+  vin: LSJWH4090PN201241
+  title: MG4
+  capacity: 64
+  icon: car
+  phases: 1
+  mode: pv
+  minCurrent: 6
+  maxCurrent: 32
+  #identifiers: # Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle (optional)
+  #priority: # Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie (optional)
+  cache: 15m
+  region: EU
+
+- name: generic_vehicle
+  type: template
+  template: offline
+  title: "Mining Load"
+  capacity: 100
+
+loadpoints:
+- title: Hoftor
+  charger: schneider_wallbox
+  mode: pv
+
+- title: "AvalonMiner 1241"
+  charger: avalon_1241
+  vehicle: generic_vehicle
+  mode: pv
+  phases: 1
+  mincurrent: 6
+  maxcurrent: 16
+    
+- title: "AvalonMiner 1246" 
+  charger: avalon_1246
+  vehicle: generic_vehicle
+  mode: pv
+  phases: 1
+  mincurrent: 6
+  maxcurrent: 16
+    
+- title: "AvalonMiner 1066"
+  charger: avalon_1066  
+  vehicle: generic_vehicle
+  mode: pv
+  phases: 1
+  mincurrent: 6
+  maxcurrent: 16
+
+site:
+  title: Home Gerwald
+  meters:
+    grid: tasmota
+    pv:
+    - pv_huawei
+    - pv_growatt
+    battery:
+    - battery_huawei
+  residualPower: 100
