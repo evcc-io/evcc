@@ -23,6 +23,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -433,20 +434,13 @@ func (wb *Kathrein) Identify() (string, error) {
 		return "", err
 	}
 
-	rfid := string(b)
-	i := bytes.IndexByte(b, 0)
+	rfid := string(bytes.TrimRight(b, "\x00"))
 
-	if i != -1 {
-		rfid = string(b[:i])
+	if strings.HasPrefix(rfid, "RFID:") {
+		return rfid[5:], nil
 	}
 
-	// "VOID" case
-	if len(rfid) < 6 {
-		return rfid, nil
-	}
-
-	// Remove prefix "RFID:"
-	return rfid[5:], nil
+	return rfid, nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)
