@@ -155,7 +155,9 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Übernehmen & schließen",
       "cancel": "Abbrechen",
+      "close": "Schließen",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
@@ -169,6 +171,7 @@
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
+      "required": "erforderlich",
       "save": "Speichern",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
@@ -434,17 +437,17 @@
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
-      "description": "evcc verfügt über eine Integration für den SMA Sunny Home Manager 2.0. Bei Betrieb im selben Netzwerk sollte deine Sunny Home Manager-Oberfläche dich auffordern, evcc hinzuzufügen. Es sind keine weiteren Anpassungen erforderlich.",
+      "description": "evcc ist mit einer Integration für den SMA Sunny Home Manager (SHM) mittels SEMP-Protokoll ausgestattet. Wenn dieser im selben Netzwerk läuft, sollte dir nach der Anmeldung in deinem Sunny Portal-Konto automatisch angeboten werden, alle in evcc konfigurierten Ladepunkte als neu erkannte Verbraucher hinzuzufügen. Alles sollte sofort einsatzbereit sein, ohne dass hier weitere Anpassungen erforderlich sind.",
       "descriptionDeviceId": "12-stelliger HEX-String. Präfix für alle Geräte (Ladepunkt, ..).",
       "descriptionIdPattern": "Kennungsmuster",
-      "descriptionIds": "Im Sunny Home Manager benötigt jedes Gerät (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, können sich diese Kennungen ändern. Um den Verlauf beizubehalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL, um deine aktuellen Kennungen zu überprüfen.",
+      "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
       "descriptionSempUrl": "SEMP-URL",
-      "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten.",
-      "labelAllowControl": "Globale Leistungsbegrenzungsanfragen von SHM akzeptieren.",
+      "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
+      "labelAllowControl": "Zusätzlich Leistungsbegrenzungsempfehlungen vom SHM akzeptieren.",
       "labelControl": "Steuerung erlauben",
       "labelDeviceId": "Geräte-ID",
       "labelVendorId": "Hersteller-ID",
-      "title": "SMA Sunny Home Manager 2.0"
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Token eingeben",
@@ -676,6 +679,57 @@
     "restartButton": "Neu starten",
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
+  },
+  "issue": {
+    "additional": {
+      "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
+      "include": "einbeziehen",
+      "lines": "Zeilen",
+      "logs": "Logs",
+      "logsDescription": "Aktuelle Log-Einträge, die bei der Identifizierung des Problems helfen können.",
+      "showDetails": "Details anzeigen",
+      "source": "Quelle",
+      "state": "Zustand",
+      "stateDescription": "Kompletter Laufzeitzustand inklusive Ladepunkt-, Geräte- und Energieinformationen. Nur auf Nachfrage hinzufügen.",
+      "title": "Zusätzliche Informationen",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationseinstellungen, die über die Web-Oberfläche vorgenommen wurden.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Deine komplette Konfigurationsdatei."
+    },
+    "additionalContext": "Zusätzlicher Kontext",
+    "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
+    "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "helpType": {
+      "discussion": "Brauche Hilfe bei meiner Einrichtung",
+      "discussionDescription": "Community-Diskussionen bieten Antworten.",
+      "issue": "Habe einen Fehler gefunden",
+      "issueDescription": "Ich bin sicher, dass etwas kaputt ist und repariert werden muss.",
+      "title": "Um welches Problem geht es?"
+    },
+    "issueDescription": "Beschreibung",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Schritte zur Reproduktion",
+    "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleIssue": "Beschreibe das Problem",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub Diskussion starten",
+      "confirmationButtonIssue": "GitHub Issue erstellen",
+      "copied": "Kopiert!",
+      "copyButton": "Zusätzliche Informationen kopieren",
+      "instructions": "Aufgrund von GitHubs URL-Größenbeschränkungen ist dies ein zweistufiger Prozess:",
+      "singleStepDescription": "Klicke den Button unten, um GitHub mit einem vorausgefüllten Formular mit deinen Problemdetails zu öffnen. Sensible Daten wurden automatisch entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "step1Description": "Klicke den Button unten, um einen grundlegenden GitHub-Eintrag mit Titel, Beschreibung und Details zu erstellen.",
+      "step2Description": "Nach der Erstellung des Eintrags, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Formular einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "stepOneDiscussion": "Schritt 1: Basis-Diskussion erstellen",
+      "stepOneIssue": "Schritt 1: Basis-Issue erstellen",
+      "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
+      "title": "GitHub Problem-Zusammenfassung"
+    },
+    "title": "Problem melden",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Nach Bereich filtern",

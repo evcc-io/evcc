@@ -81,3 +81,25 @@ func verifyEnabled(c api.Charger, enabled bool) (bool, error) {
 	// always treat charging as enabled
 	return status == api.StatusC, err
 }
+
+// whenDisabled disables charger before executing fun()
+func whenDisabled(wb api.Charger, fun func() error) error {
+	enabled, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	if !enabled {
+		return fun()
+	}
+
+	if err := wb.Enable(false); err != nil {
+		return err
+	}
+
+	if err := fun(); err != nil {
+		return err
+	}
+
+	return wb.Enable(true)
+}
