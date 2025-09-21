@@ -246,17 +246,11 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 		u = 1
 	}
 
-	if wb.enabled {
-		if err := wb.Enable(false); err != nil {
-			return err
-		}
-		defer wb.Enable(true)
-	}
-
-	// Switch phases
-	_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
-
-	return err
+	return whenDisabled(wb, func() error {
+		// Switch phases
+		_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
+		return err
+	})
 }
 
 var _ api.PhaseGetter = (*Sungrow)(nil)
