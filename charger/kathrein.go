@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -427,12 +428,25 @@ func (wb *Kathrein) Identify() (string, error) {
 		return "", nil
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 16)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 24)
 	if err != nil {
 		return "", err
 	}
 
-	return string(b), nil
+	rfid := string(b)
+	i := bytes.IndexByte(b, 0)
+
+	if i != -1 {
+		rfid = string(b[:i])
+	}
+
+	// "VOID" case
+	if len(rfid) < 6 {
+		return rfid, nil
+	}
+
+	// Remove prefix "RFID:"
+	return rfid[5:], nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)
