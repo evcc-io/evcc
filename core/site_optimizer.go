@@ -103,7 +103,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	req := evopt.OptimizationInput{
 		Strategy: evopt.OptimizerStrategy{
-			ChargingStrategy: evopt.ChargeBeforeExport, // AttenuateGridPeaks
+			ChargingStrategy:    evopt.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
+			DischargingStrategy: evopt.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
 		EtaD: eta,
@@ -129,6 +130,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			continue
 		}
 
+		v := lp.GetVehicle()
+		if v == nil || v.Capacity() == 0 {
+			continue
+		}
+
 		bat := evopt.BatteryConfig{
 			ChargeFromGrid: true,
 			CMin:           float32(lp.EffectiveMinPower()),
@@ -147,32 +153,31 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Title: lp.GetTitle(),
 		}
 
-		if v := lp.GetVehicle(); v != nil {
-			limit := v.Capacity() * 1e3 // Wh
-			if v := lp.EffectiveLimitSoc(); v > 0 {
-				limit *= float64(v) / 100
-			} else if v := lp.GetLimitEnergy(); v > 0 {
-				limit = v * 1e3
+		// vehicle
+		maxSoc := v.Capacity() * 1e3 // Wh
+		if v := lp.EffectiveLimitSoc(); v > 0 {
+			maxSoc *= float64(v) / 100
+		} else if v := lp.GetLimitEnergy(); v > 0 {
+			maxSoc = v * 1e3
+		}
+
+		bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
+		bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
+
+		detail.Type = batteryTypeVehicle
+		detail.Capacity = v.Capacity()
+
+		if vt := v.GetTitle(); vt != "" {
+			if detail.Title != "" {
+				detail.Title += " – "
 			}
+			detail.Title += vt
+		}
 
-			bat.SMax = float32(limit)
-			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
-
-			detail.Type = batteryTypeVehicle
-			detail.Capacity = v.Capacity()
-
-			if vt := v.GetTitle(); vt != "" {
-				if detail.Title != "" {
-					detail.Title += " – "
-				}
-				detail.Title += vt
-			}
-
-			// find vehicle name/id
-			for _, dev := range config.Vehicles().Devices() {
-				if dev.Instance() == v {
-					detail.Name = dev.Config().Name
-				}
+		// find vehicle name/id
+		for _, dev := range config.Vehicles().Devices() {
+			if dev.Instance() == v {
+				detail.Name = dev.Config().Name
 			}
 		}
 
