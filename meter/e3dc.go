@@ -33,8 +33,8 @@ func init() {
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity    `mapstructure:",squash"`
-		pvMaxACPower       `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
+		pvMaxACPower       `mapstructure:",squash"`
 		Usage              templates.Usage
 		Uri                string
 		User               string
