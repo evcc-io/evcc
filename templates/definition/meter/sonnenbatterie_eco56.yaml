@@ -20,11 +20,11 @@ params:
     default: 7979
   - name: capacity
     advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
   - name: cache
     advanced: true
     default: 5s
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}

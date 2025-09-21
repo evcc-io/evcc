@@ -22,8 +22,6 @@ params:
     type: int
     default: 97
     advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
   - name: cache
     advanced: true
     default: 30s
@@ -36,6 +34,8 @@ params:
       de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
       en: Query external power of all devices connected to S0
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
     usages: ["pv"]
 render: |
   type: rct
