@@ -1,0 +1,44 @@
+template: avalonq
+products:
+  - brand: Canaan
+    description:
+      generic: Avalon Q Series Bitcoin Miner
+required:
+  - host
+properties:
+  - name: host
+    description:
+      en: AvalonQ Miner IP address
+      de: AvalonQ Miner IP-Adresse
+    example: "192.168.1.100"
+    required: true
+  - name: port
+    description:
+      en: API port (default 4028)
+      de: API Port (Standard 4028)  
+    example: "4028"
+    default: "4028"
+  - name: username
+    description:
+      en: Web interface username (default admin)
+      de: Web-Interface Benutzername (Standard admin)
+    example: "admin"
+    default: "admin"
+  - name: password
+    description:
+      en: Web interface password (default admin)
+      de: Web-Interface Passwort (Standard admin)
+    example: "admin"
+    default: "admin"
+render: |
+  type: avalonq
+  host: {{ .host }}
+  {{- if .port }}
+  port: {{ .port }}
+  {{- end }}
+  {{- if .username }}
+  username: {{ .username }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
