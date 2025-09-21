@@ -1,309 +1,215 @@
 package charger
 
 import (
+    "context"
+    "encoding/json"
     "fmt"
-    "net"
-    "strconv"
-    "strings"
+    "net/http"
     "time"
 
     "github.com/evcc-io/evcc/api"
     "github.com/evcc-io/evcc/util"
+    "github.com/evcc-io/evcc/util/request"
 )
 
 // AvalonQ charger implementation
 type AvalonQ struct {
-    host     string
-    port     string
-    username string
-    password string
+    *request.Helper
+    uri      string
+    workmode string
+    power    map[string]float64
+}
+
+// AvalonQ API response structures
+type AvalonQStatus struct {
+    WorkMode string  `json:"work_mode"`
+    Power    float64 `json:"power_consumption"`
+    Enabled  bool    `json:"enabled"`
+}
+
+type AvalonQResponse struct {
+    Success bool          `json:"success"`
+    Data    AvalonQStatus `json:"data"`
 }
 
 func init() {
     registry.Add("avalonq", NewAvalonQFromConfig)
 }
 
-// NewAvalonQFromConfig creates a new AvalonQ charger from generic config
+// NewAvalonQFromConfig creates a AvalonQ charger from generic config
 func NewAvalonQFromConfig(other map[string]interface{}) (api.Charger, error) {
     cc := struct {
-        Host     string
-        Port     string
-        Username string
-        Password string
-    }{
-        Port:     "4028",
-        Username: "admin",
-        Password: "admin",
-    }
+        URI string `mapstructure:"uri"`
+    }{}
 
     if err := util.DecodeOther(other, &cc); err != nil {
         return nil, err
     }
 
-    return NewAvalonQ(cc.Host, cc.Port, cc.Username, cc.Password)
+    return NewAvalonQ(cc.URI)
 }
 
 // NewAvalonQ creates AvalonQ charger
-func NewAvalonQ(host, port, username, password string) (api.Charger, error) {
-    if port == "" {
-        port = "4028"
-    }
-    if username == "" {
-        username = "admin"
-    }
-    if password == "" {
-        password = "admin"
-    }
-
+func NewAvalonQ(uri string) (api.Charger, error) {
     c := &AvalonQ{
-        host:     host,
-        port:     port,
-        username: username,
-        password: password,
+        Helper: request.NewHelper(util.NewLogger("avalonq")),
+        uri:    util.DefaultScheme(uri, "http"),
+        power: map[string]float64{
+            "eco":         800.0,
+            "standard":    1300.0,
+            "performance": 1700.0,
+        },
     }
 
     return c, nil
 }
 
-// sendCommand sends a command to the miner via TCP
-func (c *AvalonQ) sendCommand(command string) (string, error) {
-    address := net.JoinHostPort(c.host, c.port)
-    
-    conn, err := net.DialTimeout("tcp", address, 10*time.Second)
-    if err != nil {
-        return "", fmt.Errorf("failed to connect to miner: %v", err)
-    }
-    defer conn.Close()
-
-    // Send command
-    _, err = conn.Write([]byte(command))
-    if err != nil {
-        return "", fmt.Errorf("failed to send command: %v", err)
-    }
-
-    // Read response
-    buffer := make([]byte, 8192)
-    conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-    n, err := conn.Read(buffer)
-    if err != nil {
-        return "", fmt.Errorf("failed to read response: %v", err)
-    }
-
-    return string(buffer[:n]), nil
-}
-
-// parseResponse parses the miner response format
-func (c *AvalonQ) parseResponse(response string) map[string]string {
-    result := make(map[string]string)
-    
-    // Split by | and ,
-    parts := strings.Split(response, "|")
-    for _, part := range parts {
-        fields := strings.Split(part, ",")
-        for _, field := range fields {
-            if kv := strings.SplitN(field, "=", 2); len(kv) == 2 {
-                result[kv[0]] = kv[1]
-            }
-        }
-    }
-    
-    return result
-}
-
 // Status implements the api.Charger interface
 func (c *AvalonQ) Status() (api.ChargeStatus, error) {
-    response, err := c.sendCommand("summary")
+    status, err := c.getStatus()
     if err != nil {
         return api.StatusNone, err
     }
 
-    data := c.parseResponse(response)
-    
-    // Check if miner is actively mining
-    if mhsAv, exists := data["MHS av"]; exists {
-        if hashrate, err := strconv.ParseFloat(mhsAv, 64); err == nil && hashrate > 1000 {
-            return api.StatusC, nil // Mining actively (equivalent to charging)
-        }
+    if !status.Enabled {
+        return api.StatusA, nil // Not charging
     }
 
-    // Check if miner is connected but not mining much
-    if elapsed, exists := data["Elapsed"]; exists {
-        if elapsedTime, err := strconv.Atoi(elapsed); err == nil && elapsedTime > 0 {
-            return api.StatusB, nil // Connected but low/no mining
-        }
-    }
-
-    return api.StatusA, nil // Not connected or error
+    return api.StatusC, nil // Charging
 }
 
 // Enabled implements the api.Charger interface
 func (c *AvalonQ) Enabled() (bool, error) {
-    response, err := c.sendCommand("summary")
+    status, err := c.getStatus()
     if err != nil {
         return false, err
     }
 
-    data := c.parseResponse(response)
-    
-    // Check if mining is active (hashrate > threshold)
-    if mhsAv, exists := data["MHS av"]; exists {
-        if hashrate, err := strconv.ParseFloat(mhsAv, 64); err == nil {
-            return hashrate > 100, nil // Consider enabled if hashrate > 100 MH/s
-        }
-    }
-
-    return false, nil
+    return status.Enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *AvalonQ) Enable(enable bool) error {
+    var workmode string
     if enable {
-        // Wake up miner - set softon for immediate activation
-        timestamp := time.Now().Unix()
-        command := fmt.Sprintf("ascset|0,softon,1:%d", timestamp)
-        
-        _, err := c.sendCommand(command)
-        if err != nil {
-            return fmt.Errorf("failed to enable mining: %v", err)
+        if c.workmode == "" {
+            workmode = "standard" // Default workmode
+        } else {
+            workmode = c.workmode
         }
-        
-        // Optional: Also reboot to ensure clean start
-        time.Sleep(2 * time.Second)
-        _, err = c.sendCommand("ascset|0,reboot,0")
-        return err
-        
     } else {
-        // Put miner in standby - set softoff for immediate standby
-        timestamp := time.Now().Unix()
-        command := fmt.Sprintf("ascset|0,softoff,1:%d", timestamp)
-        
-        _, err := c.sendCommand(command)
-        if err != nil {
-            return fmt.Errorf("failed to disable mining: %v", err)
-        }
-        return nil
+        workmode = "off"
     }
+
+    return c.setWorkMode(workmode)
 }
 
 // MaxCurrent implements the api.Charger interface
-// Maps current to fan speed (power control proxy)
-func (c *AvalonQ) MaxCurrent(current int64) error {
-    // Map current (6-32A) to fan speed (15-100%)
-    // Higher current = more power = higher fan speed
-    var fanSpeed int64
-    
-    if current <= 0 {
-        fanSpeed = -1 // Auto fan control
-    } else if current <= 6 {
-        fanSpeed = 15 // Minimum fan speed
-    } else if current >= 32 {
-        fanSpeed = 100 // Maximum fan speed
-    } else {
-        // Linear mapping: 6A->15%, 32A->100%
-        fanSpeed = 15 + (current-6)*(100-15)/(32-6)
-    }
-
-    command := fmt.Sprintf("ascset|0,fan-spd,%d", fanSpeed)
-    
-    _, err := c.sendCommand(command)
-    if err != nil {
-        return fmt.Errorf("failed to set fan speed: %v", err)
-    }
-
-    return nil
-}
-
-// Additional mining-specific methods
-
-// GetHashrate returns current hashrate in MH/s
-func (c *AvalonQ) GetHashrate() (float64, error) {
-    response, err := c.sendCommand("summary")
+func (c *AvalonQ) MaxCurrent() (int64, error) {
+    status, err := c.getStatus()
     if err != nil {
         return 0, err
     }
 
-    data := c.parseResponse(response)
-    
-    if mhsAv, exists := data["MHS av"]; exists {
-        return strconv.ParseFloat(mhsAv, 64)
+    // Convert workmode to "current" level (1-3)
+    switch status.WorkMode {
+    case "eco":
+        return 1, nil
+    case "standard":
+        return 2, nil
+    case "performance":
+        return 3, nil
+    default:
+        return 0, nil
     }
-
-    return 0, fmt.Errorf("hashrate not found in response")
 }
 
-// GetTemperature returns average temperature
-func (c *AvalonQ) GetTemperature() (float64, error) {
-    response, err := c.sendCommand("estats")
+// SetMaxCurrent implements the api.Charger interface
+func (c *AvalonQ) SetMaxCurrent(current int64) error {
+    var workmode string
+
+    switch current {
+    case 0:
+        workmode = "off"
+    case 1:
+        workmode = "eco"
+    case 2:
+        workmode = "standard"
+    case 3:
+        workmode = "performance"
+    default:
+        workmode = "standard"
+    }
+
+    c.workmode = workmode
+    return c.setWorkMode(workmode)
+}
+
+// ChargePower implements the api.Meter interface
+func (c *AvalonQ) ChargePower() (float64, error) {
+    status, err := c.getStatus()
     if err != nil {
         return 0, err
     }
 
-    data := c.parseResponse(response)
-    
-    if tAvg, exists := data["TAvg"]; exists {
-        return strconv.ParseFloat(tAvg, 64)
+    if !status.Enabled {
+        return 0, nil
     }
 
-    return 0, fmt.Errorf("temperature not found in response")
+    return status.Power, nil
 }
 
-// GetVersion returns miner version info
-func (c *AvalonQ) GetVersion() (string, error) {
-    response, err := c.sendCommand("version")
-    if err != nil {
-        return "", err
-    }
-
-    data := c.parseResponse(response)
+// getStatus retrieves miner status from API
+func (c *AvalonQ) getStatus() (AvalonQStatus, error) {
+    var status AvalonQResponse
     
-    if version, exists := data["CGMiner"]; exists {
-        if model, exists := data["MODEL"]; exists {
-            return fmt.Sprintf("%s %s", model, version), nil
-        }
-        return version, nil
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.uri+"/api/v1/status", nil)
+    if err != nil {
+        return AvalonQStatus{}, err
     }
 
-    return "", fmt.Errorf("version not found in response")
+    resp, err := c.DoJSON(req, &status)
+    if err != nil {
+        return AvalonQStatus{}, err
+    }
+
+    if resp.StatusCode != http.StatusOK || !status.Success {
+        return AvalonQStatus{}, fmt.Errorf("api error: status %d", resp.StatusCode)
+    }
+
+    return status.Data, nil
 }
 
-// SetWorkMode sets the work mode (0-2)
-func (c *AvalonQ) SetWorkMode(mode int) error {
-    if mode < 0 || mode > 2 {
-        return fmt.Errorf("invalid work mode: %d (must be 0-2)", mode)
-    }
+// setWorkMode sets miner work mode via API
+func (c *AvalonQ) setWorkMode(mode string) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-    command := fmt.Sprintf("ascset|0,workmode,set,%d", mode)
-    
-    _, err := c.sendCommand(command)
+    data := map[string]string{"work_mode": mode}
+    jsonData, err := json.Marshal(data)
     if err != nil {
-        return fmt.Errorf("failed to set work mode: %v", err)
+        return err
     }
 
-    return nil
-}
-
-// SetPool configures mining pool
-func (c *AvalonQ) SetPool(poolNum int, poolAddr, worker, workerPass string) error {
-    if poolNum < 0 || poolNum > 2 {
-        return fmt.Errorf("invalid pool number: %d (must be 0-2)", poolNum)
-    }
-
-    command := fmt.Sprintf("setpool|%s,%s,%d,%s,%s,%s", 
-        c.username, c.password, poolNum, poolAddr, worker, workerPass)
-    
-    _, err := c.sendCommand(command)
+    req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.uri+"/api/v1/workmode", 
+        bytes.NewBuffer(jsonData))
     if err != nil {
-        return fmt.Errorf("failed to set pool: %v", err)
+        return err
     }
+    req.Header.Set("Content-Type", "application/json")
 
-    return nil
-}
-
-// Reboot reboots the miner
-func (c *AvalonQ) Reboot() error {
-    _, err := c.sendCommand("ascset|0,reboot,0")
+    var response AvalonQResponse
+    resp, err := c.DoJSON(req, &response)
     if err != nil {
-        return fmt.Errorf("failed to reboot miner: %v", err)
+        return err
     }
+
+    if resp.StatusCode != http.StatusOK || !response.Success {
+        return fmt.Errorf("failed to set workmode: status %d", resp.StatusCode)
+    }
+
     return nil
 }
