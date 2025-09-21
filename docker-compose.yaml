@@ -1,0 +1,37 @@
+services:
+  evcc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: evcc-avalonq
+    restart: unless-stopped
+    ports:
+      - "7070:7070"
+    volumes:
+      - ./evcc.yaml:/app/evcc.yaml
+      - evcc-data:/app/data
+    environment:
+      - TZ=Europe/Berlin
+    networks:
+      - evcc-network
+
+  # Optional: Monitoring
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - evcc-network
+
+volumes:
+  evcc-data:
+  portainer-data:
+
+networks:
+  evcc-network:
+    driver: bridge
