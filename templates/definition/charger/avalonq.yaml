@@ -1,0 +1,33 @@
+template: avalonq
+products:
+  - brand: Canaan
+    description:
+      en: AvalonMiner with workmode control
+      de: AvalonMiner mit Workmode-Steuerung
+group: mining
+requirements:
+  evcc: ["0.124"]
+params:
+  - name: host
+    description:
+      en: Hostname or IP address
+      de: Hostname oder IP-Adresse
+    help:
+      en: Hostname or IP address of the miner
+      de: Hostname oder IP-Adresse des Miners
+    required: true
+    example: 192.168.1.130
+  - name: port
+    description:
+      en: Port (optional)
+      de: Port (optional)
+    default: 80
+  - name: timeout
+    description:
+      en: Timeout (optional)
+      de: Timeout (optional)
+    default: 10s
+render: |
+  type: avalonq
+  uri: http://{{ .host }}{{ if ne .port 80 }}:{{ .port }}{{ end }}
+  timeout: {{ .timeout }}
