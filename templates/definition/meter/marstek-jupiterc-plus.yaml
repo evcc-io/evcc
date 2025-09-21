@@ -12,9 +12,6 @@ params:
     comset: 8N1
   - name: capacity
     default: 2.56
-    help:
-      de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
-      en: Base unit 2.56 kWh, each extension plus 2.56 kWh
   - name: maxacpower
     default: 800 # W
 render: |
