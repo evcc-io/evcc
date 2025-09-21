@@ -155,7 +155,9 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Apply & close",
       "cancel": "Cancel",
+      "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
@@ -169,6 +171,7 @@
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
+      "required": "required",
       "save": "Save",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
@@ -660,7 +663,7 @@
   "help": {
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
-    "issueButton": "Report a bug",
+    "issueButton": "Report a problem",
     "issueDescription": "Found a strange or wrong behavior?",
     "logsButton": "View logs",
     "logsDescription": "Check the logs for errors.",
@@ -676,6 +679,57 @@
     "restartButton": "Restart",
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
+  },
+  "issue": {
+    "additional": {
+      "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
+      "include": "include",
+      "lines": "lines",
+      "logs": "Logs",
+      "logsDescription": "Recent log entries that may help identify the issue.",
+      "showDetails": "show details",
+      "source": "Source",
+      "state": "State",
+      "stateDescription": "Complete runtime state including charging point, device, and energy information. Include only if requested.",
+      "title": "Additional Information",
+      "uiConfig": "Configuration (UI)",
+      "uiConfigDescription": "Configuration settings made through the web interface.",
+      "yamlConfig": "Configuration (YAML)",
+      "yamlConfigDescription": "Your complete configuration file."
+    },
+    "additionalContext": "Additional context",
+    "additionalContextPlaceholder": "Any additional information that might be helpful...\n- Configuration details\n- What you tried\n- Environment details",
+    "createButtonDiscussion": "Start GitHub Discussion...",
+    "createButtonIssue": "Create GitHub Issue...",
+    "description": "Your installation is not working as expected? Use this page to get help or report issues. Provide enough detail to help us understand and reproduce the problem, while keeping your description concise, clear and easy to follow.",
+    "helpType": {
+      "discussion": "Need help with my setup",
+      "discussionDescription": "Community discussions provide answers.",
+      "issue": "Found a bug",
+      "issueDescription": "I'm certain something is broken and needs to be fixed.",
+      "title": "What problem are we talking about?"
+    },
+    "issueDescription": "Description",
+    "issueTitle": "Title",
+    "stepsToReproduce": "Steps to reproduce",
+    "subTitleDiscussion": "Describe your problem",
+    "subTitleIssue": "Describe the issue",
+    "summary": {
+      "confirmationButtonDiscussion": "Start GitHub Discussion",
+      "confirmationButtonIssue": "Create GitHub Issue",
+      "copied": "Copied!",
+      "copyButton": "Copy additional information",
+      "instructions": "Due to GitHub's URL size limitations, this is a two-step process:",
+      "singleStepDescription": "Click the button below to open GitHub with a pre-filled form containing your problem details. Sensitive data has been automatically redacted, but please double-check before sharing.",
+      "step1Description": "Click the button below to create a basic GitHub entry with your title, description, and details.",
+      "step2Description": "After creating the entry, return here to copy the additional information below and paste it into your GitHub form. Sensitive data has been redacted, but please double-check before sharing.",
+      "stepOneDiscussion": "Step 1: Create basic discussion",
+      "stepOneIssue": "Step 1: Create basic issue",
+      "stepTwo": "Step 2: Copy additional information",
+      "title": "GitHub Problem Summary"
+    },
+    "title": "Report a problem",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filter by area",

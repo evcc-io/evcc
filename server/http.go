@@ -221,7 +221,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -280,6 +280,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
+			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
 			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
 			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
