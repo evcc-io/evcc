@@ -25,7 +25,7 @@ params:
     example: "X-XXXXXXXX"
   - name: tariffType
     type: choice
-    choice: [ "import", "export" ]
+    choice: ["import", "export"]
     required: false
     default: "import"
     description:
@@ -37,4 +37,4 @@ render: |
   type: octopusenergy
   apikey: {{ .apiKey }}
   accountNumber: {{ .accountNumber }}
-  tariffDirection: {{ .tariffType }}
+  tariffType: {{ .tariffType }}
