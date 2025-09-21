@@ -77,6 +77,7 @@
       "title": "Kontrollera beteende"
     },
     "deviceValue": {
+      "allowControl": "Tillåt styrning",
       "amount": "Belopp",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -430,6 +431,15 @@
       "meter": "Sol & batteri",
       "system": "System",
       "vehicles": "Fordon"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "descriptionIdPattern": "Id-mönster",
+      "descriptionSempUrl": "SEMP URL",
+      "labelControl": "Tillåt styrning",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Tillverkar-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Ange sponsor-token",

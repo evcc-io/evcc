@@ -77,6 +77,7 @@
       "title": "Comportement du contrôle"
     },
     "deviceValue": {
+      "allowControl": "Permettre contrôle",
       "amount": "Montant",
       "broker": "Courtier",
       "bucket": "Bucket",
@@ -430,6 +431,20 @@
       "meter": "Solaire & Batterie",
       "system": "Système",
       "vehicles": "Véhicules"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc est équipé d'une intégration pour le SMA Sunny Home Manager (SHM) via le protocole SEMP. S'il fonctionne sur le même réseau, après vous être connecté à votre compte Sunny Portal, vous devriez automatiquement avoir la possibilité d'ajouter tous les chargeurs configurés dans evcc en tant que nouveaux consommateurs détectés. Tout devrait être prêt à l'emploi immédiatement, sans qu'aucun réglage ne soit nécessaire.",
+      "descriptionDeviceId": "Chaîne HEX à 12 caractères. Préfixe pour tous les appareils (point de recharge, etc.).",
+      "descriptionIdPattern": "Schéma d'identification",
+      "descriptionIds": "Dans Sunny Portal, chaque appareil consommateur doit disposer d'un identifiant unique. evcc génère un identifiant unique basé sur votre matériel. Si vous migrez evcc vers un autre matériel, ces identifiants peuvent changer. Si vous souhaitez conserver l'historique, vous pouvez remplacer les identifiants générés ici. Ouvrez l'URL SEMP (/semp) pour vérifier vos identifiants actuels.",
+      "descriptionSempUrl": "URL SEMP",
+      "descriptionVendorId": "Chaîne HEX à 8 caractères. Préfixe général de toutes les entités. Par défaut, evcc utilisera son propre identifiant fournisseur interne.",
+      "labelAllowControl": "Accepter les recommandations supplémentaires de SHM concernant les limites de puissance.",
+      "labelControl": "Autoriser le contrôle",
+      "labelDeviceId": "Identifiant de l'appareil",
+      "labelVendorId": "Identifiant du fournisseur",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Entrer le jeton",
