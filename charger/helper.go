@@ -89,19 +89,17 @@ func mustDisable(wb api.Charger, fun func() error) error {
 		return err
 	}
 
-	if enabled {
-		if err := wb.Enable(false); err != nil {
-			return err
-		}
+	if !enabled {
+		return fun()
+	}
+
+	if err := wb.Enable(false); err != nil {
+		return err
 	}
 
 	if err := fun(); err != nil {
 		return err
 	}
 
-	if enabled {
-		return wb.Enable(true)
-	}
-
-	return nil
+	return wb.Enable(true)
 }
