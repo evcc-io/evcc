@@ -23,17 +23,18 @@ params:
       en: "Only required if you have multiple accounts."
       de: "Nur erforderlich, wenn mehrere Konten vorhanden sind."
     example: "X-XXXXXXXX"
-  - name: export
-    description:
-      de: Einspeisetarif Nutzen
-      en: Use Export Tariffs
-    help:
-      en: "Setting this will query the export tariff associated with this account. Set this when using feedin:"
-    type: bool
+  - name: tariffType
+    type: choice
+    choice: [ "import", "export" ]
     required: false
-    default: false
+    default: "import"
+    description:
+      generic: The type of tariff to query from Octopus.
+    help:
+      generic: "Set to 'export' when using feedin:"
+
 render: |
   type: octopusenergy
   apikey: {{ .apiKey }}
   accountNumber: {{ .accountNumber }}
-  export: {{ .export }}
+  tariffDirection: {{ .tariffType }}

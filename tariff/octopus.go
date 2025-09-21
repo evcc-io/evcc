@@ -16,14 +16,14 @@ import (
 )
 
 type Octopus struct {
-	log           *util.Logger
-	region        string
-	productCode   string
-	apikey        string
-	accountnumber string
-	paymentMethod string
-	export        bool
-	data          *util.Monitor[api.Rates]
+	log             *util.Logger
+	region          string
+	productCode     string
+	apikey          string
+	accountnumber   string
+	paymentMethod   string
+	tariffDirection octoGql.TariffDirection
+	data            *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -34,13 +34,13 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region        string
-		Tariff        string // DEPRECATED: use ProductCode
-		ProductCode   string
-		DirectDebit   bool
-		ApiKey        string
-		AccountNumber string
-		Export        bool
+		Region          string
+		Tariff          string // DEPRECATED: use ProductCode
+		ProductCode     string
+		DirectDebit     bool
+		ApiKey          string
+		AccountNumber   string
+		TariffDirection string
 	}
 
 	logger := util.NewLogger("octopus")
@@ -62,8 +62,8 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
 		}
-		if cc.Export {
-			logger.WARN.Print("The 'export' key is ignored when using product code")
+		if cc.TariffDirection != "" {
+			logger.WARN.Print("The 'type' key is ignored when using product code")
 		}
 	} else {
 		// ApiKey validators
@@ -79,15 +79,23 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		// Not using Direct Debit, filter by non-Direct Debit tariff entries
 		paymentMethod = octoRest.RatePaymentMethodNotDirectDebit
 	}
+
+	tariffDirection := octoGql.TariffDirectionImport
+	// Opting not to do this with an enum lookup - it would be a bit overkill.
+	// instead just do a string cast
+	if cc.TariffDirection == string(octoGql.TariffDirectionExport) {
+		tariffDirection = octoGql.TariffDirectionExport
+	}
+
 	t := &Octopus{
-		log:           logger,
-		region:        cc.Region,
-		productCode:   cc.ProductCode,
-		apikey:        cc.ApiKey,
-		accountnumber: cc.AccountNumber,
-		paymentMethod: paymentMethod,
-		export:        cc.Export,
-		data:          util.NewMonitor[api.Rates](2 * time.Hour),
+		log:             logger,
+		region:          cc.Region,
+		productCode:     cc.ProductCode,
+		apikey:          cc.ApiKey,
+		accountnumber:   cc.AccountNumber,
+		paymentMethod:   paymentMethod,
+		tariffDirection: tariffDirection,
+		data:            util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	return runOrError(t)
@@ -107,7 +115,7 @@ func (t *Octopus) run(done chan error) {
 			t.log.ERROR.Println(err)
 			return
 		}
-		tariffCode, err := gqlCli.TariffCode(t.export)
+		tariffCode, err := gqlCli.TariffCode(t.tariffDirection)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
