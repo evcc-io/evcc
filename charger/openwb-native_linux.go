@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/openwb/hw"
+	"github.com/evcc-io/evcc/charger/openwb/native"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stianeikeland/go-rpio/v4"
@@ -115,7 +115,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	}
 
 	if hasRfid {
-		rfIdChannel, _, err := hw.NewRFIDHandler(ctx, log)
+		rfIdChannel, _, err := native.NewRFIDHandler(ctx, log)
 		if err != nil {
 			return nil, err
 		}
@@ -238,10 +238,10 @@ func (wb *OpenWbNative) GpioWorkerExecutor(worker func()) error {
 
 // Worker function to toggle the GPIOs to switch the phases
 func (wb *OpenWbNative) GpioSwitchPhases(phases int) {
-	pinGpioCP := rpio.Pin(hw.GPIO_CP[wb.chargePoint])
-	pinGpioPhases := rpio.Pin(hw.GPIO_3P[wb.chargePoint])
+	pinGpioCP := rpio.Pin(native.GPIO_CP[wb.chargePoint])
+	pinGpioPhases := rpio.Pin(native.GPIO_3P[wb.chargePoint])
 	if phases == 1 {
-		pinGpioPhases = rpio.Pin(hw.GPIO_1P[wb.chargePoint])
+		pinGpioPhases = rpio.Pin(native.GPIO_1P[wb.chargePoint])
 	}
 	pinGpioCP.Output()
 	pinGpioPhases.Output()
@@ -259,7 +259,7 @@ func (wb *OpenWbNative) GpioSwitchPhases(phases int) {
 
 // Worker function to toggle the GPIOs for the CP signal
 func (wb *OpenWbNative) GpioWakeup() {
-	pinGpioCP := rpio.Pin(hw.GPIO_CP[wb.chargePoint])
+	pinGpioCP := rpio.Pin(native.GPIO_CP[wb.chargePoint])
 	pinGpioCP.Output()
 
 	pinGpioCP.High()
