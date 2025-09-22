@@ -64,7 +64,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}
 		if cc.TariffType != string(octoGql.TariffDirectionImport) {
 			// Throw a WARN if it appears the user has set the key when it's not necessary to do so
-			logger.WARN.Print("The 'tariffType' key is ignored when using product code")
+			logger.WARN.Println("tariffType ignored when using product code")
 		}
 	} else {
 		// ApiKey validators
