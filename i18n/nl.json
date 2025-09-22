@@ -153,7 +153,9 @@
       "optional": "optioneel"
     },
     "general": {
+      "applyAndClose": "Toepassen & sluiten",
       "cancel": "Annuleren",
+      "close": "Sluiten",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
@@ -167,6 +169,7 @@
       "password": "Wachtwoord",
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
+      "required": "vereist",
       "save": "Opslaan",
       "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
@@ -181,7 +184,7 @@
       "titleEdit": "Bewerk netmeter"
     },
     "hems": {
-      "description": "Verbind evcc met een ander thuis-energie managementsysteem.",
+      "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
       "title": "HEMS"
     },
     "icon": {
@@ -431,7 +434,16 @@
       "vehicles": "Voertuigen"
     },
     "shm": {
-      "cardTitle": "Sunny Home Manager"
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc is uitgerust met een integratie voor de SMA Sunny Home Manager (SHM) via SEMP protocol. Wanneer het is aangesloten op hetzelfde netwerk, na inloggen op je Sunny Portal account, zou je automatisch alle laadpunten geconfigureerd in evcc moeten worden aangeboden als nieuw ontdekte verbruikers. Alles zou meteen gebruikt moeten kunnen worden, zonder enige onderstaande aanpassingen nodig te hebben.",
+      "descriptionDeviceId": "12 karakters HEX string. Prefix voor alle apparaten (EV lader, ..).",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
+      "labelAllowControl": "Sta additionele aanbevelingen stroombegrenzing toe van SHM.",
+      "labelControl": "Besturing toestaan",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Token invoeren",
@@ -648,7 +660,7 @@
   "help": {
     "discussionsButton": "GitHub discussies",
     "documentationButton": "Documentatie",
-    "issueButton": "Een bug melden",
+    "issueButton": "Een probleem melden",
     "issueDescription": "Vreemd of foutief gedrag gevonden?",
     "logsButton": "Bekijk logboeken",
     "logsDescription": "Kijk in de logboeken voor foutmeldingen.",
@@ -664,6 +676,38 @@
     "restartButton": "Herstart",
     "restartDescription": "Geprobeerd het uit en weer aan te zetten?",
     "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
+  },
+  "issue": {
+    "additional": {
+      "showDetails": "toon details",
+      "source": "Bron",
+      "state": "Status",
+      "title": "Additionele informatie",
+      "uiConfig": "Configuratie (UI)",
+      "uiConfigDescription": "Configuratie instellingen gemaakt via de web interface.",
+      "yamlConfig": "Configuratie (YAML)",
+      "yamlConfigDescription": "Je complete configuratie bestand."
+    },
+    "additionalContext": "Additionele context",
+    "createButtonDiscussion": "Start GitHub discussie...",
+    "createButtonIssue": "Creëer  GitHub Issue...",
+    "helpType": {
+      "discussion": "Hulp nodig met mijn installatie",
+      "issue": "Bug gevonden",
+      "title": "Welk probleem speelt er?"
+    },
+    "issueDescription": "Omschrijving",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Stappen om te reproduceren",
+    "subTitleDiscussion": "Omschrijf je probleem",
+    "subTitleIssue": "Beschrijf het probleem",
+    "summary": {
+      "copied": "Gekopiëerd!",
+      "copyButton": "Kopieer additionele informatie",
+      "stepOneDiscussion": "Stap 1: Creëer basis discussie"
+    },
+    "title": "Rapporteer een probleem",
+    "version": "Versie"
   },
   "log": {
     "areaLabel": "Filter op domain",
@@ -730,6 +774,7 @@
       "gridImport": "Netafname",
       "homePower": "Consumptie",
       "loadpoints": "Lader| Lader | {count} laders",
+      "loadpointsLimit": "{limit} limiet",
       "noEnergy": "Geen meter data",
       "pv": "PV-systeem",
       "pvExport": "Netinjectie",
@@ -741,6 +786,10 @@
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
       "waitForVehicle": "Klaar. Wachten op verwarming…"
+    },
+    "hemsWarning": {
+      "description": "Gereduceerd laden niet hoger dan {limit}.",
+      "title": "Extern limiet:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",
