@@ -43,6 +43,15 @@ params:
   - name: maxacpower
   - name: capacity
     advanced: true
+  - name: pvsource
+    choice: ["int", "ext", "all"]
+    default: "all"
+    description:
+      de: Auswahl der PV-Quelle
+      en: Selection of PV source
+    help:
+      de: Gibt an, welche PV-Leistungswerte verwendet werden sollen ("int"=intern, "ext"=externe Quelle, "all"=gesamt)
+      en: Specifies which PV power values should be used ("int"=internal, "ext"=external source, "all"=total)
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -53,4 +62,7 @@ render: |
   {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
   capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  pvsource: {{ .pvsource }}
   {{- end }}
