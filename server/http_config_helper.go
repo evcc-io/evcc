@@ -325,6 +325,14 @@ func mergeMaskedAny(old, new any) error {
 type maskedTransformer struct{}
 
 func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	// Only provide transformer for booleans to prevent them from being merged
+	if typ.Kind() == reflect.Bool {
+		return func(dst, src reflect.Value) error {
+			// Keep dst value, don't merge
+			return nil
+		}
+	}
+
 	if typ.Kind() != reflect.String {
 		return nil
 	}

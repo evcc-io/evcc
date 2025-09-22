@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -308,6 +309,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		for key, fun := range map[string]func() any{
 			keys.Network: func() any { return new(globalconfig.Network) }, // has default
 			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
+			keys.Shm:     func() any { return new(shm.Config) },
 			keys.Influx:  func() any { return new(globalconfig.Influx) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}

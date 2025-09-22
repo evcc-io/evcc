@@ -1,6 +1,8 @@
 template: nordpool
 products:
-  - brand: Nordpool spot prices
+  - brand: Nordpool
+    description:
+      generic: Spot prices
 requirements:
   description:
     de: "Nordpool Spot Preise im Day-Ahead-Markt für alle Märkte in der Nordpool-Region."
