@@ -101,7 +101,7 @@
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
       "hemsActiveLimit": "Actieve limiet",
-      "hemsType": "Systeem",
+      "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
       "no": "nee",
       "odometer": "Kilometerstand",
@@ -462,7 +462,7 @@
       "tokenRequired": "U moet een sponsortoken configureren voordat u dit apparaat kunt aanmaken.",
       "tokenRequiredLearnMore": "Meer informatie.",
       "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
-      "trialToken": "Tijdelijke token",
+      "trialToken": "tijdelijke token",
       "viaYaml": "via evcc.yaml",
       "yourToken": "Jouw token"
     },
@@ -700,7 +700,7 @@
     },
     "additionalContext": "Additionele context",
     "createButtonDiscussion": "Start GitHub discussie...",
-    "createButtonIssue": "Creëer  GitHub Issue...",
+    "createButtonIssue": "Creëer GitHub Issue...",
     "helpType": {
       "discussion": "Hulp nodig met mijn installatie",
       "issue": "Bug gevonden",
