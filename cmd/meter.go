@@ -20,6 +20,7 @@ func init() {
 	rootCmd.AddCommand(meterCmd)
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
+	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
