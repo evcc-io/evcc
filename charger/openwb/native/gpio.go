@@ -1,4 +1,4 @@
-package hw
+package native
 
 /*
 GPIO pin assignments for OpenWB hardware:
