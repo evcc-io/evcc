@@ -77,6 +77,8 @@ export interface State {
   siteTitle?: string;
   vehicles: Record<string, Vehicle>;
   authDisabled?: boolean;
+  config?: string;
+  database?: string;
 }
 
 export interface Config {

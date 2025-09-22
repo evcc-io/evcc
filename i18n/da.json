@@ -77,6 +77,7 @@
       "title": "kontrol adfærd"
     },
     "deviceValue": {
+      "allowControl": "Tillad kontrol",
       "amount": "Mængde",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -430,6 +431,20 @@
       "meter": "Sol og batteri",
       "system": "System",
       "vehicles": "Køretøjer"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc er udstyret med integration til SMA Sunny Home Manager (SHM) via SEMP-protokollen. Hvis den kører på det samme netværk, bør du – efter at have logget ind på din Sunny Portal-konto – automatisk få tilbudt at tilføje alle de ladere, der er konfigureret i evcc, som nyopdagede forbrugere. Alt burde være klar til brug med det samme, uden at der kræves yderligere justeringer nedenfor.",
+      "descriptionDeviceId": "12-tegns HEX-streng. Præfiks for alle enheder (ladestander osv.).",
+      "descriptionIdPattern": "Identifikations-mønster",
+      "descriptionIds": "I Sunny Portal skal hver forbrugsenhed have en unik identifikator. evcc genererer en unik identifikator baseret på din hardware. Hvis du flytter evcc til en anden hardware, kan disse identifikatorer ændre sig. Hvis du vil bevare historikken, kan du tilsidesætte de genererede identifikatorer her. Åbn SEMP-URL’en (/semp) for at tjekke dine nuværende identifikatorer.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8-tegns HEX-streng. Generelt præfiks for alle enheder. Som standard vil evcc bruge sit eget interne leverandør-ID.",
+      "labelAllowControl": "Accepter yderligere anbefalinger om effektgrænser fra SHM.",
+      "labelControl": "Tillad kontrol",
+      "labelDeviceId": "Enheds ID",
+      "labelVendorId": "Leverandør-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Indtast token",
