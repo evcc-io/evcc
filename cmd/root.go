@@ -162,15 +162,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
 
-	if ln, err := net.Listen("tcp", httpd.Server.Addr); err != nil {
-		log.FATAL.Println(err)
-		os.Exit(1)
-	} else {
+	if ln, err := net.Listen("tcp", httpd.Server.Addr); err == nil {
 		log.INFO.Printf("UI listening at :%d", conf.Network.Port)
 
 		go func() {
 			log.FATAL.Println(wrapFatalError(httpd.Serve(ln)))
 		}()
+	} else {
+		log.FATAL.Println(err)
+		os.Exit(1)
 	}
 
 	// start broadcasting values
