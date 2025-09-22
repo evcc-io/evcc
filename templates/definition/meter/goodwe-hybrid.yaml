@@ -62,28 +62,6 @@ render: |
         type: holding
         decode: uint16
       scale: -0.1
-  powers:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 36019 # Meter Active Power R, W
-        type: holding
-        decode: int32
-      scale: -1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 36021 # Meter Active Power S, W
-        type: holding
-        decode: int32
-      scale: -1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 36023 # Meter Active Power T, W
-        type: holding
-        decode: int32
-      scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
