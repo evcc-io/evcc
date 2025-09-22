@@ -172,8 +172,8 @@ func (c *Connection) GetPhaseStates(entities [3]string) (float64, float64, float
 func ValidatePhaseEntities(entities []string, entityType string) ([3]string, error) {
 	switch len(entities) {
 	case 1:
-		// Single-phase: use the same entity for all phases
-		return [3]string{entities[0], entities[0], entities[0]}, nil
+		// Single-phase: use entity for L1, empty for L2/L3
+		return [3]string{entities[0], "", ""}, nil
 	case 3:
 		// Three-phase: use each entity for its respective phase
 		return [3]string{entities[0], entities[1], entities[2]}, nil

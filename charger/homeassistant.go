@@ -1,5 +1,7 @@
 package charger
 
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)"
+
 import (
 	"errors"
 	"math"
@@ -88,7 +90,30 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, erro
 		c.voltages = voltages
 	}
 
-	return c, nil
+	// decorators for optional interfaces
+	var meter func() (float64, error)
+	var meterEnergy func() (float64, error)
+	var phaseCurrents func() (float64, float64, float64, error)
+	var phaseVoltages func() (float64, float64, float64, error)
+	var currentGetter func() (float64, error)
+
+	if c.power != "" {
+		meter = c.CurrentPower
+	}
+	if c.energy != "" {
+		meterEnergy = c.TotalEnergy
+	}
+	if c.currents[0] != "" {
+		phaseCurrents = c.Currents
+	}
+	if c.voltages[0] != "" {
+		phaseVoltages = c.Voltages
+	}
+	if c.maxcurrent != "" {
+		currentGetter = c.GetMaxCurrent
+	}
+
+	return decorateHomeAssistant(c, meter, meterEnergy, phaseCurrents, phaseVoltages, currentGetter), nil
 }
 
 var _ api.Charger = (*HomeAssistant)(nil)

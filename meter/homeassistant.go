@@ -1,5 +1,7 @@
 package meter
 
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+
 import (
 	"errors"
 
@@ -69,7 +71,22 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		m.voltages = voltages
 	}
 
-	return m, nil
+	// decorators for optional interfaces
+	var meterEnergy func() (float64, error)
+	var phaseCurrents func() (float64, float64, float64, error)
+	var phaseVoltages func() (float64, float64, float64, error)
+
+	if m.energy != "" {
+		meterEnergy = m.TotalEnergy
+	}
+	if m.currents[0] != "" {
+		phaseCurrents = m.Currents
+	}
+	if m.voltages[0] != "" {
+		phaseVoltages = m.Voltages
+	}
+
+	return decorateHomeAssistant(m, meterEnergy, phaseCurrents, phaseVoltages), nil
 }
 
 // NewHomeAssistant creates HomeAssistant meter
