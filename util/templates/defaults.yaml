@@ -441,6 +441,18 @@ params:
     description:
       de: Temperaturquelle
       en: Temperature source
+  - name: lat
+    description:
+      en: Latitude
+      de: Breitengrad
+    type: float
+    example: 55.7351
+  - name: lon
+    description:
+      en: Longitude
+      de: Längengrad
+    type: float
+    example: 9.1275
 
 presets:
   vehicle-base:
@@ -531,18 +543,8 @@ presets:
   forecast-base:
     params:
       - name: lat
-        description:
-          en: Latitude
-          de: Breitengrad
-        type: float
-        example: 55.7351
         required: true
       - name: lon
-        description:
-          en: Longitude
-          de: Längengrad
-        type: float
-        example: 9.1275
         required: true
       - name: dec
         description:

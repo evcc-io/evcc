@@ -38,8 +38,6 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 	t.Parallel()
 
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
-		tmpl := tmpl
-
 		// set default values for all params
 		values := tmpl.Defaults(RenderModeUnitTest)
 

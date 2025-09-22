@@ -16,9 +16,7 @@ type VehicleApi struct {
 	lp                     loadpoint.API
 	enabled                bool
 	geofenceEnabled        bool
-	latitude               float64
-	longitude              float64
-	radius                 float64
+	lat, lon, radius       float64
 	cacheRefreshExpectedAt time.Time
 }
 
@@ -30,8 +28,8 @@ func init() {
 func NewVehicleApiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		GeofenceEnabled bool    `mapstructure:"geofence_enabled"`
-		Latitude        float64 `mapstructure:"latitude"`
-		Longitude       float64 `mapstructure:"longitude"`
+		Lat             float64 `mapstructure:"lat"`
+		Lon             float64 `mapstructure:"lon"`
 		Radius          float64 `mapstructure:"radius"`
 	}{
 		Radius: 100, // Default 100 meter radius
@@ -43,8 +41,8 @@ func NewVehicleApiFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 	c := &VehicleApi{
 		geofenceEnabled: cc.GeofenceEnabled,
-		latitude:        cc.Latitude,
-		longitude:       cc.Longitude,
+		lat:             cc.Lat,
+		lon:             cc.Lon,
 		radius:          cc.Radius,
 	}
 
@@ -178,10 +176,10 @@ func (c *VehicleApi) LoadpointControl(lp loadpoint.API) {
 
 // distance approximates Euclidean distance, good enough for geofencing
 func (c *VehicleApi) distance(lat, lon float64) float64 {
-	const metersPerDegreeLat = 111000 // ~111km per degree latitude (constant)
+	const metersPerDegreeLat = 111000 // ~111km per degree lat (constant)
 
-	deltaLat := (c.latitude - lat) * metersPerDegreeLat
-	deltaLon := (c.longitude - lon) * metersPerDegreeLat * math.Cos(c.latitude*math.Pi/180) // varies by latitude
+	deltaLat := (c.lat - lat) * metersPerDegreeLat
+	deltaLon := (c.lon - lon) * metersPerDegreeLat * math.Cos(c.lat*math.Pi/180) // varies by lat
 
 	return math.Sqrt(deltaLat*deltaLat + deltaLon*deltaLon)
 }

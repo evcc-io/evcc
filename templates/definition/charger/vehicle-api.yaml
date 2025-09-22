@@ -48,7 +48,7 @@ render: |
   type: vehicle-api
   {{- if .geofence_enabled }}
   geofence_enabled: {{ .geofence_enabled }}
-  latitude: {{ .latitude }}
-  longitude: {{ .longitude }}
+  lat: {{ .lat }}
+  lon: {{ .lon }}
   radius: {{ .radius }}
   {{- end }}
