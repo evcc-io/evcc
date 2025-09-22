@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
-      "title": "Electriciteitsnetwerk beheer"
+      "title": "Electriciteitsnetwerk beheer",
+      "usableMeters": "Bruikbare meterreferenties"
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
@@ -99,6 +100,7 @@
       "feedinPrice": "Terugleververgoeding",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
+      "hemsActiveLimit": "Actieve limiet",
       "hemsType": "Systeem",
       "identifier": "RFID-Nummer",
       "no": "nee",
@@ -437,6 +439,8 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc is uitgerust met een integratie voor de SMA Sunny Home Manager (SHM) via SEMP protocol. Wanneer het is aangesloten op hetzelfde netwerk, na inloggen op je Sunny Portal account, zou je automatisch alle laadpunten geconfigureerd in evcc moeten worden aangeboden als nieuw ontdekte verbruikers. Alles zou meteen gebruikt moeten kunnen worden, zonder enige onderstaande aanpassingen nodig te hebben.",
       "descriptionDeviceId": "12 karakters HEX string. Prefix voor alle apparaten (EV lader, ..).",
+      "descriptionIdPattern": "Identificatiepatroon",
+      "descriptionIds": "In Sunny Portal heeft elk consumentenapparaat een unieke identificatiecode nodig. evcc genereert een unieke identificatiecode op basis van uw hardware. Als u evcc naar andere hardware migreert, kunnen deze identificatiecodes veranderen. Als u de geschiedenis wilt behouden, kunt u de gegenereerde identificatiecodes hier overschrijven. Open de SEMP-URL (/semp) om uw huidige identificatiecodes te controleren.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
       "labelAllowControl": "Sta additionele aanbevelingen stroombegrenzing toe van SHM.",
@@ -679,9 +683,15 @@
   },
   "issue": {
     "additional": {
+      "description": "Voeg configuratie en logbestanden toe zodat we het probleem snel kunnen reproduceren. We raden u aan zoveel mogelijk informatie te delen. De status is meestal niet nodig.",
+      "include": "toevoegen",
+      "lines": "regels",
+      "logs": "Logs",
+      "logsDescription": "Recente logboekvermeldingen die kunnen helpen bij het identificeren van het probleem.",
       "showDetails": "toon details",
       "source": "Bron",
       "state": "Status",
+      "stateDescription": "Volledige runtime-status, inclusief informatie over het oplaadpunt, het apparaat en de energie. Alleen toevoegen indien gevraagd.",
       "title": "Additionele informatie",
       "uiConfig": "Configuratie (UI)",
       "uiConfigDescription": "Configuratie instellingen gemaakt via de web interface.",
