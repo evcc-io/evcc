@@ -216,7 +216,6 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 
 // ParseChargeStatus maps Home Assistant states to EVCC charge status
 func ParseChargeStatus(state string) (api.ChargeStatus, error) {
-
 	normalized := strings.ToLower(strings.TrimSpace(state))
 	if status, ok := chargeStatusMap[normalized]; ok {
 		return status, nil
