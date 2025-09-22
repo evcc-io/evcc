@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
@@ -157,7 +158,20 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+	// create web server
+	socketHub := server.NewSocketHub()
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+
+	if ln, err := net.Listen("tcp", httpd.Server.Addr); err != nil {
+		log.FATAL.Println(err)
+		os.Exit(1)
+	} else {
+		log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+
+		go func() {
+			log.FATAL.Println(wrapFatalError(httpd.Serve(ln)))
+		}()
+	}
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -167,10 +181,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// value cache
 	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
-
-	// create web server
-	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -310,19 +320,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		// exit code 1 on error
-		os.Exit(cast.ToInt(err != nil))
-	}()
-
 	// allow web access for vehicles
 	configureAuth(httpd.Router(), valueChan)
 
@@ -383,5 +380,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
+	// wait for shutdown
+	<-stopC
+
+	select {
+	case <-shutdownDoneC(): // wait for shutdown
+	case <-time.After(conf.Interval):
+	}
+
+	// exit code 1 on error
+	os.Exit(cast.ToInt(err != nil))
 }
