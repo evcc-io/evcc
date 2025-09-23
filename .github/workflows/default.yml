@@ -138,6 +138,8 @@ jobs:
 
   ui:
     name: UI
+    permissions:
+      contents: read
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
