@@ -199,7 +199,12 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 		if err != nil {
 			return err
 		}
-
+		// Check if there is a 2.0 charger attached if so it could switch
+		// FastCharg by parameter
+		model, err := wb.getParameter("Parameter.Nameplate.ModelStr")
+		if err == nil && model == "EVC22-3AC-20" {
+			return wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.FastCharge))
+		}
 		if res == smaevcharger.SwitchOeko {
 			// Switch in PV Loading position
 			// If the selector switch of the wallbox is in the wrong position (eco-charging and not fast charging),
