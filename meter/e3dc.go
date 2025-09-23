@@ -169,9 +169,6 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		log := util.NewLogger(" >>> e3dc.go")
-		log.DEBUG.Println("m.pvSource: ", m.pvSource)
-
 		switch m.pvSource {
 		// "int": Use only the internal PV inverter's power value (values[0])
 		case "int":
