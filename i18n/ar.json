@@ -25,6 +25,14 @@
       "title": "الإعدادات",
       "vehicles": "عرباتي"
     },
+    "validation": {
+      "failed": "أخفق",
+      "label": "الحالة",
+      "running": "التحقق من صحة...",
+      "success": "ناجح",
+      "unknown": "غير معروف",
+      "validate": "تحقق من الصحة"
+    },
     "options": {
       "pvsource": {
         "int": "داخلي",
