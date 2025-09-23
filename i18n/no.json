@@ -28,6 +28,13 @@
       "title": "Oppsett",
       "vehicles": "Mine kjøretøy"
     },
+    "options": {
+      "pvsource": {
+        "int": "Intern",
+        "ext": "Ekstern kilde",
+        "all": "Totalt"
+      }
+    },
     "validation": {
       "failed": "mislykket",
       "label": "Status",

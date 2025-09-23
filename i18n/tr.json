@@ -401,6 +401,11 @@
         "heating": "Isıtma",
         "standby": "Bekleme"
       },
+      "pvsource": {
+        "int": "Dahili",
+        "ext": "Harici kaynak",
+        "all": "Toplam"
+      },
       "schema": {
         "http": "HTTP (şifrelenmemiş)",
         "https": "HTTPS (şifrelenmiş)"

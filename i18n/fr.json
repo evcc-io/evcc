@@ -408,6 +408,11 @@
         "heating": "Chauffage",
         "standby": "Standby"
       },
+      "pvsource": {
+        "int": "Interne",
+        "ext": "Source externe",
+        "all": "Total"
+      },
       "schema": {
         "http": "HTTP (non crypté)",
         "https": "HTTP (crypté)"

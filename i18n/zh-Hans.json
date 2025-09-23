@@ -360,6 +360,11 @@
         "big": "大端字节序",
         "little": "小端字节序"
       },
+      "pvsource": {
+        "int": "内部",
+        "ext": "外部来源",
+        "all": "总计"
+      },
       "schema": {
         "http": "HTTP (未加密)",
         "https": "HTTPS (已加密)"

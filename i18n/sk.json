@@ -38,6 +38,13 @@
     },
     "charger": {
       "chargers": "EV nabíjačky"
+    },
+    "options": {
+      "pvsource": {
+        "int": "Interný",
+        "ext": "Externý zdroj",
+        "all": "Celkovo"
+      }
     }
   }
 }

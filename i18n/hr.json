@@ -408,6 +408,11 @@
         "heating": "Grijanje",
         "standby": "Pripravan"
       },
+      "pvsource": {
+        "int": "Interno",
+        "ext": "Vanjski izvor",
+        "all": "Ukupno"
+      },
       "schema": {
         "http": "HTTP (nekriptirano)",
         "https": "HTTPS (kriptirano)"

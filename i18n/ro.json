@@ -266,6 +266,13 @@
       "off": "Oprit",
       "pv": "Solar"
     },
+    "options": {
+      "pvsource": {
+        "int": "Intern",
+        "ext": "Sursă externă",
+        "all": "Total"
+      }
+    },
     "provider": {
       "login": "autentificare",
       "logout": "deconectează"

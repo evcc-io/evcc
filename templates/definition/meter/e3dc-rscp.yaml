@@ -50,8 +50,8 @@ params:
       de: Auswahl der PV-Quelle
       en: Selection of PV source
     help:
-      de: Gibt an, welche PV-Leistungswerte verwendet werden sollen ("int"=intern, "ext"=externe Quelle, "all"=gesamt)
-      en: Specifies which PV power values should be used ("int"=internal, "ext"=external source, "all"=total)
+      de: Gibt an, welche PV-Leistungswerte verwendet werden sollen (PV am internen Wechselrichter, externe Quelle oder Gesamtproduktion)
+      en: Specifies which PV power values should be used (PV at the internal inverter, external source, or total production)
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}

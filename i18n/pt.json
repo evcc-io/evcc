@@ -408,6 +408,11 @@
         "heating": "Aquecimento",
         "standby": "Standby"
       },
+      "pvsource": {
+        "int": "Interno",
+        "ext": "Fonte externa",
+        "all": "Total"
+      },
       "schema": {
         "http": "HTTP (não encriptado)",
         "https": "HTTPS (encriptado)"
