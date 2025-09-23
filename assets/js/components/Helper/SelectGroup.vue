@@ -1,10 +1,13 @@
 <template>
-	<div class="mode-group border d-inline-flex" :class="{ large, transparent }" role="group">
+	<div class="mode-group border d-inline-flex" :class="{ large, transparent }" role="radiogroup">
 		<button
 			v-for="(option, i) in options"
 			:id="i === 0 ? id : undefined"
 			:key="option.value"
 			type="button"
+			role="radio"
+			:aria-checked="option.value === modelValue"
+			:aria-label="ariaLabel ? `${ariaLabel}: ${option.name}` : option.name"
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
 			:class="{ active: option.value === modelValue, 'btn--equal': equalWidth }"
 			:disabled="option.disabled"
@@ -30,6 +33,7 @@ export default defineComponent({
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,
+		ariaLabel: String,
 	},
 	emits: ["update:modelValue"],
 });
