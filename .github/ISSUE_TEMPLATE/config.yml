@@ -1,5 +1,5 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
-  - name: Need help with your setup?
+  - name: Need help?
     url: https://github.com/evcc-io/evcc/discussions/categories/need-help
-    about: Our community discussions will help you.
+    about: GitHub community discussions is a good place to ask questions.
