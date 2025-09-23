@@ -287,7 +287,7 @@
       "thresholdDisableLabel": "Onemogoči napajanje iz omrežja",
       "thresholdEnableDelayLabel": "Omogoči zakasnitev",
       "thresholdEnableHelpInvalid": "Prosimo, uporabite negativno vrednost.",
-      "thresholdEnableHelpNegative": "Začni, ko je {presežek} presežek na voljo za {delay}.",
+      "thresholdEnableHelpNegative": "Začni, ko je {surplus} presežek na voljo za {delay}.",
       "thresholdEnableHelpZero": "Začnite, ko je minimalna zahtevana moč dosežena za {delay}.",
       "thresholdEnableLabel": "Omogoči polnjenje iz omrežja",
       "titleAdd": {
