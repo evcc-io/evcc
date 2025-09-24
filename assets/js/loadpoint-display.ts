@@ -92,6 +92,12 @@ const setLoadpointVisibility = (index: number, visible: boolean) => {
   loadpointSettings.visibility[index] = visible;
 };
 
+const resetLoadpointOrder = (loadpointCount: number) => {
+  loadpointSettings.order = [];
+  loadpointSettings.visibility = {};
+  initializeLoadpointSettings(loadpointCount);
+};
+
 const convertToDisplayLoadpoints = (loadpoints: LoadpointCompact[]): DisplayLoadpoint[] => {
   return loadpoints.map((loadpoint, index) => ({
     ...loadpoint,
@@ -151,6 +157,7 @@ export {
   setLoadpointOrder,
   getLoadpointVisibility,
   setLoadpointVisibility,
+  resetLoadpointOrder,
   convertToDisplayLoadpoints,
   filterAndSortDisplayLoadpoints,
   getDisplayLoadpointList,

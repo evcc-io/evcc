@@ -19,6 +19,7 @@
   "type": "module",
   "main": "index.js",
   "dependencies": {
+    "@formkit/drag-and-drop": "^0.5.3",
     "@guolao/vue-monaco-editor": "^1.5.5",
     "@h2d2/shopicons": "^1.9.0",
     "@popperjs/core": "^2.11.8",

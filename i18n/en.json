@@ -172,6 +172,7 @@
       "readFromFile": "Read from file",
       "remove": "Remove",
       "required": "required",
+      "reset": "Reset",
       "save": "Save",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
@@ -1092,11 +1093,7 @@
     "vehicle": "Vehicle"
   },
   "settings": {
-    "device": {
-      "info": "Settings you make here are only for this device/browser.",
-      "infoApp": "Settings you make here are only for this app.",
-      "infoBrowser": "Settings you make here are only for this browser."
-    },
+    "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
       "exit": "Exit fullscreen",
@@ -1111,9 +1108,9 @@
       "label": "Language"
     },
     "loadpoints": {
-      "help": "Drag to reorder loadpoints and use switches to show or hide them.",
+      "help": "Change order and visibility for the UI.",
       "hidden": "Hidden",
-      "label": "Loadpoint Order & Visibility",
+      "label": "Charging points",
       "visible": "Visible"
     },
     "sponsorToken": {

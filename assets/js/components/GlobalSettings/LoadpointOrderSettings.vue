@@ -1,20 +1,14 @@
 <template>
-	<div class="loadpoint-order-settings">
-		<div class="small text-muted mb-2">
+	<div>
+		<div class="small text-muted mb-2 col-form-label">
 			{{ $t("settings.loadpoints.help") }}
 		</div>
-		<div class="loadpoint-list">
+		<DragDropList :values="displayList.map((item) => item.index)" @reorder="handleReorder">
 			<DragDropItem
-				v-for="(item, index) in displayList"
+				v-for="item in displayList"
 				:key="item.index"
 				:title="item.title"
 				:visible="item.visible"
-				:is-dragging="isItemBeingDragged(index)"
-				@dragstart="onDragStart(index, $event)"
-				@drop="onDrop(index, $event)"
-				@touchstart="onTouchStart(index, $event)"
-				@touchmove="onTouchMove($event)"
-				@touchend="onTouchEnd($event)"
 			>
 				<template #actions>
 					<div class="form-check form-switch">
@@ -39,9 +33,11 @@
 					</div>
 				</template>
 			</DragDropItem>
-		</div>
-		<div v-if="displayList.length === 0" class="text-muted text-center py-3">
-			{{ $t("main.loadpoint.fallbackName") }}
+		</DragDropList>
+		<div v-if="displayList.length > 0" class="mt-2 text-end">
+			<button type="button" class="btn btn-link btn-sm text-muted" @click="resetOrder">
+				{{ $t("config.general.reset") }}
+			</button>
 		</div>
 	</div>
 </template>
@@ -53,29 +49,20 @@ import {
 	getLoadpointDisplayList,
 	setLoadpointOrder,
 	setLoadpointVisibility,
+	resetLoadpointOrder,
 	type LoadpointDisplayItem,
 } from "@/loadpoint-display";
-import dragDropMixin from "@/mixins/dragDrop";
-import DragDropItem from "@/components/DragDrop/DragDropItem.vue";
+import DragDropList from "@/components/Helper/DragDropList.vue";
+import DragDropItem from "@/components/Helper/DragDropItem.vue";
 
 export default defineComponent({
 	name: "LoadpointOrderSettings",
-	components: { DragDropItem },
-	mixins: [dragDropMixin],
+	components: { DragDropList, DragDropItem },
 	props: {
 		loadpoints: {
 			type: Array as PropType<LoadpointCompact[]>,
 			default: () => [],
 		},
-	},
-	data() {
-		return {
-			draggedIndex: -1,
-			touchStartY: 0,
-			touchStartTime: 0,
-			isDragging: false,
-			placeholder: null as HTMLElement | null,
-		};
 	},
 	computed: {
 		displayList(): LoadpointDisplayItem[] {
@@ -86,16 +73,11 @@ export default defineComponent({
 		updateVisibility(loadpointIndex: number, visible: boolean) {
 			setLoadpointVisibility(loadpointIndex, visible);
 		},
-		/**
-		 * Implementation of handleReorder required by dragDropMixin
-		 */
-		handleReorder(fromIndex: number, toIndex: number) {
-			const newOrder = [...this.displayList.map((item) => item.index)];
-			const draggedItem = newOrder.splice(fromIndex, 1)[0];
-			if (draggedItem !== undefined) {
-				newOrder.splice(toIndex, 0, draggedItem);
-				setLoadpointOrder(newOrder);
-			}
+		handleReorder(newOrder: number[]) {
+			setLoadpointOrder(newOrder);
+		},
+		resetOrder() {
+			resetLoadpointOrder(this.loadpoints.length);
 		},
 	},
 });
@@ -109,9 +91,5 @@ export default defineComponent({
 .form-check {
 	display: flex;
 	align-items: center;
-}
-
-.loadpoint-list:empty + .text-muted {
-	display: block;
 }
 </style>

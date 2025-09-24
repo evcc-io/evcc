@@ -172,6 +172,7 @@
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "required": "erforderlich",
+      "reset": "Zurücksetzen",
       "save": "Speichern",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
@@ -1092,11 +1093,7 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
-    "device": {
-      "info": "Einstellungen, die du hier vornimmst, gelten nur für dieses Gerät/diesen Browser.",
-      "infoApp": "Einstellungen, die du hier vornimmst, gelten nur für diese App.",
-      "infoBrowser": "Einstellungen, die du hier vornimmst, gelten nur für diesen Browser."
-    },
+    "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
@@ -1111,9 +1108,9 @@
       "label": "Sprache"
     },
     "loadpoints": {
-      "help": "Ziehe, um Ladepunkte neu anzuordnen und verwende Schalter, um sie ein- oder auszublenden.",
+      "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hidden": "Ausgeblendet",
-      "label": "Ladepunkt Reihenfolge & Sichtbarkeit",
+      "label": "Ladepunkte",
       "visible": "Sichtbar"
     },
     "sponsorToken": {

@@ -1,8 +1,5 @@
 <template>
 	<div class="container mx-0 px-0">
-		<div class="small text-muted mb-3">
-			{{ isApp() ? $t("settings.device.infoApp") : $t("settings.device.infoBrowser") }}
-		</div>
 		<FormRow id="settingsDesign" :label="$t('settings.theme.label')">
 			<SelectGroup
 				id="settingsDesign"
@@ -62,6 +59,21 @@
 				equal-width
 			/>
 		</FormRow>
+		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
+			<LoadpointOrderSettings :loadpoints="loadpoints" />
+		</FormRow>
+		<FormRow v-if="fullscreenAvailable" :label="$t('settings.fullscreen.label')">
+			<button
+				v-if="fullscreenActive"
+				class="btn btn-sm btn-outline-secondary"
+				@click="exitFullscreen"
+			>
+				{{ $t("settings.fullscreen.exit") }}
+			</button>
+			<button v-else class="btn btn-sm btn-outline-secondary" @click="enterFullscreen">
+				{{ $t("settings.fullscreen.enter") }}
+			</button>
+		</FormRow>
 		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
 			<div class="form-check form-switch my-1">
 				<input
@@ -78,25 +90,9 @@
 				</div>
 			</div>
 		</FormRow>
-		<FormRow v-if="fullscreenAvailable" :label="$t('settings.fullscreen.label')">
-			<button
-				v-if="fullscreenActive"
-				class="btn btn-sm btn-outline-secondary"
-				@click="exitFullscreen"
-			>
-				{{ $t("settings.fullscreen.exit") }}
-			</button>
-			<button v-else class="btn btn-sm btn-outline-secondary" @click="enterFullscreen">
-				{{ $t("settings.fullscreen.enter") }}
-			</button>
-		</FormRow>
-		<FormRow
-			v-if="loadpoints.length > 1"
-			id="loadpointOrder"
-			:label="$t('settings.loadpoints.label')"
-		>
-			<LoadpointOrderSettings :loadpoints="loadpoints" />
-		</FormRow>
+		<div class="small text-muted mb-3">
+			{{ $t("settings.deviceInfo") }}
+		</div>
 	</div>
 </template>
 
