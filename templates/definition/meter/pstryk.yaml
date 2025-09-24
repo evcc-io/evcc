@@ -5,9 +5,6 @@ products:
       generic: Pstryk.pl (3-phase meter via local HTTP)
 params:
   - name: host
-    description:
-      de: Hostname oder IP
-      en: Hostname or IP address
 render: |
   type: custom
   power:
