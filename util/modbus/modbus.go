@@ -26,9 +26,10 @@ const (
 // RTU field is included for compatibility with modbus.tpl which renders rtu: false for TCP
 // TODO remove RTU field (https://github.com/evcc-io/evcc/issues/3360)
 type TcpSettings struct {
-	URI string
-	ID  uint8
-	RTU *bool `mapstructure:"rtu"`
+	URI   string
+	ID    uint8
+	RTU   *bool  `mapstructure:"rtu"`
+	Delay string `json:",omitempty" yaml:",omitempty"`
 }
 
 // Settings contains the ModBus settings
@@ -39,6 +40,7 @@ type Settings struct {
 	Baudrate            int    `json:",omitempty" yaml:",omitempty"`
 	UDP                 bool   `json:",omitempty" yaml:",omitempty"`
 	RTU                 *bool  `json:",omitempty" yaml:",omitempty"`
+	Delay               string `json:",omitempty" yaml:",omitempty"`
 }
 
 // Protocol identifies the wire format from the RTU setting
