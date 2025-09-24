@@ -663,7 +663,7 @@
   "help": {
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
-    "issueButton": "Bug melden",
+    "issueButton": "Problem melden",
     "issueDescription": "Komisches Verhalten gefunden?",
     "logsButton": "Logs ansehen",
     "logsDescription": "Überprüfe die Logs auf Fehler.",
