@@ -42,6 +42,7 @@
 						name: $t(`settings.unit.${value}`),
 					}))
 				"
+				:aria-label="$t('settings.unit.label')"
 				equal-width
 			/>
 		</FormRow>
@@ -57,6 +58,7 @@
 						name: $t(`settings.time.${value}h`),
 					}))
 				"
+				:aria-label="$t('settings.time.label')"
 				equal-width
 			/>
 		</FormRow>
