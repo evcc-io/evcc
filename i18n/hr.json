@@ -409,9 +409,9 @@
         "standby": "Pripravan"
       },
       "pvsource": {
-        "int": "Interno",
+        "all": "Ukupno",
         "ext": "Vanjski izvor",
-        "all": "Ukupno"
+        "int": "Interno"
       },
       "schema": {
         "http": "HTTP (nekriptirano)",

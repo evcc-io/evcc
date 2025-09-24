@@ -268,9 +268,9 @@
     },
     "options": {
       "pvsource": {
-        "int": "Intern",
+        "all": "Total",
         "ext": "Sursă externă",
-        "all": "Total"
+        "int": "Intern"
       }
     },
     "provider": {

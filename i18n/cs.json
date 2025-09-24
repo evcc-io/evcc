@@ -409,9 +409,9 @@
         "standby": "Pohotovostní režim"
       },
       "pvsource": {
-        "int": "Interní",
+        "all": "Celkem",
         "ext": "Externí zdroj",
-        "all": "Celkem"
+        "int": "Interní"
       },
       "schema": {
         "http": "HTTP (nešifrované)",

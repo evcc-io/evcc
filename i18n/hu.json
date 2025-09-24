@@ -402,9 +402,9 @@
         "standby": "Készenlét"
       },
       "pvsource": {
-        "int": "Belső",
+        "all": "Összesen",
         "ext": "Külső forrás",
-        "all": "Összesen"
+        "int": "Belső"
       },
       "schema": {
         "http": "HTTP (titkosítatlan)",

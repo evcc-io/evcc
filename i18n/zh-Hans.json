@@ -361,9 +361,9 @@
         "little": "小端字节序"
       },
       "pvsource": {
-        "int": "内部",
+        "all": "总计",
         "ext": "外部来源",
-        "all": "总计"
+        "int": "内部"
       },
       "schema": {
         "http": "HTTP (未加密)",

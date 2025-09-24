@@ -214,10 +214,10 @@
         "little": "little endian"
       },
       "pvsource": {
-        "int": "Interno",
+        "all": "Total",
         "ext": "Fuente externa",
-        "all": "Total"
-      } ,
+        "int": "Interno"
+      },
       "schema": {
         "http": "HTTP (sin cifrar)",
         "https": "HTTPS (cifrado)"

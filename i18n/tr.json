@@ -402,9 +402,9 @@
         "standby": "Bekleme"
       },
       "pvsource": {
-        "int": "Dahili",
+        "all": "Toplam",
         "ext": "Harici kaynak",
-        "all": "Toplam"
+        "int": "Dahili"
       },
       "schema": {
         "http": "HTTP (şifrelenmemiş)",

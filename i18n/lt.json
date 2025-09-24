@@ -409,9 +409,9 @@
         "standby": "Budėjimo režimas"
       },
       "pvsource": {
-        "int": "Vidinis",
+        "all": "Iš viso",
         "ext": "Išorinis šaltinis",
-        "all": "Iš viso"
+        "int": "Vidinis"
       },
       "schema": {
         "http": "HTTP (nešifruotas)",

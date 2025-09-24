@@ -41,9 +41,9 @@
     },
     "options": {
       "pvsource": {
-        "int": "Interný",
+        "all": "Celkovo",
         "ext": "Externý zdroj",
-        "all": "Celkovo"
+        "int": "Interný"
       }
     }
   }

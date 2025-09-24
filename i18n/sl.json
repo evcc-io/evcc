@@ -320,9 +320,9 @@
         "little": "little-endian"
       },
       "pvsource": {
-        "int": "Interno",
+        "all": "Skupaj",
         "ext": "Zunanji vir",
-        "all": "Skupaj"
+        "int": "Interno"
       },
       "schema": {
         "http": "HTTP (nešifrirano)",

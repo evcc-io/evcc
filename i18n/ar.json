@@ -25,6 +25,13 @@
       "title": "الإعدادات",
       "vehicles": "عرباتي"
     },
+    "options": {
+      "pvsource": {
+        "all": "إجمالي",
+        "ext": "مصدر خارجي",
+        "int": "داخلي"
+      }
+    },
     "validation": {
       "failed": "أخفق",
       "label": "الحالة",
@@ -32,13 +39,6 @@
       "success": "ناجح",
       "unknown": "غير معروف",
       "validate": "تحقق من الصحة"
-    },
-    "options": {
-      "pvsource": {
-        "int": "داخلي",
-        "ext": "مصدر خارجي",
-        "all": "إجمالي"
-      }
     },
     "vehicle": {
       "cancel": "الغاء",

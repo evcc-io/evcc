@@ -7,9 +7,9 @@
   "config": {
     "options": {
       "pvsource": {
-        "int": "Sisemine",
+        "all": "Kokku",
         "ext": "Väline allikas",
-        "all": "Kokku"
+        "int": "Sisemine"
       }
     }
   }

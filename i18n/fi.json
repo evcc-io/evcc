@@ -408,9 +408,9 @@
         "standby": "Valmiustila"
       },
       "pvsource": {
-        "int": "Sisäinen",
+        "all": "Yhteensä",
         "ext": "Ulkoinen lähde",
-        "all": "Yhteensä"
+        "int": "Sisäinen"
       },
       "schema": {
         "http": "HTTP (salaamaton)",

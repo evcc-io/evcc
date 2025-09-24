@@ -412,9 +412,9 @@
         "standby": "Standby"
       },
       "pvsource": {
-        "int": "Internal",
+        "all": "Total",
         "ext": "External source",
-        "all": "Total"
+        "int": "Internal"
       },
       "schema": {
         "http": "HTTP (unencrypted)",

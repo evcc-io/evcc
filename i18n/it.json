@@ -350,9 +350,9 @@
         "little": "little-endian"
       },
       "pvsource": {
-        "int": "Interno",
+        "all": "Totale",
         "ext": "Fonte esterna",
-        "all": "Totale"
+        "int": "Interno"
       },
       "schema": {
         "http": "HTTP (non crittografato)",

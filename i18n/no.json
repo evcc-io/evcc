@@ -30,9 +30,9 @@
     },
     "options": {
       "pvsource": {
-        "int": "Intern",
+        "all": "Totalt",
         "ext": "Ekstern kilde",
-        "all": "Totalt"
+        "int": "Intern"
       }
     },
     "validation": {

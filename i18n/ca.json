@@ -20,9 +20,9 @@
   "config": {
     "options": {
       "pvsource": {
-        "int": "Intern",
+        "all": "Total",
         "ext": "Font externa",
-        "all": "Total"
+        "int": "Intern"
       }
     }
   },

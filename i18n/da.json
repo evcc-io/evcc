@@ -409,9 +409,9 @@
         "standby": "Standby"
       },
       "pvsource": {
-        "int": "Intern",
+        "all": "Total",
         "ext": "Ekstern kilde",
-        "all": "Total"
+        "int": "Intern"
       },
       "schema": {
         "http": "HTTP (ikke-krypteret)",

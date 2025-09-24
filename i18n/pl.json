@@ -325,9 +325,9 @@
         "standby": "Oczekuje"
       },
       "pvsource": {
-        "int": "Wewnętrzne",
+        "all": "Łącznie",
         "ext": "Źródło zewnętrzne",
-        "all": "Łącznie"
+        "int": "Wewnętrzne"
       },
       "status": {
         "A": "A (niepodłączony)",
