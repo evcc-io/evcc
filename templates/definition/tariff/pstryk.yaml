@@ -55,11 +55,18 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: go
-    # single input "all" — one request for 48h (today 00:00Z -> day after tomorrow 00:00Z)
+    # Do 13:05 lokalnie: tylko dziś. Od 13:05: dziś+jutro.
     script: |
-      all
+      (func() string {
+        now := time.Now().In(time.Local)
+        if now.Hour() < 13 || (now.Hour() == 13 && now.Minute() < 5) {
+          return today24
+        }
+        return all48
+      })()
     in:
-      - name: all
+      # 48h (dziś + jutro) — jedno zapytanie
+      - name: all48
         type: string
         config:
           source: http
@@ -68,9 +75,9 @@ render: |
             Authorization: {{ .token }}
             Accept: application/json
             User-Agent: evcc-pstryk-template
+          allowempty: true
           jq: |
-            # frames: [{start, end, price_gross, ...}] in UTC (RFC3339)
-            # toRFC3339 converts fromdateiso8601 -> local RFC3339 with colon in offset or Z
+            # UTC ISO -> lokalny RFC3339 (z dwukropkiem) / Z
             def toRFC3339($t):
               ( $t | fromdateiso8601? ) as $ts
               | if $ts == null then null
@@ -91,4 +98,47 @@ render: |
               }
             ]
             | map(select(.start!=null and .end!=null and .value!=null))
+            | tostring
+
+      # 24h (tylko dziś) — tnij po LOKALNEJ dacie pierwszej ramki (DST-safe)
+      - name: today24
+        type: string
+        config:
+          source: http
+          uri: {{ .base }}/integrations/{{ .plan }}?resolution=hour&window_start={{ `{{ now.UTC | date "2006-01-02T00:00:00Z" }}` }}&window_end={{ `{{ addDate (now.UTC) 0 0 1 | date "2006-01-02T00:00:00Z" }}` }}
+          headers:
+            Authorization: {{ .token }}
+            Accept: application/json
+            User-Agent: evcc-pstryk-template
+          jq: |
+            def toRFC3339($t):
+              ( $t | fromdateiso8601? ) as $ts
+              | if $ts == null then null
+                else
+                  ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
+                  | ($ts | strftime("%z")) as $off
+                  | if ($off == "+0000" or $off == "-0000")
+                      then ($base + "Z")
+                      else ($base + ($off[0:3] + ":" + $off[3:5]))
+                    end
+              end;
+
+            # lokalna data YYYY-MM-DD dla znacznika czasu
+            def localDate($t): ( ($t|fromdateiso8601?) | strftime("%Y-%m-%d") );
+
+            # wyznacz "dzisiaj" jako lokalną datę pierwszej ramki (bez Go-funkcji)
+            def firstLocalDay:
+              ( (.frames // []) | if length>0 then (.[0].start|localDate) else null end );
+
+            [ (.frames // [])[] as $f |
+              {
+                "start": toRFC3339($f.start),
+                "end":   toRFC3339($f.end),
+                "value": $f.price_gross,
+                "__d":   localDate($f.start)
+              }
+            ]
+            | (firstLocalDay) as $D
+            | map(select($D!=null and .__d == $D))
+            | map(del(.__d))
             | tostring
