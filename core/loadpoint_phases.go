@@ -171,7 +171,7 @@ func (lp *Loadpoint) checkChargerPhaseReconfiguration() {
 	if pg, ok := lp.charger.(api.PhaseGetter); ok {
 		if chargerPhases, err := pg.GetPhases(); err == nil {
 			if chargerPhases > 0 && chargerPhases != lp.GetPhases() {
-				lp.log.INFO.Printf("detected charger phase reconfiguration: %dp -> %dp", lp.GetPhases(), chargerPhases)
+				lp.log.WARN.Printf("detected charger phase reconfiguration: %dp -> %dp", lp.GetPhases(), chargerPhases)
 				lp.SetPhases(chargerPhases)
 			}
 		} else if !errors.Is(err, api.ErrNotAvailable) {
