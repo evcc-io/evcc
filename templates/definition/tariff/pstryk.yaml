@@ -1,0 +1,94 @@
+template: pstryk
+products:
+  - brand: Pstryk.pl
+requirements:
+  description:
+    en: "Get your API token from the Pstryk App"
+    de: "Hol dir deinen API-Token aus der Pstryk App"
+  evcc: ["skiptest"]
+group: price
+countries: ["PL"]
+
+params:
+  - name: token
+    type: string
+    required: true
+    description:
+      en: "API token (e.g. sk-...)."
+      de: "API-Token (z.B. sk-...)."
+    help:
+      en: "Exact Authorization header value, without 'Bearer'."
+      de: "Genauer Authorization-Wert, ohne 'Bearer'."
+
+  - name: plan
+    type: choice
+    default: pricing
+    choice: ["pricing", "prosumer-pricing"]
+    required: true
+    description:
+      en: "Tariff source."
+      de: "Tarifquelle."
+    help:
+      en: "Path under /integrations/: 'pricing' or 'prosumer-pricing'."
+      de: "Pfad unter /integrations/: 'pricing' oder 'prosumer-pricing'."
+
+  - name: base
+    type: string
+    default: "https://api.pstryk.pl"
+    description:
+      en: "Base API URL."
+      de: "Basis-API-URL."
+
+  - name: currency
+    type: choice
+    default: PLN
+    required: true
+    choice: ["PLN"]
+    description:
+      en: "Currency."
+      de: "Währung."
+
+  - preset: tariff-base
+
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: go
+    # single input "all" — one request for 48h (today 00:00Z -> day after tomorrow 00:00Z)
+    script: |
+      all
+    in:
+      - name: all
+        type: string
+        config:
+          source: http
+          uri: {{ .base }}/integrations/{{ .plan }}?resolution=hour&window_start={{ `{{ now.UTC | date "2006-01-02T00:00:00Z" }}` }}&window_end={{ `{{ addDate (now.UTC) 0 0 2 | date "2006-01-02T00:00:00Z" }}` }}
+          headers:
+            Authorization: {{ .token }}
+            Accept: application/json
+            User-Agent: evcc-pstryk-template
+          jq: |
+            # frames: [{start, end, price_gross, ...}] in UTC (RFC3339)
+            # toRFC3339 converts fromdateiso8601 -> local RFC3339 with colon in offset or Z
+            def toRFC3339($t):
+              ( $t | fromdateiso8601? ) as $ts
+              | if $ts == null then null
+                else
+                  ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
+                  | ($ts | strftime("%z")) as $off
+                  | if ($off == "+0000" or $off == "-0000")
+                      then ($base + "Z")
+                      else ($base + ($off[0:3] + ":" + $off[3:5]))
+                    end
+              end;
+
+            [ (.frames // [])[] as $f |
+              {
+                "start": toRFC3339($f.start),
+                "end":   toRFC3339($f.end),
+                "value": $f.price_gross
+              }
+            ]
+            | map(select(.start!=null and .end!=null and .value!=null))
+            | tostring
