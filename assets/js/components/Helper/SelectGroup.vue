@@ -6,10 +6,10 @@
 			:key="option.value"
 			type="button"
 			role="radio"
-			:aria-checked="option.value === modelValue"
-			:aria-label="ariaLabel ? `${ariaLabel}: ${option.name}` : option.name"
+			:aria-checked="optionSelected(option)"
+			:aria-label="optionLabel(option)"
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
-			:class="{ active: option.value === modelValue, 'btn--equal': equalWidth }"
+			:class="{ active: optionSelected(option), 'btn--equal': equalWidth }"
 			:disabled="option.disabled"
 			:data-testid="`${id}-${option.value}`"
 			tabindex="0"
@@ -36,6 +36,17 @@ export default defineComponent({
 		ariaLabel: String,
 	},
 	emits: ["update:modelValue"],
+	methods: {
+		optionSelected(option: SelectOption<string | number>) {
+			return (
+				option.value === this.modelValue ||
+				(this.modelValue === null && option.value === "")
+			);
+		},
+		optionLabel(option: SelectOption<string | number>) {
+			return this.ariaLabel ? `${this.ariaLabel}: ${option.name}` : option.name;
+		},
+	},
 });
 </script>
 

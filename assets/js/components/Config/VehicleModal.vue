@@ -197,7 +197,7 @@ import {
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/vehicle.yaml?raw";
 
-const initialValues = { type: ConfigType.Template, icon: "car", phases: "" };
+const initialValues = { type: ConfigType.Template, icon: "car" };
 const device = createDeviceUtils("vehicle");
 
 function sleep(ms: number) {
