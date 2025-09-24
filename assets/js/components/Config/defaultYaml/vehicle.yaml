@@ -10,6 +10,9 @@ soc: # state of charge
 
 ## optional attributes (read-only)
 
+#getcapacity: # dynamic battery capacity
+#  source: const
+#  value: 75.0 # kWh
 #limitsoc: # in-vehicle charge limit
 #  source: const
 #  value: 80 # %
