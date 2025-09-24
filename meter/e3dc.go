@@ -180,7 +180,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			} else {
 				return values[1], nil
 			}
-		// "all" (default): Use total power of internal and external source (values[0] - values[1], substracted as external is always negative)
+		// "all" (default): Use total power of internal and external source (values[0] - values[1], subtracted as external is always negative)
 		default:
 			return values[0] - values[1], nil
 		}
