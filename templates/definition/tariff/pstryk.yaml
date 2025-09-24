@@ -35,9 +35,6 @@ params:
   - name: base
     type: string
     default: "https://api.pstryk.pl"
-    description:
-      en: "Base API URL."
-      de: "Basis-API-URL."
 
   - name: currency
     type: choice
