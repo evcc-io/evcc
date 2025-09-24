@@ -43,6 +43,17 @@ params:
   - name: maxacpower
   - name: capacity
     advanced: true
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Quelle einschließen
+      en: Include external power
+    help:
+      de: Bezieht alle angeschlossenen externen Quellen in die PV-Berechnung ein (Standard).
+      en: Includes all connected external sources into the PV calculation (default).
+    advanced: true
+    usages: ["pv"]
+    default: "true"
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -53,4 +64,7 @@ render: |
   {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
   capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  externalpower: {{ .externalpower }}
   {{- end }}
