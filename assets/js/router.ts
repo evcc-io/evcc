@@ -94,6 +94,12 @@ export default function setupRouter(i18n: VueI18nInstance) {
           };
         },
       },
+      {
+        path: "/issue",
+        component: () => import("./views/Issue.vue"),
+        beforeEnter: ensureAuth,
+        props: true,
+      },
     ],
   });
   router.beforeEach(async () => {

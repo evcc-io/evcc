@@ -328,6 +328,9 @@
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
+					<router-link to="/issue" class="btn btn-outline-secondary">
+						{{ $t("help.issueButton") }}
+					</router-link>
 					<button
 						class="btn btn-outline-secondary text-truncate"
 						@click="openModal('backupRestoreModal')"
