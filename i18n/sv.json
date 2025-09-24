@@ -66,7 +66,7 @@
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
       "title": "Belastningshantering",
-      "usableMeters": "Användbara mätarreferenser"
+      "usableMeters": "Mätarreferenser som kan användas"
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
@@ -77,6 +77,7 @@
       "title": "Kontrollera beteende"
     },
     "deviceValue": {
+      "allowControl": "Tillåt styrning",
       "amount": "Belopp",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -249,7 +250,7 @@
       "noVehicles": "Inga fordon är konfigurerade.",
       "option": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmare"
+        "heating": "Lägg till värmningsenhet"
       },
       "phases1p": "1-fas",
       "phases3p": "3-fas",
@@ -288,7 +289,7 @@
       "thresholdEnableLabel": "Anslut elnätet",
       "titleAdd": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmare",
+        "heating": "Lägg till värmningsenhet",
         "unknown": "Lägg till laddare eller värmare"
       },
       "titleEdit": {
@@ -430,6 +431,20 @@
       "meter": "Sol & batteri",
       "system": "System",
       "vehicles": "Fordon"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc är utrustad med en integration för SMA Sunny Home Manager (SHM) via SEMP-protokollet. Om den körs på samma nätverk, bör du efter att du har loggat in på ditt Sunny Portal-konto automatiskt erbjudas att lägga till alla laddare som är konfigurerade i evcc. Det bör fungera direkt utan att några justeringar behöver göras nedan.",
+      "descriptionDeviceId": "Hexsträng med 12 tecken. Prefix för alla enheter (laddare, ..).",
+      "descriptionIdPattern": "Identifieringsmönster",
+      "descriptionIds": "I Sunny Portal behöver varje konsumentenhet en unik identifierare. evcc genererar en unik identifierare baserat på din hårdvara. Om du migrerar evcc till en annan hårdvara kan dessa identifierare ändras. Om du vill behålla historiken kan du åsidosätta de genererade identifierarna här. Öppna SEMP-URL:en (/semp) för att kontrollera dina aktuella identifierare.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "Hexsträng med 8 tecken. Generellt prefix för alla entiteter. Evcc använder sitt egna tillverkar-ID som standard.",
+      "labelAllowControl": "Tillåt rekommendationer från SHM för effektgränser.",
+      "labelControl": "Tillåt styrning",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Tillverkar-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Ange sponsor-token",
@@ -1058,7 +1073,7 @@
     "unit": {
       "km": "km",
       "label": "Enheter",
-      "mi": "miles"
+      "mi": "amerikanska mil"
     }
   },
   "smartCost": {

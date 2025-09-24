@@ -77,6 +77,7 @@
       "title": "Comportement du contrôle"
     },
     "deviceValue": {
+      "allowControl": "Permettre contrôle",
       "amount": "Montant",
       "broker": "Courtier",
       "bucket": "Bucket",
@@ -154,7 +155,9 @@
       "optional": "optionnel"
     },
     "general": {
+      "applyAndClose": "Appliquer & fermer",
       "cancel": "Annuler",
+      "close": "Fermer",
       "customHelp": "Créer un appareil sur mesure en utilisant le système de plugins d’evcc.",
       "customOption": "Appareil sur mesure",
       "delete": "Supprimer",
@@ -168,6 +171,7 @@
       "password": "Mot de passe",
       "readFromFile": "Lu depuis le fichier",
       "remove": "Supprimer",
+      "required": "obligatoire",
       "save": "Enregistrer",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
@@ -431,6 +435,20 @@
       "system": "Système",
       "vehicles": "Véhicules"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc est équipé d'une intégration pour le SMA Sunny Home Manager (SHM) via le protocole SEMP. S'il fonctionne sur le même réseau, après vous être connecté à votre compte Sunny Portal, vous devriez automatiquement avoir la possibilité d'ajouter tous les chargeurs configurés dans evcc en tant que nouveaux consommateurs détectés. Tout devrait être prêt à l'emploi immédiatement, sans qu'aucun réglage ne soit nécessaire.",
+      "descriptionDeviceId": "Chaîne HEX à 12 caractères. Préfixe pour tous les appareils (point de recharge, etc.).",
+      "descriptionIdPattern": "Schéma d'identification",
+      "descriptionIds": "Dans Sunny Portal, chaque appareil consommateur doit disposer d'un identifiant unique. evcc génère un identifiant unique basé sur votre matériel. Si vous migrez evcc vers un autre matériel, ces identifiants peuvent changer. Si vous souhaitez conserver l'historique, vous pouvez remplacer les identifiants générés ici. Ouvrez l'URL SEMP (/semp) pour vérifier vos identifiants actuels.",
+      "descriptionSempUrl": "URL SEMP",
+      "descriptionVendorId": "Chaîne HEX à 8 caractères. Préfixe général de toutes les entités. Par défaut, evcc utilisera son propre identifiant fournisseur interne.",
+      "labelAllowControl": "Accepter les recommandations supplémentaires de SHM concernant les limites de puissance.",
+      "labelControl": "Autoriser le contrôle",
+      "labelDeviceId": "Identifiant de l'appareil",
+      "labelVendorId": "Identifiant du fournisseur",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
@@ -646,7 +664,7 @@
   "help": {
     "discussionsButton": "Discussions GitHub",
     "documentationButton": "Documentation",
-    "issueButton": "Signaler un bug",
+    "issueButton": "Signaler un problème",
     "issueDescription": "Trouvé un comportement étrange ou erroné ?",
     "logsButton": "Voir les journaux",
     "logsDescription": "Vérifiez s’il y a des erreurs dans les journaux.",
@@ -662,6 +680,57 @@
     "restartButton": "Redémarrer",
     "restartDescription": "Déjà essayé de redémarrer ?",
     "secondaryActions": "Toujours pas de solution ? Voici quelques options plus avancées."
+  },
+  "issue": {
+    "additional": {
+      "description": "Merci d’inclure la configuration et les journaux afin de nous permettre de reproduire le problème efficacement. Nous vous encourageons à partager autant d’information que possible. L’état n’est normalement pas nécessaire.",
+      "include": "inclure",
+      "lines": "lignes",
+      "logs": "Journaux",
+      "logsDescription": "Les entrées de journaux récentes qui pourraient être utiles à identifier le problème.",
+      "showDetails": "voir les détails",
+      "source": "Source",
+      "state": "Etat",
+      "stateDescription": "Etat complet incluant le point de charge, l’appareil et les informations d’énergie. A inclure uniquement sur demande.",
+      "title": "Informations additionnelles",
+      "uiConfig": "Configuration (interface utilisateur)",
+      "uiConfigDescription": "Configuration effectuée à travers l’interface utilisateur.",
+      "yamlConfig": "Configuration (YAML)",
+      "yamlConfigDescription": "Votre fichier de configuration complet."
+    },
+    "additionalContext": "Contexte additionnel",
+    "additionalContextPlaceholder": "Toute information utile...\n- Détails de configuration\n- Ce que vous avez essayé\n- Détails de l’environnement",
+    "createButtonDiscussion": "Démarrer une discussion sur GitHub…",
+    "createButtonIssue": "Créer un Cas sur GitHub…",
+    "description": "Votre installation ne fonctionne pas comme attendu ? Utilisez cette pas pour obtenir de l’aide ou signaler un problème. Fournissez suffisamment de détails pour nous permettre de comprendre et reproduire le problème tout en restant concis, clair et facile à suivre.",
+    "helpType": {
+      "discussion": "J’ai besoin d’aide avec mon installation",
+      "discussionDescription": "Les discussions de la communautés fournissent des réponses.",
+      "issue": "J’ai trouvé un bug",
+      "issueDescription": "Je suis certain que quelque chose doit être réparé.",
+      "title": "À quel problème avons-nous affaire ?"
+    },
+    "issueDescription": "Description",
+    "issueTitle": "Titre",
+    "stepsToReproduce": "Étapes permettant de reproduire le problème",
+    "subTitleDiscussion": "Décrivez votre problème",
+    "subTitleIssue": "Décrivez le problème",
+    "summary": {
+      "confirmationButtonDiscussion": "Démarrer une Discussion sur GitHub",
+      "confirmationButtonIssue": "Créer un Cas sur GitHub",
+      "copied": "Copié !",
+      "copyButton": "Copier les informations additionnelles",
+      "instructions": "A cause des limitations de GitHub sur la taille des URL, il faut procéder en deux étapes :",
+      "singleStepDescription": "Cliquer sur le bouton ci-dessous pour ouvrir GitHub avec un formulaire pré-rempli avec les détails de votre problème. Les données sensibles ont été automatiquement rendues anonymes, mais veuillez vérifier avant de partager.",
+      "step1Description": "Cliquer sur le bouton ci-dessous pour créer une entrée simple GitHub avec votre titre, description et détails.",
+      "step2Description": "Après avoir créé l’entrée, revenir ici pour copier les informations additionnelles ci-dessous et les copier dans le formulaire GitHub. Les données sensibles ont été automatiquement rendues anonymes, mais vérifiez avant de partager.",
+      "stepOneDiscussion": "Étape 1 : créer la discussion de base",
+      "stepOneIssue": "Étape 1 : créer le case de base",
+      "stepTwo": "Étape 2 : copier les informations additionnelles",
+      "title": "Résumé du problème GitHub"
+    },
+    "title": "Signaler un problème",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filtrer par zone",
@@ -892,7 +961,7 @@
       "targetChargeActive": "Plan de charge actif. Fin estimée dans {duration}.",
       "targetChargePlanned": "Le plan de charge démarre dans {duration}.",
       "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule…",
-      "vehicleLimit": "Limit du véhicule",
+      "vehicleLimit": "Limite du véhicule",
       "vehicleLimitReached": "Limite du véhicule atteinte.",
       "waitForVehicle": "Prêt à charger. Attente du véhicule…",
       "welcome": "Courte charge initiale pour confirmer la connexion."
