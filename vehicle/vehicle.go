@@ -27,6 +27,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		Soc           plugin.Config
+		GetCapacity   *plugin.Config
 		LimitSoc      *plugin.Config
 		Status        *plugin.Config
 		Range         *plugin.Config
@@ -51,6 +52,15 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	v := &Vehicle{
 		embed: &cc.embed,
 		socG:  socG,
+	}
+
+	// decorate capacity
+	if cc.GetCapacity != nil {
+		getCapacity, err := cc.GetCapacity.FloatGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("getCapacity: %w", err)
+		}
+		v.embed.GetCapacity = getCapacity
 	}
 
 	// decorate range

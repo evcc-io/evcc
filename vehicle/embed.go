@@ -13,6 +13,7 @@ type embed struct {
 	Identifiers_ []string         `mapstructure:"identifiers"`
 	Features_    []api.Feature    `mapstructure:"features"`
 	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
+	GetCapacity  func() (float64, error) `mapstructure:"-"`
 }
 
 // Title implements the api.Vehicle interface
@@ -37,6 +38,11 @@ func (v *embed) SetTitle(title string) {
 
 // Capacity implements the api.Vehicle interface
 func (v *embed) Capacity() float64 {
+	if v.GetCapacity != nil {
+		if capacity, err := v.GetCapacity(); err == nil {
+			return capacity
+		}
+	}
 	return v.Capacity_
 }
 
