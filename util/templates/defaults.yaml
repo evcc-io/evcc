@@ -577,8 +577,8 @@ presets:
         type: bool
         advanced: true
         description:
-          en: Integrated device
-          de: Integriertes Gerät
+          en: (true/false); Integrated device
+          de: (true/false); Integriertes Gerät
         help:
           de: Fest angeschlossenes Gerät. Keine Ladevorgänge
           en: Integrated device. No charging sessions
@@ -586,8 +586,8 @@ presets:
         type: bool
         advanced: true
         description:
-          en: Heating device
-          de: Wärmeerzeuger
+          en: (true/false); Heating device
+          de: (true/false); Wärmeerzeuger
         help:
           de: Zeigt °C anstatt % an
           en: Shows °C instead of %
