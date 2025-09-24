@@ -35,6 +35,9 @@ params:
   - name: base
     type: string
     default: "https://api.pstryk.pl"
+    description:
+      en: "URL of Pstryk API (or reverse proxy)"
+      de: "URL der Pstryk-API (oder Reverse-Proxy)"
 
   - name: currency
     type: choice
