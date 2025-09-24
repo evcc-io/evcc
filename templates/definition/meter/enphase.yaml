@@ -23,6 +23,8 @@ params:
   - name: cache
     advanced: true
     default: 1s
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -149,4 +151,6 @@ render: |
     cache: {{ .cache }}
     jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

@@ -14,6 +14,8 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   {{- if eq .usage "battery" }}
   type: custom
@@ -106,4 +108,6 @@ render: |
             {{- include "modbus" . | indent 10 }}
             value: 124:0:InOutWRte_RvrtTms
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

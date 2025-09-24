@@ -25,7 +25,6 @@ params:
   - name: cache
     advanced: true
     default: 30s
-  - name: maxchargepower
   - name: externalpower
     type: bool
     description:
@@ -35,6 +34,8 @@ params:
       de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
       en: Query external power of all devices connected to S0
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
     usages: ["pv"]
 render: |
   type: rct
@@ -44,5 +45,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
-  maxchargepower: {{ .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   externalpower: {{ .externalpower }}

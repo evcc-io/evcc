@@ -20,11 +20,11 @@ params:
     default: 7979
   - name: capacity
     advanced: true
-  - name: maxchargepower
-    advanced: true
   - name: cache
     advanced: true
     default: 5s
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -120,4 +120,6 @@ render: |
                     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C24
                     body: {{ if .maxchargepower }}{{ .maxchargepower }}{{ else }}99000{{ end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

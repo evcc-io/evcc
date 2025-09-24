@@ -11,6 +11,8 @@ params:
     choice: ["tcpip"]
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -105,4 +107,6 @@ render: |
       decode: uint16nan
     scale: 0.01
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

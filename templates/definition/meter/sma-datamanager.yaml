@@ -17,6 +17,8 @@ params:
     id: 2
   - name: capacity
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -101,4 +103,6 @@ render: |
       type: holding
       decode: uint32nan
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

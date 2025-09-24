@@ -31,6 +31,8 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+  - name: maxdischargepower
   - name: defaultmode
     default: 0 # "SelfUse"
     advanced: true
@@ -178,4 +180,6 @@ render: |
               type: writesingle
               decode: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
