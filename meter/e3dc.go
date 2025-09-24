@@ -257,16 +257,16 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 		}
 
 		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
-		if !ok {
-			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 value not found")
+		if !ok || voltageL1 < 207 || voltageL1 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 not found or out of range")
 		}
 		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
-		if !ok {
-			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 value not found")
+		if !ok || voltageL2 < 207 || voltageL2 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 not found or out of range")
 		}
 		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
-		if !ok {
-			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 value not found")
+		if !ok || voltageL3 < 207 || voltageL3 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L3 not found or out of range")
 		}
 		return voltageL1, voltageL2, voltageL3, nil
 
