@@ -171,9 +171,9 @@ func (m *E3dc) CurrentPower() (float64, error) {
 
 		if m.externalPower {
 			return values[0] - values[1], nil
-		} else {
-			return values[0], nil
 		}
+
+		return values[0], nil
 
 	case templates.UsageBattery:
 		res, err := m.retryMessage(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
