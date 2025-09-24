@@ -51,6 +51,7 @@
 		class="w-50"
 		equal-width
 		transparent
+		:aria-label="label"
 		:options="[
 			{ value: false, name: $t('config.options.boolean.no') },
 			{ value: true, name: $t('config.options.boolean.yes') },
@@ -115,6 +116,7 @@ export default {
 		invalid: Boolean,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
+		label: String,
 	},
 	emits: ["update:modelValue"],
 	data: () => {
