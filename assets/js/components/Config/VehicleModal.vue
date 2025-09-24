@@ -78,6 +78,7 @@
 									{ name: '2-phases', value: '2' },
 									{ name: '3-phases', value: '' },
 								]"
+								:aria-label="$t('config.vehicle.maximumPhases')"
 								equal-width
 								transparent
 							/>
@@ -210,7 +211,7 @@ type VehicleDeviceValues = DeviceValues & {
 	minCurrent: number | undefined;
 	maxCurrent: number | undefined;
 	priority: number | undefined;
-	phases: number | undefined;
+	phases: string | undefined;
 	mode: string | undefined;
 };
 

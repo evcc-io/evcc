@@ -1236,7 +1236,7 @@ func (lp *Loadpoint) fastCharging() error {
 		maxPower1p := Voltage * lp.effectiveMaxCurrent()
 
 		// load management limit active
-		if circuitMaxPower := lp.circuitMaxPower(); circuitMaxPower < 1.1*maxPower1p {
+		if circuitMaxPower := lp.circuitMaxPower(); circuitMaxPower > 0 && circuitMaxPower < 1.1*maxPower1p {
 			phases = 1
 			lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW max circuit power", circuitMaxPower)
 		}

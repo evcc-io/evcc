@@ -40,28 +40,50 @@ render: |
       type: holding
       decode: float32
     scale: 0.001
+  powers:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36019 # Meter Active Power R, W
+        type: holding
+        decode: int32
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36021 # Meter Active Power S, W
+        type: holding
+        decode: int32
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36023 # Meter Active Power T, W
+        type: holding
+        decode: int32
+      scale: -1
   currents:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 35122 # R phase Grid current, A
-      type: holding
-      decode: uint16
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 35127 # S phase Grid current, A
-      type: holding
-      decode: uint16
-    scale: 0.1
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 35132 # T phase Grid current, A
-      type: holding
-      decode: uint16
-    scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36055 # Meter Current R, A
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36056 # Meter Current S, A
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36057 # Meter Current T, A  
+        type: holding
+        decode: uint16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
