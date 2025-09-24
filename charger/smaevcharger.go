@@ -42,6 +42,7 @@ type Smaevcharger struct {
 	oldstate     float64
 	measurementG util.Cacheable[[]smaevcharger.Measurements]
 	parameterG   util.Cacheable[[]smaevcharger.Parameters]
+	isLegacyHw   bool
 }
 
 func init() {
@@ -108,30 +109,41 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 		Base:   wb.Client.Transport,
 	}
 
-	var swVersion, refVersion *version.Version
+	// get model
+	model, err := wb.getParameter("Parameter.Nameplate.ModelStr")
+	if err != nil {
+		return nil, err
+	}
 
+	wb.isLegacyHw = !strings.HasSuffix(model, "-20")
+
+	// get version
 	pkgRev, err := wb.getParameter("Parameter.Nameplate.PkgRev")
-	if err == nil {
-		swVersion, err = version.NewVersion(strings.TrimSuffix(pkgRev, ".R"))
+	if err != nil {
+		return nil, err
 	}
-	if err == nil {
-		refVersion, err = version.NewVersion(smaevcharger.MinAcceptedVersion)
+	swVersion, err := version.NewVersion(strings.TrimSuffix(pkgRev, ".R"))
+	if err != nil {
+		return nil, err
 	}
-	if err == nil && swVersion.Compare(refVersion) < 0 {
-		err = errors.New("charger software version not supported - please update >= " + smaevcharger.MinAcceptedVersion)
-	}
-
-	if err == nil {
-		// Prepare charger: disable App Lock functionality.
-		// This option have been introduced with 1.2.23 and will lock the charger
-		// until unlocked via SMA App. Unfortunately this Lock option will overwrite
-		// the status of the charger and prevent ev detection
-		err = wb.Send(
-			value("Parameter.Chrg.ChrgLok", smaevcharger.ChargerAppLockDisabled),
-			value("Parameter.Chrg.ChrgApv", smaevcharger.ChargerManualLockEnabled),
-		)
+	refVersion, err := version.NewVersion(smaevcharger.MinAcceptedVersion)
+	if err != nil {
+		return nil, err
 	}
 
+	// check minimum version
+	if swVersion.Compare(refVersion) < 0 {
+		return nil, fmt.Errorf("charger firmware version not supported - please update >= %s", smaevcharger.MinAcceptedVersion)
+	}
+
+	// Prepare charger: disable App Lock functionality.
+	// This option have been introduced with 1.2.23 and will lock the charger
+	// until unlocked via SMA App. Unfortunately this Lock option will overwrite
+	// the status of the charger and prevent ev detection
+	err = wb.Send(
+		value("Parameter.Chrg.ChrgLok", smaevcharger.ChargerAppLockDisabled),
+		value("Parameter.Chrg.ChrgApv", smaevcharger.ChargerManualLockEnabled),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -146,20 +158,13 @@ func (wb *Smaevcharger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if state != wb.oldstate {
-		// if the wallbox detects a car, it automatically switches to the charging state of the selector switch.
-		// Since EVCC requires the fast charging option, the wallbox would immediately start charging with maximum charging power,
-		// without taking into account the desired state of evcc. Since this is not desired,
-		// the charging status must be changed / overwritten from fast charging to charging stop as soon as a vehicle is detected (StatusB)
-		// After that, EVCC can decide which charging option should be selected.
-
-		if state == smaevcharger.StatusB && wb.oldstate == smaevcharger.StatusA {
-			if err := wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.StopCharge)); err != nil {
-				return api.StatusNone, err
-			}
+	// Explicitly stop charging when the vehicle is connected to prevent unauthorised charging
+	if wb.oldstate == smaevcharger.StatusA && state != smaevcharger.StatusA {
+		if err := wb.Enable(false); err != nil {
+			return api.StatusNone, err
 		}
-		wb.oldstate = state
 	}
+	wb.oldstate = state
 
 	switch state {
 	case smaevcharger.StatusA:
@@ -200,16 +205,16 @@ func (wb *Smaevcharger) Enable(enable bool) error {
 			return err
 		}
 
-		if res == smaevcharger.SwitchOeko {
-			// Switch in PV Loading position
-			// If the selector switch of the wallbox is in the wrong position (eco-charging and not fast charging),
+		if wb.isLegacyHw && res == smaevcharger.SwitchOeko {
+			// Hardware mode switch is in the solar charging position.
+			// If the selector switch of the charger is in the wrong position (eco-charging and not fast charging),
 			// the charging process is started with eco-charging when it is activated,
-			// which may be desired when integrated with SHM.
+			// which may be desired when still integrated with SHM.
 			// Since evcc does not have full control over the charging station in this mode,
 			// a corresponding error is returned to indicate the incorrect switch position.
-			// If the wallbox is installed without SHM, charging in eco mode is not possible.
+			// If the charger is installed without SHM, charging in eco mode is not possible.
 			_ = wb.Send(value("Parameter.Chrg.ActChaMod", smaevcharger.OptiCharge))
-			return fmt.Errorf("switch position not on fast charging - SMA's own optimized charging was activated")
+			return fmt.Errorf("charge mode switch not in fast-charging position - charger controlled by SHM")
 		}
 
 		// Switch in Fast charging position
