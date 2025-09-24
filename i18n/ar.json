@@ -25,13 +25,6 @@
       "title": "الإعدادات",
       "vehicles": "عرباتي"
     },
-    "options": {
-      "pvsource": {
-        "all": "إجمالي",
-        "ext": "مصدر خارجي",
-        "int": "داخلي"
-      }
-    },
     "validation": {
       "failed": "أخفق",
       "label": "الحالة",

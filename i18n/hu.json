@@ -401,11 +401,6 @@
         "heating": "Fűtés",
         "standby": "Készenlét"
       },
-      "pvsource": {
-        "all": "Összesen",
-        "ext": "Külső forrás",
-        "int": "Belső"
-      },
       "schema": {
         "http": "HTTP (titkosítatlan)",
         "https": "HTTPS (titkosított)"

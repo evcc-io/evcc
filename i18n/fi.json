@@ -411,11 +411,6 @@
         "heating": "Lämmitys",
         "standby": "Valmiustila"
       },
-      "pvsource": {
-        "all": "Yhteensä",
-        "ext": "Ulkoinen lähde",
-        "int": "Sisäinen"
-      },
       "schema": {
         "http": "HTTP (salaamaton)",
         "https": "HTTPS (salattu)"

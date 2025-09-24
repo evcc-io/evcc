@@ -19,7 +19,7 @@ import (
 type E3dc struct {
 	mu             sync.Mutex
 	dischargeLimit uint32
-	pvSource       string
+	externalPower  bool            // whether to include power of external sources
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
 	retry          func() error
@@ -40,7 +40,7 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User            string
 		Password        string
 		Key             string
-		PvSource        string
+		ExternalPower   bool
 		DischargeLimit  uint32
 		Timeout         time.Duration
 	}{
@@ -69,12 +69,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.PvSource, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, pvSource string, dischargeLimit uint32, capacity, maxacpower func() float64) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -89,7 +89,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, pvSource string, disc
 	m := &E3dc{
 		usage:          usage,
 		conn:           conn,
-		pvSource:       pvSource,
+		externalPower:  externalPower,
 		dischargeLimit: dischargeLimit,
 	}
 
@@ -169,20 +169,10 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		switch m.pvSource {
-		// "int": Use only the internal PV inverter's power value (values[0])
-		case "int":
-			return values[0], nil
-		// "ext": Use only the external source's power value (values[1]), invert if negative (but not if 0)
-		case "ext":
-			if values[1] < 0 {
-				return -values[1], nil
-			} else {
-				return values[1], nil
-			}
-		// "all" (default): Use total power of internal and external source (values[0] - values[1], subtracted as external is always negative)
-		default:
+		if m.externalPower {
 			return values[0] - values[1], nil
+		} else {
+			return values[0], nil
 		}
 
 	case templates.UsageBattery:

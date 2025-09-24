@@ -324,11 +324,6 @@
         "heating": "Grzeje",
         "standby": "Oczekuje"
       },
-      "pvsource": {
-        "all": "Łącznie",
-        "ext": "Źródło zewnętrzne",
-        "int": "Wewnętrzne"
-      },
       "status": {
         "A": "A (niepodłączony)",
         "B": "B (podłączony)",

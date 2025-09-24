@@ -3,14 +3,5 @@
     "batteryLevel": "Akutase",
     "capacity": "{energy} / {total}",
     "control": "Akuhaldus"
-  },
-  "config": {
-    "options": {
-      "pvsource": {
-        "all": "Kokku",
-        "ext": "Väline allikas",
-        "int": "Sisemine"
-      }
-    }
   }
 }

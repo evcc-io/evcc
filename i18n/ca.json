@@ -17,15 +17,6 @@
     "legendTopSubline": "quan la bateria de casa està per sobre {soc}.",
     "modalTitle": "Configuració bateria"
   },
-  "config": {
-    "options": {
-      "pvsource": {
-        "all": "Total",
-        "ext": "Font externa",
-        "int": "Intern"
-      }
-    }
-  },
   "footer": {
     "community": {
       "greenEnergy": "Energia Solar",

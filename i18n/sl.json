@@ -319,11 +319,6 @@
         "big": "big-endian",
         "little": "little-endian"
       },
-      "pvsource": {
-        "all": "Skupaj",
-        "ext": "Zunanji vir",
-        "int": "Interno"
-      },
       "schema": {
         "http": "HTTP (nešifrirano)",
         "https": "HTTPS (šifrirano)"

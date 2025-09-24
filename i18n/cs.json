@@ -408,11 +408,6 @@
         "heating": "Vytápění",
         "standby": "Pohotovostní režim"
       },
-      "pvsource": {
-        "all": "Celkem",
-        "ext": "Externí zdroj",
-        "int": "Interní"
-      },
       "schema": {
         "http": "HTTP (nešifrované)",
         "https": "HTTPS (šifrované)"

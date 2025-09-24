@@ -411,11 +411,6 @@
         "heating": "Šildymas",
         "standby": "Budėjimo režimas"
       },
-      "pvsource": {
-        "all": "Iš viso",
-        "ext": "Išorinis šaltinis",
-        "int": "Vidinis"
-      },
       "schema": {
         "http": "HTTP (nešifruotas)",
         "https": "HTTPS (užšifruotas)"

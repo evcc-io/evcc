@@ -213,11 +213,6 @@
         "big": "big endian",
         "little": "little endian"
       },
-      "pvsource": {
-        "all": "Total",
-        "ext": "Fuente externa",
-        "int": "Interno"
-      },
       "schema": {
         "http": "HTTP (sin cifrar)",
         "https": "HTTPS (cifrado)"
