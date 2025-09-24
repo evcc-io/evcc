@@ -17,6 +17,7 @@
 			:unit="Unit"
 			:required="Required"
 			:choice="Choice"
+			:label="label"
 		/>
 	</FormRow>
 </template>
