@@ -77,6 +77,7 @@
       "title": "Määrittele toimintaa"
     },
     "deviceValue": {
+      "allowControl": "Salli säätäminen",
       "amount": "Määrä",
       "broker": "Välittäjä (Broker)",
       "bucket": "Bucket",
@@ -154,7 +155,9 @@
       "optional": "valinnainen"
     },
     "general": {
+      "applyAndClose": "Ota käyttöön ja sulje",
       "cancel": "Peruuta",
+      "close": "Sulje",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
       "customOption": "Itsemääritelty laite",
       "delete": "Poista",
@@ -168,6 +171,7 @@
       "password": "Salasana",
       "readFromFile": "Lue tiedostosta",
       "remove": "Poista",
+      "required": "vaadittu",
       "save": "Tallenna",
       "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
@@ -431,6 +435,20 @@
       "system": "Järjestelmä",
       "vehicles": "Ajoneuvot"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc:ssä on integraatio SMA Sunny Home Manager (SHM) SEMP-protokollan välityksellä. Jos SHM on samassa lähiverkossa, kirjauduttuasi sisään Sunny Portal -tiliisi, sinulle pitäisi mahdollisuus lisätä kaikki laturit evcc:een uusina käyttölaitteina. Kaiken pitäisi olla valmiina välittömään käyttöön ilman lisämuutoksia alla oleviin asetuksiin.",
+      "descriptionDeviceId": "12-merkkinen HEX-merkkijono. Etuliitteenä kaikkiin laitteisiin (latausasema, ...).",
+      "descriptionIdPattern": "Tunnistusmuoto",
+      "descriptionIds": "Sunny Portal -järjestelmässä jokainen käyttölaite vaatii yksilöllisen tunnisteen. Evcc luo yksilöllisen tunnisteen laitteistosi perusteella. Jos siirrät evcc:n asennuksen toiseen laitteistoon nämä tunnisteet voivat muuttua. Jos haluat pitää vanhat tunnisteet, voit automaattiset luodut tunnisteet tässä. Avaa SEMP URL (/semp) tarkistaaksesi nykyiset tunnisteesi.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8-merkkinen HEX-merkkijono. Yleinen etuliite kaikille laitteille. Oletuksena evcc käyttää sisäistä valmistajatunnistettaan.",
+      "labelAllowControl": "Hyväksy lisätehorajasuositukset SHM:lta.",
+      "labelControl": "Salli hallinta",
+      "labelDeviceId": "Laite-ID",
+      "labelVendorId": "Valmistaja-ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
@@ -662,6 +680,57 @@
     "restartButton": "Käynnistä uudelleen",
     "restartDescription": "Yrititkö sammuttaa ja käynnistää uudelleen?",
     "secondaryActions": "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
+  },
+  "issue": {
+    "additional": {
+      "description": "Sisällytä asetuksesi ja lokitietosi auttaaksesi meitä toisintamaan ongelman pikaisesti. Kannustamme jakamaan mahdollisimman paljon tietoa. Nykyistä tilaa ei yleensä ole tarpeen jakaa.",
+      "include": "sisällytä",
+      "lines": "riviä",
+      "logs": "Lokitiedot",
+      "logsDescription": "Viimeaikaiset lokitiedot, jotka saattavat auttaa ongelman tunnistamisessa.",
+      "showDetails": "näytä yksityiskohdat",
+      "source": "Lähde",
+      "state": "Tila",
+      "stateDescription": "Täydellinen ajonaikainen tila sisältää latausaseman, laitteiden ja käytetyn energian tiedot. Sisällytä vain pyydettäessä.",
+      "title": "Lisätietoja",
+      "uiConfig": "Asetukset (käyttöliittymä)",
+      "uiConfigDescription": "Asetukset, jotka on määritetty selainkäyttöliittymän kautta.",
+      "yamlConfig": "Asetukset (YAML)",
+      "yamlConfigDescription": "Täydellinen YAML-asetustiedostosi."
+    },
+    "additionalContext": "Tilannetiedot",
+    "additionalContextPlaceholder": "Mitä tahansa lisätietoja, jotka voivat olla höydyllisiä, kuten\n- asetuksien yksityiskohtia\n- mitä olet yrittänyt tehdä\n- asennusympäristön yksityiskohtia",
+    "createButtonDiscussion": "Aloita GitHub keskustelu...",
+    "createButtonIssue": "Luo GitHub -tiketti...",
+    "description": "Asennuksesi ei toimi kuten oletit? Tällä sivulla voit saada apua tai raportoida uudesta ongelmatilanteesta. Välitä tarpeeksi yksityiskohtia, jotta voimme ymmärtää ja toisintaa ongelman, kuitenkin pitäen selityksen napakkana, selkeänä ja helppona seurata.",
+    "helpType": {
+      "discussion": "Tarvitsen apua ympäristöni kanssa",
+      "discussionDescription": "Yhteisökeskustelu tarjoaa vastauksia.",
+      "issue": "Löysin ohjelmistovirheen",
+      "issueDescription": "Olen varma, että jokin on vialla ja vaatii korjaamista.",
+      "title": "Minkälaisesta ongelmasta on kyse?"
+    },
+    "issueDescription": "Kuvaus",
+    "issueTitle": "Otsikko",
+    "stepsToReproduce": "Toisintamisvaiheet",
+    "subTitleDiscussion": "Kuvaile ongelmasi",
+    "subTitleIssue": "Kuvaile ongelma",
+    "summary": {
+      "confirmationButtonDiscussion": "Aloita GitHub-keskustelu",
+      "confirmationButtonIssue": "Luo GitHub-tiketti",
+      "copied": "Kopioitu!",
+      "copyButton": "Kopioi lisätiedot",
+      "instructions": "GitHubin URL-rajoitteen vuoksi tämä on kaksivaiheinen prosessi:",
+      "singleStepDescription": "Paina alla olevaa nappia avataksesi GitHubin esitäytetyn lomakkeen, jossa on ongelmasi yksityiskohdat. Sensitiivinen data on automaattisesti suodatettu pois, mutta varmista tämä ennen jakamista.",
+      "step1Description": "Paina alla olevaa nappia luodaksesi GitHub-tiketin, jossa on otsikko, kuvaus ja antamasi yksityiskohdat.",
+      "step2Description": "Luotuasi tiketin palaa tänne ja kopioi lisätiedot alta ja liitä ne GitHub-lomakkeeseen. Sensistiivinen data on suodatettu pois, mutta varmista tämä ennen tietojen jakamista.",
+      "stepOneDiscussion": "Vaihe 1: Luo peruskeskustelu",
+      "stepOneIssue": "Vaihe 1: Luo perus-tiketti (issue)",
+      "stepTwo": "Vaihe 2: Kopioi lisätiedot",
+      "title": "Yhteenveto GitHubiin"
+    },
+    "title": "Raportoi ongelmasta",
+    "version": "Versio"
   },
   "log": {
     "areaLabel": "Rajaa alueella",

@@ -1,4 +1,6 @@
 name: Nightly Build
+permissions:
+  contents: read
 
 on:
   schedule: # runs on the default branch: master
