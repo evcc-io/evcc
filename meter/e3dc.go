@@ -236,17 +236,17 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 				},
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L1,
-					DataType: rscp.None,
+					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L2,
-					DataType: rscp.None,
+					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L3,
-					DataType: rscp.None,
+					// DataType: rscp.None,
 					// Value:    nil,
 				},
 			},
