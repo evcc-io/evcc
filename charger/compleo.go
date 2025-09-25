@@ -135,7 +135,7 @@ func (wb *Compleo) heartbeat(ctx context.Context, log *util.Logger, timeout time
 }
 
 func (wb *Compleo) status() (byte, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.base+compleoRegStatus, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +163,7 @@ func (wb *Compleo) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Compleo) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(compleoRegMaxPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+compleoRegMaxPower, 1)
 	if err != nil {
 		return false, err
 	}
@@ -183,7 +183,7 @@ func (wb *Compleo) Enable(enable bool) error {
 
 // setPower writes the power limit in 100W steps
 func (wb *Compleo) setPower(power uint16) error {
-	_, err := wb.conn.WriteSingleRegister(compleoRegMaxPower, power/100)
+	_, err := wb.conn.WriteSingleRegister(wb.base+compleoRegMaxPower, power/100)
 	return err
 }
 
@@ -221,7 +221,7 @@ var _ api.Meter = (*Compleo)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Compleo) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegActualPower, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.base+compleoRegActualPower, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -233,7 +233,7 @@ var _ api.ChargeRater = (*Compleo)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Compleo) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegEnergy, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.base+compleoRegEnergy, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -260,21 +260,21 @@ var _ api.PhaseCurrents = (*Compleo)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Compleo) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(compleoRegCurrents, 10)
+	return wb.getPhaseValues(wb.base+compleoRegCurrents, 10)
 }
 
 var _ api.PhaseVoltages = (*Compleo)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Compleo) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(compleoRegVoltages, 1)
+	return wb.getPhaseValues(wb.base+compleoRegVoltages, 1)
 }
 
 var _ api.ChargeTimer = (*Compleo)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Compleo) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(compleoRegChargeDuration, 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+compleoRegChargeDuration, 2)
 	if err != nil {
 		return 0, err
 	}
