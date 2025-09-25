@@ -427,6 +427,9 @@ export default defineComponent({
 			try {
 				const response = await api.get("config/evcc.yaml", {
 					responseType: "text",
+					validateStatus(status: number) {
+						return status >= 200 && status < 500;
+					},
 				});
 				// Remove empty lines from config
 				this.sections.yamlConfig.content = response.data
