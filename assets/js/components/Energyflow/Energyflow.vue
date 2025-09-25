@@ -551,11 +551,9 @@ export default defineComponent({
 		openBatterySettingsModal(initialActiveTab?: string) {
 			const modalElement = document.getElementById("batterySettingsModal") as HTMLElement;
 			if (initialActiveTab !== undefined) {
-				modalElement.setAttribute('data-initial-active-tab', initialActiveTab);
+				modalElement.setAttribute("data-initial-active-tab", initialActiveTab);
 			}
-			const modal = Modal.getOrCreateInstance(
-				modalElement
-			);
+			const modal = Modal.getOrCreateInstance(modalElement);
 			modal.show();
 		},
 		openForecastModal() {

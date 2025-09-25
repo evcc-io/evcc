@@ -435,16 +435,16 @@ export default defineComponent({
 			this.isModalVisible = true;
 		},
 		initActiveTab($event: Event) {
-			const targetElement = ($event.target as HTMLElement);
-			const initialActiveTab = targetElement?.dataset['initialActiveTab'] ?? null;
+			const targetElement = $event.target as HTMLElement;
+			const initialActiveTab = targetElement?.dataset["initialActiveTab"] ?? null;
 			if (initialActiveTab !== null) {
-				if (initialActiveTab === 'gridTab') {
+				if (initialActiveTab === "gridTab") {
 					this.gridTabActive = true;
 				}
 			} else {
 				this.gridTabActive = false;
 			}
-			targetElement.removeAttribute('data-initial-active-tab');
+			targetElement.removeAttribute("data-initial-active-tab");
 		},
 		modalInvisible() {
 			this.isModalVisible = false;
