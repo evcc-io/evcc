@@ -89,9 +89,9 @@ export default defineComponent({
 		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	methods: {
-		handleShow() {
+		handleShow($event?: Event) {
 			console.log(this.dataTestid, "> show");
-			this.$emit("open");
+			this.$emit("open", $event);
 		},
 		handleShown() {
 			console.log(this.dataTestid, "> shown");

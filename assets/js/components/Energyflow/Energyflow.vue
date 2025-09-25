@@ -227,7 +227,7 @@
 								<button
 									type="button"
 									class="btn-reset d-flex justify-content-between text-start pe-4"
-									@click.stop="openBatterySettingsModal"
+									@click.stop="openBatterySettingsModal('gridTab')"
 								>
 									<span v-if="batteryGridChargeActive">
 										{{ $t("main.energyflow.batteryGridChargeActive") }}
@@ -548,9 +548,13 @@ export default defineComponent({
 		updateHeight() {
 			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
-		openBatterySettingsModal() {
+		openBatterySettingsModal(initialActiveTab?: string) {
+			const modalElement = document.getElementById("batterySettingsModal") as HTMLElement;
+			if (initialActiveTab !== undefined) {
+				modalElement.setAttribute('data-initial-active-tab', initialActiveTab);
+			}
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal") as HTMLElement
+				modalElement
 			);
 			modal.show();
 		},
