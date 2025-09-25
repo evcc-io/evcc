@@ -431,12 +431,20 @@ export default defineComponent({
 						return status >= 200 && status < 500;
 					},
 				});
+
+				// Handle 404 silently when evcc.yaml doesn't exist
+				if (response.status === 404) {
+					this.sections.yamlConfig.content = "no yaml configuration found";
+					this.sections.yamlConfig.included = false;
+					return;
+				}
+
 				// Remove empty lines from config
 				this.sections.yamlConfig.content = response.data
 					.split("\n")
 					.filter((line: string) => line.trim() !== "")
 					.join("\n");
-			} catch (error) {
+			} catch (error: any) {
 				console.error("Failed to fetch config:", error);
 				this.sections.yamlConfig.content = "Failed to load configuration";
 			}
