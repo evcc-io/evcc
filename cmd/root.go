@@ -294,7 +294,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
-	valueChan <- util.Param{Key: keys.Config, Val: cfgFile}
+	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 
 	// run shutdown functions on stop

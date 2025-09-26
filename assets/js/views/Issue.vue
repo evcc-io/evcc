@@ -143,10 +143,10 @@
 								<template #description>
 									<p class="text-muted small">
 										{{ $t("issue.additional.yamlConfigDescription") }}<br />
-										<span v-if="configPath"
-											>{{ $t("issue.additional.source") }}:
-											<code>{{ configPath }}</code></span
-										>
+										<span>
+											{{ $t("issue.additional.source") }}:
+											<code>{{ configPath || "---" }}</code>
+										</span>
 									</p>
 								</template>
 							</IssueAdditionalItem>
