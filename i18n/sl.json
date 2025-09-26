@@ -45,15 +45,28 @@
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
       "titleAdd": {
-        "charging": "Dodaj polnilnik"
+        "charging": "Dodaj polnilnik",
+        "heating": "Dodaj grelec"
       },
       "titleEdit": {
-        "charging": "Uredi polnilec"
+        "charging": "Uredi polnilec",
+        "heating": "Uredi grelec"
+      },
+      "type": {
+        "custom": {
+          "charging": "Uporabniško določena polnilnica",
+          "heating": "Uporabniško določen grelec"
+        },
+        "heatpump": "Uporabniško določena toplotna črpalka",
+        "sgready": "Uporabniško določena toplotna črpalka (sg-ready, all)",
+        "sgready-boost": "Uporabniško določena toplotna črpalka (sg-ready, boost)",
+        "switchsocket": "Uporabniško definirana vtičnica stikala"
       }
     },
     "circuits": {
       "description": "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije.",
-      "title": "Upravljanje obremenitve"
+      "title": "Upravljanje obremenitve",
+      "usableMeters": "Uporabne reference števcev"
     },
     "control": {
       "description": "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete.",
@@ -64,6 +77,7 @@
       "title": "Nadzor vedenja"
     },
     "deviceValue": {
+      "allowControl": "Dovoli nadzor",
       "amount": "Znesek",
       "broker": "Broker",
       "bucket": "Vedro",
@@ -86,7 +100,8 @@
       "feedinPrice": "Cena prejete energije iz omrežja",
       "gridPrice": "Cena omrežja",
       "heaterTempLimit": "Omejitev ogrevanja",
-      "hemsType": "Sistem",
+      "hemsActiveLimit": "Aktivna omejitev",
+      "hemsType": "Komunikacija",
       "identifier": "RFID-Identifier",
       "no": "ne",
       "odometer": "Število kilometrov",
@@ -112,6 +127,10 @@
       "B": "B (povezan)",
       "C": "C (polnjenje)"
     },
+    "deviceValueHemsType": {
+      "eebus": "preko EEBus",
+      "relay": "prek releja"
+    },
     "devices": {
       "auxMeter": "Pametni porabnik",
       "batteryStorage": "Baterijski hranilnik",
@@ -136,19 +155,28 @@
       "optional": "neobvezno"
     },
     "general": {
+      "applyAndClose": "Uporabi in zapri",
       "cancel": "Prekliči",
+      "close": "Zapri",
+      "customHelp": "Ustvarite uporabniško definirano napravo z uporabo sistema vtičnikov evcc.",
+      "customOption": "Uporabniško definirana naprava",
       "delete": "Izbriši",
       "docsLink": "Oglejte si dokumentacijo.",
       "experimental": "Eksperimentalno",
       "hideAdvancedSettings": "Skrij napredne nastavitve",
+      "invalidFileSelected": "Izbrana neveljavna datoteka",
+      "noFileSelected": "Izbrana ni nobena datoteka.",
       "off": "izklopljeno",
       "on": "vklopljeno",
       "password": "Geslo",
       "readFromFile": "Preberi iz datoteke",
       "remove": "Odstrani",
+      "required": "zahtevano",
       "save": "Shrani",
+      "selectFile": "Brskaj",
       "showAdvancedSettings": "Prikaži napredne nastavitve",
       "telemetry": "Telemetrija",
+      "templateLoading": "Nalaganje ...",
       "title": "Ime",
       "validateSave": "Preveri in shrani"
     },
@@ -158,8 +186,11 @@
       "titleEdit": "Uredi števec električnega omrežja"
     },
     "hems": {
-      "description": "Povežite evcc z drugim sistemom za upravljanje z energijo doma.",
+      "description": "Omejitev moči z zunanjimi sistemi (npr. krmilniki EnWG 14a). Zahteva konfiguracijo upravljanja obremenitve.",
       "title": "HEMS"
+    },
+    "icon": {
+      "change": "sprememba"
     },
     "influx": {
       "description": "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja.",
@@ -179,12 +210,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Dodaj polnilnik"
+        "charging": "Dodaj polnilnik",
+        "heating": "Dodaj grelec"
       },
-      "addMeter": "Dodaj namenski merilnik za polnilnico",
+      "addMeter": "Dodaj namenski števec energije",
       "cancel": "Prekliči",
+      "chargerError": {
+        "charging": "Zahtevana je konfiguracija polnilnika.",
+        "heating": "Potrebna je konfiguracija grelnika."
+      },
       "chargerLabel": {
-        "charging": "Polnilnica"
+        "charging": "Polnilnica",
+        "heating": "Grelec"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
@@ -193,13 +230,15 @@
       "chargerPowerCustom": "drugo",
       "chargerPowerCustomHelp": "Določite drug obseg toka.",
       "chargerTypeLabel": "Vrsta polnilnice",
-      "chargingTitle": "Polnjenje",
+      "chargingTitle": "Vedenje",
+      "circuitHelp": "Dodelitev upravljanja obremenitve, da se zagotovi, da omejitve moči in toka niso presežene.",
       "circuitLabel": "Krog",
       "circuitUnassigned": "nedodeljeno",
       "defaultModeHelp": {
-        "charging": "Način polnjenja pri priklopu vozila."
+        "charging": "Način polnjenja pri priklopu vozila.",
+        "heating": "Nastavi se ob zagonu sistema."
       },
-      "defaultModeHelpKeep": "Ohrani zadnji izbrani način polnjenja.",
+      "defaultModeHelpKeep": "Ohrani nazadnje izbran način.",
       "defaultModeLabel": "Privzeti način",
       "delete": "Izbriši",
       "electricalSubtitle": "Če ste v dvomih, vprašajte svojega električarja.",
@@ -212,12 +251,17 @@
       "minCurrentHelp": "Pod 6 A pojdi samo, če veš, kaj delaš.",
       "minCurrentLabel": "Minimalni tok",
       "noVehicles": "Nobeno vozilo ni konfigurirano.",
+      "option": {
+        "charging": "Dodaj polnilno mesto",
+        "heating": "Dodajte ogrevalno napravo"
+      },
       "phases1p": "1-fazni",
       "phases3p": "3-fazni",
       "phasesAutomatic": "Samodejne faze",
       "phasesAutomaticHelp": "Vaš polnilnik podpira samodejno preklapljanje med 1- in 3-faznim polnjenjem. Na glavnem zaslonu lahko prilagodite obnašanje faze med polnjenjem.",
-      "phasesHelp": "Število faz, povezanih s polnilnikom.",
+      "phasesHelp": "Število priključenih faz.",
       "phasesLabel": "Faze",
+      "pollIntervalDanger": "Redno preverjanje vozila lahko izprazni akumulator vozila. Nekateri proizvajalci vozil v tem primeru aktivno preprečujejo polnjenje. Ni priporočljivo! To uporabite le, če se zavedate tveganj.",
       "pollIntervalHelp": "Čas med posodobitvami API-ja vozila. Kratki intervali lahko izpraznijo akumulator vozila.",
       "pollIntervalLabel": "Interval posodabljanja",
       "pollModeAlways": "vedno",
@@ -227,25 +271,39 @@
       "pollModeConnected": "povezan",
       "pollModeConnectedHelp": "Ko je vzpostavljena povezava redno posodobi stanje vozila.",
       "pollModeLabel": "Vedenje posodobitev",
-      "priorityHelp": "Prioritetne polnilnice imajo prednostni dostop do sončnega presežka.",
+      "priorityHelp": "Višja prioriteta ima prednostni dostop do presežka sončne energije.",
       "priorityLabel": "Prioriteta",
       "save": "Shrani",
       "showAllSettings": "Prikaži vse nastavitve",
       "solarBehaviorCustomHelp": "Določite lastne pragove za omogočanje in onemogočanje ter zakasnitve.",
-      "solarBehaviorDefaultHelp": "Polnite samo s solarnim presežkom. Začnite po {enableDelay} presežka. Ustavite, ko ni dovolj presežka za {disableDelay}.",
-      "solarBehaviorLabel": "Sončno vedenje",
+      "solarBehaviorDefaultHelp": "Začni po {enableDelay} zadostnega presežka. Ustavi, ko presežek ni dovolj za {disableDelay}.",
+      "solarBehaviorLabel": "Sončna energija",
       "solarModeCustom": "po meri",
       "solarModeMaximum": "maksimalno sončno polnjenje",
       "thresholdDisableDelayLabel": "Onemogoči zakasnitev",
       "thresholdDisableHelpInvalid": "Prosimo, uporabite pozitivno vrednost.",
-      "thresholdDisableHelpPositive": "Ustavite polnjenje, ko se porabi več kot {power} iz omrežja za {delay}.",
-      "thresholdDisableHelpZero": "Ustavi polnjenje, ko najmanjše moči polnjenja ni mogoče doseči za {delay}.",
+      "thresholdDisableHelpPositive": "Ustavi se, ko se iz omrežja porabi več kot {power} za {delay}.",
+      "thresholdDisableHelpZero": "Ustavi se, ko minimalne zahtevane moči ni mogoče doseči za {delay}.",
       "thresholdDisableLabel": "Onemogoči napajanje iz omrežja",
       "thresholdEnableDelayLabel": "Omogoči zakasnitev",
       "thresholdEnableHelpInvalid": "Prosimo, uporabite negativno vrednost.",
-      "thresholdEnableHelpNegative": "Začnite polniti, ko bo {surplus} presežek na voljo za {delay}.",
-      "thresholdEnableHelpZero": "Začni, ko je na voljo minimalni presežek polnilne moči za {delay}.",
+      "thresholdEnableHelpNegative": "Začni, ko je {surplus} presežek na voljo za {delay}.",
+      "thresholdEnableHelpZero": "Začnite, ko je minimalna zahtevana moč dosežena za {delay}.",
       "thresholdEnableLabel": "Omogoči polnjenje iz omrežja",
+      "titleAdd": {
+        "charging": "Dodaj polnilno mesto",
+        "heating": "Dodaj grelno napravo",
+        "unknown": "Dodajte polnilnico ali grelec"
+      },
+      "titleEdit": {
+        "charging": "Uredi polnilno mesto",
+        "heating": "Uredi grelno napravo",
+        "unknown": "Urejanje polnilnice ali grelnika"
+      },
+      "titleExample": {
+        "charging": "Garaža, nadstrešek itd.",
+        "heating": "Toplotna črpalka, grelec itd."
+      },
       "titleLabel": "Ime",
       "vehicleAutoDetection": "samodejno zaznavanje",
       "vehicleHelpAutoDetection": "Samodejno izbere najbolj verjetno vozilo. Možen je ročni popravek.",
@@ -254,13 +312,15 @@
       "vehiclesTitle": "Vozila"
     },
     "main": {
+      "addAdditional": "Dodajte dodaten števec",
       "addGrid": "Dodaj števec električnega omrežja",
-      "addLoadpoint": "Dodaj polnilno mesto",
+      "addLoadpoint": "Dodajte polnilnico ali grelec",
       "addPvBattery": "Dodaj sončne celice ali baterijo",
       "addTariffs": "Dodaj tarife",
       "addVehicle": "Dodaj vozilo",
       "configured": "konfigurirano",
       "edit": "uredi",
+      "loadpointRequired": "Konfigurirana mora biti vsaj ena polnilnica.",
       "name": "Ime",
       "title": "Konfiguracija",
       "unconfigured": "ni konfigurirano",
@@ -274,10 +334,21 @@
     "meter": {
       "cancel": "Prekliči",
       "delete": "Izbriši",
+      "generic": "Splošne integracije",
+      "option": {
+        "aux": "Dodajte samoreguliranega odjemalca",
+        "battery": "Dodajte merilnik baterije",
+        "ext": "Dodaj zunanji merilnik",
+        "pv": "Dodaj merilnik sončne energije"
+      },
       "save": "Shrani",
+      "specific": "Specifične integracije",
       "template": "Proizvajalec",
       "titleChoice": "Kaj želite dodati?",
       "validateSave": "Preveri in shrani"
+    },
+    "modbus": {
+      "baudrate": "Hitrost prenosa podatkov (Baud rate)"
     },
     "modbusproxy": {
       "description": "Dovoli več odjemalcem dostop do ene naprave Modbus.",
