@@ -612,8 +612,8 @@ html.app .hide-in-app {
 }
 
 html.app .safe-area-inset {
-	padding: max(1rem, var(--safe-area-inset-top)) var(--safe-area-inset-right) var(--safe-area-inset-bottom)
-		var(--safe-area-inset-left);
+	padding: max(1rem, var(--safe-area-inset-top)) var(--safe-area-inset-right)
+		var(--safe-area-inset-bottom) var(--safe-area-inset-left);
 	position: relative;
 }
 
