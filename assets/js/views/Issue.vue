@@ -427,15 +427,12 @@ export default defineComponent({
 			try {
 				const response = await api.get("config/evcc.yaml", {
 					responseType: "text",
-					validateStatus(status: number) {
-						return status >= 200 && status < 500;
-					},
+					validateStatus: (code) => [200, 404].includes(code),
 				});
 
 				// Handle 404 silently when evcc.yaml doesn't exist
 				if (response.status === 404) {
-					this.sections.yamlConfig.content = "no yaml configuration found";
-					this.sections.yamlConfig.included = false;
+					this.sections.yamlConfig.content = "no yaml configuration";
 					return;
 				}
 
