@@ -21,18 +21,18 @@ func NewRFIDHandler(ctx context.Context, log *util.Logger) (chan string, func(),
 
 	var keyboardPaths []string
 	for _, d := range devicePaths {
-		log.INFO.Printf("Device path: %s | Name: %s\n", d.Path, d.Name)
+		log.DEBUG.Printf("Device path: %s | Name: %s\n", d.Path, d.Name)
 		dev, err := evdev.Open(d.Path)
 		if err != nil {
-			log.INFO.Printf("Cannot read %s: %v\n", d.Path, err)
+			log.WARN.Printf("Cannot read %s: %v\n", d.Path, err)
 			continue
 		}
 		events := dev.CapableEvents(evdev.EV_KEY)
 		if slices.Contains(events, evdev.KEY_ENTER) {
-			log.INFO.Println("detected 'enter' key, device seems to be a keyboard")
+			log.DEBUG.Println("detected 'enter' key, device seems to be a keyboard")
 			keyboardPaths = append(keyboardPaths, d.Path)
 		} else {
-			log.INFO.Println("no 'enter' key detected, skipping device")
+			log.DEBUG.Println("no 'enter' key detected, skipping device")
 		}
 	}
 
