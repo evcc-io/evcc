@@ -1,3 +1,5 @@
+// queries PM #1 and PVI #1 only
+
 package meter
 
 import (
@@ -6,6 +8,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	// "fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -143,6 +147,34 @@ func (m *E3dc) retryMessages(msgs []rscp.Message) ([]rscp.Message, error) {
 	return m.conn.SendMultiple(msgs)
 }
 
+func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any) (T, error)) (T, bool) {
+	var zero T
+
+	// fmt.Printf("\nentry with\n%#v\n", msg)
+	if msg.DataType != rscp.Container {
+		if msg.Tag == wantedTag {
+			v, err := rscpValue(msg, fun)
+			if err != nil {
+				return zero, false
+			}
+			return v, true
+		}
+		return zero, false
+	} 
+	if nestedMessage, ok := msg.Value.([]rscp.Message); ok {
+		for _, m := range nestedMessage {
+			// ok == tag found
+			if v, ok := extractValueByTag(m, wantedTag, fun); ok {
+				return v, ok
+			}
+		}
+	}
+
+	return zero, false
+}
+
+var _ api.Meter = (*E3dc)(nil)
+
 func (m *E3dc) CurrentPower() (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -186,6 +218,198 @@ func (m *E3dc) CurrentPower() (float64, error) {
 		}
 
 		return -pwr, nil
+
+	default:
+		return 0, api.ErrNotAvailable
+	}
+}
+
+var _ api.PhaseVoltages = (*E3dc)(nil)
+
+func (m *E3dc) Voltages() (float64, float64, float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	switch m.usage {
+	case templates.UsageGrid:
+		res, err := m.retryMessage(rscp.Message{
+			Tag:      rscp.PM_REQ_DATA,
+			DataType: rscp.Container,
+			Value: []rscp.Message{
+				{
+					Tag:      rscp.PM_INDEX,
+					DataType: rscp.UInt16,
+					Value:    uint16(0), // PM #1
+				},
+				{
+					Tag:      rscp.PM_REQ_VOLTAGE_L1,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_VOLTAGE_L2,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_VOLTAGE_L3,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+			},
+		})
+
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
+		if !ok || voltageL1 < 207 || voltageL1 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 not found or out of range")
+		}
+		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
+		if !ok || voltageL2 < 207 || voltageL2 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 not found or out of range")
+		}
+		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
+		if !ok || voltageL3 < 207 || voltageL3 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L3 not found or out of range")
+		}
+		return voltageL1, voltageL2, voltageL3, nil
+
+	default:
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+}
+
+var _ api.PhaseCurrents = (*E3dc)(nil)
+
+func (m *E3dc) Currents() (float64, float64, float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	switch m.usage {
+	case templates.UsageGrid:
+		res, err := m.retryMessage(rscp.Message{
+			Tag:      rscp.PM_REQ_DATA,
+			DataType: rscp.Container,
+			Value: []rscp.Message{
+				{
+					Tag:      rscp.PM_INDEX,
+					DataType: rscp.UInt16,
+					Value:    uint16(0), // PM #1
+				},
+				{
+					Tag:      rscp.PM_REQ_POWER_L1,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_POWER_L2,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_POWER_L3,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_VOLTAGE_L1,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_VOLTAGE_L2,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+				{
+					Tag:      rscp.PM_REQ_VOLTAGE_L3,
+					// DataType: rscp.None,
+					// Value:    nil,
+				},
+			},
+		})
+
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		powerL1, ok := extractValueByTag(*res, rscp.PM_POWER_L1, cast.ToFloat64E)
+		if !ok {
+			return 0, 0, 0, errors.New("PM_POWER_L1 not found")
+		}
+		powerL2, ok := extractValueByTag(*res, rscp.PM_POWER_L2, cast.ToFloat64E)
+		if !ok {
+			return 0, 0, 0, errors.New("PM_POWER_L2 not found")
+		}
+		powerL3, ok := extractValueByTag(*res, rscp.PM_POWER_L3, cast.ToFloat64E)
+		if !ok {
+			return 0, 0, 0, errors.New("PM_POWER_L3 not found")
+		}
+		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
+		if !ok || voltageL1 < 207 || voltageL1 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 not found or out of range")
+		}
+		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
+		if !ok || voltageL2 < 207 || voltageL2 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 not found or out of range")
+		}
+		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
+		if !ok || voltageL3 < 207 || voltageL3 > 253 {
+			return 0, 0, 0, errors.New("PM_VOLTAGE_L3 not found or out of range")
+		}
+
+		return powerL1/voltageL1, powerL2/voltageL2, powerL3/voltageL3, nil
+
+	default:
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+}
+
+var _ api.MeterEnergy = (*E3dc)(nil)
+
+func (m *E3dc) TotalEnergy() (float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var energyPerPhase [3]float64
+
+	switch m.usage {
+	case templates.UsageGrid:
+		return 0, api.ErrNotAvailable
+
+	case templates.UsagePV:
+		for phase := range 3 {
+			res, err := m.retryMessage(rscp.Message{
+				Tag:      rscp.PVI_REQ_DATA,
+				DataType: rscp.Container,
+				Value: []rscp.Message{
+					{
+						Tag:      rscp.PVI_INDEX,
+						DataType: rscp.UInt16,
+						Value:    uint16(0), // PVI #1 = 0
+					},
+					{
+						Tag:      rscp.PVI_REQ_AC_ENERGY_ALL,
+						DataType: rscp.UInt16,
+						Value:    uint16(phase), // phase
+					},
+				},
+			})
+			if err != nil {
+				return 0, err
+			}
+
+			val, ok := extractValueByTag(*res, rscp.PVI_VALUE, cast.ToFloat64E)
+			if !ok {
+				return 0, errors.New("PVI_VALUE value not found")
+			}
+			energyPerPhase[phase] = val
+		}
+
+		return (energyPerPhase[0] + energyPerPhase[1] + energyPerPhase[2]) / 1000, nil // Wh -> kWh
 
 	default:
 		return 0, api.ErrNotAvailable
