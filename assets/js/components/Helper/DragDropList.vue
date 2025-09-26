@@ -26,3 +26,14 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style>
+
+/* Overwrites Animation for Drag-Elements */
+.drag-drop-item[style*="position: fixed"],
+.drag-drop-item[style*="z-index: 9999"] {
+	transition: none !important;
+	animation: none !important;
+}
+
+</style>
