@@ -4,7 +4,7 @@
 		:title="$t('settings.title')"
 		data-testid="global-settings-modal"
 	>
-		<UserInterfaceSettings :loadpoints="loadpoints" />
+		<UserInterfaceSettings :loadpoints="uiLoadpoints" />
 	</GenericModal>
 </template>
 
@@ -12,13 +12,13 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import UserInterfaceSettings from "./UserInterfaceSettings.vue";
-import type { LoadpointCompact } from "@/types/evcc";
+import type { UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "GlobalSettingsModal",
 	components: { GenericModal, UserInterfaceSettings },
 	props: {
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		uiLoadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
 });
 </script>

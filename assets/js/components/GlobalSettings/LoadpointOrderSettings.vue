@@ -3,25 +3,26 @@
 		<div class="small text-muted mb-2 col-form-label">
 			{{ $t("settings.loadpoints.help") }}
 		</div>
-		<DragDropList :values="displayList.map((item) => item.index)" @reorder="handleReorder">
+		<DragDropList :values="loadpoints.map((item) => item.id)" @reorder="handleReorder">
 			<DragDropItem
-				v-for="item in displayList"
-				:key="item.index"
+				v-for="item in loadpoints"
+				:key="item.id"
 				:title="item.title"
 				:visible="item.visible"
 			>
 				<template #actions>
 					<div class="form-check form-switch">
 						<input
-							:id="`loadpoint-visible-${item.index}`"
+							:id="`loadpoint-visible-${item.id}`"
 							v-model="item.visible"
 							class="form-check-input"
 							type="checkbox"
 							role="switch"
-							@change="updateVisibility(item.index, item.visible)"
+							:disabled="isLastVisible(item)"
+							@change="updateVisibility(item.id, item.visible)"
 						/>
 						<label
-							:for="`loadpoint-visible-${item.index}`"
+							:for="`loadpoint-visible-${item.id}`"
 							class="form-check-label visually-hidden"
 						>
 							{{
@@ -34,8 +35,13 @@
 				</template>
 			</DragDropItem>
 		</DragDropList>
-		<div v-if="displayList.length > 0" class="mt-2 text-end">
-			<button type="button" class="btn btn-link btn-sm text-muted" @click="resetOrder">
+		<div class="mt-2 text-end">
+			<button
+				type="button"
+				class="btn btn-link btn-sm text-muted"
+				:disabled="resetDisabled"
+				@click="resetOrder"
+			>
 				{{ $t("config.general.reset") }}
 			</button>
 		</div>
@@ -44,14 +50,13 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import type { LoadpointCompact } from "@/types/evcc";
+import type { UiLoadpoint } from "@/types/evcc";
 import {
-	getLoadpointDisplayList,
 	setLoadpointOrder,
 	setLoadpointVisibility,
-	resetLoadpointOrder,
-	type LoadpointDisplayItem,
-} from "@/loadpoint-display";
+	resetLoadpointsOrder,
+	resetLoadpointsVisible,
+} from "@/uiLoadpoints";
 import DragDropList from "@/components/Helper/DragDropList.vue";
 import DragDropItem from "@/components/Helper/DragDropItem.vue";
 
@@ -59,25 +64,31 @@ export default defineComponent({
 	name: "LoadpointOrderSettings",
 	components: { DragDropList, DragDropItem },
 	props: {
-		loadpoints: {
-			type: Array as PropType<LoadpointCompact[]>,
-			default: () => [],
-		},
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
 	computed: {
-		displayList(): LoadpointDisplayItem[] {
-			return getLoadpointDisplayList(this.loadpoints);
+		resetDisabled() {
+			const allVisible = this.loadpoints.every((lp) => lp.visible);
+			const noOrder = this.loadpoints.every((lp) => lp.order === null);
+			return allVisible && noOrder;
+		},
+		visibleCount() {
+			return this.loadpoints.filter((lp) => lp.visible).length;
 		},
 	},
 	methods: {
-		updateVisibility(loadpointIndex: number, visible: boolean) {
-			setLoadpointVisibility(loadpointIndex, visible);
+		isLastVisible(item: UiLoadpoint) {
+			return item.visible && this.visibleCount <= 1;
 		},
-		handleReorder(newOrder: number[]) {
+		updateVisibility(loadpointId: string, visible: boolean) {
+			setLoadpointVisibility(loadpointId, visible);
+		},
+		handleReorder(newOrder: string[]) {
 			setLoadpointOrder(newOrder);
 		},
 		resetOrder() {
-			resetLoadpointOrder(this.loadpoints.length);
+			resetLoadpointsOrder();
+			resetLoadpointsVisible();
 		},
 	},
 });

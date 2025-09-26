@@ -2,14 +2,11 @@
 	<GenericModal
 		id="telemetryModal"
 		:title="$t('config.telemetry.title')"
-		:description="$t('config.telemetry.description')"
 		size="lg"
 		data-testid="telemetry-modal"
-		no-buttons
 	>
-		<div class="mt-3">
-			<TelemetrySettings :sponsorActive="sponsor && !!sponsor.name" :telemetry="telemetry" />
-		</div>
+		<p>{{ $t("config.telemetry.description") }}</p>
+		<TelemetrySettings :sponsorActive="sponsor && !!sponsor.name" :telemetry="telemetry" />
 	</GenericModal>
 </template>
 

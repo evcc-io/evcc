@@ -111,7 +111,7 @@ import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { LENGTH_UNIT, THEME, type LoadpointCompact } from "@/types/evcc";
+import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
@@ -120,7 +120,7 @@ export default defineComponent({
 	name: "UserInterfaceSettings",
 	components: { FormRow, SelectGroup, LoadpointOrderSettings },
 	props: {
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
 	data() {
 		return {
