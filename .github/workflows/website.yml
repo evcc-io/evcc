@@ -1,4 +1,6 @@
 name: Deploy data to website
+permissions:
+  contents: read
 
 on:
   release:

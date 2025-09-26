@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Zajišťuje, že součet všech nabíjecích bodů připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
-      "title": "Řízení zátěže"
+      "title": "Řízení zátěže",
+      "usableMeters": "Použitelné elektroměry"
     },
     "control": {
       "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
@@ -76,6 +77,7 @@
       "title": "Chování systému"
     },
     "deviceValue": {
+      "allowControl": "Povolit ovládání",
       "amount": "Množství",
       "broker": "Broker",
       "bucket": "Úložiště (bucket)",
@@ -98,7 +100,8 @@
       "feedinPrice": "Cena za výkup energie",
       "gridPrice": "Cena ze sítě",
       "heaterTempLimit": "Limit topení",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktivní limit",
+      "hemsType": "Komunikace",
       "identifier": "RFID identifikátor",
       "no": "ne",
       "odometer": "Ujetých km",
@@ -123,6 +126,10 @@
       "A": "A (nepřipojeno)",
       "B": "B (připojeno)",
       "C": "C (nabíjení)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "skrze EEBus",
+      "relay": "skrze relé"
     },
     "devices": {
       "auxMeter": "Chytrý spotřebič",
@@ -176,7 +183,7 @@
       "titleEdit": "Editovat měřič spotřeby ze sítě"
     },
     "hems": {
-      "description": "Umožňuje propojení evcc s dalším systémem pro správu energie v domácnosti.",
+      "description": "Limitace výkonu externími systémy (např. EnWG 14a kontroléry). Vyžaduje konfiguraci systému řízení zátěže.",
       "title": "HEMS"
     },
     "icon": {
@@ -425,6 +432,20 @@
       "system": "Systém",
       "vehicles": "Vozidla"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "EVCC disponuje integrací s SMA Sunny Home Manager (SHM) skrze SEMP protokol. Pokud je provozován na stejné lokální síti (LAN) mělo be po přihlášení do Sunny Portal účtu nastat automatické nabídnutí k přidání všech nabíječek, které byly konfigurovány skrze EVCC jako nová zařízení. Vše by mělo být připraveno k okamžitému použití, bez nutných změn požadovaných níže.",
+      "descriptionDeviceId": "12 znaků v HEX string. Předpona pro všechna zařízení (nabíjecí místo, ..).",
+      "descriptionIdPattern": "Identifikace řetězce",
+      "descriptionIds": "V Sunny Portálu každé zařízení potřebuje unikátní identifikátor. EVCC generuje tento identifikátor v závisosti na vašem HW. Pokud zmigrujete EVCC na jiný HW mohou se tyto identifikátory změnit. Pokud chcete uchovat statistiky můžete zde přepsat generované identifikátory. Otevřete SEMP URL (/semp) abyste zkontrolovali současné identifikátory.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 znaků HEX string. Obecné předpony všech entit. Ve výchozím stavu EVCC použije vlastní interní ID.",
+      "labelAllowControl": "Povolit dodatečné limity výkonu doporučené SHM.",
+      "labelControl": "Povolit ovládání",
+      "labelDeviceId": "ID zařízení",
+      "labelVendorId": "ID výrobce",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
@@ -438,7 +459,7 @@
       "tokenRequired": "Před vytvořením tohoto zařízení musíte nakonfigurovat sponzorský token.",
       "tokenRequiredLearnMore": "Zjistit více.",
       "tokenRequiredShort": "Nebyl přidán sponzorský token.",
-      "trialToken": "Zkušební token",
+      "trialToken": "zkušební token",
       "viaYaml": "skrze evcc.yaml",
       "yourToken": "Váš sponzorský token"
     },
@@ -722,6 +743,7 @@
       "gridImport": "Odběr ze sítě",
       "homePower": "Spotřeba domu",
       "loadpoints": "Nabíječka | Nabíječka | {count} nabíječek",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "Žádná data z měřiče",
       "pv": "FVE",
       "pvExport": "Export do sítě",
@@ -733,6 +755,10 @@
       "connected": "Pohotovostní režim.",
       "vehicleLimit": "Limit topení",
       "waitForVehicle": "Připraven. Čekám na odpověď topidla…"
+    },
+    "hemsWarning": {
+      "description": "Zpomalené nabíjení zamezující přesáhnutí {limit}.",
+      "title": "Externí limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
