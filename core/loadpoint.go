@@ -504,6 +504,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
+	// check for charger-internal phase reconfiguration
+	lp.checkChargerPhaseReconfiguration()
+
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -562,6 +565,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// mark plan slot as inactive
 	// this will force a deletion of an outdated plan once plan time is expired in GetPlan()
 	lp.setPlanActive(false)
+
+	// check for charger-internal phase reconfiguration
+	lp.checkChargerPhaseReconfiguration()
 }
 
 // evVehicleSocProgressHandler sends external start event
