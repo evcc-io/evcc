@@ -2,7 +2,7 @@ template: fox-ess-h3-smart
 products:
   - brand: FoxESS
     description:
-      generic: H3-Smart Series Hybrid Inverter
+      generic: "H3-Smart & H3 PRO Series Hybrid Inverter"
 capabilities: ["battery-control"]
 params:
   - name: usage
