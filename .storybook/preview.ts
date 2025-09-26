@@ -1,4 +1,4 @@
-import { setup } from "@storybook/vue3";
+import { type Preview, setup } from "@storybook/vue3";
 import "bootstrap/dist/css/bootstrap.min.css";
 import smoothscroll from "smoothscroll-polyfill";
 import setupI18n from "../assets/js/i18n";
@@ -9,8 +9,7 @@ smoothscroll.polyfill();
 watchThemeChanges();
 
 // Setup global parameters
-/** @type { import('@storybook/vue3').Preview } */
-const preview = {
+export default {
   parameters: {
     controls: {
       matchers: {
@@ -32,7 +31,7 @@ const preview = {
       ],
     },
   },
-};
+} satisfies Preview;
 
 setup((app) => {
   app.config.globalProperties.$hiddenFeatures = () => true;
@@ -44,5 +43,3 @@ setup((app) => {
     template: '<a :href="to"><slot /></a>',
   });
 });
-
-export default preview;
