@@ -291,6 +291,11 @@ a:hover {
 	outline-width: var(--bs-focus-ring-width);
 }
 
+.btn-link:disabled {
+	border-color: transparent !important;
+	opacity: 0.2;
+}
+
 .dark .btn-outline-secondary {
 	--bs-btn-color: var(--bs-gray-bright);
 	--bs-btn-border-color: var(--bs-gray-bright);

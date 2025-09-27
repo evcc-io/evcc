@@ -1,6 +1,12 @@
 import Loadpoint from "./Loadpoint.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
-import { SMART_COST_TYPE } from "@/types/evcc";
+import {
+  SMART_COST_TYPE,
+  CHARGE_MODE,
+  CHARGER_STATUS_REASON,
+  PHASE_ACTION,
+  PV_ACTION,
+} from "@/types/evcc";
 
 export default {
   title: "Loadpoints/Loadpoint",
@@ -12,9 +18,9 @@ export default {
 
 // Based on actual API state structure from demo.evcc.io
 const baseState = {
-  id: 1,
+  id: "1",
   title: "Carport",
-  mode: "pv",
+  mode: CHARGE_MODE.PV,
   enabled: true,
   connected: true,
   socBasedCharging: true,
@@ -50,9 +56,9 @@ const baseState = {
   planProjectedStart: undefined,
   planTime: undefined,
   priority: 0,
-  phaseAction: "inactive",
+  phaseAction: PHASE_ACTION.INACTIVE,
   phaseRemaining: 0,
-  pvAction: "inactive",
+  pvAction: PV_ACTION.INACTIVE,
   pvRemaining: 0,
   smartCostActive: false,
   smartCostNextStart: undefined,
@@ -65,7 +71,7 @@ const baseState = {
   chargerFeatureIntegratedDevice: false,
   chargerIcon: "",
   chargerSinglePhase: false,
-  chargerStatusReason: "unknown",
+  chargerStatusReason: CHARGER_STATUS_REASON.UNKNOWN,
   connectedDuration: 0,
   // Global props that would typically come from parent
   vehicles: [
@@ -125,7 +131,7 @@ Idle.args = {
   connected: false,
   vehicleName: "",
   vehicles: [],
-  mode: "off",
+  mode: CHARGE_MODE.OFF,
   charging: false,
   chargePower: 0,
   offeredCurrent: 0,
@@ -139,7 +145,7 @@ DisabledLongTitle.args = {
   title: "Charging point with a very very very long title!!!1!",
   remoteDisabled: "soft",
   remoteDisabledSource: "Sunny Home Manager",
-  mode: "now",
+  mode: CHARGE_MODE.NOW,
   enabled: false,
   charging: false,
   chargePower: 0,
@@ -150,7 +156,7 @@ ChargerIconNoVehicle.args = {
   ...baseState,
   chargerIcon: "heater",
   title: "Heating device with long name",
-  mode: "now",
+  mode: CHARGE_MODE.NOW,
   chargerFeatureIntegratedDevice: true,
   vehicleName: "",
   vehicles: [],
