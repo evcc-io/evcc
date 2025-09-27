@@ -35,3 +35,4 @@ render: |
   account: {{ .account }}
   serial: {{ .serial }}
   timeout: {{ .timeout }}
+  capacity: {{ .capacity }}

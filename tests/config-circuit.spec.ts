@@ -72,6 +72,7 @@ test.describe("circuit", async () => {
     await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
     await chargerModal.getByLabel("Charge status").selectOption("C");
     await chargerModal.getByLabel("Power").fill("1000");
+    await chargerModal.getByRole("radio", { name: "Enabled: Yes" }).click();
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
