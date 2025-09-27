@@ -155,7 +155,9 @@
       "optional": "valfri"
     },
     "general": {
+      "applyAndClose": "Använd & stäng",
       "cancel": "Avbryt",
+      "close": "Stäng",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
@@ -169,6 +171,7 @@
       "password": "Lösenord",
       "readFromFile": "Läs från fil",
       "remove": "Ta bort",
+      "required": "nödvändig",
       "save": "Spara",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
@@ -678,6 +681,32 @@
     "restartButton": "Omstart",
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inkludera konfiguration och loggar för att hjälpa oss att återskapa problemet snabbt. Vi uppmuntrar till att dela så mycket som möjligt. Status behövs normalt inte.",
+      "include": "inkludera",
+      "lines": "linjer",
+      "logs": "Loggar",
+      "logsDescription": "Senaste loggar kan hjälpa att identifiera problemet.",
+      "showDetails": "visa detaljer",
+      "source": "Källa",
+      "state": "Status",
+      "stateDescription": "Komplett runtime status inklusive laddpunkter, enhets och energiinformation. Inkludera enbart om det efterfrågas.",
+      "title": "Ytterligare information",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationsinställningar gjorda via webinterface.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Din kompletta konfigurationsfil."
+    },
+    "additionalContext": "Ytterligare upplysningar",
+    "additionalContextPlaceholder": "Eventuellt ytterligare information som kan vara till hjälp...\n- Konfigurationsdetaljer\n- Vad du provat\n- Plattforms och systemupplysningar",
+    "createButtonDiscussion": "Starta en GitHub-diskussion...",
+    "createButtonIssue": "Starta ett GitHub-ärende...",
+    "description": "Fungerar inte din installation som förväntat? Använd denna sida för hjälp eller rapportera problem. Bifoga tillräckligt med upplysningar för att vi ska förstå och kunna reproducera problemet. Gör beskrivningen kort, koncis och enkel att följa.",
+    "helpType": {
+      "discussion": "Behöver du hjälp med inställningarna"
+    }
   },
   "log": {
     "areaLabel": "Filtrera per område",
