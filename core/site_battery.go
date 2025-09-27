@@ -94,6 +94,20 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		meter := dev.Instance()
 
 		if batCtrl, ok := meter.(api.BatteryController); ok {
+			// charge mode: validate max soc
+			if batLimiter, ok := meter.(api.BatterySocLimiter); ok && mode == api.BatteryCharge {
+				if batSoc, ok := meter.(api.Battery); ok {
+					soc, err := batSoc.Soc()
+					if err != nil {
+						return err
+					}
+
+					if _, max := batLimiter.GetSocLimits(); soc >= max {
+						continue
+					}
+				}
+			}
+
 			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
