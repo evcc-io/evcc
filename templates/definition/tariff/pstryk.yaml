@@ -1,0 +1,149 @@
+template: pstryk
+products:
+  - brand: Pstryk.pl
+requirements:
+  description:
+    en: "Get your API token from the Pstryk App"
+    de: "Hol dir deinen API-Token aus der Pstryk App"
+  evcc: ["skiptest"]
+group: price
+countries: ["PL"]
+
+params:
+  - name: token
+    type: string
+    required: true
+    description:
+      en: "API token (e.g. sk-...)."
+      de: "API-Token (z.B. sk-...)."
+    help:
+      en: "Exact Authorization header value, without 'Bearer'."
+      de: "Genauer Authorization-Wert, ohne 'Bearer'."
+
+  - name: plan
+    type: choice
+    default: pricing
+    choice: ["pricing", "prosumer-pricing"]
+    required: true
+    description:
+      en: "Tariff source."
+      de: "Tarifquelle."
+    help:
+      en: "Path under /integrations/: 'pricing' or 'prosumer-pricing'."
+      de: "Pfad unter /integrations/: 'pricing' oder 'prosumer-pricing'."
+
+  - name: base
+    type: string
+    default: "https://api.pstryk.pl"
+    description:
+      en: "URL of Pstryk API (or reverse proxy)"
+      de: "URL der Pstryk-API (oder Reverse-Proxy)"
+
+  - name: currency
+    type: choice
+    default: PLN
+    required: true
+    choice: ["PLN"]
+    description:
+      en: "Currency."
+      de: "Währung."
+
+  - preset: tariff-base
+
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: go
+    # Before 13:05 (local): today-only; from 13:05: today+tomorrow (48h)
+    script: |
+      (func() string {
+        now := time.Now().In(time.Local)
+        if now.Hour() < 13 || (now.Hour() == 13 && now.Minute() < 5) {
+          return today24
+        }
+        return all48
+      })()
+    in:
+      # ---------- 48h (today + tomorrow), trimmed to first two LOCAL days ----------
+      - name: all48
+        type: string
+        config:
+          source: http
+          uri: {{ .base }}/integrations/{{ .plan }}?resolution=hour&window_start={{ `{{ now.UTC | date "2006-01-02T00:00:00Z" }}` }}&window_end={{ `{{ addDate (now.UTC) 0 0 2 | date "2006-01-02T00:00:00Z" }}` }}
+          headers:
+            Authorization: {{ .token }}
+            Accept: application/json
+            User-Agent: evcc-pstryk-template
+          allowempty: true
+          jq: |
+            # UTC ISO -> local RFC3339 (with colon) / Z
+            def toRFC3339($t):
+              ( $t | fromdateiso8601? ) as $ts
+              | if $ts == null then null
+                else
+                  ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
+                  | ($ts | strftime("%z")) as $off
+                  | if ($off == "+0000" or $off == "-0000")
+                      then ($base + "Z")
+                      else ($base + ($off[0:3] + ":" + $off[3:5]))
+                    end
+              end;
+
+            # build records with local day tag
+            [ (.frames // [])[] as $f |
+              {
+                "start": toRFC3339($f.start),
+                "end":   toRFC3339($f.end),
+                "value": $f.price_gross,
+                "__d":   ($f.start | fromdateiso8601? | strftime("%Y-%m-%d"))
+              }
+            ]
+            # keep only first two unique LOCAL days (today & tomorrow)
+            | ( [.[].__d] | unique ) as $days
+            | ( if ($days|length) >= 2 then [$days[0], $days[1]] else $days end ) as $keep
+            | map(select($keep | index(.__d)))
+            | map(del(.__d))
+            | tostring
+
+      # ---------- 24h (today only), DST-safe ----------
+      - name: today24
+        type: string
+        config:
+          source: http
+          uri: {{ .base }}/integrations/{{ .plan }}?resolution=hour&window_start={{ `{{ now.UTC | date "2006-01-02T00:00:00Z" }}` }}&window_end={{ `{{ addDate (now.UTC) 0 0 1 | date "2006-01-02T00:00:00Z" }}` }}
+          headers:
+            Authorization: {{ .token }}
+            Accept: application/json
+            User-Agent: evcc-pstryk-template
+          jq: |
+            # UTC ISO -> local RFC3339 (with colon) / Z
+            def toRFC3339($t):
+              ( $t | fromdateiso8601? ) as $ts
+              | if $ts == null then null
+                else
+                  ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
+                  | ($ts | strftime("%z")) as $off
+                  | if ($off == "+0000" or $off == "-0000")
+                      then ($base + "Z")
+                      else ($base + ($off[0:3] + ":" + $off[3:5]))
+                    end
+              end;
+
+            # work on frames array; derive first LOCAL day from the first frame (DST-safe)
+            (.frames // []) as $frames
+            | ( if ($frames|length)>0
+                  then ($frames[0].start | fromdateiso8601? | strftime("%Y-%m-%d"))
+                  else null
+                end ) as $D
+            | [ $frames[] as $f |
+                {
+                  "start": toRFC3339($f.start),
+                  "end":   toRFC3339($f.end),
+                  "value": $f.price_gross,
+                  "__d":   ($f.start | fromdateiso8601? | strftime("%Y-%m-%d"))
+                }
+              ]
+            | map(select($D!=null and .__d == $D))
+            | map(del(.__d))
+            | tostring
