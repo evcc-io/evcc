@@ -35,4 +35,6 @@ render: |
   account: {{ .account }}
   serial: {{ .serial }}
   timeout: {{ .timeout }}
+  {{- if eq .usage "battery" }}
   capacity: {{ .capacity }}
+  {{- end }}
