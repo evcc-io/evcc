@@ -63,6 +63,9 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range via car telemetry
 func (v *Provider) Range() (int64, error) {
 	res, err := v.telemetryG()
+	if len(res.Battery) == 0 {
+		return 0, api.ErrNotAvailable
+	}
 	return res.Battery[0].EstimatedDistanceToEmptyKm, err
 }
 
@@ -71,6 +74,9 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer via car telemetry
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.telemetryG()
+	if len(res.Odometer) == 0 {
+		return 0, api.ErrNotAvailable
+	}
 	return float64(res.Odometer[0].OdometerMeters) / 1e3, err
 }
 
@@ -79,5 +85,8 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime via car telemetry
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.telemetryG()
+	if len(res.Battery) == 0 {
+		return time.Time{}, api.ErrNotAvailable
+	}
 	return time.Now().Add(time.Duration(res.Battery[0].EstimatedChargingTimeToFullMinutes) * time.Minute), err
 }
