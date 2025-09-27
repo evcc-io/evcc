@@ -65,7 +65,7 @@ render: |
         return all48
       })()
     in:
-      # ---------- 48h (today + tomorrow) ----------
+      # ---------- 48h (today + tomorrow), trimmed to first two LOCAL days ----------
       - name: all48
         type: string
         config:
@@ -90,17 +90,23 @@ render: |
                     end
               end;
 
+            # build records with local day tag
             [ (.frames // [])[] as $f |
               {
                 "start": toRFC3339($f.start),
                 "end":   toRFC3339($f.end),
-                "value": $f.price_gross
+                "value": $f.price_gross,
+                "__d":   ($f.start | fromdateiso8601? | strftime("%Y-%m-%d"))
               }
             ]
-            | map(select(.start!=null and .end!=null and .value!=null))
+            # keep only first two unique LOCAL days (today & tomorrow)
+            | ( [.[].__d] | unique ) as $days
+            | ( if ($days|length) >= 2 then [$days[0], $days[1]] else $days end ) as $keep
+            | map(select($keep | index(.__d)))
+            | map(del(.__d))
             | tostring
 
-      # ---------- 24h (today only, DST-safe) ----------
+      # ---------- 24h (today only), DST-safe ----------
       - name: today24
         type: string
         config:
@@ -124,7 +130,7 @@ render: |
                     end
               end;
 
-            # Work on frames array first, derive local day safely (no .frames access after array is built)
+            # work on frames array; derive first LOCAL day from the first frame (DST-safe)
             (.frames // []) as $frames
             | ( if ($frames|length)>0
                   then ($frames[0].start | fromdateiso8601? | strftime("%Y-%m-%d"))
