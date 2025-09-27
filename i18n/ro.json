@@ -3,7 +3,7 @@
     "batteryLevel": "Nivelul bateriei",
     "bufferStart": {
       "above": "cand e peste {soc}",
-      "full": "cand atinge starea de incarcare",
+      "full": "când atinge {soc}.",
       "never": "numai cand exista surplus suficient"
     },
     "capacity": "{energy} din {total}",
@@ -12,12 +12,12 @@
     "disclaimerHint": "Nota:",
     "disclaimerText": "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator",
     "legendBottomName": "prioritate casa",
-    "legendBottomSubline": "neutilizat pentru incarcare",
+    "legendBottomSubline": "până când atinge {soc}.",
     "legendMiddleName": "in primul rand vehiculul",
-    "legendMiddleSubline": "in al doilea rand casa",
+    "legendMiddleSubline": "când bateria casei e peste {soc}.",
     "legendTopAutostart": "porneste automat",
     "legendTopName": "Incarcare ajutata de baterie",
-    "legendTopSubline": "fara intreruperi",
+    "legendTopSubline": "când bateria casei e peste {soc}.",
     "modalTitle": "Setari bateriei"
   },
   "config": {
@@ -278,7 +278,7 @@
       "descriptionEnergy": "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?",
       "descriptionSoc": "Când ar trebui vehiculul să fie încărcat la {targetSoc}?",
       "inactiveLabel": "Timp dorit",
-      "notReachableInTime": "Telul nu a fost atins la timp. Estimare: {endTime}.",
+      "notReachableInTime": "Telul nu a fost atins la timp. Estimare: {overrun}.",
       "onlyInPvMode": "Planul de incarcare merge doar in mod Solar.",
       "planDuration": "Timp de încărcare",
       "planPeriodLabel": "Perioada",
@@ -335,8 +335,8 @@
       "pvEnable": "Surplus FV disponibil. Pornesc în {remaining}…",
       "scale1p": "Reduc încărcarea la faza 1 în {remaining}…",
       "scale3p": "Schimbam încărcarea la 3 faze în {remaining}…",
-      "targetChargeActive": "Încarcare țintă activă…",
-      "targetChargePlanned": "Încărcarea pornește la {time}.",
+      "targetChargeActive": "Încărcare țintă activă. Terminare estimată în {duration}.",
+      "targetChargePlanned": "Încărcarea pornește la {duration}.",
       "targetChargeWaitForVehicle": "Încărcare terminată. Aștept după vehicul…",
       "vehicleLimitReached": "Limita {soc} a fost atinsă.",
       "waitForVehicle": "Pregătit. Aștept după vehicul…"

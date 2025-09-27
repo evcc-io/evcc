@@ -103,7 +103,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	req := evopt.OptimizationInput{
 		Strategy: evopt.OptimizerStrategy{
-			ChargingStrategy: evopt.ChargeBeforeExport, // AttenuateGridPeaks
+			ChargingStrategy:    evopt.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
+			DischargingStrategy: evopt.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
 		EtaD: eta,
@@ -129,6 +130,11 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			continue
 		}
 
+		v := lp.GetVehicle()
+		if v == nil || v.Capacity() == 0 {
+			continue
+		}
+
 		bat := evopt.BatteryConfig{
 			ChargeFromGrid: true,
 			CMin:           float32(lp.EffectiveMinPower()),
@@ -147,30 +153,31 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			Title: lp.GetTitle(),
 		}
 
-		if v := lp.GetVehicle(); v != nil {
-			limit := lp.GetLimitEnergy() * 1e3 // Wh
-			if limit == 0 {
-				limit = v.Capacity() * float64(lp.GetLimitSoc()) / 10 // Wh
+		// vehicle
+		maxSoc := v.Capacity() * 1e3 // Wh
+		if v := lp.EffectiveLimitSoc(); v > 0 {
+			maxSoc *= float64(v) / 100
+		} else if v := lp.GetLimitEnergy(); v > 0 {
+			maxSoc = v * 1e3
+		}
+
+		bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
+		bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
+
+		detail.Type = batteryTypeVehicle
+		detail.Capacity = v.Capacity()
+
+		if vt := v.GetTitle(); vt != "" {
+			if detail.Title != "" {
+				detail.Title += " – "
 			}
+			detail.Title += vt
+		}
 
-			bat.SMax = float32(limit)
-			bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
-
-			detail.Type = batteryTypeVehicle
-			detail.Capacity = v.Capacity()
-
-			if vt := v.GetTitle(); vt != "" {
-				if detail.Title != "" {
-					detail.Title += " – "
-				}
-				detail.Title += vt
-			}
-
-			// find vehicle name/id
-			for _, dev := range config.Vehicles().Devices() {
-				if dev.Instance() == v {
-					detail.Name = dev.Config().Name
-				}
+		// find vehicle name/id
+		for _, dev := range config.Vehicles().Devices() {
+			if dev.Instance() == v {
+				detail.Name = dev.Config().Name
 			}
 		}
 
@@ -188,7 +195,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			goal, socBased := lp.GetPlanGoal()
 			if goal > 0 {
 				if v := lp.GetVehicle(); socBased && v != nil {
-					goal *= v.Capacity()
+					goal *= v.Capacity() * 10
 				}
 			}
 
@@ -209,7 +216,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for i, b := range battery {
-		if b.Capacity == nil || b.Soc == nil {
+		// TODO decide if nil should be only indicator
+		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil || *b.Soc == 0 {
 			continue
 		}
 
@@ -229,10 +237,16 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			bat.ChargeFromGrid = true
 		}
 
-		if m, ok := instance.(api.BatteryMaxPowerGetter); ok {
-			charge, discharge := m.GetMaxChargeDischargePower()
+		if m, ok := instance.(api.BatteryPowerLimiter); ok {
+			charge, discharge := m.GetPowerLimits()
 			bat.CMax = float32(charge)
 			bat.DMax = float32(discharge)
+		}
+
+		if m, ok := instance.(api.BatterySocLimiter); ok {
+			min, max := m.GetSocLimits()
+			bat.SMin = float32(*b.Capacity * float64(min) * 10) // Wh
+			bat.SMax = float32(*b.Capacity * float64(max) * 10) // Wh
 		}
 
 		req.Batteries = append(req.Batteries, bat)

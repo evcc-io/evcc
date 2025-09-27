@@ -41,11 +41,9 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 	return NewHomeAssistantSwitch(cc.embed, cc.BaseURL, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
 }
 
-//go:generate go tool decorate -f decorateHomeAssistantSwitch -b *HomeAssistantSwitch -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)"
-
 func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
 	c := &HomeAssistantSwitch{
-		baseURL:      baseURL,
+		baseURL:      strings.TrimSuffix(baseURL, "/"),
 		switchEntity: switchEntity,
 		powerEntity:  powerEntity,
 		Helper:       request.NewHelper(util.NewLogger("ha-switch")),
@@ -53,6 +51,11 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 
 	if switchEntity == "" {
 		return nil, errors.New("missing switch entity")
+	}
+
+	// standbypower < 0 ensures that currentPower is never used by the switch socket if not present
+	if powerEntity == "" && standbypower >= 0 {
+		return nil, errors.New("missing either power entity or negative standbypower")
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
@@ -64,7 +67,7 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		Base: c.Helper.Client.Transport,
 	}
 
-	return decorateHomeAssistantSwitch(c, c.currentPower), nil
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface

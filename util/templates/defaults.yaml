@@ -342,8 +342,8 @@ params:
     type: int
     usages: ["battery"]
     description:
-      en: Maximum charge power
-      de: Maximale Ladeleistung
+      en: Maximum charge rate
+      de: Maximale prozentuale Ladeleistung
     help:
       en: For forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
       de: Für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
@@ -441,6 +441,18 @@ params:
     description:
       de: Temperaturquelle
       en: Temperature source
+  - name: lat
+    description:
+      en: Latitude
+      de: Breitengrad
+    type: float
+    example: 55.7351
+  - name: lon
+    description:
+      en: Longitude
+      de: Längengrad
+    type: float
+    example: 9.1275
 
 presets:
   vehicle-base:
@@ -531,18 +543,8 @@ presets:
   forecast-base:
     params:
       - name: lat
-        description:
-          en: Latitude
-          de: Breitengrad
-        type: float
-        example: 55.7351
         required: true
       - name: lon
-        description:
-          en: Longitude
-          de: Längengrad
-        type: float
-        example: 9.1275
         required: true
       - name: dec
         description:

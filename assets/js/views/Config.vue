@@ -265,11 +265,11 @@
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags
-									v-if="circuits.length == 0"
+									v-if="circuitsSorted.length == 0"
 									:tags="{ configured: { value: false } }"
 								/>
 								<template
-									v-for="(circuit, idx) in circuits"
+									v-for="(circuit, idx) in circuitsSorted"
 									v-else
 									:key="circuit.name"
 								>
@@ -295,6 +295,18 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
+							:title="$t('config.shm.cardTitle')"
+							editable
+							:error="hasClassError('shm')"
+							data-testid="shm"
+							@edit="openModal('shmModal')"
+						>
+							<template #icon><ShmIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="shmTags" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
 							:title="$t('config.hems.title')"
 							editable
 							:error="hasClassError('hems')"
@@ -315,6 +327,9 @@
 				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
+					</router-link>
+					<router-link to="/issue" class="btn btn-outline-secondary">
+						{{ $t("help.issueButton") }}
 					</router-link>
 					<button
 						class="btn btn-outline-secondary text-truncate"
@@ -372,6 +387,7 @@
 				<ControlModal @changed="loadDirty" />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 				<HemsModal @changed="yamlChanged" />
+				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<ModbusProxyModal @changed="yamlChanged" />
@@ -408,6 +424,8 @@ import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
+import ShmIcon from "../components/MaterialIcon/Shm.vue";
+import ShmModal from "@/components/Config/ShmModal.vue";
 import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
@@ -430,6 +448,7 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent } from "vue";
 import type {
+	Circuit,
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
@@ -465,6 +484,8 @@ export default defineComponent({
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
+		ShmModal,
+		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
 		MessagingModal,
@@ -613,13 +634,28 @@ export default defineComponent({
 		vehicleOptions() {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
+		shmTags() {
+			const { allowControl } = store.state?.shm || {};
+			return { allowControl: { value: allowControl || false } };
+		},
 		hemsTags() {
-			const result = { configured: { value: false }, hemsType: {} };
 			const { type } = store.state?.hems || {};
-			if (type) {
-				result.configured.value = true;
+			if (!type) {
+				return { configured: { value: false } };
+			}
+			const result = {
+				hemsType: {},
+				hemsActiveLimit: { value: null as number | null },
+			};
+			if (["relay", "eebus"].includes(type)) {
 				result.hemsType = { value: type };
 			}
+			const lpc = store.state?.circuits?.["lpc"];
+			if (lpc) {
+				const value = lpc.maxPower || null;
+				result.hemsActiveLimit = { value };
+			}
+
 			return result;
 		},
 		isSponsor() {
@@ -643,6 +679,12 @@ export default defineComponent({
 			return {
 				authDisabled: store.state?.authDisabled || false,
 			};
+		},
+		circuitsSorted() {
+			const sortedNames = Object.keys(store.state?.circuits || {});
+			return [...this.circuits].sort(
+				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
+			);
 		},
 	},
 	watch: {
@@ -704,7 +746,15 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const response = await api.get("/config/devices/circuit");
-			this.circuits = response.data || [];
+			const circuits = response.data || [];
+			// set lpc default title
+			circuits.forEach((c: ConfigCircuit) => {
+				if (c.name === "lpc" && !c.config?.title) {
+					c.config = c.config || {};
+					c.config.title = this.$t("config.hems.title");
+				}
+			});
+			this.circuits = circuits;
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {
@@ -984,7 +1034,8 @@ export default defineComponent({
 		},
 		circuitTags(circuit: ConfigCircuit) {
 			const circuits = store.state?.circuits || {};
-			const data = circuits[circuit.name] || {};
+			const data =
+				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
 			const result: Record<string, object> = {};
 			const p = data.power || 0;
 			if (data.maxPower) {

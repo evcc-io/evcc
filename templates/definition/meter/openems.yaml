@@ -40,26 +40,52 @@ params:
     advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }} 
   power:
     source: http
-    {{- if eq .usage "grid" }}
     uri: http://{{ .host }}/rest/channel/_sum/GridActivePower
-    {{- end }}
-    {{- if eq .usage "pv" }}
-    uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
-    {{- end }}
-    {{- if eq .usage "battery" }}
-    uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
-    {{- end }}
     auth:
       type: basic
       user: x
       password: {{ .password }}
     jq: (.value // 0)
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/GridBuyActiveEnergy
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value / 1000 // 0) # convert Wh to kWh
+  {{- end }}
   {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value // 0)
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value / 1000 // 0) # convert Wh to kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value // 0)
   soc:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssSoc

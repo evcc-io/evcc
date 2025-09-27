@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
-      "title": "Belastningshantering"
+      "title": "Belastningshantering",
+      "usableMeters": "Mätarreferenser som kan användas"
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
@@ -76,6 +77,7 @@
       "title": "Kontrollera beteende"
     },
     "deviceValue": {
+      "allowControl": "Tillåt styrning",
       "amount": "Belopp",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -98,7 +100,8 @@
       "feedinPrice": "Inmatningspris",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktiv begränsning",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -123,6 +126,10 @@
       "A": "A (ej ansluten)",
       "B": "B (ansluten)",
       "C": "C (laddar)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via relä"
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
@@ -176,7 +183,7 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
-      "description": "Anslut evcc till annat energistyrningssystem i hemmet.",
+      "description": "Effektbegränsning mha externt system (tex. §14a EnWG styrbox). Fordrar lasthanteringskonfiguration.",
       "title": "HEMS"
     },
     "icon": {
@@ -243,7 +250,7 @@
       "noVehicles": "Inga fordon är konfigurerade.",
       "option": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmare"
+        "heating": "Lägg till värmningsenhet"
       },
       "phases1p": "1-fas",
       "phases3p": "3-fas",
@@ -266,23 +273,23 @@
       "save": "Spara",
       "showAllSettings": "Visa alla inställningar",
       "solarBehaviorCustomHelp": "Definera dina egna aktiverings- och deaktiverings-tröskelvärden och fördröjningar.",
-      "solarBehaviorDefaultHelp": "Ladda endast med solenergiöverskott. Starta efter {enableDelay} av överskott. Stanna när överskottet går under {disableDelay}.",
-      "solarBehaviorLabel": "Solenergi inställningar",
+      "solarBehaviorDefaultHelp": "Starta efter {enableDelay} av tillräckligt överskott. Stanna när det inte är tillräckligt överskottet i {disableDelay}.",
+      "solarBehaviorLabel": "Solöverskott",
       "solarModeCustom": "egen",
       "solarModeMaximum": "maximal solenergi",
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
       "thresholdDisableHelpInvalid": "Ange ett positivt värde.",
-      "thresholdDisableHelpPositive": "Sluta ladda när mer än {power} under {delay} används från elnätet.",
-      "thresholdDisableHelpZero": "Sluta när minimum laddningseffekt inte kan uppfyllas under {delay}.",
+      "thresholdDisableHelpPositive": "Sluta när mer än {power} används från elnätet i {delay} .",
+      "thresholdDisableHelpZero": "Sluta när minimum effekt inte kan uppfyllas under {delay}.",
       "thresholdDisableLabel": "Koppla bort elnätet",
       "thresholdEnableDelayLabel": "Slå på fördröjning",
       "thresholdEnableHelpInvalid": "Ange ett negativt värde.",
-      "thresholdEnableHelpNegative": "Börjar ladda när {surplus} överskott finns i {delay}.",
-      "thresholdEnableHelpZero": "Starta när minimum överskott av laddningseffekt finns i {delay}.",
+      "thresholdEnableHelpNegative": "Starta när {surplus} överskott finns i {delay}.",
+      "thresholdEnableHelpZero": "Starta när minimum av nödvändig effekt finns i {delay}.",
       "thresholdEnableLabel": "Anslut elnätet",
       "titleAdd": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmare",
+        "heating": "Lägg till värmningsenhet",
         "unknown": "Lägg till laddare eller värmare"
       },
       "titleEdit": {
@@ -304,7 +311,7 @@
     "main": {
       "addAdditional": "Lägg till ytterligare mätare",
       "addGrid": "Lägg till elmätare",
-      "addLoadpoint": "Lägg till laddbox",
+      "addLoadpoint": "Lägg till laddare eller värmekälla",
       "addPvBattery": "Lägg till solceller eller batteri",
       "addTariffs": "Lägg till tariffer",
       "addVehicle": "Lägg till fordon",
@@ -420,16 +427,30 @@
       "general": "Allmänna",
       "grid": "Elnät",
       "integrations": "Integrationer",
-      "loadpoints": "Laddpunkter",
+      "loadpoints": "Laddare & värmekällor",
       "meter": "Sol & batteri",
       "system": "System",
       "vehicles": "Fordon"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc är utrustad med en integration för SMA Sunny Home Manager (SHM) via SEMP-protokollet. Om den körs på samma nätverk, bör du efter att du har loggat in på ditt Sunny Portal-konto automatiskt erbjudas att lägga till alla laddare som är konfigurerade i evcc. Det bör fungera direkt utan att några justeringar behöver göras nedan.",
+      "descriptionDeviceId": "Hexsträng med 12 tecken. Prefix för alla enheter (laddare, ..).",
+      "descriptionIdPattern": "Identifieringsmönster",
+      "descriptionIds": "I Sunny Portal behöver varje konsumentenhet en unik identifierare. evcc genererar en unik identifierare baserat på din hårdvara. Om du migrerar evcc till en annan hårdvara kan dessa identifierare ändras. Om du vill behålla historiken kan du åsidosätta de genererade identifierarna här. Öppna SEMP-URL:en (/semp) för att kontrollera dina aktuella identifierare.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "Hexsträng med 8 tecken. Generellt prefix för alla entiteter. Evcc använder sitt egna tillverkar-ID som standard.",
+      "labelAllowControl": "Tillåt rekommendationer från SHM för effektgränser.",
+      "labelControl": "Tillåt styrning",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Tillverkar-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Du får token från {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
       "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
@@ -679,7 +700,7 @@
     "iframeIssue": "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP.",
     "invalid": "Ogiltigt lösenord.",
     "login": "Logga in",
-    "password": "Lösenord",
+    "password": "Lösenord administratör",
     "reset": "Återställ lösenord?",
     "title": "Autentisering"
   },
@@ -723,6 +744,7 @@
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
       "loadpoints": "Laddare | Laddare | {count} laddare",
+      "loadpointsLimit": "{limit} begränsning",
       "noEnergy": "Inga mätaruppgifter",
       "pv": "Solanläggning",
       "pvExport": "Export till elnät",
@@ -734,6 +756,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
       "waitForVehicle": "Redo, väntar på värmare…"
+    },
+    "hemsWarning": {
+      "description": "Reducerad laddning för att inte överskrida {limit}.",
+      "title": "Extern begränsning:"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -811,7 +837,7 @@
       "goalReached": "Målet är uppnått",
       "inactiveLabel": "Mål-tid",
       "nextPlan": "Nästa plan",
-      "notReachableInTime": "Laddmål kommer att nås {endTime} senare.",
+      "notReachableInTime": "Laddmål kommer att nås {overrun} senare.",
       "onlyInPvMode": "Laddplan fungerar enbart i sol-läge.",
       "planDuration": "Laddtid",
       "planPeriodLabel": "Period",
@@ -1047,7 +1073,7 @@
     "unit": {
       "km": "km",
       "label": "Enheter",
-      "mi": "miles"
+      "mi": "amerikanska mil"
     }
   },
   "smartCost": {

@@ -39,6 +39,7 @@
 						name: $t(`settings.unit.${value}`),
 					}))
 				"
+				:aria-label="$t('settings.unit.label')"
 				equal-width
 			/>
 		</FormRow>
@@ -54,6 +55,7 @@
 						name: $t(`settings.time.${value}h`),
 					}))
 				"
+				:aria-label="$t('settings.time.label')"
 				equal-width
 			/>
 		</FormRow>
@@ -141,7 +143,7 @@ export default defineComponent({
 				return { value: key, name: value[1] };
 			});
 			// sort by name
-			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
+			locales.sort((a, b) => ((a.name || "") < (b.name || "") ? -1 : 1));
 			return locales;
 		},
 		fullscreenAvailable: () => {

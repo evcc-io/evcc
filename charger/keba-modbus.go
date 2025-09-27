@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -395,10 +395,7 @@ func (wb *Keba) getPhases() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if binary.BigEndian.Uint32(b) == 0 {
-		return 1, nil
-	}
-	return 3, nil
+	return int(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.Diagnosis = (*Keba)(nil)

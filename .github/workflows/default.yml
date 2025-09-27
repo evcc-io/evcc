@@ -13,7 +13,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
@@ -48,7 +48,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
@@ -81,7 +81,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
@@ -107,7 +107,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
@@ -133,12 +133,17 @@ jobs:
           version: latest
           args: --timeout 5m
 
+      - name: License
+        run: make license
+
   ui:
     name: UI
+    permissions:
+      contents: read
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -153,6 +158,9 @@ jobs:
 
       - name: Test
         run: make test-ui
+
+      - name: License
+        run: make license-ui
 
       - name: Build UI
         run: make ui
@@ -173,7 +181,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm-16
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:

@@ -3,7 +3,6 @@ products:
   - brand: EM2GO
     description:
       generic: Duo Power
-capabilities: ["mA"]
 params:
   - name: modbus
     choice: ["tcpip"]

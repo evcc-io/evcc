@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023-2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -286,18 +286,10 @@ func (wb *MennekesCompact) phases1p3p(phases int) error {
 		u = 1
 	}
 
-	// temporarily disable charger during phase switching
-	if en, err := wb.Enabled(); err == nil && en {
-		if err := wb.Enable(false); err != nil {
-			return err
-		}
-
-		defer wb.Enable(true)
-	}
-
-	_, err := wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, u)
-
-	return err
+	return whenDisabled(wb, func() error {
+		_, err := wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, u)
+		return err
+	})
 }
 
 var _ api.Diagnosis = (*MennekesCompact)(nil)

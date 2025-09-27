@@ -1,0 +1,19 @@
+template: energinet
+deprecated: true
+products:
+  - brand: Energinet
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["DK"]
+params:
+  - name: region
+    example: dk1
+    type: choice
+    choice: ["dk1", "dk2"]
+    required: true
+  - preset: tariff-base
+render: |
+  type: energinet
+  region: {{ .region }}
+  {{ include "tariff-base" . }}

@@ -120,7 +120,7 @@ func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
 	} else if _, ok := meter.(api.PhaseCurrents); meter != nil && !ok {
-		return nil, fmt.Errorf("meter does not support phase currents")
+		return nil, errors.New("meter does not support phase currents")
 	}
 
 	return c, nil
@@ -150,7 +150,7 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
-		return fmt.Errorf("circuit already has a parent")
+		return errors.New("circuit already has a parent")
 	}
 	c.parent = parent
 	if parent != nil {
@@ -161,6 +161,9 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 
 // Wrap wraps circuit with parent, keeping the original meter
 func (c *Circuit) Wrap(parent api.Circuit) error {
+	if parent == c {
+		return nil // wrap circuit with itself
+	}
 	if c.meter != nil {
 		parent.(*Circuit).meter = c.meter
 	}
