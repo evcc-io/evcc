@@ -77,7 +77,6 @@
       "title": "Regelverhalten"
     },
     "deviceValue": {
-      "allowControl": "Steuerung erlauben",
       "amount": "Anzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -95,6 +94,7 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "deviceId": "Geräte-ID",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "feedinPrice": "Einspeisevergütung",
@@ -120,6 +120,7 @@
       "topic": "Thema",
       "url": "URL",
       "vehicleLimitSoc": "Fahrzeuglimit",
+      "vendorId": "Hersteller-ID",
       "yes": "Ja"
     },
     "deviceValueChargeStatus": {
@@ -443,10 +444,6 @@
       "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
-      "labelAllowControl": "Zusätzlich Leistungsbegrenzungsempfehlungen vom SHM akzeptieren.",
-      "labelControl": "Steuerung erlauben",
-      "labelDeviceId": "Geräte-ID",
-      "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {

@@ -77,7 +77,6 @@
       "title": "Kontrolno ponašanje"
     },
     "deviceValue": {
-      "allowControl": "Dozvoli kontrolu",
       "amount": "Iznos",
       "broker": "Posrednik",
       "bucket": "Kanta",
@@ -95,6 +94,7 @@
       "currency": "Valuta",
       "current": "Struja",
       "currentRange": "Struja",
+      "deviceId": "ID uređaja",
       "enabled": "Omogućeno",
       "energy": "Energija",
       "feedinPrice": "Cijena izvoza",
@@ -120,6 +120,7 @@
       "topic": "Tema",
       "url": "URL",
       "vehicleLimitSoc": "Ograničenje vozila",
+      "vendorId": "ID proizvođača",
       "yes": "da"
     },
     "deviceValueChargeStatus": {
@@ -440,10 +441,6 @@
       "descriptionIds": "U Sunny Portalu svaki uređaj mora imati jedinstveni identifikator. evcc generira jedinstveni identifikator prema vašem hardveru. Ukoliko evcc premjestite na drugi hardver, identifikatori bi se mogli promijeniti. Ukoliko želite očuvati sljednost, ovdje možete definirati svoje identifikatore. Otvorite SEMP URL (/semp) kako biste provjerili trenutne identifikatore.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "HEX izraz od 8 znakova. Prefiks za sve objekte. Uobičajeno je da evcc koristi svoj interni ID.",
-      "labelAllowControl": "Prihvati dodatna ograničenja snage prema savjetima od SHM-a.",
-      "labelControl": "Dozvoli kontrolu",
-      "labelDeviceId": "ID uređaja",
-      "labelVendorId": "ID proizvođača",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
