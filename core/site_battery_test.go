@@ -180,9 +180,8 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 		{api.BatteryHold, api.BatteryCharge, 50},
 		{api.BatteryHold, api.BatteryHold, 90}, // TODO make this api.BatteryUnknown
 
-		// TODO evaluate soc
-		// {api.BatteryCharge, api.BatteryUnknown, 50},
-		// {api.BatteryCharge, api.BatteryHold, 90},
+		{api.BatteryCharge, api.BatteryUnknown, 50},
+		{api.BatteryCharge, api.BatteryHold, 90},
 	} {
 		t.Logf("%+v", tc)
 
