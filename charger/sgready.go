@@ -161,6 +161,25 @@ func (wb *SgReady) Enable(enable bool) error {
 	return wb.setMaxPower(wb.power)
 }
 
+var _ api.Dimmer = (*SgReady)(nil)
+
+// Dimmed implements the api.Dimmer interface
+func (wb *SgReady) Dimmed() (bool, error) {
+	mode, err := wb.getMode()
+	return mode == Dimm, err
+}
+
+// Dimm implements the api.Dimmer interface
+func (wb *SgReady) Dimm() error {
+	if err := wb.modeS(Dimm); err != nil {
+		return err
+	}
+
+	wb.mode = Dimm
+
+	return nil
+}
+
 // MaxCurrent implements the api.Charger interface
 func (wb *SgReady) MaxCurrent(current int64) error {
 	return wb.MaxCurrentMillis(float64(current))
