@@ -816,6 +816,32 @@ func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
 }
 
+// Dimm mocks base method.
+func (m *MockCircuit) Dimm(arg0 bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Dimm", arg0)
+}
+
+// Dimm indicates an expected call of Dimm.
+func (mr *MockCircuitMockRecorder) Dimm(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimm", reflect.TypeOf((*MockCircuit)(nil).Dimm), arg0)
+}
+
+// Dimmed mocks base method.
+func (m *MockCircuit) Dimmed() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Dimmed")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Dimmed indicates an expected call of Dimmed.
+func (mr *MockCircuitMockRecorder) Dimmed() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimmed", reflect.TypeOf((*MockCircuit)(nil).Dimmed))
+}
+
 // GetChargePower mocks base method.
 func (m *MockCircuit) GetChargePower() float64 {
 	m.ctrl.T.Helper()
