@@ -18,16 +18,13 @@ package charger
 // SOFTWARE.
 
 import (
-	"bytes"
-	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -35,111 +32,15 @@ import (
 // SEMP charger implementation
 type SEMP struct {
 	*request.Helper
-	log      *util.Logger
-	uri      string
-	deviceID string
-	cache    time.Duration
-	statusG  util.Cacheable[DeviceStatus]
-	infoG    util.Cacheable[DeviceInfo]
-	phases   int
-	current  float64
-	enabled  bool
+	log        *util.Logger
+	sempClient *semp.Client
+	cache      time.Duration
+	statusG    util.Cacheable[semp.DeviceStatus]
+	infoG      util.Cacheable[semp.DeviceInfo]
+	phases     int
+	current    float64
+	enabled    bool
 }
-
-// DeviceInfo represents SEMP device information
-type DeviceInfo struct {
-	Identification  Identification  `xml:"Identification"`
-	Characteristics Characteristics `xml:"Characteristics"`
-	Capabilities    Capabilities    `xml:"Capabilities"`
-}
-
-// Identification represents SEMP device identification
-type Identification struct {
-	DeviceID     string `xml:"DeviceId"`
-	DeviceName   string `xml:"DeviceName"`
-	DeviceType   string `xml:"DeviceType"`
-	DeviceSerial string `xml:"DeviceSerial"`
-	DeviceVendor string `xml:"DeviceVendor"`
-}
-
-// Characteristics represents SEMP device characteristics
-type Characteristics struct {
-	MinPowerConsumption int `xml:"MinPowerConsumption"`
-	MaxPowerConsumption int `xml:"MaxPowerConsumption"`
-	MinOnTime           int `xml:"MinOnTime,omitempty"`
-	MinOffTime          int `xml:"MinOffTime,omitempty"`
-}
-
-// Capabilities represents SEMP device capabilities
-type Capabilities struct {
-	CurrentPowerMethod   string `xml:"CurrentPower>Method"`
-	AbsoluteTimestamps   bool   `xml:"Timestamps>AbsoluteTimestamps"`
-	InterruptionsAllowed bool   `xml:"Interruptions>InterruptionsAllowed"`
-	OptionalEnergy       bool   `xml:"Requests>OptionalEnergy"`
-}
-
-// DeviceStatus represents SEMP device status
-type DeviceStatus struct {
-	DeviceID          string    `xml:"DeviceId"`
-	Status            string    `xml:"Status"`
-	EMSignalsAccepted bool      `xml:"EMSignalsAccepted"`
-	PowerInfo         PowerInfo `xml:"PowerConsumption>PowerInfo"`
-}
-
-// PowerInfo represents SEMP power information
-type PowerInfo struct {
-	AveragePower      int `xml:"AveragePower"`
-	Timestamp         int `xml:"Timestamp"`
-	AveragingInterval int `xml:"AveragingInterval"`
-}
-
-// DeviceControl represents SEMP device control message
-type DeviceControl struct {
-	DeviceID                    string `xml:"DeviceId"`
-	On                          bool   `xml:"On"`
-	RecommendedPowerConsumption int    `xml:"RecommendedPowerConsumption"`
-	Timestamp                   int    `xml:"Timestamp"`
-}
-
-// PlanningRequest represents SEMP planning request
-type PlanningRequest struct {
-	Timeframe []Timeframe `xml:"Timeframe"`
-}
-
-// Timeframe represents SEMP timeframe
-type Timeframe struct {
-	DeviceID            string `xml:"DeviceId"`
-	EarliestStart       int    `xml:"EarliestStart"`
-	LatestEnd           int    `xml:"LatestEnd"`
-	MinRunningTime      *int   `xml:"MinRunningTime,omitempty"`
-	MaxRunningTime      *int   `xml:"MaxRunningTime,omitempty"`
-	MinEnergy           *int   `xml:"MinEnergy,omitempty"`
-	MaxEnergy           *int   `xml:"MaxEnergy,omitempty"`
-	MaxPowerConsumption *int   `xml:"MaxPowerConsumption,omitempty"`
-	MinPowerConsumption *int   `xml:"MinPowerConsumption,omitempty"`
-}
-
-// Device2EM represents the device to energy manager message
-type Device2EM struct {
-	XMLName         xml.Name          `xml:"Device2EM"`
-	Xmlns           string            `xml:"xmlns,attr"`
-	DeviceInfo      []DeviceInfo      `xml:"DeviceInfo,omitempty"`
-	DeviceStatus    []DeviceStatus    `xml:"DeviceStatus,omitempty"`
-	PlanningRequest []PlanningRequest `xml:"PlanningRequest,omitempty"`
-}
-
-// EM2Device represents the energy manager to device message
-type EM2Device struct {
-	XMLName       xml.Name        `xml:"EM2Device"`
-	Xmlns         string          `xml:"xmlns,attr"`
-	DeviceControl []DeviceControl `xml:"DeviceControl,omitempty"`
-}
-
-// Status constants
-const (
-	StatusOn  = "On"
-	StatusOff = "Off"
-)
 
 //go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
@@ -177,24 +78,25 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("semp")
 
 	wb := &SEMP{
-		Helper:   request.NewHelper(log),
-		log:      log,
-		uri:      strings.TrimRight(uri, "/"),
-		deviceID: deviceID,
-		cache:    cache,
+		Helper: request.NewHelper(log),
+		log:    log,
+		cache:  cache,
 	}
 
 	// Set default timeout
 	wb.Client.Timeout = request.Timeout
 
+	// Initialize SEMP client
+	wb.sempClient = semp.NewClient(wb.Helper, strings.TrimRight(uri, "/"), deviceID)
+
 	// Setup cached device status getter
-	wb.statusG = util.ResettableCached(func() (DeviceStatus, error) {
-		return wb.getDeviceStatus()
+	wb.statusG = util.ResettableCached(func() (semp.DeviceStatus, error) {
+		return wb.sempClient.GetDeviceStatus()
 	}, cache)
 
 	// Setup cached device info getter
-	wb.infoG = util.ResettableCached(func() (DeviceInfo, error) {
-		return wb.getDeviceInfo()
+	wb.infoG = util.ResettableCached(func() (semp.DeviceInfo, error) {
+		return wb.sempClient.GetDeviceInfo()
 	}, cache)
 
 	var (
@@ -203,7 +105,7 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	)
 
 	// Check if device supports phase switching by checking power characteristics
-	info, err := wb.getDeviceInfo()
+	info, err := wb.sempClient.GetDeviceInfo()
 	if err == nil {
 		// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
 		if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
@@ -217,151 +119,6 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	return decorateSEMP(wb, phases1p3p, getPhases), nil
 }
 
-// MarshalXML marshals XML into an io.ReadSeeker
-func MarshalXML(data interface{}) io.ReadSeeker {
-	if data == nil {
-		return nil
-	}
-
-	body, err := xml.Marshal(data)
-	if err != nil {
-		return &errorReader{err: err}
-	}
-
-	return bytes.NewReader(body)
-}
-
-// errorReader wraps an error with an io.Reader
-type errorReader struct {
-	err error
-}
-
-func (r *errorReader) Read(p []byte) (int, error) {
-	return 0, r.err
-}
-
-func (r *errorReader) Seek(offset int64, whence int) (int64, error) {
-	return 0, r.err
-}
-
-// DoXML executes HTTP request and decodes XML response
-func (wb *SEMP) DoXML(req *http.Request, res interface{}) error {
-	resp, err := wb.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if err := request.ResponseError(resp); err != nil {
-		return err
-	}
-
-	return xml.NewDecoder(resp.Body).Decode(&res)
-}
-
-// getDeviceStatus retrieves the current device status from SEMP interface
-func (wb *SEMP) getDeviceStatus() (DeviceStatus, error) {
-	uri := fmt.Sprintf("%s/semp/DeviceStatus", wb.uri)
-
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptXML)
-	if err != nil {
-		return DeviceStatus{}, err
-	}
-
-	var response Device2EM
-	if err := wb.DoXML(req, &response); err != nil {
-		return DeviceStatus{}, err
-	}
-
-	// Find device status for our device ID
-	for _, status := range response.DeviceStatus {
-		if status.DeviceID == wb.deviceID {
-			return status, nil
-		}
-	}
-
-	return DeviceStatus{}, fmt.Errorf("device %s not found in status response", wb.deviceID)
-}
-
-// getDeviceInfo retrieves the device info from SEMP interface
-func (wb *SEMP) getDeviceInfo() (DeviceInfo, error) {
-	uri := fmt.Sprintf("%s/semp/DeviceInfo", wb.uri)
-
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptXML)
-	if err != nil {
-		return DeviceInfo{}, err
-	}
-
-	var response Device2EM
-	if err := wb.DoXML(req, &response); err != nil {
-		return DeviceInfo{}, err
-	}
-
-	// Find device info for our device ID
-	for _, info := range response.DeviceInfo {
-		if info.Identification.DeviceID == wb.deviceID {
-			return info, nil
-		}
-	}
-
-	return DeviceInfo{}, fmt.Errorf("device %s not found in info response", wb.deviceID)
-}
-
-// hasPlanningRequest checks if there is a planning request/timeframe for the device
-func (wb *SEMP) hasPlanningRequest() (bool, error) {
-	uri := fmt.Sprintf("%s/semp/PlanningRequest", wb.uri)
-
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptXML)
-	if err != nil {
-		return false, err
-	}
-
-	var response Device2EM
-	if err := wb.DoXML(req, &response); err != nil {
-		return false, err
-	}
-
-	// Check if there are any timeframes for our device ID
-	for _, planningRequest := range response.PlanningRequest {
-		for _, timeframe := range planningRequest.Timeframe {
-			if timeframe.DeviceID == wb.deviceID {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
-// sendDeviceControl sends a control message to the SEMP device
-func (wb *SEMP) sendDeviceControl(on bool, power int) error {
-	control := DeviceControl{
-		DeviceID:                    wb.deviceID,
-		On:                          on,
-		RecommendedPowerConsumption: power,
-		Timestamp:                   int(time.Now().Unix()),
-	}
-
-	message := EM2Device{
-		Xmlns:         "http://www.sma.de/communication/schema/SEMP/v1",
-		DeviceControl: []DeviceControl{control},
-	}
-
-	uri := fmt.Sprintf("%s/semp/DeviceControl", wb.uri)
-
-	req, err := request.New(http.MethodPost, uri, MarshalXML(message), request.XMLEncoding)
-	if err != nil {
-		return err
-	}
-
-	_, err = wb.DoBody(req)
-	if err == nil {
-		wb.statusG.Reset()
-	}
-
-	return err
-}
-
 // Status implements the api.Charger interface
 func (wb *SEMP) Status() (api.ChargeStatus, error) {
 	status, err := wb.statusG.Get()
@@ -371,7 +128,7 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 	// Check if there is a planning request/timeframe for this device
 	// If no planning request exists -> Status A (unplugged/disconnected)
-	hasPlanningRequest, err := wb.hasPlanningRequest()
+	hasPlanningRequest, err := wb.sempClient.HasPlanningRequest()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -381,7 +138,7 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 	}
 
 	// If status is "On", the charger is actively charging -> Status C
-	if status.Status == StatusOn {
+	if status.Status == semp.StatusOn {
 		return api.StatusC, nil
 	}
 
@@ -396,7 +153,7 @@ func (wb *SEMP) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return status.EMSignalsAccepted && status.Status == StatusOn, nil
+	return status.EMSignalsAccepted && status.Status == semp.StatusOn, nil
 }
 
 // Enable implements the api.Charger interface
@@ -417,7 +174,11 @@ func (wb *SEMP) Enable(enable bool) error {
 	}
 
 	wb.enabled = enable
-	return wb.sendDeviceControl(wb.enabled, wb.calcPower())
+	err = wb.sempClient.SendDeviceControl(wb.enabled, wb.calcPower())
+	if err == nil {
+		wb.statusG.Reset()
+	}
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -430,7 +191,11 @@ var _ api.ChargerEx = (*SEMP)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
 	wb.current = current
-	return wb.sendDeviceControl(wb.enabled, wb.calcPower())
+	err := wb.sempClient.SendDeviceControl(wb.enabled, wb.calcPower())
+	if err == nil {
+		wb.statusG.Reset()
+	}
+	return err
 }
 
 var _ api.Meter = (*SEMP)(nil)
@@ -449,16 +214,22 @@ var _ api.Diagnosis = (*SEMP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (s *SEMP) Diagnose() {
-	if status, err := s.getDeviceStatus(); err == nil {
+	if status, err := s.sempClient.GetDeviceStatus(); err == nil {
 		fmt.Printf("Device Status: %+v\n", status)
+	} else {
+		fmt.Printf("Device Status Error: %v\n", err)
 	}
 
-	if info, err := s.getDeviceInfo(); err == nil {
+	if info, err := s.sempClient.GetDeviceInfo(); err == nil {
 		fmt.Printf("Device Info: %+v\n", info)
+	} else {
+		fmt.Printf("Device Info Error: %v\n", err)
 	}
 
-	if hasPlanning, err := s.hasPlanningRequest(); err == nil {
+	if hasPlanning, err := s.sempClient.HasPlanningRequest(); err == nil {
 		fmt.Printf("Planning Request: %t\n", hasPlanning)
+	} else {
+		fmt.Printf("Planning Request Error: %v\n", err)
 	}
 }
 
@@ -466,7 +237,11 @@ func (s *SEMP) Diagnose() {
 func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
 	wb.phases = phases
-	return wb.sendDeviceControl(wb.enabled, wb.calcPower())
+	err := wb.sempClient.SendDeviceControl(wb.enabled, wb.calcPower())
+	if err == nil {
+		wb.statusG.Reset()
+	}
+	return err
 }
 
 func (wb *SEMP) getPhases() (int, error) {
