@@ -129,8 +129,10 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			continue
 		}
 
-		// charge mode: validate max soc
-		if mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge {
+		isCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+
+		// validate max soc
+		if isCharge {
 			ok, err := batteryMaxSocReached(meter)
 			if err != nil {
 				return err
