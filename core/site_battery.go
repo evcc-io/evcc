@@ -42,13 +42,10 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
 
-	// already in charge mode
-	isCharging := site.batteryMode == api.BatteryCharge
-
 	// NOTE: applyBatteryMode is always called when charge mode is active to validate max soc
-	if mustUpdate := batteryMode != api.BatteryUnknown; isCharging || mustUpdate {
+	if modeChanged := batteryMode != api.BatteryUnknown; modeChanged || site.batteryMode == api.BatteryCharge {
 		if err := site.applyBatteryMode(batteryMode); err == nil {
-			if mustUpdate {
+			if modeChanged {
 				site.SetBatteryMode(batteryMode)
 			}
 		} else {
@@ -129,7 +126,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			// charge mode: validate max soc
-			if mode == api.BatteryCharge || site.batteryMode == api.BatteryCharge && mode == api.BatteryUnknown {
+			if mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge {
 				ok, err := batteryMaxSocReached(meter)
 				if err != nil {
 					return err
