@@ -383,7 +383,16 @@ func (c *Circuit) Dimm(dimm bool) {
 }
 
 func (c *Circuit) Dimmed() bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.dimmed
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.dimmed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Dimmed()
 }
