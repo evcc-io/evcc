@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SEMP charger implementation
@@ -76,6 +77,10 @@ func NewSEMPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewSEMP creates a SEMP charger
 func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("semp")
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	wb := &SEMP{
 		Helper: request.NewHelper(log),
