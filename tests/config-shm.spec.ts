@@ -75,7 +75,7 @@ test.describe("SHM", () => {
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
-    // verify it shows as emptyv
+    // verify it shows as empty
     await expect(shmCard).toContainText(["Device ID", "", "Vendor ID", ""].join(""));
   });
 });
