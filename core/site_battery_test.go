@@ -163,3 +163,62 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+func TestForcedBatteryChargeLimits(t *testing.T) {
+	limit := 80.0
+
+	for _, tc := range []struct {
+		internal, expected api.BatteryMode
+		soc                float64
+	}{
+		{api.BatteryUnknown, api.BatteryCharge, 50},
+		{api.BatteryUnknown, api.BatteryHold, 90},
+
+		{api.BatteryNormal, api.BatteryCharge, 50},
+		{api.BatteryNormal, api.BatteryHold, 90},
+
+		{api.BatteryHold, api.BatteryCharge, 50},
+		{api.BatteryHold, api.BatteryHold, 90}, // TODO make this api.BatteryUnknown
+
+		{api.BatteryCharge, api.BatteryUnknown, 50},
+		{api.BatteryCharge, api.BatteryHold, 90},
+	} {
+		t.Logf("%+v", tc)
+
+		ctrl := gomock.NewController(t)
+
+		var bat api.Meter
+		batSoc := api.NewMockBattery(ctrl)
+		batCon := api.NewMockBatteryController(ctrl)
+		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+
+		bat = &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			Meter:             bat,
+			Battery:           batSoc,
+			BatteryController: batCon,
+			BatterySocLimiter: batSocLimit,
+		}
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+			batteryMode:   tc.internal,
+		}
+
+		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
+		batSocLimit.EXPECT().GetSocLimits().Return(0.0, limit).Times(1)
+
+		if tc.expected != api.BatteryUnknown {
+			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
+		}
+
+		site.updateBatteryMode(true, api.Rate{})
+
+		ctrl.Finish()
+	}
+}
