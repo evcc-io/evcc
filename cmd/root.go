@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
@@ -158,21 +157,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	// create web server
-	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
-
-	if ln, err := net.Listen("tcp", httpd.Server.Addr); err == nil {
-		log.INFO.Printf("UI listening at :%d", conf.Network.Port)
-
-		go func() {
-			log.FATAL.Println(wrapFatalError(httpd.Serve(ln)))
-		}()
-	} else {
-		log.FATAL.Println(err)
-		os.Exit(1)
-	}
-
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
@@ -181,6 +165,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// value cache
 	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
+
+	// create web server
+	socketHub := server.NewSocketHub()
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+
+	// start serving in background, watch for “routine‐only” errors
+	go func() {
+		if err := wrapFatalError(httpd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
+			log.FATAL.Println(err)
+			os.Exit(1)
+		}
+	}()
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+
+	// signal ui listening
+	valueChan <- util.Param{Key: keys.Startup, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -246,7 +246,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// signal restart
+	// signal devices initialized
 	valueChan <- util.Param{Key: keys.Startup, Val: true}
 
 	// setup mqtt publisher
