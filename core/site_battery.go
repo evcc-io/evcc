@@ -62,7 +62,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		site.Unlock()
 	}
 
-	mapper := func(s api.BatteryMode) api.BatteryMode {
+	isUnchanged := func(s api.BatteryMode) api.BatteryMode {
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
@@ -79,9 +79,9 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		}
 	case batteryGridChargeActive:
 		// TODO validate max soc to leave force-charging
-		res = mapper(api.BatteryCharge)
+		res = isUnchanged(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
-		res = mapper(api.BatteryHold)
+		res = isUnchanged(api.BatteryHold)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
 	}

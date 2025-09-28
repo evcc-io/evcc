@@ -164,7 +164,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 	}
 }
 
-func TestForcedBatteryCharge(t *testing.T) {
+func TestForcedBatteryChargeLimits(t *testing.T) {
 	limit := 80.0
 
 	for _, tc := range []struct {
@@ -177,12 +177,12 @@ func TestForcedBatteryCharge(t *testing.T) {
 		{api.BatteryNormal, api.BatteryCharge, 50},
 		{api.BatteryNormal, api.BatteryHold, 90},
 
+		{api.BatteryHold, api.BatteryCharge, 50},
+		{api.BatteryHold, api.BatteryHold, 90}, // TODO make this api.BatteryUnknown
+
 		// TODO evaluate soc
 		// {api.BatteryCharge, api.BatteryUnknown, 50},
 		// {api.BatteryCharge, api.BatteryHold, 90},
-
-		{api.BatteryHold, api.BatteryCharge, 50},
-		{api.BatteryHold, api.BatteryHold, 90}, // TODO make this api.BatteryUnknown
 	} {
 		t.Logf("%+v", tc)
 
