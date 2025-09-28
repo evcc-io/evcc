@@ -1,0 +1,32 @@
+template: semp-charger
+products:
+  - brand: SMA
+    description:
+      generic: SEMP-compatible wallbox
+  - brand: Generic
+    description:
+      generic: SEMP-compatible charger
+capabilities: ["1p3p"]
+requirements:
+  description:
+    en: |
+      SEMP (Smart Energy Management Protocol) compatible wallbox that can be controlled directly via HTTP/XML API.
+      Configure the SEMP base URL and the device ID of the wallbox.
+    de: |
+      SEMP (Smart Energy Management Protocol) kompatible Wallbox, die direkt über HTTP/XML API gesteuert werden kann.
+      Konfiguriere die SEMP Basis-URL und die Geräte-ID der Wallbox.
+params:
+  - name: uri
+    description:
+      en: SEMP base URL (e.g. http://192.168.1.100:8080)
+      de: SEMP Basis-URL (z.B. http://192.168.1.100:8080)
+    required: true
+  - name: deviceid
+    description:
+      en: SEMP device ID as configured in the wallbox
+      de: SEMP Geräte-ID wie in der Wallbox konfiguriert
+    required: true
+render: |
+  type: semp
+  uri: {{ .uri }}
+  deviceId: {{ .deviceid }}
