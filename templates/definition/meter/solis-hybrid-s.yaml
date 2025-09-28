@@ -6,6 +6,7 @@ products:
   - brand: Axitec
     description:
       generic: AXIhycon 12-15H
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -17,6 +18,17 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: minsoc
+    type: int
+    default: 20
+    advanced: true
+  - name: maxsoc
+    type: int
+    default: 95
+    advanced: true
+  - name: delay
+    default: 100ms
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -133,5 +145,15 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 43024 # Battery Reserve Mode SOC
+      type: writeholding
+      encoding: uint16
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
