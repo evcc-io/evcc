@@ -78,6 +78,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 			res = extMode
 		}
 	case batteryGridChargeActive:
+		// TODO validate max soc to leave force-charging
 		res = mapper(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
 		res = mapper(api.BatteryHold)
@@ -88,6 +89,27 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	return res
 }
 
+// batteryMaxSocReached checks is battery has exceed max soc limit
+func batteryMaxSocReached(meter api.Meter) (bool, error) {
+	batLimiter, ok := meter.(api.BatterySocLimiter)
+	if !ok {
+		return false, nil
+	}
+
+	batSoc, ok := meter.(api.Battery)
+	if !ok {
+		return false, errors.New("battery with soc limits must have soc")
+	}
+
+	soc, err := batSoc.Soc()
+	if err != nil {
+		return false, err
+	}
+
+	_, max := batLimiter.GetSocLimits()
+	return soc >= max, nil
+}
+
 // applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	for _, dev := range site.batteryMeters {
@@ -95,16 +117,16 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			// charge mode: validate max soc
-			if batLimiter, ok := meter.(api.BatterySocLimiter); ok && mode == api.BatteryCharge {
-				if batSoc, ok := meter.(api.Battery); ok {
-					soc, err := batSoc.Soc()
-					if err != nil {
-						return err
-					}
+			if mode == api.BatteryCharge {
+				ok, err := batteryMaxSocReached(meter)
+				if err != nil {
+					return err
+				}
 
-					if _, max := batLimiter.GetSocLimits(); soc >= max {
-						continue
-					}
+				// put battery into hold mode when soc limit reached
+				// TODO do this once only
+				if ok {
+					mode = api.BatteryHold
 				}
 			}
 
