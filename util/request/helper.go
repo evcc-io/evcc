@@ -86,7 +86,7 @@ func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 		return nil
 	}
 
-	return decodeJSON(resp, &res)
+	return decodeJSON(resp, res)
 }
 
 // GetJSON executes HTTP GET request and decodes JSON response.
@@ -113,7 +113,7 @@ func (r *Helper) DoXML(req *http.Request, res interface{}) error {
 		return nil
 	}
 
-	return decodeXML(resp, &res)
+	return decodeXML(resp, res)
 }
 
 // GetXML executes HTTP GET request and decodes XML response.
