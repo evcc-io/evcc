@@ -77,7 +77,6 @@
       "title": "Kontrollera beteende"
     },
     "deviceValue": {
-      "allowControl": "Tillåt styrning",
       "amount": "Belopp",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -440,8 +439,6 @@
       "descriptionIds": "I Sunny Portal behöver varje konsumentenhet en unik identifierare. evcc genererar en unik identifierare baserat på din hårdvara. Om du migrerar evcc till en annan hårdvara kan dessa identifierare ändras. Om du vill behålla historiken kan du åsidosätta de genererade identifierarna här. Öppna SEMP-URL:en (/semp) för att kontrollera dina aktuella identifierare.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "Hexsträng med 8 tecken. Generellt prefix för alla entiteter. Evcc använder sitt egna tillverkar-ID som standard.",
-      "labelAllowControl": "Tillåt rekommendationer från SHM för effektgränser.",
-      "labelControl": "Tillåt styrning",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Tillverkar-ID",
       "title": "SMA Sunny Home Manager"

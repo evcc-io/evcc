@@ -38,7 +38,6 @@ export interface HemsConfig {
 }
 
 export interface ShmConfig {
-  allowControl: boolean;
   vendorId: string;
   deviceId: string;
 }
