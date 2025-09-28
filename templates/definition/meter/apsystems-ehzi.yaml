@@ -1,0 +1,83 @@
+template: apsystems-ehzi
+products:
+  - brand: APsystems
+    description:
+      generic: EHZI Micro Hybrid Inverter with Battery Storage and Control
+      de: EHZI Mikro-Hybridwechselrichter mit Batteriespeicher und Steuerung
+capabilities: ["battery-control"]
+requirements:
+  description:
+    generic: Requires local network access to the APsystems EHZI micro hybrid inverter
+    de: Erfordert lokalen Netzwerkzugriff auf den APsystems EHZI Mikro-Hybridwechselrichter  
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+    help:
+      generic: IP address or hostname of the EHZI micro hybrid inverter
+      de: IP-Adresse oder Hostname des EHZI Mikro-Hybridwechselrichters
+    example: 192.168.20.8
+  - name: capacity
+    help:
+      generic: Battery capacity in kWh
+      de: Batteriekapazität in kWh
+    default: 2.4
+    advanced: true
+  - name: minsoc
+    default: 10
+    type: int
+    advanced: true
+    help:
+      generic: Minimum SOC for discharge (%)
+      de: Minimaler SoC für Entladung (%)
+  - name: maxsoc
+    default: 90
+    type: int
+    advanced: true
+    help:
+      generic: Maximum SOC for charge (%)
+      de: Maximaler SoC für Ladung (%)
+  - name: maxpower
+    description:
+      generic: Maximum charge/discharge power
+      de: Maximale Lade-/Entladeleistung
+    default: 1200
+    advanced: true
+    help:
+      generic: Maximum charge/discharge power in W. Note that EHZI will dynamically limit actual power based on battery SOC, temperature, and grid conditions. Actual power may be significantly lower than requested.
+      de: Maximale Lade-/Entladeleistung in W. Beachten Sie, dass EHZI die tatsächliche Leistung dynamisch basierend auf Batterie-SoC, Temperatur und Netzbedingungen begrenzt. Die tatsächliche Leistung kann deutlich niedriger sein als angefordert.
+render: |
+  type: custom
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/getOutputData
+    jq: (.data.batP | tonumber) * -1
+  energy:
+    source: http
+    uri: http://{{ .host }}/getOutputData
+    jq: ((.data.batSoc | tonumber) * {{ .capacity }}) / 100 # Available energy based on SoC in kWh
+  soc:
+    source: http
+    uri: http://{{ .host }}/getOutputData
+    jq: .data.batSoc | tonumber
+  capacity: {{ .capacity }} # kWh
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal - allow natural battery operation
+      set:
+        source: http
+        uri: http://{{ .host }}/setPower?p=0
+        method: GET
+    - case: 2 # hold - prevent discharge/charge
+      set:
+        source: http
+        uri: http://{{ .host }}/setPower?p=0
+        method: GET  
+    - case: 3 # charge - force charge from grid with max power
+      set:
+        source: http
+        uri: http://{{ .host }}/setPower?p={{ .maxpower | mul -1 }}
+        method: GET
+  {{- end }}
