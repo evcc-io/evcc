@@ -94,6 +94,7 @@
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "deviceId": "Device ID",
       "enabled": "Enabled",
       "energy": "Energy",
       "feedinPrice": "Feed-in price",
@@ -119,6 +120,7 @@
       "topic": "Topic",
       "url": "URL",
       "vehicleLimitSoc": "Vehicle limit",
+      "vendorId": "Vendor ID",
       "yes": "yes"
     },
     "deviceValueChargeStatus": {
@@ -442,8 +444,6 @@
       "descriptionIds": "In Sunny Portal every consumer device needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL (/semp) to check your current identifiers.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
-      "labelDeviceId": "Device ID",
-      "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {

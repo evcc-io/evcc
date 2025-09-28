@@ -21,6 +21,7 @@ test.describe("SHM", () => {
     await enableExperimental(page, false);
 
     const shmCard = page.getByTestId("shm");
+    await expect(shmCard).toContainText(["Device ID", "", "Vendor ID", ""].join(""));
 
     // configure SHM with IDs
     await shmCard.getByRole("button", { name: "edit" }).click();
@@ -46,6 +47,9 @@ test.describe("SHM", () => {
 
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
+    await expect(shmCard).toContainText(
+      ["Device ID", VALID_DEVICE_ID, "Vendor ID", VALID_VENDOR_ID].join("")
+    );
 
     // verify persistence after restart
     await restart(CONFIG);
@@ -64,5 +68,14 @@ test.describe("SHM", () => {
     const xml = await sempPage.content();
     expect(xml).toContain(`<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID}-00</DeviceId>`);
     await sempPage.close();
+
+    // remove IDs
+    await vendor.fill("");
+    await device.fill("");
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+
+    // verify it shows as emptyv
+    await expect(shmCard).toContainText(["Device ID", "", "Vendor ID", ""].join(""));
   });
 });

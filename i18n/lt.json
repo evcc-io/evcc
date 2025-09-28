@@ -94,6 +94,7 @@
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "deviceId": "Įrenginio ID",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
       "feedinPrice": "Tiekimo į tinklą kaina",
@@ -119,6 +120,7 @@
       "topic": "Tema",
       "url": "URL",
       "vehicleLimitSoc": "Automobilio limitas",
+      "vendorId": "Gamintojo ID",
       "yes": "taip"
     },
     "deviceValueChargeStatus": {
@@ -439,8 +441,6 @@
       "descriptionIds": "Sunny Portal sistemoje kiekvienam vartotojo įrenginiui reikalingas unikalus identifikatorius. evcc generuoja unikalų identifikatorių pagal jūsų aparatinę įrangą. Jei migruosite evcc į kitą aparatinę įrangą, šie identifikatoriai gali pasikeisti. Jei norite išsaugoti istoriją, čia galite pakeisti sugeneruotus identifikatorius. Atidarykite SEMP URL (/semp), kad patikrintumėte dabartinius identifikatorius.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 simbolių HEX eilutė. Bendras visų objektų prefiksas. Pagal numatytuosius nustatymus evcc naudos savo vidinį tiekėjo ID.",
-      "labelDeviceId": "Įrenginio ID",
-      "labelVendorId": "Gamintojo ID",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {

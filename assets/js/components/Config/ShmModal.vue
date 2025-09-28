@@ -23,7 +23,7 @@
 					</p>
 					<FormRow
 						id="shmVendorid"
-						:label="$t('config.shm.labelVendorId')"
+						:label="$t('config.deviceValue.vendorId')"
 						:help="$t('config.shm.descriptionVendorId')"
 						example="AAAAAAAA"
 						optional
@@ -39,7 +39,7 @@
 					</FormRow>
 					<FormRow
 						id="shmDeviceid"
-						:label="$t('config.shm.labelDeviceId')"
+						:label="$t('config.deviceValue.deviceId')"
 						:help="$t('config.shm.descriptionDeviceId')"
 						example="BBBBBBBBBBBB"
 						optional
