@@ -59,16 +59,12 @@ func NewSEMPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Cache: 5 * time.Second,
 	}
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
-	}
-
-	if cc.DeviceID == "" {
-		return nil, errors.New("missing deviceId")
 	}
 
 	return NewSEMP(cc.URI, cc.DeviceID, cc.Cache)
@@ -78,14 +74,11 @@ func NewSEMPFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("semp")
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
-
 	wb := &SEMP{
 		Helper: request.NewHelper(log),
 		log:    log,
 		cache:  cache,
+		phases: 3,
 	}
 
 	// Set default timeout
