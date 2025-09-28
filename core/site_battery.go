@@ -124,25 +124,28 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
-		if batCtrl, ok := meter.(api.BatteryController); ok {
-			// charge mode: validate max soc
-			if mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge {
-				ok, err := batteryMaxSocReached(meter)
-				if err != nil {
-					return err
-				}
+		batCtrl, ok := meter.(api.BatteryController)
+		if !ok {
+			continue
+		}
 
-				// put battery into hold mode when soc limit reached
-				if ok {
-					// TODO do this once only
-					mode = api.BatteryHold
-				}
+		// charge mode: validate max soc
+		if mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge {
+			ok, err := batteryMaxSocReached(meter)
+			if err != nil {
+				return err
 			}
 
-			if mode != api.BatteryUnknown {
-				if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-					return err
-				}
+			// put battery into hold mode when soc limit reached
+			if ok {
+				// TODO do this once only
+				mode = api.BatteryHold
+			}
+		}
+
+		if mode != api.BatteryUnknown {
+			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				return err
 			}
 		}
 	}
