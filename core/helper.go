@@ -55,6 +55,16 @@ func deviceProperties[T any](dev config.Device[T]) config.Properties {
 	return config.Properties{}
 }
 
+// deviceTitleOrName returns device title or name
+func deviceTitleOrName[T any](dev config.Device[T]) string {
+	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
+		if title := d.Properties().Title; title != "" {
+			return title
+		}
+	}
+	return dev.Config().Name
+}
+
 // circuitMaxPower returns a circuits power limit
 func circuitMaxPower(circuit api.Circuit) float64 {
 	if circuit == nil {

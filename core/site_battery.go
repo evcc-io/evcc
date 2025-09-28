@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 func batteryModeModified(mode api.BatteryMode) bool {
@@ -94,7 +95,9 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 }
 
 // batteryMaxSocReached checks is battery has exceed max soc limit
-func batteryMaxSocReached(meter api.Meter) (bool, error) {
+func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, error) {
+	meter := dev.Instance()
+
 	batLimiter, ok := meter.(api.BatterySocLimiter)
 	if !ok {
 		return false, nil
@@ -110,8 +113,12 @@ func batteryMaxSocReached(meter api.Meter) (bool, error) {
 		return false, err
 	}
 
-	_, max := batLimiter.GetSocLimits()
-	return soc >= max, nil
+	if _, max := batLimiter.GetSocLimits(); max > 0 && max < 100 && soc >= max {
+		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f > %.0f)", deviceTitleOrName(dev), soc, max)
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // applyBatteryMode applies the mode to each battery
@@ -121,7 +128,14 @@ func batteryMaxSocReached(meter api.Meter) (bool, error) {
 //	The current soc is validated against max soc.
 //	In case max soc is reached, hold mode is applied.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	circuitMaxPower := circuitMaxPower(site.circuit)
+	isCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+
+	// put battery into hold mode when charging and load management limit active
+	if circuitMaxPower := circuitMaxPower(site.circuit); isCharge && circuitMaxPower > 0 {
+		// TODO do this only once
+		site.log.DEBUG.Printf("battery mode: load management active at %.0fW", circuitMaxPower)
+		mode = api.BatteryHold
+	}
 
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
@@ -131,11 +145,9 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			continue
 		}
 
-		isCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-
 		// validate max soc
-		if isCharge {
-			ok, err := batteryMaxSocReached(meter)
+		if isCharge && mode != api.BatteryHold {
+			ok, err := site.batteryMaxSocReached(dev)
 			if err != nil {
 				return err
 			}
@@ -145,12 +157,6 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 				// TODO do this only once
 				mode = api.BatteryHold
 			}
-		}
-
-		// put battery into hold mode when load management limit active
-		if isCharge && circuitMaxPower > 0 {
-			// TODO do this only once
-			mode = api.BatteryHold
 		}
 
 		if mode != api.BatteryUnknown {
