@@ -331,6 +331,19 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 	return c.current
 }
 
+// IsPowerOverloaded determines if a circuit is exceeding it's power limit
+func (c *Circuit) IsPowerOverloaded() bool {
+	if maxPower := c.GetMaxPower(); maxPower != 0 {
+		return c.power > maxPower
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.IsPowerOverloaded()
+}
+
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
 	if maxPower := c.GetMaxPower(); maxPower != 0 {
