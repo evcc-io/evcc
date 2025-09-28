@@ -8,7 +8,7 @@ capabilities: ["battery-control"]
 requirements:
   description:
     generic: Requires local network access to the APsystems EHZI micro hybrid inverter
-    de: Erfordert lokalen Netzwerkzugriff auf den APsystems EHZI Mikro-Hybridwechselrichter  
+    de: Erfordert lokalen Netzwerkzugriff auf den APsystems EHZI Mikro-Hybridwechselrichter
 params:
   - name: usage
     choice: ["battery"]
