@@ -272,7 +272,7 @@ func TestSEMPCharger(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(t, handler.lastRequest, "<On>true</On>")
 		assert.Contains(t, handler.lastRequest, "F-12345678-ABCDEF123456-00")
-		// calcPower() returns 0 because phases and current are not set
+		// calcPower() returns 0 because current is not set yet
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
 		assert.Equal(t, 2, handler.requestCount) // DeviceInfo + DeviceStatus + DeviceControl
 	})
@@ -281,8 +281,8 @@ func TestSEMPCharger(t *testing.T) {
 		handler.requestCount = 0
 		err := wb.MaxCurrent(16)
 		require.NoError(t, err)
-		// calcPower() returns 0 because phases and current are not set
-		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
+		// calcPower() = 230 * 3 (phases) * 16 (current) = 11040 (enabled from previous test)
+		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11040</RecommendedPowerConsumption>")
 		assert.Equal(t, 1, handler.requestCount) // Only DeviceControl
 	})
 }
@@ -389,18 +389,22 @@ func TestSEMPChargerNoInterruptions(t *testing.T) {
 		assert.Contains(t, err.Error(), "device does not allow control")
 	})
 
-	t.Run("MaxCurrentReturnsErrorWhenInterruptionsNotAllowed", func(t *testing.T) {
+	t.Run("MaxCurrentSucceedsWhenInterruptionsNotAllowed", func(t *testing.T) {
 		// MaxCurrent calls MaxCurrentMillis which doesn't check InterruptionsAllowed
 		err := wb.MaxCurrent(16)
 		require.NoError(t, err)
+		// calcPower() = 0 because enabled=false (Enable() wasn't called)
+		assert.Contains(t, handler.lastRequest, "<On>false</On>")
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
 	})
 
-	t.Run("MaxCurrentMillisReturnsErrorWhenInterruptionsNotAllowed", func(t *testing.T) {
+	t.Run("MaxCurrentMillisSucceedsWhenInterruptionsNotAllowed", func(t *testing.T) {
 		chargerEx, ok := wb.(api.ChargerEx)
 		require.True(t, ok)
 		err := chargerEx.MaxCurrentMillis(16.0)
 		require.NoError(t, err)
+		// calcPower() = 0 because enabled=false (Enable() wasn't called)
+		assert.Contains(t, handler.lastRequest, "<On>false</On>")
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
 	})
 }
@@ -423,19 +427,25 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 
 	t.Run("SwitchTo1Phase", func(t *testing.T) {
 		handler.requestCount = 0
-		err := phaseSwitcher.Phases1p3p(1)
+		// Enable the charger first so calcPower() returns a non-zero value
+		err := wb.Enable(true)
 		require.NoError(t, err)
-		// calcPower() = 230 * 1 * 0 (current not set) = 0
-		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
-		assert.Equal(t, 1, handler.requestCount) // Only DeviceControl
+		// Set current to have a predictable power calculation
+		err = wb.MaxCurrent(16)
+		require.NoError(t, err)
+		err = phaseSwitcher.Phases1p3p(1)
+		require.NoError(t, err)
+		// calcPower() = 230 * 1 * 16 = 3680
+		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>3680</RecommendedPowerConsumption>")
+		assert.Equal(t, 5, handler.requestCount) // Enable (DeviceInfo + DeviceStatus + DeviceControl) + MaxCurrent + Phases1p3p
 	})
 
 	t.Run("SwitchTo3Phase", func(t *testing.T) {
 		handler.requestCount = 0
 		err := phaseSwitcher.Phases1p3p(3)
 		require.NoError(t, err)
-		// calcPower() = 230 * 3 * 0 (current not set) = 0
-		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
+		// calcPower() = 230 * 3 * 16 = 11040 (enabled=true and current=16 from previous test)
+		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11040</RecommendedPowerConsumption>")
 		assert.Equal(t, 1, handler.requestCount) // Only DeviceControl
 	})
 }
