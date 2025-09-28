@@ -36,6 +36,7 @@ type Circuit struct {
 
 	current float64
 	power   float64
+	dimmed  bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -373,4 +374,16 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	}
 
 	return c.parent.ValidateCurrent(old, new)
+}
+
+func (c *Circuit) Dimm(dimm bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.dimmed = dimm
+}
+
+func (c *Circuit) Dimmed() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.dimmed
 }

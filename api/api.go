@@ -258,6 +258,10 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+
+	// §14a
+	Dimm(bool)
+	Dimmed() bool
 }
 
 // Redactor is an interface to redact sensitive data
