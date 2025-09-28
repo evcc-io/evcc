@@ -1862,7 +1862,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			}
 
 			lp.publish(keys.Dimmed, true)
-			lp.log.DEBUG.Printf("dimm active: %v", err)
+			lp.log.INFO.Printf("§14a active: dimming")
 			return
 		}
 	} else {
