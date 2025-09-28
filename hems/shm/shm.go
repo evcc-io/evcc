@@ -47,9 +47,9 @@ type SEMP struct {
 }
 
 type Config struct {
-	_        bool   `json:"allowControl"` // deprecated
-	VendorId string `json:"vendorId"`
-	DeviceId string `json:"deviceId"`
+	AllowControl_ bool   `json:"allowControl,omitempty"` // deprecated
+	VendorId      string `json:"vendorId"`
+	DeviceId      string `json:"deviceId"`
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
