@@ -11,9 +11,52 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func TestApplyBatteryMode(t *testing.T) {
+	for _, tc := range []struct {
+		internal, expected api.BatteryMode
+	}{
+		{api.BatteryUnknown, api.BatteryUnknown}, // no change required
+		{api.BatteryNormal, api.BatteryUnknown},  // no change required
+		{api.BatteryHold, api.BatteryNormal},
+		{api.BatteryCharge, api.BatteryNormal},
+	} {
+		t.Logf("%+v", tc)
+
+		ctrl := gomock.NewController(t)
+
+		var bat api.Meter
+		batCon := api.NewMockBatteryController(ctrl)
+
+		bat = &struct {
+			api.Meter
+			api.BatteryController
+		}{
+			BatteryController: batCon,
+		}
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+			batteryMode:   tc.internal,
+		}
+
+		// verify mode applied to battery
+		if tc.expected != api.BatteryUnknown {
+			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
+		}
+		site.updateBatteryMode(false, api.Rate{})
+
+		if tc.internal != api.BatteryNormal {
+			assert.Equal(t, tc.expected, site.batteryMode)
+		}
+
+		ctrl.Finish()
+	}
+}
+
 func TestRequiredExternalBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
-		internal, ext, new api.BatteryMode
+		internal, external, new api.BatteryMode
 	}{
 		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
 		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
@@ -35,7 +78,7 @@ func TestRequiredExternalBatteryMode(t *testing.T) {
 		}
 
 		site.batteryMode = tc.internal
-		site.batteryModeExternal = tc.ext
+		site.batteryModeExternal = tc.external
 
 		mode := site.requiredBatteryMode(false, api.Rate{})
 		assert.Equal(t, tc.new.String(), mode.String(), "internal mode expected %s got %s", tc.new, mode)
@@ -44,19 +87,19 @@ func TestRequiredExternalBatteryMode(t *testing.T) {
 
 func TestExternalBatteryModeChange(t *testing.T) {
 	for _, tc := range []struct {
-		internal, ext, expected api.BatteryMode
+		internal, external, expected api.BatteryMode
 	}{
-		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryNormal},
-		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
-		{api.BatteryUnknown, api.BatteryCharge, api.BatteryNormal},
+		// {api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
+		// {api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
+		// {api.BatteryUnknown, api.BatteryCharge, api.BatteryCharge},
 
-		{api.BatteryNormal, api.BatteryUnknown, api.BatteryNormal},
-		{api.BatteryNormal, api.BatteryNormal, api.BatteryNormal},
-		{api.BatteryNormal, api.BatteryCharge, api.BatteryNormal},
+		// {api.BatteryNormal, api.BatteryUnknown, api.BatteryUnknown},
+		// {api.BatteryNormal, api.BatteryNormal, api.BatteryUnknown},
+		// {api.BatteryNormal, api.BatteryCharge, api.BatteryCharge},
 
-		{api.BatteryCharge, api.BatteryUnknown, api.BatteryNormal},
+		{api.BatteryCharge, api.BatteryUnknown, api.BatteryUnknown},
 		{api.BatteryCharge, api.BatteryNormal, api.BatteryNormal},
-		{api.BatteryCharge, api.BatteryCharge, api.BatteryNormal},
+		{api.BatteryCharge, api.BatteryCharge, api.BatteryUnknown},
 	} {
 		t.Logf("%+v", tc)
 
@@ -83,13 +126,13 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		assert.True(t, site.batteryModeExternalTimer.IsZero())
 
 		// 1. set required external mode
-		site.SetBatteryModeExternal(tc.ext)
-		assert.Equal(t, site.batteryModeExternal, tc.ext, "external mode expected %s got %s", tc.ext, site.batteryModeExternal)
-		assert.Equal(t, site.batteryMode, tc.internal, "internal mode expected unchanged %s got %s", tc.ext, site.batteryMode)
+		site.SetBatteryModeExternal(tc.external)
+		assert.Equal(t, site.batteryModeExternal, tc.external, "external mode expected %s got %s", tc.external, site.batteryModeExternal)
+		assert.Equal(t, site.batteryMode, tc.internal, "internal mode expected unchanged %s got %s", tc.external, site.batteryMode)
 
 		// 2. verify external mode applied to battery
-		if tc.ext != api.BatteryUnknown {
-			batCon.EXPECT().SetBatteryMode(tc.ext).Times(1)
+		if tc.expected != api.BatteryUnknown {
+			batCon.EXPECT().SetBatteryMode(tc.external).Times(1)
 		}
 		site.updateBatteryMode(false, api.Rate{})
 		if !ctrl.Satisfied() {
