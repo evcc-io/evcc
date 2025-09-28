@@ -1,9 +1,9 @@
-template: compleo-solo
+template: neoom-n
 products:
-  - brand: Compleo
+  - brand: Neoom
     description:
-      generic: Solo
-capabilities: ["mA", "rfid"]
+      generic: N
+capabilities: ["mA", "1p3p"]
 requirements:
   evcc: ["sponsorship"]
 params:
