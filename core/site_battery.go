@@ -142,14 +142,14 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 
 			// put battery into hold mode when soc limit reached
 			if ok {
-				// TODO do this once only
+				// TODO do this only once
 				mode = api.BatteryHold
 			}
 		}
 
 		// put battery into hold mode when load management limit active
 		if isCharge && circuitMaxPower > 0 {
-			// TODO do this once only
+			// TODO do this only once
 			mode = api.BatteryHold
 		}
 
