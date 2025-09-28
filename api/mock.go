@@ -928,6 +928,20 @@ func (mr *MockCircuitMockRecorder) HasMeter() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasMeter", reflect.TypeOf((*MockCircuit)(nil).HasMeter))
 }
 
+// IsPowerOverloaded mocks base method.
+func (m *MockCircuit) IsPowerOverloaded() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsPowerOverloaded")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsPowerOverloaded indicates an expected call of IsPowerOverloaded.
+func (mr *MockCircuitMockRecorder) IsPowerOverloaded() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPowerOverloaded", reflect.TypeOf((*MockCircuit)(nil).IsPowerOverloaded))
+}
+
 // RegisterChild mocks base method.
 func (m *MockCircuit) RegisterChild(child Circuit) {
 	m.ctrl.T.Helper()
