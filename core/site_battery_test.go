@@ -46,11 +46,11 @@ func TestExternalBatteryModeChange(t *testing.T) {
 	for _, tc := range []struct {
 		internal, ext, expected api.BatteryMode
 	}{
-		// {api.BatteryUnknown, api.BatteryUnknown, api.BatteryNormal},
-		// {api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
-		// {api.BatteryUnknown, api.BatteryCharge, api.BatteryNormal},
+		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryNormal},
+		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
+		{api.BatteryUnknown, api.BatteryCharge, api.BatteryNormal},
 
-		// {api.BatteryNormal, api.BatteryUnknown, api.BatteryNormal},
+		{api.BatteryNormal, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryNormal, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryNormal, api.BatteryCharge, api.BatteryNormal},
 
