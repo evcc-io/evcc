@@ -198,7 +198,7 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 		Device: Device{
 			DeviceType:      sempGateway,
 			FriendlyName:    "evcc",
-			Manufacturer:    "github.com/evcc-io/evcc",
+			Manufacturer:    "evcc.io",
 			ModelName:       serverName,
 			PresentationURL: s.hostURI,
 			UDN:             uid,
