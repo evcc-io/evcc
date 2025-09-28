@@ -12,11 +12,11 @@ import (
 
 // HomeAssistant meter implementation
 type HomeAssistant struct {
-	conn     *homeassistant.Connection
-	power    string
-	energy   string
-	currents [3]string
-	voltages [3]string
+	conn            *homeassistant.Connection
+	power           string
+	energy          string
+	currentEntities [3]string
+	voltageEntities [3]string
 }
 
 func init() {
@@ -59,7 +59,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		if err != nil {
 			return nil, err
 		}
-		m.currents = currents
+		m.currentEntities = currents
 	}
 
 	// Set up phase voltages (optional)
@@ -68,7 +68,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		if err != nil {
 			return nil, err
 		}
-		m.voltages = voltages
+		m.voltageEntities = voltages
 	}
 
 	// decorators for optional interfaces
@@ -79,10 +79,10 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 	if m.energy != "" {
 		meterEnergy = m.TotalEnergy
 	}
-	if m.currents[0] != "" {
+	if m.currentEntities[0] != "" {
 		phaseCurrents = m.Currents
 	}
-	if m.voltages[0] != "" {
+	if m.voltageEntities[0] != "" {
 		phaseVoltages = m.Voltages
 	}
 
@@ -101,11 +101,11 @@ func NewHomeAssistant(baseURL, token, power, energy string, currents, voltages [
 	}
 
 	m := &HomeAssistant{
-		conn:     conn,
-		power:    power,
-		energy:   energy,
-		currents: currents,
-		voltages: voltages,
+		conn:            conn,
+		power:           power,
+		energy:          energy,
+		currentEntities: currents,
+		voltageEntities: voltages,
 	}
 
 	return m, nil
@@ -118,7 +118,6 @@ func (m *HomeAssistant) CurrentPower() (float64, error) {
 	return m.conn.GetFloatState(m.power)
 }
 
-var _ api.MeterEnergy = (*HomeAssistant)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (m *HomeAssistant) TotalEnergy() (float64, error) {
@@ -128,22 +127,18 @@ func (m *HomeAssistant) TotalEnergy() (float64, error) {
 	return m.conn.GetFloatState(m.energy)
 }
 
-var _ api.PhaseCurrents = (*HomeAssistant)(nil)
-
 // Currents implements the api.PhaseCurrents interface
 func (m *HomeAssistant) Currents() (float64, float64, float64, error) {
-	if m.currents[0] == "" {
+	if m.currentEntities[0] == "" {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
-	return m.conn.GetPhaseStates(m.currents)
+	return m.conn.GetPhaseStates(m.currentEntities)
 }
-
-var _ api.PhaseVoltages = (*HomeAssistant)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (m *HomeAssistant) Voltages() (float64, float64, float64, error) {
-	if m.voltages[0] == "" {
+	if m.voltageEntities[0] == "" {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
-	return m.conn.GetPhaseStates(m.voltages)
+	return m.conn.GetPhaseStates(m.voltageEntities)
 }
