@@ -33,14 +33,14 @@ import (
 // SEMP charger implementation
 type SEMP struct {
 	*request.Helper
-	log        *util.Logger
-	sempClient *semp.Client
-	cache      time.Duration
-	statusG    util.Cacheable[semp.DeviceStatus]
-	infoG      util.Cacheable[semp.DeviceInfo]
-	phases     int
-	current    float64
-	enabled    bool
+	log     *util.Logger
+	conn    *semp.Connection
+	cache   time.Duration
+	statusG util.Cacheable[semp.DeviceStatus]
+	infoG   util.Cacheable[semp.DeviceInfo]
+	phases  int
+	current float64
+	enabled bool
 }
 
 //go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
@@ -84,17 +84,17 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	// Set default timeout
 	wb.Client.Timeout = request.Timeout
 
-	// Initialize SEMP client
-	wb.sempClient = semp.NewClient(wb.Helper, strings.TrimRight(uri, "/"), deviceID)
+	// Initialize SEMP connection
+	wb.conn = semp.NewConnection(wb.Helper, strings.TrimRight(uri, "/"), deviceID)
 
 	// Setup cached device status getter
 	wb.statusG = util.ResettableCached(func() (semp.DeviceStatus, error) {
-		return wb.sempClient.GetDeviceStatus()
+		return wb.conn.GetDeviceStatus()
 	}, cache)
 
 	// Setup cached device info getter
 	wb.infoG = util.ResettableCached(func() (semp.DeviceInfo, error) {
-		return wb.sempClient.GetDeviceInfo()
+		return wb.conn.GetDeviceInfo()
 	}, cache)
 
 	var (
@@ -103,7 +103,7 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	)
 
 	// Check if device supports phase switching by checking power characteristics
-	info, err := wb.sempClient.GetDeviceInfo()
+	info, err := wb.conn.GetDeviceInfo()
 	if err == nil {
 		// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
 		if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
@@ -126,7 +126,7 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 	// Check if there is a planning request/timeframe for this device
 	// If no planning request exists -> Status A (unplugged/disconnected)
-	hasPlanningRequest, err := wb.sempClient.HasPlanningRequest()
+	hasPlanningRequest, err := wb.conn.HasPlanningRequest()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -172,7 +172,7 @@ func (wb *SEMP) Enable(enable bool) error {
 	}
 
 	wb.enabled = enable
-	err = wb.sempClient.SendDeviceControl(wb.enabled, wb.calcPower())
+	err = wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 	if err == nil {
 		wb.statusG.Reset()
 	}
@@ -189,7 +189,7 @@ var _ api.ChargerEx = (*SEMP)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
 	wb.current = current
-	err := wb.sempClient.SendDeviceControl(wb.enabled, wb.calcPower())
+	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 	if err == nil {
 		wb.statusG.Reset()
 	}
@@ -212,19 +212,19 @@ var _ api.Diagnosis = (*SEMP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (s *SEMP) Diagnose() {
-	if status, err := s.sempClient.GetDeviceStatus(); err == nil {
+	if status, err := s.conn.GetDeviceStatus(); err == nil {
 		fmt.Printf("Device Status: %+v\n", status)
 	} else {
 		fmt.Printf("Device Status Error: %v\n", err)
 	}
 
-	if info, err := s.sempClient.GetDeviceInfo(); err == nil {
+	if info, err := s.conn.GetDeviceInfo(); err == nil {
 		fmt.Printf("Device Info: %+v\n", info)
 	} else {
 		fmt.Printf("Device Info Error: %v\n", err)
 	}
 
-	if hasPlanning, err := s.sempClient.HasPlanningRequest(); err == nil {
+	if hasPlanning, err := s.conn.HasPlanningRequest(); err == nil {
 		fmt.Printf("Planning Request: %t\n", hasPlanning)
 	} else {
 		fmt.Printf("Planning Request Error: %v\n", err)
@@ -235,7 +235,7 @@ func (s *SEMP) Diagnose() {
 func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
 	wb.phases = phases
-	err := wb.sempClient.SendDeviceControl(wb.enabled, wb.calcPower())
+	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 	if err == nil {
 		wb.statusG.Reset()
 	}
