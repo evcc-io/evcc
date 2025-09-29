@@ -126,7 +126,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Plan:         plan,
 			Power:        maxPower,
 		}
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -177,7 +177,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Plan:         plan,
 			Power:        maxPower,
 		}
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
