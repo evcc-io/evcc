@@ -113,7 +113,7 @@ func (r *Helper) DoXML(req *http.Request, res interface{}) error {
 		return nil
 	}
 
-	return decodeXML(resp, &res)
+	return decodeXML(resp, res)
 }
 
 // GetXML executes HTTP GET request and decodes XML response.
@@ -124,5 +124,5 @@ func (r *Helper) GetXML(url string, res interface{}) error {
 		return err
 	}
 
-	return r.DoXML(req, &res)
+	return r.DoXML(req, res)
 }
