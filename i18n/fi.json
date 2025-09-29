@@ -77,7 +77,6 @@
       "title": "Määrittele toimintaa"
     },
     "deviceValue": {
-      "allowControl": "Salli säätäminen",
       "amount": "Määrä",
       "broker": "Välittäjä (Broker)",
       "bucket": "Bucket",
@@ -443,8 +442,6 @@
       "descriptionIds": "Sunny Portal -järjestelmässä jokainen käyttölaite vaatii yksilöllisen tunnisteen. Evcc luo yksilöllisen tunnisteen laitteistosi perusteella. Jos siirrät evcc:n asennuksen toiseen laitteistoon nämä tunnisteet voivat muuttua. Jos haluat pitää vanhat tunnisteet, voit automaattiset luodut tunnisteet tässä. Avaa SEMP URL (/semp) tarkistaaksesi nykyiset tunnisteesi.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8-merkkinen HEX-merkkijono. Yleinen etuliite kaikille laitteille. Oletuksena evcc käyttää sisäistä valmistajatunnistettaan.",
-      "labelAllowControl": "Hyväksy lisätehorajasuositukset SHM:lta.",
-      "labelControl": "Salli hallinta",
       "labelDeviceId": "Laite-ID",
       "labelVendorId": "Valmistaja-ID",
       "title": "SMA Sunny Home Manager"

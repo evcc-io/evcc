@@ -77,7 +77,6 @@
       "title": "Kontrollverhalen"
     },
     "deviceValue": {
-      "allowControl": "Steierung erlaben",
       "amount": "Unzahl",
       "broker": "Broker",
       "bucket": "Eemer",
@@ -440,8 +439,6 @@
       "descriptionIds": "Am Sunny Portal brauch all Ladung (Luedpunkt, etc.) eng eenzegaarteg Identifikatioun. evcc generéiert eng eenzegaarteg Identifikatioun, déi op Ärer Hardware baséiert. Wann Dir evcc op aner Hardware migréiert, kann dësen Identifikator sech änneren. Fir den Historique ze späicheren, kënnt Dir déi generéiert Identifikatoren hei iwwerschreiwen. Maacht d'SEMP URL op (/semp) fir Är aktuell Identifikatoren ze kontrolléieren.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stellegen HEX-String. Allgemenge Präfix fir all Entiéiten. Standardméisseg verwennt evcc seng eegen intern Hiersteller-ID.",
-      "labelAllowControl": "Zousätzlech Recommandatioune fir d'Leeschtungslimit vun SHM z'akzeptéieren.",
-      "labelControl": "Steierung erlaben",
       "labelDeviceId": "Geräter-ID",
       "labelVendorId": "Hiersteller-ID",
       "title": "SMA Sunny Home Manager"
