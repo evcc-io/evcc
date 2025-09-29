@@ -94,7 +94,6 @@
       "currency": "Valuta",
       "current": "Stroomsterkte",
       "currentRange": "Stroomsterkte",
-      "deviceId": "Device ID",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
       "feedinPrice": "Terugleververgoeding",
@@ -120,7 +119,6 @@
       "topic": "Onderwerp",
       "url": "URL",
       "vehicleLimitSoc": "Voertuig limiet",
-      "vendorId": "Vendor ID",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -444,6 +442,8 @@
       "descriptionIds": "In Sunny Portal heeft elk consumentenapparaat een unieke identificatiecode nodig. evcc genereert een unieke identificatiecode op basis van uw hardware. Als u evcc naar andere hardware migreert, kunnen deze identificatiecodes veranderen. Als u de geschiedenis wilt behouden, kunt u de gegenereerde identificatiecodes hier overschrijven. Open de SEMP-URL (/semp) om uw huidige identificatiecodes te controleren.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
