@@ -3,21 +3,22 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"net"
 	"os"
-	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"github.com/evcc-io/evcc/util/config"
+	"go.yaml.in/yaml/v4"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
 	levels := viper.GetStringMapString("levels")
+	if levels == nil {
+		levels = make(map[string]string)
+	}
 
 	var level string
 	for _, kv := range strings.Split(viper.GetString("log"), ",") {
@@ -48,33 +49,12 @@ func unwrap(err error) (res []string) {
 	return
 }
 
-var redactSecrets = []string{
-	"mac",                   // infrastructure
-	"sponsortoken", "plant", // global settings
-	"apikey", "user", "password", "pin", // users
-	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
-	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
-	"app", "chats", "recipients", // push messaging
-	"vin",               // vehicles
-	"lat", "lon", "zip", // solar forecast
-}
-
-// redact redacts a configuration string
 func redact(src string) string {
-	return regexp.
-		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(redactSecrets, "|"))).
-		ReplaceAllString(src, "$1: *****")
+	return util.RedactConfigString(src)
 }
 
 func redactMap(src map[string]any) map[string]any {
-	res := maps.Clone(src)
-	for k := range res {
-		if slices.Contains(redactSecrets, k) {
-			res[k] = "*****"
-		}
-	}
-
-	return res
+	return util.RedactConfigMap(src)
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating
@@ -89,6 +69,18 @@ func shutdownDoneC() <-chan struct{} {
 	doneC := make(chan struct{})
 	go shutdown.Cleanup(doneC)
 	return doneC
+}
+
+// joinErrors is like errors.Join but does not wrap single errors (refs https://groups.google.com/g/golang-nuts/c/N0D1g5Ec_ZU)
+func joinErrors(errs ...error) error {
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.Join(errs...)
+	}
 }
 
 func wrapFatalError(err error) error {
@@ -123,4 +115,16 @@ func customDevice(other map[string]any) (map[string]any, error) {
 	var res map[string]any
 	err := yaml.Unmarshal([]byte(customYaml), &res)
 	return res, err
+}
+
+func deviceHeader[T any](dev config.Device[T]) string {
+	name := dev.Config().Name
+
+	if cd, ok := dev.(config.ConfigurableDevice[T]); ok {
+		if title := cd.Properties().Title; title != "" {
+			return fmt.Sprintf("%s (%s)", title, name)
+		}
+	}
+
+	return name
 }

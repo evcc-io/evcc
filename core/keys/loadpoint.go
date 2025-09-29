@@ -36,6 +36,7 @@ const (
 	Enabled   = "enabled"   // loadpoint enabled
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
+	Dimmed    = "dimmed"    // dimmed pseudo-status
 
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current

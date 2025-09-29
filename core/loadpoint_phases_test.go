@@ -399,6 +399,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),
+			wakeUpTimer:    NewTimer(),
 			clock:          clock,
 			charger:        charger,
 			minCurrent:     minA,
@@ -453,8 +454,9 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 		phaseCharger := api.NewMockPhaseSwitcher(ctrl)
 
 		lp := &Loadpoint{
-			log:   util.NewLogger("foo"),
-			clock: clock.NewMock(),
+			log:         util.NewLogger("foo"),
+			clock:       clock.NewMock(),
+			wakeUpTimer: NewTimer(),
 			charger: struct {
 				*api.MockCharger
 				*api.MockPhaseSwitcher

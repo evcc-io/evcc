@@ -65,6 +65,9 @@ const (
 	flagRepeatInterval            = "repeat-interval"
 	flagRepeatIntervalDescription = "Interval between repetitions"
 
+	flagHeartbeat            = "heartbeat"
+	flagHeartbeatDescription = "After command, continue running device heartbeats (if any) until interrupted"
+
 	flagDigits = "digits"
 	flagDelay  = "delay"
 	flagForce  = "force"

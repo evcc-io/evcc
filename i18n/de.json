@@ -44,12 +44,29 @@
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Schaltbare Steckdosen",
       "template": "Hersteller",
-      "titleAdd": "Wallbox hinzufügen",
-      "titleEdit": "Wallbox bearbeiten"
+      "titleAdd": {
+        "charging": "Wallbox hinzufügen",
+        "heating": "Heizung hinzufügen"
+      },
+      "titleEdit": {
+        "charging": "Wallbox bearbeiten",
+        "heating": "Heizung bearbeiten"
+      },
+      "type": {
+        "custom": {
+          "charging": "Benutzerdefinierte Wallbox",
+          "heating": "Benutzerdefinierte Heizung"
+        },
+        "heatpump": "Benutzerdefinierte Wärmepumpe",
+        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready, komplett)",
+        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready, boost)",
+        "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
+      }
     },
     "circuits": {
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
-      "title": "Lastmanagement"
+      "title": "Lastmanagement",
+      "usableMeters": "Verwendbare Zählerreferenzen"
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
@@ -60,6 +77,7 @@
       "title": "Regelverhalten"
     },
     "deviceValue": {
+      "allowControl": "Steuerung erlauben",
       "amount": "Anzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -82,7 +100,8 @@
       "feedinPrice": "Einspeisevergütung",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktives Limit",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "no": "Nein",
       "odometer": "Kilometerstand",
@@ -108,6 +127,10 @@
       "B": "B (verbunden)",
       "C": "C (lädt)"
     },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relais"
+    },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
       "batteryStorage": "Batterie",
@@ -132,19 +155,29 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Übernehmen & schließen",
       "cancel": "Abbrechen",
+      "close": "Schließen",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
+      "dragHandle": "Verschieben",
+      "dragItem": "Verschiebbar: {title}",
+      "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
+      "invalidFileSelected": "Ungültige Datei ausgewählt",
+      "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
+      "required": "erforderlich",
+      "reset": "Zurücksetzen",
       "save": "Speichern",
+      "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
@@ -157,7 +190,7 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
-      "description": "evcc mit einem anderen Heimenergiemanagementsystem verbinden.",
+      "description": "Leistungsbegrenzung durch externe Systeme (bspw. Steuerboxen, § 14a EnWG). Setzt Lastmanagementkonfiguration voraus.",
       "title": "HEMS"
     },
     "icon": {
@@ -180,11 +213,20 @@
       "v2Support": "Zurück zu InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Wallbox hinzufügen",
-      "addMeter": "Zusätzlichen Zähler hinzufügen",
+      "addCharger": {
+        "charging": "Wallbox hinzufügen",
+        "heating": "Heizung hinzufügen"
+      },
+      "addMeter": "Zusätzlichen Energiezähler hinzufügen",
       "cancel": "Abbrechen",
-      "chargerError": "Wallbox muss konfiguriert sein.",
-      "chargerLabel": "Wallbox",
+      "chargerError": {
+        "charging": "Wallbox muss konfiguriert sein.",
+        "heating": "Heizung muss konfiguriert sein."
+      },
+      "chargerLabel": {
+        "charging": "Wallbox",
+        "heating": "Heizung"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
       "chargerPower22kw": "22 kW",
@@ -192,11 +234,14 @@
       "chargerPowerCustom": "andere",
       "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
       "chargerTypeLabel": "Ladetyp",
-      "chargingTitle": "Laden",
+      "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
-      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
+      "defaultModeHelp": {
+        "charging": "Lademodus beim Anschließen des Fahrzeugs.",
+        "heating": "Wird beim Systemstart gesetzt."
+      },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
@@ -210,11 +255,15 @@
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
+      "option": {
+        "charging": "Ladepunkt hinzufügen",
+        "heating": "Heizungsgerät hinzufügen"
+      },
       "phases1p": "1-phasig",
       "phases3p": "3-phasig",
       "phasesAutomatic": "Automatische Phasen",
       "phasesAutomaticHelp": "Deine Wallbox unterstützt automatisches Umschalten zwischen 1- und 3-phasigem Laden. In der Hauptansicht kannst du das Phasenverhalten während des Ladens anpassen.",
-      "phasesHelp": "Anzahl der an die Wallbox angeschlossenen Phasen.",
+      "phasesHelp": "Anzahl der angeschlossenen Phasen.",
       "phasesLabel": "Phasen",
       "pollIntervalDanger": "Regelmäßiges Abfragen des Fahrzeuges kann dazu führen, dass die Fahrzeugbatterie entleert wird. Einige Fahrzeughersteller sperren das Laden in solchen Fällen auch aktiv. Nicht empfohlen! Verwende diese Einstellung nur, wenn du dir der Risiken bewusst bist.",
       "pollIntervalHelp": "Zeit zwischen Fahrzeug-API-Updates. Kurze Intervalle können die Fahrzeugbatterie belasten.",
@@ -226,28 +275,39 @@
       "pollModeConnected": "wenn verbunden",
       "pollModeConnectedHelp": "Fahrzeugstatus in regelmäßigen Abständen abfragen, wenn verbunden.",
       "pollModeLabel": "Update-Verhalten",
-      "priorityHelp": "Ladepunkte mit höherer Priorität haben Vorrang beim PV-Überschuss.",
+      "priorityHelp": "Höherer Prioritäten haben Vorrang beim PV-Überschuss.",
       "priorityLabel": "Priorität",
       "save": "Speichern",
       "showAllSettings": "Alle Einstellungen anzeigen",
       "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
-      "solarBehaviorDefaultHelp": "Nur mit PV-Überschuss laden. Start nach {enableDelay} Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
-      "solarBehaviorLabel": "PV-Verhalten",
-      "solarModeCustom": "eigenes",
+      "solarBehaviorDefaultHelp": "Start nach {enableDelay} ausreichend vorhandenem Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
+      "solarBehaviorLabel": "PV-Überschuss",
+      "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
       "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
-      "thresholdDisableHelpZero": "Stoppen, wenn minimale Ladeleistung für {delay} nicht erreicht werden kann.",
+      "thresholdDisableHelpZero": "Stoppen, wenn minimale Mindestleistung für {delay} nicht erreicht werden kann.",
       "thresholdDisableLabel": "Netzleistung ausschalten",
       "thresholdEnableDelayLabel": "Einschaltverzögerung",
       "thresholdEnableHelpInvalid": "Bitte verwende einen negativen Wert.",
-      "thresholdEnableHelpNegative": "Laden starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
-      "thresholdEnableHelpZero": "Starten, wenn minimale Ladeleistung für {delay} als Überschuss verfügbar ist.",
+      "thresholdEnableHelpNegative": "Starten, wenn {surplus} Überschuss für {delay} verfügbar ist.",
+      "thresholdEnableHelpZero": "Starten, wenn erforderliche Mindestleistung für {delay} als Überschuss verfügbar ist.",
       "thresholdEnableLabel": "Netzleistung einschalten",
-      "titleAdd": "Ladepunkt hinzufügen",
-      "titleEdit": "Ladepunkt bearbeiten",
-      "titleExample": "Garage, Carport, etc.",
+      "titleAdd": {
+        "charging": "Ladepunkt hinzufügen",
+        "heating": "Heizung hinzufügen",
+        "unknown": "Wallbox oder Heizung hinzufügen"
+      },
+      "titleEdit": {
+        "charging": "Ladepunkt bearbeiten",
+        "heating": "Heizung bearbeiten",
+        "unknown": "Wallbox oder Heizung bearbeiten"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Wärmepumpe, Heizung, etc."
+      },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatische Erkennung",
       "vehicleHelpAutoDetection": "Wählt automatisch das plausibelste Fahrzeug aus. Manuelle Übersteuerung möglich.",
@@ -258,7 +318,7 @@
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
-      "addLoadpoint": "Ladepunkt hinzufügen",
+      "addLoadpoint": "Wallbox oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
       "addTariffs": "Tarife hinzufügen",
       "addVehicle": "Fahrzeug hinzufügen",
@@ -351,6 +411,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Heizen",
+        "standby": "Standby"
+      },
       "schema": {
         "http": "HTTP (unverschlüsselt)",
         "https": "HTTPS (verschlüsselt)"
@@ -370,24 +434,75 @@
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
-      "loadpoints": "Ladepunkte",
+      "loadpoints": "Laden & Heizen",
       "meter": "PV & Batterie",
       "system": "System",
       "vehicles": "Fahrzeuge"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc ist mit einer Integration für den SMA Sunny Home Manager (SHM) mittels SEMP-Protokoll ausgestattet. Wenn dieser im selben Netzwerk läuft, sollte dir nach der Anmeldung in deinem Sunny Portal-Konto automatisch angeboten werden, alle in evcc konfigurierten Ladepunkte als neu erkannte Verbraucher hinzuzufügen. Alles sollte sofort einsatzbereit sein, ohne dass hier weitere Anpassungen erforderlich sind.",
+      "descriptionDeviceId": "12-stelliger HEX-String. Präfix für alle Geräte (Ladepunkt, ..).",
+      "descriptionIdPattern": "Kennungsmuster",
+      "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
+      "descriptionSempUrl": "SEMP-URL",
+      "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
+      "labelAllowControl": "Zusätzlich Leistungsbegrenzungsempfehlungen vom SHM akzeptieren.",
+      "labelControl": "Steuerung erlauben",
+      "labelDeviceId": "Geräte-ID",
+      "labelVendorId": "Hersteller-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
-      "descriptionToken": "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an.",
+      "descriptionToken": "Als Sponsor erhältst du dein Token auf {url}. Zum Ausprobieren gibts ein {trialToken}.",
+      "enterYourToken": "Token eingeben",
       "error": "Das Sponsortoken ist ungültig.",
+      "invalid": "ungültig",
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
-      "trialToken": "Testtoken"
+      "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
+      "trialToken": "Testtoken",
+      "viaYaml": "über evcc.yaml",
+      "yourToken": "Dein Token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Sicherung herunterladen...",
+          "confirmationButton": "Sicherung herunterladen",
+          "confirmationText": "Bitte gib dein Passwort ein, um die Datenbankdatei herunterzuladen.",
+          "description": "Sichere deine Daten in eine Datei. Diese Datei kann verwendet werden, um deine Daten im Falle eines Systemausfalls wiederherzustellen.",
+          "title": "Sichern"
+        },
+        "cancel": "Abbrechen",
+        "description": "Sichern, wiederherstellen und zurücksetzen deiner Daten. Nützlich, wenn du deine Daten auf ein anderes System übertragen möchtest.",
+        "note": "Hinweis: Alle oben genannten Aktionen betreffen nur deine Datenbankdaten. Die evcc.yaml-Konfigurationsdatei bleibt unverändert.",
+        "reset": {
+          "action": "Zurücksetzen...",
+          "confirmationButton": "Zurücksetzen & Neustart",
+          "confirmationText": "Dies löscht deine ausgewählten Daten dauerhaft. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
+          "description": "Hast du Probleme mit der Konfiguration und möchtest von vorne beginnen? Lösche alle Daten und beginne neu.",
+          "sessions": "Ladevorgänge",
+          "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
+          "settings": "Konfiguration & Einstellungen",
+          "settingsDescription": "Löscht alle konfigurierten Geräte, Dienste, Pläne, Caches, usw.",
+          "title": "Zurücksetzen"
+        },
+        "restore": {
+          "action": "Wiederherstellen...",
+          "confirmationButton": "Wiederherstellen & Neustart",
+          "confirmationText": "Dies überschreibt deine komplette Datenbank. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
+          "description": "Stelle deine Daten aus einer Sicherungsdatei wieder her. Dies überschreibt alle deine aktuellen Daten.",
+          "labelFile": "Sicherungsdatei",
+          "title": "Wiederherstellen"
+        },
+        "title": "Sichern & Wiederherstellen"
+      },
       "logs": "Logs",
       "restart": "Neu starten",
       "restartRequiredDescription": "Bitte neu starten, um die Änderungen zu übernehmen.",
@@ -398,6 +513,10 @@
     "tariffs": {
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
       "title": "Tarife"
+    },
+    "telemetry": {
+      "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
+      "title": "Telemetrie"
     },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
@@ -537,10 +656,13 @@
   },
   "header": {
     "about": "Über",
+    "authProviders": {
+      "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+      "title": "Autorisierungsstatus"
+    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
-    "login": "Fahrzeug-Logins",
     "logout": "Abmelden",
     "nativeSettings": "Server ändern",
     "needHelp": "Hilfe benötigt?",
@@ -549,8 +671,8 @@
   "help": {
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
-    "issueButton": "Bug melden",
-    "issueDescription": "Komisches Verhalten gefunden?",
+    "issueButton": "Problem melden",
+    "issueDescription": "Seltsames Verhalten gefunden?",
     "logsButton": "Logs ansehen",
     "logsDescription": "Überprüfe die Logs auf Fehler.",
     "modalTitle": "Hilfe benötigt?",
@@ -565,6 +687,57 @@
     "restartButton": "Neu starten",
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
+  },
+  "issue": {
+    "additional": {
+      "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
+      "include": "einbeziehen",
+      "lines": "Zeilen",
+      "logs": "Logs",
+      "logsDescription": "Aktuelle Log-Einträge, die bei der Identifizierung des Problems helfen können.",
+      "showDetails": "Details anzeigen",
+      "source": "Quelle",
+      "state": "Zustand",
+      "stateDescription": "Kompletter Laufzeitzustand inklusive Ladepunkt-, Geräte- und Energieinformationen. Nur auf Nachfrage hinzufügen.",
+      "title": "Zusätzliche Informationen",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationseinstellungen, die über die Web-Oberfläche vorgenommen wurden.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Deine komplette Konfigurationsdatei."
+    },
+    "additionalContext": "Zusätzlicher Kontext",
+    "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
+    "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "helpType": {
+      "discussion": "Brauche Hilfe bei meiner Einrichtung",
+      "discussionDescription": "Community-Diskussionen bieten Antworten.",
+      "issue": "Habe einen Fehler gefunden",
+      "issueDescription": "Ich bin sicher, dass etwas kaputt ist und repariert werden muss.",
+      "title": "Um welches Problem geht es?"
+    },
+    "issueDescription": "Beschreibung",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Schritte zur Reproduktion",
+    "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleIssue": "Beschreibe das Problem",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub Diskussion starten",
+      "confirmationButtonIssue": "GitHub Issue erstellen",
+      "copied": "Kopiert!",
+      "copyButton": "Zusätzliche Informationen kopieren",
+      "instructions": "Aufgrund von GitHubs URL-Größenbeschränkungen ist dies ein zweistufiger Prozess:",
+      "singleStepDescription": "Klicke den Button unten, um GitHub mit einem vorausgefüllten Formular mit deinen Problemdetails zu öffnen. Sensible Daten wurden automatisch entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "step1Description": "Klicke den Button unten, um einen grundlegenden GitHub-Eintrag mit Titel, Beschreibung und Details zu erstellen.",
+      "step2Description": "Nach der Erstellung des Eintrags, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Formular einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "stepOneDiscussion": "Schritt 1: Basis-Diskussion erstellen",
+      "stepOneIssue": "Schritt 1: Basis-Issue erstellen",
+      "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
+      "title": "GitHub Problem-Zusammenfassung"
+    },
+    "title": "Problem melden",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Nach Bereich filtern",
@@ -582,12 +755,11 @@
   "loginModal": {
     "cancel": "Abbrechen",
     "demoMode": "Login ist im Demo-Modus nicht verfügbar.",
-    "error": "Login fehlgeschlagen: ",
     "iframeHint": "Öffne evcc in einem neuen Tab.",
     "iframeIssue": "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest.",
     "invalid": "Passwort ist ungültig.",
     "login": "Anmelden",
-    "password": "Passwort",
+    "password": "Administrator Passwort",
     "reset": "Passwort zurücksetzen?",
     "title": "Authentifizierung"
   },
@@ -631,6 +803,7 @@
       "gridImport": "Netzbezug",
       "homePower": "Verbrauch",
       "loadpoints": "Ladepunkt | Ladepunkt | {count} Ladepunkte",
+      "loadpointsLimit": "{limit} Limit",
       "noEnergy": "Keine Messwerte",
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
@@ -642,6 +815,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit. Warte auf Heizung …"
+    },
+    "hemsWarning": {
+      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
+      "title": "Externe Begrenzung:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
@@ -919,6 +1096,7 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
@@ -931,6 +1109,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Sprache"
+    },
+    "loadpoints": {
+      "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
+      "hide": "{title} ausblenden",
+      "label": "Ladepunkte",
+      "show": "{title} anzeigen"
     },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
@@ -982,7 +1166,7 @@
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",
     "resetWarning": "Es ist kein dynamischer Einspeisetarif konfiguriert. Dennoch ist ein Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
-    "title": "Einspeisepriorität"
+    "title": "Einspeisung priorisieren"
   },
   "startupError": {
     "configFile": "Verwendete Konfigurationsdatei:",

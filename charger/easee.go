@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -122,7 +122,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
 	// replace client transport with authenticated transport
@@ -135,11 +135,11 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	if charger == "" {
 		chargers, err := c.chargers()
 		if err != nil {
-			return c, err
+			return nil, err
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
+			return nil, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID
@@ -313,7 +313,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
-		c.sessionEnergy = value.(float64)
+		// SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
+		// Reset to 0 is done in case CHARGER_OP_MODE
+		if value.(float64) != 0 {
+			c.sessionEnergy = value.(float64)
+		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
@@ -335,7 +339,16 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		c.opMode = value.(int)
+		opMode := value.(int)
+
+		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
+		// This should be done in a proper way by the api, but it's not.
+		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			c.sessionEnergy = 0
+			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+		}
+
+		c.opMode = opMode
 
 		// startup completed
 		c.startDone()

@@ -8,7 +8,6 @@ import {
   editorPaste,
 } from "./utils";
 
-const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
@@ -25,7 +24,7 @@ async function goToConfig(page: Page) {
 
 test.describe("tariffs", async () => {
   test("tariffs not configured", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
     await goToConfig(page);
 
     await expect(page.getByTestId("tariffs")).not.toBeVisible();
@@ -33,7 +32,7 @@ test.describe("tariffs", async () => {
   });
 
   test("tariffs via ui", async ({ page }) => {
-    await start(CONFIG_GRID_ONLY);
+    await start();
     await goToConfig(page);
 
     await page.getByTestId("add-tariffs").click();
@@ -74,7 +73,7 @@ grid:
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
 
-    await restart(CONFIG_GRID_ONLY);
+    await restart();
 
     // restart done
     await expect(restartButton).not.toBeVisible();
@@ -86,7 +85,8 @@ grid:
 
   test("tariffs from evcc.yaml", async ({ page }) => {
     await start(CONFIG_WITH_TARIFFS);
-    await goToConfig(page);
+    await page.goto("/#/config");
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();
     await expect(page.getByTestId("tariffs")).toContainText(

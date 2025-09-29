@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -48,6 +48,7 @@ type Zaptec struct {
 	version    int
 	enabled    bool
 	priority   bool
+	passive    bool
 }
 
 func init() {
@@ -62,6 +63,7 @@ func NewZaptecFromConfig(ctx context.Context, other map[string]interface{}) (api
 		User, Password string
 		Id             string
 		Priority       bool
+		Passive        bool
 		Cache          time.Duration
 	}{
 		Cache: time.Second,
@@ -75,11 +77,11 @@ func NewZaptecFromConfig(ctx context.Context, other map[string]interface{}) (api
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)
+	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(ctx context.Context, user, password, id string, priority bool, cache time.Duration) (api.Charger, error) {
+func NewZaptec(ctx context.Context, user, password, id string, priority bool, passive bool, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -90,6 +92,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, ca
 		Helper:   request.NewHelper(log),
 		log:      log,
 		priority: priority,
+		passive:  passive,
 	}
 
 	// setup cached values
@@ -235,6 +238,13 @@ func (c *Zaptec) Enable(enable bool) error {
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
+	if c.passive {
+		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil {
+			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current fields set")
+			return nil
+		}
+	}
+
 	uri := fmt.Sprintf("%s/api/chargers/%s/update", zaptec.ApiURL, c.instance.Id)
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)

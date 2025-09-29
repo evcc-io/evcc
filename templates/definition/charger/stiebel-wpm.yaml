@@ -107,11 +107,3 @@ render: |
       encoding: int16
     scale: 0.1
   {{- end }}
-  power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 680
-      type: input
-      encoding: int16
-    scale: 0.1

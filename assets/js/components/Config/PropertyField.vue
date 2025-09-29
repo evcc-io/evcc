@@ -33,7 +33,6 @@
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>
@@ -52,6 +51,7 @@
 		class="w-50"
 		equal-width
 		transparent
+		:aria-label="label"
 		:options="[
 			{ value: false, name: $t('config.options.boolean.no') },
 			{ value: true, name: $t('config.options.boolean.yes') },
@@ -116,6 +116,7 @@ export default {
 		invalid: Boolean,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
+		label: String,
 	},
 	emits: ["update:modelValue"],
 	data: () => {

@@ -87,7 +87,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 // deleteSessionHandler removes session in sessions table with given id
@@ -107,7 +107,7 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 // updateSessionHandler updates the data of an existing session

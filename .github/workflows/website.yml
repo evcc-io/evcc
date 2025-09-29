@@ -1,4 +1,6 @@
 name: Deploy data to website
+permissions:
+  contents: read
 
 on:
   release:
@@ -8,12 +10,14 @@ on:
 jobs:
   brandupdate:
     name: Deploy data to website
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
         id: go
 
       - name: Build docs

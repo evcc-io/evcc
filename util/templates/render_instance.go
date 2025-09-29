@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Instance is an actual instantiated template

@@ -10,9 +10,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 )
 
 type EEBus struct {
@@ -32,6 +32,7 @@ type EEBus struct {
 	failsafeDuration time.Duration
 
 	heartbeat *util.Value[struct{}]
+	interval  time.Duration
 }
 
 type Limits struct {
@@ -41,11 +42,12 @@ type Limits struct {
 	FailsafeDurationMinimum             time.Duration
 }
 
-// New creates an EEBus HEMS from generic config
-func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
+// NewFromConfig creates an EEBus HEMS from generic config
+func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
 	cc := struct {
-		Ski    string
-		Limits `mapstructure:",squash"`
+		Ski      string
+		Limits   `mapstructure:",squash"`
+		Interval time.Duration
 	}{
 		Limits: Limits{
 			ContractualConsumptionNominalMax:    24800,
@@ -53,6 +55,7 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEB
 			FailsafeConsumptionActivePowerLimit: 4200,
 			FailsafeDurationMinimum:             2 * time.Hour,
 		},
+		Interval: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,15 +68,10 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEB
 		return nil, errors.New("hems requires load management- please configure root circuit")
 	}
 
-	// create new root circuit for LPC
-	lpc, err := circuit.New(util.NewLogger("lpc"), "eebus", 0, 0, nil, time.Minute)
+	// register LPC circuit if not already registered
+	lpc, err := shared.GetOrCreateCircuit("lpc", "eebus")
 	if err != nil {
 		return nil, err
-	}
-
-	// register LPC-Circuit for use in config, if not already registered
-	if _, err := config.Circuits().ByName("lpc"); err != nil {
-		_ = config.Circuits().Add(config.NewStaticDevice(config.Named{Name: "lpc"}, api.Circuit(lpc)))
 	}
 
 	// wrap old root with new pc parent
@@ -82,11 +80,11 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEB
 	}
 	site.SetCircuit(lpc)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc, cc.Interval)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -97,6 +95,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(),
 		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
+		interval:  interval,
 
 		consumptionLimit: &ucapi.LoadLimit{
 			Value:        limits.ConsumptionLimit,
@@ -149,7 +148,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit) 
 }
 
 func (c *EEBus) Run() {
-	for range time.Tick(10 * time.Second) {
+	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -223,5 +222,6 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 }
 
 func (c *EEBus) setLimit(limit float64) {
+	c.root.Dim(limit > 0)
 	c.root.SetMaxPower(limit)
 }

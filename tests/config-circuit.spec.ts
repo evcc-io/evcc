@@ -21,7 +21,7 @@ test.describe("circuit", async () => {
     await start(CONFIG_YAML);
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText(["Power", "1.0 kW"].join(""));
@@ -60,8 +60,9 @@ test.describe("circuit", async () => {
 
     // add loadpoint and charger
     const lpModal = page.getByTestId("loadpoint-modal");
-    await page.getByRole("button", { name: "Add charge point" }).click();
+    await page.getByRole("button", { name: "Add charger or heater" }).click();
     await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Add charging point" }).click();
     await lpModal.getByLabel("Title").fill("Carport");
 
     // add charger
@@ -71,6 +72,7 @@ test.describe("circuit", async () => {
     await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
     await chargerModal.getByLabel("Charge status").selectOption("C");
     await chargerModal.getByLabel("Power").fill("1000");
+    await chargerModal.getByRole("radio", { name: "Enabled: Yes" }).click();
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);

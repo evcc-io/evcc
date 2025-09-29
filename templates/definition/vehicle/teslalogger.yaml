@@ -18,7 +18,7 @@ params:
     required: true
     example: http://192.0.2.2
   - name: port
-    default: 5010
+    default: 5000
 render: |
   type: custom
   {{- include "vehicle-common" . }}

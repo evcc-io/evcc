@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	OAuthURI    = "https://iam.viessmann.com/idp/v3"
+	OAuthURI    = "https://iam.viessmann-climatesolutions.com/idp/v3"
 	RedirectURI = "http://localhost:4200/"
 	// ^ the value of RedirectURI doesn't matter, but it must be the same between requests
 )

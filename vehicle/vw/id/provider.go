@@ -11,8 +11,9 @@ import (
 
 // Provider is an api.Vehicle implementation for VW ID cars
 type Provider struct {
-	statusG func() (Status, error)
-	action  func(action, value string) error
+	statusG   func() (Status, error)
+	positionG func() (ParkingPosition, error)
+	action    func(action, value string) error
 }
 
 // NewProvider creates a vehicle api provider
@@ -20,6 +21,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: util.Cached(func() (Status, error) {
 			return api.Status(vin)
+		}, cache),
+		positionG: util.Cached(func() (ParkingPosition, error) {
+			return api.ParkingPosition(vin)
 		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
@@ -34,13 +38,12 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
-	var eng EngineRangeStatus
-	if err == nil {
-		eng, err = res.FuelStatus.EngineRangeStatus("electric")
+	if err == nil && res.Charging == nil {
+		err = errors.New("missing charging status")
 	}
 
 	if err == nil {
-		return float64(eng.CurrentSOCPct), nil
+		return float64(res.Charging.BatteryStatus.Value.CurrentSOCPct), nil
 	}
 
 	return 0, err
@@ -50,22 +53,25 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	res, err := v.statusG()
-	if err == nil && res.Charging == nil {
-		err = errors.New("missing charging status")
-	}
-
 	status := api.StatusA // disconnected
-	if err == nil {
-		if res.Charging.PlugStatus.Value.PlugConnectionState == "connected" {
-			status = api.StatusB
-		}
-		if res.Charging.ChargingStatus.Value.ChargingState == "charging" {
-			status = api.StatusC
-		}
+
+	res, err := v.statusG()
+	if err != nil {
+		return status, err
 	}
 
-	return status, err
+	if res.Charging == nil {
+		return status, errors.New("missing charging status")
+	}
+
+	if res.Charging.PlugStatus.Value.PlugConnectionState == "connected" {
+		status = api.StatusB
+	}
+	if res.Charging.ChargingStatus.Value.ChargingState == "charging" {
+		status = api.StatusC
+	}
+
+	return status, nil
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -73,16 +79,16 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if err == nil && res.Charging == nil {
-		err = errors.New("missing charging status")
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	if err == nil {
-		cst := res.Charging.ChargingStatus.Value
-		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
+	if res.Charging == nil {
+		return time.Time{}, errors.New("missing charging status")
 	}
 
-	return time.Time{}, err
+	cst := res.Charging.ChargingStatus.Value
+	return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -90,20 +96,15 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if err == nil && res.FuelStatus == nil {
-		err = api.ErrNotAvailable
+	if err != nil {
+		return 0, err
 	}
 
-	var eng EngineRangeStatus
-	if err == nil {
-		eng, err = res.FuelStatus.EngineRangeStatus("electric")
+	if res.Charging == nil {
+		return 0, errors.New("missing charging status")
 	}
 
-	if err == nil {
-		return int64(eng.RemainingRangeKm), nil
-	}
-
-	return 0, err
+	return int64(res.Charging.BatteryStatus.Value.CruisingRangeElectricKm), nil
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -162,6 +163,22 @@ var _ api.ChargeController = (*Provider)(nil)
 func (v *Provider) ChargeEnable(enable bool) error {
 	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
 	return v.action(ActionCharge, action[enable])
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.positionG()
+	if res.Latitude == 0 && res.Longitude == 0 {
+		err = api.ErrNotAvailable
+	}
+
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return res.Latitude, res.Longitude, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)

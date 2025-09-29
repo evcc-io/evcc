@@ -25,8 +25,8 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		err = fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
+		return nil, fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
 	}
 
-	return v, err
+	return v, nil
 }

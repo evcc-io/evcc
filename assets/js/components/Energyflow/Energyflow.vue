@@ -11,7 +11,7 @@
 				:gridImport="gridImport"
 				:selfPv="selfPv"
 				:selfBattery="selfBattery"
-				:loadpoints="loadpointsCompact"
+				:loadpoints="loadpoints"
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
@@ -173,12 +173,7 @@
 							data-testid="energyflow-entry-home"
 						/>
 						<EnergyflowEntry
-							:name="
-								// @ts-ignore
-								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
-									count: activeLoadpointsCount,
-								})
-							"
+							:name="loadpointsLabel"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
 							:power="loadpointsPower"
@@ -199,14 +194,18 @@
 							<template v-if="activeLoadpointsCount > 0" #expanded>
 								<EnergyflowEntry
 									v-for="lp in activeLoadpoints"
-									:key="lp.index"
-									:name="lp.title"
-									:power="lp.power"
+									:key="lp.id"
+									:name="lp.displayTitle"
+									:power="lp.chargePower"
 									:powerUnit="powerUnit"
 									icon="vehicle"
 									:iconProps="{ names: [lp.icon] }"
-									:details="lp.soc || undefined"
-									:detailsFmt="lp.heating ? fmtLoadpointTemp : fmtLoadpointSoc"
+									:details="lp.vehicleSoc || undefined"
+									:detailsFmt="
+										lp.chargerFeatureHeating
+											? fmtLoadpointTemp
+											: fmtLoadpointSoc
+									"
 								/>
 							</template>
 						</EnergyflowEntry>
@@ -294,7 +293,7 @@ import {
 	type Battery,
 	type CURRENCY,
 	type Forecast,
-	type LoadpointCompact,
+	type UiLoadpoint,
 } from "@/types/evcc";
 
 export default defineComponent({
@@ -312,7 +311,7 @@ export default defineComponent({
 		pvConfigured: Boolean,
 		pv: { type: Array as PropType<Pv[]> },
 		pvPower: { type: Number, default: 0 },
-		loadpointsCompact: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
 		battery: { type: Array as PropType<Battery[]> },
 		batteryPower: { type: Number, default: 0 },
@@ -370,7 +369,7 @@ export default defineComponent({
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
 		activeLoadpoints() {
-			return this.loadpointsCompact.filter((lp) => lp.charging);
+			return this.loadpoints.filter((lp) => lp.charging);
 		},
 		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;
@@ -382,8 +381,8 @@ export default defineComponent({
 			return ["car"];
 		},
 		loadpointsPower() {
-			return this.loadpointsCompact.reduce((sum, lp) => {
-				return sum + (lp.power || 0);
+			return this.loadpoints.reduce((sum, lp) => {
+				return sum + (lp.chargePower || 0);
 			}, 0);
 		},
 		pvExport() {
@@ -478,6 +477,12 @@ export default defineComponent({
 		},
 		loadpointsExpanded() {
 			return settings.energyflowLoadpoints;
+		},
+		loadpointsLabel() {
+			// @ts-expect-error plural
+			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
+				count: this.activeLoadpointsCount,
+			});
 		},
 	},
 	watch: {

@@ -14,7 +14,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.MaxACPowerGetter,MaxACPower,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
+//go:generate go tool decorate -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
@@ -22,13 +22,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		measurement.Energy `mapstructure:",squash"` // energy optional
 		measurement.Phases `mapstructure:",squash"` // optional
 
+		// pv
+		pvMaxACPower `mapstructure:",squash"`
+
 		// battery
-		batteryCapacity   `mapstructure:",squash"`
-		batteryMaxACPower `mapstructure:",squash"`
-		batterySocLimits  `mapstructure:",squash"`
-		Soc               *plugin.Config // optional
-		LimitSoc          *plugin.Config // optional
-		BatteryMode       *plugin.Config // optional
+		batteryCapacity    `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		Soc                *plugin.Config // optional
+		LimitSoc           *plugin.Config // optional
+		BatteryMode        *plugin.Config // optional
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
@@ -80,7 +83,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		}
 	}
 
-	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.batteryCapacity.Decorator(), cc.batteryMaxACPower.Decorator(), batModeS)
+	res := m.Decorate(
+		energyG, currentsG, voltagesG, powersG,
+		socG, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), batModeS,
+		cc.pvMaxACPower.Decorator(),
+	)
 
 	return res, nil
 }
@@ -104,10 +111,15 @@ func (m *Meter) Decorate(
 	currents, voltages, powers func() (float64, float64, float64, error),
 	batterySoc func() (float64, error),
 	batteryCapacity func() float64,
-	maxACPower func() float64,
+	batterySocLimits, batteryPowerLimits func() (float64, float64),
 	setBatteryMode func(api.BatteryMode) error,
+	maxACPower func() float64,
 ) api.Meter {
-	return decorateMeter(m, totalEnergy, currents, voltages, powers, batterySoc, batteryCapacity, maxACPower, setBatteryMode)
+	return decorateMeter(m,
+		totalEnergy, currents, voltages, powers,
+		batterySoc, batteryCapacity, batterySocLimits, batteryPowerLimits, setBatteryMode,
+		maxACPower,
+	)
 }
 
 // CurrentPower implements the api.Meter interface

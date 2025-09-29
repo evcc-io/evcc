@@ -9,8 +9,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// AVM FritzBox AHA interface specifications:
-// https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
+// FRITZ! FritzBox AHA interface specifications:
+// https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 
 // FritzDECT charger implementation
 type FritzDECT struct {

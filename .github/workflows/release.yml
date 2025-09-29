@@ -14,10 +14,12 @@ jobs:
     name: Publish Docker :release
     needs:
       - call-build-workflow
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -51,15 +53,17 @@ jobs:
     name: Github & APT
     needs:
       - call-build-workflow
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
         id: go
 
       - name: Patch ASN1
@@ -111,11 +115,11 @@ jobs:
     name: Demo
     needs:
       - docker
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --local-only --config packaging/fly.toml
 
@@ -123,7 +127,7 @@ jobs:
     name: Hassio Addon
     needs:
       - docker
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - name: Checkout

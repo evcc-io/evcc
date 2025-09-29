@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -44,26 +44,28 @@ type Keba struct {
 	current      uint16
 	regEnable    uint16
 	energyFactor float64
+	state1p      uint32
 }
 
 const (
-	kebaRegChargingState   = 1000
-	kebaRegCableState      = 1004
-	kebaRegCurrents        = 1008 // 6 regs, mA
-	kebaRegSerial          = 1014 // leading zeros trimmed
-	kebaRegProduct         = 1016
-	kebaRegFirmware        = 1018
-	kebaRegPower           = 1020 // mW
-	kebaRegEnergy          = 1036 // Wh
-	kebaRegVoltages        = 1040 // 6 regs, V
-	kebaRegRfid            = 1500 // hex
-	kebaRegSessionEnergy   = 1502 // Wh
-	kebaRegPhaseSource     = 1550
-	kebaRegPhaseState      = 1552
-	kebaRegFailsafeTimeout = 1602
-	kebaRegMaxCurrent      = 5004 // mA
-	kebaRegEnable          = 5014
-	kebaRegTriggerPhase    = 5052
+	kebaRegChargingState        = 1000
+	kebaRegCableState           = 1004
+	kebaRegCurrents             = 1008 // 6 regs, mA
+	kebaRegSerial               = 1014 // leading zeros trimmed
+	kebaRegProduct              = 1016
+	kebaRegFirmware             = 1018
+	kebaRegPower                = 1020 // mW
+	kebaRegEnergy               = 1036 // Wh
+	kebaRegVoltages             = 1040 // 6 regs, V
+	kebaRegRfid                 = 1500 // hex
+	kebaRegSessionEnergy        = 1502 // Wh
+	kebaRegPhaseSource          = 1550
+	kebaRegPhaseState           = 1552
+	kebaRegFailsafeTimeout      = 1602
+	kebaRegMaxCurrent           = 5004 // mA
+	kebaRegEnable               = 5014
+	kebaRegWriteFailsafeTimeout = 5018 //unit16!
+	kebaRegTriggerPhase         = 5052
 )
 
 func init() {
@@ -116,11 +118,13 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		// P30
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
+		wb.state1p = 0
 	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
 		// P40
 		wb.regEnable = kebaRegMaxCurrent
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
+		wb.state1p = 1
 
 		b, err := wb.conn.ReadHoldingRegisters(kebaRegFirmware, 2)
 		if err != nil {
@@ -161,7 +165,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(ctx, b)
+		go wb.heartbeat(ctx, u)
 	}
 
 	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
@@ -189,11 +193,11 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 		energyFactor: 1e4,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
-func (wb *Keba) heartbeat(ctx context.Context, b []byte) {
-	timeout := time.Duration(binary.BigEndian.Uint32(b)) * time.Second / 2
+func (wb *Keba) heartbeat(ctx context.Context, u uint32) {
+	timeout := time.Duration(u) * time.Second / 2
 
 	for tick := time.Tick(timeout); ; {
 		select {
@@ -202,7 +206,7 @@ func (wb *Keba) heartbeat(ctx context.Context, b []byte) {
 			return
 		}
 
-		if _, err := wb.conn.WriteMultipleRegisters(kebaRegFailsafeTimeout, 2, b); err != nil {
+		if _, err := wb.conn.WriteSingleRegister(kebaRegWriteFailsafeTimeout, uint16(u)); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -394,7 +398,8 @@ func (wb *Keba) getPhases() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if binary.BigEndian.Uint32(b) == 0 {
+
+	if binary.BigEndian.Uint32(b) == wb.state1p {
 		return 1, nil
 	}
 	return 3, nil

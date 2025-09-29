@@ -9,7 +9,7 @@
 			data-testid="topnavigation-button"
 		>
 			<span
-				v-if="showBadge"
+				v-if="showRootBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
 				:class="badgeClass"
 			>
@@ -61,7 +61,7 @@
 			<li>
 				<router-link class="dropdown-item" to="/config" active-class="active">
 					<span
-						v-if="showBadge"
+						v-if="showConfigBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
 						:class="badgeClass"
 					></span>
@@ -73,11 +73,16 @@
 					{{ $t("log.title") }}
 				</router-link>
 			</li>
+
+			<li v-if="optimizeAvailable">
+				<router-link class="dropdown-item" to="/optimize" active-class="active">
+					Optimize 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
-				<li><hr class="dropdown-divider" /></li>
 				<li>
-					<h6 class="dropdown-header">{{ $t("header.login") }}</h6>
+					<h6 class="dropdown-header">{{ $t("header.authProviders.title") }}</h6>
 				</li>
 				<li v-for="l in providerLogins" :key="l.title">
 					<button
@@ -86,14 +91,13 @@
 						@click="handleProviderAuthorization(l)"
 					>
 						<span
-							v-if="!l.loggedIn"
 							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
-							:class="badgeClass"
+							:class="l.authenticated ? 'bg-success' : 'bg-warning'"
 						></span>
 						{{ l.title }}
-						{{ $t(l.loggedIn ? "main.provider.logout" : "main.provider.login") }}
 					</button>
 				</li>
+				<li><hr class="dropdown-divider" /></li>
 			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
@@ -136,28 +140,19 @@ import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, VehicleLogins } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, EvOpt } from "@/types/evcc";
 import type { Provider as Provider } from "./types";
 
 export default defineComponent({
 	name: "TopNavigation",
 	mixins: [collector],
 	props: {
-		vehicleLogins: {
-			type: Object as PropType<VehicleLogins>,
-			default: () => {
-				return {};
-			},
-		},
-		sponsor: {
-			type: Object as PropType<Sponsor>,
-			default: () => {
-				return {};
-			},
-		},
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
 		battery: Array,
-		fatal: Object as PropType<FatalError>,
+		evopt: { type: Object as PropType<EvOpt>, required: false },
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -169,26 +164,26 @@ export default defineComponent({
 		batteryConfigured() {
 			return this.battery?.length;
 		},
-		logoutCount() {
-			return this.providerLogins.filter((login) => !login.loggedIn).length;
-		},
 		providerLogins(): Provider[] {
-			return Object.entries(this.vehicleLogins).map(([k, v]) => ({
-				title: k,
-				loggedIn: v.authenticated,
-				loginPath: v.uri + "/login",
-				logoutPath: v.uri + "/logout",
+			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
+				title,
+				authenticated,
+				loginPath: "providerauth/login?id=" + id,
+				logoutPath: "providerauth/logout?id=" + id,
 			}));
 		},
 		loginRequired() {
-			return this.logoutCount > 0;
+			return Object.values(this.authProviders).some((p) => !p.authenticated);
 		},
-		showBadge() {
+		showConfigBadge() {
 			const userConfigError = isUserConfigError(this.fatal);
-			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
+			return this.sponsor.expiresSoon || userConfigError;
+		},
+		showRootBadge() {
+			return this.loginRequired || this.showConfigBadge;
 		},
 		badgeClass() {
-			if (this.fatal?.error) {
+			if (this.fatal.length > 0) {
 				return "bg-danger";
 			}
 			return "bg-warning";
@@ -199,6 +194,9 @@ export default defineComponent({
 		forecastAvailable() {
 			const { grid, solar, co2 } = this.forecast || {};
 			return grid || solar || co2;
+		},
+		optimizeAvailable() {
+			return !!this.evopt && this.$hiddenFeatures();
 		},
 		showLogout() {
 			return isLoggedIn();
@@ -218,12 +216,24 @@ export default defineComponent({
 	},
 	methods: {
 		async handleProviderAuthorization(provider: Provider) {
-			if (!provider.loggedIn) {
-				baseAPI.post(provider.loginPath).then(function (response) {
+			const { title, authenticated, loginPath, logoutPath } = provider;
+			if (!authenticated) {
+				try {
+					const response = await baseAPI.get(loginPath);
 					window.location.href = response.data.loginUri;
-				});
+				} catch (error: any) {
+					console.error(error);
+					alert(`Failed to login: ${error.response?.data}`);
+				}
 			} else {
-				baseAPI.post(provider.logoutPath);
+				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
+					try {
+						await baseAPI.get(logoutPath);
+					} catch (error: any) {
+						console.error(error);
+						alert(`Failed to logout: ${error.response?.data}`);
+					}
+				}
 			}
 		},
 		openSettingsModal() {

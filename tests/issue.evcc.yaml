@@ -1,0 +1,21 @@
+interval: 10s
+
+site:
+  title: Hello World
+  meters:
+    pv: carport_pv
+
+loadpoints:
+  - title: Carport
+    charger: charger
+
+chargers:
+  - name: charger
+    type: template
+    template: demo-charger
+
+meters:
+  - name: carport_pv
+    type: template
+    template: demo-meter
+    power: 1234

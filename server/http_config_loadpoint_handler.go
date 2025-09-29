@@ -68,17 +68,35 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
-	lp := dev.Instance()
-
 	var id int
 	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
 		id = configurable.ID()
 	}
 
-	res := loadpointFullConfig{
-		ID:   id,
-		Name: dev.Config().Name,
+	lp := dev.Instance()
 
+	// // missing instance due to error, decode config from database
+	// if lp == nil || reflect.ValueOf(lp).IsNil() {
+	// 	cc := dev.Config()
+
+	// 	dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
+
+	// 	var static loadpoint.StaticConfig
+	// 	_ = util.DecodeOther(staticMap, &static)
+
+	// 	res := loadpointFullConfig{
+	// 		ID:            id,
+	// 		Name:          dev.Config().Name,
+	// 		StaticConfig:  static,
+	// 		DynamicConfig: dynamic,
+	// 	}
+
+	// 	return res
+	// }
+
+	res := loadpointFullConfig{
+		ID:            id,
+		Name:          dev.Config().Name,
 		StaticConfig:  getLoadpointStaticConfig(lp),
 		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
@@ -93,7 +111,7 @@ func loadpointsConfigHandler() http.HandlerFunc {
 			return loadpointConfig(dev)
 		})
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -118,7 +136,7 @@ func loadpointConfigHandler() http.HandlerFunc {
 
 		res := loadpointConfig(dev)
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -284,6 +302,6 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			ID: id,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }

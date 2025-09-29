@@ -22,15 +22,16 @@ type circuitsTestSuite struct {
 }
 
 func (suite *circuitsTestSuite) SetupSuite() {
-	db, err := db.New("sqlite", ":memory:")
-	if err != nil {
-		suite.T().Fatal(err)
-	}
-	config.Init(db)
+	_ = db.NewInstance("sqlite", ":memory:")
+	config.Init()
 }
 
 func (suite *circuitsTestSuite) SetupTest() {
 	config.Reset()
+}
+
+func (suite *circuitsTestSuite) charger() api.Charger {
+	return api.NewMockCharger(gomock.NewController(suite.T()))
 }
 
 func (suite *circuitsTestSuite) TestCircuitConf() {
@@ -58,7 +59,7 @@ loadpoints:
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, suite.charger())))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
@@ -89,7 +90,7 @@ loadpoints:
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, suite.charger())))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
@@ -146,7 +147,7 @@ loadpoints:
 	// mock charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, suite.charger())))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)

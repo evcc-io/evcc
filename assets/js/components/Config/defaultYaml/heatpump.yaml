@@ -1,0 +1,23 @@
+## required attributes [type: heatpump]
+
+setmaxpower: # update the maximum heating power
+  source: js
+  script: console.log(setmaxpower); #
+
+## optional attributes (read-only)
+
+#getmaxpower: # heating power in W
+#  source: const
+#  value: 5000
+#power: # heating power in W
+#  source: const
+#  value: 2000
+#energy: # meter reading in kWh
+#  source: const
+#  value: 42.5
+#temp: # current temperature (°C)
+#  source: const
+#  value: 45.5
+#limittemp: # temperature limit (°C) configured in device
+#  source: const
+#  value: 60

@@ -12,7 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var (

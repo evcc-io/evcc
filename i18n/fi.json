@@ -44,12 +44,29 @@
       "ocppLabel": "OCPP-palvelimen URL",
       "switchsockets": "Kytkettävät pistorasiat",
       "template": "Valmistaja",
-      "titleAdd": "Lisää laturi",
-      "titleEdit": "Muokkaa laturia"
+      "titleAdd": {
+        "charging": "Lisää laturi",
+        "heating": "Lisää lämmitin"
+      },
+      "titleEdit": {
+        "charging": "Muokkaa laturia",
+        "heating": "Muokkaa lämmitintä"
+      },
+      "type": {
+        "custom": {
+          "charging": "Itse määritelty laturi",
+          "heating": "Itse määritelty lämmitin"
+        },
+        "heatpump": "Itse määritelty lämpöpumppu",
+        "sgready": "Itse määritelty lämpöpumppu (älyverkkovalmius, kaikki)",
+        "sgready-boost": "Itse määritelty lämpöpumppu (älyverkkovalmius, tehostus)",
+        "switchsocket": "Itse määritelty relepistorasia"
+      }
     },
     "circuits": {
       "description": "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkkäin.",
-      "title": "Kuormanhallinta"
+      "title": "Kuormanhallinta",
+      "usableMeters": "Käytettävissä olevat mittarit"
     },
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
@@ -60,6 +77,7 @@
       "title": "Määrittele toimintaa"
     },
     "deviceValue": {
+      "allowControl": "Salli säätäminen",
       "amount": "Määrä",
       "broker": "Välittäjä (Broker)",
       "bucket": "Bucket",
@@ -82,7 +100,8 @@
       "feedinPrice": "Sähköverkkoon myynninhinta",
       "gridPrice": "Verkosta ostonhinta",
       "heaterTempLimit": "Lämmityksen raja",
-      "hemsType": "Järjestelmä",
+      "hemsActiveLimit": "Aktiivinen raja",
+      "hemsType": "Kommunikaatiomenetelmä",
       "identifier": "RFID-tunniste",
       "no": "ei",
       "odometer": "Matkamittari",
@@ -108,6 +127,10 @@
       "B": "B (yhdistetty)",
       "C": "C (lataa)"
     },
+    "deviceValueHemsType": {
+      "eebus": "EEBusilla",
+      "relay": "Relayllä"
+    },
     "devices": {
       "auxMeter": "Älykkään virranhallinnan laite",
       "batteryStorage": "Akkujärjestelmä",
@@ -132,19 +155,25 @@
       "optional": "valinnainen"
     },
     "general": {
+      "applyAndClose": "Ota käyttöön ja sulje",
       "cancel": "Peruuta",
+      "close": "Sulje",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
       "customOption": "Itsemääritelty laite",
       "delete": "Poista",
       "docsLink": "Katso dokumentaatio.",
       "experimental": "Kokeellinen",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
+      "invalidFileSelected": "Valittu virheellinen tiedosto",
+      "noFileSelected": "Ei valittua tiedostoa.",
       "off": "pois",
       "on": "päällä",
       "password": "Salasana",
       "readFromFile": "Lue tiedostosta",
       "remove": "Poista",
+      "required": "vaadittu",
       "save": "Tallenna",
+      "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
       "telemetry": "Telemetria",
       "templateLoading": "Ladataan...",
@@ -157,7 +186,7 @@
       "titleEdit": "Muokkaa sähköverkonmittaria"
     },
     "hems": {
-      "description": "Yhdistä evcc toiseen kodin energianhallintajärjestelmään.",
+      "description": "Ulkoisen järjestelmän (kuten EnWG kontrolleri) asettama tehon rajoitus. Vaatii kuormanhallinnan määrittämistä.",
       "title": "HEMS"
     },
     "icon": {
@@ -180,11 +209,20 @@
       "v2Support": "Takaisin InfluxDB 2.x:ään"
     },
     "loadpoint": {
-      "addCharger": "Lisää laturi",
-      "addMeter": "Lisää erillinen latausmittari",
+      "addCharger": {
+        "charging": "Lisää laturi",
+        "heating": "Lisää lämmitin"
+      },
+      "addMeter": "Lisää erillinen kulutusmittari",
       "cancel": "Peruuta",
-      "chargerError": "Vaaditaan käyttöönottoasetusten määrittely laturille.",
-      "chargerLabel": "Laturi",
+      "chargerError": {
+        "charging": "Vaaditaan käyttöönottoasetusten määrittely laturille.",
+        "heating": "Vaaditaan lämmittimen asetuksien määrittely."
+      },
+      "chargerLabel": {
+        "charging": "Laturi",
+        "heating": "Lämmitin"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Käyttää 6-16 A:n virta-aluetta.",
       "chargerPower22kw": "22 kW",
@@ -192,15 +230,18 @@
       "chargerPowerCustom": "muu",
       "chargerPowerCustomHelp": "Mukauta käytettävä virta-alue.",
       "chargerTypeLabel": "Laturin tyyppi",
-      "chargingTitle": "Lataa",
+      "chargingTitle": "Toiminta",
       "circuitHelp": "Kuormanhallinnan määritys varmistaa, että teho ja virtarajoitteita ei ylitetä.",
       "circuitLabel": "Piiri",
       "circuitUnassigned": "määräämätön",
-      "defaultModeHelp": "Lataustila ajoneuvoa kytkettäessä.",
-      "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataustilan.",
+      "defaultModeHelp": {
+        "charging": "Lataustila ajoneuvoa kytkettäessä.",
+        "heating": "Asetetaan päälle järjestelmän käynnistyessä."
+      },
+      "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataus/käyttötilan.",
       "defaultModeLabel": "Oletustila",
       "delete": "Poista",
-      "electricalSubtitle": "Jos olet epävarma, kysy sähkömieheltäsi.",
+      "electricalSubtitle": "Jos olet epävarma, kysy sähköasentajaltasi.",
       "electricalTitle": "Sähköinen",
       "energyMeterHelp": "Lisämittari, jos laturissa ei ole integroitua energiamittaria.",
       "energyMeterLabel": "Energiamittari",
@@ -210,11 +251,15 @@
       "minCurrentHelp": "Valitse alle 6 A vain, jos tiedät mitä olet tekemässä.",
       "minCurrentLabel": "Minimivirta",
       "noVehicles": "Ajoneuvoja ei ole määritetty.",
+      "option": {
+        "charging": "Lisää latauspiste",
+        "heating": "Lisää lämmityslaite"
+      },
       "phases1p": "1-vaihe",
       "phases3p": "3-vaihe",
       "phasesAutomatic": "Automaattinen",
       "phasesAutomaticHelp": "Laturisi tukee automaattista vaihtoa 1- ja 3-vaiheisen latauksen välillä. Päänäytössä voit säätää vaihekäyttäytymistä latauksen aikana.",
-      "phasesHelp": "Laturiin kytkettyjen vaiheiden lukumäärä.",
+      "phasesHelp": "Kytkettyjen vaiheiden lukumäärä.",
       "phasesLabel": "Vaiheet",
       "pollIntervalDanger": "Ajoneuvon akku voi tyhjentyä tiheiden säännöllisten tietopyyntöjen seurauksena. Joidenkin autovalmistajien ajoneuvot voivat estää tällöin ajoneuvon lataamisen. Ei suositella! Käytä ainoastaan tiedostaen riskit.",
       "pollIntervalHelp": "Ajoneuvon API-päivitysten välinen aika. Lyhyet välit voivat tyhjentää ajoneuvon akun.",
@@ -226,28 +271,39 @@
       "pollModeConnected": "yhdistetty",
       "pollModeConnectedHelp": "Päivitä ajoneuvon tila säännöllisin väliajoin, kun yhteys on muodostettu.",
       "pollModeLabel": "Päivitys käyttäytyminen",
-      "priorityHelp": "Korkeamman prioriteetin latauspisteet saavat ensisijaisen pääsyn aurinkoenergian ylijäämään.",
+      "priorityHelp": "Korkeamman prioriteetin laitteet saavat ensisijaisen pääsyn aurinkoenergian ylijäämään.",
       "priorityLabel": "Prioriteetti",
       "save": "Tallenna",
       "showAllSettings": "Näytä kaikki asetukset",
       "solarBehaviorCustomHelp": "Määritä omat päälle- ja poiskytkentä sekä viiveet.",
-      "solarBehaviorDefaultHelp": "Lataa vain aurinkoenergian ylijäämällä. Aloita ylijäämän {enableDelay} jälkeen. Lopeta, kun ylijäämää ei ole tarpeeksi {disableDelay}:lle.",
-      "solarBehaviorLabel": "PV käyttäytyminen",
+      "solarBehaviorDefaultHelp": "Aloita aurinkoylijäämän {enableDelay} jälkeen. Lopeta, kun ylijäämää ei ole tarpeeksi {disableDelay}:lle.",
+      "solarBehaviorLabel": "Aurinkoenergia",
       "solarModeCustom": "muokattu",
       "solarModeMaximum": "maksimi PV",
       "thresholdDisableDelayLabel": "Poista viive käytöstä",
       "thresholdDisableHelpInvalid": "Käytä positiivista arvoa.",
-      "thresholdDisableHelpPositive": "Lopeta lataaminen, kun verkosta käytetään enemmän kuin {power}, {delay} ajaksi.",
-      "thresholdDisableHelpZero": "Pysäytä, kun vähimmäislataustehoa ei voida täyttää {delay} ajaksi.",
+      "thresholdDisableHelpPositive": "Lopeta, kun verkosta käytetään enemmän kuin {power}, {delay} ajaksi.",
+      "thresholdDisableHelpZero": "Pysäytä, kun vähimmäistehoa ei voida täyttää {delay} ajaksi.",
       "thresholdDisableLabel": "Poista verkkoenergia käytöstä",
       "thresholdEnableDelayLabel": "Ota viive käyttöön",
       "thresholdEnableHelpInvalid": "Käytä negatiivista arvoa.",
-      "thresholdEnableHelpNegative": "Aloita lataaminen, kun {surplus} ylijäämää on käytettävissä {delay}.",
-      "thresholdEnableHelpZero": "Aloita, kun vähimmäislatausteho on käytettävissä {delay}.",
+      "thresholdEnableHelpNegative": "Aloita, kun {surplus} ylijäämää on käytettävissä {delay}.",
+      "thresholdEnableHelpZero": "Aloita, kun vähimmäistehoa on käytettävissä {delay}.",
       "thresholdEnableLabel": "Ota verkkoenergia käyttöön",
-      "titleAdd": "Lisää latauspiste",
-      "titleEdit": "Muokkaa latauspistettä",
-      "titleExample": "Autotalli, autokatos jne.",
+      "titleAdd": {
+        "charging": "Lisää latauspiste",
+        "heating": "Lisää lämmityslaite",
+        "unknown": "Lisää latauslaite tai lämmitin"
+      },
+      "titleEdit": {
+        "charging": "Muokkaa latauspistettä",
+        "heating": "Muokkaa latauslaitetta",
+        "unknown": "Muokkaa latauslaitetta tai lämmitintä"
+      },
+      "titleExample": {
+        "charging": "Autotalli, autokatos, yms.",
+        "heating": "Lämpöpumppu, lämmitin, yms."
+      },
       "titleLabel": "Otsikko",
       "vehicleAutoDetection": "automaattinen tunnistus",
       "vehicleHelpAutoDetection": "Valitsee automaattisesti todennäköisimmän ajoneuvon. Manuaalinen ohitus on mahdollista.",
@@ -258,7 +314,7 @@
     "main": {
       "addAdditional": "Lisää lisämittari",
       "addGrid": "Lisää verkkomittari",
-      "addLoadpoint": "Lisää latauspiste",
+      "addLoadpoint": "Lisää latauslaite tai lämmitin",
       "addPvBattery": "Lisää aurinkovoimala tai akusto",
       "addTariffs": "Lisää tariffit",
       "addVehicle": "Lisää ajoneuvo",
@@ -351,6 +407,10 @@
         "big": "big-endian",
         "little": "little-endian"
       },
+      "operationMode": {
+        "heating": "Lämmitys",
+        "standby": "Valmiustila"
+      },
       "schema": {
         "http": "HTTP (salaamaton)",
         "https": "HTTPS (salattu)"
@@ -370,24 +430,75 @@
       "general": "Yleinen",
       "grid": "Sähköverkko",
       "integrations": "Integraatiot",
-      "loadpoints": "Latauspisteet",
+      "loadpoints": "Lataus- ja lämmityspisteet",
       "meter": "Aurinko & Akku",
       "system": "Järjestelmä",
       "vehicles": "Ajoneuvot"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc:ssä on integraatio SMA Sunny Home Manager (SHM) SEMP-protokollan välityksellä. Jos SHM on samassa lähiverkossa, kirjauduttuasi sisään Sunny Portal -tiliisi, sinulle pitäisi mahdollisuus lisätä kaikki laturit evcc:een uusina käyttölaitteina. Kaiken pitäisi olla valmiina välittömään käyttöön ilman lisämuutoksia alla oleviin asetuksiin.",
+      "descriptionDeviceId": "12-merkkinen HEX-merkkijono. Etuliitteenä kaikkiin laitteisiin (latausasema, ...).",
+      "descriptionIdPattern": "Tunnistusmuoto",
+      "descriptionIds": "Sunny Portal -järjestelmässä jokainen käyttölaite vaatii yksilöllisen tunnisteen. Evcc luo yksilöllisen tunnisteen laitteistosi perusteella. Jos siirrät evcc:n asennuksen toiseen laitteistoon nämä tunnisteet voivat muuttua. Jos haluat pitää vanhat tunnisteet, voit automaattiset luodut tunnisteet tässä. Avaa SEMP URL (/semp) tarkistaaksesi nykyiset tunnisteesi.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8-merkkinen HEX-merkkijono. Yleinen etuliite kaikille laitteille. Oletuksena evcc käyttää sisäistä valmistajatunnistettaan.",
+      "labelAllowControl": "Hyväksy lisätehorajasuositukset SHM:lta.",
+      "labelControl": "Salli hallinta",
+      "labelDeviceId": "Laite-ID",
+      "labelVendorId": "Valmistaja-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
       "description": "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset.",
-      "descriptionToken": "Saat tunnuksen osoitteesta {url}. Tarjoamme myös kokeilutunnuksen testausta varten.",
+      "descriptionToken": "Sponsorit saavat sponsorointitunnuksensa osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
+      "enterYourToken": "Syötä sponsorointitunnuksesi",
       "error": "Sponsoritunnus ei kelpaa.",
+      "invalid": "epäkelpo",
       "labelToken": "Sponsoritunnus",
       "title": "Sponsorointi",
       "tokenRequired": "Sinun on määritettävä sponsoritunnus ennen kuin voit luoda tämän laitteen.",
       "tokenRequiredLearnMore": "Lisätietoja.",
-      "trialToken": "Kokeilutunnus"
+      "tokenRequiredShort": "Sponsorointi-tokenia ei ole määritelty.",
+      "trialToken": "kokeilutunnus",
+      "viaYaml": "evcc.yaml-tiedoston mukaisesti",
+      "yourToken": "Sponsorointitunnuksesi"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Ladataan varmuuskopiota...",
+          "confirmationButton": "Lataa varmuuskopio",
+          "confirmationText": "Syötä salasanasi ladataksesi tietokantatiedoston.",
+          "description": "Varmuuskopioi tietosi. Tätä tiedostoa voidaan käyttää palauttamaan tietosi järjestelmävirheen jälkeen.",
+          "title": "Varmuuskopio"
+        },
+        "cancel": "Peruuta",
+        "description": "Varmuuskopioi, palauta ja nollaa tietosi. Hyödyllinen jos haluat siirtää tietosi toiseen järjestelmään.",
+        "note": "Huomioi: Kaikki ylläolevat toiminnut vaikuttavat vain tietokannassa oleviin tietoihin. evcc.yaml-tiedoston määrittelyt pysyvät muuttumattomina.",
+        "reset": {
+          "action": "Nollaa...",
+          "confirmationButton": "Nollaa ja käynnistä uudelleen",
+          "confirmationText": "Tämä poistaa pysyvästä valitut tiedot. Varmista, että olet ensin ladannut varmuuskopion.",
+          "description": "Onko ongelmia määrittelyn kanssa ja haluat aloittaa alusta? Poista kaikki tiedot ja aloita puhtaalta pöydältä.",
+          "sessions": "Lataustapahtumat",
+          "sessionsDescription": "Poistaa lataustapahtumahistorian.",
+          "settings": "Määrittelyt ja asetukset",
+          "settingsDescription": "Poistaa kaikki määritellyt laitteet, palvelut, välimuistitiedon jne.",
+          "title": "Nollaa"
+        },
+        "restore": {
+          "action": "Palauta...",
+          "confirmationButton": "Palauta ja uudelleenkäynnistä",
+          "confirmationText": "Tämä ylikirjoittaa kaikki tietokannassa olevat tiedot. Varmista, että olet ensin ladannut tietojen varmuuskopion.",
+          "description": "Palauta tietosi varmuuskopiotiedostosta. Tämä ylikirjoittaa kaikki tietosi.",
+          "labelFile": "Varmuuskopiotiedosto",
+          "title": "Palauta"
+        },
+        "title": "Varmuuskopiointi ja palautus"
+      },
       "logs": "Logi",
       "restart": "Käynnistä uudelleen",
       "restartRequiredDescription": "Ole hyvä ja käynnistä uudelleen, jotta näet muutoksen.",
@@ -537,6 +648,10 @@
   },
   "header": {
     "about": "Tietoa",
+    "authProviders": {
+      "confirmLogout": "Oletko varma, että haluat poistaa yhteyden {title}?",
+      "title": "Autentikointivaltuutuksen tila"
+    },
     "blog": "Blogi",
     "docs": "Dokumentaatio",
     "github": "GitHub",
@@ -566,6 +681,57 @@
     "restartDescription": "Yrititkö sammuttaa ja käynnistää uudelleen?",
     "secondaryActions": "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
   },
+  "issue": {
+    "additional": {
+      "description": "Sisällytä asetuksesi ja lokitietosi auttaaksesi meitä toisintamaan ongelman pikaisesti. Kannustamme jakamaan mahdollisimman paljon tietoa. Nykyistä tilaa ei yleensä ole tarpeen jakaa.",
+      "include": "sisällytä",
+      "lines": "riviä",
+      "logs": "Lokitiedot",
+      "logsDescription": "Viimeaikaiset lokitiedot, jotka saattavat auttaa ongelman tunnistamisessa.",
+      "showDetails": "näytä yksityiskohdat",
+      "source": "Lähde",
+      "state": "Tila",
+      "stateDescription": "Täydellinen ajonaikainen tila sisältää latausaseman, laitteiden ja käytetyn energian tiedot. Sisällytä vain pyydettäessä.",
+      "title": "Lisätietoja",
+      "uiConfig": "Asetukset (käyttöliittymä)",
+      "uiConfigDescription": "Asetukset, jotka on määritetty selainkäyttöliittymän kautta.",
+      "yamlConfig": "Asetukset (YAML)",
+      "yamlConfigDescription": "Täydellinen YAML-asetustiedostosi."
+    },
+    "additionalContext": "Tilannetiedot",
+    "additionalContextPlaceholder": "Mitä tahansa lisätietoja, jotka voivat olla höydyllisiä, kuten\n- asetuksien yksityiskohtia\n- mitä olet yrittänyt tehdä\n- asennusympäristön yksityiskohtia",
+    "createButtonDiscussion": "Aloita GitHub keskustelu...",
+    "createButtonIssue": "Luo GitHub -tiketti...",
+    "description": "Asennuksesi ei toimi kuten oletit? Tällä sivulla voit saada apua tai raportoida uudesta ongelmatilanteesta. Välitä tarpeeksi yksityiskohtia, jotta voimme ymmärtää ja toisintaa ongelman, kuitenkin pitäen selityksen napakkana, selkeänä ja helppona seurata.",
+    "helpType": {
+      "discussion": "Tarvitsen apua ympäristöni kanssa",
+      "discussionDescription": "Yhteisökeskustelu tarjoaa vastauksia.",
+      "issue": "Löysin ohjelmistovirheen",
+      "issueDescription": "Olen varma, että jokin on vialla ja vaatii korjaamista.",
+      "title": "Minkälaisesta ongelmasta on kyse?"
+    },
+    "issueDescription": "Kuvaus",
+    "issueTitle": "Otsikko",
+    "stepsToReproduce": "Toisintamisvaiheet",
+    "subTitleDiscussion": "Kuvaile ongelmasi",
+    "subTitleIssue": "Kuvaile ongelma",
+    "summary": {
+      "confirmationButtonDiscussion": "Aloita GitHub-keskustelu",
+      "confirmationButtonIssue": "Luo GitHub-tiketti",
+      "copied": "Kopioitu!",
+      "copyButton": "Kopioi lisätiedot",
+      "instructions": "GitHubin URL-rajoitteen vuoksi tämä on kaksivaiheinen prosessi:",
+      "singleStepDescription": "Paina alla olevaa nappia avataksesi GitHubin esitäytetyn lomakkeen, jossa on ongelmasi yksityiskohdat. Sensitiivinen data on automaattisesti suodatettu pois, mutta varmista tämä ennen jakamista.",
+      "step1Description": "Paina alla olevaa nappia luodaksesi GitHub-tiketin, jossa on otsikko, kuvaus ja antamasi yksityiskohdat.",
+      "step2Description": "Luotuasi tiketin palaa tänne ja kopioi lisätiedot alta ja liitä ne GitHub-lomakkeeseen. Sensistiivinen data on suodatettu pois, mutta varmista tämä ennen tietojen jakamista.",
+      "stepOneDiscussion": "Vaihe 1: Luo peruskeskustelu",
+      "stepOneIssue": "Vaihe 1: Luo perus-tiketti (issue)",
+      "stepTwo": "Vaihe 2: Kopioi lisätiedot",
+      "title": "Yhteenveto GitHubiin"
+    },
+    "title": "Raportoi ongelmasta",
+    "version": "Versio"
+  },
   "log": {
     "areaLabel": "Rajaa alueella",
     "areas": "Kaikki alueet",
@@ -587,7 +753,7 @@
     "iframeIssue": "Salasanasi on oikea, mutta selaimesi näyttää pudonneen todennusevästeen. Näin voi käydä, jos suoritat evcc:n iframe-kehyksessä HTTP:n kautta.",
     "invalid": "Salasana ei kelpaa.",
     "login": "Kirjaudu",
-    "password": "Salasana",
+    "password": "Hallintasalasana",
     "reset": "Määritä salasana uudelleen?",
     "title": "Vahvistus"
   },
@@ -631,6 +797,7 @@
       "gridImport": "Kulutus sähköverkosta",
       "homePower": "Kodin sähkönkulutus",
       "loadpoints": "Latauslaite| Latauslaite | {count} latauslaitetta",
+      "loadpointsLimit": "{limit} rajoitus",
       "noEnergy": "Ei mittarin tietoja",
       "pv": "Aurinkosähköjärjestelmä",
       "pvExport": "Sähköverkkoon vienti",
@@ -642,6 +809,10 @@
       "connected": "Valmiustila.",
       "vehicleLimit": "Lämmittimen rajoitin",
       "waitForVehicle": "Valmiina. Odottaa lämmitintä…"
+    },
+    "hemsWarning": {
+      "description": "Rajoitettu latausta, jotta rajaa {limit} ei ylitettäisi.",
+      "title": "Ulkoinen raja:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Hinta",
@@ -779,6 +950,8 @@
       "connected": "Yhdistetty.",
       "disconnectRequired": "Istunto lopetettu. Yhdistä uudelleen.",
       "disconnected": "Irroitettu.",
+      "feedinPriorityNextStart": "Korkea tuotannon verkkoon myyntihinta alkaa {duration}.",
+      "feedinPriorityPausing": "Aurinkoenergialataus tauolla, jotta sähkön myynti verkkoon voidaan maksimoida.",
       "finished": "Valmis.",
       "minCharge": "Ladataan minimissään {soc}.",
       "pvDisable": "Ei tarpeeksi ylijäämää. Lataus keskeytetään pian.",
@@ -973,6 +1146,14 @@
     "resetAction": "Poista rajoitus",
     "resetWarning": "Dynaamista sähköverkonhintaa tai sähkötuotannon CO₂-päästöjä ei ole määritetty, vaikka rajoitus {limit} on asetettu. Siistitäänkö asetuksiasi?",
     "saved": "Tallennettu."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Tauotettu tuntia",
+    "description": "Lataus tauotetaan korkean sähkön hinnan aikana, jotta voidaan priorisoida sähkön myyntiä verkkoon.",
+    "priceLabel": "Verkkoon myyntihinta",
+    "priceLimit": "Verkkoon syöttö rajoite",
+    "resetWarning": "Dynaamista verkkoon myyntihintaa ei ole määritetty. Kuitenkin on määritetty raja {limit}. Siivotaanko määrityksiäsi?",
+    "title": "Verkkoon myynnin priorisointi"
   },
   "startupError": {
     "configFile": "Käytetty määritystiedostoa:",

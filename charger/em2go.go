@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -73,8 +73,11 @@ func init() {
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Connector          int // TODO remove deprecated
+	}{
+		TcpSettings: modbus.TcpSettings{ID: 255},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -100,12 +103,16 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		log:        log,
-		conn:       conn,
-		current:    60,
-		workaround: false,
+		log:     log,
+		conn:    conn,
+		current: 60,
 	}
 
+	return wb.initialize()
+}
+
+// initialize performs common initialization for both Em2Go models
+func (wb *Em2Go) initialize() (api.Charger, error) {
 	var (
 		maxCurrent func(float64) error
 		phases1p3p func(int) error
@@ -134,7 +141,7 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		phasesG = wb.getPhases
 	}
 
-	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), err
+	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), nil
 }
 
 // Status implements the api.Charger interface
@@ -357,7 +364,7 @@ func (wb *Em2Go) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMaxCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMaxCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMinCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Min. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegCableMaxCurrent, 1); err == nil {

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { openTopNavigation, expectTopNavigationClosed } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -13,9 +14,17 @@ test.afterAll(async () => {
 test.describe("opening logs", async () => {
   test("via config", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("link", { name: "Configuration" }).click();
+    await expectTopNavigationClosed(page);
     await page.getByRole("link", { name: "Logs" }).click();
+    await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
+  });
+  test("via top navigation", async ({ page }) => {
+    await page.goto("/");
+    await openTopNavigation(page);
+    await page.getByRole("link", { name: "Logs" }).click();
+    await expectTopNavigationClosed(page);
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
   });
   test("via notifications", async ({ page }) => {
@@ -27,8 +36,9 @@ test.describe("opening logs", async () => {
   });
   test("via need help", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByRole("button", { name: "Need Help?" }).click();
+    await expectTopNavigationClosed(page);
     await page.getByRole("link", { name: "View logs" }).click();
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
   });

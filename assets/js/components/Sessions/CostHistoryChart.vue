@@ -60,7 +60,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[0].created);
+			return new Date(this.sessions[0]!.created);
 		},
 		month() {
 			return (this.firstDay?.getMonth() || 0) + 1;
@@ -72,7 +72,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[this.sessions.length - 1].created);
+			return new Date(this.sessions[this.sessions.length - 1]!.created);
 		},
 		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update cost history data");
@@ -133,11 +133,12 @@ export default defineComponent({
 							? session.price || 0
 							: (session.co2PerKWh || 0) * (session.chargedEnergy || 0);
 
-					result[index][groupKey] = (result[index][groupKey] || 0) + value;
+					const item = result[index]!;
+					item[groupKey] = (item[groupKey] || 0) + value;
 
-					result[index].totalCost = (result[index].totalCost || 0) + value;
-					result[index].totalKWh = (result[index].totalKWh || 0) + session.chargedEnergy;
-					result[index].avgCost = result[index].totalCost / result[index].totalKWh;
+					item.totalCost = (item.totalCost || 0) + value;
+					item.totalKWh = (item.totalKWh || 0) + session.chargedEnergy;
+					item.avgCost = item.totalCost / item.totalKWh;
 				});
 			}
 
@@ -196,6 +197,7 @@ export default defineComponent({
 		legends() {
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
+				let type: "area" | "line" = "area";
 
 				// line chart handling
 				if ((dataset as any).type === "line") {
@@ -210,6 +212,7 @@ export default defineComponent({
 								: this.fmtGrams(value, false);
 					};
 					value = `${format(min, false)} – ${format(max, true)}`;
+					type = "line";
 				} else {
 					const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 					value =
@@ -221,6 +224,7 @@ export default defineComponent({
 					label: dataset.label || "",
 					color: dataset.backgroundColor,
 					value,
+					type,
 				};
 			});
 		},
@@ -254,7 +258,7 @@ export default defineComponent({
 						},
 						callbacks: {
 							title: (tooltipItem: TooltipItem<"bar">[]) => {
-								const { label } = tooltipItem[0];
+								const { label } = tooltipItem[0] || { label: "" };
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {
@@ -322,10 +326,14 @@ export default defineComponent({
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value: number) =>
-								this.costType === TYPES.PRICE
-									? this.fmtMoney(value, this.currency, false, true)
-									: this.fmtNumber(value / 1e3, 0),
+							callback: (value: number) => {
+								if (this.costType === TYPES.PRICE) {
+									const showDecimals = this.suggestedMaxCost < 4;
+									return this.fmtMoney(value, this.currency, showDecimals, true);
+								} else {
+									return this.fmtNumber(value / 1e3, 0);
+								}
+							},
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},

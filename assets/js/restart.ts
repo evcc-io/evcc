@@ -20,4 +20,8 @@ export function restartComplete() {
   restart.restartNeeded = false;
 }
 
+export function showRestarting() {
+  restart.restarting = true;
+}
+
 export default restart;

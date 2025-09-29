@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"slices"
 	"sync/atomic"
 	"time"
 
@@ -38,20 +39,24 @@ type MyPv struct {
 	lp      loadpoint.API
 	power   uint32
 	scale   float64
+	name    string
 	statusC uint16
 	enabled bool
 	regTemp uint16
 }
 
 const (
-	elwaRegSetPower  = 1000
-	elwaRegTempLimit = 1002
-	elwaRegStatus    = 1003
-	elwaRegLoadState = 1059
-	elwaRegPower     = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegSetPower        = 1000
+	elwaRegTempLimit       = 1002
+	elwaRegStatus          = 1003
+	elwaRegLoadState       = 1059
+	elwaRegPower           = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegOperationState  = 1077
+	elwaERegOperationState = elwaRegStatus // same register for elwa-e operation state
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
+var elwaStandbyPower uint16 = 10
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
@@ -62,6 +67,10 @@ func init() {
 	// https: // github.com/evcc-io/evcc/issues/18020
 	registry.AddCtx("ac-thor", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 		return newMyPvFromConfig(ctx, "ac-thor", other, 9)
+	})
+
+	registry.AddCtx("ac-elwa-e", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+		return newMyPvFromConfig(ctx, "ac-elwa-e", other, 2)
 	})
 }
 
@@ -107,6 +116,7 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource in
 	wb := &MyPv{
 		log:     log,
 		conn:    conn,
+		name:    name,
 		statusC: statusC,
 		scale:   scale,
 		regTemp: elwaTemp[tempSource-1],
@@ -153,14 +163,19 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
-	if err != nil {
-		return api.StatusNone, err
-	}
+	var b []byte
+	var err error
 
-	// all loads detached
-	if binary.BigEndian.Uint16(b) == 0 {
-		return api.StatusA, nil
+	if wb.name == "ac-thor" {
+		b, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		// all loads detached
+		if binary.BigEndian.Uint16(b) == 0 {
+			return api.StatusA, nil
+		}
 	}
 
 	res := api.StatusB
@@ -176,7 +191,7 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 	}
 
 	// ignore standby power
-	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > 10 {
+	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > elwaStandbyPower {
 		res = api.StatusC
 	}
 
@@ -185,15 +200,31 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegSetPower, 1)
+	// "ac-thor" and "ac-elwa-2"
+	reg := elwaRegOperationState
+	enabled := []uint16{1, 2} // heating PV excess, boost backup
+
+	if wb.name == "ac-elwa-e" {
+		reg = elwaERegOperationState
+		enabled = []uint16{2, 4} // heating PV excess, boost backup
+	}
+
+	// register read
+	b, err := wb.conn.ReadHoldingRegisters(uint16(reg), 1)
 	if err != nil {
 		return false, err
 	}
+	state := binary.BigEndian.Uint16(b)
 
-	if binary.BigEndian.Uint16(b) == 0 {
-		wb.enabled = false
+	// determine enabled state
+	if state == 0 { // standby
+		return false, nil
+	}
+	if slices.Contains(enabled, state) {
+		return true, nil
 	}
 
+	// fallback to cached value as last resort
 	return wb.enabled, nil
 }
 

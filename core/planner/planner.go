@@ -40,7 +40,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 
 	for _, source := range rates {
 		// slot not relevant
-		if source.Start.After(targetTime) || source.Start.Equal(targetTime) || source.End.Before(t.clock.Now()) {
+		if !(source.End.After(t.clock.Now()) && source.Start.Before(targetTime)) {
 			continue
 		}
 

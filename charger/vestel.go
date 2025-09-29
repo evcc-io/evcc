@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -150,7 +150,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 	go wb.heartbeat(ctx, timeout)
 
-	return decorateVestel(wb, phasesS, phasesG, identify), err
+	return decorateVestel(wb, phasesS, phasesG, identify), nil
 }
 
 func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {

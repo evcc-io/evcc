@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden, openTopNavigation } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
@@ -13,10 +13,11 @@ test.afterAll(async () => {
 test.describe("battery settings", async () => {
   test("open modal", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByTestId("topnavigation-battery").click();
 
     const modal = page.getByTestId("battery-settings-modal");
+    await expectModalVisible(modal);
     await expect(modal.getByRole("heading", { name: "Home Battery" })).toBeVisible();
     await expect(modal.getByRole("link", { name: "Grid charging 🧪" })).not.toBeVisible();
     await expect(modal).toContainText("Battery level: 50%");
@@ -25,20 +26,22 @@ test.describe("battery settings", async () => {
 
   test("battery usage", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByTestId("topnavigation-battery").click();
 
-    await page.locator("#batterySettingsPriority").selectOption({ label: "50%" });
-    await expect(page.locator("label[for=batterySettingsPriorityMiddle] span")).toHaveText("50%");
-    await expect(page.locator("label[for=batterySettingsPriorityBottom] span")).toHaveText("50%");
-    await page.locator("#batterySettingsBufferTop").selectOption({ label: "80%" });
-    await page.locator("#batterySettingsBufferStart").selectOption({ label: "when above 90%." });
-    await expect(page.locator("label[for=batterySettingsBuffer] span")).toHaveText("80%");
+    const modal = page.getByTestId("battery-settings-modal");
+    await expectModalVisible(modal);
+    await modal.locator("#batterySettingsPriority").selectOption({ label: "50%" });
+    await expect(modal.locator("label[for=batterySettingsPriorityMiddle] span")).toHaveText("50%");
+    await expect(modal.locator("label[for=batterySettingsPriorityBottom] span")).toHaveText("50%");
+    await modal.locator("#batterySettingsBufferTop").selectOption({ label: "80%" });
+    await modal.locator("#batterySettingsBufferStart").selectOption({ label: "when above 90%." });
+    await expect(modal.locator("label[for=batterySettingsBuffer] span")).toHaveText("80%");
   });
 
   test("grid charging", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
+    await openTopNavigation(page);
     await page.getByTestId("topnavigation-battery").click();
     const modal = page.getByTestId("battery-settings-modal");
     await expectModalVisible(modal);

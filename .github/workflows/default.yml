@@ -10,14 +10,15 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: ubuntu-24.04
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
-          cache: false
+          go-version-file: go.mod
+          cache: false # avoid cache thrashing
         id: go
 
       - uses: actions/cache@v4
@@ -44,13 +45,14 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
+          go-version-file: go.mod
           cache: false
         id: go
 
@@ -76,13 +78,14 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
+          go-version-file: go.mod
           cache: false
         id: go
 
@@ -101,13 +104,14 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
+          go-version-file: go.mod
           cache: false # avoid cache thrashing
         id: go
 
@@ -129,12 +133,17 @@ jobs:
           version: latest
           args: --timeout 5m
 
+      - name: License
+        run: make license
+
   ui:
     name: UI
-    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -149,6 +158,9 @@ jobs:
 
       - name: Test
         run: make test-ui
+
+      - name: License
+        run: make license-ui
 
       - name: Build UI
         run: make ui
@@ -166,13 +178,14 @@ jobs:
 
   integration:
     name: Integration
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm-16
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
+          go-version-file: go.mod
           cache: false
         id: go
 
@@ -208,12 +221,17 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
-      - name: Install Playwright
+      - name: Install Playwright (browsers + deps)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
+      - name: Install Playwright (deps only)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
       - name: Run tests
         run: npx playwright test
+        timeout-minutes: 20
         env:
           TZ: Europe/Berlin
 

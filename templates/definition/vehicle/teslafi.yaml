@@ -1,0 +1,46 @@
+template: teslafi
+products:
+  - description:
+      generic: TeslaFi
+group: generic
+requirements:
+  description:
+    en: Connect your Tesla using the TeslaFi API. TeslaFi is a Tesla data logging service that provides HTTP API access to vehicle data. Get your API key from your TeslaFi account settings.
+    de: Verbinden Sie Ihr Tesla-Fahrzeug über die TeslaFi-API. TeslaFi ist ein Tesla-Datenlogger-Service, der HTTP-API-Zugriff auf Fahrzeugdaten bietet. Holen Sie sich Ihren API-Schlüssel aus den TeslaFi-Kontoeinstellungen.
+params:
+  - preset: vehicle-common
+  - name: apikey
+    required: true
+  - name: vin
+    advanced: true
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  {{- define "teslafi_source" }}
+  source: http
+  uri: https://www.teslafi.com/feed.php?command=lastGood{{ if .vin }}&vin={{ .vin }}{{ end }}
+  headers:
+    Authorization: Bearer {{ .apikey }}
+  cache: 10s
+  {{- end }}
+  soc:
+    {{- include "teslafi_source" . | indent 2 }}
+    jq: .battery_level
+  status:
+    source: combined
+    plugged:
+      {{- include "teslafi_source" . | indent 4 }}
+      jq: (.charging_state | ascii_downcase) as $state | $state == "charging" or $state == "complete" or $state == "nopower" or $state == "starting" or $state == "stopped"
+    charging:
+      {{- include "teslafi_source" . | indent 4 }}
+      jq: .charging_state == "Charging"
+  range:
+    {{- include "teslafi_source" . | indent 2 }}
+    jq: (.battery_range | tonumber) * 1.60934
+  odometer:
+    {{- include "teslafi_source" . | indent 2 }}
+    jq: (.odometer | tonumber) * 1.60934
+  limitsoc:
+    {{- include "teslafi_source" . | indent 2 }}
+    jq: .charge_limit_soc
+  features: ["coarsecurrent"]

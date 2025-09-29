@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorUrl,
+  simulatorHost,
+  simulatorApply,
+} from "./simulator";
 import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
@@ -25,14 +31,14 @@ test.describe("main screen", async () => {
 });
 
 test.describe("grid meter", async () => {
-  test("create, edit and remove grid meter", async ({ page }) => {
+  test("create, edit and remove grid meter (using OpenEMS simulator)", async ({ page }) => {
     // setup test data for mock openems api
     await page.goto(simulatorUrl());
     await page.getByLabel("Grid Power").fill("5000");
-    await page.getByRole("button", { name: "Apply changes" }).click();
+    await simulatorApply(page);
 
     await page.goto("/#/config");
-    await enableExperimental(page);
+    await enableExperimental(page, false);
 
     await expect(page.getByTestId("grid")).toHaveCount(0);
     await expect(page.getByTestId("add-grid")).toBeVisible();

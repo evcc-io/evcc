@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -154,7 +155,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
-		"telemetry":               {"GET", "/settings/telemetry", getHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
@@ -221,7 +221,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -280,6 +280,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
+			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
 			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
 			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
@@ -309,6 +310,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		for key, fun := range map[string]func() any{
 			keys.Network: func() any { return new(globalconfig.Network) }, // has default
 			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
+			keys.Shm:     func() any { return new(shm.Config) },
 			keys.Influx:  func() any { return new(globalconfig.Influx) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}
@@ -345,9 +347,12 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// system api
 		routes := map[string]route{
-			"log":      {"GET", "/log", logHandler},
-			"logareas": {"GET", "/log/areas", logAreasHandler},
-			"reset":    {"POST", "/reset", resetHandler},
+			"log":        {"GET", "/log", logHandler},
+			"logareas":   {"GET", "/log/areas", logAreasHandler},
+			"clearcache": {"DELETE", "/cache", clearCacheHandler},
+			"backup":     {"POST", "/backup", getBackup(auth)},
+			"restore":    {"POST", "/restore", restoreDatabase(auth, shutdown)},
+			"reset":      {"POST", "/reset", resetDatabase(auth, shutdown)},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)

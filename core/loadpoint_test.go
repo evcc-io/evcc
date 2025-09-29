@@ -741,11 +741,12 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 
 		Voltage = 100
 		lp := &Loadpoint{
-			log:        util.NewLogger("foo"),
-			clock:      clock,
-			charger:    charger,
-			minCurrent: minA,
-			maxCurrent: maxA,
+			log:         util.NewLogger("foo"),
+			wakeUpTimer: NewTimer(),
+			clock:       clock,
+			charger:     charger,
+			minCurrent:  minA,
+			maxCurrent:  maxA,
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
