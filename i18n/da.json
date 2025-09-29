@@ -77,6 +77,7 @@
       "title": "kontrol adfærd"
     },
     "deviceValue": {
+      "allowControl": "Tillad kontrol",
       "amount": "Mængde",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -94,7 +95,6 @@
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
-      "deviceId": "Enheds ID",
       "enabled": "Aktiveret",
       "energy": "Energi",
       "feedinPrice": "Indfødningstarif",
@@ -120,7 +120,6 @@
       "topic": "Emne",
       "url": "URL",
       "vehicleLimitSoc": "Køretøjets begrænsning",
-      "vendorId": "Leverandør-ID",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -444,6 +443,10 @@
       "descriptionIds": "I Sunny Portal skal hver forbrugsenhed have en unik identifikator. evcc genererer en unik identifikator baseret på din hardware. Hvis du flytter evcc til en anden hardware, kan disse identifikatorer ændre sig. Hvis du vil bevare historikken, kan du tilsidesætte de genererede identifikatorer her. Åbn SEMP-URL’en (/semp) for at tjekke dine nuværende identifikatorer.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8-tegns HEX-streng. Generelt præfiks for alle enheder. Som standard vil evcc bruge sit eget interne leverandør-ID.",
+      "labelAllowControl": "Accepter yderligere anbefalinger om effektgrænser fra SHM.",
+      "labelControl": "Tillad kontrol",
+      "labelDeviceId": "Enheds ID",
+      "labelVendorId": "Leverandør-ID",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {

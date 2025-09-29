@@ -10,6 +10,19 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
+			<FormRow id="shmControl" :label="$t('config.shm.labelControl')" optional>
+				<div class="d-flex">
+					<input
+						id="shmControl"
+						v-model="values.allowControl"
+						class="form-check-input"
+						type="checkbox"
+					/>
+					<label class="form-check-label ms-2" for="shmControl">
+						{{ $t("config.shm.labelAllowControl") }}
+					</label>
+				</div>
+			</FormRow>
 			<PropertyCollapsible>
 				<template #advanced>
 					<p>{{ $t("config.shm.descriptionIds") }}</p>
@@ -23,7 +36,7 @@
 					</p>
 					<FormRow
 						id="shmVendorid"
-						:label="$t('config.deviceValue.vendorId')"
+						:label="$t('config.shm.labelVendorId')"
 						:help="$t('config.shm.descriptionVendorId')"
 						example="AAAAAAAA"
 						optional
@@ -39,7 +52,7 @@
 					</FormRow>
 					<FormRow
 						id="shmDeviceid"
-						:label="$t('config.deviceValue.deviceId')"
+						:label="$t('config.shm.labelDeviceId')"
 						:help="$t('config.shm.descriptionDeviceId')"
 						example="BBBBBBBBBBBB"
 						optional
