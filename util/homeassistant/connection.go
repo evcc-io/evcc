@@ -105,6 +105,7 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 // CallService calls a Home Assistant service
 func (c *Connection) CallService(domain, service string, data map[string]interface{}) error {
 	uri := fmt.Sprintf("%s/api/services/%s/%s", c.uri, domain, service)
+
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
@@ -120,6 +121,7 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	if len(parts) == 0 {
 		return fmt.Errorf("invalid entity format: %s", entity)
 	}
+
 	domain := parts[0]
 	service := "turn_off"
 	if turnOn {
@@ -144,9 +146,9 @@ func (c *Connection) CallNumberService(entity string, value float64) error {
 }
 
 // GetPhaseStates retrieves three phase values (currents, voltages, etc.)
-func (c *Connection) GetPhaseStates(entities [3]string) (float64, float64, float64, error) {
-	if entities[0] == "" {
-		return 0, 0, 0, errors.New("missing phase entities")
+func (c *Connection) GetPhaseStates(entities []string) (float64, float64, float64, error) {
+	if len(entities) != 3 {
+		return 0, 0, 0, errors.New("invalid phase entities")
 	}
 
 	var l1, l2, l3 float64
@@ -156,33 +158,26 @@ func (c *Connection) GetPhaseStates(entities [3]string) (float64, float64, float
 		return 0, 0, 0, fmt.Errorf("phase L1: %w", err)
 	}
 
-	// L2 and L3 are optional for single-phase systems
-	if entities[1] != "" {
-		if l2, err = c.GetFloatState(entities[1]); err != nil {
-			return 0, 0, 0, fmt.Errorf("phase L2: %w", err)
-		}
+	if l2, err = c.GetFloatState(entities[1]); err != nil {
+		return 0, 0, 0, fmt.Errorf("phase L2: %w", err)
 	}
 
-	if entities[2] != "" {
-		if l3, err = c.GetFloatState(entities[2]); err != nil {
-			return 0, 0, 0, fmt.Errorf("phase L3: %w", err)
-		}
+	if l3, err = c.GetFloatState(entities[2]); err != nil {
+		return 0, 0, 0, fmt.Errorf("phase L3: %w", err)
 	}
 
 	return l1, l2, l3, nil
 }
 
 // ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
-func ValidatePhaseEntities(entities []string, entityType string) ([3]string, error) {
+func ValidatePhaseEntities(entities []string) ([]string, error) {
 	switch len(entities) {
-	case 1:
-		// Single-phase: use entity for L1, empty for L2/L3
-		return [3]string{entities[0], "", ""}, nil
+	case 0:
+		return nil, nil
 	case 3:
-		// Three-phase: use each entity for its respective phase
-		return [3]string{entities[0], entities[1], entities[2]}, nil
+		return entities, nil
 	default:
-		return [3]string{}, fmt.Errorf("%s must contain either 1 entity (single-phase) or 3 entities (three-phase L1, L2, L3), got %d", entityType, len(entities))
+		return nil, fmt.Errorf("must contain three-phase entities (L1, L2, L3), got %d", len(entities))
 	}
 }
 
