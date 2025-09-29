@@ -162,6 +162,9 @@
       "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
+      "dragHandle": "Drag handle",
+      "dragItem": "Draggable: {title}",
+      "dragList": "Reorderable list",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
@@ -1109,9 +1112,9 @@
     },
     "loadpoints": {
       "help": "Change order and visibility for the UI.",
-      "hidden": "Hidden",
+      "hide": "Hide {title}",
       "label": "Charging points",
-      "visible": "Visible"
+      "show": "Show {title}"
     },
     "sponsorToken": {
       "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",

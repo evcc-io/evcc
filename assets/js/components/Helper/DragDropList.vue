@@ -1,5 +1,5 @@
 <template>
-	<div ref="container">
+	<div ref="container" role="list" :aria-label="$t('config.general.dragList')">
 		<slot />
 	</div>
 </template>
@@ -20,7 +20,7 @@ export default defineComponent({
 			dragAndDrop({
 				parent: container,
 				getValues: () => this.values,
-				setValues: (newOrder) => this.$emit("reorder", newOrder),
+				setValues: (newOrder: unknown[]) => this.$emit("reorder", newOrder),
 			});
 		}
 	},

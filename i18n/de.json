@@ -162,6 +162,9 @@
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
+      "dragHandle": "Verschieben",
+      "dragItem": "Verschiebbar: {title}",
+      "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
@@ -1109,9 +1112,9 @@
     },
     "loadpoints": {
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
-      "hidden": "Ausgeblendet",
+      "hide": "{title} ausblenden",
       "label": "Ladepunkte",
-      "visible": "Sichtbar"
+      "show": "{title} anzeigen"
     },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",

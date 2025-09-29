@@ -18,19 +18,10 @@
 							class="form-check-input"
 							type="checkbox"
 							role="switch"
+							:aria-label="getVisibilityLabel(item)"
 							:disabled="isLastVisible(item)"
 							@change="updateVisibility(item.id, item.visible)"
 						/>
-						<label
-							:for="`loadpoint-visible-${item.id}`"
-							class="form-check-label visually-hidden"
-						>
-							{{
-								item.visible
-									? $t("settings.loadpoints.visible")
-									: $t("settings.loadpoints.hidden")
-							}}
-						</label>
 					</div>
 				</template>
 			</DragDropItem>
@@ -79,6 +70,10 @@ export default defineComponent({
 	methods: {
 		isLastVisible(item: UiLoadpoint) {
 			return item.visible && this.visibleCount <= 1;
+		},
+		getVisibilityLabel(item: UiLoadpoint) {
+			const action = item.visible ? "hide" : "show";
+			return this.$t(`settings.loadpoints.${action}`, { title: item.title });
 		},
 		updateVisibility(loadpointId: string, visible: boolean) {
 			setLoadpointVisibility(loadpointId, visible);

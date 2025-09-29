@@ -4,8 +4,16 @@
 		:class="{
 			'drag-drop-item--hidden': !visible,
 		}"
+		role="listitem"
+		:aria-label="$t('config.general.dragItem', { title })"
+		tabindex="0"
 	>
-		<div class="drag-handle me-2">
+		<div
+			class="drag-handle me-2"
+			:aria-label="$t('config.general.dragHandle')"
+			role="button"
+			tabindex="-1"
+		>
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</div>
 		<div class="flex-grow-1">
