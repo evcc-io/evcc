@@ -1847,6 +1847,31 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
 
+	// §14a
+	if dimmer, ok := lp.charger.(api.Dimmer); ok {
+		dimmed, err := dimmer.Dimmed()
+		if err != nil {
+			lp.log.ERROR.Printf("dimmed: %v", err)
+			return
+		}
+
+		dim := lp.circuit != nil && lp.circuit.Dimmed()
+
+		if dim != dimmed {
+			if err := dimmer.Dim(dim); err != nil {
+				lp.log.ERROR.Printf("dim: %v", err)
+				return
+			}
+
+			lp.publish(keys.Dimmed, dim)
+			lp.log.INFO.Printf("§14a dim: %t", dim)
+		}
+
+		if dim {
+			return
+		}
+	}
+
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {

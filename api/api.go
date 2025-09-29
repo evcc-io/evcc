@@ -185,6 +185,12 @@ type SocLimiter interface {
 	GetLimitSoc() (int64, error)
 }
 
+// Dimmer provides §14a dimming
+type Dimmer interface {
+	Dimmed() (bool, error)
+	Dim(bool) error
+}
+
 // ChargeController allows to start/stop the charging session on the vehicle side
 type ChargeController interface {
 	ChargeEnable(bool) error
