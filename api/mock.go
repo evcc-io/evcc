@@ -816,16 +816,16 @@ func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
 }
 
-// Dimm mocks base method.
-func (m *MockCircuit) Dimm(arg0 bool) {
+// Dim mocks base method.
+func (m *MockCircuit) Dim(arg0 bool) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Dimm", arg0)
+	m.ctrl.Call(m, "Dim", arg0)
 }
 
-// Dimm indicates an expected call of Dimm.
-func (mr *MockCircuitMockRecorder) Dimm(arg0 any) *gomock.Call {
+// Dim indicates an expected call of Dim.
+func (mr *MockCircuitMockRecorder) Dim(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimm", reflect.TypeOf((*MockCircuit)(nil).Dimm), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dim", reflect.TypeOf((*MockCircuit)(nil).Dim), arg0)
 }
 
 // Dimmed mocks base method.

@@ -260,7 +260,7 @@ type Circuit interface {
 	ValidatePower(old, new float64) float64
 
 	// §14a
-	Dimm(bool)
+	Dim(bool)
 	Dimmed() bool
 }
 
