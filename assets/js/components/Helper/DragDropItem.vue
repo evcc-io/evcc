@@ -39,6 +39,7 @@ export default defineComponent({
 	background-color: var(--evcc-box);
 	border-color: var(--bs-border-color-translucent) !important;
 	transition: all var(--evcc-transition-fast) ease-in-out;
+	transform: translate(0, 0);
 }
 
 .drag-drop-item--hidden {
