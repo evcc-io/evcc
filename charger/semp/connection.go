@@ -8,16 +8,16 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// Client represents a SEMP HTTP client with helper methods
-type Client struct {
+// Connection represents a SEMP HTTP connection with helper methods
+type Connection struct {
 	helper   *request.Helper
 	uri      string
 	deviceID string
 }
 
-// NewClient creates a new SEMP client
-func NewClient(helper *request.Helper, uri, deviceID string) *Client {
-	return &Client{
+// NewConnection creates a new SEMP client
+func NewConnection(helper *request.Helper, uri, deviceID string) *Connection {
+	return &Connection{
 		helper:   helper,
 		uri:      uri,
 		deviceID: deviceID,
@@ -25,7 +25,7 @@ func NewClient(helper *request.Helper, uri, deviceID string) *Client {
 }
 
 // GetDeviceStatus retrieves the current device status from SEMP interface
-func (c *Client) GetDeviceStatus() (DeviceStatus, error) {
+func (c *Connection) GetDeviceStatus() (DeviceStatus, error) {
 	uri := fmt.Sprintf("%s/semp/DeviceStatus", c.uri)
 
 	var response Device2EM
@@ -44,7 +44,7 @@ func (c *Client) GetDeviceStatus() (DeviceStatus, error) {
 }
 
 // GetDeviceInfo retrieves the device info from SEMP interface
-func (c *Client) GetDeviceInfo() (DeviceInfo, error) {
+func (c *Connection) GetDeviceInfo() (DeviceInfo, error) {
 	uri := fmt.Sprintf("%s/semp/DeviceInfo", c.uri)
 
 	var response Device2EM
@@ -63,7 +63,7 @@ func (c *Client) GetDeviceInfo() (DeviceInfo, error) {
 }
 
 // HasPlanningRequest checks if there is a planning request/timeframe for the device
-func (c *Client) HasPlanningRequest() (bool, error) {
+func (c *Connection) HasPlanningRequest() (bool, error) {
 	uri := fmt.Sprintf("%s/semp/PlanningRequest", c.uri)
 
 	var response Device2EM
@@ -84,7 +84,7 @@ func (c *Client) HasPlanningRequest() (bool, error) {
 }
 
 // SendDeviceControl sends a control message to the SEMP device
-func (c *Client) SendDeviceControl(on bool, power int) error {
+func (c *Connection) SendDeviceControl(on bool, power int) error {
 	control := DeviceControl{
 		DeviceID:                    c.deviceID,
 		On:                          on,
