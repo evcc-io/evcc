@@ -71,7 +71,9 @@ test.describe("SHM", () => {
       modal.getByTestId("semp-url").click(),
     ]);
     const xml = await sempPage.content();
-    expect(xml).toContain(`<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID}-00</DeviceId>`);
+    expect(xml).toContain(
+      `<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID.toLowerCase()}-00</DeviceId>`
+    );
     await sempPage.close();
 
     // uncheck allow control

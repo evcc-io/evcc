@@ -58,6 +58,9 @@ products:
   - brand: Spelsberg
     description:
       generic: Wallbox Smart Pro
+  - brand: SMA
+    description:
+      generic: EV Charger Business
 capabilities: ["rfid"]
 requirements:
   description:
