@@ -1855,16 +1855,19 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			return
 		}
 
-		mustDim := lp.circuit != nil && lp.circuit.Dimmed()
+		dim := lp.circuit != nil && lp.circuit.Dimmed()
 
-		if mustDim != dimmed {
-			if err := dimmer.Dim(mustDim); err != nil {
+		if dim != dimmed {
+			if err := dimmer.Dim(dim); err != nil {
 				lp.log.ERROR.Printf("dim: %v", err)
 				return
 			}
 
-			lp.publish(keys.Dimmed, mustDim)
-			lp.log.INFO.Printf("§14a dim: %t", mustDim)
+			lp.publish(keys.Dimmed, dim)
+			lp.log.INFO.Printf("§14a dim: %t", dim)
+		}
+
+		if dim {
 			return
 		}
 	}
