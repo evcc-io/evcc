@@ -47,7 +47,7 @@ func init() {
 
 const (
 	_      int64 = iota
-	Dimm         // 1
+	Dim          // 1
 	Normal       // 2
 	Boost        // 3
 )
@@ -134,7 +134,7 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Dimm {
+	if mode == Dim {
 		return api.StatusNone, errors.New("dimm mode")
 	}
 
@@ -166,16 +166,21 @@ var _ api.Dimmer = (*SgReady)(nil)
 // Dimmed implements the api.Dimmer interface
 func (wb *SgReady) Dimmed() (bool, error) {
 	mode, err := wb.getMode()
-	return mode == Dimm, err
+	return mode == Dim, err
 }
 
 // Dimm implements the api.Dimmer interface
-func (wb *SgReady) Dimm() error {
-	if err := wb.modeS(Dimm); err != nil {
+func (wb *SgReady) Dim(dim bool) error {
+	mode := Normal
+	if dim {
+		mode = Dim
+	}
+
+	if err := wb.modeS(mode); err != nil {
 		return err
 	}
 
-	wb.mode = Dimm
+	wb.mode = Dim
 
 	return nil
 }
