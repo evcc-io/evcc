@@ -135,7 +135,7 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 	}
 
 	if mode == Dim {
-		return api.StatusNone, errors.New("dimm mode")
+		return api.StatusNone, errors.New("dim mode")
 	}
 
 	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
