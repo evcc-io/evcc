@@ -49,10 +49,6 @@
 			<div class="text-nowrap" data-testid="target-text">{{ targetText }}</div>
 			<PlanEndIcon v-if="targetOutOfRange" />
 		</div>
-		<div style="height: 200px">
-			<!-- @vue-ignore -->
-			<Bar ref="chart" :data="chartData" :options="options" />
-		</div>
 	</div>
 </template>
 
