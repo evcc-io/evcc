@@ -56,21 +56,21 @@ func (r *Helper) GetBody(url string) ([]byte, error) {
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
 func decodeJSON(resp *http.Response, res interface{}) error {
 	if err := ResponseError(resp); err != nil {
-		_ = json.NewDecoder(resp.Body).Decode(res)
+		_ = json.NewDecoder(resp.Body).Decode(&res)
 		return err
 	}
 
-	return json.NewDecoder(resp.Body).Decode(res)
+	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
 // decodeXML reads HTTP response and decodes XML body if error is nil
 func decodeXML(resp *http.Response, res interface{}) error {
 	if err := ResponseError(resp); err != nil {
-		_ = xml.NewDecoder(resp.Body).Decode(res)
+		_ = xml.NewDecoder(resp.Body).Decode(&res)
 		return err
 	}
 
-	return xml.NewDecoder(resp.Body).Decode(res)
+	return xml.NewDecoder(resp.Body).Decode(&res)
 }
 
 // DoJSON executes HTTP request and decodes JSON response.
@@ -86,7 +86,7 @@ func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 		return nil
 	}
 
-	return decodeJSON(resp, res)
+	return decodeJSON(resp, &res)
 }
 
 // GetJSON executes HTTP GET request and decodes JSON response.
@@ -97,7 +97,7 @@ func (r *Helper) GetJSON(url string, res interface{}) error {
 		return err
 	}
 
-	return r.DoJSON(req, res)
+	return r.DoJSON(req, &res)
 }
 
 // DoXML executes HTTP request and decodes XML response.
@@ -113,7 +113,7 @@ func (r *Helper) DoXML(req *http.Request, res interface{}) error {
 		return nil
 	}
 
-	return decodeXML(resp, res)
+	return decodeXML(resp, &res)
 }
 
 // GetXML executes HTTP GET request and decodes XML response.
@@ -124,5 +124,5 @@ func (r *Helper) GetXML(url string, res interface{}) error {
 		return err
 	}
 
-	return r.DoXML(req, res)
+	return r.DoXML(req, &res)
 }
