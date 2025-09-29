@@ -7,7 +7,7 @@ export default {
   component: Energyflow,
 } as Meta<typeof Energyflow>;
 
-const Template: StoryFn<typeof Energyflow> = (args) => ({
+const Template: StoryFn<typeof Energyflow> = (args: any) => ({
   components: { Energyflow },
   setup() {
     return { args };
@@ -22,39 +22,33 @@ GridAndPV.args = {
   pvPower: 7300,
   gridPower: -2300,
   homePower: 800,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 1000,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 1000,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 1000,
       icon: "bike",
       charging: true,
       title: "Garage",
       chargePower: 1000,
       connected: true,
-      index: 1,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 2200,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 2200,
       connected: true,
-      index: 2,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
@@ -72,7 +66,7 @@ GridAndPV.args = {
       dayAfterTomorrow: { energy: 1000, complete: false },
     },
   },
-};
+} as any;
 
 export const BatteryAndGrid = Template.bind({});
 BatteryAndGrid.args = {
@@ -91,7 +85,7 @@ BatteryAndGrid.args = {
     { soc: 44.999, capacity: 13.3, power: 350, controllable: true },
     { soc: 82.3331, capacity: 21, power: 450, controllable: false },
   ],
-};
+} as any;
 
 export const BatteryCharging = Template.bind({});
 BatteryCharging.args = {
@@ -101,15 +95,13 @@ BatteryCharging.args = {
   pvPower: 5000,
   gridPower: -1300,
   homePower: 800,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 1400,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 1400,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
@@ -117,7 +109,7 @@ BatteryCharging.args = {
   ],
   batteryPower: -1500,
   batterySoc: 75,
-};
+} as any;
 
 export const GridPVAndBattery = Template.bind({});
 GridPVAndBattery.args = {
@@ -129,7 +121,7 @@ GridPVAndBattery.args = {
   homePower: 3300,
   batteryPower: 1500,
   batterySoc: 30,
-};
+} as any;
 
 export const BatteryThresholds = Template.bind({});
 BatteryThresholds.args = {
@@ -138,27 +130,23 @@ BatteryThresholds.args = {
   batteryConfigured: true,
   pvPower: 8700,
   gridPower: -500,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 5000,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 5000,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 2500,
       icon: "bus",
       charging: true,
       title: "Garage",
       chargePower: 2500,
       connected: true,
-      index: 1,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
@@ -166,7 +154,7 @@ BatteryThresholds.args = {
   ],
   batteryPower: -700,
   batterySoc: 95,
-};
+} as any;
 
 export const PVThresholds = Template.bind({});
 PVThresholds.args = {
@@ -176,27 +164,23 @@ PVThresholds.args = {
   pvPower: 300,
   gridPower: 6500,
   homePower: 1000,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 5000,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 5000,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 1600,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 1600,
       connected: true,
-      index: 1,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
@@ -204,7 +188,7 @@ PVThresholds.args = {
   ],
   batteryPower: 800,
   batterySoc: 76,
-};
+} as any;
 
 export const GridOnly = Template.bind({});
 GridOnly.args = {
@@ -214,51 +198,43 @@ GridOnly.args = {
   pvPower: 0,
   gridPower: 6500,
   homePower: 1000,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 5500,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 5500,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 0,
       icon: "car",
       charging: false,
       title: "Garage",
       chargePower: 0,
       connected: false,
-      index: 1,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 0,
       icon: "car",
       charging: false,
       title: "Garage",
       chargePower: 0,
       connected: false,
-      index: 2,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 0,
       icon: "car",
       charging: false,
       title: "Garage",
       chargePower: 0,
       connected: false,
-      index: 3,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
@@ -266,7 +242,7 @@ GridOnly.args = {
   ],
   batteryPower: 0,
   batterySoc: 0,
-};
+} as any;
 
 export const LowPower = Template.bind({});
 LowPower.args = {
@@ -281,7 +257,7 @@ LowPower.args = {
   tariffGrid: 0.25,
   tariffFeedIn: 0.08,
   currency: CURRENCY.EUR,
-};
+} as any;
 
 export const CO2 = Template.bind({});
 CO2.args = {
@@ -290,39 +266,33 @@ CO2.args = {
   pvPower: 7300,
   gridPower: -2300,
   homePower: 800,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 1000,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 1000,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 1000,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 1000,
       connected: true,
-      index: 1,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
     {
-      power: 2200,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 2200,
       connected: true,
-      index: 2,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
@@ -334,7 +304,7 @@ CO2.args = {
   smartCostType: "co2",
   currency: CURRENCY.EUR,
   pv: [{ power: 5000 }, { power: 2300 }],
-};
+} as any;
 
 export const UnknownInput = Template.bind({});
 UnknownInput.args = {
@@ -342,21 +312,19 @@ UnknownInput.args = {
   pvConfigured: true,
   pvPower: 2000,
   gridPower: -2000,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 1000,
       icon: "car",
       charging: true,
       title: "Garage",
       chargePower: 1000,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
   ],
-};
+} as any;
 
 export const UnknownInputFill = Template.bind({});
 UnknownInputFill.args = {
@@ -366,8 +334,8 @@ UnknownInputFill.args = {
   pvPower: 500,
   gridPower: 0,
   batteryPower: -1000,
-  loadpointsCompact: [],
-};
+  loadpoints: [],
+} as any;
 
 export const UnknownOutput = Template.bind({});
 UnknownOutput.args = {
@@ -375,21 +343,19 @@ UnknownOutput.args = {
   pvConfigured: true,
   pvPower: 3000,
   gridPower: -1000,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 1700,
+      chargePower: 1700,
       icon: "car",
       charging: true,
       title: "Garage",
-      chargePower: 1700,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
   ],
-};
+} as any;
 
 export const UnknownOutputLessThan10Percent = Template.bind({});
 UnknownOutputLessThan10Percent.args = {
@@ -397,18 +363,16 @@ UnknownOutputLessThan10Percent.args = {
   pvConfigured: true,
   pvPower: 3000,
   gridPower: -1000,
-  loadpointsCompact: [
+  loadpoints: [
     {
-      power: 1800,
+      chargePower: 1800,
       icon: "car",
       charging: true,
       title: "Garage",
-      chargePower: 1800,
       connected: true,
-      index: 0,
       vehicleName: "",
       vehicleSoc: 50,
       chargerFeatureHeating: false,
     },
   ],
-};
+} as any;
