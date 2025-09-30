@@ -12,38 +12,38 @@ func TestOctopusConfigParse(t *testing.T) {
 
 	// This test will start failing if you remove the deprecated "tariff" config var.
 	validTariffConfig := map[string]interface{}{
-		"region":      "H",
-		"tariff":      "GO-22-03-29",
-		"tariffType":  "import",
-		"directDebit": "True",
+		"region":          "H",
+		"tariff":          "GO-22-03-29",
+		"tariffDirection": "import",
+		"directDebit":     "True",
 	}
 
 	_, err := NewOctopusFromConfig(validTariffConfig)
 	require.NoError(t, err)
 
 	validProductCodeConfig := map[string]interface{}{
-		"region":      "H",
-		"productcode": "GO-22-03-29",
-		"tariffType":  "import",
-		"directDebit": "False",
+		"region":          "H",
+		"productcode":     "GO-22-03-29",
+		"tariffDirection": "import",
+		"directDebit":     "False",
 	}
 
 	_, err = NewOctopusFromConfig(validProductCodeConfig)
 	require.NoError(t, err)
 
 	invalidApiAndProductCodeConfig := map[string]interface{}{
-		"region":      "H",
-		"productcode": "GO-22-03-29",
-		"tariffType":  "import",
-		"apikey":      "invalid_key",
+		"region":          "H",
+		"productcode":     "GO-22-03-29",
+		"tariffDirection": "import",
+		"apikey":          "invalid_key",
 	}
 	_, err = NewOctopusFromConfig(invalidApiAndProductCodeConfig)
 	require.Error(t, err)
 
-	invalidTariffTypeConfig := map[string]interface{}{
-		"tariffType": "invalid",
-		"apikey":     "test",
+	invalidTariffDirectionConfig := map[string]interface{}{
+		"tariffDirection": "invalid",
+		"apikey":          "test",
 	}
-	_, err = NewOctopusFromConfig(invalidTariffTypeConfig)
+	_, err = NewOctopusFromConfig(invalidTariffDirectionConfig)
 	require.Errorf(t, err, "invalid tariff type")
 }
