@@ -1,23 +1,18 @@
 template: daheimladen
-deprecated: true
+covers: ["daheimladen-mb"]
 products:
   - brand: DaheimLaden
     description:
-      generic: Wallbox
+      generic: Smart/Touch
 requirements:
   description:
-    de: Für die Nutzung mit evcc muss die Wallbox im RFID Modus betrieben werden.
-    en: For use with evcc, the wallbox must be operated in RFID mode.
+    de: Die Wallbox muss über eine aktuelle Firmware mit Modbus-Unterstützung verfügen. In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
+    en: Wallbox must be operated with a recent firmware including Modbus support. Furthermore, “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
+capabilities: ["mA"]
 params:
-  - name: token
-    help:
-      de: "Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de."
-      en: "Request your access token from Daheimladen support: info@daheimladen.de."
-  - name: stationid
-    help:
-      de: "Die Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird."
-      en: "Serial number as displayed on the wallbox display."
+  - name: host
+  - name: port
+    default: 502
 render: |
   type: daheimladen
-  stationID: {{ .stationid }}
-  token: {{ .token }}
+  uri: {{ .host }}:{{ .port }}
