@@ -7,6 +7,16 @@ products:
     description:
       generic: AXIhycon 12-15H
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zum Netzladen nutzen zu können ist eine einmalige manuelle Einrichtung notwendig.
+      Navigiere zu "System Settings" > "Storage Mode" im Wechselrichter Menü und aktiviere "Allow grid charging".
+      Wenn die aktive Ladesteuerung dann die "Battery Reserve"-Einstellung anpasst, lädt der Wechselrichter die Batterie aus dem Netz bis zum hier konfigurierten Max SOC Wert auf (Standard: 95%).
+    en: |
+      To use active battery control with grid charging, a one-time manual setup is required.
+      Navigate to "System Settings" > "Storage Mode" in the inverter menu and enable "Allow grid charging".
+      When active battery control adjusts the "Battery Reserve" setting, the inverter will charge the battery from the grid up to the Max SOC setting configured here (Default: 95%).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
