@@ -144,8 +144,7 @@ func (o *OAuth) HandleCallback(responseValues url.Values) error {
 		return err
 	}
 
-	err = settings.SetJson(o.subject, token)
-	if err != nil {
+	if err := settings.SetJson(o.subject, token); err != nil {
 		o.log.ERROR.Printf("error saving token: %s", err)
 	}
 
