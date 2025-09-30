@@ -38,7 +38,7 @@ params:
       de: Stunde des Sonnenuntergangs (0-23)
       en: Hour of sunset (0-23)
   - name: interval
-    default: 1h
+    default: 15m
     advanced: true
 
 render: |

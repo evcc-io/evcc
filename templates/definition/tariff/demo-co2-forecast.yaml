@@ -28,7 +28,7 @@ params:
       en: Variation factor to simulate daily fluctuations (0.4 = 40%)
       de: Variationsfaktor zur Simulation täglicher Schwankungen (0.4 = 40%)
   - name: interval
-    default: 1h
+    default: 15m
     advanced: true
 
 render: |
