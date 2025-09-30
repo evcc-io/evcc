@@ -53,6 +53,6 @@ func Setup(router *mux.Router, paramC chan<- util.Param) {
 }
 
 // Register registers a specific AuthProvider. Returns login path as string.
-func Register(handler api.AuthProvider, name string) error {
-	return instance.register(handler, name)
+func Register(name string, handler api.AuthProvider) error {
+	return instance.register(name, handler)
 }

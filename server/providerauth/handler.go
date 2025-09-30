@@ -2,7 +2,6 @@ package providerauth
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -46,31 +45,23 @@ func (a *Handler) Publish(paramC chan<- util.Param) {
 	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
-func (a *Handler) register(handler api.AuthProvider, name string) error {
+func (a *Handler) register(name string, handler api.AuthProvider) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.providers[name] != nil {
-		a.log.ERROR.Printf("provider with name %s already registered", name)
-		return errors.New("provider already registered")
+		return fmt.Errorf("provider already registered: %s", name)
 	}
 
-	a.log.INFO.Printf("registering oauth provider: %s", name)
+	a.log.DEBUG.Printf("registering provider: %s", name)
 	a.providers[name] = handler
+
 	return nil
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
-	// Find corresponding provider
-	q := r.URL.Query()
-	id := q.Get("id")
-	if id == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "missing id")
-		return
-	}
-
-	a.log.DEBUG.Printf("login request for provider: %s", id)
+	id := r.URL.Query().Get("id")
+	a.log.DEBUG.Printf("login request for: %s", id)
 
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -111,11 +102,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
-	if id == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "missing id")
-		return
-	}
+	a.log.DEBUG.Printf("logout request for: %s", id)
 
 	a.mu.Lock()
 	defer a.mu.Unlock()

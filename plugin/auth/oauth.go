@@ -103,7 +103,7 @@ func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (oaut
 	addInstance(o.subject, o)
 
 	// register auth redirect
-	providerauth.Register(o, subject)
+	providerauth.Register(subject, o)
 
 	return o, nil
 }
