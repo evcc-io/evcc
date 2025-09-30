@@ -702,3 +702,6 @@ input::-webkit-date-and-time-value {
 		font-size: 0.875em;
 	}
 }
+.tabular {
+	font-variant-numeric: tabular-nums;
+}

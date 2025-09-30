@@ -67,9 +67,12 @@ import { defineComponent, type PropType } from "vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import type { CURRENCY, Timeout } from "@/types/evcc";
-import { ForecastType } from "@/utils/forecast";
+import { ForecastType, findLowestSumSlotIndex } from "@/utils/forecast";
 import type { ForecastSlot, SolarDetails } from "./types";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
+
+const FORECASTED_HOURS = 48;
+const SLOTS_PER_HOUR = 4;
 
 export interface Energy {
 	energy: string;
@@ -111,7 +114,7 @@ export default defineComponent({
 		upcomingSlots(): ForecastSlot[] {
 			const now = this.now;
 			const slots = this.isPrice ? this.grid || [] : this.co2 || [];
-			return slots.filter((slot) => new Date(slot.end) > now).slice(0, 48);
+			return slots.filter((slot) => new Date(slot.end) > now).slice(0, FORECASTED_HOURS*SLOTS_PER_HOUR);
 		},
 		averagePrice() {
 			if (this.isSolar) return "";
@@ -129,22 +132,15 @@ export default defineComponent({
 		lowestPriceHour() {
 			if (this.isSolar) return "";
 			const slots = this.upcomingSlots;
-			if (!slots.length) return "";
-			// Group slots by hour, summing values per hour
-			const hourSums: Record<number, { sum: number; start: Date }> = {};
-			for (const slot of slots) {
-				const d = new Date(slot.start);
-				d.setMinutes(0, 0, 0); // round to hour
-				const k = d.getTime();
-				if (!hourSums[k]) hourSums[k] = { sum: 0, start: new Date(d) };
-				hourSums[k].sum += slot.value;
-			}
-			// Find hour with lowest sum
-			const min = Object.values(hourSums).reduce((a, b) => (a.sum < b.sum ? a : b));
-			const end = new Date(min.start);
-			end.setHours(end.getHours() + 1);
+			const index = findLowestSumSlotIndex(slots, SLOTS_PER_HOUR);
+			if (index === -1) return "";
+			const startSlot = slots[index];
+			const endSlot = slots[index + SLOTS_PER_HOUR - 1];
+			if (!startSlot || !endSlot) return "";
+			const start = new Date(startSlot.start);
+			const end = new Date(endSlot.end);
 
-			return `${this.weekdayShort(min.start)} ${this.hourShort(min.start)} – ${this.hourShort(end)}`;
+			return `${this.weekdayShort(start)} ${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
 		},
 		highlightColor() {
 			switch (this.type) {
