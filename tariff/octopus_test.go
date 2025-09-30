@@ -35,14 +35,14 @@ func TestOctopusConfigParse(t *testing.T) {
 		"region":      "H",
 		"productcode": "GO-22-03-29",
 		"tariffType":  "import",
-		"apikey":      "nope",
+		"apikey":      "invalid_key",
 	}
 	_, err = NewOctopusFromConfig(invalidApiAndProductCodeConfig)
 	require.Error(t, err)
 
 	invalidTariffTypeConfig := map[string]interface{}{
 		"tariffType": "invalid",
-		"apikey":     "sk_live_TESTTESTTESTTESTTESTTEST",
+		"apikey":     "test",
 	}
 	_, err = NewOctopusFromConfig(invalidTariffTypeConfig)
 	require.Errorf(t, err, "invalid tariff type")

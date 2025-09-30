@@ -76,7 +76,8 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.Region != "" || cc.Tariff != "" {
 			return nil, errors.New("cannot use apikey at same time as product code")
 		}
-		if len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_") {
+		// We permit the specific special apiKey "test" as sk_live_ keys are considered Stripe secrets by Github
+		if cc.ApiKey != "test" && (len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_")) {
 			return nil, errors.New("invalid apikey format")
 		}
 	}
