@@ -37,15 +37,12 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, api.ErrMissingCredentials
 	}
 
-	config := cardata.Config
-	config.ClientID = cc.ClientID
-
 	v := &Cardata{
 		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("cardata").Redact(cc.ClientID)
-	ts, err := cardata.NewIdentity(ctx, log, &config)
+	ts, err := cardata.NewIdentity(ctx, log, cc.ClientID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +52,9 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	vehicle, err := ensureVehicle(
 		cc.VIN, api.Vehicles,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	container, err := api.EnsureContainer()
 	if err != nil {

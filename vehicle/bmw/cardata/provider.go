@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"sync"
 	"time"
 
@@ -104,9 +105,7 @@ func (v *Provider) handler(c mqtt.Client, m mqtt.Message) {
 	v.mu.Lock()
 	defer v.mu.RUnlock()
 
-	for key, val := range res.Data {
-		v.streaming[key] = val
-	}
+	maps.Copy(v.streaming, res.Data)
 }
 
 func (v *Provider) any(key string) (any, error) {

@@ -22,31 +22,41 @@ var Config = oauth2.Config{
 	},
 }
 
+var (
+	idMu       sync.Mutex
+	identities = make(map[string]oauth2.TokenSource)
+)
+
 type Identity struct {
-	mu sync.Mutex
-	*request.Helper
-	*oauth2.Config
+	oauth2.Config
+	mu  sync.Mutex
 	ts  oauth2.TokenSource
 	log *util.Logger
 }
 
 // NewIdentity creates BMW/Mini Cardata identity
-func NewIdentity(ctx context.Context, log *util.Logger, config *oauth2.Config) (oauth2.TokenSource, error) {
-	v := &Identity{
-		Helper: request.NewHelper(log),
-		Config: config,
-		log:    log,
+func NewIdentity(ctx context.Context, log *util.Logger, clientID string) (oauth2.TokenSource, error) {
+	idMu.Lock()
+	defer idMu.Unlock()
+
+	if id, ok := identities[clientID]; ok {
+		return id, nil
 	}
 
-	var token *oauth2.Token
+	v := &Identity{
+		log:    log,
+		Config: Config,
+	}
+
+	v.ClientID = clientID
 
 	var cardataToken Token
 	if err := settings.Json(v.settingsKey(), &cardataToken); err == nil {
 		v.log.DEBUG.Println("database token found")
 
-		token = cardataToken.TokenEx()
+		token := cardataToken.TokenEx()
 
-		ctx := context.WithValue(ctx, oauth2.HTTPClient, v.Helper.Client)
+		ctx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 		v.ts = &PersistingTokenSource{
 			TokenSource: Config.TokenSource(ctx, token),
 			Persist:     v.storeToken,
@@ -54,9 +64,11 @@ func NewIdentity(ctx context.Context, log *util.Logger, config *oauth2.Config) (
 	} else {
 		v.log.DEBUG.Println("no database token found, login required")
 
-		// TODO
-		return nil, errors.New("missing token")
+		return nil, ErrLoginRequired
 	}
+
+	// store
+	identities[clientID] = v
 
 	return v, nil
 }
