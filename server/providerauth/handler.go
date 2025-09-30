@@ -132,13 +132,7 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	encryptedState := q.Get("state")
 	state, err := DecryptState(encryptedState, a.secret)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "failed to decrypt state")
-		return
-	}
-
-	if err := state.Validate(); err != nil {
+	if err != nil || !state.Valid() {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "invalid state")
 		return

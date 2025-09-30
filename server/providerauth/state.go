@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-var ErrStateExpired = fmt.Errorf("state expired")
-
 const stateValidity = 2 * time.Minute
 
 type State struct {
@@ -84,10 +82,6 @@ func (c *State) Encrypt(key []byte) string {
 	return base64.URLEncoding.EncodeToString(ciphertext)
 }
 
-func (c *State) Validate() error {
-	if time.Since(c.Created) <= stateValidity {
-		return nil
-	}
-
-	return ErrStateExpired
+func (c *State) Valid() bool {
+	return time.Since(c.Created) <= stateValidity
 }
