@@ -24,7 +24,7 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div :class="showPrecondition ? 'col-2' : 'col-3'">
+			<div :class="showPrecondition ? 'col-3' : 'col-4'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
@@ -81,7 +81,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div :class="['col-7', showPrecondition ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
+			<div :class="['col-7', showPrecondition ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
 				<select
 					:id="formId('goal')"
 					v-model="selectedSoc"
@@ -114,7 +114,7 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 col-lg-1 d-flex align-items-center">
+			<div class="col-3 col-lg-1 d-flex align-items-center">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -129,16 +129,22 @@
 					/>
 				</div>
 			</div>
-			<div class="col-5 col-lg-2 d-flex align-items-center">
+			<div
+				class="col-4 col-lg-1 d-flex align-items-center justify-content-end justify-content-lg-start"
+			>
 				<button
 					v-if="showApply"
 					type="button"
-					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline text-truncate"
 					data-testid="repeating-plan-apply"
 					tabindex="0"
 					@click="update(true)"
 				>
-					{{ $t("main.chargingPlan.update") }}
+					<span class="d-lg-none">{{ $t("main.chargingPlan.update") }}</span>
+					<shopicon-regular-checkmark
+						size="s"
+						class="flex-shrink-0 d-none d-lg-block"
+					></shopicon-regular-checkmark>
 				</button>
 				<button
 					v-else

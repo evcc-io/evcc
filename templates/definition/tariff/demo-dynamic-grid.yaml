@@ -1,8 +1,8 @@
 template: demo-dynamic-grid
 products:
   - description:
-      de: Demo Dynamischer Strompreis
-      en: Demo Dynamic Grid Price
+      de: Demo Börsenpreis
+      en: Demo Market Price
 requirements:
   description:
     de: Zu Demonstrationszwecken. Simuliert dynamische Strompreise ähnlich EPEX Spotmarkt mit typischen Tagesmustern.

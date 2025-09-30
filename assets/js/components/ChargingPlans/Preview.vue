@@ -28,7 +28,7 @@
 		<TariffChart
 			:slots="slots"
 			:target-text="targetText"
-			:target-offset="targetHourOffset"
+			:target-offset="targetOffset"
 			@slot-hovered="slotHovered"
 		/>
 	</div>
@@ -120,10 +120,10 @@ export default defineComponent({
 			}
 			return null;
 		},
-		targetHourOffset(): number | undefined {
+		targetOffset(): number | undefined {
 			if (!this.targetTime) return;
 			const start = new Date(this.startTime);
-			start.setMinutes(0);
+			start.setMinutes(start.getMinutes() - (start.getMinutes() % 15));
 			start.setSeconds(0);
 			start.setMilliseconds(0);
 			return (this.targetTime.getTime() - start.getTime()) / (60 * 60 * 1000);
@@ -137,6 +137,7 @@ export default defineComponent({
 		slots(): Slot[] {
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
+			console.log(plan);
 			const quarterHour = 15 * 60 * 1000;
 
 			const base = new Date(this.startTime);
@@ -146,7 +147,7 @@ export default defineComponent({
 			return Array.from({ length: 48 * 4 }, (_, i) => {
 				const start = new Date(base.getTime() + quarterHour * i);
 				const end = new Date(start.getTime() + quarterHour);
-				const charging = this.findSlotInRange(start, end, plan) !== null;
+				const charging = !!this.findSlotInRange(start, end, plan);
 				const warning =
 					charging &&
 					this.targetTime &&
