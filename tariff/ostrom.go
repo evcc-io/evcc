@@ -250,7 +250,7 @@ func (t *Ostrom) Rates() (api.Rates, error) {
 	err := t.data.GetFunc(func(val api.Rates) {
 		res = slices.Clone(val)
 	})
-	return api.ConvertTo15mSlots(res, t.Type()), err
+	return res, err
 }
 
 // Type implements the api.Tariff interface

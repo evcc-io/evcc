@@ -60,7 +60,7 @@ func (t *combined) Rates() (api.Rates, error) {
 		res = append(res, rate)
 	}
 
-	return api.ConvertTo15mSlots(res, t.Type()), nil
+	return res, nil
 }
 
 func (t *combined) Type() api.TariffType {
