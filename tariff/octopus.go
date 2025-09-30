@@ -34,13 +34,13 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region        string
-		Tariff        string // DEPRECATED: use ProductCode
-		ProductCode   string
-		DirectDebit   bool
-		ApiKey        string
-		AccountNumber string
-		TariffType    octoGql.TariffDirection
+		Region          string
+		Tariff          string // DEPRECATED: use ProductCode
+		ProductCode     string
+		DirectDebit     bool
+		ApiKey          string
+		AccountNumber   string
+		TariffDirection octoGql.TariffDirection
 	}
 
 	logger := util.NewLogger("octopus")
@@ -50,7 +50,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	// Do not permit invalid TariffTypes.
-	if cc.TariffType != octoGql.TariffDirectionImport && cc.TariffType != octoGql.TariffDirectionExport {
+	if cc.TariffDirection != octoGql.TariffDirectionImport && cc.TariffDirection != octoGql.TariffDirectionExport {
 		return nil, errors.New("invalid tariff type")
 	}
 
@@ -67,7 +67,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
 		}
-		if cc.TariffType != octoGql.TariffDirectionImport {
+		if cc.TariffDirection != octoGql.TariffDirectionImport {
 			// Throw a WARN if it appears the user has set the key when it's not necessary to do so
 			logger.WARN.Println("tariffType ignored when using product code")
 		}
@@ -93,7 +93,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		apikey:          cc.ApiKey,
 		accountnumber:   cc.AccountNumber,
 		paymentMethod:   paymentMethod,
-		tariffDirection: cc.TariffType,
+		tariffDirection: cc.TariffDirection,
 		data:            util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 

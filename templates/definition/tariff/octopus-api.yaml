@@ -23,13 +23,13 @@ params:
       en: "Only required if you have multiple accounts."
       de: "Nur erforderlich, wenn mehrere Konten vorhanden sind."
     example: "X-XXXXXXXX"
-  - name: tariffType
+  - name: tariffDirection
     type: choice
     choice: ["import", "export"]
     required: false
     default: "import"
     description:
-      generic: The type of tariff to query from Octopus.
+      generic: The tariff flow direction to query from Octopus.
     help:
       generic: "Set to 'export' when using feedin:"
 
@@ -37,4 +37,4 @@ render: |
   type: octopusenergy
   apikey: {{ .apiKey }}
   accountNumber: {{ .accountNumber }}
-  tariffType: {{ .tariffType }}
+  tariffDirection: {{ .tariffDirection }}
