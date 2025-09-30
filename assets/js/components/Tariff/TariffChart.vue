@@ -91,7 +91,6 @@ const BAR_WIDTH = 20;
 export default defineComponent({
 	name: "TariffChart",
 	components: {
-		Bar,
 		PlanEndIcon,
 	},
 	mixins: [formatter],
