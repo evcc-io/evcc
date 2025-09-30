@@ -114,7 +114,9 @@ export default defineComponent({
 		upcomingSlots(): ForecastSlot[] {
 			const now = this.now;
 			const slots = this.isPrice ? this.grid || [] : this.co2 || [];
-			return slots.filter((slot) => new Date(slot.end) > now).slice(0, FORECASTED_HOURS*SLOTS_PER_HOUR);
+			return slots
+				.filter((slot) => new Date(slot.end) > now)
+				.slice(0, FORECASTED_HOURS * SLOTS_PER_HOUR);
 		},
 		averagePrice() {
 			if (this.isSolar) return "";

@@ -59,7 +59,6 @@ import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
 import type { Slot } from "@/types/evcc";
-import { Bar } from "vue-chartjs";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import {
 	BarController,
