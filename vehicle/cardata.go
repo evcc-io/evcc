@@ -45,12 +45,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	}
 
 	log := util.NewLogger("cardata").Redact(cc.ClientID)
-	identity, err := cardata.NewIdentity(ctx, log, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	ts, err := identity.Login()
+	ts, err := cardata.NewIdentity(ctx, log, &config)
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +56,12 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		cc.VIN, api.Vehicles,
 	)
 
-	if err == nil {
-		v.Provider = cardata.NewProvider(api, vehicle.VIN, cc.Cache)
+	container, err := api.EnsureContainer()
+	if err != nil {
+		return nil, err
 	}
 
-	return v, err
+	v.Provider = cardata.NewProvider(log, api, ts, vehicle, container)
+
+	return v, nil
 }
