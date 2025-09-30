@@ -40,13 +40,18 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		DirectDebit   bool
 		ApiKey        string
 		AccountNumber string
-		TariffType    string
+		TariffType    octoGql.TariffDirection
 	}
 
 	logger := util.NewLogger("octopus")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// Do not permit invalid TariffTypes.
+	if cc.TariffType != octoGql.TariffDirectionImport && cc.TariffType != octoGql.TariffDirectionExport {
+		return nil, errors.New("invalid tariff type")
 	}
 
 	// Allow ApiKey to be missing only if Region and Tariff are not.
@@ -62,7 +67,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
 		}
-		if cc.TariffType != string(octoGql.TariffDirectionImport) {
+		if cc.TariffType != octoGql.TariffDirectionImport {
 			// Throw a WARN if it appears the user has set the key when it's not necessary to do so
 			logger.WARN.Println("tariffType ignored when using product code")
 		}
@@ -81,18 +86,6 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		paymentMethod = octoRest.RatePaymentMethodNotDirectDebit
 	}
 
-	var tariffDirection octoGql.TariffDirection
-	// Opting not to do this with an enum lookup - it would be a bit overkill.
-	// instead just do string cast
-	switch cc.TariffType {
-	case string(octoGql.TariffDirectionImport):
-		tariffDirection = octoGql.TariffDirectionImport
-	case string(octoGql.TariffDirectionExport):
-		tariffDirection = octoGql.TariffDirectionExport
-	default:
-		return nil, errors.New("invalid tariff type")
-	}
-
 	t := &Octopus{
 		log:             logger,
 		region:          cc.Region,
@@ -100,7 +93,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		apikey:          cc.ApiKey,
 		accountnumber:   cc.AccountNumber,
 		paymentMethod:   paymentMethod,
-		tariffDirection: tariffDirection,
+		tariffDirection: cc.TariffType,
 		data:            util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 

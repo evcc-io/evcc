@@ -14,6 +14,7 @@ func TestOctopusConfigParse(t *testing.T) {
 	validTariffConfig := map[string]interface{}{
 		"region":      "H",
 		"tariff":      "GO-22-03-29",
+		"tariffType":  "import",
 		"directDebit": "True",
 	}
 
@@ -23,6 +24,7 @@ func TestOctopusConfigParse(t *testing.T) {
 	validProductCodeConfig := map[string]interface{}{
 		"region":      "H",
 		"productcode": "GO-22-03-29",
+		"tariffType":  "import",
 		"directDebit": "False",
 	}
 
@@ -32,8 +34,16 @@ func TestOctopusConfigParse(t *testing.T) {
 	invalidApiAndProductCodeConfig := map[string]interface{}{
 		"region":      "H",
 		"productcode": "GO-22-03-29",
+		"tariffType":  "import",
 		"apikey":      "nope",
 	}
 	_, err = NewOctopusFromConfig(invalidApiAndProductCodeConfig)
 	require.Error(t, err)
+
+	invalidTariffTypeConfig := map[string]interface{}{
+		"tariffType": "invalid",
+		"apikey":     "sk_live_TESTTESTTESTTESTTESTTEST",
+	}
+	_, err = NewOctopusFromConfig(invalidTariffTypeConfig)
+	require.Errorf(t, err, "invalid tariff type")
 }
