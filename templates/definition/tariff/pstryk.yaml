@@ -32,13 +32,6 @@ params:
       en: "Path under /integrations/: 'pricing' or 'prosumer-pricing'."
       de: "Pfad unter /integrations/: 'pricing' oder 'prosumer-pricing'."
 
-  - name: base
-    type: string
-    default: "https://api.pstryk.pl"
-    description:
-      en: "URL of Pstryk API (or reverse proxy)"
-      de: "URL der Pstryk-API (oder Reverse-Proxy)"
-
   - name: currency
     type: choice
     default: PLN
@@ -54,96 +47,46 @@ render: |
   type: custom
   {{ include "tariff-base" . }}
   forecast:
-    source: go
-    # Before 13:05 (local): today-only; from 13:05: today+tomorrow (48h)
-    script: |
-      (func() string {
-        now := time.Now().In(time.Local)
-        if now.Hour() < 13 || (now.Hour() == 13 && now.Minute() < 5) {
-          return today24
-        }
-        return all48
-      })()
-    in:
-      # ---------- 48h (today + tomorrow), trimmed to first two LOCAL days ----------
-      - name: all48
-        type: string
-        config:
-          source: http
-          uri: {{ .base }}/integrations/{{ .plan }}?resolution=hour&window_start={{ `{{ now.UTC | date "2006-01-02T00:00:00Z" }}` }}&window_end={{ `{{ addDate (now.UTC) 0 0 2 | date "2006-01-02T00:00:00Z" }}` }}
-          headers:
-            Authorization: {{ .token }}
-            Accept: application/json
-            User-Agent: evcc-pstryk-template
-          allowempty: true
-          jq: |
-            # UTC ISO -> local RFC3339 (with colon) / Z
-            def toRFC3339($t):
-              ( $t | fromdateiso8601? ) as $ts
-              | if $ts == null then null
-                else
-                  ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
-                  | ($ts | strftime("%z")) as $off
-                  | if ($off == "+0000" or $off == "-0000")
-                      then ($base + "Z")
-                      else ($base + ($off[0:3] + ":" + $off[3:5]))
-                    end
-              end;
+    source: http
+    # Jeden request, 48h od lokalnej "północy PL" liczonej w UTC:
+    # - CEST: 22:00Z → 22:00Z następnego dnia
+    # - CET : 23:00Z → 23:00Z następnego dnia
+    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `
+      {{- if eq (now.Local | date "MST") "CEST" -}}
+        {{ now.UTC       | date "2006-01-02" }}T22:00:00Z
+      {{- else -}}
+        {{ now.UTC       | date "2006-01-02" }}T23:00:00Z
+      {{- end -}}
+    ` }}&window_end={{ `
+      {{- if eq (now.Local | date "MST") "CEST" -}}
+        {{ addDate (now.UTC) 0 0 1 | date "2006-01-02" }}T22:00:00Z
+      {{- else -}}
+        {{ addDate (now.UTC) 0 0 1 | date "2006-01-02" }}T23:00:00Z
+      {{- end -}}
+    ` }}
+    headers:
+      Authorization: {{ .token }}
+      Accept: application/json
+      User-Agent: evcc-pstryk-template
+    # Pstryk może zwrócić 0 lub <0; niczego nie filtrujemy.
+    jq: |
+      def toRFC3339($t):
+        ( $t | fromdateiso8601? ) as $ts
+        | if $ts == null then null
+          else
+            ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
+            | ($ts | strftime("%z")) as $off
+            | if ($off == "+0000" or $off == "-0000")
+                then ($base + "Z")
+                else ($base + ($off[0:3] + ":" + $off[3:5]))
+              end
+          end;
 
-            # build records with local day tag
-            [ (.frames // [])[] as $f |
-              {
-                "start": toRFC3339($f.start),
-                "end":   toRFC3339($f.end),
-                "value": $f.price_gross,
-                "__d":   ($f.start | fromdateiso8601? | strftime("%Y-%m-%d"))
-              }
-            ]
-            # keep only first two unique LOCAL days (today & tomorrow)
-            | ( [.[].__d] | unique ) as $days
-            | ( if ($days|length) >= 2 then [$days[0], $days[1]] else $days end ) as $keep
-            | map(select($keep | index(.__d)))
-            | map(del(.__d))
-            | tostring
-
-      # ---------- 24h (today only), DST-safe ----------
-      - name: today24
-        type: string
-        config:
-          source: http
-          uri: {{ .base }}/integrations/{{ .plan }}?resolution=hour&window_start={{ `{{ now.UTC | date "2006-01-02T00:00:00Z" }}` }}&window_end={{ `{{ addDate (now.UTC) 0 0 1 | date "2006-01-02T00:00:00Z" }}` }}
-          headers:
-            Authorization: {{ .token }}
-            Accept: application/json
-            User-Agent: evcc-pstryk-template
-          jq: |
-            # UTC ISO -> local RFC3339 (with colon) / Z
-            def toRFC3339($t):
-              ( $t | fromdateiso8601? ) as $ts
-              | if $ts == null then null
-                else
-                  ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
-                  | ($ts | strftime("%z")) as $off
-                  | if ($off == "+0000" or $off == "-0000")
-                      then ($base + "Z")
-                      else ($base + ($off[0:3] + ":" + $off[3:5]))
-                    end
-              end;
-
-            # work on frames array; derive first LOCAL day from the first frame (DST-safe)
-            (.frames // []) as $frames
-            | ( if ($frames|length)>0
-                  then ($frames[0].start | fromdateiso8601? | strftime("%Y-%m-%d"))
-                  else null
-                end ) as $D
-            | [ $frames[] as $f |
-                {
-                  "start": toRFC3339($f.start),
-                  "end":   toRFC3339($f.end),
-                  "value": $f.price_gross,
-                  "__d":   ($f.start | fromdateiso8601? | strftime("%Y-%m-%d"))
-                }
-              ]
-            | map(select($D!=null and .__d == $D))
-            | map(del(.__d))
-            | tostring
+      [ (.frames // [])[] as $f
+        | {
+            "start": toRFC3339($f.start),
+            "end":   toRFC3339($f.end),
+            "value": $f.price_gross
+          }
+      ]
+      | tostring
