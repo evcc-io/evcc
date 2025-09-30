@@ -104,6 +104,7 @@ func (a *Handler) register(handler api.AuthProvider, name string) error {
 		a.log.ERROR.Printf("provider with name %s already registered", name)
 		return errors.New("provider already registered")
 	}
+
 	a.log.INFO.Printf("registering oauth provider: %s", name)
 	a.providers[name] = handler
 	return nil

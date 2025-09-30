@@ -22,10 +22,10 @@ import (
 type OAuth struct {
 	oauth2.TokenSource
 	mu      sync.Mutex
-	cc      oauth2.Config
+	log     *util.Logger
+	oc      *oauth2.Config
 	subject string
 	cv      string
-	log     *util.Logger
 	ctx     context.Context
 }
 
@@ -58,7 +58,7 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (Authorizer, 
 	return NewOauth(ctx, cc)
 } */
 
-func NewOauth(ctx context.Context, cc oauth2.Config, instanceName string) (*OAuth, error) {
+func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (*OAuth, error) {
 	log := util.NewLogger("oauth-generic")
 
 	if instanceName == "" {
@@ -66,11 +66,10 @@ func NewOauth(ctx context.Context, cc oauth2.Config, instanceName string) (*OAut
 	}
 
 	// generate json string from oauth2 config
-	bytejson, _ := json.Marshal(cc)
+	b, _ := json.Marshal(oc)
 
-	h := sha256.New()
-	h.Write(bytejson)
-	fullHash := hex.EncodeToString(h.Sum(nil))
+	h := sha256.Sum256(b)
+	fullHash := hex.EncodeToString(h[:])
 	sha256_hash := fullHash[:8]
 
 	subject := instanceName + " (" + sha256_hash + ")"
@@ -83,7 +82,7 @@ func NewOauth(ctx context.Context, cc oauth2.Config, instanceName string) (*OAut
 	// create new instance
 	o := &OAuth{
 		subject: subject,
-		cc:      cc,
+		oc:      oc,
 		log:     log,
 		ctx:     ctx,
 	}
@@ -127,7 +126,7 @@ func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	o.log.DEBUG.Printf("refreshing token for %s", o.subject)
 
 	// refresh token source
-	token, err := o.cc.TokenSource(o.ctx, token).Token()
+	token, err := o.oc.TokenSource(o.ctx, token).Token()
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid_grant") {
 			if settings.Exists(o.subject) {
@@ -148,11 +147,12 @@ func (o *OAuth) HandleCallback(responseValues url.Values) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	token, err := o.cc.Exchange(o.ctx, code, oauth2.VerifierOption(o.cv))
+	token, err := o.oc.Exchange(o.ctx, code, oauth2.VerifierOption(o.cv))
 	if err != nil {
 		o.log.ERROR.Printf("error during oauth exchange: %s", err)
 		return err
 	}
+
 	err = settings.SetJson(o.subject, token)
 	if err != nil {
 		o.log.ERROR.Printf("error saving token: %s", err)
@@ -168,7 +168,7 @@ func (o *OAuth) Login(state string) string {
 	defer o.mu.Unlock()
 
 	o.cv = oauth2.GenerateVerifier()
-	return o.cc.AuthCodeURL(state, oauth2.S256ChallengeOption(o.cv))
+	return o.oc.AuthCodeURL(state, oauth2.S256ChallengeOption(o.cv))
 }
 
 // Logout implements api.AuthProvider.
@@ -191,10 +191,6 @@ func (o *OAuth) DisplayName() string {
 
 // Authenticated implements api.AuthProvider.
 func (o *OAuth) Authenticated() bool {
-	// check if token is valid
-	if token, err := o.TokenSource.Token(); err == nil {
-		return token.Valid()
-	} else {
-		return false
-	}
+	token, err := o.TokenSource.Token()
+	return err == nil && token.Valid()
 }
