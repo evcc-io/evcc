@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"sync"
@@ -61,9 +62,17 @@ func buildOctopusFromConfig(other map[string]interface{}) (*Octopus, error) {
 		return nil, err
 	}
 
-	// Do not permit invalid TariffDirections.
-	if cc.TariffDirection != octoGql.TariffDirectionImport && cc.TariffDirection != octoGql.TariffDirectionExport {
-		return nil, errors.New("invalid tariff direction")
+	switch cc.TariffDirection {
+	case "", octoGql.TariffDirectionImport:
+		// default to Import if unset
+		if cc.TariffDirection == "" {
+			cc.TariffDirection = octoGql.TariffDirectionImport
+		}
+	case octoGql.TariffDirectionExport:
+		// OK
+	default:
+		// Do not permit invalid TariffDirections.
+		return nil, fmt.Errorf("invalid tariff direction %q", cc.TariffDirection)
 	}
 
 	// Allow ApiKey to be missing only if Region and Tariff are not.
