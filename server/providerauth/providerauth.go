@@ -145,24 +145,22 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, state)
 	}(encryptedState)
 
-	// Build authorization URL
-	loginUri := provider.Login(encryptedState)
-
-	responseVal := struct {
+	// return authorization URL
+	res := struct {
 		LoginUri string `json:"loginUri"`
 	}{
-		LoginUri: loginUri,
+		LoginUri: provider.Login(encryptedState),
 	}
-	if err := json.NewEncoder(w).Encode(responseVal); err != nil {
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
 		a.log.ERROR.Printf("failed to encode login URI response: %v", err)
 	}
+
 	w.WriteHeader(http.StatusFound)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
-	// Find corresponding provider
-	q := r.URL.Query()
-	id := q.Get("id")
+	id := r.URL.Query().Get("id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "missing id")
