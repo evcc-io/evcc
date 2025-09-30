@@ -4,9 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"net/http"
+	"fmt"
 	"net/url"
 	"strings"
 	"sync"
@@ -58,21 +57,17 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (Authorizer, 
 	return NewOauth(ctx, cc)
 } */
 
-func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (*OAuth, error) {
+func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (oauth2.TokenSource, error) {
 	log := util.NewLogger("oauth-generic")
 
 	if instanceName == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
 
-	// generate json string from oauth2 config
-	b, _ := json.Marshal(oc)
-
-	h := sha256.Sum256(b)
-	fullHash := hex.EncodeToString(h[:])
-	sha256_hash := fullHash[:8]
-
-	subject := instanceName + " (" + sha256_hash + ")"
+	// hash oauth2 config
+	h := sha256.Sum256(fmt.Append(nil, oc))
+	hash := hex.EncodeToString(h[:])[:8]
+	subject := instanceName + " (" + hash + ")"
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
@@ -106,14 +101,6 @@ func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (*OAu
 	providerauth.Register(o, subject)
 
 	return o, nil
-}
-
-func (o *OAuth) Transport(base http.RoundTripper) http.RoundTripper {
-	transport := oauth2.Transport{
-		Base:   base,
-		Source: o,
-	}
-	return &transport
 }
 
 // RefreshToken implements oauth.RefreshTokenSource.
