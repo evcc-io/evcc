@@ -26,13 +26,13 @@ func NewAPI(log *util.Logger, vccapikey string, ts oauth2.TokenSource) *API {
 		Helper: request.NewHelper(log),
 	}
 
-	v.Client.Transport = &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"vcc-api-key": vccapikey,
-		}),
-		Base: &oauth2.Transport{
-			Source: ts,
-			Base:   v.Client.Transport,
+	v.Client.Transport = &oauth2.Transport{
+		Source: ts,
+		Base: &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"vcc-api-key": vccapikey,
+			}),
+			Base: v.Client.Transport,
 		},
 	}
 
