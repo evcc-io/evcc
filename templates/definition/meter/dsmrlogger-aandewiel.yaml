@@ -1,8 +1,8 @@
 template: dsmrlogger-aandewiel
 products:
-  - brand: DSMR-logger
+  - brand: Aandewiel
     description:
-      generic: Aandewiel
+      generic: DSMR-logger
 requirements:
   description:
     generic: DSMR-logger by Willem Aandewiel, RestAPI version
