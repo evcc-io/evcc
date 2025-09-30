@@ -91,7 +91,7 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, err
 	}
 
-	log := util.NewLogger("daheimladen-mb")
+	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLaden{
