@@ -77,6 +77,7 @@
       "title": "kontrol adfærd"
     },
     "deviceValue": {
+      "allowControl": "Tillad kontrol",
       "amount": "Mængde",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -154,7 +155,9 @@
       "optional": "valgfrit"
     },
     "general": {
+      "applyAndClose": "Anvend og luk",
       "cancel": "Afbryd",
+      "close": "Luk",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
@@ -168,6 +171,7 @@
       "password": "Adgangskode",
       "readFromFile": "Læs fra fil",
       "remove": "Fjern",
+      "required": "påkrævet",
       "save": "Gem",
       "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
@@ -431,6 +435,20 @@
       "system": "System",
       "vehicles": "Køretøjer"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc er udstyret med integration til SMA Sunny Home Manager (SHM) via SEMP-protokollen. Hvis den kører på det samme netværk, bør du – efter at have logget ind på din Sunny Portal-konto – automatisk få tilbudt at tilføje alle de ladere, der er konfigureret i evcc, som nyopdagede forbrugere. Alt burde være klar til brug med det samme, uden at der kræves yderligere justeringer nedenfor.",
+      "descriptionDeviceId": "12-tegns HEX-streng. Præfiks for alle enheder (ladestander osv.).",
+      "descriptionIdPattern": "Identifikations-mønster",
+      "descriptionIds": "I Sunny Portal skal hver forbrugsenhed have en unik identifikator. evcc genererer en unik identifikator baseret på din hardware. Hvis du flytter evcc til en anden hardware, kan disse identifikatorer ændre sig. Hvis du vil bevare historikken, kan du tilsidesætte de genererede identifikatorer her. Åbn SEMP-URL’en (/semp) for at tjekke dine nuværende identifikatorer.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8-tegns HEX-streng. Generelt præfiks for alle enheder. Som standard vil evcc bruge sit eget interne leverandør-ID.",
+      "labelAllowControl": "Accepter yderligere anbefalinger om effektgrænser fra SHM.",
+      "labelControl": "Tillad kontrol",
+      "labelDeviceId": "Enheds ID",
+      "labelVendorId": "Leverandør-ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
@@ -647,7 +665,7 @@
   "help": {
     "discussionsButton": "GitHub diskussioner",
     "documentationButton": "Dokumentation",
-    "issueButton": "Meld en fejl",
+    "issueButton": "Indberet et problem",
     "issueDescription": "Fundet en mærkelig eller forkert adfærd?",
     "logsButton": "Se logfil",
     "logsDescription": "Check log for fejl.",
@@ -663,6 +681,57 @@
     "restartButton": "Genstart",
     "restartDescription": "Har du prøvet at slukke og tænde den igen?",
     "secondaryActions": "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inkludér konfiguration og logfiler for at hjælpe os med hurtigt at genskabe problemet. Vi opfordrer til at dele så meget som muligt. Status er som regel ikke nødvendig.",
+      "include": "inkluder",
+      "lines": "linjer",
+      "logs": "Log",
+      "logsDescription": "Seneste logposter, der kan hjælpe med at identificere problemet.",
+      "showDetails": "vis detaljer",
+      "source": "Kilde",
+      "state": "Status",
+      "stateDescription": "Komplet kørselstilstand med ladestander-, enheds- og energiinformation. Medtag kun, hvis det bliver efterspurgt.",
+      "title": "Supplerende information",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Indstillinger foretaget via webgrænsefladen.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Din komplette konfigurationsfil."
+    },
+    "additionalContext": "Supplerende oplysninger",
+    "additionalContextPlaceholder": "Eventuelle yderligere oplysninger, der kan være nyttige...\"\n- Konfigurationsdetaljer\n- Hvad du har prøvet\n- Platform- og systemoplysninger",
+    "createButtonDiscussion": "Start en GitHub diskussion...",
+    "createButtonIssue": "Opret GitHub-issue…",
+    "description": "Virker din installation ikke som forventet? Brug denne side til at få hjælp eller rapportere problemer. Giv tilstrækkelige oplysninger, så vi kan forstå og genskabe problemet, samtidig med at din beskrivelse holdes kort, klar og let at følge.",
+    "helpType": {
+      "discussion": "Har brug for hjælp til min opsætning",
+      "discussionDescription": "Diskussioner i fællesskabet giver svar.",
+      "issue": "Fundet en fejl",
+      "issueDescription": "Jeg er sikker på, at noget er galt og skal rettes.",
+      "title": "Hvilket problem drejer det sig om?"
+    },
+    "issueDescription": "Beskrivelse",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Trin til at genskabe problemet",
+    "subTitleDiscussion": "Beskriv dit problem",
+    "subTitleIssue": "Beskriv problemet",
+    "summary": {
+      "confirmationButtonDiscussion": "Start en GitHub-diskussion",
+      "confirmationButtonIssue": "Opret GitHub-issue",
+      "copied": "Kopieret!",
+      "copyButton": "Kopiér yderligere oplysninger",
+      "instructions": "Da GitHub har begrænsning på URL-længde, foregår dette i to trin:",
+      "singleStepDescription": "Klik på knappen nedenfor for at åbne GitHub med en formular udfyldt med dine problemoplysninger. Følsomme data er automatisk fjernet, men dobbelttjek gerne før deling.",
+      "step1Description": "Klik på knappen nedenfor for at oprette en GitHub-post med titel, beskrivelse og oplysninger.",
+      "step2Description": "Når posten er oprettet, vend tilbage hertil for at kopiere de ekstra oplysninger nedenfor og indsæt dem i din GitHub-formular. Følsomme data er fjernet, men dobbelttjek før deling.",
+      "stepOneDiscussion": "Trin 1: Opret en grundlæggende diskussion",
+      "stepOneIssue": "Trin 1: Opret grundlæggende issue",
+      "stepTwo": "Trin 2: Kopiér yderligere oplysninger",
+      "title": "GitHub-problemoversigt"
+    },
+    "title": "Indberet et problem",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filtrer per område",

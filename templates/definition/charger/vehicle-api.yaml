@@ -2,8 +2,8 @@ template: vehicle-api
 group: generic
 products:
   - description:
-      de: Steuerung über Fahrzeug-API
-      en: Charge using vehicle API
+      de: Fahrzeug-API Ladesteuerung
+      en: Vehicle API-only charger
 requirements:
   description:
     en: |
@@ -29,21 +29,11 @@ params:
     type: bool
     default: false
   - name: latitude
-    description:
-      de: Ladestandort Breitengrad
-      en: Charging location latitude
-    type: float
-    help:
-      en: Latitude of your charging location in decimal degrees (e.g., 52.520008)
-      de: Breitengrad Ihres Ladestandorts in Dezimalgrad (z.B. 52.520008)
+    deprecated: true
   - name: longitude
-    description:
-      de: Ladestandort Längengrad
-      en: Charging location longitude
-    type: float
-    help:
-      en: Longitude of your charging location in decimal degrees (e.g., 13.404954)
-      de: Längengrad Ihres Ladestandorts in Dezimalgrad (z.B. 13.404954)
+    deprecated: true
+  - name: lat
+  - name: lon
   - name: radius
     description:
       de: Geofence-Radius in Metern
@@ -58,7 +48,7 @@ render: |
   type: vehicle-api
   {{- if .geofence_enabled }}
   geofence_enabled: {{ .geofence_enabled }}
-  latitude: {{ .latitude }}
-  longitude: {{ .longitude }}
+  lat: {{ .lat }}
+  lon: {{ .lon }}
   radius: {{ .radius }}
   {{- end }}

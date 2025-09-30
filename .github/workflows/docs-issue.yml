@@ -1,4 +1,7 @@
 name: Create Documentation Issue
+permissions:
+  issues: write
+  contents: read
 
 on:
   pull_request_target:

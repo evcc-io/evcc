@@ -328,6 +328,9 @@
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
+					<router-link to="/issue" class="btn btn-outline-secondary">
+						{{ $t("help.issueButton") }}
+					</router-link>
 					<button
 						class="btn btn-outline-secondary text-truncate"
 						@click="openModal('backupRestoreModal')"
@@ -387,6 +390,7 @@
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
+				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ModbusProxyModal @changed="yamlChanged" />
 				<CircuitsModal
 					:gridMeter="gridMeter"
@@ -440,6 +444,7 @@ import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
+import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
@@ -497,6 +502,7 @@ export default defineComponent({
 		NotificationIcon,
 		SponsorModal,
 		TariffsModal,
+		TelemetryModal,
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
@@ -658,6 +664,13 @@ export default defineComponent({
 		isSponsor() {
 			const { name } = store.state?.sponsor || {};
 			return !!name;
+		},
+		sponsor() {
+			return store.state?.sponsor;
+		},
+		telemetry() {
+			// @ts-expect-error: telemetry property exists but not in TypeScript definitions
+			return store.state?.telemetry === true;
 		},
 		eebusTags() {
 			return { configured: { value: store.state?.eebus || false } };

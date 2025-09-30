@@ -155,7 +155,9 @@
       "optional": "pasirinktinai"
     },
     "general": {
+      "applyAndClose": "Pritaikyti ir uždaryti",
       "cancel": "Atšaukti",
+      "close": "Uždaryti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
@@ -169,6 +171,7 @@
       "password": "Slaptažodis",
       "readFromFile": "Skaityti iš failo",
       "remove": "Pašalinti",
+      "required": "privaloma",
       "save": "Išsaugoti",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
@@ -434,11 +437,17 @@
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
+      "description": "evcc turi per SEMP protokolą integruotą SMA Sunny Home Manager (SHM) sistemą . Jei ji veikia tame pačiame tinkle, prisijungus prie Sunny Portal paskyros, automatiškai turėtų būti pasiūlyta pridėti visus evcc sukonfigūruotus įkroviklius kaip naujai atrastus vartotojus. Viskas turėtų būti paruošta naudoti iš karto, be jokių toliau nurodytų pakeitimų.",
+      "descriptionDeviceId": "12 simbolių HEX eilutė. Visų įrenginių prefiksas (įkroviklis, ..).",
+      "descriptionIdPattern": "Identifikatoriaus šablonas",
+      "descriptionIds": "Sunny Portal sistemoje kiekvienam vartotojo įrenginiui reikalingas unikalus identifikatorius. evcc generuoja unikalų identifikatorių pagal jūsų aparatinę įrangą. Jei migruosite evcc į kitą aparatinę įrangą, šie identifikatoriai gali pasikeisti. Jei norite išsaugoti istoriją, čia galite pakeisti sugeneruotus identifikatorius. Atidarykite SEMP URL (/semp), kad patikrintumėte dabartinius identifikatorius.",
       "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 simbolių HEX eilutė. Bendras visų objektų prefiksas. Pagal numatytuosius nustatymus evcc naudos savo vidinį tiekėjo ID.",
+      "labelAllowControl": "Priimti papildomas SHM galios ribojimo rekomendacijas.",
       "labelControl": "Leisti valdyti",
       "labelDeviceId": "Įrenginio ID",
       "labelVendorId": "Gamintojo ID",
-      "title": "SMA Sunny Home Manager 2.0"
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Įveskite žetoną",
@@ -656,7 +665,7 @@
   "help": {
     "discussionsButton": "GitHub diskusijos",
     "documentationButton": "Dokumentacija",
-    "issueButton": "Pranešti apie klaidą",
+    "issueButton": "Pranešti apie problemą",
     "issueDescription": "Pastebėjote keistą ar netinkamą veikimą?",
     "logsButton": "Peržiūrėti žurnalus",
     "logsDescription": "Patikrinkite ar žurnaluose nėra klaidų.",
@@ -672,6 +681,57 @@
     "restartButton": "Restartuoti",
     "restartDescription": "Ar pabandėte išjungti ir vėl įjungti?",
     "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+  },
+  "issue": {
+    "additional": {
+      "description": "Įtraukite konfigūraciją ir žurnalus, kad galėtume greitai atkartoti problemą. Raginame kuo daugiau dalytis. Paprastai nereikia nurodyti būsenos.",
+      "include": "įtraukti",
+      "lines": "eilutės",
+      "logs": "Žurnalai",
+      "logsDescription": "Naujausi žurnalo įrašai, kurie gali padėti nustatyti problemą.",
+      "showDetails": "rodyti išsamiai",
+      "source": "Šaltinis",
+      "state": "Būsena",
+      "stateDescription": "Išsami veikimo būsenos informacija, įskaitant įkroviklį, įrenginį ir informaciją apie energiją. Pateikite tik tuo atveju, jei prašoma.",
+      "title": "Papildoma informacija",
+      "uiConfig": "Konfigūracija (UI)",
+      "uiConfigDescription": "Konfigūracijos nustatymai, atlikti per žiniatinklio sąsają.",
+      "yamlConfig": "Konfigūracija (YAML)",
+      "yamlConfigDescription": "Pilnas jūsų konfigūracijos failas."
+    },
+    "additionalContext": "Papildomas kontekstas",
+    "additionalContextPlaceholder": "Bet kokia papildoma informacija, kuri galėtų būti naudinga...\n- Konfigūracijos informacija\n- Ką bandėte\n- Sistemos informacija",
+    "createButtonDiscussion": "Pradėti GitHub diskusiją...",
+    "createButtonIssue": "Sukurti GitHub pranešimą apie problemą...",
+    "description": "Jūsų diegimas neveikia taip, kaip tikėtasi? Šiame puslapyje galite gauti pagalbos arba pranešti apie problemas. Pateikite pakankamai informacijos, kad galėtume suprasti ir atkartoti problemą, o aprašymas turi būti glaustas, aiškus ir lengvai suprantamas.",
+    "helpType": {
+      "discussion": "Reikia pagalbos",
+      "discussionDescription": "Bendruomenės diskusijose randami atsakymai.",
+      "issue": "Radau klaidą",
+      "issueDescription": "Esu tikras, kad sistemoje kažkas yra ne taip ir reikia ištaisyti.",
+      "title": "Apie kokią problemą kalbame?"
+    },
+    "issueDescription": "Aprašymas",
+    "issueTitle": "Pavadinimas",
+    "stepsToReproduce": "Žingsniai atkartojimui",
+    "subTitleDiscussion": "Aprašykite savo problemą",
+    "subTitleIssue": "Aprašykite nesklandumus",
+    "summary": {
+      "confirmationButtonDiscussion": "Pradėti diskusiją GitHub",
+      "confirmationButtonIssue": "Sukurti pranešimą apie problemą GitHub",
+      "copied": "Nukopijuota!",
+      "copyButton": "Kopijuoti papildomą informaciją",
+      "instructions": "Dėl GitHub URL dydžio apribojimų tai yra dviejų etapų procesas:",
+      "singleStepDescription": "Spustelėkite žemiau esantį mygtuką, kad atidarytumėte „GitHub“ su iš anksto užpildyta forma, kurioje yra jūsų problemos informacija. Neskelbtini duomenys buvo automatiškai pašalinti, tačiau prieš bendrindami dar kartą patikrinkite.",
+      "step1Description": "Spustelėkite žemiau esantį mygtuką, kad sukurtumėte paprastą GitHub įrašą su savo pavadinimu, aprašymu ir išsamia informacija.",
+      "step2Description": "Sukūrę įrašą, grįžkite čia, kad nukopijuotumėte toliau pateiktą papildomą informaciją ir įklijuotumėte ją į savo GitHub formą. Neskelbtini duomenys buvo redaguoti, bet prieš bendrindami dar kartą patikrinkite.",
+      "stepOneDiscussion": "1 žingsnis: sukurti diskusiją",
+      "stepOneIssue": "1 žingsnis: Sukurti problemos užklausą",
+      "stepTwo": "2 žingsnis: nukopijuoti papildomą informaciją",
+      "title": "GitHub pranešimo apie problemą santrauka"
+    },
+    "title": "Pranešti apie problemą",
+    "version": "Versija"
   },
   "log": {
     "areaLabel": "Filtruoti pagal sritis",

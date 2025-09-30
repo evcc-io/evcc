@@ -156,7 +156,7 @@ test.describe("vehicles", async () => {
 
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Default mode")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Maximum phases")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Maximum phases: 3-phases")).toBeVisible();
     await expect(vehicleModal.getByLabel("Minimum current")).toBeVisible();
     await expect(vehicleModal.getByLabel("Maximum current")).toBeVisible();
     await expect(vehicleModal.getByLabel("Priority")).toBeVisible();

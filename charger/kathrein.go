@@ -18,10 +18,12 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -427,12 +429,18 @@ func (wb *Kathrein) Identify() (string, error) {
 		return "", nil
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 16)
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 24)
 	if err != nil {
 		return "", err
 	}
 
-	return string(b), nil
+	rfid := string(bytes.TrimRight(b, "\x00"))
+
+	if strings.HasPrefix(rfid, "RFID:") {
+		return rfid[5:], nil
+	}
+
+	return rfid, nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)

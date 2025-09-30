@@ -39,10 +39,9 @@ func init() {
 
 type Viessmann struct {
 	client *http.Client
-	ts     oauth2.TokenSource
 }
 
-func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authorizer, error) {
+func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
 		ClientID       string
 		User, Password string
@@ -57,22 +56,13 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (Authoriz
 
 	oc := OAuth2Config(cc.ClientID)
 
-	ctx = context.WithValue(context.Background(), oauth2.HTTPClient, v.client)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, v.client)
 	token, err := v.login(ctx, oc, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	v.ts = oc.TokenSource(ctx, token)
-
-	return v, nil
-}
-
-func (v *Viessmann) Transport(base http.RoundTripper) http.RoundTripper {
-	return &oauth2.Transport{
-		Base:   base,
-		Source: v.ts,
-	}
+	return oc.TokenSource(ctx, token), nil
 }
 
 func (v *Viessmann) login(ctx context.Context, oc *oauth2.Config, user, password string) (*oauth2.Token, error) {

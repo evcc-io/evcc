@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
@@ -291,6 +292,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
+	// publish system infos
+	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
+	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+
 	// run shutdown functions on stop
 	var once sync.Once
 	stopC := make(chan struct{})
@@ -337,11 +343,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	})
+	}, viper.ConfigFileUsed())
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {
-		valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 		go updater.Run(log, httpd, valueChan)
 	}
 
