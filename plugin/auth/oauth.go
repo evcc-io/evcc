@@ -29,15 +29,19 @@ type OAuth struct {
 }
 
 var (
-	// oauthMu    sync.Mutex
+	oauthMu    sync.Mutex
 	identities = make(map[string]*OAuth)
 )
 
 func getInstance(subject string) *OAuth {
+	oauthMu.Lock()
+	defer oauthMu.Unlock()
 	return identities[subject]
 }
 
 func addInstance(subject string, identity *OAuth) {
+	oauthMu.Lock()
+	defer oauthMu.Unlock()
 	identities[subject] = identity
 }
 
