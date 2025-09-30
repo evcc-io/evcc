@@ -32,7 +32,19 @@ func init() {
 	registry.Add("octopusenergy", NewOctopusFromConfig)
 }
 
+// NewOctopusFromConfig creates the tariff provider from the given config map, and runs it.
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
+	t, err := buildOctopusFromConfig(other)
+	if err != nil {
+		return nil, err
+	}
+
+	return runOrError(t)
+}
+
+// buildOctopusFromConfig creates the Tariff provider from the given config map.
+// Split out to allow for testing.
+func buildOctopusFromConfig(other map[string]interface{}) (*Octopus, error) {
 	var cc struct {
 		Region          string
 		Tariff          string // DEPRECATED: use ProductCode
@@ -49,9 +61,9 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
-	// Do not permit invalid TariffTypes.
+	// Do not permit invalid TariffDirections.
 	if cc.TariffDirection != octoGql.TariffDirectionImport && cc.TariffDirection != octoGql.TariffDirectionExport {
-		return nil, errors.New("invalid tariff type")
+		return nil, errors.New("invalid tariff direction")
 	}
 
 	// Allow ApiKey to be missing only if Region and Tariff are not.
@@ -69,7 +81,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}
 		if cc.TariffDirection != octoGql.TariffDirectionImport {
 			// Throw a WARN if it appears the user has set the key when it's not necessary to do so
-			logger.WARN.Println("tariffType ignored when using product code")
+			logger.WARN.Println("tariffDirection ignored when using product code")
 		}
 	} else {
 		// ApiKey validators
@@ -98,7 +110,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:            util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	return runOrError(t)
+	return t, nil
 }
 
 func (t *Octopus) run(done chan error) {

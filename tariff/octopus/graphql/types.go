@@ -42,10 +42,10 @@ func (d *tariffData) TariffCode() string {
 type TariffDirection string
 
 const (
-	// TariffTypeImport is for energy flow INTO the meter FROM the grid (to the property)
+	// TariffDirectionImport is for energy flow INTO the meter FROM the grid (to the property)
 	TariffDirectionImport TariffDirection = "import"
 
-	// TariffTypeExport is for energy flow OUT OF the meter FROM the property (to the grid)
+	// TariffDirectionExport is for energy flow OUT OF the meter FROM the property (to the grid)
 	TariffDirectionExport TariffDirection = "export"
 )
 
