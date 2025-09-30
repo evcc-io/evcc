@@ -74,17 +74,16 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate a new state and store the provider
-	state := util.NewState()
+	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
 	a.states[encryptedState] = id
 
 	// Schedule cleanup for stale state entries after state becomes invalid
-	go func(state string) {
-		time.Sleep(util.StateValidity)
+	time.AfterFunc(stateValidity, func() {
 		a.mu.Lock()
 		defer a.mu.Unlock()
-		delete(a.states, state)
-	}(encryptedState)
+		delete(a.states, encryptedState)
+	})
 
 	// return authorization URL
 	res := struct {
@@ -132,7 +131,7 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encryptedState := q.Get("state")
-	state, err := util.DecryptState(encryptedState, a.secret)
+	state, err := DecryptState(encryptedState, a.secret)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "failed to decrypt state")

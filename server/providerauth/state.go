@@ -1,4 +1,4 @@
-package util
+package providerauth
 
 import (
 	"crypto/aes"
@@ -14,15 +14,15 @@ import (
 
 var ErrStateExpired = fmt.Errorf("state expired")
 
-const StateValidity = 2 * time.Minute
+const stateValidity = 2 * time.Minute
 
 type State struct {
-	Time time.Time
+	Created time.Time
 }
 
 func NewState() State {
 	return State{
-		Time: time.Now(),
+		Created: time.Now(),
 	}
 }
 
@@ -85,7 +85,7 @@ func (c *State) Encrypt(key []byte) string {
 }
 
 func (c *State) Validate() error {
-	if time.Since(c.Time) <= StateValidity {
+	if time.Since(c.Created) <= stateValidity {
 		return nil
 	}
 
