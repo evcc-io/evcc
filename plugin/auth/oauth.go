@@ -45,21 +45,22 @@ func addInstance(subject string, identity *OAuth) {
 	identities[subject] = identity
 }
 
-/* func init() {
+func init() {
 	registry.AddCtx("oauth", NewOauthFromConfig)
 }
 
-func NewOauthFromConfig(ctx context.Context, other map[string]any) (Authorizer, error) {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
-	// parse oauth config from yaml
-	var cc oauth2.Config
+func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
+	var cc struct {
+		Name          string
+		oauth2.Config `mapstructure:",squash"`
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOauth(ctx, cc)
-} */
+	return NewOauth(ctx, &cc.Config, cc.Name)
+}
 
 func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (oauth2.TokenSource, error) {
 	log := util.NewLogger("oauth-generic")
@@ -101,7 +102,7 @@ func NewOauth(ctx context.Context, oc *oauth2.Config, instanceName string) (oaut
 	// add instance
 	addInstance(o.subject, o)
 
-	// register authredirect
+	// register auth redirect
 	providerauth.Register(o, subject)
 
 	return o, nil
