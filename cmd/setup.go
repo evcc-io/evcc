@@ -955,7 +955,7 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
 		*conf = []globalconfig.ModbusProxy{}
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
+		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
 			return err
 		}
 	}
