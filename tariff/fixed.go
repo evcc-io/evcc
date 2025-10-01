@@ -135,7 +135,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 		}
 	}
 
-	return api.ConvertTo15mSlots(res, t.Type()), nil
+	return res, nil
 }
 
 // Type implements the api.Tariff interface

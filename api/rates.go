@@ -52,6 +52,22 @@ func (r Rates) MarshalMQTT() ([]byte, error) {
 	return json.Marshal(r)
 }
 
+type Tariff15mWrapper struct {
+	Inner Tariff
+}
+
+func (t Tariff15mWrapper) Rates() (Rates, error) {
+	rates, err := t.Inner.Rates()
+	if err != nil {
+		return nil, err
+	}
+	return ConvertTo15mSlots(rates, t.Type()), nil
+}
+
+func (t Tariff15mWrapper) Type() TariffType {
+	return t.Inner.Type()
+}
+
 // ConvertTo15mSlots converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
 // For price tariffs, the value is constant over all sub-slots.
 // For solar/co2, linear interpolation is used between slot boundaries.

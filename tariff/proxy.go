@@ -107,7 +107,7 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 
 	if p.tariff == nil {
 		if res, err := p.cacheGet(for24hrs()); err == nil {
-			return api.ConvertTo15mSlots(res.Rates, res.Type), nil
+			return res.Rates, nil
 		}
 
 		p.createInstance()
@@ -122,7 +122,7 @@ func (p *CachingProxy) Rates() (api.Rates, error) {
 		err = p.cachePut(p.tariff.Type(), res)
 	}
 
-	return api.ConvertTo15mSlots(res, p.tariff.Type()), err
+	return res, err
 }
 
 // Type returns the tariff type
