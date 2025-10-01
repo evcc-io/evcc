@@ -26,33 +26,33 @@
 					</div>
 
 					<FormRow
-						id="serialConnectionURI"
+						id="networkConnectionURI"
 						label="URI"
 						example="192.0.2.2:502"
 						help="The IP address and the port of the target device in common URI Scheme."
 					>
 						<input
-							id="serialConnectionURI"
+							id="networkConnectionURI"
 							v-model="connection.Settings.URI"
 							class="form-control"
 							required
 						/>
 					</FormRow>
 					<FormRow
-						id="serialConnectionPort"
+						id="networkConnectionPort"
 						label="Port"
 						example="5022"
 						help="The local TCP/IP port under which a connection is provided as a proxy server."
 					>
 						<input
-							id="serialConnectionPort"
+							id="networkConnectionPort"
 							v-model="connection.Port"
 							class="form-control"
 							required
 						/>
 					</FormRow>
 					<FormRow
-						id="serialConnectionReadonly"
+						id="networkConnectionReadonly"
 						label="Readonly"
 						:help="
 							connection.ReadOnly === MODBUS_PROXY_READONLY.TRUE
@@ -65,7 +65,7 @@
 						"
 					>
 						<SelectGroup
-							id="serialConnectionReadonly"
+							id="networkConnectionReadonly"
 							v-model="connection.ReadOnly"
 							class="w-100"
 							:options="
@@ -80,12 +80,12 @@
 					<div class="align-items-center d-flex mb-4 justify-content-between">
 						<div>
 							<input
-								id="serialConnectionRTU"
+								id="networkConnectionRTU"
 								v-model="connection.Settings.RTU"
 								class="form-check-input"
 								type="checkbox"
 							/>
-							<label class="form-check-label ms-2" for="serialConnectionRTU">
+							<label class="form-check-label ms-2" for="networkConnectionRTU">
 								Use Modbus RTU over TCP
 							</label>
 						</div>
