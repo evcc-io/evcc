@@ -137,7 +137,7 @@ func (t *Stekker) run(done chan error) {
 					continue
 				}
 
-				start = start.UTC()
+				start = start.Local()
 				end := start.Add(time.Hour)
 
 				res = append(res, api.Rate{
