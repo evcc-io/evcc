@@ -21,6 +21,7 @@
 					v-for="(connection, index) in values.filter(
 						(item) => 'URI' in item.Settings
 					) as ModbusProxy<ModbusProxyNetworkConnection>[]"
+					:key="index"
 				>
 					<div class="d-none d-lg-block">
 						<hr class="mt-5" />
@@ -134,6 +135,7 @@
 					v-for="(connection, index) in values.filter(
 						(item) => 'Device' in item.Settings
 					) as ModbusProxy<ModbusProxySerialConnection>[]"
+					:key="index"
 				>
 					<div class="d-none d-lg-block">
 						<hr class="mt-5" />
