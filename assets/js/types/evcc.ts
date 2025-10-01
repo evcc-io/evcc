@@ -347,19 +347,28 @@ export interface Sponsor {
   fromYaml: boolean;
 }
 
+export enum MODBUS_PROXY_READONLY {
+  TRUE = "true",
+  FALSE = "false",
+  DENY = "deny",
+}
+
 export interface ModbusProxySerialConnection {
   Device: string;
-  Port: number;
   Baudrate: number;
   Comset: string;
 }
+
 export interface ModbusProxyNetworkConnection {
   URI: string;
-  Port: number;
   RTU: boolean;
 }
 
-export type ModbusProxy = ModbusProxySerialConnection | ModbusProxyNetworkConnection;
+export type ModbusProxy<T = ModbusProxySerialConnection | ModbusProxyNetworkConnection> = {
+  Port: number;
+  ReadOnly: MODBUS_PROXY_READONLY;
+  Settings: T;
+};
 
 export interface Notification {
   message: string;
