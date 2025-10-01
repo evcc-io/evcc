@@ -33,6 +33,8 @@ func (pts *PersistingTokenSource) Token() (*oauth2.Token, error) {
 	return token, nil
 }
 
+var TokenExtra = tokenExtra
+
 func tokenExtra(t *oauth2.Token, key string) string {
 	if v := t.Extra(key); v != nil {
 		return v.(string)

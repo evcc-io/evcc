@@ -28,14 +28,21 @@ type OAuth struct {
 	cv      string
 	ctx     context.Context
 
-	deviceFlow bool
+	deviceFlow  bool
+	tokenStorer func(*oauth2.Token) any
 }
 
 type oauthOption func(*OAuth)
 
-func OauthDeviceFlowOption() func(o *OAuth) {
+func WithOauthDeviceFlowOption() func(o *OAuth) {
 	return func(o *OAuth) {
 		o.deviceFlow = true
+	}
+}
+
+func WithTokenStorerOption(ts func(*oauth2.Token) any) func(o *OAuth) {
+	return func(o *OAuth) {
+		o.tokenStorer = ts
 	}
 }
 
@@ -151,7 +158,14 @@ func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 // updateToken must only be called when lock is held
 func (o *OAuth) updateToken(token *oauth2.Token) {
-	if err := settings.SetJson(o.subject, token); err != nil {
+	var store any = token
+
+	// tokenStorer allows persisting the token together with it's extra properties
+	if o.tokenStorer != nil {
+		store = o.tokenStorer(token)
+	}
+
+	if err := settings.SetJson(o.subject, store); err != nil {
 		o.log.ERROR.Printf("error saving token: %v", err)
 	}
 

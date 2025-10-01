@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
+	"golang.org/x/oauth2"
 )
 
 // Cardata is an api.Vehicle implementation for BMW and Mini cars
@@ -41,8 +43,18 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		embed: &cc.embed,
 	}
 
+	oc := cardata.Config
+	oc.ClientID = cc.ClientID
+
 	log := util.NewLogger("cardata").Redact(cc.ClientID)
-	ts, err := cardata.NewIdentity(ctx, log, cc.ClientID)
+
+	ts, err := auth.NewOauth(ctx, "cardata", &oc, auth.WithTokenStorerOption(func(token *oauth2.Token) any {
+		return cardata.Token{
+			Token:   token,
+			IdToken: cardata.TokenExtra(token, "id_token"),
+			Gcid:    cardata.TokenExtra(token, "gcid"),
+		}
+	}))
 	if err != nil {
 		return nil, err
 	}
