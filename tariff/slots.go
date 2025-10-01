@@ -28,15 +28,15 @@ func convertTo15mSlots(rates api.Rates, typ api.TariffType) api.Rates {
 	now := time.Now().Truncate(slot)
 
 	for i, r := range rates {
+		if !r.End.After(now) { // only keep slots >= now
+			continue
+		}
+
 		interval := r.End.Sub(r.Start)
 		numSlots := max(int(interval/slot), 1)
 
 		for j := range numSlots {
 			start := r.Start.Add(time.Duration(j) * slot)
-
-			if start.Before(now) { // only keep slots >= now
-				continue
-			}
 
 			end := start.Add(slot)
 			var val float64
