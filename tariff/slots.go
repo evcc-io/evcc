@@ -12,19 +12,16 @@ type SlotWrapper struct {
 	api.Tariff
 }
 
+// Rates converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
+// For price tariffs, the value is constant over all sub-slots.
+// For solar/co2, linear interpolation is used between slot boundaries.
 func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
 		return nil, err
 	}
-	return convertTo15mSlots(rates, t.Type()), nil
-}
 
-// convertTo15mSlots converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
-// For price tariffs, the value is constant over all sub-slots.
-// For solar/co2, linear interpolation is used between slot boundaries.
-func convertTo15mSlots(rates api.Rates, typ api.TariffType) api.Rates {
-	var result api.Rates
+	var res api.Rates
 
 	now := time.Now().Truncate(SlotDuration)
 
@@ -38,14 +35,11 @@ func convertTo15mSlots(rates api.Rates, typ api.TariffType) api.Rates {
 
 		for j := range numSlots {
 			start := r.Start.Add(time.Duration(j) * SlotDuration)
-
 			end := start.Add(SlotDuration)
+
 			var val float64
 
-			switch typ {
-			case api.TariffTypePriceStatic, api.TariffTypePriceDynamic, api.TariffTypePriceForecast:
-				val = r.Value
-
+			switch t.Type() {
 			case api.TariffTypeSolar, api.TariffTypeCo2:
 				if i+1 < len(rates) {
 					start0 := r.Start
@@ -57,15 +51,16 @@ func convertTo15mSlots(rates api.Rates, typ api.TariffType) api.Rates {
 				}
 
 			default:
-				panic("invalid tariff type: " + typ.String())
+				val = r.Value
 			}
 
-			result = append(result, api.Rate{
+			res = append(res, api.Rate{
 				Start: start,
 				End:   end,
 				Value: val,
 			})
 		}
 	}
-	return result
+
+	return res, nil
 }
