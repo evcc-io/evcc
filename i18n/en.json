@@ -161,6 +161,9 @@
       "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
+      "dragHandle": "Drag handle",
+      "dragItem": "Draggable: {title}",
+      "dragList": "Reorderable list",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
@@ -171,6 +174,7 @@
       "readFromFile": "Read from file",
       "remove": "Remove",
       "required": "required",
+      "reset": "Reset",
       "save": "Save",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
@@ -506,6 +510,10 @@
     "tariffs": {
       "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
       "title": "Tariffs"
+    },
+    "telemetry": {
+      "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
+      "title": "Telemetry"
     },
     "title": {
       "description": "Displayed on main screen and browser tab.",
@@ -1085,6 +1093,7 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
       "exit": "Exit fullscreen",
@@ -1097,6 +1106,12 @@
     "language": {
       "auto": "Automatic",
       "label": "Language"
+    },
+    "loadpoints": {
+      "help": "Change order and visibility for the UI.",
+      "hide": "Hide {title}",
+      "label": "Charging points",
+      "show": "Show {title}"
     },
     "sponsorToken": {
       "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",

@@ -86,7 +86,7 @@
 				<LabelBar
 					v-for="(lp, index) in loadpoints"
 					:key="index"
-					v-bind="labelBarProps('bottom', 'loadpoints', lp.power)"
+					v-bind="labelBarProps('bottom', 'loadpoints', lp.chargePower)"
 				>
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
@@ -116,7 +116,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { LoadpointCompact } from "@/types/evcc";
+import type { UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -127,7 +127,7 @@ export default defineComponent({
 		selfPv: { type: Number, default: 0 },
 		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		batteryHold: { type: Boolean, default: false },
