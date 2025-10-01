@@ -22,8 +22,11 @@
 				@mouseup="hoverSlot(null)"
 				@click="selectSlot(index)"
 			>
-				<div class="slot-bar" :style="valueStyle(slot.value)" :class="{ 'unknown': slot.value === undefined && avgValue }">
-				</div>
+				<div
+					class="slot-bar"
+					:style="valueStyle(slot.value)"
+					:class="{ unknown: slot.value === undefined && avgValue }"
+				></div>
 				<div class="slot-label">
 					<span v-if="slot.start.getMinutes() === 0">{{
 						formatHour(slot.start.getHours())
