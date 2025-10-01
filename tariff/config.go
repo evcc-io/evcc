@@ -28,5 +28,5 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 		return nil, fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
 	}
 
-	return api.Tariff15mWrapper{Inner: v}, nil
+	return &SlotWrapper{Tariff: v}, nil
 }
