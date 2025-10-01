@@ -14,8 +14,13 @@ jobs:
   build:
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: nwisbeta/validate-yaml-schema@v2.0.0
         with:
           yamlSchemasJson: |

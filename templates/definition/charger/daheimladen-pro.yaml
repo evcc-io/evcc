@@ -13,6 +13,6 @@ params:
   - name: port
     default: 502
 render: |
-  type: daheimladen-mb
+  type: daheimladen
   uri: {{ .host }}:{{ .port }}
   phases1p3p: true
