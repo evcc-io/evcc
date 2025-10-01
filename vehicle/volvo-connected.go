@@ -19,11 +19,11 @@ type VolvoConnected struct {
 }
 
 func init() {
-	registry.Add("volvo-connected", NewVolvoConnectedFromConfig)
+	registry.AddCtx("volvo-connected", NewVolvoConnectedFromConfig)
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		VIN         string
@@ -42,14 +42,15 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
 
 	// create oauth2 config
-	config := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	authorizer, err := auth.NewOauth(ctx, *config, cc.embed.GetTitle())
+	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
+
+	ts, err := auth.NewOauth(ctx, oc, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}
 
-	api := connected.NewAPI(log, cc.VccApiKey, authorizer)
+	api := connected.NewAPI(log, cc.VccApiKey, ts)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
