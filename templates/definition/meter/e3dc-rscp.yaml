@@ -40,9 +40,13 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: int
     advanced: true
+    usages: ["battery"]
   - name: maxacpower
+    advanced: true
+    usages: ["pv"]
   - name: capacity
     advanced: true
+    usages: ["battery"]
   - name: externalpower
     type: bool
     description:
@@ -66,5 +70,6 @@ render: |
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
   externalpower: {{ .externalpower }}
   {{- end }}
