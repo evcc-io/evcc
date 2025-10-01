@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+const SlotDuration = 15 * time.Minute
+
 type SlotWrapper struct {
 	api.Tariff
 }
@@ -22,10 +24,9 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 // For price tariffs, the value is constant over all sub-slots.
 // For solar/co2, linear interpolation is used between slot boundaries.
 func convertTo15mSlots(rates api.Rates, typ api.TariffType) api.Rates {
-	const slot = 15 * time.Minute
 	var result api.Rates
 
-	now := time.Now().Truncate(slot)
+	now := time.Now().Truncate(SlotDuration)
 
 	for i, r := range rates {
 		if !r.End.After(now) { // only keep slots >= now
@@ -33,12 +34,12 @@ func convertTo15mSlots(rates api.Rates, typ api.TariffType) api.Rates {
 		}
 
 		interval := r.End.Sub(r.Start)
-		numSlots := max(int(interval/slot), 1)
+		numSlots := max(int(interval/SlotDuration), 1)
 
 		for j := range numSlots {
-			start := r.Start.Add(time.Duration(j) * slot)
+			start := r.Start.Add(time.Duration(j) * SlotDuration)
 
-			end := start.Add(slot)
+			end := start.Add(SlotDuration)
 			var val float64
 
 			switch typ {
