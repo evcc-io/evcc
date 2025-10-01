@@ -1,0 +1,43 @@
+template: evecube
+products:
+  - brand: EV Expert
+    description:
+      generic: EVECUBE
+requirements:
+  description:
+    en: Requires firmware 1.0.4 or later. Use HTTP API for best compatibility.
+    de: Benötigt mindestens Firmware 1.0.4 oder neuer. HTTP API bietet beste Kompatibilität.
+params:
+  - name: host
+    help:
+      en: Hostname or IP address
+      de: Hostname oder IP-Adresse
+  - name: user
+    required: false
+    help:
+      en: Username for admin API access (required for current control)
+      de: Benutzername für Admin-API-Zugriff (für Stromsteuerung erforderlich)
+  - name: password
+    required: false
+    mask: true
+    help:
+      en: Password for admin API access
+      de: Passwort für Admin-API-Zugriff
+  - name: connector
+    default: 1
+    advanced: true
+    help:
+      en: Connector ID (1 or 2 for EVECUBE 2S)
+      de: Anschluss-ID (1 oder 2 für EVECUBE 2S)
+render: |
+  type: evecube
+  uri: http://{{ .host }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  {{- if ne .connector "1" }}
+  connector: {{ .connector }}
+  {{- end }}
