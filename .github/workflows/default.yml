@@ -12,8 +12,13 @@ jobs:
     name: Clean
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v6
         with:
@@ -47,8 +52,13 @@ jobs:
     name: Build
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v6
         with:
@@ -80,8 +90,13 @@ jobs:
     name: Test
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v6
         with:
@@ -106,8 +121,13 @@ jobs:
     name: Lint
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v6
         with:
@@ -140,10 +160,13 @@ jobs:
     name: UI
     permissions:
       contents: read
+      actions: write
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -180,8 +203,14 @@ jobs:
     name: Integration
     runs-on: depot-ubuntu-24.04-arm-16
 
+    permissions:
+      contents: read
+      actions: write
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-go@v6
         with:
