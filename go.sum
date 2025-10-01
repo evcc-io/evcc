@@ -740,6 +740,8 @@ github.com/teivah/onecontext v1.3.0 h1:tbikMhAlo6VhAuEGCvhc8HlTnpX4xTNPTOseWuhO1
 github.com/teivah/onecontext v1.3.0/go.mod h1:hoW1nmdPVK/0jrvGtcx8sCKYs2PiS4z0zzfdeuEVyb0=
 github.com/teslamotors/vehicle-command v0.4.0 h1:39JJ7wGdS3dmW3tlsshg2C9/YWx+fxaUw6aRKfqWmpc=
 github.com/teslamotors/vehicle-command v0.4.0/go.mod h1:aL0IRpLu+l205NxejRkuxpqAovw69rDKriBKKyP8gLI=
+github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29 h1:whgDCnunp97KCC7TF94E3l1hGo080ICSRs6ei8jCnzs=
+github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29/go.mod h1:kqrfk4Y14pHCPKIwp6o7ZbgpohUzQHh7EMX+RUA4JCU=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/traefik/yaegi v0.16.1 h1:f1De3DVJqIDKmnasUF6MwmWv1dSEEat0wcpXhD2On3E=
 github.com/traefik/yaegi v0.16.1/go.mod h1:4eVhbPb3LnD2VigQjhYbEJ69vDRFdT2HQNrXx8eEwUY=
