@@ -17,7 +17,11 @@
 				<p>
 					The device is directly connected via a native network connection (Modbus TCP).
 				</p>
-				<div v-for="(connection, index) in networkConnections(values)">
+				<div
+					v-for="(connection, index) in values.filter(
+						(item) => 'URI' in item.Settings
+					) as ModbusProxy<ModbusProxyNetworkConnection>[]"
+				>
 					<div class="d-none d-lg-block">
 						<hr class="mt-5" />
 						<h5>
@@ -126,7 +130,11 @@
 					device configuration and read the relevant user manuals, data sheets, or system
 					settings for further details.
 				</p>
-				<div v-for="(connection, index) in serialConnections(values)">
+				<div
+					v-for="(connection, index) in values.filter(
+						(item) => 'Device' in item.Settings
+					) as ModbusProxy<ModbusProxySerialConnection>[]"
+				>
 					<div class="d-none d-lg-block">
 						<hr class="mt-5" />
 						<h5>
@@ -199,20 +207,6 @@
 					</FormRow>
 					<div class="align-items-center d-flex mb-4">
 						<button
-							v-if="index + 1 === serialConnections(values).length"
-							type="button"
-							class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
-							data-testid="networkconnection-add"
-							tabindex="0"
-							@click="addConnection(values, DEFAULT_SERIAL_CONNECTION)"
-						>
-							<shopicon-regular-plus
-								size="s"
-								class="flex-shrink-0"
-							></shopicon-regular-plus>
-							Add serial connection
-						</button>
-						<button
 							type="button"
 							class="btn btn-sm btn-outline-secondary border-0 ms-auto"
 							aria-label="Remove"
@@ -227,7 +221,6 @@
 					</div>
 				</div>
 				<button
-					v-if="serialConnections(values).length === 0"
 					type="button"
 					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
 					data-testid="networkconnection-add"
@@ -275,22 +268,6 @@ export default {
 			DEFAULT_SERIAL_CONNECTION,
 			MODBUS_PROXY_READONLY,
 		};
-	},
-	computed: {
-		networkConnections() {
-			return (values: ModbusProxy[]) => {
-				return values.filter(
-					(item) => "URI" in item.Settings
-				) as ModbusProxy<ModbusProxyNetworkConnection>[];
-			};
-		},
-		serialConnections() {
-			return (values: ModbusProxy[]) => {
-				return values.filter(
-					(item) => "Device" in item.Settings
-				) as ModbusProxy<ModbusProxySerialConnection>[];
-			};
-		},
 	},
 	methods: {
 		addConnection(values: ModbusProxy[], c: ModbusProxy) {
