@@ -22,8 +22,7 @@
 				@mouseup="hoverSlot(null)"
 				@click="selectSlot(index)"
 			>
-				<div class="slot-bar" :style="valueStyle(slot.value)">
-					<span v-if="slot.value === undefined && avgValue" class="unknown">?</span>
+				<div class="slot-bar" :style="valueStyle(slot.value)" :class="{ 'unknown': slot.value === undefined && avgValue }">
 				</div>
 				<div class="slot-label">
 					<span v-if="slot.start.getMinutes() === 0">{{
@@ -149,7 +148,7 @@ export default defineComponent({
 			const height =
 				value !== undefined && !isNaN(val)
 					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
-					: "75%";
+					: "50%";
 			return { height };
 		},
 		startLongPress(index: number) {
@@ -244,6 +243,9 @@ export default defineComponent({
 	color: var(--bs-white);
 	transition: height var(--evcc-transition-fast) ease-in;
 }
+.slot-bar.unknown {
+	opacity: 0.33;
+}
 .slot-label {
 	color: var(--bs-gray-light);
 	line-height: 1.1;
@@ -270,9 +272,6 @@ export default defineComponent({
 }
 .slot.warning .slot-label {
 	color: var(--bs-warning);
-}
-.unknown {
-	margin: 0 -0.5rem;
 }
 .slot.hovered {
 	opacity: 1;
