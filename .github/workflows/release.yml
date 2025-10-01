@@ -99,7 +99,7 @@ jobs:
           # use GH_TOKEN for access to evcc-io/homebrew-tap
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
