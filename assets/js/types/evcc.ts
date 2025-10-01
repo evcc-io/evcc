@@ -70,7 +70,7 @@ export interface State {
   shm?: ShmConfig;
   sponsor?: Sponsor;
   eebus?: any;
-  modbusproxy?: [];
+  modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
   circuits?: Record<string, Circuit>;
@@ -346,6 +346,20 @@ export interface Sponsor {
   token?: string;
   fromYaml: boolean;
 }
+
+export interface ModbusProxySerialConnection {
+  Device: string;
+  Port: number;
+  Baudrate: number;
+  Comset: string;
+}
+export interface ModbusProxyNetworkConnection {
+  URI: string;
+  Port: number;
+  RTU: boolean;
+}
+
+export type ModbusProxy = ModbusProxySerialConnection | ModbusProxyNetworkConnection;
 
 export interface Notification {
   message: string;
