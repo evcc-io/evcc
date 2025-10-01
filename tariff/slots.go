@@ -10,7 +10,7 @@ type SlotWrapper struct {
 	api.Tariff
 }
 
-func (t SlotWrapper) Rates() (api.Rates, error) {
+func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
 		return nil, err
