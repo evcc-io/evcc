@@ -1,6 +1,6 @@
 <template>
 	<div class="root position-relative">
-		<div class="chart position-relative">
+		<div class="chart position-relative" :class="{ 'chart--with-target': targetText }">
 			<div
 				v-for="(slot, index) in slots"
 				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
@@ -26,13 +26,9 @@
 					<span v-if="slot.value === undefined && avgValue" class="unknown">?</span>
 				</div>
 				<div class="slot-label">
-					<span
-						v-if="
-							(!slot.isTarget || targetNearlyOutOfRange) &&
-							slot.start.getMinutes() === 0
-						"
-						>{{ formatHour(slot.start.getHours()) }}</span
-					>
+					<span v-if="slot.start.getMinutes() === 0">{{
+						formatHour(slot.start.getHours())
+					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
 				</div>
@@ -180,7 +176,10 @@ export default defineComponent({
 	overflow-x: auto;
 	align-items: flex-end;
 	overflow-y: none;
-	padding-bottom: 55px;
+	padding-bottom: 35px;
+}
+.chart--with-target {
+	padding-bottom: 57px;
 }
 .target-inline {
 	height: 130px;
@@ -233,16 +232,6 @@ export default defineComponent({
 	width: 8px;
 	flex-grow: 0;
 	flex-shrink: 0;
-}
-@media (max-width: 991px) {
-	.chart {
-		overflow-x: auto;
-	}
-}
-@media (min-width: 992px) {
-	.chart {
-		overflow-x: hidden;
-	}
 }
 .slot-bar {
 	background-clip: content-box !important;

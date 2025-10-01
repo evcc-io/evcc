@@ -191,18 +191,16 @@ export default defineComponent({
 				return [];
 			}
 
-			const result = [] as Slot[];
 			const rates = this.rates;
-			const startTime = new Date();
 			const quarterHour = 15 * 60 * 1000;
 
-			for (let i = 0; i < 42 * 4; i++) {
-				const start = new Date(startTime.getTime() + quarterHour * i);
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
-				const end = new Date(start.getTime() + quarterHour * (i + 1));
-				const day = this.weekdayShort(start);
+			const base = new Date();
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
+
+			return Array.from({ length: 48 * 4 }, (_, i) => {
+				const start = new Date(base.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const active =
 					this.limitDirection === "below" &&
@@ -214,19 +212,17 @@ export default defineComponent({
 					this.selectedLimit !== null &&
 					value !== undefined &&
 					value >= this.selectedLimit;
-				const selectable = value !== undefined;
-				result.push({
-					day,
+
+				return {
+					day: this.weekdayShort(start),
 					value,
 					start,
 					end,
 					charging: active,
-					selectable,
+					selectable: value !== undefined,
 					warning,
-				});
-			}
-
-			return result;
+				};
+			});
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -268,14 +264,11 @@ export default defineComponent({
 			return this.warningSlots.length ? "text-warning" : "value-inactive";
 		},
 		activeHoursText() {
-			const params = {
-				active:
-					this.limitDirection === "below"
-						? this.activeSlots.length
-						: this.warningSlots.length,
-				total: this.totalSlots.length,
-			};
-			return this.$t("smartCost.activeHours", params);
+			const active =
+				this.limitDirection === "below"
+					? this.activeSlots.length
+					: this.warningSlots.length;
+			return this.fmtDurationLong(active * 15 * 60, "short");
 		},
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";

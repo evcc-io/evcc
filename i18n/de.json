@@ -1144,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} von {total}",
-    "activeHoursLabel": "Aktive Stunden",
+    "activeHoursLabel": "Aktive Zeit",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
     "cheapTitle": "Günstiges Netzladen",
@@ -1161,7 +1161,7 @@
     "saved": "Gepeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Stunden",
+    "activeHoursLabel": "Pausierte Zeit",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",

@@ -26,6 +26,7 @@
 			</div>
 		</div>
 		<TariffChart
+			class="mb-3"
 			:slots="slots"
 			:target-text="targetText"
 			:target-offset="targetOffset"
