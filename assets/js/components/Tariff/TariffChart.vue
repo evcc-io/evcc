@@ -3,7 +3,7 @@
 		<div class="chart position-relative">
 			<div
 				v-for="(slot, index) in slots"
-				:key="`${slot.day}-${slot.startHour}`"
+				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -26,9 +26,13 @@
 					<span v-if="slot.value === undefined && avgValue" class="unknown">?</span>
 				</div>
 				<div class="slot-label">
-					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						formatHour(slot.startHour)
-					}}</span>
+					<span
+						v-if="
+							(!slot.isTarget || targetNearlyOutOfRange) &&
+							slot.start.getMinutes() === 0
+						"
+						>{{ formatHour(slot.start.getHours()) }}</span
+					>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
 				</div>
@@ -59,8 +63,7 @@ import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
 import type { Slot } from "@/types/evcc";
-
-const BAR_WIDTH = 20;
+const BAR_WIDTH = 8;
 
 export default defineComponent({
 	name: "TariffChart",
@@ -96,12 +99,10 @@ export default defineComponent({
 			return { min, range: max - min };
 		},
 		targetLeft() {
-			const fullHours = Math.floor(this.targetOffset);
-			const hourFraction = this.targetOffset - fullHours;
-			return `${fullHours * BAR_WIDTH + 4 + hourFraction * 12}px`;
+			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
 		},
 		targetNearlyOutOfRange() {
-			return this.targetOffset > this.slots.length - 4;
+			return this.targetOffset > this.slots.length - 8;
 		},
 		targetOutOfRange() {
 			return this.targetOffset > this.slots.length;
@@ -142,7 +143,7 @@ export default defineComponent({
 					return false;
 				}
 			}
-			if (slot.startHour === 0) {
+			if (slot.start.getHours() === 0 && slot.start.getMinutes() === 0) {
 				return true;
 			}
 			return false;
@@ -219,7 +220,7 @@ export default defineComponent({
 }
 .slot {
 	text-align: center;
-	padding: 4px;
+	padding: 2px;
 	height: 100%;
 	display: flex;
 	justify-content: flex-end;
@@ -229,7 +230,7 @@ export default defineComponent({
 	transition-property: opacity, background, color;
 	transition-duration: var(--evcc-transition-fast);
 	transition-timing-function: ease-in;
-	width: 20px;
+	width: 8px;
 	flex-grow: 0;
 	flex-shrink: 0;
 }
@@ -246,7 +247,7 @@ export default defineComponent({
 .slot-bar {
 	background-clip: content-box !important;
 	background: var(--bs-gray-light);
-	border-radius: 8px;
+	border-radius: 2px;
 	width: 100%;
 	align-items: center;
 	display: flex;
@@ -259,7 +260,7 @@ export default defineComponent({
 	line-height: 1.1;
 	position: absolute;
 	top: 100%;
-	left: -50%;
+	left: -100%;
 	width: 200%;
 	text-align: center;
 }

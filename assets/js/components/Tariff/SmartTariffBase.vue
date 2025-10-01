@@ -194,17 +194,14 @@ export default defineComponent({
 			const result = [] as Slot[];
 			const rates = this.rates;
 			const startTime = new Date();
-			const oneHour = 3600000;
+			const quarterHour = 15 * 60 * 1000;
 
-			for (let i = 0; i < 42; i++) {
-				const start = new Date(startTime.getTime() + oneHour * i);
-				const startHour = start.getHours();
+			for (let i = 0; i < 42 * 4; i++) {
+				const start = new Date(startTime.getTime() + quarterHour * i);
 				start.setMinutes(0);
 				start.setSeconds(0);
 				start.setMilliseconds(0);
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-				const endHour = end.getHours();
+				const end = new Date(start.getTime() + quarterHour * (i + 1));
 				const day = this.weekdayShort(start);
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const active =
@@ -221,8 +218,8 @@ export default defineComponent({
 				result.push({
 					day,
 					value,
-					startHour,
-					endHour,
+					start,
+					end,
 					charging: active,
 					selectable,
 					warning,
@@ -258,8 +255,8 @@ export default defineComponent({
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;

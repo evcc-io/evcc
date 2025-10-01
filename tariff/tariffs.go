@@ -16,7 +16,8 @@ type Tariffs struct {
 func At(t api.Tariff, ts time.Time) (api.Rate, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
-			if r, err := rr.At(ts); err == nil {
+			rounded := ts.Truncate(15 * time.Minute)
+			if r, err := rr.At(rounded); err == nil {
 				return r, nil
 			}
 		}
