@@ -183,42 +183,64 @@ type sempTestHandler struct {
 func (h *sempTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.requestCount++
 
+	// Handle POST to base URL for DeviceControl
+	if r.Method == http.MethodPost {
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+		h.lastRequest = string(body)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Handle GET requests
 	switch r.URL.Path {
-	case "/semp/DeviceStatus":
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
+	case "/semp":
+		// Return complete SEMP document at base URL
+		// Extract and combine the XML fragments
+		var parts []string
+
+		// Add DeviceInfo
+		if start := strings.Index(h.infoResponse, "<DeviceInfo>"); start != -1 {
+			if end := strings.Index(h.infoResponse, "</Device2EM>"); end != -1 {
+				parts = append(parts, h.infoResponse[start:end])
+			}
 		}
+
+		// Add DeviceStatus
+		if start := strings.Index(h.statusResponse, "<DeviceStatus>"); start != -1 {
+			if end := strings.Index(h.statusResponse, "</Device2EM>"); end != -1 {
+				parts = append(parts, h.statusResponse[start:end])
+			}
+		}
+
+		// Add PlanningRequest if exists
+		if start := strings.Index(h.planningResponse, "<PlanningRequest>"); start != -1 {
+			if end := strings.Index(h.planningResponse, "</Device2EM>"); end != -1 {
+				parts = append(parts, h.planningResponse[start:end])
+			}
+		}
+
+		fullDoc := `<?xml version="1.0" encoding="UTF-8"?>
+<Device2EM xmlns="http://www.sma.de/communication/schema/SEMP/v1">` +
+			strings.Join(parts, "") +
+			`</Device2EM>`
+		w.Header().Set("Content-Type", "application/xml")
+		w.Write([]byte(fullDoc))
+
+	case "/semp/DeviceStatus":
+		// Legacy endpoint - still supported
 		w.Header().Set("Content-Type", "application/xml")
 		w.Write([]byte(h.statusResponse))
 
 	case "/semp/DeviceInfo":
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+		// Legacy endpoint - still supported
 		w.Header().Set("Content-Type", "application/xml")
 		w.Write([]byte(h.infoResponse))
 
 	case "/semp/PlanningRequest":
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+		// Legacy endpoint - still supported
 		w.Header().Set("Content-Type", "application/xml")
 		w.Write([]byte(h.planningResponse))
-
-	case "/semp/DeviceControl":
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		body := make([]byte, r.ContentLength)
-		r.Body.Read(body)
-		h.lastRequest = string(body)
-
-		w.WriteHeader(http.StatusOK)
 
 	default:
 		http.NotFound(w, r)
@@ -234,20 +256,20 @@ func TestSEMPCharger(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL, "F-12345678-ABCDEF123456-00", time.Second)
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
 
 	t.Run("Status", func(t *testing.T) {
 		status, err := wb.Status()
 		require.NoError(t, err)
 		assert.Equal(t, api.StatusC, status)
-		assert.Equal(t, 3, handler.requestCount) // DeviceInfo (init) + DeviceStatus + PlanningRequest
+		assert.Equal(t, 1, handler.requestCount) // Only 1 request to base URL for full document (DeviceInfo in NewSEMP was cached)
 	})
 
 	t.Run("Enabled", func(t *testing.T) {
 		handler.requestCount = 0
 		// Reset cache to force new request
-		wb.(*SEMP).statusG.Reset()
+		wb.(*SEMP).documentG.Reset()
 		enabled, err := wb.Enabled()
 		require.NoError(t, err)
 		assert.True(t, enabled)
@@ -257,7 +279,7 @@ func TestSEMPCharger(t *testing.T) {
 	t.Run("CurrentPower", func(t *testing.T) {
 		handler.requestCount = 0
 		// Reset cache to force new request
-		wb.(*SEMP).statusG.Reset()
+		wb.(*SEMP).documentG.Reset()
 		meter, ok := wb.(api.Meter)
 		require.True(t, ok)
 		power, err := meter.CurrentPower()
@@ -268,13 +290,15 @@ func TestSEMPCharger(t *testing.T) {
 
 	t.Run("Enable", func(t *testing.T) {
 		handler.requestCount = 0
+		// Reset caches to ensure fresh requests
+		wb.(*SEMP).documentG.Reset()
 		err := wb.Enable(true)
 		require.NoError(t, err)
 		assert.Contains(t, handler.lastRequest, "<On>true</On>")
 		assert.Contains(t, handler.lastRequest, "F-12345678-ABCDEF123456-00")
 		// calcPower() returns 0 because current is not set yet
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
-		assert.Equal(t, 2, handler.requestCount) // DeviceInfo + DeviceStatus + DeviceControl
+		assert.Equal(t, 2, handler.requestCount) // 1 GET for full document + 1 POST for DeviceControl
 	})
 
 	t.Run("MaxCurrent", func(t *testing.T) {
@@ -296,7 +320,7 @@ func TestSEMPChargerOff(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL, "F-12345678-ABCDEF123456-00", time.Second)
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
 
 	t.Run("StatusOff", func(t *testing.T) {
@@ -329,7 +353,7 @@ func TestSEMPChargerDeviceNotFound(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL, "F-12345678-ABCDEF123456-00", time.Second)
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
 
 	t.Run("DeviceNotFound", func(t *testing.T) {
@@ -348,7 +372,7 @@ func TestSEMPChargerReady(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL, "F-12345678-ABCDEF123456-00", time.Second)
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
 
 	t.Run("StatusReady", func(t *testing.T) {
@@ -373,7 +397,7 @@ func TestSEMPChargerNoInterruptions(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL, "F-12345678-ABCDEF123456-00", time.Second)
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
 
 	t.Run("EnabledReturnsFalseWhenInterruptionsNotAllowed", func(t *testing.T) {
@@ -418,7 +442,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL, "F-12345678-ABCDEF123456-00", time.Second)
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
 
 	// Check if the charger supports phase switching
@@ -437,7 +461,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 		require.NoError(t, err)
 		// calcPower() = 230 * 1 * 16 = 3680
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>3680</RecommendedPowerConsumption>")
-		assert.Equal(t, 5, handler.requestCount) // Enable (DeviceInfo + DeviceStatus + DeviceControl) + MaxCurrent + Phases1p3p
+		assert.Equal(t, 3, handler.requestCount) // Enable (1 POST) + MaxCurrent (1 POST) + Phases1p3p (1 POST) - document is cached from init
 	})
 
 	t.Run("SwitchTo3Phase", func(t *testing.T) {
