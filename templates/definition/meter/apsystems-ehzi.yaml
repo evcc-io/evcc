@@ -2,26 +2,26 @@ template: apsystems-ehzi
 products:
   - brand: APsystems
     description:
-      generic: EHZI Micro Hybrid Inverter with Battery Storage and Control
-      de: EHZI Mikro-Hybridwechselrichter mit Batteriespeicher und Steuerung
+      generic: EHZI Hybrid Inverter 
+      de: EHZI Hybridwechselrichter
 capabilities: ["battery-control"]
 requirements:
   description:
-    generic: Requires local network access to the APsystems EHZI micro hybrid inverter
-    de: Erfordert lokalen Netzwerkzugriff auf den APsystems EHZI Mikro-Hybridwechselrichter
+    generic: Requires local network access to the APsystems EHZI hybrid inverter
+    de: Erfordert lokalen Netzwerkzugriff auf den APsystems EHZI Hybridwechselrichter
 params:
   - name: usage
     choice: ["battery"]
   - name: host
     help:
-      generic: IP address or hostname of the EHZI micro hybrid inverter
-      de: IP-Adresse oder Hostname des EHZI Mikro-Hybridwechselrichters
-    example: 192.168.20.8
+      generic: IP address or hostname of the EHZI hybrid inverter
+      de: IP-Adresse oder Hostname des EHZI Hybridwechselrichters
+    example: 192.168.1.100
   - name: capacity
     help:
       generic: Battery capacity in kWh
       de: Batteriekapazität in kWh
-    default: 2.4
+    default: 4.8
     advanced: true
   - name: minsoc
     default: 10
@@ -46,6 +46,25 @@ params:
     help:
       generic: Maximum charge/discharge power in W. Note that EHZI will dynamically limit actual power based on battery SOC, temperature, and grid conditions. Actual power may be significantly lower than requested.
       de: Maximale Lade-/Entladeleistung in W. Beachten Sie, dass EHZI die tatsächliche Leistung dynamisch basierend auf Batterie-SoC, Temperatur und Netzbedingungen begrenzt. Die tatsächliche Leistung kann deutlich niedriger sein als angefordert.
+  - name: watchdog
+    description:
+      generic: Watchdog timeout for dynamic power matching
+      de: Watchdog-Timeout für dynamisches Power-Matching
+    default: 60s
+    advanced: true
+    help:
+      generic: In normal mode, battery power will be continuously adjusted to match grid power every watchdog/2 seconds. Set to 0s to disable dynamic matching.
+      de: Im Normal-Modus wird die Batterieleistung kontinuierlich alle watchdog/2 Sekunden an die Netzleistung angepasst. Auf 0s setzen, um dynamisches Matching zu deaktivieren.
+  - name: evccport
+    description:
+      generic: evcc API port for grid power monitoring
+      de: evcc API-Port für Netzleistungsüberwachung
+    default: 7070
+    type: int
+    advanced: true
+    help:
+      generic: Port where evcc API is accessible for dynamic power matching. Usually 7070 (default).
+      de: Port, auf dem die evcc-API für dynamisches Power-Matching erreichbar ist. Normalerweise 7070 (Standard).
 render: |
   type: custom
   {{- if eq .usage "battery" }}
@@ -53,31 +72,49 @@ render: |
     source: http
     uri: http://{{ .host }}/getOutputData
     jq: (.data.batP | tonumber) * -1
+    cache: 5s
   energy:
     source: http
     uri: http://{{ .host }}/getOutputData
     jq: ((.data.batSoc | tonumber) * {{ .capacity }}) / 100 # Available energy based on SoC in kWh
+    cache: 5s
   soc:
     source: http
     uri: http://{{ .host }}/getOutputData
     jq: .data.batSoc | tonumber
+    cache: 5s
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   batterymode:
-    source: switch
-    switch:
-    - case: 1 # normal - allow natural battery operation
-      set:
-        source: http
-        uri: http://{{ .host }}/setPower?p=0
-        method: GET
-    - case: 2 # hold - prevent discharge/charge
-      set:
-        source: http
-        uri: http://{{ .host }}/setPower?p=0
-        method: GET  
-    - case: 3 # charge - force charge from grid with max power
-      set:
-        source: http
-        uri: http://{{ .host }}/setPower?p={{ .maxpower | mul -1 }}
-        method: GET
+    # IMPORTANT: Battery control must be activated once via evcc UI after adding the battery:
+    # 1. Open evcc web interface
+    # 2. Click on battery icon or go to Settings
+    # 3. Enable "Battery Discharge Control" or set battery mode to "Normal"
+    # After this one-time activation, the watchdog will run automatically every {{watchdog}}/2 seconds
+    # and continuously adjust battery power to match home consumption (homePower - pvPower)
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: [2,3] # watchdog runs on unknown(0) and normal(1), stops on hold(2) and charge(3)
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal - dynamic charge/discharge matching grid power
+        set: &apsystems_ehzi_battery_normal
+          source: script
+          cmd: sh -c 'data=$(curl -s --max-time 3 http://127.0.0.1:{{ .evccport }}/api/state); home=$(echo "$data" | jq -r ".homePower // 0"); pv=$(echo "$data" | jq -r ".pvPower // 0"); soc=$(echo "$data" | jq -r ".batterySoc // 50"); power=$(echo "$home - $pv" | bc); max={{ .maxpower }}; min=$((- max)); minsoc={{ .minsoc }}; maxsoc={{ .maxsoc }}; if (( $(echo "$soc <= $minsoc" | bc -l) )) && (( $(echo "$power > 0" | bc -l) )); then power=0; elif (( $(echo "$soc >= $maxsoc" | bc -l) )) && (( $(echo "$power < 0" | bc -l) )); then power=0; fi; if (( $(echo "$power > $max" | bc -l) )); then power=$max; elif (( $(echo "$power < $min" | bc -l) )); then power=$min; fi; curl -s --max-time 3 "http://{{ .host }}/setPower?p=$power" >/dev/null 2>&1'
+      - case: 0 # unknown - auto-enable normal mode and run dynamic matching
+        set:
+          source: script
+          cmd: sh -c 'curl -s --max-time 2 -X POST "http://127.0.0.1:{{ .evccport }}/api/batterymode/normal" >/dev/null 2>&1; data=$(curl -s --max-time 3 http://127.0.0.1:{{ .evccport }}/api/state); home=$(echo "$data" | jq -r ".homePower // 0"); pv=$(echo "$data" | jq -r ".pvPower // 0"); soc=$(echo "$data" | jq -r ".batterySoc // 50"); power=$(echo "$home - $pv" | bc); max={{ .maxpower }}; min=$((- max)); minsoc={{ .minsoc }}; maxsoc={{ .maxsoc }}; if (( $(echo "$soc <= $minsoc" | bc -l) )) && (( $(echo "$power > 0" | bc -l) )); then power=0; elif (( $(echo "$soc >= $maxsoc" | bc -l) )) && (( $(echo "$power < 0" | bc -l) )); then power=0; fi; if (( $(echo "$power > $max" | bc -l) )); then power=$max; elif (( $(echo "$power < $min" | bc -l) )); then power=$min; fi; curl -s --max-time 3 "http://{{ .host }}/setPower?p=$power" >/dev/null 2>&1'
+      - case: 2 # hold - maintain current battery level (setPower 0)
+        set:
+          source: http
+          uri: http://{{ .host }}/setPower?p=0
+          method: GET
+      - case: 3 # charge - force charge from grid with max power
+        set:
+          source: http
+          uri: http://{{ .host }}/setPower?p={{ .maxpower | mul -1 }}
+          method: GET
   {{- end }}
