@@ -194,7 +194,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "change"
+      "change": "change",
+      "label": "Icon"
     },
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
@@ -349,6 +350,14 @@
       "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
+      "usage": {
+        "aux": "Self-regulating consumer meter",
+        "battery": "Battery meter",
+        "charge": "Charger meter",
+        "grid": "Grid meter",
+        "label": "Usage",
+        "pv": "Solar meter"
+      },
       "validateSave": "Validate & save"
     },
     "modbus": {

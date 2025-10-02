@@ -22,102 +22,115 @@
 			<p v-if="hasDescription" class="mt-0 mb-4">
 				{{ $t(`config.${meterType}.description`) }}
 			</p>
-			<div v-if="meterType === 'ext'" class="alert alert-warning mb-4" role="alert">
-				<strong>Work in Progress:</strong> This feature is not yet available.
-			</div>
-			<div v-else>
-				<FormRow
-					v-if="hasDeviceTitle"
+			<FormRow
+				v-if="hasDeviceTitle"
+				id="meterParamDeviceTitle"
+				label="Title"
+				help="Will be displayed in the user interface"
+			>
+				<PropertyField
 					id="meterParamDeviceTitle"
-					label="Title"
-					help="Will be displayed in the user interface"
-				>
-					<PropertyField
-						id="meterParamDeviceTitle"
-						v-model.trim="values.deviceTitle"
-						type="String"
-						size="w-100"
-						class="me-2"
-						required
-					/>
-				</FormRow>
-				<FormRow v-if="hasDeviceIcon" id="meterParamDeviceIcon" label="Icon">
-					<PropertyField
-						id="meterParamDeviceIcon"
-						v-model="values.deviceIcon"
-						:choice="iconChoices"
-						property="icon"
-						type="String"
-						class="me-2"
-						required
-					/>
-				</FormRow>
+					v-model.trim="values.deviceTitle"
+					type="String"
+					size="w-100"
+					class="me-2"
+					required
+				/>
+			</FormRow>
+			<FormRow
+				v-if="hasDeviceIcon"
+				id="meterParamDeviceIcon"
+				:label="$t('config.icon.label')"
+			>
+				<PropertyField
+					id="meterParamDeviceIcon"
+					v-model="values.deviceIcon"
+					:choice="iconChoices"
+					property="icon"
+					type="String"
+					class="me-2"
+					required
+				/>
+			</FormRow>
+			<FormRow
+				v-if="meterType === 'ext'"
+				id="meterParamExtMeterUsage"
+				:label="$t('config.meter.usage.label')"
+			>
+				<PropertyField
+					id="meterParamExtMeterUsage"
+					v-model="extMeterUsage"
+					:choice="extMeterUsageOptions"
+					:required="!!extMeterUsage"
+					:disabled="!isNew"
+					@change="extMeterUsageChanged"
+				/>
+			</FormRow>
+			<TemplateSelector
+				ref="templateSelect"
+				v-model="templateName"
+				device-type="meter"
+				:is-new="isNew"
+				:product-name="productName"
+				:groups="templateOptions"
+				:disabled="templateSelectorDisabled"
+				@change="templateChanged"
+			/>
 
-				<TemplateSelector
-					ref="templateSelect"
-					v-model="templateName"
-					device-type="meter"
-					:is-new="isNew"
-					:product-name="productName"
-					:groups="templateOptions"
-					@change="templateChanged"
+			<YamlEntry
+				v-if="values.type === 'custom'"
+				v-model="values.yaml"
+				type="meter"
+				:error-line="test.errorLine"
+			/>
+			<div v-else>
+				<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
+				<Markdown v-if="description" :markdown="description" class="my-4" />
+				<Modbus
+					v-if="modbus"
+					v-model:modbus="values.modbus"
+					v-model:id="values.id"
+					v-model:host="values.host"
+					v-model:port="values.port"
+					v-model:device="values.device"
+					v-model:baudrate="values.baudrate"
+					v-model:comset="values.comset"
+					:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
+					:defaultComset="modbus.Comset"
+					:defaultBaudrate="modbus.Baudrate"
+					:defaultPort="modbus.Port"
+					:capabilities="modbusCapabilities"
+				/>
+				<PropertyEntry
+					v-for="param in normalParams"
+					:id="`meterParam${param.Name}`"
+					:key="param.Name"
+					v-bind="param"
+					v-model="values[param.Name]"
 				/>
 
-				<YamlEntry
-					v-if="values.type === 'custom'"
-					v-model="values.yaml"
-					type="meter"
-					:error-line="test.errorLine"
-				/>
-				<div v-else>
-					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
-					<Markdown v-if="description" :markdown="description" class="my-4" />
-					<Modbus
-						v-if="modbus"
-						v-model:modbus="values.modbus"
-						v-model:id="values.id"
-						v-model:host="values.host"
-						v-model:port="values.port"
-						v-model:device="values.device"
-						v-model:baudrate="values.baudrate"
-						v-model:comset="values.comset"
-						:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
-						:defaultComset="modbus.Comset"
-						:defaultBaudrate="modbus.Baudrate"
-						:defaultPort="modbus.Port"
-						:capabilities="modbusCapabilities"
-					/>
-					<PropertyEntry
-						v-for="param in normalParams"
-						:id="`meterParam${param.Name}`"
-						:key="param.Name"
-						v-bind="param"
-						v-model="values[param.Name]"
-					/>
-
-					<PropertyCollapsible>
-						<template v-if="advancedParams.length" #advanced>
-							<PropertyEntry
-								v-for="param in advancedParams"
-								:id="`meterParam${param.Name}`"
-								:key="param.Name"
-								v-bind="param"
-								v-model="values[param.Name]"
-							/>
-						</template>
-					</PropertyCollapsible>
-				</div>
-
-				<DeviceModalActions
-					v-if="showActions"
-					:is-deletable="isDeletable"
-					:test-state="test"
-					:is-saving="saving"
-					@save="isNew ? create() : update()"
-					@remove="remove"
-					@test="testManually"
-				/>
+				<PropertyCollapsible>
+					<template v-if="advancedParams.length" #advanced>
+						<PropertyEntry
+							v-for="param in advancedParams"
+							:id="`meterParam${param.Name}`"
+							:key="param.Name"
+							v-bind="param"
+							v-model="values[param.Name]"
+						/>
+					</template>
+				</PropertyCollapsible>
 			</div>
+
+			<DeviceModalActions
+				v-if="showActions"
+				:is-deletable="isDeletable"
+				:test-state="test"
+				:is-saving="saving"
+				@save="isNew ? create() : update()"
+				@remove="remove"
+				@test="testManually"
+			/>
 		</form>
 	</GenericModal>
 </template>
@@ -148,6 +161,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	type TemplateType,
+	type MeterUsage,
 } from "./DeviceModal";
 import defaultYaml from "./defaultYaml/meter.yaml?raw";
 
@@ -162,7 +176,7 @@ const CUSTOM_FIELDS = ["usage", "modbus"];
 
 const defaultIcons: Record<string, string> = {
 	aux: "smartconsumer",
-	ext: "meter",
+	ext: "generic",
 };
 
 type MeterDeviceValues = DeviceValues & {
@@ -216,6 +230,7 @@ export default defineComponent({
 			template: null as Template | null,
 			saving: false,
 			selectedType: null as string | null,
+			extMeterUsage: undefined as MeterUsage | undefined,
 			loadingTemplate: false,
 			iconChoices: ICONS,
 			values: { ...initialValues } as MeterDeviceValues,
@@ -273,6 +288,17 @@ export default defineComponent({
 				});
 			return params;
 		},
+		extMeterUsageOptions() {
+			return ["grid", "pv", "battery", "charge", "aux"].map((key) => ({
+				name: this.$t(`config.meter.usage.${key}`),
+				key,
+			}));
+		},
+		templateSelectorDisabled() {
+			const noProducts = this.products.length === 0;
+			const noExtMeterUsage = this.meterType === "ext" && this.extMeterUsage === undefined;
+			return noProducts || noExtMeterUsage;
+		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
@@ -307,8 +333,10 @@ export default defineComponent({
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template) {
+				const usage: MeterUsage | undefined =
+					(this.meterType === "ext" ? this.extMeterUsage : this.meterType) || undefined;
 				data["template"] = this.templateName;
-				data["usage"] = this.meterType || undefined;
+				data["usage"] = usage;
 			}
 			return data;
 		},
@@ -333,6 +361,8 @@ export default defineComponent({
 			if (visible) {
 				this.templateName = null;
 				this.selectedType = null;
+				this.extMeterUsage = undefined;
+				this.products = [];
 				this.reset();
 				this.test = initialTestState();
 				this.loadProducts();
@@ -376,16 +406,19 @@ export default defineComponent({
 				this.values.deviceProduct = meter.deviceProduct;
 				applyDefaultsFromTemplate(this.template, this.values);
 				this.templateName = this.values.template;
+				if (this.meterType === "ext") {
+					this.extMeterUsage = this.values["usage"] as MeterUsage;
+				}
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		async loadProducts() {
-			if (!this.isModalVisible || !this.meterType) {
-				return;
-			}
+			if (!this.isModalVisible) return;
+			const usage = this.meterType === "ext" ? this.extMeterUsage : this.meterType;
+			if (!usage) return;
 			try {
-				this.products = await device.loadProducts(this.$i18n?.locale, this.meterType);
+				this.products = await device.loadProducts(this.$i18n?.locale, usage);
 			} catch (e) {
 				console.error(e);
 			}
@@ -479,6 +512,12 @@ export default defineComponent({
 				this.values.type = ConfigType.Custom;
 				this.values.yaml = defaultYaml;
 			}
+		},
+		extMeterUsageChanged() {
+			console.log("extMeterUsageChanged", this.extMeterUsage);
+			this.reset(true);
+			this.templateName = null;
+			this.loadProducts();
 		},
 	},
 });

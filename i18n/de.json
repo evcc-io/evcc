@@ -194,7 +194,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ändern"
+      "change": "ändern",
+      "label": "Symbol"
     },
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
@@ -349,6 +350,14 @@
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "usage": {
+        "aux": "Intelligenter Verbraucher",
+        "battery": "Batterie Zähler",
+        "charge": "Ladegerät Zähler",
+        "grid": "Netz Zähler",
+        "label": "Verwendung",
+        "pv": "PV Zähler"
+      },
       "validateSave": "Überprüfen & speichern"
     },
     "modbus": {
