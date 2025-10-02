@@ -13,6 +13,7 @@
 	>
 		<template #default="{ values }: { values: ModbusProxy[] }">
 			<div class="mb-3">
+				<pre class="text-monospace">{{ ASCII_DIAGRAM }}</pre>
 				<h6>Network Connection</h6>
 				<p>
 					The device is directly connected via a native network connection (Modbus TCP).
@@ -248,6 +249,7 @@ import {
 	type ModbusProxySerialConnection,
 } from "@/types/evcc";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
 
 const DEFAULT_NETWORK_CONNECTION: ModbusProxy<ModbusProxyNetworkConnection> = {
 	Port: 0,
@@ -266,6 +268,7 @@ export default {
 	emits: ["changed"],
 	data() {
 		return {
+			ASCII_DIAGRAM,
 			DEFAULT_NETWORK_CONNECTION,
 			DEFAULT_SERIAL_CONNECTION,
 			MODBUS_PROXY_READONLY,
