@@ -4,6 +4,7 @@ products:
     description:
       generic: Dynamic eco power price of EWS Elektrizitätswerke Schönau
 requirements:
+  evcc: ["skiptest"]
   description:
     de: "Ein API-Key kann unter der E-Mail-Adresse api@ews-schoenau.de erfragt werden."
     en: "You can request an API key at api@ews-schoenau.de"
