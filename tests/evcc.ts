@@ -10,7 +10,7 @@ import { test } from "@playwright/test";
 
 const BINARY = "./evcc";
 const IS_CI = !!process.env["GITHUB_ACTIONS"];
-const LOG_ENABLED = !IS_CI;
+const LOG_ENABLED = true //!IS_CI;
 
 // sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
 let allowedStartupFails = IS_CI ? 2 : 0;

@@ -138,7 +138,6 @@ export default defineComponent({
 		slots(): Slot[] {
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
-			console.log(plan);
 			const quarterHour = 15 * 60 * 1000;
 
 			const base = new Date(this.startTime);

@@ -154,6 +154,7 @@
 					data-testid="static-plan-apply"
 					:disabled="timeInThePast"
 					tabindex="0"
+					:aria-label="$t('main.chargingPlan.update')"
 					@click="update"
 				>
 					<span class="d-lg-none">{{ $t("main.chargingPlan.update") }}</span>
