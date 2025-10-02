@@ -182,32 +182,6 @@
 							required
 						/>
 					</FormRow>
-					<FormRow
-						id="serialConnectionReadonly"
-						label="Readonly"
-						:help="
-							connection.ReadOnly === MODBUS_PROXY_READONLY.TRUE
-								? 'Write access is blocked without response.'
-								: connection.ReadOnly === MODBUS_PROXY_READONLY.FALSE
-									? 'Write access is blocked with a modbus error as response.'
-									: connection.ReadOnly === MODBUS_PROXY_READONLY.DENY
-										? 'Write access is forwarded.'
-										: 'Whether Modbus write accesses by third-party systems should be blocked.'
-						"
-					>
-						<SelectGroup
-							id="serialConnectionReadonly"
-							v-model="connection.ReadOnly"
-							class="w-100"
-							:options="
-								Object.values(MODBUS_PROXY_READONLY).map((v) => ({
-									value: v,
-									name: v,
-								}))
-							"
-							transparent
-						/>
-					</FormRow>
 					<div class="align-items-center d-flex mb-4">
 						<button
 							type="button"

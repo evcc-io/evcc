@@ -38,7 +38,7 @@
 			</label>
 		</div>
 	</FormRow>
-	<FormRow id="modbusId" :label="$t('config.modbus.id')">
+	<FormRow v-if="showIdForm" id="modbusId" :label="$t('config.modbus.id')">
 		<PropertyField
 			id="modbusId"
 			property="id"
@@ -157,6 +157,34 @@
 			/>
 		</FormRow>
 	</div>
+	<FormRow
+		v-if="true"
+		id="serialConnectionReadonly"
+		label="Readonly"
+		:help="
+			readOnly === MODBUS_PROXY_READONLY.TRUE
+				? 'Write access is blocked without response.'
+				: readOnly === MODBUS_PROXY_READONLY.FALSE
+					? 'Write access is blocked with a modbus error as response.'
+					: readOnly === MODBUS_PROXY_READONLY.DENY
+						? 'Write access is forwarded.'
+						: 'Whether Modbus write accesses by third-party systems should be blocked.'
+		"
+	>
+		<SelectGroup
+			id="serialConnectionReadonly"
+			:model-value="readOnly || defaultReadOnly || MODBUS_PROXY_READONLY.DENY"
+			class="w-100"
+			:options="
+				Object.values(MODBUS_PROXY_READONLY).map((v) => ({
+					value: v,
+					name: v,
+				}))
+			"
+			transparent
+			@change="$emit('update:readonly', $event.target.value)"
+		/>
+	</FormRow>
 </template>
 
 <script lang="ts">
@@ -165,13 +193,15 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
+import { MODBUS_PROXY_READONLY } from "@/types/evcc";
+import SelectGroup from "@/components/Helper/SelectGroup.vue";
 type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
 type ConnectionOption = "tcpip" | "serial";
 type ProtocolOption = "tcp" | "rtu";
 
 export default defineComponent({
 	name: "Modbus",
-	components: { FormRow, PropertyField },
+	components: { FormRow, PropertyField, SelectGroup },
 	props: {
 		capabilities: {
 			type: Array as PropType<ModbusCapability[]>,
@@ -184,10 +214,14 @@ export default defineComponent({
 		baudrate: [Number, String],
 		comset: String,
 		device: String,
+		readOnly: String as PropType<MODBUS_PROXY_READONLY>,
 		defaultPort: Number,
 		defaultId: Number,
 		defaultComset: String,
 		defaultBaudrate: Number,
+		defaultReadOnly: String as PropType<MODBUS_PROXY_READONLY>,
+		showIdForm: { type: Boolean, default: true },
+		showReadonlyForm: Boolean,
 	},
 	emits: [
 		"update:modbus",
@@ -197,11 +231,13 @@ export default defineComponent({
 		"update:device",
 		"update:baudrate",
 		"update:comset",
+		"update:readonly",
 	],
-	data(): { connection: ConnectionOption; protocol: ProtocolOption } {
+	data() {
 		return {
-			connection: "tcpip",
-			protocol: "tcp",
+			connection: "tcpip" as ConnectionOption,
+			protocol: "tcp" as ProtocolOption,
+			MODBUS_PROXY_READONLY,
 		};
 	},
 	computed: {
