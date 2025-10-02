@@ -136,7 +136,7 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 	}
 
 	// If status is "On", the charger is actively charging -> Status C
-	if status.Status == semp.StatusOn {
+	if status.Status == semp.StatusOn && status.PowerInfo.AveragePower > 0 {
 		return api.StatusC, nil
 	}
 
