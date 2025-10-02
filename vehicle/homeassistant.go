@@ -181,7 +181,7 @@ func (v *HomeAssistant) setMaxCurrent(entity string, current int64) error {
 	}
 
 	domain := parts[0]
-	service := ""
+	var service string
 
 	switch domain {
 	case "number":
