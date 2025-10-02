@@ -151,7 +151,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
-	if len(zipReader.File) != 1 {
+	if len(zipReader.File) != 2 {
 		return nil, fmt.Errorf("unexpected number of files in the ZIP archive")
 	}
 
