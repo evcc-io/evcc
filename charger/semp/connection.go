@@ -26,7 +26,7 @@ func NewConnection(helper *request.Helper, uri, deviceID string) *Connection {
 
 // GetDeviceStatus retrieves the current device status from SEMP interface
 func (c *Connection) GetDeviceStatus() (DeviceStatus, error) {
-	uri := fmt.Sprintf("%s/semp/DeviceStatus", c.uri)
+	uri := fmt.Sprintf("%s/DeviceStatus", c.uri)
 
 	var response Device2EM
 	if err := c.helper.GetXML(uri, &response); err != nil {
@@ -45,7 +45,7 @@ func (c *Connection) GetDeviceStatus() (DeviceStatus, error) {
 
 // GetDeviceInfo retrieves the device info from SEMP interface
 func (c *Connection) GetDeviceInfo() (DeviceInfo, error) {
-	uri := fmt.Sprintf("%s/semp/DeviceInfo", c.uri)
+	uri := fmt.Sprintf("%s/DeviceInfo", c.uri)
 
 	var response Device2EM
 	if err := c.helper.GetXML(uri, &response); err != nil {
@@ -64,7 +64,7 @@ func (c *Connection) GetDeviceInfo() (DeviceInfo, error) {
 
 // HasPlanningRequest checks if there is a planning request/timeframe for the device
 func (c *Connection) HasPlanningRequest() (bool, error) {
-	uri := fmt.Sprintf("%s/semp/PlanningRequest", c.uri)
+	uri := fmt.Sprintf("%s/PlanningRequest", c.uri)
 
 	var response Device2EM
 	if err := c.helper.GetXML(uri, &response); err != nil {
@@ -97,7 +97,7 @@ func (c *Connection) SendDeviceControl(on bool, power int) error {
 		DeviceControl: []DeviceControl{control},
 	}
 
-	uri := fmt.Sprintf("%s/semp/DeviceControl", c.uri)
+	uri := fmt.Sprintf("%s", c.uri)
 
 	req, err := request.New(http.MethodPost, uri, request.MarshalXML(message), request.XMLEncoding)
 	if err != nil {
