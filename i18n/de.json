@@ -162,6 +162,9 @@
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
+      "dragHandle": "Verschieben",
+      "dragItem": "Verschiebbar: {title}",
+      "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
@@ -172,6 +175,7 @@
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "required": "erforderlich",
+      "reset": "Zurücksetzen",
       "save": "Speichern",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
@@ -510,6 +514,10 @@
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
       "title": "Tarife"
     },
+    "telemetry": {
+      "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
       "label": "Titel",
@@ -663,8 +671,8 @@
   "help": {
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
-    "issueButton": "Bug melden",
-    "issueDescription": "Komisches Verhalten gefunden?",
+    "issueButton": "Problem melden",
+    "issueDescription": "Seltsames Verhalten gefunden?",
     "logsButton": "Logs ansehen",
     "logsDescription": "Überprüfe die Logs auf Fehler.",
     "modalTitle": "Hilfe benötigt?",
@@ -1088,6 +1096,7 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
@@ -1100,6 +1109,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Sprache"
+    },
+    "loadpoints": {
+      "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
+      "hide": "{title} ausblenden",
+      "label": "Ladepunkte",
+      "show": "{title} anzeigen"
     },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",

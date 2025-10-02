@@ -3,7 +3,7 @@ products:
   - brand: Compleo
     description:
       generic: Solo
-capabilities: ["mA", "rfid", "1p3p"]
+capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
 params:

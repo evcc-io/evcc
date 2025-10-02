@@ -53,7 +53,7 @@ func NewSgReadyBoostFromConfig(ctx context.Context, other map[string]interface{}
 func NewSgReadyBoost(ctx context.Context, embed *embed, charger api.Charger) (*SgReady, error) {
 	modeS := func(mode int64) error {
 		switch mode {
-		case Dimm:
+		case Dim:
 			return api.ErrNotAvailable
 		case Normal:
 			return charger.Enable(false)
