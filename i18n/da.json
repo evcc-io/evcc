@@ -162,6 +162,9 @@
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
       "docsLink": "Se dokumentation.",
+      "dragHandle": "Træk-håndtag",
+      "dragItem": "Kan trækkes: {title}",
+      "dragList": "Rækkefølgen kan ændres",
       "experimental": "Eksperimentel",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
@@ -172,6 +175,7 @@
       "readFromFile": "Læs fra fil",
       "remove": "Fjern",
       "required": "påkrævet",
+      "reset": "Nulstil",
       "save": "Gem",
       "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
@@ -510,6 +514,10 @@
     "tariffs": {
       "description": "Definer dine energitakster for at beregne omkostningerne ved dine opladningssessioner.",
       "title": "Tariffer"
+    },
+    "telemetry": {
+      "description": "Konfigurér datadeling for at hjælpe med at forbedre evcc. Din privatlivsbeskyttelse er vigtig for os, og deltagelse er helt frivillig.",
+      "title": "Telemetri"
     },
     "title": {
       "description": "Vises på hovedskærm og på browserfane.",
@@ -1091,6 +1099,7 @@
     "vehicle": "Køretøj"
   },
   "settings": {
+    "deviceInfo": "De indstillinger, du laver her, gælder kun for denne enhed.",
     "fullscreen": {
       "enter": "Gå til fuldskærmsvisning",
       "exit": "Afslut fuldskærm",
@@ -1103,6 +1112,12 @@
     "language": {
       "auto": "Automatisk",
       "label": "Sprog"
+    },
+    "loadpoints": {
+      "help": "Tilpas rækkefølge og synlighed i brugerfladen.",
+      "hide": "Skjul {title}",
+      "label": "Opladningspunkter",
+      "show": "Vis {title}"
     },
     "sponsorToken": {
       "expires": "Din sponsortoken udløber {inXDays}. {getNewToken} og opdater det her.",
