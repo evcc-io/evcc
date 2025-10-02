@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
@@ -70,7 +71,7 @@ type EVECUBEConnectorStatus struct {
 	Voltages         []float64               `json:"voltages"`
 	Current          float64                 `json:"current"`
 	Currents         []float64               `json:"currents"`
-	Energy           int                     `json:"energy"`
+	Energy           float64                 `json:"energy"`
 	EnergyTotal      float64                 `json:"energyTotal"`
 	CarConnected     bool                    `json:"carConnected"`
 	LastStatusPacket EVECUBELastStatusPacket `json:"lastStatusPacket"`
@@ -83,8 +84,8 @@ type EVECUBELastStatusPacket struct {
 	Voltage        float64   `json:"voltage"`
 	Voltages       []float64 `json:"voltages"`
 	Current        float64   `json:"current"`
-	ActualWh       int       `json:"actualWh"`
-	TotalWh        int       `json:"totalWh"`
+	ActualWh       float64   `json:"actualWh"`
+	TotalWh        float64   `json:"totalWh"`
 }
 
 // EVECUBEAutomationStatus is the /api/admin/automation/status response
@@ -164,6 +165,10 @@ func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) 
 		wb.Client.Transport = transport.BasicAuth(user, password, wb.Client.Transport)
 	}
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	return wb, nil
 }
 
@@ -213,18 +218,15 @@ func (wb *EVECUBE) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	chargingStatus := strings.ToUpper(status.LastStatusPacket.ChargingStatus)
-	carStatus := strings.ToUpper(status.LastStatusPacket.CarStatus)
-
-	if carStatus == "NOT_CONNECTED" {
+	if !status.CarConnected {
 		return api.StatusA, nil
 	}
 
-	if chargingStatus == "NOT_CHARGING" {
-		return api.StatusB, nil
+	if status.Status == "Charging" {
+		return api.StatusC, nil
 	}
 
-	return api.StatusC, nil
+	return api.StatusB, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -347,12 +349,10 @@ func (wb *EVECUBE) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	// PhasesCurrent contains [L1, L2, L3]
 	if len(status.Currents) == 3 {
 		return status.Currents[0], status.Currents[1], status.Currents[2], nil
 	}
 
-	// Fallback if phase currents not available
 	return 0, 0, 0, nil
 }
 
@@ -365,7 +365,7 @@ func (wb *EVECUBE) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	if len(status.LastStatusPacket.Voltages) >= 3 {
+	if len(status.LastStatusPacket.Voltages) == 3 {
 		return status.LastStatusPacket.Voltages[0], status.LastStatusPacket.Voltages[1], status.LastStatusPacket.Voltages[2], nil
 	}
 
@@ -374,7 +374,9 @@ func (wb *EVECUBE) Voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *EVECUBE) phases1p3p(phases int) error {
-	return wb.setValue("ForcePhaseCharging", int64(phases))
+	return whenDisabled(wb, func() error {
+		return wb.setValue("ForcePhaseCharging", int64(phases))
+	})
 }
 
 // identify implements the api.Identifier interface
