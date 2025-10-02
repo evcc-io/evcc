@@ -38,8 +38,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		Interval time.Duration
 		Cache    time.Duration
 	}{
-		Interval: 15 * time.Minute,
-		Cache:    15 * time.Minute,
+		Interval: SlotDuration,
+		Cache:    SlotDuration,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -116,7 +116,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 		}
 
 		// only prune rates older than current period
-		periodStart := now.With(time.Now()).Truncate(15 * time.Minute)
+		periodStart := now.With(time.Now()).Truncate(SlotDuration)
 		if t.typ == api.TariffTypeSolar {
 			periodStart = beginningOfDay()
 		}
@@ -141,13 +141,13 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 	}
 
 	res := make(api.Rates, 48*4) // forecast for two days
-	start := now.With(time.Now()).Truncate(15 * time.Minute)
+	start := now.With(time.Now()).Truncate(SlotDuration)
 
 	for i := range res {
-		slot := start.Add(time.Duration(i) * 15 * time.Minute)
+		slot := start.Add(time.Duration(i) * SlotDuration)
 		res[i] = api.Rate{
 			Start: slot,
-			End:   slot.Add(15 * time.Minute),
+			End:   slot.Add(SlotDuration),
 			Value: t.totalPrice(price, slot),
 		}
 	}
