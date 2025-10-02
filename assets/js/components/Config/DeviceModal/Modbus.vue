@@ -38,23 +38,35 @@
 			</label>
 		</div>
 	</FormRow>
-	<FormRow v-if="showIdForm" id="modbusId" :label="$t('config.modbus.id')">
+	<FormRow v-if="!isProxy" id="modbusId" :label="$t('config.modbus.id')">
 		<PropertyField
 			id="modbusId"
 			property="id"
 			type="Int"
 			class="me-2"
 			required
-			:model-value="id || defaultId || 1"
+			:model-value="id || defaultId"
 			@change="$emit('update:id', $event.target.value)"
 		/>
 	</FormRow>
 	<div v-if="connection === 'tcpip'">
 		<FormRow
-			id="modbusHost"
-			:label="$t('config.modbus.host')"
-			:help="$t('config.modbus.hostHint')"
+			v-if="isProxy"
+			id="modbusURI"
+			:label="$t('config.modbus.uri')"
+			example="192.0.2.2:502"
 		>
+			<PropertyField
+				id="modbusURI"
+				property="uri"
+				type="String"
+				class="me-2"
+				required
+				:model-value="host"
+				@change="$emit('update:host', $event.target.value)"
+			/>
+		</FormRow>
+		<FormRow v-else id="modbusHost" :label="$t('config.modbus.host')" example="192.0.2.2">
 			<PropertyField
 				id="modbusHost"
 				property="host"
@@ -72,7 +84,7 @@
 				type="Int"
 				class="me-2 w-50"
 				required
-				:model-value="port || defaultPort || 502"
+				:model-value="port || defaultPort"
 				@change="$emit('update:port', $event.target.value)"
 			/>
 		</FormRow>
@@ -117,11 +129,7 @@
 		</FormRow>
 	</div>
 	<div v-else>
-		<FormRow
-			id="modbusDevice"
-			:label="$t('config.modbus.device')"
-			:help="$t('config.modbus.deviceHint')"
-		>
+		<FormRow id="modbusDevice" :label="$t('config.modbus.device')" example="/dev/ttyUSB0">
 			<PropertyField
 				id="modbusDevice"
 				property="device"
@@ -152,13 +160,13 @@
 				class="me-2 w-50"
 				:choice="comsetOptions"
 				required
-				:model-value="comset || defaultComset || '8N1'"
+				:model-value="comset || defaultComset"
 				@change="$emit('update:comset', $event.target.value)"
 			/>
 		</FormRow>
 	</div>
 	<FormRow
-		v-if="true"
+		v-if="isProxy"
 		id="serialConnectionReadonly"
 		label="Readonly"
 		:help="
@@ -173,7 +181,7 @@
 	>
 		<SelectGroup
 			id="serialConnectionReadonly"
-			:model-value="readOnly || defaultReadOnly || MODBUS_PROXY_READONLY.DENY"
+			:model-value="readOnly || defaultReadOnly"
 			class="w-100"
 			:options="
 				Object.values(MODBUS_PROXY_READONLY).map((v) => ({
@@ -182,7 +190,7 @@
 				}))
 			"
 			transparent
-			@change="$emit('update:readonly', $event.target.value)"
+			@update:model-value="$emit('update:readOnly', $event.target.value)"
 		/>
 	</FormRow>
 </template>
@@ -193,7 +201,7 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
-import { MODBUS_PROXY_READONLY } from "@/types/evcc";
+import { MODBUS_BAUDRATE, MODBUS_COMSET, MODBUS_PROXY_READONLY } from "@/types/evcc";
 import SelectGroup from "@/components/Helper/SelectGroup.vue";
 type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
 type ConnectionOption = "tcpip" | "serial";
@@ -215,13 +223,15 @@ export default defineComponent({
 		comset: String,
 		device: String,
 		readOnly: String as PropType<MODBUS_PROXY_READONLY>,
-		defaultPort: Number,
-		defaultId: Number,
-		defaultComset: String,
-		defaultBaudrate: Number,
-		defaultReadOnly: String as PropType<MODBUS_PROXY_READONLY>,
-		showIdForm: { type: Boolean, default: true },
-		showReadonlyForm: Boolean,
+		defaultPort: { type: Number, default: 502 },
+		defaultId: { type: Number, default: 1 },
+		defaultComset: { type: String as PropType<MODBUS_COMSET>, default: "8N1" },
+		defaultBaudrate: { type: Number as PropType<MODBUS_BAUDRATE>, default: 1200 },
+		defaultReadOnly: {
+			type: String as PropType<MODBUS_PROXY_READONLY>,
+			default: MODBUS_PROXY_READONLY.DENY,
+		},
+		isProxy: Boolean,
 	},
 	emits: [
 		"update:modbus",
@@ -231,13 +241,15 @@ export default defineComponent({
 		"update:device",
 		"update:baudrate",
 		"update:comset",
-		"update:readonly",
+		"update:readOnly",
 	],
 	data() {
 		return {
 			connection: "tcpip" as ConnectionOption,
 			protocol: "tcp" as ProtocolOption,
 			MODBUS_PROXY_READONLY,
+			MODBUS_BAUDRATE,
+			MODBUS_COMSET,
 		};
 	},
 	computed: {
@@ -254,14 +266,16 @@ export default defineComponent({
 			return this.connection === "tcpip" && this.capabilities.includes("rs485");
 		},
 		comsetOptions() {
-			return ["8N1", "8E1", "8N2"].map((v) => {
+			return Object.values(MODBUS_COMSET).map((v) => {
 				return { key: v, name: v };
 			});
 		},
 		baudrateOptions() {
-			return [1200, 9600, 19200, 38400, 57600, 115200].map((v) => {
-				return { key: v, name: `${v}` };
-			});
+			return Object.values(MODBUS_BAUDRATE)
+				.filter((v) => typeof v === "number")
+				.map((v) => {
+					return { key: v, name: `${v}` };
+				});
 		},
 	},
 	watch: {

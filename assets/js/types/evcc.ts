@@ -347,27 +347,37 @@ export interface Sponsor {
   fromYaml: boolean;
 }
 
+export enum MODBUS_BAUDRATE {
+  _1200 = 1200,
+  _9600 = 9600,
+  _19200 = 19200,
+  _38400 = 38400,
+  _57600 = 57600,
+  _115200 = 115200,
+}
+
+export enum MODBUS_COMSET {
+  _8N1 = "8N1",
+  _8E1 = "8E1",
+  _8N2 = "8N2",
+}
+
 export enum MODBUS_PROXY_READONLY {
   TRUE = "true",
   FALSE = "false",
   DENY = "deny",
 }
 
-export interface ModbusProxySerialConnection {
-  Device: string;
-  Baudrate: number;
-  Comset: string;
-}
-
-export interface ModbusProxyNetworkConnection {
-  URI: string;
-  RTU: boolean;
-}
-
-export type ModbusProxy<T = ModbusProxySerialConnection | ModbusProxyNetworkConnection> = {
+export type ModbusProxy = {
   Port: number;
   ReadOnly: MODBUS_PROXY_READONLY;
-  Settings: T;
+  Settings: {
+    URI?: string;
+    RTU?: boolean;
+    Device?: string;
+    Baudrate?: MODBUS_BAUDRATE;
+    Comset?: string;
+  };
 };
 
 export interface Notification {
