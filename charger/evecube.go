@@ -38,27 +38,61 @@ type EVECUBE struct {
 	user, pass   string
 	statusCache  time.Duration
 	cache        time.Duration
-	currentLimit int64 // stores the last non-zero current limit
+	currentLimit int64
 }
 
 func init() {
 	registry.Add("evecube", NewEVECUBEFromConfig)
 }
 
-// EVECUBEStatus is the /api/status response
-type EVECUBEStatus struct {
-	ID                int       `json:"id"`
-	Status            string    `json:"status"`
-	Voltage           float64   `json:"voltage"`
-	Current           float64   `json:"current"`
-	MaxCurrent        int       `json:"maxCurrent"`
-	Energy            int       `json:"energy"`      // Wh charged since transaction start
-	EnergyTotal       float64   `json:"energyTotal"` // Total kWh
-	LastSessionStart  time.Time `json:"lastSessionStart"`
-	OCPPTransactionID int       `json:"ocppTransactionId"`
-	CarConnected      bool      `json:"carConnected"`
-	AuthTag           string    `json:"authenticationTag"`
-	PhasesCurrent     []float64 `json:"phasesCurrent"` // Current in A on each phase [L1, L2, L3]
+//go:generate go tool decorate -f decorateEVECUBE -b *EVECUBE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+
+// EVECUBEUnitConfig is the /api/admin/unitconfig response
+type EVECUBEUnitConfig struct {
+	ForcePhaseCharging int `json:"ForcePhaseCharging"`
+	NumberOfConnectors int `json:"NumberOfConnectors"`
+	MaxCurrent1        int `json:"MaxCurrent_1"`
+	MaxCurrent2        int `json:"MaxCurrent_2"`
+	MaxCurrent3        int `json:"MaxCurrent_3"`
+	MaxCurrent4        int `json:"MaxCurrent_4"`
+}
+
+// EVECUBEStatusResponse is the /api/admin/status response
+type EVECUBEStatusResponse struct {
+	Connectors []EVECUBEConnectorStatus `json:"connectors"`
+}
+
+// EVECUBEConnectorStatus represents a single connector in the admin status response
+type EVECUBEConnectorStatus struct {
+	ID               int                     `json:"id"`
+	Status           string                  `json:"status"`
+	Voltage          float64                 `json:"voltage"`
+	Voltages         []float64               `json:"voltages"`
+	Current          float64                 `json:"current"`
+	Currents         []float64               `json:"currents"`
+	Energy           int                     `json:"energy"`
+	EnergyTotal      float64                 `json:"energyTotal"`
+	CarConnected     bool                    `json:"carConnected"`
+	LastStatusPacket EVECUBELastStatusPacket `json:"lastStatusPacket"`
+}
+
+// EVECUBELastStatusPacket contains detailed status information
+type EVECUBELastStatusPacket struct {
+	CarStatus      string    `json:"carStatus"`
+	ChargingStatus string    `json:"chargingStatus"`
+	Voltage        float64   `json:"voltage"`
+	Voltages       []float64 `json:"voltages"`
+	Current        float64   `json:"current"`
+	ActualWh       int       `json:"actualWh"`
+	TotalWh        int       `json:"totalWh"`
+}
+
+// EVECUBEAutomationStatus is the /api/admin/automation/status response
+type EVECUBEAutomationStatus struct {
+	Connectors map[string]interface{} `json:"connectors"`
+	AuthTag    struct {
+		Tag string `json:"tag"`
+	} `json:"authTag"`
 }
 
 // EVECUBEUnitConfigRequest is the request body for /api/admin/unitconfig POST
@@ -83,15 +117,36 @@ func NewEVECUBEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.Connector < 1 {
-		return nil, fmt.Errorf("connector must be >= 1")
+	wb, err := NewEVECUBE(cc.URI, cc.User, cc.Password, cc.Connector, cc.Cache)
+	if err != nil {
+		return nil, err
 	}
 
-	return NewEVECUBE(cc.URI, cc.User, cc.Password, cc.Connector, cc.Cache)
+	// Get unit configuration to determine connector count
+	config, err := wb.getUnitConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get unit config: %w", err)
+	}
+
+	if cc.Connector < 1 || cc.Connector > 4 || config.NumberOfConnectors < cc.Connector {
+		return nil, fmt.Errorf("invalid connector: %d", cc.Connector)
+	}
+
+	// Phases1p3p and Identify APIs affect the entire charger, not individual connectors
+	// Only enable these APIs if the charger has a single connector
+	var phases1p3p func(int) error
+	var identify func() (string, error)
+
+	if config.NumberOfConnectors == 1 {
+		phases1p3p = wb.phases1p3p
+		identify = wb.identify
+	}
+
+	return decorateEVECUBE(wb, phases1p3p, identify), nil
 }
 
 // NewEVECUBE creates EVECUBE charger
-func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) (api.Charger, error) {
+func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) (*EVECUBE, error) {
 	log := util.NewLogger("evecube")
 
 	wb := &EVECUBE{
@@ -102,10 +157,9 @@ func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) 
 		pass:         password,
 		statusCache:  cache,
 		cache:        cache,
-		currentLimit: 6, // default to 6A
+		currentLimit: 6,
 	}
 
-	// Set basic auth if credentials provided
 	if user != "" {
 		wb.Client.Transport = transport.BasicAuth(user, password, wb.Client.Transport)
 	}
@@ -113,22 +167,43 @@ func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) 
 	return wb, nil
 }
 
-func (wb *EVECUBE) getStatus() (EVECUBEStatus, error) {
-	var statuses []EVECUBEStatus
-	uri := fmt.Sprintf("%s/api/status", wb.uri)
+func (wb *EVECUBE) getUnitConfig() (EVECUBEUnitConfig, error) {
+	var config EVECUBEUnitConfig
+	uri := fmt.Sprintf("%s/api/admin/unitconfig", wb.uri)
 
-	if err := wb.GetJSON(uri, &statuses); err != nil {
-		return EVECUBEStatus{}, err
+	if err := wb.GetJSON(uri, &config); err != nil {
+		return EVECUBEUnitConfig{}, err
 	}
 
-	// Find the status for our connector
-	for _, status := range statuses {
-		if status.ID == wb.connector {
-			return status, nil
+	return config, nil
+}
+
+func (wb *EVECUBE) getStatus() (EVECUBEConnectorStatus, error) {
+	var resp EVECUBEStatusResponse
+	uri := fmt.Sprintf("%s/api/admin/status", wb.uri)
+
+	if err := wb.GetJSON(uri, &resp); err != nil {
+		return EVECUBEConnectorStatus{}, err
+	}
+
+	for _, connector := range resp.Connectors {
+		if connector.ID == wb.connector {
+			return connector, nil
 		}
 	}
 
-	return EVECUBEStatus{}, fmt.Errorf("connector %d not found", wb.connector)
+	return EVECUBEConnectorStatus{}, fmt.Errorf("connector %d not found", wb.connector)
+}
+
+func (wb *EVECUBE) getAutomationStatus() (EVECUBEAutomationStatus, error) {
+	var resp EVECUBEAutomationStatus
+	uri := fmt.Sprintf("%s/api/admin/automation/status", wb.uri)
+
+	if err := wb.GetJSON(uri, &resp); err != nil {
+		return EVECUBEAutomationStatus{}, err
+	}
+
+	return resp, nil
 }
 
 // Status implements the api.Charger interface
@@ -138,26 +213,41 @@ func (wb *EVECUBE) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch status.Status {
-	case "Available":
+	chargingStatus := strings.ToUpper(status.LastStatusPacket.ChargingStatus)
+	carStatus := strings.ToUpper(status.LastStatusPacket.CarStatus)
+
+	if carStatus == "NOT_CONNECTED" {
 		return api.StatusA, nil
-	case "Preparing", "SuspendedEVSE", "SuspendedEV", "Finishing":
-		return api.StatusB, nil
-	case "Charging":
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("unknown status: %s", status.Status)
 	}
+
+	if chargingStatus == "NOT_CHARGING" {
+		return api.StatusB, nil
+	}
+
+	return api.StatusC, nil
 }
 
 // Enabled implements the api.Charger interface
 func (wb *EVECUBE) Enabled() (bool, error) {
-	status, err := wb.getStatus()
+	config, err := wb.getUnitConfig()
 	if err != nil {
 		return false, err
 	}
 
-	return status.MaxCurrent > 0, nil
+	// Get the MaxCurrent for our connector
+	var maxCurrent int
+	switch wb.connector {
+	case 1:
+		maxCurrent = config.MaxCurrent1
+	case 2:
+		maxCurrent = config.MaxCurrent2
+	case 3:
+		maxCurrent = config.MaxCurrent3
+	case 4:
+		maxCurrent = config.MaxCurrent4
+	}
+
+	return maxCurrent > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -167,7 +257,7 @@ func (wb *EVECUBE) Enable(enable bool) error {
 		current = wb.currentLimit
 	}
 
-	return wb.setCurrent(current)
+	return wb.setValue(fmt.Sprintf("MaxCurrent_%d", wb.connector), current)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -178,15 +268,14 @@ func (wb *EVECUBE) MaxCurrent(current int64) error {
 
 	wb.currentLimit = current
 
-	return wb.setCurrent(current)
+	return wb.setValue(fmt.Sprintf("MaxCurrent_%d", wb.connector), current)
 }
 
-// setCurrent sets the MaxCurrent_X value via admin API
-func (wb *EVECUBE) setCurrent(current int64) error {
-	configKey := fmt.Sprintf("MaxCurrent_%d", wb.connector)
+// setValue sets a named value via admin API
+func (wb *EVECUBE) setValue(key string, value int64) error {
 	reqBody := EVECUBEUnitConfigRequest{
 		Values: map[string]interface{}{
-			configKey: current,
+			key: value,
 		},
 	}
 
@@ -201,7 +290,6 @@ func (wb *EVECUBE) setCurrent(current int64) error {
 		return err
 	}
 
-	// Set basic auth for admin endpoint
 	if wb.user != "" {
 		req.SetBasicAuth(wb.user, wb.pass)
 	}
@@ -235,7 +323,6 @@ func (wb *EVECUBE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// EnergyTotal is in kWh
 	return status.EnergyTotal, nil
 }
 
@@ -248,7 +335,6 @@ func (wb *EVECUBE) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// Energy is in Wh, convert to kWh
 	return float64(status.Energy) / 1000.0, nil
 }
 
@@ -262,15 +348,14 @@ func (wb *EVECUBE) Currents() (float64, float64, float64, error) {
 	}
 
 	// PhasesCurrent contains [L1, L2, L3]
-	if len(status.PhasesCurrent) >= 3 {
-		return status.PhasesCurrent[0], status.PhasesCurrent[1], status.PhasesCurrent[2], nil
+	if len(status.Currents) == 3 {
+		return status.Currents[0], status.Currents[1], status.Currents[2], nil
 	}
 
 	// Fallback if phase currents not available
 	return 0, 0, 0, nil
 }
 
-/*
 var _ api.PhaseVoltages = (*EVECUBE)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
@@ -280,19 +365,24 @@ func (wb *EVECUBE) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	// The API only provides a single voltage value, assume same for all phases
-	return status.Voltage, status.Voltage, status.Voltage, nil
+	if len(status.LastStatusPacket.Voltages) >= 3 {
+		return status.LastStatusPacket.Voltages[0], status.LastStatusPacket.Voltages[1], status.LastStatusPacket.Voltages[2], nil
+	}
+
+	return 0, 0, 0, nil
 }
-*/
 
-var _ api.Identifier = (*EVECUBE)(nil)
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *EVECUBE) phases1p3p(phases int) error {
+	return wb.setValue("ForcePhaseCharging", int64(phases))
+}
 
-// Identify implements the api.Identifier interface
-func (wb *EVECUBE) Identify() (string, error) {
-	status, err := wb.getStatus()
+// identify implements the api.Identifier interface
+func (wb *EVECUBE) identify() (string, error) {
+	status, err := wb.getAutomationStatus()
 	if err != nil {
 		return "", err
 	}
 
-	return status.AuthTag, nil
+	return status.AuthTag.Tag, nil
 }
