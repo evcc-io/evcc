@@ -16,12 +16,20 @@ import (
 )
 
 type PlanResponse struct {
+	PlanId       int       `json:"planId"`
 	PlanTime     time.Time `json:"planTime"`
 	Duration     int64     `json:"duration"`
 	Precondition int64     `json:"precondition"`
 	Plan         api.Rates `json:"plan"`
 	Power        float64   `json:"power"`
-	PlanId       int       `json:"planId,omitempty"`
+}
+
+type PlanPreviewResponse struct {
+	PlanTime     time.Time `json:"planTime"`
+	Duration     int64     `json:"duration"`
+	Precondition int64     `json:"precondition"`
+	Plan         api.Rates `json:"plan"`
+	Power        float64   `json:"power"`
 }
 
 // remoteDemandHandler updates minimum soc
@@ -119,7 +127,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanResponse{
+		res := PlanPreviewResponse{
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
 			Precondition: int64(precondition.Seconds()),
@@ -170,7 +178,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanResponse{
+		res := PlanPreviewResponse{
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
 			Precondition: int64(precondition.Seconds()),
