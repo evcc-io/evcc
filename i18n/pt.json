@@ -155,11 +155,15 @@
       "optional": "opcional"
     },
     "general": {
+      "applyAndClose": "Aplicar e fechar",
       "cancel": "Cancelar",
+      "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
       "docsLink": "Ver documentação.",
+      "dragHandle": "Arrastar",
+      "dragItem": "Arrastável: {title}",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
