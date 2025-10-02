@@ -27,9 +27,10 @@ var supportedRegions = []string{
 // Stekker provider
 type Stekker struct {
 	*embed
-	region string
-	log    *util.Logger
-	data   *util.Monitor[api.Rates]
+	region     string
+	resolution int
+	log        *util.Logger
+	data       *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Stekker)(nil)
@@ -43,8 +44,9 @@ const stekkerURI = "https://stekker.app/epex-forecast"
 // NewStekkerFromConfig creates provider from config
 func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed  `mapstructure:",squash"`
-		Region string
+		embed      `mapstructure:",squash"`
+		Region     string
+		Resolution int
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -60,10 +62,11 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Stekker{
-		embed:  &cc.embed,
-		region: cc.Region,
-		log:    util.NewLogger("stekker"),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		embed:      &cc.embed,
+		region:     cc.Region,
+		resolution: cc.Resolution,
+		log:        util.NewLogger("stekker"),
+		data:       util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	return runOrError(t)
@@ -74,7 +77,10 @@ func (t *Stekker) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, t.region)
+		// Construct region-resolution string like "NL-900"
+		regionRes := fmt.Sprintf("%s-%d", t.region, t.resolution*60)
+
+		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, regionRes)
 
 		resp, err := client.Get(url)
 		if err != nil {

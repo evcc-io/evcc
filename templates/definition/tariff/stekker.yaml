@@ -11,6 +11,9 @@ params:
   - name: region
     example: BE
     type: choice
+    required: true
+    description:
+      generic: Market region code
     choice:
       [
         "DE-LU",
@@ -47,8 +50,19 @@ params:
         "CZ",
         "HR",
       ]
+  - name: resolution
+    example: 60
+    default: 60
+    type: choice
+    description:
+      generic: Market resolution 15 or 60
+    help:
+      en: 15 minutes only for BE and NL at this moment
+    choice:
+      [15, 60]
   - preset: tariff-base
 render: |
   type: stekker
   region: {{ .region }}
+  resolution: {{ .resolution }}
   {{ include "tariff-base" . }}
