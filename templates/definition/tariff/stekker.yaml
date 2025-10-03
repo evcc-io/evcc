@@ -50,7 +50,7 @@ params:
         "CZ",
         "HR",
         "BE-900",
-        "NL-900"
+        "NL-900",
       ]
   - preset: tariff-base
 render: |
