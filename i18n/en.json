@@ -350,6 +350,7 @@
       "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
+      "titleLabel": "Title",
       "usage": {
         "aux": "Self-regulating consumer meter",
         "battery": "Battery meter",

@@ -350,6 +350,7 @@
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleLabel": "Titel",
       "usage": {
         "aux": "Intelligenter Verbraucher",
         "battery": "Batterie Zähler",

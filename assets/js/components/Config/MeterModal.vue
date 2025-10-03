@@ -25,8 +25,7 @@
 			<FormRow
 				v-if="hasDeviceTitle"
 				id="meterParamDeviceTitle"
-				label="Title"
-				help="Will be displayed in the user interface"
+				:label="$t('config.meter.titleLabel')"
 			>
 				<PropertyField
 					id="meterParamDeviceTitle"
