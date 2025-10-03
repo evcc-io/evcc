@@ -10,8 +10,8 @@ products:
       en: EEBus consumer or metering device (MPC)
 requirements:
   description:
-    de: Ein EEBus Verbraucher oder Messstelle mit bekanntem SKI (Subject Key Identifier). Unterstützt werden die Use Cases MGCP (Monitoring of Grid Connection Point) und MPC (Monitoring & Power Consumption).
-    en: An EEBus consumer or metering device with a known SKI (Subject Key Identifier). Supports both MGCP (grid connection points) and MPC (generic power monitoring) use cases.
+    de: Ein EEBus Verbraucher oder Messstelle mit bekanntem SKI (Subject Key Identifier). Unterstützt werden die Use Cases MGCP (Monitoring of Grid Connection Point), MPC (Monitoring & Power Consumption) und LPC (Limitation of Power Consumption).
+    en: An EEBus consumer or metering device with a known SKI (Subject Key Identifier). Supports MGCP (grid connection points), MPC (generic power monitoring), and LPC (Limitation of Power Consumption) use cases.
   evcc: ["eebus"]
 params:
   - name: ski

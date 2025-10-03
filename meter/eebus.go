@@ -6,6 +6,7 @@ import (
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
@@ -15,9 +16,10 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 )
 
-// EEBus is an EEBus meter implementation supporting both MGCP and MPC use cases
+// EEBus is an EEBus meter implementation supporting MGCP, MPC, and LPC use cases
 // Uses MGCP (Monitoring of Grid Connection Point) for usage=grid
 // Uses MPC (Monitoring & Power Consumption) for all other usages
+// Additionally supports LPC (Limitation of Power Consumption)
 type EEBus struct {
 	log *util.Logger
 
@@ -232,4 +234,35 @@ func (c *EEBus) PhaseVoltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 	return res[0], res[1], res[2], nil
+}
+
+var _ api.Dimmer = (*EEBus)(nil)
+
+// Dimmed implements the api.Dimmer interface
+func (c *EEBus) Dimmed() (bool, error) {
+	limit, err := c.uc.LPC.ConsumptionLimit()
+	if err != nil {
+		// No limit available means not dimmed
+		return false, nil
+	}
+
+	// Check if limit is active and has a valid power value
+	return limit.IsActive && limit.Value > 0, nil
+}
+
+// Dim implements the api.Dimmer interface
+func (c *EEBus) Dim(dim bool) error {
+	// Sets or removes the consumption power limit
+	// When dim=true, a default limit is set (4200W per §14a EnWG)
+	// When dim=false, the limit is removed
+
+	var limit float64
+	if dim {
+		limit = 4200
+	}
+
+	return c.uc.LPC.SetConsumptionLimit(ucapi.LoadLimit{
+		Value:    limit,
+		IsActive: dim,
+	})
 }
