@@ -1,4 +1,6 @@
-// queries PM #1 and PVI #1 only
+// queries PM #0 (root) for grid current / voltage / power (calculated) per phase
+//     and PVI #0 for solar DC energy
+// everything else from EMS
 
 package meter
 
@@ -239,7 +241,7 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 				{
 					Tag:      rscp.PM_INDEX,
 					DataType: rscp.UInt16,
-					Value:    uint16(0), // PM #1
+					Value:    uint16(0), // root PM
 				},
 				{
 					Tag:      rscp.PM_REQ_VOLTAGE_L1,
@@ -297,7 +299,7 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 				{
 					Tag:      rscp.PM_INDEX,
 					DataType: rscp.UInt16,
-					Value:    uint16(0), // PM #1
+					Value:    uint16(0), // root PM
 				},
 				{
 					Tag:      rscp.PM_REQ_POWER_L1,
@@ -374,14 +376,14 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var energyPerPhase [3]float64
+	var energyPerString [2]float64
 
 	switch m.usage {
 	case templates.UsageGrid:
 		return 0, api.ErrNotAvailable
 
-	case templates.UsagePV:
-		for phase := range 3 {
+		case templates.UsagePV:  // PVI: Solar DC only
+		for string := range 2 {
 			res, err := m.retryMessage(rscp.Message{
 				Tag:      rscp.PVI_REQ_DATA,
 				DataType: rscp.Container,
@@ -392,9 +394,9 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 						Value:    uint16(0), // PVI #1 = 0
 					},
 					{
-						Tag:      rscp.PVI_REQ_AC_ENERGY_ALL,
+						Tag:      rscp.PVI_REQ_DC_STRING_ENERGY_ALL,
 						DataType: rscp.UInt16,
-						Value:    uint16(phase), // phase
+						Value:    uint16(string),
 					},
 				},
 			})
@@ -406,10 +408,10 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 			if !ok {
 				return 0, errors.New("PVI_VALUE value not found")
 			}
-			energyPerPhase[phase] = val
+			energyPerString[string] = val
 		}
 
-		return (energyPerPhase[0] + energyPerPhase[1] + energyPerPhase[2]) / 1000, nil // Wh -> kWh
+		return (energyPerString[0] + energyPerString[1]) / 1000, nil // Wh -> kWh
 
 	default:
 		return 0, api.ErrNotAvailable
