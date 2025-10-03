@@ -76,7 +76,7 @@ sponsortoken: invalid-token-that-will-fail-validation
 	// This is what the OLD code does - it calls configureEnvironment
 	// This is slow (~8 seconds) and unnecessary for password management
 	start := time.Now()
-	err = configureEnvironment(cmd, &conf)
+	_ = configureEnvironment(cmd, &conf)
 	elapsed := time.Since(start)
 
 	// configureEnvironment doesn't fail hard, but it's slow
