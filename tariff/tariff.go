@@ -38,8 +38,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		Interval time.Duration
 		Cache    time.Duration
 	}{
-		Interval: SlotDuration,
-		Cache:    SlotDuration,
+		Interval: time.Hour,
+		Cache:    15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -72,7 +72,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 		embed:  &cc.embed,
 		typ:    cc.Type,
 		priceG: priceG,
-		data:   util.NewMonitor[api.Rates](8 * cc.Interval),
+		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
 	}
 
 	if forecastG != nil {
