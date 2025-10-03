@@ -578,24 +578,6 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	return nil
 }
 
-// RemoteControl sets remote status demand
-func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Println("remote demand:", demand)
-
-	// apply immediately
-	if lp.remoteDemand != demand {
-		lp.remoteDemand = demand
-
-		lp.publish(keys.RemoteDisabled, demand)
-		lp.publish(keys.RemoteDisabledSource, source)
-
-		lp.requestUpdate()
-	}
-}
-
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)

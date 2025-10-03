@@ -162,9 +162,6 @@ type API interface {
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 
-	// RemoteControl sets remote status demand
-	RemoteControl(string, RemoteDemand)
-
 	//
 	// smart grid charging
 	//

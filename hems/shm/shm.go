@@ -37,20 +37,19 @@ var serverName = "EVCC SEMP Server " + util.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log          *util.Logger
-	controllable bool
-	vid          string
-	did          []byte
-	uid          string
-	hostURI      string
-	port         int
-	site         site.API
+	log     *util.Logger
+	vid     string
+	did     []byte
+	uid     string
+	hostURI string
+	port    int
+	site    site.API
 }
 
 type Config struct {
-	AllowControl bool   `json:"allowControl"`
-	VendorId     string `json:"vendorId"`
-	DeviceId     string `json:"deviceId"`
+	AllowControl_ bool   `json:"allowControl,omitempty"` // deprecated
+	VendorId      string `json:"vendorId"`
+	DeviceId      string `json:"deviceId"`
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
@@ -83,12 +82,11 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	}
 
 	s := &SEMP{
-		log:          util.NewLogger("semp"),
-		site:         site,
-		uid:          uid.String(),
-		vid:          vendorId,
-		did:          did,
-		controllable: cfg.AllowControl,
+		log:  util.NewLogger("semp"),
+		site: site,
+		uid:  uid.String(),
+		vid:  vendorId,
+		did:  did,
 	}
 
 	// find external port
@@ -368,19 +366,15 @@ func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
 	chargePower := lp.GetChargePower()
 
 	status := lp.GetStatus()
-	mode := lp.GetMode()
-	isPV := mode == api.ModeMinPV || mode == api.ModePV
 
 	deviceStatus := StatusOff
 	if status == api.StatusC {
 		deviceStatus = StatusOn
 	}
 
-	connected := status == api.StatusB || status == api.StatusC
-
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: s.controllable && isPV && connected,
+		EMSignalsAccepted: false,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -461,41 +455,12 @@ func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	var msg EM2Device
 
-	err := xml.NewDecoder(r.Body).Decode(&msg)
-	s.log.TRACE.Printf("recv: %+v", msg)
-
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	if err := xml.NewDecoder(r.Body).Decode(&msg); err == nil {
+		s.log.TRACE.Printf("recv: %+v", msg)
+	} else {
+		s.log.ERROR.Printf("recv: %+v", msg)
 	}
 
-	for _, dev := range msg.DeviceControl {
-		did := dev.DeviceID
-
-		for id, lp := range s.site.Loadpoints() {
-			if did != s.deviceID(id) {
-				continue
-			}
-
-			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			// ignore requests if not controllable
-			if !s.controllable {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			demand := loadpoint.RemoteSoftDisable
-			if dev.On {
-				demand = loadpoint.RemoteEnable
-			}
-
-			lp.RemoteControl(sempController, demand)
-		}
-	}
-
-	w.WriteHeader(http.StatusOK)
+	// ignore control requests
+	w.WriteHeader(http.StatusBadRequest)
 }
