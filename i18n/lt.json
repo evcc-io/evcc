@@ -161,6 +161,9 @@
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
       "docsLink": "Žiūrėkite dokumentaciją.",
+      "dragHandle": "Vilkti",
+      "dragItem": "Galima vilkti: {title}",
+      "dragList": "Galima sukeisti vietomis",
       "experimental": "Eksperimentinis",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
@@ -171,6 +174,7 @@
       "readFromFile": "Skaityti iš failo",
       "remove": "Pašalinti",
       "required": "privaloma",
+      "reset": "Grąžinti į pirminę būseną",
       "save": "Išsaugoti",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
@@ -504,6 +508,10 @@
     "tariffs": {
       "description": "Nustatykite savo energijos tarifus, kad apskaičiuotumėte įkrovimo sesijų išlaidas.",
       "title": "Tarifai"
+    },
+    "telemetry": {
+      "description": "Konfigūruokite duomenų bendrinimą, kuris padeda tobulinti evcc. Jūsų privatumas mums yra svarbus, todėl dalyvavimas yra laisvai pasirenkamas.",
+      "title": "Duomenų perdavimas"
     },
     "title": {
       "description": "Rodoma pagrindiniame ekrane ir naršyklės kortelėje.",
@@ -1085,6 +1093,7 @@
     "vehicle": "Automobilis"
   },
   "settings": {
+    "deviceInfo": "Šiame dialoge atlikti nustatymai taikomi tik šiam įrenginiui.",
     "fullscreen": {
       "enter": "Įjungti visą ekraną",
       "exit": "Išjungti visą ekraną",
@@ -1097,6 +1106,12 @@
     "language": {
       "auto": "Automatiškai",
       "label": "Kalba"
+    },
+    "loadpoints": {
+      "help": "Pakeiskite vartotojo sąsajos išdėstymą ir matomumą.",
+      "hide": "Paslėpti {title}",
+      "label": "Įkrovikliai",
+      "show": "Rodyti {title}"
     },
     "sponsorToken": {
       "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",

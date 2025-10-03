@@ -154,11 +154,16 @@
       "optional": "valfri"
     },
     "general": {
+      "applyAndClose": "Använd & stäng",
       "cancel": "Avbryt",
+      "close": "Stäng",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
       "docsLink": "Se dokumentation.",
+      "dragHandle": "Senarelägga",
+      "dragItem": "Går att senarelägga: {title}",
+      "dragList": "Sorterbar lista",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
@@ -168,6 +173,8 @@
       "password": "Lösenord",
       "readFromFile": "Läs från fil",
       "remove": "Ta bort",
+      "required": "nödvändig",
+      "reset": "Nollställ",
       "save": "Spara",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
@@ -675,6 +682,46 @@
     "restartButton": "Omstart",
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inkludera konfiguration och loggar för att hjälpa oss att återskapa problemet snabbt. Vi uppmuntrar till att dela så mycket som möjligt. Status behövs normalt inte.",
+      "include": "inkludera",
+      "lines": "linjer",
+      "logs": "Loggar",
+      "logsDescription": "Senaste loggar kan hjälpa att identifiera problemet.",
+      "showDetails": "visa detaljer",
+      "source": "Källa",
+      "state": "Status",
+      "stateDescription": "Komplett runtime status inklusive laddpunkter, enhets och energiinformation. Inkludera enbart om det efterfrågas.",
+      "title": "Ytterligare information",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationsinställningar gjorda via webinterface.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Din kompletta konfigurationsfil."
+    },
+    "additionalContext": "Ytterligare upplysningar",
+    "additionalContextPlaceholder": "Eventuellt ytterligare information som kan vara till hjälp...\n- Konfigurationsdetaljer\n- Vad du provat\n- Plattforms och systemupplysningar",
+    "createButtonDiscussion": "Starta en GitHub-diskussion...",
+    "createButtonIssue": "Starta ett GitHub-ärende...",
+    "description": "Fungerar inte din installation som förväntat? Använd denna sida för hjälp eller rapportera problem. Bifoga tillräckligt med upplysningar för att vi ska förstå och kunna reproducera problemet. Gör beskrivningen kort, koncis och enkel att följa.",
+    "helpType": {
+      "discussion": "Behöver du hjälp med inställningarna",
+      "issue": "Hittat ett fel",
+      "issueDescription": "Jag är säker på att något är fel och behöver fixas.",
+      "title": "Vilket problem rör det sig om?"
+    },
+    "issueDescription": "Beskrivning",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Steg för att återskapa",
+    "subTitleDiscussion": "Beskriv ditt problem",
+    "subTitleIssue": "Beskriv ditt problem",
+    "summary": {
+      "confirmationButtonDiscussion": "Starta en GitHub-diskussion",
+      "confirmationButtonIssue": "Skapa GitHub-issue",
+      "copied": "Kopierad!",
+      "copyButton": "Kopiera ytterligare information"
+    }
   },
   "log": {
     "areaLabel": "Filtrera per område",
