@@ -39,8 +39,7 @@ params:
       de: Zufällige Schwankung pro Slot (±Wert)
     advanced: true
   - name: interval
-    default: 15m
-    advanced: true
+    deprecated: true
 
 render: |
   type: custom
@@ -116,4 +115,3 @@ render: |
       }
 
       JSON.stringify(rates);
-  interval: {{ .interval }}
