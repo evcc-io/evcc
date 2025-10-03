@@ -24,7 +24,7 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 	}
 
 	// setup database only (skip sponsorship check to allow password reset even with invalid token)
-	if err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database)); err != nil {
+	if err := configureDatabaseOnly(conf.Database); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
