@@ -563,13 +563,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	return err
 }
 
-// configureDatabaseOnly sets up only the database without other environment setup.
-// This is useful for commands that only need database access (e.g., password management)
-// and should not be blocked by sponsorship token validation or other checks.
-func configureDatabaseOnly(conf globalconfig.DB) error {
-	return wrapErrorWithClass(ClassDatabase, configureDatabase(conf))
-}
-
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
 	if conf.Dsn == "" {
