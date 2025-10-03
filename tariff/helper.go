@@ -48,10 +48,9 @@ func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 
 // mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
 func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
-	new.Sort()
-
 	var newStart time.Time
 	if len(new) > 0 {
+		new.Sort()
 		newStart = new[0].Start
 	}
 
@@ -69,7 +68,7 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 
 // beginningOfDay returns the beginning of the current day
 func beginningOfDay() time.Time {
-	return now.With(time.Now()).BeginningOfDay()
+	return now.BeginningOfDay()
 }
 
 type runnable[T any] interface {
