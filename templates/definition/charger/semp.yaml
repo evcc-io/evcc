@@ -23,8 +23,8 @@ params:
     required: true
   - name: deviceid
     description:
-      en: SEMP device ID (Format: F-AAAAAAAA-BBBBBBBBBBBB-00)
-      de: SEMP Geräte-ID (Format: F-AAAAAAAA-BBBBBBBBBBBB-00)
+      en: SEMP device ID (Format F-AAAAAAAA-BBBBBBBBBBBB-00)
+      de: SEMP Geräte-ID (Format F-AAAAAAAA-BBBBBBBBBBBB-00)
     required: true
 render: |
   type: semp
