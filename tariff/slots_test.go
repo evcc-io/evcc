@@ -141,11 +141,11 @@ func TestDropOldRates(t *testing.T) {
 	require.Len(t, res, 0)
 }
 
-// TestSolarInterpolation
+// TestSolarAndCo2Interpolation
 //
 // For solar tariffs we expect power at time of interval start (see https://github.com/evcc-io/evcc/issues/23184 for changing this).
 // When converting to 15min slots, solar interpolation needs to take care of this
-func TestSolarInterpolation(t *testing.T) {
+func TestSolarAndCo2Interpolation(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
 	// Two consecutive hourly solar rates: 0.0 in the first hour, 4.0 in the next
@@ -161,24 +161,26 @@ func TestSolarInterpolation(t *testing.T) {
 		Value: 4.0,
 	}
 
-	w := &SlotWrapper{&testTariff{
-		rates: api.Rates{r0, r1},
-		typ:   api.TariffTypeSolar,
-	}}
+	for _, typ := range []api.TariffType{api.TariffTypeSolar, api.TariffTypeCo2} {
+		w := &SlotWrapper{&testTariff{
+			rates: api.Rates{r0, r1},
+			typ:   typ,
+		}}
 
-	res, err := w.Rates()
-	require.NoError(t, err)
+		res, err := w.Rates()
+		require.NoError(t, err)
 
-	// Build expected results: r0 interpolated into 4 slots (0..3), then r1 as four slots with value 4.0
-	expected := makeRates(now, SlotDuration, 4, 0)
+		// Build expected results: r0 interpolated into 4 slots (0..3), then r1 as four slots with value 4.0
+		expected := makeRates(now, SlotDuration, 4, 0)
 
-	for j := range 4 {
-		expected = append(expected, api.Rate{
-			Start: r1.Start.Add(time.Duration(j) * SlotDuration),
-			End:   r1.Start.Add(time.Duration(j+1) * SlotDuration),
-			Value: 4.0,
-		})
+		for j := range 4 {
+			expected = append(expected, api.Rate{
+				Start: r1.Start.Add(time.Duration(j) * SlotDuration),
+				End:   r1.Start.Add(time.Duration(j+1) * SlotDuration),
+				Value: 4.0,
+			})
+		}
+
+		assert.Equal(t, expected, res)
 	}
-
-	assert.Equal(t, expected, res)
 }
