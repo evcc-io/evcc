@@ -248,12 +248,16 @@ func (wb *OpenWbNative) GpioSwitchPhases(phases int) {
 
 	time.Sleep(time.Second)
 	pinGpioCP.High() // enable phases switch relay (NO), disconnect CP
-	time.Sleep(time.Second * time.Duration(wb.cpWait/2.0))
-	pinGpioPhases.High() // move latching relay to desired position
+
 	time.Sleep(time.Second)
+	pinGpioPhases.High() // move latching relay to desired position
+
+	time.Sleep(time.Second * time.Duration(wb.cpWait/2.0))
 	pinGpioPhases.Low() // lock latching relay
+
 	time.Sleep(time.Second * time.Duration(wb.cpWait/2.0))
 	pinGpioCP.Low() // disable phase switching, reconnect CP
+
 	time.Sleep(time.Second)
 }
 
