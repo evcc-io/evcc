@@ -25,20 +25,19 @@ type Provider struct {
 	api *API
 	ts  oauth2.TokenSource
 
-	vin, container string
+	vin string
 
 	initial   map[string]TelematicDataPoint
 	streaming map[string]StreamingData
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin, container string) *Provider {
+func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin string) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
 		ts:        ts,
 		vin:       vin,
-		container: container,
 		streaming: make(map[string]StreamingData),
 	}
 
@@ -126,11 +125,23 @@ func (v *Provider) any(key string) (any, error) {
 			return nil, api.ErrNotAvailable
 		}
 
-		if res, err := v.api.GetTelematics(v.container); err == nil {
+		defer func() {
+			if v.initial == nil {
+				v.initial = make(map[string]TelematicDataPoint)
+			}
+		}()
+
+		container, err := v.api.EnsureContainer()
+		if err != nil {
+			v.log.ERROR.Printf("get container: %v", err)
+			return nil, api.ErrNotAvailable
+		}
+
+		if res, err := v.api.GetTelematics(container); err == nil {
 			v.initial = res.TelematicData
 		} else {
-			v.initial = make(map[string]TelematicDataPoint)
 			v.log.ERROR.Printf("get telematics: %v", err)
+			return nil, api.ErrNotAvailable
 		}
 	}
 

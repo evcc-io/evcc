@@ -87,12 +87,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	container, err := api.EnsureContainer()
-	if err != nil && !is429(err) {
-		return nil, err
-	}
-
-	v.Provider = cardata.NewProvider(log, api, ts, vehicle, container)
+	v.Provider = cardata.NewProvider(log, api, ts, vehicle)
 
 	return v, nil
 }
