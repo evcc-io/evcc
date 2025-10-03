@@ -77,7 +77,6 @@
       "title": "Nadzor vedenja"
     },
     "deviceValue": {
-      "allowControl": "Dovoli nadzor",
       "amount": "Znesek",
       "broker": "Broker",
       "bucket": "Vedro",

@@ -43,22 +43,21 @@ func backoffPermanentError(err error) error {
 
 // mergeRates blends new and existing rates, keeping existing rates after current hour
 func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
-	mergeRatesAfter(data, new, now.With(time.Now()).BeginningOfHour())
+	mergeRatesAfter(data, new, time.Now().Truncate(SlotDuration))
 }
 
 // mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
 func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
-	new.Sort()
-
 	var newStart time.Time
 	if len(new) > 0 {
+		new.Sort()
 		newStart = new[0].Start
 	}
 
 	data.SetFunc(func(old api.Rates) api.Rates {
 		var between api.Rates
 		for _, r := range old {
-			if (r.Start.Before(newStart) && !r.Start.Before(now) || newStart.IsZero()) && r.End.After(now) {
+			if (newStart.IsZero() || !r.End.After(newStart)) && r.End.After(now) {
 				between = append(between, r)
 			}
 		}
@@ -69,7 +68,7 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 
 // beginningOfDay returns the beginning of the current day
 func beginningOfDay() time.Time {
-	return now.With(time.Now()).BeginningOfDay()
+	return now.BeginningOfDay()
 }
 
 type runnable[T any] interface {

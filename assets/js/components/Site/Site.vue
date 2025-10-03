@@ -165,7 +165,7 @@ export default defineComponent({
 	},
 	computed: {
 		loadpoints() {
-			return store.uiLoadpoints.value;
+			return store.uiLoadpoints.value || [];
 		},
 		orderedVisibleLoadpoints() {
 			return this.loadpoints.filter((lp) => lp.visible);
