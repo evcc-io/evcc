@@ -23,8 +23,8 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup database only (skip sponsorship check to allow password set even with invalid token)
-	if err := configureDatabaseOnly(conf.Database); err != nil {
+	// setup persistence
+	if err := configureDatabase(conf.Database); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
