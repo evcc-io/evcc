@@ -155,11 +155,16 @@
       "optional": "optionell"
     },
     "general": {
+      "applyAndClose": "Uwennen & Zoumaachen",
       "cancel": "Ofbriechen",
+      "close": "Zoumaachen",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
       "docsLink": "D'Dokumentatioun kucken.",
+      "dragHandle": "Verréckelen",
+      "dragItem": "Verréckelbar: {title}",
+      "dragList": "Sortéirbar Lëscht",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
@@ -169,6 +174,8 @@
       "password": "Passwuert",
       "readFromFile": "Vun der Datei liesen",
       "remove": "Ewechhuelen",
+      "required": "obligatoresch",
+      "reset": "Zerécksetzen",
       "save": "Späicheren",
       "selectFile": "Duerchsichen",
       "showAdvancedSettings": "Fortgeschratten Astellungen uweisen",
@@ -507,6 +514,9 @@
       "description": "Definéier d'Stroumtariffer fir d'Käschte vun den Opluedsessiounen ze berechnen.",
       "title": "Tariffer"
     },
+    "telemetry": {
+      "description": "Konfiguréier den Datenaustausch fir den evcc ze verbesseren. Deng Privatsphär ass eis wichteg an d'Participatioun ass komplett fakultativ."
+    },
     "title": {
       "description": "Um Haaptbildschierm an am Browser Tab ugewisen.",
       "label": "Titel",
@@ -677,6 +687,12 @@
     "restartButton": "Nei starten",
     "restartDescription": "Hues du schonns probéiert d'Gerät aus- an erëm unzemaachen?",
     "secondaryActions": "Nach ëmmer keng Léisung fonnt? Hei sinn e puer weider Méiglechkeeten."
+  },
+  "issue": {
+    "additional": {
+      "logs": "Logge",
+      "logsDescription": "Rezent Log-Entréen, déi hëllefe kéinten, de Problem z'identifizéieren."
+    }
   },
   "log": {
     "areaLabel": "No Beräich filteren",
