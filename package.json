@@ -19,6 +19,7 @@
   "type": "module",
   "main": "index.js",
   "dependencies": {
+    "@formkit/drag-and-drop": "^0.5.3",
     "@guolao/vue-monaco-editor": "^1.5.5",
     "@h2d2/shopicons": "^1.9.0",
     "@popperjs/core": "^2.11.8",
@@ -49,7 +50,7 @@
     "@chromatic-com/storybook": "^4.2.0-next.1",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.13.0",
-    "@jest/types": "^29.6.3",
+    "@jest/types": "^30.2.0",
     "@playwright/test": "^1.55.0",
     "@storybook/vue3": "^10.0.0-beta.2",
     "@storybook/vue3-vite": "^10.0.0-beta.2",
@@ -76,7 +77,7 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-vue": "^10.4.0",
     "globals": "^16.3.0",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^19.0.1",
     "jiti": "^2.5.1",
     "kill-port": "^2.0.1",
     "license-compliance": "^3.0.1",
@@ -95,6 +96,6 @@
     "vue-eslint-parser": "^10.2.0",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.0.6",
-    "wait-on": "^8.0.4"
+    "wait-on": "^9.0.1"
   }
 }

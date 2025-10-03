@@ -6,17 +6,17 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateDaheimLaden(base *DaheimLadenMB, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateDaheimLaden(base *DaheimLaden, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
 	case phaseSwitcher == nil:
 		return base
 
 	case phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
-			*DaheimLadenMB
+			*DaheimLaden
 			api.PhaseSwitcher
 		}{
-			DaheimLadenMB: base,
+			DaheimLaden: base,
 			PhaseSwitcher: &decorateDaheimLadenPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -24,11 +24,11 @@ func decorateDaheimLaden(base *DaheimLadenMB, phaseSwitcher func(int) error, pha
 
 	case phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
-			*DaheimLadenMB
+			*DaheimLaden
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
-			DaheimLadenMB: base,
+			DaheimLaden: base,
 			PhaseGetter: &decorateDaheimLadenPhaseGetterImpl{
 				phaseGetter: phaseGetter,
 			},

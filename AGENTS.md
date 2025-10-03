@@ -209,7 +209,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Examples**:
   - `page.getByRole("button", { name: "Add charger" })`
   - `page.getByLabel("Manufacturer").selectOption("Demo charger")`
+  - `page.getByRole("listitem", { name: "Draggable: First Loadpoint" })` (using aria-label)
   - `page.getByTestId("loadpoint")` (fallback only)
+- never use `.locator()` or `class` and `id`-based selectors
 
 ### Test Patterns
 
