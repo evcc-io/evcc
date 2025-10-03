@@ -13,6 +13,7 @@ type SlotWrapper struct {
 }
 
 // Rates converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
+// Slot length must be multiple of SlotDuration.
 // For price tariffs, the value is constant over all sub-slots.
 // For solar/co2, linear interpolation is used between slot boundaries.
 func (t *SlotWrapper) Rates() (api.Rates, error) {

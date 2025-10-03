@@ -9,21 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type priceTariff struct{ rates api.Rates }
+type testTariff struct {
+	rates api.Rates
+	typ   api.TariffType
+}
 
-func (t *priceTariff) Rates() (api.Rates, error) { return t.rates, nil }
-func (t *priceTariff) Type() api.TariffType      { return api.TariffTypePriceStatic }
-
-type solarTariff struct{ rates api.Rates }
-
-func (t *solarTariff) Rates() (api.Rates, error) { return t.rates, nil }
-func (t *solarTariff) Type() api.TariffType      { return api.TariffTypeSolar }
+func (t *testTariff) Rates() (api.Rates, error) {
+	return t.rates, nil
+}
+func (t *testTariff) Type() api.TariffType {
+	return t.typ
+}
 
 // makeRates creates n consecutive rates starting at 'start', each with the given duration
 // Values start at startVal and increase by 1 for each subsequent rate
 func makeRates(start time.Time, duration time.Duration, n int, startVal float64) api.Rates {
 	var rates api.Rates
-	for i := 0; i < n; i++ {
+	for i := range n {
 		s := start.Add(time.Duration(i) * duration)
 		rates = append(rates, api.Rate{
 			Start: s,
@@ -51,7 +53,10 @@ func TestBasicSlotConversionCounts(t *testing.T) {
 	for _, tc := range cases {
 		// Create a single rate of length tc.dur starting at "now"
 		rates := makeRates(now, tc.dur, 1, 5.0)
-		w := &SlotWrapper{&priceTariff{rates: rates}}
+		w := &SlotWrapper{&testTariff{
+			rates: rates,
+			typ:   api.TariffTypePriceStatic,
+		}}
 
 		out, err := w.Rates()
 		require.NoError(t, err)
@@ -89,7 +94,11 @@ func TestMixedSlots(t *testing.T) {
 		Value: 3.0,
 	}
 
-	w := &SlotWrapper{&priceTariff{rates: api.Rates{first, second}}}
+	w := &SlotWrapper{&testTariff{
+		rates: api.Rates{first, second},
+		typ:   api.TariffTypePriceStatic,
+	}}
+
 	out, err := w.Rates()
 	require.NoError(t, err)
 
@@ -109,18 +118,32 @@ func TestMixedSlots(t *testing.T) {
 	assert.Equal(t, expected, out)
 }
 
-// TestDropOldRatesAndSolarInterpolation checks two behaviors:
-// 1) Old rates (that already ended) are dropped
-// 2) Solar tariffs are linearly interpolated between consecutive rate boundaries
-func TestDropOldRatesAndSolarInterpolation(t *testing.T) {
+func TestDropOldRates(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
 	// old rate that should be removed by the wrapper (ends before 'now')
 	old := api.Rate{
-		Start: now.Add(-2 * time.Hour),
-		End:   now.Add(-1 * time.Hour),
+		Start: now.Add(-1 * time.Hour),
+		End:   now,
 		Value: 0.5,
 	}
+
+	w := &SlotWrapper{&testTariff{
+		rates: api.Rates{old},
+		typ:   api.TariffTypeSolar,
+	}}
+
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 0)
+}
+
+// TestSolarInterpolation
+//
+// For solar tariffs we expect power at time of interval start (see https://github.com/evcc-io/evcc/issues/23184 for changing this).
+// When converting to 15min slots, solar interpolation needs to take care of this
+func TestSolarInterpolation(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
 
 	// Two consecutive hourly solar rates: 0.0 in the first hour, 4.0 in the next
 	// With linear interpolation, the first hour's four 15m slots should have values 0,1,2,3
@@ -135,20 +158,18 @@ func TestDropOldRatesAndSolarInterpolation(t *testing.T) {
 		Value: 4.0,
 	}
 
-	w := &SlotWrapper{&solarTariff{rates: api.Rates{old, r0, r1}}}
-	out, err := w.Rates()
+	w := &SlotWrapper{&testTariff{
+		rates: api.Rates{r0, r1},
+		typ:   api.TariffTypeSolar,
+	}}
+
+	res, err := w.Rates()
 	require.NoError(t, err)
 
-	// Build expected results: skip the old rate, then r0 interpolated into 4 slots (0..3), then r1 as four slots with value 4.0
-	var expected api.Rates
-	for j := 0; j < 4; j++ {
-		expected = append(expected, api.Rate{
-			Start: r0.Start.Add(time.Duration(j) * SlotDuration),
-			End:   r0.Start.Add(time.Duration(j+1) * SlotDuration),
-			Value: float64(j),
-		})
-	}
-	for j := 0; j < 4; j++ {
+	// Build expected results: r0 interpolated into 4 slots (0..3), then r1 as four slots with value 4.0
+	expected := makeRates(now, SlotDuration, 4, 0)
+
+	for j := range 4 {
 		expected = append(expected, api.Rate{
 			Start: r1.Start.Add(time.Duration(j) * SlotDuration),
 			End:   r1.Start.Add(time.Duration(j+1) * SlotDuration),
@@ -156,5 +177,5 @@ func TestDropOldRatesAndSolarInterpolation(t *testing.T) {
 		})
 	}
 
-	assert.Equal(t, expected, out)
+	assert.Equal(t, expected, res)
 }
