@@ -41,7 +41,7 @@ render: |
       cache: 10s
     value:
       source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingLevelPercent
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value
   limitsoc:
     source: valid
     valid:
@@ -50,7 +50,7 @@ render: |
       cache: 10s
     value:
       source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingTarget
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateOfCharge.target
   status:
     source: valid
     valid:
@@ -61,11 +61,11 @@ render: |
       source: combined
       plugged:
         source: http
-        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.isChargerConnected
+        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.body.chargingPort.status.value
       charging:
         source: http
-        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingStatus
-        jq: '. == "CHARGING"'
+        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.charging.status.value
+        jq: '. == "CHARGINGACTIVE"'
   range:
     source: valid
     valid:
@@ -74,7 +74,7 @@ render: |
       cache: 10s
     value:
       source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.range
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.kombiRemainingElectricRange.value
   odometer:
     source: valid
     valid:
@@ -83,5 +83,5 @@ render: |
       cache: 10s
     value:
       source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.currentMileage
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.travelledDistance.value
   {{ include "vehicle-features" . }}
