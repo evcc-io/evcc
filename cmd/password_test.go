@@ -59,10 +59,10 @@ sponsortoken: invalid-token-that-will-fail-validation
 	err := loadConfigFile(&conf, true)
 	require.NoError(t, err)
 
-	// Setup database directly (skipping sponsor validation via configureEnvironment)
-	// This is what password_set.go and password_reset.go should use
-	err = configureDatabase(conf.Database)
-	require.NoError(t, err, "configureDatabase should succeed with invalid sponsor token")
+	// Setup database only (skipping sponsor validation via configureEnvironment)
+	// This is what password_set.go and password_reset.go use
+	err = configureDatabaseOnly(conf.Database)
+	require.NoError(t, err, "configureDatabaseOnly should succeed with invalid sponsor token")
 
 	// Store the invalid token to verify it's present
 	settings.SetString(keys.SponsorToken, "invalid-token-that-will-fail-validation")
@@ -90,8 +90,8 @@ func TestPasswordResetWithInvalidSponsorToken(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test.db")
 
-	// Initialize database directly
-	err := configureDatabase(globalconfig.DB{
+	// Initialize database only (skipping sponsor validation)
+	err := configureDatabaseOnly(globalconfig.DB{
 		Type: "sqlite",
 		Dsn:  dbPath,
 	})
