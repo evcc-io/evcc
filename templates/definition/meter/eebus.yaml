@@ -1,0 +1,54 @@
+template: eebus-meter
+products:
+  - brand: Generic
+    description:
+      de: EEBus-kompatibler Netzanschlusspunkt (MGCP)
+      en: EEBus-compatible grid connection point (MGCP)
+  - brand: Generic
+    description:
+      de: EEBus-kompatibler Verbraucher oder Messstelle (MPC)
+      en: EEBus-compatible consumer or metering device (MPC)
+requirements:
+  description:
+    de: Ein EEBus-kompatibler Verbraucher oder Messstelle mit bekanntem SKI (Subject Key Identifier). Unterstützt werden die Use Cases MGCP (Monitoring of Grid Connection Point) und MPC (Monitoring & Power Consumption).
+    en: An EEBus-compatible consumer or metering device with a known SKI (Subject Key Identifier). Supports both MGCP (grid connection points) and MPC (generic power monitoring) use cases.
+  evcc: ["eebus"]
+params:
+  - name: ski
+    description:
+      en: The SKI (Subject Key Identifier) of the EEBus device
+      de: Der SKI (Subject Key Identifier) des EEBus-Geräts
+  - name: ip
+    description:
+      en: IP address (optional, auto-discovery via mDNS)
+      de: IP-Adresse (optional, Auto-Discovery via mDNS)
+    help:
+      en: The IP address of the EEBus device. If not specified, the device will be discovered automatically via mDNS.
+      de: Die IP-Adresse des EEBus-Geräts. Falls nicht angegeben, wird das Gerät automatisch über mDNS gefunden.
+  - name: usage
+    type: choice
+    default: grid
+    values:
+      - grid
+      - other
+    description:
+      en: Usage type (grid=MGCP, other=MPC)
+      de: Verwendungsart (grid=MGCP, andere=MPC)
+    help:
+      en: |
+        Determines the EEBus use case:
+        - grid: Uses MGCP (Monitoring of Grid Connection Point)
+        - other: Uses MPC (Monitoring & Power Consumption)
+      de: |
+        Bestimmt den EEBus Use Case:
+        - grid: Verwendet MGCP (Monitoring of Grid Connection Point)
+        - other: Verwendet MPC (Monitoring & Power Consumption)
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  {{- if .ip }}
+  ip: {{ .ip }}
+  {{- end }}
+  {{- if .usage }}
+  usage: {{ .usage }}
+  {{- end }}
