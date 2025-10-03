@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	// "fmt"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -162,7 +160,7 @@ func extractValueByTag[T any](msg rscp.Message, wantedTag rscp.Tag, fun func(any
 			return v, true
 		}
 		return zero, false
-	} 
+	}
 	if nestedMessage, ok := msg.Value.([]rscp.Message); ok {
 		for _, m := range nestedMessage {
 			// ok == tag found
@@ -244,17 +242,17 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 					Value:    uint16(0), // root PM
 				},
 				{
-					Tag:      rscp.PM_REQ_VOLTAGE_L1,
+					Tag: rscp.PM_REQ_VOLTAGE_L1,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_VOLTAGE_L2,
+					Tag: rscp.PM_REQ_VOLTAGE_L2,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_VOLTAGE_L3,
+					Tag: rscp.PM_REQ_VOLTAGE_L3,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
@@ -266,15 +264,15 @@ func (m *E3dc) Voltages() (float64, float64, float64, error) {
 		}
 
 		voltageL1, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L1, cast.ToFloat64E)
-		if !ok || voltageL1 < 207 || voltageL1 > 253 {
+		if !ok || voltageL1 < 208 || voltageL1 > 253 {
 			return 0, 0, 0, errors.New("PM_VOLTAGE_L1 not found or out of range")
 		}
 		voltageL2, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L2, cast.ToFloat64E)
-		if !ok || voltageL2 < 207 || voltageL2 > 253 {
+		if !ok || voltageL2 < 208 || voltageL2 > 253 {
 			return 0, 0, 0, errors.New("PM_VOLTAGE_L2 not found or out of range")
 		}
 		voltageL3, ok := extractValueByTag(*res, rscp.PM_VOLTAGE_L3, cast.ToFloat64E)
-		if !ok || voltageL3 < 207 || voltageL3 > 253 {
+		if !ok || voltageL3 < 208 || voltageL3 > 253 {
 			return 0, 0, 0, errors.New("PM_VOLTAGE_L3 not found or out of range")
 		}
 		return voltageL1, voltageL2, voltageL3, nil
@@ -302,32 +300,32 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 					Value:    uint16(0), // root PM
 				},
 				{
-					Tag:      rscp.PM_REQ_POWER_L1,
+					Tag: rscp.PM_REQ_POWER_L1,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_POWER_L2,
+					Tag: rscp.PM_REQ_POWER_L2,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_POWER_L3,
+					Tag: rscp.PM_REQ_POWER_L3,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_VOLTAGE_L1,
+					Tag: rscp.PM_REQ_VOLTAGE_L1,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_VOLTAGE_L2,
+					Tag: rscp.PM_REQ_VOLTAGE_L2,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
 				{
-					Tag:      rscp.PM_REQ_VOLTAGE_L3,
+					Tag: rscp.PM_REQ_VOLTAGE_L3,
 					// DataType: rscp.None,
 					// Value:    nil,
 				},
@@ -363,7 +361,7 @@ func (m *E3dc) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, errors.New("PM_VOLTAGE_L3 not found or out of range")
 		}
 
-		return powerL1/voltageL1, powerL2/voltageL2, powerL3/voltageL3, nil
+		return powerL1 / voltageL1, powerL2 / voltageL2, powerL3 / voltageL3, nil
 
 	default:
 		return 0, 0, 0, api.ErrNotAvailable
@@ -382,7 +380,7 @@ func (m *E3dc) TotalEnergy() (float64, error) {
 	case templates.UsageGrid:
 		return 0, api.ErrNotAvailable
 
-		case templates.UsagePV:  // PVI: Solar DC only
+	case templates.UsagePV: // PVI: Solar DC only
 		for string := range 2 {
 			res, err := m.retryMessage(rscp.Message{
 				Tag:      rscp.PVI_REQ_DATA,
