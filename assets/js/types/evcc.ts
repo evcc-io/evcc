@@ -437,7 +437,6 @@ export type ValueOf<T> = T[keyof T];
 export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
-  curl: string;
   details: OptimizationDetails;
 }
 
