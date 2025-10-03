@@ -700,18 +700,6 @@ func (mr *MockAPIMockRecorder) PublishEffectiveValues() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishEffectiveValues", reflect.TypeOf((*MockAPI)(nil).PublishEffectiveValues))
 }
 
-// RemoteControl mocks base method.
-func (m *MockAPI) RemoteControl(arg0 string, arg1 RemoteDemand) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RemoteControl", arg0, arg1)
-}
-
-// RemoteControl indicates an expected call of RemoteControl.
-func (mr *MockAPIMockRecorder) RemoteControl(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoteControl", reflect.TypeOf((*MockAPI)(nil).RemoteControl), arg0, arg1)
-}
-
 // SetBatteryBoost mocks base method.
 func (m *MockAPI) SetBatteryBoost(enable bool) error {
 	m.ctrl.T.Helper()

@@ -77,7 +77,6 @@
       "title": "Comportamento de controlo"
     },
     "deviceValue": {
-      "allowControl": "Permitir controlo",
       "amount": "Quantidade",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -447,8 +446,6 @@
       "descriptionIds": "No Sunny Portal cada dispositivo necessita duma identidade única. O evcc gera uma identidade única com base no seu hardware. Se migrar o evcc para outro hardware estas identidades podem mudar. Se quiser manter o histórico pode substituir as identidades geradas aqui. Abra o SEMP URL(/semp) para ver as identidade atuais.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "string 8 caratecteres HEX. Prefixo geral de todas as entidades. O evcc usa o seu próprio vendor ID interno Por defeito.",
-      "labelAllowControl": "Aceitar recomendações adicionais de limite de potência do SHM.",
-      "labelControl": "Permitir controlo",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
