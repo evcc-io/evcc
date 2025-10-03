@@ -9,6 +9,10 @@ on:
 
 jobs:
   stale:
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     runs-on: depot-ubuntu-24.04-arm
     steps:
       - uses: actions/stale@v9

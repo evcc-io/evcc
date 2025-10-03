@@ -294,7 +294,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
-	valueChan <- util.Param{Key: keys.Config, Val: cfgFile}
+	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 
 	// run shutdown functions on stop
@@ -343,7 +343,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	}, cfgFile)
+	}, viper.ConfigFileUsed())
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {
