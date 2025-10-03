@@ -42,10 +42,15 @@ func TestMergeRatesAfter(t *testing.T) {
 		ts            time.Time
 	}{
 		{new, combined, clock.Now()},
+		{new, combined, clock.Now().Add(SlotDuration)},
 		{nil, combined, clock.Now()},
+		{nil, combined, clock.Now().Add(SlotDuration)},
 		{new, combined, clock.Now().Add(time.Hour)},
+		{new, combined, clock.Now().Add(time.Hour + SlotDuration)},
 		{new, combined, now.With(clock.Now().Add(time.Hour + 30*time.Minute)).BeginningOfHour()},
+		{new, combined, now.With(clock.Now().Add(time.Hour + 30*time.Minute)).BeginningOfHour().Add(SlotDuration)},
 		{new, new, clock.Now().Add(2 * time.Hour)},
+		{new, new, clock.Now().Add(2*time.Hour + SlotDuration)},
 	} {
 		t.Logf("%d. %+v", i+1, tc)
 

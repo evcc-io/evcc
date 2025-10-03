@@ -64,3 +64,26 @@ export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
 
   return result;
 }
+
+export interface SlotWithValue {
+  start: string | Date;
+  value: number;
+}
+
+// find index of first slot with lowest sum over span (e.g. span=4 for 1h with 15min slots)
+export function findLowestSumSlotIndex(slots: SlotWithValue[], span: number): number {
+  if (slots.length < span) return -1;
+
+  let lowestSum = Infinity;
+  let lowestIndex = -1;
+
+  for (let i = 0; i <= slots.length - span; i++) {
+    const sum = slots.slice(i, i + span).reduce((acc, slot) => acc + slot.value, 0);
+    if (sum < lowestSum) {
+      lowestSum = sum;
+      lowestIndex = i;
+    }
+  }
+
+  return lowestIndex;
+}
