@@ -2,7 +2,7 @@
 
 setmaxpower: # update the maximum heating power
   source: js
-  script: console.log(setmaxpower); #
+  script: console.log(maxpower); #
 
 ## optional attributes (read-only)
 
