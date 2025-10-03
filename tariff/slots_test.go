@@ -82,20 +82,21 @@ func TestMixedSlots(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
 	// first: a single 15-minute rate
-	first := api.Rate{
+	r0 := api.Rate{
 		Start: now,
 		End:   now.Add(15 * time.Minute),
 		Value: 1.0,
 	}
+
 	// second: an hour that follows immediately
-	second := api.Rate{
-		Start: first.End,
-		End:   first.End.Add(1 * time.Hour),
+	r1 := api.Rate{
+		Start: r0.End,
+		End:   r0.End.Add(1 * time.Hour),
 		Value: 3.0,
 	}
 
 	w := &SlotWrapper{&testTariff{
-		rates: api.Rates{first, second},
+		rates: api.Rates{r0, r1},
 		typ:   api.TariffTypePriceStatic,
 	}}
 
@@ -103,14 +104,16 @@ func TestMixedSlots(t *testing.T) {
 	require.NoError(t, err)
 
 	// expected: one 15m slot with value 1.0, then four 15m slots with value 3.0
-	var expected api.Rates
-	expected = append(expected, api.Rate{Start: first.Start, End: first.End, Value: 1.0})
+	expected := api.Rates{api.Rate{
+		Start: r0.Start,
+		End:   r0.End,
+		Value: 1.0,
+	}}
 
-	s := second.Start
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		expected = append(expected, api.Rate{
-			Start: s.Add(time.Duration(i) * SlotDuration),
-			End:   s.Add(time.Duration(i+1) * SlotDuration),
+			Start: r1.Start.Add(time.Duration(i) * SlotDuration),
+			End:   r1.Start.Add(time.Duration(i+1) * SlotDuration),
 			Value: 3.0,
 		})
 	}
