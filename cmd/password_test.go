@@ -31,6 +31,14 @@ func TestPasswordSetWithInvalidSponsorToken(t *testing.T) {
 	// Verify database is initialized
 	assert.NotNil(t, db.Instance)
 
+	// Store an invalid sponsor token in the database
+	settings.SetString(keys.SponsorToken, "invalid-token-that-will-fail-validation")
+
+	// Verify the invalid token is stored
+	storedToken, err := settings.String(keys.SponsorToken)
+	require.NoError(t, err)
+	assert.Equal(t, "invalid-token-that-will-fail-validation", storedToken)
+
 	// Set a password using auth (simulates password set command)
 	testPassword := "test-password-123"
 	authInstance := auth.New()
@@ -45,6 +53,9 @@ func TestPasswordSetWithInvalidSponsorToken(t *testing.T) {
 	// Verify password is valid
 	assert.True(t, authInstance.IsAdminPasswordValid(testPassword))
 	assert.False(t, authInstance.IsAdminPasswordValid("wrong-password"))
+
+	// Clean up - remove invalid sponsor token
+	settings.SetString(keys.SponsorToken, "")
 }
 
 // TestPasswordResetWithInvalidSponsorToken verifies that password reset command
@@ -62,6 +73,14 @@ func TestPasswordResetWithInvalidSponsorToken(t *testing.T) {
 	})
 	require.NoError(t, err, "configureDatabaseOnly should succeed even with invalid sponsor token")
 
+	// Store an expired sponsor token in the database
+	settings.SetString(keys.SponsorToken, "expired-token-xyz")
+
+	// Verify the invalid token is stored
+	storedToken, err := settings.String(keys.SponsorToken)
+	require.NoError(t, err)
+	assert.Equal(t, "expired-token-xyz", storedToken)
+
 	// Set an initial password
 	authInstance := auth.New()
 	require.NoError(t, authInstance.SetAdminPassword("initial-password"))
@@ -78,4 +97,7 @@ func TestPasswordResetWithInvalidSponsorToken(t *testing.T) {
 	storedHash, err = settings.String(keys.AdminPassword)
 	require.NoError(t, err)
 	assert.Empty(t, storedHash, "password should be removed")
+
+	// Clean up - remove invalid sponsor token
+	settings.SetString(keys.SponsorToken, "")
 }
