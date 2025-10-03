@@ -77,7 +77,6 @@
       "title": "Valdymo elgesys"
     },
     "deviceValue": {
-      "allowControl": "Leisti valdymą",
       "amount": "Kiekis",
       "broker": "Broker sistema",
       "bucket": "Bucket",
@@ -200,7 +199,6 @@
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
       "labelBucket": "Bucket",
-      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
       "labelOrg": "Organizacija",
@@ -372,7 +370,6 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Leisti keliems klientams pasiekti vieną „Modbus“ įrenginį.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -382,7 +379,6 @@
       "descriptionTopic": "Palikite tuščią, kad išjungtumėte publikavimą.",
       "labelBroker": "Broker",
       "labelCaCert": "Serverio sertifikatas (CA)",
-      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
       "labelClientCert": "Kliento sertifikatas",
       "labelClientId": "Kliento ID",
       "labelClientKey": "Kliento raktas",
@@ -447,8 +443,6 @@
       "descriptionIds": "Sunny Portal sistemoje kiekvienam vartotojo įrenginiui reikalingas unikalus identifikatorius. evcc generuoja unikalų identifikatorių pagal jūsų aparatinę įrangą. Jei migruosite evcc į kitą aparatinę įrangą, šie identifikatoriai gali pasikeisti. Jei norite išsaugoti istoriją, čia galite pakeisti sugeneruotus identifikatorius. Atidarykite SEMP URL (/semp), kad patikrintumėte dabartinius identifikatorius.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 simbolių HEX eilutė. Bendras visų objektų prefiksas. Pagal numatytuosius nustatymus evcc naudos savo vidinį tiekėjo ID.",
-      "labelAllowControl": "Priimti papildomas SHM galios ribojimo rekomendacijas.",
-      "labelControl": "Leisti valdyti",
       "labelDeviceId": "Įrenginio ID",
       "labelVendorId": "Gamintojo ID",
       "title": "SMA Sunny Home Manager"
