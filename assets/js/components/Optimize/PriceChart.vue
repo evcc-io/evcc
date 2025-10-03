@@ -128,8 +128,8 @@ export default defineComponent({
 						intersect: false,
 						callbacks: {
 							title: (context) => {
-								const index = context[0].dataIndex;
-								return this.formatTimeRange(index);
+								const index = context[0]?.dataIndex;
+								return this.formatTimeRange(index ?? 0);
 							},
 							label: (context) => {
 								const label = context.dataset.label || "";
@@ -159,7 +159,7 @@ export default defineComponent({
 							autoSkip: false,
 							maxRotation: 0,
 							minRotation: 0,
-							callback: (value, index) => {
+							callback: (_value, index) => {
 								const startTime = new Date(this.timestamp);
 
 								// Calculate cumulative time from dt array
@@ -168,7 +168,9 @@ export default defineComponent({
 									cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
 								}
 
-								const currentTime = new Date(startTime.getTime() + cumulativeSeconds * 1000);
+								const currentTime = new Date(
+									startTime.getTime() + cumulativeSeconds * 1000
+								);
 								const hour = currentTime.getHours();
 								const minute = currentTime.getMinutes();
 

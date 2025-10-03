@@ -1,6 +1,6 @@
 <template>
 	<div class="mb-5">
-		<div v-for="(battery, index) in evopt.res.batteries" :key="index" class="mb-3">
+		<div v-for="(_battery, index) in evopt.res.batteries" :key="index" class="mb-3">
 			<div class="mb-2" style="font-size: 0.875rem; font-weight: bold">
 				{{ getBatteryTitle(index) }}
 			</div>
@@ -41,8 +41,6 @@ import type { EvoptData } from "./TimeSeriesDataTable.vue";
 import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
-import LegendList from "../Sessions/LegendList.vue";
-import type { Legend } from "../Sessions/types";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, ChartLegendPlugin);
 
@@ -50,7 +48,6 @@ export default defineComponent({
 	name: "SocChart",
 	components: {
 		Chart,
-		LegendList,
 	},
 	mixins: [formatter],
 	props: {
@@ -100,6 +97,9 @@ export default defineComponent({
 
 		getBatteryChartData(batteryIndex: number): ChartData {
 			const battery = this.evopt.res.batteries[batteryIndex];
+			if (!battery) {
+				return { labels: [], datasets: [] };
+			}
 			const baseColor = this.batteryColors[batteryIndex] || "";
 
 			return {
@@ -141,8 +141,8 @@ export default defineComponent({
 						intersect: false,
 						callbacks: {
 							title: (context) => {
-								const index = context[0].dataIndex;
-								return this.formatTimeRange(index);
+								const index = context[0]?.dataIndex;
+								return this.formatTimeRange(index ?? 0);
 							},
 							label: (context) => {
 								const value = context.parsed.y;
@@ -171,7 +171,7 @@ export default defineComponent({
 							autoSkip: false,
 							maxRotation: 0,
 							minRotation: 0,
-							callback: (value, index) => {
+							callback: (_value, index) => {
 								const startTime = new Date(this.timestamp);
 
 								// Calculate cumulative time from dt array
@@ -180,7 +180,9 @@ export default defineComponent({
 									cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
 								}
 
-								const currentTime = new Date(startTime.getTime() + cumulativeSeconds * 1000);
+								const currentTime = new Date(
+									startTime.getTime() + cumulativeSeconds * 1000
+								);
 								const hour = currentTime.getHours();
 								const minute = currentTime.getMinutes();
 

@@ -18,7 +18,9 @@
 				<tbody>
 					<!-- Request Data -->
 					<tr class="table-secondary">
-						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">Request Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Request Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Solar Forecast (kW)</td>
@@ -77,7 +79,9 @@
 
 					<!-- Response Data -->
 					<tr class="table-secondary">
-						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">Response Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Response Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Grid Export (kW)</td>
