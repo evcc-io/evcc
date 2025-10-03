@@ -79,6 +79,7 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 		log:      log,
 		cache:    cache,
 		phases:   3,
+		enabled:  true,
 		deviceID: deviceID,
 	}
 
@@ -108,6 +109,11 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 			getPhases = wb.getPhases
 			log.DEBUG.Println("detected phase switching support")
 		}
+	}
+
+	wb.enabled, err = wb.Enabled()
+	if err != nil {
+		return nil, err
 	}
 
 	return decorateSEMP(wb, phases1p3p, getPhases), nil
