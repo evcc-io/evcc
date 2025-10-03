@@ -45,19 +45,21 @@ func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin, contain
 	go func() {
 		bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
 
-		token, err := ts.Token()
-		if err != nil {
-			if !errors.Is(err, ErrLoginRequired) {
-				v.log.ERROR.Println(err)
+		for {
+			token, err := ts.Token()
+			if err != nil {
+				if !errors.Is(err, ErrLoginRequired) {
+					v.log.ERROR.Println(err)
+				}
+
+				time.Sleep(bo.NextBackOff())
 			}
 
-			time.Sleep(bo.NextBackOff())
-		}
+			bo.Reset()
 
-		bo.Reset()
-
-		if err := v.runMqtt(vin, token); err != nil {
-			v.log.ERROR.Println(err)
+			if err := v.runMqtt(vin, token); err != nil {
+				v.log.ERROR.Println(err)
+			}
 		}
 	}()
 

@@ -83,7 +83,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	vehicle, err := ensureVehicle(
 		cc.VIN, api.Vehicles,
 	)
-	if err != nil && cc.VIN == "" || !is429(err) {
+	if err != nil && (cc.VIN == "" || !is429(err)) {
 		return nil, err
 	}
 
