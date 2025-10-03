@@ -42,15 +42,6 @@ render: |
     value:
       source: http
       uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value
-  limitsoc:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateOfCharge.target
   status:
     source: valid
     valid:
