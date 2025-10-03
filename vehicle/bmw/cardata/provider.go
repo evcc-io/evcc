@@ -186,38 +186,35 @@ func (v *Provider) Soc() (float64, error) {
 	return v.Float("vehicle.drivetrain.electricEngine.charging.level")
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	res, err := v.statusG()
-// 	if err != nil {
-// 		return api.StatusNone, err
-// 	}
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	port, err := v.String("vehicle.body.chargingPort.status")
+	if err != nil {
+		return api.StatusNone, err
+	}
 
-// 	status := api.StatusA // disconnected
-// 	if res.State.ElectricChargingState.IsChargerConnected {
-// 		status = api.StatusB
-// 	}
-// 	if res.State.ElectricChargingState.ChargingStatus == "CHARGING" {
-// 		status = api.StatusC
-// 	}
+	status := api.StatusA // disconnected
+	if port == "CONNECTED" {
+		status = api.StatusB
+	}
 
-// 	return status, nil
-// }
+	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	if err == nil && hv == "CHARGING" {
+		status = api.StatusC
+	}
 
-// var _ api.VehicleFinishTimer = (*Provider)(nil)
+	return status, nil
+}
 
-// // FinishTime implements the api.VehicleFinishTimer interface
-// func (v *Provider) FinishTime() (time.Time, error) {
-// 	res, err := v.statusG()
-// err == nil {
-// 		ctr := res.VehicleStatus.ChargingTimeRemaining
-// 		return time.Now().Add(time.Duration(ctr) * time.Minute), err
-// 	}
+var _ api.VehicleFinishTimer = (*Provider)(nil)
 
-// 	return time.Time{}, err
-// }
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeToFullyCharged")
+	return time.Now().Add(time.Duration(res) * time.Minute), err
+}
 
 var _ api.VehicleRange = (*Provider)(nil)
 
@@ -233,17 +230,12 @@ func (v *Provider) Odometer() (float64, error) {
 	return v.Float("vehicle.vehicle.travelledDistance")
 }
 
-// var _ api.SocLimiter = (*Provider)(nil)
+var _ api.SocLimiter = (*Provider)(nil)
 
-// // GetLimitSoc implements the api.SocLimiter interface
-// func (v *Provider) GetLimitSoc() (int64, error) {
-// 	res, err := v.statusG()
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	return res.State.ElectricChargingState.ChargingTarget, nil
-// }
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	return v.Int("vehicle.powertrain.electric.battery.stateOfCharge.target")
+}
 
 // var _ api.VehicleClimater = (*Provider)(nil)
 
