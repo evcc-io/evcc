@@ -12,10 +12,15 @@ jobs:
     name: Deploy data to website
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
         id: go
@@ -29,7 +34,7 @@ jobs:
       - name: Deploy to evcc.io repo
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.GH_TOKEN }}
+          personal_token: ${{ secrets.WEBSITE_DEPLOY_TOKEN }}
           publish_dir: ./templates/evcc.io/
           external_repository: evcc-io/evcc.io
           publish_branch: main
