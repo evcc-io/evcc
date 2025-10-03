@@ -461,7 +461,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 		require.NoError(t, err)
 		// calcPower() = 230 * 1 * 16 = 3680
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>3680</RecommendedPowerConsumption>")
-		assert.Equal(t, 3, handler.requestCount) // Enable (1 POST) + MaxCurrent (1 POST) + Phases1p3p (1 POST) - document is cached from init
+		assert.Equal(t, 5, handler.requestCount) // Enable (1 GET + 1 POST) + MaxCurrent (1 POST) + Phases1p3p (2 POST: stop + restart)
 	})
 
 	t.Run("SwitchTo3Phase", func(t *testing.T) {
@@ -470,6 +470,6 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 		require.NoError(t, err)
 		// calcPower() = 230 * 3 * 16 = 11040 (enabled=true and current=16 from previous test)
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11040</RecommendedPowerConsumption>")
-		assert.Equal(t, 1, handler.requestCount) // Only DeviceControl
+		assert.Equal(t, 3, handler.requestCount) // 1 GET (DeviceInfo) + 2 POST (stop + restart DeviceControl)
 	})
 }

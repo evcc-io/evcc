@@ -280,8 +280,29 @@ func (s *SEMP) Diagnose() {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
+	info, err := wb.getDeviceInfo()
+	if err != nil {
+		return err
+	}
+
+	var power int
+	switch phases {
+	case 1:
+		power = info.Characteristics.MinPowerConsumption
+	case 3:
+		power = info.Characteristics.MaxPowerConsumption
+	}
+
+	// stop charging and set power to extreme value to ensure phase switch
+	err = wb.conn.SendDeviceControl(false, power)
+	if err != nil {
+		return err
+	}
+
 	wb.phases = phases
-	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
+
+	// restart charging with (hopefully) new phase setting
+	err = wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 	if err == nil {
 		wb.documentG.Reset()
 	}
