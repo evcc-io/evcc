@@ -41,7 +41,7 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 			var val float64
 
 			switch t.Type() {
-			case api.TariffTypeSolar, api.TariffTypeCo2:
+			case api.TariffTypeSolar: //, api.TariffTypeCo2
 				if i+1 < len(rates) {
 					start0 := r.Start
 					start1 := rates[i+1].Start

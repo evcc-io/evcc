@@ -161,7 +161,7 @@ func TestSolarAndCo2Interpolation(t *testing.T) {
 		Value: 4.0,
 	}
 
-	for _, typ := range []api.TariffType{api.TariffTypeSolar, api.TariffTypeCo2} {
+	for _, typ := range []api.TariffType{api.TariffTypeSolar} { //, api.TariffTypeCo2
 		w := &SlotWrapper{&testTariff{
 			rates: api.Rates{r0, r1},
 			typ:   typ,
