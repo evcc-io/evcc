@@ -353,14 +353,10 @@ func TestSEMPChargerDeviceNotFound(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
-	require.NoError(t, err)
-
-	t.Run("DeviceNotFound", func(t *testing.T) {
-		_, err := wb.Status()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "device F-12345678-ABCDEF123456-00 not found")
-	})
+	// NewSEMP now calls Enabled() which will fail if device is not found
+	_, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "device F-12345678-ABCDEF123456-00 not found")
 }
 
 func TestSEMPChargerReady(t *testing.T) {
@@ -417,9 +413,10 @@ func TestSEMPChargerNoInterruptions(t *testing.T) {
 		// MaxCurrent calls MaxCurrentMillis which doesn't check InterruptionsAllowed
 		err := wb.MaxCurrent(16)
 		require.NoError(t, err)
-		// calcPower() = 0 because enabled=false (Enable() wasn't called)
-		assert.Contains(t, handler.lastRequest, "<On>false</On>")
-		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
+		// calcPower() uses enabled state which was initialized from device status (true)
+		// Power = 230V * 3 phases * 16A = 11040W
+		assert.Contains(t, handler.lastRequest, "<On>true</On>")
+		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11040</RecommendedPowerConsumption>")
 	})
 
 	t.Run("MaxCurrentMillisSucceedsWhenInterruptionsNotAllowed", func(t *testing.T) {
@@ -427,9 +424,10 @@ func TestSEMPChargerNoInterruptions(t *testing.T) {
 		require.True(t, ok)
 		err := chargerEx.MaxCurrentMillis(16.0)
 		require.NoError(t, err)
-		// calcPower() = 0 because enabled=false (Enable() wasn't called)
-		assert.Contains(t, handler.lastRequest, "<On>false</On>")
-		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
+		// calcPower() uses enabled state which was initialized from device status (true)
+		// Power = 230V * 3 phases * 16A = 11040W
+		assert.Contains(t, handler.lastRequest, "<On>true</On>")
+		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11040</RecommendedPowerConsumption>")
 	})
 }
 
