@@ -77,7 +77,6 @@
       "title": "Regelverhalten"
     },
     "deviceValue": {
-      "allowControl": "Steuerung erlauben",
       "amount": "Anzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -447,8 +446,6 @@
       "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
-      "labelAllowControl": "Zusätzlich Leistungsbegrenzungsempfehlungen vom SHM akzeptieren.",
-      "labelControl": "Steuerung erlauben",
       "labelDeviceId": "Geräte-ID",
       "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
@@ -1144,7 +1141,7 @@
   },
   "smartCost": {
     "activeHours": "{active} von {total}",
-    "activeHoursLabel": "Aktive Stunden",
+    "activeHoursLabel": "Aktive Zeit",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
     "cheapTitle": "Günstiges Netzladen",
@@ -1161,7 +1158,7 @@
     "saved": "Gepeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Stunden",
+    "activeHoursLabel": "Pausierte Zeit",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",

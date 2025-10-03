@@ -77,7 +77,6 @@
       "title": "Kontrollverhalen"
     },
     "deviceValue": {
-      "allowControl": "Steierung erlaben",
       "amount": "Unzahl",
       "broker": "Broker",
       "bucket": "Eemer",
@@ -155,11 +154,16 @@
       "optional": "optionell"
     },
     "general": {
+      "applyAndClose": "Uwennen & Zoumaachen",
       "cancel": "Ofbriechen",
+      "close": "Zoumaachen",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
       "docsLink": "D'Dokumentatioun kucken.",
+      "dragHandle": "Verréckelen",
+      "dragItem": "Verréckelbar: {title}",
+      "dragList": "Sortéirbar Lëscht",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
@@ -169,6 +173,8 @@
       "password": "Passwuert",
       "readFromFile": "Vun der Datei liesen",
       "remove": "Ewechhuelen",
+      "required": "obligatoresch",
+      "reset": "Zerécksetzen",
       "save": "Späicheren",
       "selectFile": "Duerchsichen",
       "showAdvancedSettings": "Fortgeschratten Astellungen uweisen",
@@ -440,8 +446,6 @@
       "descriptionIds": "Am Sunny Portal brauch all Ladung (Luedpunkt, etc.) eng eenzegaarteg Identifikatioun. evcc generéiert eng eenzegaarteg Identifikatioun, déi op Ärer Hardware baséiert. Wann Dir evcc op aner Hardware migréiert, kann dësen Identifikator sech änneren. Fir den Historique ze späicheren, kënnt Dir déi generéiert Identifikatoren hei iwwerschreiwen. Maacht d'SEMP URL op (/semp) fir Är aktuell Identifikatoren ze kontrolléieren.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stellegen HEX-String. Allgemenge Präfix fir all Entiéiten. Standardméisseg verwennt evcc seng eegen intern Hiersteller-ID.",
-      "labelAllowControl": "Zousätzlech Recommandatioune fir d'Leeschtungslimit vun SHM z'akzeptéieren.",
-      "labelControl": "Steierung erlaben",
       "labelDeviceId": "Geräter-ID",
       "labelVendorId": "Hiersteller-ID",
       "title": "SMA Sunny Home Manager"
@@ -506,6 +510,9 @@
     "tariffs": {
       "description": "Definéier d'Stroumtariffer fir d'Käschte vun den Opluedsessiounen ze berechnen.",
       "title": "Tariffer"
+    },
+    "telemetry": {
+      "description": "Konfiguréier den Datenaustausch fir den evcc ze verbesseren. Deng Privatsphär ass eis wichteg an d'Participatioun ass komplett fakultativ."
     },
     "title": {
       "description": "Um Haaptbildschierm an am Browser Tab ugewisen.",
@@ -677,6 +684,12 @@
     "restartButton": "Nei starten",
     "restartDescription": "Hues du schonns probéiert d'Gerät aus- an erëm unzemaachen?",
     "secondaryActions": "Nach ëmmer keng Léisung fonnt? Hei sinn e puer weider Méiglechkeeten."
+  },
+  "issue": {
+    "additional": {
+      "logs": "Logge",
+      "logsDescription": "Rezent Log-Entréen, déi hëllefe kéinten, de Problem z'identifizéieren."
+    }
   },
   "log": {
     "areaLabel": "No Beräich filteren",

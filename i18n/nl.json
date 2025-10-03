@@ -77,7 +77,6 @@
       "title": "Regelgedrag"
     },
     "deviceValue": {
-      "allowControl": "Besturing toestaan",
       "amount": "Aantal",
       "broker": "Agent",
       "bucket": "Bucket",
@@ -162,6 +161,7 @@
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
       "docsLink": "Zie documentatie.",
+      "dragHandle": "Schuifknop",
       "experimental": "Experimenteel",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
@@ -443,8 +443,6 @@
       "descriptionIds": "In Sunny Portal heeft elk consumentenapparaat een unieke identificatiecode nodig. evcc genereert een unieke identificatiecode op basis van uw hardware. Als u evcc naar andere hardware migreert, kunnen deze identificatiecodes veranderen. Als u de geschiedenis wilt behouden, kunt u de gegenereerde identificatiecodes hier overschrijven. Open de SEMP-URL (/semp) om uw huidige identificatiecodes te controleren.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
-      "labelAllowControl": "Sta additionele aanbevelingen stroombegrenzing toe van SHM.",
-      "labelControl": "Besturing toestaan",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
@@ -476,7 +474,7 @@
           "title": "Backup"
         },
         "cancel": "Annuleer",
-        "description": "Backup, herstel en rest je data. Nuttig als je je data naar een ander systeem wilt migreren.",
+        "description": "Backup, herstel en reset je data. Nuttig als je je data naar een ander systeem wilt migreren.",
         "note": "Notabene: alle bovenstaande acties hebben alleen impact op je databasedata. Het evcc.yaml configuratiebestand blijft onveranderd.",
         "reset": {
           "action": "Reset...",

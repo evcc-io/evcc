@@ -48,6 +48,6 @@ render: |
     jq: |
       [.unix_seconds, .price] | transpose | map({
         "start": .[0] | todate,
-        "end":   .[0]+3600 | todate,
+        "end":   .[0]+900 | todate,
         "value": .[1]/1000
       }) | tostring
