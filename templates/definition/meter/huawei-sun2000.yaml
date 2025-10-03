@@ -282,8 +282,8 @@ render: |
                 type: writesingle
                 encoding: uint16
   capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
