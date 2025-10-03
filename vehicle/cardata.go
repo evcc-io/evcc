@@ -2,11 +2,15 @@ package vehicle
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
 	"golang.org/x/oauth2"
 )
@@ -48,13 +52,23 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	log := util.NewLogger("cardata").Redact(cc.ClientID)
 
-	ts, err := auth.NewOauth(ctx, "cardata", &oc, auth.WithTokenStorerOption(func(token *oauth2.Token) any {
-		return cardata.Token{
-			Token:   token,
-			IdToken: cardata.TokenExtra(token, "id_token"),
-			Gcid:    cardata.TokenExtra(token, "gcid"),
-		}
-	}))
+	ts, err := auth.NewOauth(ctx, "cardata", &oc,
+		auth.WithOauthDeviceFlowOption(),
+		auth.WithTokenRetrieverOption(func(data string, res *oauth2.Token) error {
+			var token cardata.Token
+			if err := json.Unmarshal([]byte(data), &token); err != nil {
+				return err
+			}
+			*res = *token.TokenEx()
+			return nil
+		}),
+		auth.WithTokenStorerOption(func(token *oauth2.Token) any {
+			return cardata.Token{
+				Token:   token,
+				IdToken: cardata.TokenExtra(token, "id_token"),
+				Gcid:    cardata.TokenExtra(token, "gcid"),
+			}
+		}))
 	if err != nil {
 		return nil, err
 	}
@@ -65,12 +79,18 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		cc.VIN, api.Vehicles,
 	)
 	if err != nil {
-		return nil, err
+		// allow HTTP 429 for given VIN
+		if se := new(request.StatusError); cc.VIN == "" || !errors.As(err, &se) || se.StatusCode() != http.StatusTooManyRequests {
+			return nil, err
+		}
 	}
 
 	container, err := api.EnsureContainer()
 	if err != nil {
-		return nil, err
+		// allow HTTP 429 for given VIN
+		if se := new(request.StatusError); !errors.As(err, &se) || se.StatusCode() != http.StatusTooManyRequests {
+			return nil, err
+		}
 	}
 
 	v.Provider = cardata.NewProvider(log, api, ts, vehicle, container)

@@ -28,8 +28,9 @@ type OAuth struct {
 	cv      string
 	ctx     context.Context
 
-	deviceFlow  bool
-	tokenStorer func(*oauth2.Token) any
+	deviceFlow     bool
+	tokenRetriever func(string, *oauth2.Token) error
+	tokenStorer    func(*oauth2.Token) any
 }
 
 type oauthOption func(*OAuth)
@@ -43,6 +44,12 @@ func WithOauthDeviceFlowOption() func(o *OAuth) {
 func WithTokenStorerOption(ts func(*oauth2.Token) any) func(o *OAuth) {
 	return func(o *OAuth) {
 		o.tokenStorer = ts
+	}
+}
+
+func WithTokenRetrieverOption(tr func(string, *oauth2.Token) error) func(o *OAuth) {
+	return func(o *OAuth) {
+		o.tokenRetriever = tr
 	}
 }
 
@@ -117,8 +124,19 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	if settings.Exists(o.subject) {
 		o.log.DEBUG.Printf("loading token for %s from database", o.subject)
 
-		if err := settings.Json(o.subject, &token); err != nil {
-			return nil, err
+		if o.tokenRetriever != nil {
+			plain, err := settings.String(o.subject)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := o.tokenRetriever(plain, &token); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := settings.Json(o.subject, &token); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -221,6 +239,10 @@ func (o *OAuth) Login(state string) (string, error) {
 		}()
 
 		return da.VerificationURIComplete, nil
+	}
+
+	if o.oc.Endpoint.AuthURL == "" {
+		return "", errors.New("missing auth url")
 	}
 
 	return o.oc.AuthCodeURL(state, oauth2.S256ChallengeOption(o.cv)), nil

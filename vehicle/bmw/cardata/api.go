@@ -10,7 +10,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const ApiURL = "https://api-bmwgroup.com"
+const ApiURL = "https://api-cardata.bmwgroup.com"
 
 type API struct {
 	*request.Helper

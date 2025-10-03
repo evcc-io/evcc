@@ -270,6 +270,12 @@ func main() {
 		Persist:     storeToken,
 	}
 
+	if token, err := ts.Token(); err != nil {
+		log.Fatal(err)
+	} else {
+		log.Println(token)
+	}
+
 	if *apiCall {
 		apiClient := client
 		apiClient.Transport = &oauth2.Transport{

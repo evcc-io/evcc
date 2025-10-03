@@ -20,7 +20,7 @@ const StreamingURL = "tls://customer.streaming-cardata.bmwgroup.com:9000"
 
 // Provider implements the vehicle api
 type Provider struct {
-	mu  sync.RWMutex
+	mu  sync.Mutex
 	log *util.Logger
 	api *API
 
@@ -103,14 +103,14 @@ func (v *Provider) handler(c mqtt.Client, m mqtt.Message) {
 	}
 
 	v.mu.Lock()
-	defer v.mu.RUnlock()
+	defer v.mu.Unlock()
 
 	maps.Copy(v.streaming, res.Data)
 }
 
 func (v *Provider) any(key string) (any, error) {
-	v.mu.RLock()
-	defer v.mu.RUnlock()
+	v.mu.Lock()
+	defer v.mu.Unlock()
 
 	if a, ok := v.streaming[key]; ok {
 		return a, nil
@@ -119,7 +119,7 @@ func (v *Provider) any(key string) (any, error) {
 	if v.initial == nil {
 		res, err := v.api.GetTelematics(v.container)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("get telematics: %w", err)
 		}
 		v.initial = res.TelematicData
 	}
