@@ -28,10 +28,8 @@ params:
     default: 1
     advanced: true
   - name: minsoc
-    type: int
     advanced: true
   - name: maxsoc
-    type: int
     advanced: true
   - name: maxchargepower
     default: 10000
