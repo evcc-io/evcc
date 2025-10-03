@@ -157,12 +157,6 @@ func (c *OctopusGraphQLClient) TariffCode(direction TariffDirection) (string, er
 		return "", errors.New("no electricity agreements found")
 	}
 
-	// check type
-	// (theoretically) not needed for our uses
-	//switch t := q.Account.ElectricityAgreements[0].Tariff.(type) {
-	//
-	//}
-
 	// Filter out any inappropriate tariffs; select the first tariff that aligns with our configuration.
 	var tariffCode string
 	for _, agreement := range q.Account.ElectricityAgreements {
