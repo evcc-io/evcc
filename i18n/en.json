@@ -1144,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} of {total}",
-    "activeHoursLabel": "Active hours",
+    "activeHoursLabel": "Active time",
     "applyToAll": "Apply everywhere?",
     "batteryDescription": "Charges the home battery with energy from the grid.",
     "cheapTitle": "Cheap Grid Charging",
@@ -1161,7 +1161,7 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused hours",
+    "activeHoursLabel": "Paused time",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
     "priceLimit": "Feed-in limit",

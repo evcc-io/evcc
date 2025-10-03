@@ -17,7 +17,7 @@
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
 				:tariff="forecast?.planner"
-				class="mt-2"
+				class="mt-2 mb-4"
 			/>
 			<SmartFeedInPriority
 				:current-limit="smartFeedInPriorityLimit"
@@ -26,7 +26,7 @@
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
-				class="mt-2"
+				class="mt-2 mb-4"
 			/>
 			<LoadpointSettingsBatteryBoost
 				v-if="batteryBoostAvailable"

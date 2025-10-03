@@ -38,8 +38,7 @@ params:
       de: Stunde des Sonnenuntergangs (0-23)
       en: Hour of sunset (0-23)
   - name: interval
-    default: 1h
-    advanced: true
+    deprecated: true
 
 render: |
   type: custom
@@ -47,7 +46,7 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate realistic solar forecast with bell curve for next 72 hours
+      // Generate realistic solar forecast with bell curve for next 72 hours in 15-minute slots
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
       var rates = [];
@@ -74,17 +73,23 @@ render: |
         }
       }
 
-      // Generate hourly rates for 3 days
+      // Generate 15-minute slots for 3 days
+      var slotMinutes = 15;
+      var slotDuration = slotMinutes * 60 * 1000;
+      var slotsPerHour = 60 / slotMinutes;
+      var slotsPerDay = 24 * slotsPerHour;
+
       for (var day = 0; day < 3; day++) {
-        for (var hour = 0; hour < 24; hour++) {
-          var time = new Date(start.getTime() + (day * 24 + hour) * 3600000);
+        for (var slot = 0; slot < slotsPerDay; slot++) {
+          var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
+          var hour = slot / slotsPerHour;
           var solarValue = 0;
 
           if (dayLength > 0) {
-            // Check if hour is within daylight period
+            // Check if slot is within daylight period
             var isDaylight = is24HourDaylight || (sunrise <= sunset
-              ? hour >= sunrise && hour <= sunset
-              : hour >= sunrise || hour <= sunset);
+              ? hour >= sunrise && hour <= sunset + 1
+              : hour >= sunrise || hour <= sunset + 1);
 
             if (isDaylight) {
               var position = getPositionInPeriod(hour);
@@ -98,11 +103,10 @@ render: |
 
           rates.push({
             start: time.toISOString(),
-            end: new Date(time.getTime() + 3600000).toISOString(),
+            end: new Date(time.getTime() + slotDuration).toISOString(),
             value: Math.round(Math.max(0, solarValue))
           });
         }
       }
 
       JSON.stringify(rates);
-  interval: {{ .interval }}
