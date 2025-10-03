@@ -75,22 +75,21 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	api := cardata.NewAPI(log, ts)
 
+	is429 := func(err error) bool {
+		se := new(request.StatusError)
+		return errors.As(err, &se) && se.StatusCode() == http.StatusTooManyRequests
+	}
+
 	vehicle, err := ensureVehicle(
 		cc.VIN, api.Vehicles,
 	)
-	if err != nil {
-		// allow HTTP 429 for given VIN
-		if se := new(request.StatusError); cc.VIN == "" || !errors.As(err, &se) || se.StatusCode() != http.StatusTooManyRequests {
-			return nil, err
-		}
+	if err != nil && cc.VIN == "" || !is429(err) {
+		return nil, err
 	}
 
 	container, err := api.EnsureContainer()
-	if err != nil {
-		// allow HTTP 429 for given VIN
-		if se := new(request.StatusError); !errors.As(err, &se) || se.StatusCode() != http.StatusTooManyRequests {
-			return nil, err
-		}
+	if err != nil && !is429(err) {
+		return nil, err
 	}
 
 	v.Provider = cardata.NewProvider(log, api, ts, vehicle, container)

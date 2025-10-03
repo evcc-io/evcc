@@ -20,6 +20,7 @@ params:
   - preset: vehicle-features
 render: |
   type: cardata
+  vin: {{ .vin }}
   clientid: {{ .clientid }}
   {{ include "vehicle-common" . }}
   {{ include "vehicle-features" . }}

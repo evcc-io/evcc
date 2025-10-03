@@ -23,6 +23,7 @@ type Provider struct {
 	mu  sync.Mutex
 	log *util.Logger
 	api *API
+	ts  oauth2.TokenSource
 
 	vin, container string
 
@@ -35,6 +36,7 @@ func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin, contain
 	v := &Provider{
 		log:       log,
 		api:       api,
+		ts:        ts,
 		vin:       vin,
 		container: container,
 		streaming: make(map[string]StreamingData),
@@ -117,11 +119,17 @@ func (v *Provider) any(key string) (any, error) {
 	}
 
 	if v.initial == nil {
-		res, err := v.api.GetTelematics(v.container)
-		if err != nil {
-			return nil, fmt.Errorf("get telematics: %w", err)
+		// don't try as long as there's no token
+		if _, err := v.ts.Token(); err != nil {
+			return nil, api.ErrNotAvailable
 		}
-		v.initial = res.TelematicData
+
+		if res, err := v.api.GetTelematics(v.container); err == nil {
+			v.initial = res.TelematicData
+		} else {
+			v.initial = make(map[string]TelematicDataPoint)
+			v.log.ERROR.Printf("get telematics: %v", err)
+		}
 	}
 
 	if el, ok := v.initial[key]; ok {
