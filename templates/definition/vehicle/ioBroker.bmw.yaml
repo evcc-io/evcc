@@ -34,45 +34,25 @@ render: |
   type: custom
   {{ include "vehicle-common" . }}
   soc:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value
   status:
-    source: valid
-    valid:
+    source: combined
+    plugged:
       source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: combined
-      plugged:
-        source: http
-        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.body.chargingPort.status.value
-      charging:
-        source: http
-        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.charging.status.value
-        jq: '. == "CHARGINGACTIVE"'
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.body.chargingPort.status.value
+    charging:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.charging.status.value
+      jq: '. == "CHARGINGACTIVE"'
   range:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.kombiRemainingElectricRange.value
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.kombiRemainingElectricRange.value
   odometer:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.travelledDistance.value
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.travelledDistance.value
+  climater:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.preConditioning.activity.value
+    jq: if .state == "HEATING" or .state == "heating" or .state == "COOLING" or .state == "cooling" then true else false end
   {{ include "vehicle-features" . }}
