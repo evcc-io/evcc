@@ -22,7 +22,7 @@ requirements:
           vehicle.vehicle.travelledDistance
 
     en: |
-      Requires CarData activation in BMW/Mini portal. The following data points need be configured for streaming access:
+      Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access:
 
           vehicle.body.chargingPort.status
           vehicle.cabin.hvac.preconditioning.status.comfortState
