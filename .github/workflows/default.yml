@@ -190,7 +190,7 @@ jobs:
 
       - name: Cache dist
         # avoid cache thrashing by nightly
-        if: github.event_name != 'workflow_call'
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         uses: actions/cache/save@v4
         id: cache-dist
         with:
