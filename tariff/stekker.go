@@ -21,7 +21,7 @@ var supportedRegions = []string{
 	"SE4", "SE3", "SE1", "DK1", "DK2",
 	"FI", "NO1", "NO2", "NO3", "NO4", "NO5",
 	"LV", "LT", "PL", "PT", "RO", "RS",
-	"SI", "SK", "HU", "AT", "CZ", "HR", "EE",
+	"SI", "SK", "HU", "AT", "CZ", "HR", "EE", "BE-900", "NL-900",
 }
 
 // Stekker provider
@@ -75,7 +75,6 @@ func (t *Stekker) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, t.region)
-
 		resp, err := client.Get(url)
 		if err != nil {
 			once.Do(func() { done <- err })
@@ -137,7 +136,7 @@ func (t *Stekker) run(done chan error) {
 					continue
 				}
 
-				start = start.UTC()
+				//start = start.UTC()
 				end := start.Add(time.Hour)
 
 				res = append(res, api.Rate{
@@ -160,6 +159,9 @@ func (t *Stekker) Rates() (api.Rates, error) {
 		res = slices.Clone(val)
 	})
 	return res, err
+
+	//this for 15M intervals
+	//return api.ConvertTo15mSlots(res, t.Type()), err
 }
 
 // Type implements api.Tariff
