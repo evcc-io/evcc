@@ -189,6 +189,8 @@ jobs:
         run: make ui
 
       - name: Cache dist
+        # avoid cache thrashing by nightly
+        if: github.event_name != 'workflow_call'
         uses: actions/cache/save@v4
         id: cache-dist
         with:
