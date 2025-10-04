@@ -17,6 +17,8 @@ export type Template = {
 
 export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+export type MeterUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
