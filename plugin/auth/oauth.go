@@ -148,9 +148,9 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	if err != nil {
 		return nil, err
 	}
-
-	onlineC <- token.Valid()
 	o.onlineC = onlineC
+
+	o.onlineC <- token.Valid()
 
 	// add instance
 	addInstance(o.subject, o)
@@ -193,6 +193,8 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 	if err := settings.SetJson(o.subject, store); err != nil {
 		o.log.ERROR.Printf("error saving token: %v", err)
 	}
+
+	o.onlineC <- token.Valid()
 
 	o.TokenSource = oauth.RefreshTokenSource(token, o)
 }
