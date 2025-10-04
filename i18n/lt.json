@@ -199,6 +199,7 @@
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
       "labelBucket": "Bucket",
+      "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
       "labelOrg": "Organizacija",
@@ -370,6 +371,7 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
+      "description": "Leidžia keliems klientams pasiekti vieną Modbus įrenginį.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -379,6 +381,7 @@
       "descriptionTopic": "Palikite tuščią, kad išjungtumėte publikavimą.",
       "labelBroker": "Broker",
       "labelCaCert": "Serverio sertifikatas (CA)",
+      "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelClientCert": "Kliento sertifikatas",
       "labelClientId": "Kliento ID",
       "labelClientKey": "Kliento raktas",
@@ -1141,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} iš {total}",
-    "activeHoursLabel": "Aktyvumo valandos",
+    "activeHoursLabel": "Aktyvumo laikas",
     "applyToAll": "Pritaikyti visur?",
     "batteryDescription": "Įkrauna kaupiklį energija iš tinklo.",
     "cheapTitle": "Pigus įkrovimas iš tinklo",
@@ -1158,7 +1161,7 @@
     "saved": "Išsaugota."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pristabdyta valandomis",
+    "activeHoursLabel": "Pristabdymo laikas",
     "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
     "priceLabel": "Pardavimo kaina",
     "priceLimit": "Pardavimo limitas",
