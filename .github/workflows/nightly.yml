@@ -117,7 +117,6 @@ jobs:
           repository: evcc-io/hassio-addon
           token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
           path: ./hassio
-          persist-credentials: false
 
       - name: Update version
         run: |
@@ -168,7 +167,7 @@ jobs:
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
