@@ -13,6 +13,28 @@ import (
 
 const ApiURL = "https://api-cardata.bmwgroup.com"
 
+var Config = oauth2.Config{
+	Scopes: []string{"authenticate_user", "openid", "cardata:streaming:read", "cardata:api:read"},
+	Endpoint: oauth2.Endpoint{
+		DeviceAuthURL: "https://customer.bmwgroup.com/gcdm/oauth/device/code",
+		TokenURL:      "https://customer.bmwgroup.com/gcdm/oauth/token",
+	},
+}
+
+// requiredKeys are the necessary data dictionary entities according to
+// https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
+var requiredKeys = []string{
+	"vehicle.body.chargingPort.status",
+	"vehicle.cabin.hvac.preconditioning.status.comfortState",
+	"vehicle.drivetrain.batteryManagement.header",
+	"vehicle.drivetrain.electricEngine.charging.hvStatus",
+	"vehicle.drivetrain.electricEngine.charging.level",
+	"vehicle.drivetrain.electricEngine.charging.timeToFullyCharged",
+	"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
+	"vehicle.powertrain.electric.battery.stateOfCharge.target",
+	"vehicle.vehicle.travelledDistance",
+}
+
 type API struct {
 	*request.Helper
 }
@@ -62,20 +84,9 @@ func (v *API) GetContainers() ([]Container, error) {
 
 func (v *API) CreateContainer() error {
 	data := CreateContainer{
-		Name:    "evcc.io",
-		Purpose: "evcc.io",
-		TechnicalDescriptors: []string{
-			// https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
-			"vehicle.body.chargingPort.status",
-			"vehicle.cabin.hvac.preconditioning.status.comfortState",
-			"vehicle.drivetrain.batteryManagement.header",
-			"vehicle.drivetrain.electricEngine.charging.hvStatus",
-			"vehicle.drivetrain.electricEngine.charging.level",
-			"vehicle.drivetrain.electricEngine.charging.timeToFullyCharged",
-			"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
-			"vehicle.powertrain.electric.battery.stateOfCharge.target",
-			"vehicle.vehicle.travelledDistance",
-		},
+		Name:                 "evcc.io",
+		Purpose:              "evcc.io",
+		TechnicalDescriptors: requiredKeys,
 	}
 
 	var res any

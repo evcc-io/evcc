@@ -14,6 +14,9 @@ var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc
 // ErrMissingCredentials indicates that user/password are missing
 var ErrMissingCredentials = errors.New("missing user/password credentials")
 
+// ErrLoginRequired indicates that retrieving tokens credentials waits for login
+var ErrLoginRequired = errors.New("login required")
+
 // ErrMissingToken indicates that access/refresh tokens are missing
 var ErrMissingToken = errors.New("missing token credentials")
 

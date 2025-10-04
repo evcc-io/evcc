@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"sync"
 	"time"
 
@@ -47,7 +48,7 @@ func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin string) 
 		for {
 			token, err := ts.Token()
 			if err != nil {
-				if !errors.Is(err, ErrLoginRequired) {
+				if !tokenError(err) {
 					v.log.ERROR.Println(err)
 				}
 
@@ -66,8 +67,8 @@ func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin string) 
 }
 
 func (v *Provider) runMqtt(vin string, token *oauth2.Token) error {
-	gcid := tokenExtra(token, "gcid")
-	idToken := tokenExtra(token, "id_token")
+	gcid := TokenExtra(token, "gcid")
+	idToken := TokenExtra(token, "id_token")
 
 	o := mqtt.NewClientOptions().
 		AddBroker(StreamingURL).
@@ -201,11 +202,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if err == nil && hv == "CHARGING" {
+	if hv == "CHARGING" {
 		status = api.StatusC
 	}
 
-	return status, nil
+	return status, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -237,10 +238,10 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	return v.Int("vehicle.powertrain.electric.battery.stateOfCharge.target")
 }
 
-// var _ api.VehicleClimater = (*Provider)(nil)
+var _ api.VehicleClimater = (*Provider)(nil)
 
-// // Climater implements the api.VehicleClimater interface
-// func (v *Provider) Climater() (bool, error) {
-// 	res, err := v.statusG()
-// 	return res.State.ClimateControlState.Activity == "HEATING" || res.State.ClimateControlState.Activity == "COOLING", err
-// }
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.String("vehicle.cabin.hvac.preconditioning.status.comfortState")
+	return slices.Contains([]string{"COMFORT_HEATING", "COMFORT_COOLING", "COMFORT_VENTILATION", "DEFROST"}, res), err
+}

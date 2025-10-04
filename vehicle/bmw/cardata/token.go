@@ -1,6 +1,11 @@
 package cardata
 
-import "golang.org/x/oauth2"
+import (
+	"errors"
+
+	"github.com/evcc-io/evcc/api"
+	"golang.org/x/oauth2"
+)
 
 type Token struct {
 	*oauth2.Token
@@ -15,29 +20,14 @@ func (t *Token) TokenEx() *oauth2.Token {
 	})
 }
 
-type PersistingTokenSource struct {
-	oauth2.TokenSource
-	token   *oauth2.Token
-	Persist func(token *oauth2.Token) error
-}
-
-func (pts *PersistingTokenSource) Token() (*oauth2.Token, error) {
-	token, err := pts.TokenSource.Token()
-	if err != nil || token == pts.token {
-		return token, err
-	}
-	if err := pts.Persist(token); err != nil {
-		return nil, err
-	}
-	pts.token = token
-	return token, nil
-}
-
-var TokenExtra = tokenExtra
-
-func tokenExtra(t *oauth2.Token, key string) string {
+// TokenExtra returns extra string properties of the oauth2.Token
+func TokenExtra(t *oauth2.Token, key string) string {
 	if v := t.Extra(key); v != nil {
 		return v.(string)
 	}
 	return ""
+}
+
+func tokenError(err error) bool {
+	return errors.Is(err, api.ErrLoginRequired) || errors.Is(err, api.ErrMissingToken)
 }
