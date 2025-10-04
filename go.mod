@@ -114,7 +114,6 @@ require (
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.9
 	gorm.io/gorm v1.31.0
-	moul.io/http2curl v1.0.0
 )
 
 require (

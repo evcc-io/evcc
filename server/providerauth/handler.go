@@ -69,7 +69,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	provider, ok := a.providers[id]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid id")
+		fmt.Fprintln(w, "invalid id")
 		return
 	}
 
@@ -85,11 +85,18 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
+	uri, err := provider.Login(encryptedState)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "error: %v", err)
+		return
+	}
+
 	// return authorization URL
 	res := struct {
 		LoginUri string `json:"loginUri"`
 	}{
-		LoginUri: provider.Login(encryptedState),
+		LoginUri: uri,
 	}
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -109,7 +116,7 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	provider, ok := a.providers[id]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid id")
+		fmt.Fprintln(w, "invalid id")
 		return
 	}
 
@@ -161,9 +168,9 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Handle the callback
 	if err := provider.HandleCallback(r.URL.Query()); err != nil {
-		a.log.ERROR.Printf("callback handling for provider %s failed: %v", id, err)
+		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "callback handling failed")
+		fmt.Fprintln(w, "callback failed")
 		return
 	}
 
