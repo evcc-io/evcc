@@ -52,7 +52,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	log := util.NewLogger("cardata").Redact(cc.ClientID)
 
-	ts, err := auth.NewOauth(ctx, "cardata", &oc,
+	ts, err := auth.NewOauth(context.Background(), "BMW/Mini CarData", &oc,
 		auth.WithOauthDeviceFlowOption(),
 		auth.WithTokenRetrieverOption(func(data string, res *oauth2.Token) error {
 			var token cardata.Token
