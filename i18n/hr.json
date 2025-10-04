@@ -853,7 +853,7 @@
       "onlyForSocBasedCharging": "Navedene opcije dostupne samo za vozila s poznatom razinom napunjenosti baterije.",
       "phasesConfigured": {
         "label": "Faze",
-        "no1p3pSupport": "Kako je vaš punjač povezan?",
+        "no1p3pSupport": "Kako je spojen vaš punjač?",
         "phases_0": "automatsko prebacivanje",
         "phases_1": "jednofazno",
         "phases_1_hint": "({min} do {max})",
