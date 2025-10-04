@@ -151,12 +151,18 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
-	if len(zipReader.File) != 1 {
-		return nil, fmt.Errorf("unexpected number of files in the ZIP archive")
+	var tariffFile *zip.File
+	for _, file := range zipReader.File {
+		if strings.HasSuffix(file.Name, "Prezzi.xml") {
+			tariffFile = file
+			break
+		}
+	}
+	if tariffFile == nil {
+		return nil, fmt.Errorf("tariff file not found in downloaded ZIP archive")
 	}
 
-	zipFile := zipReader.File[0]
-	f, err := zipFile.Open()
+	f, err := tariffFile.Open()
 	if err != nil {
 		return nil, err
 	}

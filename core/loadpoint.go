@@ -1792,8 +1792,10 @@ func (lp *Loadpoint) startWakeUpTimer() {
 
 // stopWakeUpTimer stops wakeUpTimer
 func (lp *Loadpoint) stopWakeUpTimer() {
-	lp.log.DEBUG.Printf("wake-up timer: stop")
-	lp.wakeUpTimer.Stop()
+	if lp.wakeUpTimer.Running() {
+		lp.log.DEBUG.Printf("wake-up timer: stop")
+		lp.wakeUpTimer.Stop()
+	}
 }
 
 func (lp *Loadpoint) shouldBeConsistent() bool {
