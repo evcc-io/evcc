@@ -26,15 +26,13 @@ render: |
     cache: 60m
     timeout: 10s
     jq: >
-      ( .today + .tomorrow )
-      | map({
-          start: ( .startsAt
-                   | strptime("%Y-%m-%dT%H:%M:%S.%f%z")
-                   | strftime("%Y-%m-%dT%H:%M:%SZ") ),
-          end:   ( .startsAt
-                   | strptime("%Y-%m-%dT%H:%M:%S.%f%z")
-                   | mktime + 900
-                   | strftime("%Y-%m-%dT%H:%M:%SZ") ),
-          value: ( .total / 100.0 )
-        })
+      ( (.today // []) + (.tomorrow // []) )
+      | map(
+          ( .startsAt | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime ) as $s
+          | {
+              start: ( $s        | strftime("%Y-%m-%dT%H:%M:%SZ") ),
+              end:   ( ($s+900)  | strftime("%Y-%m-%dT%H:%M:%SZ") ),
+              value: ( .total / 100.0 )
+            }
+        )
       | tostring
