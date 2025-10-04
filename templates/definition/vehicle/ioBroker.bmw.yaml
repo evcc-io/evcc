@@ -56,4 +56,7 @@ render: |
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.preConditioning.activity.value
     jq: if .state == "HEATING" or .state == "heating" or .state == "COOLING" or .state == "cooling" then true else false end
+  limitsoc:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateofcharge.target.value
   {{ include "vehicle-features" . }}
