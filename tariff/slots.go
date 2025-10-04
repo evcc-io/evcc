@@ -23,6 +23,10 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 	}
 
 	var res api.Rates
+	if len(rates) > 0 {
+		// assume all slots of equal length
+		res = make(api.Rates, 0, len(rates)*max(int(rates[0].End.Sub(rates[0].Start)/SlotDuration), 1))
+	}
 
 	now := time.Now().Truncate(SlotDuration)
 
@@ -31,14 +35,12 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 			continue
 		}
 
-		interval := r.End.Sub(r.Start)
-		numSlots := max(int(interval/SlotDuration), 1)
+		numSlots := max(int(r.End.Sub(r.Start)/SlotDuration), 1)
 
 		for j := range numSlots {
 			start := r.Start.Add(time.Duration(j) * SlotDuration)
 			end := start.Add(SlotDuration)
-
-			var val float64
+			val := r.Value
 
 			switch t.Type() {
 			case api.TariffTypeSolar: //, api.TariffTypeCo2
@@ -47,12 +49,7 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 					start1 := rates[i+1].Start
 					frac := float64(start.Sub(start0)) / float64(start1.Sub(start0))
 					val = r.Value + frac*(rates[i+1].Value-r.Value)
-				} else {
-					val = r.Value
 				}
-
-			default:
-				val = r.Value
 			}
 
 			res = append(res, api.Rate{
