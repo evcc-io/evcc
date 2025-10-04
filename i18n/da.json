@@ -1144,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} af {total}",
-    "activeHoursLabel": "Aktive timer",
+    "activeHoursLabel": "Aktiv tid",
     "applyToAll": "Anvendes overalt?",
     "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",
     "cheapTitle": "Billig opladning fra elnettet",
@@ -1161,7 +1161,7 @@
     "saved": "Gemt."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pauserede timer",
+    "activeHoursLabel": "Pauseret tid",
     "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
     "priceLabel": "Indfødningspris",
     "priceLimit": "Indfødningsgrænse",

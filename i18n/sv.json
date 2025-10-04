@@ -512,6 +512,10 @@
       "description": "Lägg in din energitariff för att beräkna kostnaden för dina laddningar.",
       "title": "Tariffer"
     },
+    "telemetry": {
+      "description": "Konfigurera datadelning för att hjälpa oss förbättra evcc. Ditt privatliv är viktigt för oss och deltagande är helt frivilligt.",
+      "title": "Telemetri"
+    },
     "title": {
       "description": "Visas på huvudskärm och tabbar.",
       "label": "Titel",
@@ -666,7 +670,7 @@
   "help": {
     "discussionsButton": "GitHub diskussioner",
     "documentationButton": "Dokumentation",
-    "issueButton": "Rapportera fel",
+    "issueButton": "Rapportera ett problem",
     "issueDescription": "Hittat ett konstigt eller felaktigt beteende?",
     "logsButton": "Se loggar",
     "logsDescription": "Felsök loggar.",
@@ -707,6 +711,7 @@
     "description": "Fungerar inte din installation som förväntat? Använd denna sida för hjälp eller rapportera problem. Bifoga tillräckligt med upplysningar för att vi ska förstå och kunna reproducera problemet. Gör beskrivningen kort, koncis och enkel att följa.",
     "helpType": {
       "discussion": "Behöver du hjälp med inställningarna",
+      "discussionDescription": "Forumdiskussioner ger dig svar.",
       "issue": "Hittat ett fel",
       "issueDescription": "Jag är säker på att något är fel och behöver fixas.",
       "title": "Vilket problem rör det sig om?"
@@ -720,8 +725,18 @@
       "confirmationButtonDiscussion": "Starta en GitHub-diskussion",
       "confirmationButtonIssue": "Skapa GitHub-issue",
       "copied": "Kopierad!",
-      "copyButton": "Kopiera ytterligare information"
-    }
+      "copyButton": "Kopiera ytterligare information",
+      "instructions": ":På grund av GitHUb's begränsning av URL-längd görs detta i två steg:",
+      "singleStepDescription": "Klicka på knappen nedan för att öppna GitHub med ett ifyllt formulär med ditt problem. Känsliga data har automatiskt tagits bort men dubbelkolla innan du delar.",
+      "step1Description": "Klicka på knappen nedan för att skapa en GitHub-post med titel, beskrivning och detaljer.",
+      "step2Description": "När posten skapats, återvänd hit för att kopiera ytterligare information nedan och klistra in i ditt GitHub-formulär. Känsliga data har automatiskt tagits bort men dubbelkolla innan du delar.",
+      "stepOneDiscussion": "Steg 1: Skapa en grund-diskussion",
+      "stepOneIssue": "Steg 1: Skapa grundläggande issue",
+      "stepTwo": "Steg 2: Kopiera ytterligare information",
+      "title": "GitHub problemöversikt"
+    },
+    "title": "Rapportera ett problem",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filtrera per område",
@@ -1081,6 +1096,7 @@
     "vehicle": "Fordon"
   },
   "settings": {
+    "deviceInfo": "Inställningar du gör här påverkar endast denna enhet.",
     "fullscreen": {
       "enter": "Till helskärmsläge",
       "exit": "Lämna helskärmsläge",
@@ -1093,6 +1109,12 @@
     "language": {
       "auto": "Automatisk",
       "label": "Språk"
+    },
+    "loadpoints": {
+      "help": "Ändra sortering och synlighet för UI.",
+      "hide": "Göm {title}",
+      "label": "Laddpunkter",
+      "show": "Visa {title}"
     },
     "sponsorToken": {
       "expires": "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera här.",
@@ -1122,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} av {total}",
-    "activeHoursLabel": "Aktiva timmar",
+    "activeHoursLabel": "Aktiv tid",
     "applyToAll": "Tillämpa överallt?",
     "batteryDescription": "Laddar batteriet med el från nätet.",
     "cheapTitle": "Billig laddning från nätet",
@@ -1139,7 +1161,7 @@
     "saved": "Sparad."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausade timmar",
+    "activeHoursLabel": "Pausad tid",
     "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
     "priceLabel": "Inmatningshastighet",
     "priceLimit": "Inmatningsbegränsning",
