@@ -157,8 +157,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
-
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
@@ -171,6 +169,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// create web server
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+
+	// start serving in background, watch for “routine‐only” errors
+	go func() {
+		if err := wrapFatalError(httpd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
+			log.FATAL.Println(err)
+			os.Exit(1)
+		}
+	}()
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+
+	// signal ui listening
+	valueChan <- util.Param{Key: keys.Startup, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -236,7 +246,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// signal restart
+	// signal devices initialized
 	valueChan <- util.Param{Key: keys.Startup, Val: true}
 
 	// setup mqtt publisher
@@ -310,19 +320,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		// exit code 1 on error
-		os.Exit(cast.ToInt(err != nil))
-	}()
-
 	// allow web access for vehicles
 	configureAuth(httpd.Router(), valueChan)
 
@@ -383,5 +380,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
+	// wait for shutdown
+	<-stopC
+
+	select {
+	case <-shutdownDoneC(): // wait for shutdown
+	case <-time.After(conf.Interval):
+	}
+
+	// exit code 1 on error
+	os.Exit(cast.ToInt(err != nil))
 }
