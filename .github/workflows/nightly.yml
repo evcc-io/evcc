@@ -37,6 +37,9 @@ jobs:
       && startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
+    permissions:
+      contents: read
+      actions: write
 
   docker:
     name: Publish Docker :nightly
