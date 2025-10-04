@@ -137,7 +137,7 @@ func (v *Provider) any(key string) (any, error) {
 			return nil, api.ErrNotAvailable
 		}
 
-		if res, err := v.api.GetTelematics(container); err == nil {
+		if res, err := v.api.GetTelematics(v.vin, container); err == nil {
 			v.initial = res.TelematicData
 		} else {
 			v.log.ERROR.Printf("get telematics: %v", err)

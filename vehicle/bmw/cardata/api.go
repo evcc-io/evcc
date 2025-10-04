@@ -1,6 +1,7 @@
 package cardata
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/util"
@@ -130,8 +131,9 @@ func (v *API) EnsureContainer() (string, error) {
 	return res.ContainerId, err
 }
 
-func (v *API) GetTelematics(id string) (TelematicData, error) {
+func (v *API) GetTelematics(vin, container string) (TelematicData, error) {
 	var res TelematicData
-	err := v.GetJSON(ApiURL+"/customers/containers/"+id, &res)
+	uri := fmt.Sprintf(ApiURL+"/customers/vehicles/%s/telematicData?containerId=%s", vin, container)
+	err := v.GetJSON(uri, &res)
 	return res, err
 }
