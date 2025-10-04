@@ -638,8 +638,7 @@ export default defineComponent({
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		shmTags() {
-			const { allowControl } = store.state?.shm || {};
-			return { allowControl: { value: allowControl || false } };
+			return { configured: { value: true } };
 		},
 		hemsTags() {
 			const { type } = store.state?.hems || {};

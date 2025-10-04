@@ -18,7 +18,9 @@
 				<tbody>
 					<!-- Request Data -->
 					<tr class="table-secondary">
-						<td colspan="100%" class="fw-bold text-start">Request Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Request Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Solar Forecast (kW)</td>
@@ -77,7 +79,9 @@
 
 					<!-- Response Data -->
 					<tr class="table-secondary">
-						<td colspan="100%" class="fw-bold text-start">Response Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Response Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Grid Export (kW)</td>
@@ -118,7 +122,7 @@
 						:key="batteryIndex"
 					>
 						<tr>
-							<td colspan="100%" class="fw-bold text-start">
+							<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
 								<div class="d-flex align-items-center">
 									<span
 										class="battery-indicator me-2"
@@ -255,11 +259,15 @@ export default defineComponent({
 			return this.fmtWh(wh, this.POWER_UNIT.KW, false, 1);
 		},
 		formatDuration: (seconds: number): string => {
-			return (seconds / 3600).toFixed(1);
+			return (seconds / 3600).toFixed(2);
 		},
 		formatHour(index: number): string {
+			// Show label only every 4th slot (every hour for 15-minute slots)
+			if (index % 4 !== 0) {
+				return "";
+			}
 			const startTime = new Date(this.timestamp);
-			const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
+			const currentTime = new Date(startTime.getTime() + index * 15 * 60 * 1000); // Add 15-minute intervals
 			return currentTime.getHours().toString();
 		},
 		getBatteryTitle(index: number): string {

@@ -77,7 +77,6 @@
       "title": "Chování systému"
     },
     "deviceValue": {
-      "allowControl": "Povolit ovládání",
       "amount": "Množství",
       "broker": "Broker",
       "bucket": "Úložiště (bucket)",
@@ -440,8 +439,6 @@
       "descriptionIds": "V Sunny Portálu každé zařízení potřebuje unikátní identifikátor. EVCC generuje tento identifikátor v závisosti na vašem HW. Pokud zmigrujete EVCC na jiný HW mohou se tyto identifikátory změnit. Pokud chcete uchovat statistiky můžete zde přepsat generované identifikátory. Otevřete SEMP URL (/semp) abyste zkontrolovali současné identifikátory.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 znaků HEX string. Obecné předpony všech entit. Ve výchozím stavu EVCC použije vlastní interní ID.",
-      "labelAllowControl": "Povolit dodatečné limity výkonu doporučené SHM.",
-      "labelControl": "Povolit ovládání",
       "labelDeviceId": "ID zařízení",
       "labelVendorId": "ID výrobce",
       "title": "SMA Sunny Home Manager"
