@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -38,6 +39,9 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.T
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+
+	log := util.NewLogger("viessmann").Redact(cc.ClientID)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	return NewOauth(ctx, "Viessmann", oauth2Config(cc.ClientID))
 }

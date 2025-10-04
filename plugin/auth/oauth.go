@@ -94,7 +94,7 @@ var (
 	_ api.AuthProvider     = (*OAuth)(nil)
 )
 
-func NewOauth(_ context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
+func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
@@ -110,11 +110,16 @@ func NewOauth(_ context.Context, name string, oc *oauth2.Config, opts ...oauthOp
 	}
 
 	log := util.NewLogger("oauth-" + hash)
+
+	if ctx.Value(oauth2.HTTPClient) == nil {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
+	}
+
 	o := &OAuth{
 		subject: subject,
 		oc:      oc,
 		log:     log,
-		ctx:     context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log)),
+		ctx:     ctx,
 	}
 
 	for _, opt := range opts {
