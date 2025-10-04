@@ -91,7 +91,7 @@ func (t *Amber) run(done chan error) {
 			continue
 		}
 
-		// Create a time-ordered list of all Amber intervals
+		// Create and sort time-ordered list of all Amber intervals
 		var intervals []struct {
 			start, end time.Time
 			value      float64
@@ -132,62 +132,107 @@ func (t *Amber) run(done chan error) {
 			continue
 		}
 
-		// Find time range and create 15-minute slots
-		minTime := intervals[0].start.Truncate(SlotDuration)
-		maxTime := intervals[len(intervals)-1].end
+		// Sort intervals by start time to ensure correct processing
+		slices.SortFunc(intervals, func(a, b struct {
+			start, end time.Time
+			value      float64
+			isCurrent  bool
+		}) int {
+			return a.start.Compare(b.start)
+		})
 
-		var data api.Rates
-		for slotStart := minTime; slotStart.Before(maxTime); slotStart = slotStart.Add(SlotDuration) {
-			slotEnd := slotStart.Add(SlotDuration)
-
-			var totalValue, totalDuration float64
-			var currentPrice *float64
-
-			// Find all intervals that overlap with this 15-minute slot
-			for _, interval := range intervals {
-				if interval.end.After(slotStart) && interval.start.Before(slotEnd) {
-					// Calculate overlap duration
-					overlapStart := slotStart
-					if interval.start.After(slotStart) {
-						overlapStart = interval.start
-					}
-
-					overlapEnd := slotEnd
-					if interval.end.Before(slotEnd) {
-						overlapEnd = interval.end
-					}
-
-					overlapSecs := overlapEnd.Sub(overlapStart).Seconds()
-
-					if interval.isCurrent {
-						// Current interval overrides the entire slot
-						currentPrice = &interval.value
-					} else {
-						// Add to weighted average
-						totalValue += interval.value * overlapSecs
-						totalDuration += overlapSecs
-					}
-				}
-			}
-
-			// Determine final value for this slot
-			var finalValue float64
-			if currentPrice != nil {
-				finalValue = *currentPrice
-			} else if totalDuration > 0 {
-				finalValue = totalValue / totalDuration
-			}
-
-			data = append(data, api.Rate{
-				Start: slotStart,
-				End:   slotEnd,
-				Value: finalValue,
-			})
-		}
+		data := t.buildSlotRates(intervals)
 
 		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
+}
+
+// buildSlotRates converts Amber intervals into 15-minute slots using bucket sharding
+// to avoid O(slots × intervals) complexity and only create slots with actual data
+func (t *Amber) buildSlotRates(intervals []struct {
+	start, end time.Time
+	value      float64
+	isCurrent  bool
+}) api.Rates {
+	// Build slot buckets using sharding approach
+	type bucket struct {
+		totalSecs   float64
+		weightedSum float64
+		current     *float64
+	}
+	buckets := make(map[time.Time]*bucket)
+
+	for _, iv := range intervals {
+		// Truncate start to slot boundary
+		slot := iv.start.Truncate(SlotDuration)
+		end := iv.end
+
+		for slot.Before(end) {
+			next := slot.Add(SlotDuration)
+
+			// Compute overlap [max(slot, iv.start), min(next, iv.end))
+			overlapStart := slot
+			if iv.start.After(slot) {
+				overlapStart = iv.start
+			}
+
+			overlapEnd := next
+			if iv.end.Before(next) {
+				overlapEnd = iv.end
+			}
+
+			overlapSecs := overlapEnd.Sub(overlapStart).Seconds()
+
+			b, ok := buckets[slot]
+			if !ok {
+				b = &bucket{}
+				buckets[slot] = b
+			}
+
+			if iv.isCurrent {
+				// Current interval overrides the entire slot
+				b.current = &iv.value
+			} else {
+				// Add to weighted average
+				b.weightedSum += iv.value * overlapSecs
+				b.totalSecs += overlapSecs
+			}
+
+			slot = next
+		}
+	}
+
+	// Convert buckets to sorted rates, skipping empty slots
+	var data api.Rates
+	for start, b := range buckets {
+		var finalValue float64
+		hasValue := false
+
+		if b.current != nil {
+			finalValue = *b.current
+			hasValue = true
+		} else if b.totalSecs > 0 {
+			finalValue = b.weightedSum / b.totalSecs
+			hasValue = true
+		}
+
+		// Only add slots with actual data
+		if hasValue {
+			data = append(data, api.Rate{
+				Start: start,
+				End:   start.Add(SlotDuration),
+				Value: finalValue,
+			})
+		}
+	}
+
+	// Sort by start time
+	slices.SortFunc(data, func(a, b api.Rate) int {
+		return a.Start.Compare(b.Start)
+	})
+
+	return data
 }
 
 // Rates implements the api.Tariff interface
