@@ -1,6 +1,7 @@
 package cardata
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,7 +34,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin string) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, vin string) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
@@ -45,19 +46,21 @@ func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin string) 
 	go func() {
 		bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
 
-		for {
+		for ctx.Err() == nil {
+			time.Sleep(bo.NextBackOff())
+
 			token, err := ts.Token()
 			if err != nil {
 				if !tokenError(err) {
 					v.log.ERROR.Println(err)
 				}
 
-				time.Sleep(bo.NextBackOff())
+				continue
 			}
 
 			bo.Reset()
 
-			if err := v.runMqtt(vin, token); err != nil {
+			if err := v.runMqtt(ctx, vin, token); err != nil {
 				v.log.ERROR.Println(err)
 			}
 		}
@@ -66,7 +69,7 @@ func NewProvider(log *util.Logger, api *API, ts oauth2.TokenSource, vin string) 
 	return v
 }
 
-func (v *Provider) runMqtt(vin string, token *oauth2.Token) error {
+func (v *Provider) runMqtt(ctx context.Context, vin string, token *oauth2.Token) error {
 	gcid := TokenExtra(token, "gcid")
 	idToken := TokenExtra(token, "id_token")
 
@@ -93,7 +96,10 @@ func (v *Provider) runMqtt(vin string, token *oauth2.Token) error {
 		return fmt.Errorf("subscribe: %w", err)
 	}
 
-	time.Sleep(time.Until(token.Expiry))
+	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
+	defer cancel()
+
+	<-ctx.Done()
 
 	return nil
 }
@@ -104,6 +110,8 @@ func (v *Provider) handler(c mqtt.Client, m mqtt.Message) {
 		v.log.ERROR.Println(m.Topic(), string(m.Payload()), err)
 		return
 	}
+
+	v.log.TRACE.Println("recv: " + string(m.Payload()))
 
 	v.mu.Lock()
 	defer v.mu.Unlock()
