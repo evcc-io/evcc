@@ -44,7 +44,6 @@ params:
   - name: maxacpower
   - name: capacity
     advanced: true
-    usages: ["battery"]
   - name: externalpower
     type: bool
     description:
