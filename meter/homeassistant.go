@@ -4,6 +4,7 @@ package meter
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -19,6 +20,23 @@ type HomeAssistant struct {
 	voltageEntities [3]string
 }
 
+// parsePhases helper to turn a []string into a [3]string or error
+func parsePhases(name string, cfg []string) ([3]string, error) {
+	var arr [3]string
+	if len(cfg) == 0 {
+		return arr, nil
+	}
+	if len(cfg) != 1 && len(cfg) != 3 {
+		return arr, fmt.Errorf("%s must contain either 1 entity (single-phase) or 3 entities (three-phase L1, L2, L3), got %d", name, len(cfg))
+	}
+	if len(cfg) == 1 {
+		arr[0] = cfg[0]
+	} else {
+		copy(arr[:], cfg)
+	}
+	return arr, nil
+}
+
 func init() {
 	registry.Add("homeassistant", NewHomeAssistantFromConfig)
 }
@@ -26,7 +44,7 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		BaseURL  string   `mapstructure:"baseurl"`
+		URI      string   `mapstructure:"uri"`
 		Token    string   `mapstructure:"token"`
 		Power    string   `mapstructure:"power"`
 		Energy   string   `mapstructure:"energy"`
@@ -42,7 +60,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	conn, err := homeassistant.NewConnection(cc.BaseURL, cc.Token)
+	conn, err := homeassistant.NewConnection(cc.URI, cc.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -54,22 +72,18 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 	}
 
 	// Set up phase currents (optional)
-	if len(cc.Currents) > 0 {
-		currents, err := homeassistant.ValidatePhaseEntities(cc.Currents, "currents")
-		if err != nil {
-			return nil, err
-		}
-		m.currentEntities = currents
+	currents, err := parsePhases("currents", cc.Currents)
+	if err != nil {
+		return nil, err
 	}
+	m.currentEntities = currents
 
 	// Set up phase voltages (optional)
-	if len(cc.Voltages) > 0 {
-		voltages, err := homeassistant.ValidatePhaseEntities(cc.Voltages, "voltages")
-		if err != nil {
-			return nil, err
-		}
-		m.voltageEntities = voltages
+	voltages, err := parsePhases("voltages", cc.Voltages)
+	if err != nil {
+		return nil, err
 	}
+	m.voltageEntities = voltages
 
 	// decorators for optional interfaces
 	var meterEnergy func() (float64, error)
@@ -77,25 +91,25 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 	var phaseVoltages func() (float64, float64, float64, error)
 
 	if m.energy != "" {
-		meterEnergy = m.TotalEnergy
+		meterEnergy = m.totalEnergy
 	}
 	if m.currentEntities[0] != "" {
-		phaseCurrents = m.Currents
+		phaseCurrents = m.currents
 	}
 	if m.voltageEntities[0] != "" {
-		phaseVoltages = m.Voltages
+		phaseVoltages = m.voltages
 	}
 
 	return decorateHomeAssistant(m, meterEnergy, phaseCurrents, phaseVoltages), nil
 }
 
 // NewHomeAssistant creates HomeAssistant meter
-func NewHomeAssistant(baseURL, token, power, energy string, currents, voltages [3]string) (*HomeAssistant, error) {
+func NewHomeAssistant(uri, token, power, energy string, currents, voltages [3]string) (*HomeAssistant, error) {
 	if power == "" {
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	conn, err := homeassistant.NewConnection(baseURL, token)
+	conn, err := homeassistant.NewConnection(uri, token)
 	if err != nil {
 		return nil, err
 	}
@@ -118,25 +132,24 @@ func (m *HomeAssistant) CurrentPower() (float64, error) {
 	return m.conn.GetFloatState(m.power)
 }
 
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *HomeAssistant) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface (private for decorator)
+func (m *HomeAssistant) totalEnergy() (float64, error) {
 	if m.energy == "" {
 		return 0, api.ErrNotAvailable
 	}
 	return m.conn.GetFloatState(m.energy)
 }
 
-// Currents implements the api.PhaseCurrents interface
-func (m *HomeAssistant) Currents() (float64, float64, float64, error) {
+// currents implements the api.PhaseCurrents interface (private for decorator)
+func (m *HomeAssistant) currents() (float64, float64, float64, error) {
 	if m.currentEntities[0] == "" {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 	return m.conn.GetPhaseStates(m.currentEntities)
 }
 
-// Voltages implements the api.PhaseVoltages interface
-func (m *HomeAssistant) Voltages() (float64, float64, float64, error) {
+// voltages implements the api.PhaseVoltages interface (private for decorator)
+func (m *HomeAssistant) voltages() (float64, float64, float64, error) {
 	if m.voltageEntities[0] == "" {
 		return 0, 0, 0, api.ErrNotAvailable
 	}

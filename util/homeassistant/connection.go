@@ -117,7 +117,7 @@ func (c *Connection) CallService(domain, service string, data map[string]interfa
 // CallSwitchService is a convenience method for switch services
 func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	parts := strings.Split(entity, ".")
-	if len(parts) == 0 {
+	if len(parts) < 2 {
 		return fmt.Errorf("invalid entity format: %s", entity)
 	}
 	domain := parts[0]
