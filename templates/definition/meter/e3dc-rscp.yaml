@@ -42,8 +42,6 @@ params:
     advanced: true
     usages: ["battery"]
   - name: maxacpower
-    advanced: true
-    usages: ["pv"]
   - name: capacity
     advanced: true
     usages: ["battery"]
