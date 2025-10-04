@@ -57,6 +57,13 @@ func (m *Timer) Stop() {
 	m.started = time.Time{}
 }
 
+func (m *Timer) Running() bool {
+	m.Lock()
+	defer m.Unlock()
+
+	return !m.started.IsZero()
+}
+
 // Elapsed checks if the timer has elapsed and if resets its status
 func (m *Timer) Elapsed() WakeUpEvent {
 	m.Lock()
