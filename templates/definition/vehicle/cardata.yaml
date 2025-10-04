@@ -1,0 +1,26 @@
+template: cardata
+products:
+  - brand: BMW
+    description:
+      generic: CarData (EU Data Act)
+  - brand: Mini
+    description:
+      generic: CarData (EU Data Act)
+requirements:
+  description:
+    de: |
+      Benötigt CarData Einrichtung im BMW/Mini portal.
+    en: |
+      Requires CarData activation in BMW/Mini portal.
+params:
+  - preset: vehicle-common
+  - name: vin
+    example: WBMW...
+  - name: clientid
+  - preset: vehicle-features
+render: |
+  type: cardata
+  vin: {{ .vin }}
+  clientid: {{ .clientid }}
+  {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}

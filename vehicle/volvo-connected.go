@@ -45,7 +45,7 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
-	ts, err := auth.NewOauth(ctx, oc, cc.embed.GetTitle())
+	ts, err := auth.NewOauth(ctx, cc.embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
