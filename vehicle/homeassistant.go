@@ -189,7 +189,7 @@ func (v *HomeAssistant) setMaxCurrent(entity string, current int64) error {
 	case "input_number":
 		service = "set_value"
 	default:
-		return fmt.Errorf("unsupported entity domain for max current: %s", domain)
+		return fmt.Errorf("unsupported entity domain: %s", domain)
 	}
 
 	data := map[string]interface{}{
