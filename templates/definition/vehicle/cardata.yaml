@@ -17,6 +17,7 @@ params:
   - name: vin
     example: WBMW...
   - name: clientid
+    required: true
   - preset: vehicle-features
 render: |
   type: cardata
