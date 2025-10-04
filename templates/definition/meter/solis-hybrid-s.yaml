@@ -29,15 +29,8 @@ params:
     advanced: true
   - name: maxacpower
   - name: minsoc
-    type: int
-    default: 20
     advanced: true
   - name: maxsoc
-    type: int
-    default: 95
-    advanced: true
-  - name: delay
-    default: 100ms
     advanced: true
 render: |
   type: custom
@@ -158,7 +151,6 @@ render: |
   limitsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 43024 # Battery Reserve Mode SOC
       type: writeholding
