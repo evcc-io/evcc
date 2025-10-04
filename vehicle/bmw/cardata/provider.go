@@ -111,6 +111,8 @@ func (v *Provider) handler(c mqtt.Client, m mqtt.Message) {
 		return
 	}
 
+	v.log.TRACE.Println("recv: " + string(m.Payload()))
+
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
