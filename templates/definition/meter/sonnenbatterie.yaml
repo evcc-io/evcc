@@ -26,6 +26,7 @@ params:
     advanced: true
   - name: maxchargepower
     default: 3300
+  - name: maxdischargepower
   - name: minsoc
     advanced: true
   - name: maxsoc
@@ -137,4 +138,6 @@ render: |
           - Auth-Token: {{ .token }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}
