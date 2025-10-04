@@ -26,6 +26,10 @@ params:
     advanced: true
   - name: maxchargepower
     default: 3300
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
   - name: token
     required: false
     help:
@@ -59,6 +63,8 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- if .token }}
   batterymode:
     source: switch
