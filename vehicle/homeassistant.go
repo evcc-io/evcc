@@ -44,10 +44,10 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			FinishTime string // optional
 		}
 		Services struct {
-			Start      string `mapstructure:"start_charging"` // script.*  optional
-			Stop       string `mapstructure:"stop_charging"`  // script.*  optional
-			Wakeup     string // script.*  optional
-			MaxCurrent string `mapstructure:"max_current"` // number.* or input_number.* optional
+			Start         string `mapstructure:"start_charging"` // script.*  optional
+			Stop          string `mapstructure:"stop_charging"`  // script.*  optional
+			Wakeup        string // script.*  optional
+			SetMaxCurrent string `mapstructure:"setMaxCurrent"` // number.* or input_number.* optional
 		}
 	}
 
@@ -121,9 +121,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return res.callScript(cc.Services.Wakeup) }
 	}
-	if cc.Services.MaxCurrent != "" {
-		maxCurrent = func(current int64) error { return res.setMaxCurrent(cc.Services.MaxCurrent, current) }
-		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.Services.MaxCurrent) }
+	if cc.Services.SetMaxCurrent != "" {
+		maxCurrent = func(current int64) error { return res.setMaxCurrent(cc.Services.SetMaxCurrent, current) }
+		getMaxCurrent = func() (float64, error) { return res.getFloatSensor(cc.Services.SetMaxCurrent) }
 	}
 
 	// decorate all features
