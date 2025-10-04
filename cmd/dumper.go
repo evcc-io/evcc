@@ -67,7 +67,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Power:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Power:\t%.0fW (%v)\n", power, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Power:\t%.0fW\t(%v)\n", power, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -79,7 +79,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Energy:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Energy:\t%.1fkWh (%v)\n", energy, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Energy:\t%.1fkWh\t(%v)\n", energy, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -91,7 +91,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Current L1..L3:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Current L1..L3:\t%.3gA %.3gA %.3gA (%v)\n", i1, i2, i3, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Current L1..L3:\t%.3gA %.3gA %.3gA\t(%v)\n", i1, i2, i3, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -103,7 +103,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Voltage L1..L3:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Voltage L1..L3:\t%.3gV %.3gV %.3gV (%v)\n", u1, u2, u3, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Voltage L1..L3:\t%.3gV %.3gV %.3gV\t(%v)\n", u1, u2, u3, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -115,7 +115,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Power L1..L3:\t%.0fW %.0fW %.0fW (%v)\n", p1, p2, p3, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Power L1..L3:\t%.0fW %.0fW %.0fW\t(%v)\n", p1, p2, p3, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -141,13 +141,13 @@ func (d *dumper) Dump(name string, v interface{}) {
 			if err != nil {
 				fmt.Fprintf(w, "Temp:\t%v\n", err)
 			} else {
-				fmt.Fprintf(w, "Temp:\t%.0f°C (%v)\n", soc, duration.Round(time.Millisecond))
+				fmt.Fprintf(w, "Temp:\t%.0f°C\t(%v)\n", soc, duration.Round(time.Millisecond))
 			}
 		} else {
 			if err != nil {
 				fmt.Fprintf(w, "Soc:\t%v\n", err)
 			} else {
-				fmt.Fprintf(w, "Soc:\t%.0f%% (%v)\n", soc, duration.Round(time.Millisecond))
+				fmt.Fprintf(w, "Soc:\t%.0f%%\t(%v)\n", soc, duration.Round(time.Millisecond))
 			}
 		}
 	}
@@ -170,7 +170,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Charge status:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Charge status:\t%v (%v)\n", status, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Charge status:\t%v\t(%v)\n", status, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -182,7 +182,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Status reason:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Status reason:\t%v (%v)\n", status, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Status reason:\t%v\t(%v)\n", status, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -199,7 +199,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Enabled:\t%t (%v)\n", enabled, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Enabled:\t%t\t(%v)\n", enabled, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -211,7 +211,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Charged:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Charged:\t%.1fkWh (%v)\n", energy, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Charged:\t%.1fkWh\t(%v)\n", energy, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -223,7 +223,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Duration:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Duration:\t%v (%v)\n", chargeDuration.Truncate(time.Second), queryDuration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Duration:\t%v\t(%v)\n", chargeDuration.Truncate(time.Second), queryDuration.Round(time.Millisecond))
 		}
 	}
 
@@ -235,7 +235,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Mix/Max Current:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Mix/Max Current:\t%.1f/%.1fA (%v)\n", min, max, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Mix/Max Current:\t%.1f/%.1fA\t(%v)\n", min, max, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -249,7 +249,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Range:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Range:\t%vkm (%v)\n", rng, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Range:\t%vkm\t(%v)\n", rng, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -261,7 +261,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Odometer:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Odometer:\t%.0fkm (%v)\n", odo, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Odometer:\t%.0fkm\t(%v)\n", odo, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -273,7 +273,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Finish time:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Finish time:\t%v (%v)\n", ft.Truncate(time.Minute).In(time.Local), duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Finish time:\t%v\t(%v)\n", ft.Truncate(time.Minute).In(time.Local), duration.Round(time.Millisecond))
 		}
 	}
 
@@ -285,7 +285,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Climater:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Climate active:\t%v (%v)\n", active, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Climate active:\t%v\t(%v)\n", active, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -297,7 +297,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Position:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Position:\t%v,%v (%v)\n", lat, lon, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Position:\t%v,%v\t(%v)\n", lat, lon, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -310,13 +310,13 @@ func (d *dumper) Dump(name string, v interface{}) {
 			if err != nil {
 				fmt.Fprintf(w, "Max Temp:\t%v\n", err)
 			} else {
-				fmt.Fprintf(w, "Max Temp:\t%d°C (%v)\n", limitSoc, duration.Round(time.Millisecond))
+				fmt.Fprintf(w, "Max Temp:\t%d°C\t(%v)\n", limitSoc, duration.Round(time.Millisecond))
 			}
 		} else {
 			if err != nil {
 				fmt.Fprintf(w, "Limit Soc:\t%v\n", err)
 			} else {
-				fmt.Fprintf(w, "Limit Soc:\t%d%% (%v)\n", limitSoc, duration.Round(time.Millisecond))
+				fmt.Fprintf(w, "Limit Soc:\t%d%%\t(%v)\n", limitSoc, duration.Round(time.Millisecond))
 			}
 		}
 	}
@@ -340,7 +340,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Max Current:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Max Current:\t%.1fA (%v)\n", f, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Max Current:\t%.1fA\t(%v)\n", f, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -352,7 +352,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if err != nil {
 			fmt.Fprintf(w, "Phases:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Phases:\t%d (%v)\n", f, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Phases:\t%d\t(%v)\n", f, duration.Round(time.Millisecond))
 		}
 	}
 
@@ -369,7 +369,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 			if id == "" {
 				id = "<none>"
 			}
-			fmt.Fprintf(w, "Identifier:\t%s (%v)\n", id, duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "Identifier:\t%s\t(%v)\n", id, duration.Round(time.Millisecond))
 		}
 	}
 
