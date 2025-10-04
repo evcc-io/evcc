@@ -70,13 +70,12 @@ func (v *Provider) runMqtt(vin string, token *oauth2.Token) error {
 	gcid := TokenExtra(token, "gcid")
 	idToken := TokenExtra(token, "id_token")
 
-	o := mqtt.NewClientOptions().
-		AddBroker(StreamingURL).
-		SetAutoReconnect(true).
-		SetUsername(gcid).
-		SetPassword(idToken)
-
-	paho := mqtt.NewClient(o)
+	paho := mqtt.NewClient(
+		mqtt.NewClientOptions().
+			AddBroker(StreamingURL).
+			SetAutoReconnect(true).
+			SetUsername(gcid).
+			SetPassword(idToken))
 
 	timeout := 30 * time.Second
 	if t := paho.Connect(); !t.WaitTimeout(timeout) {
