@@ -164,15 +164,16 @@ func (p *CachingProxy) cacheGet(until time.Time) (*cached, error) {
 		return nil, errors.New("not enough rates")
 	}
 
-	rates := currentRates(p.cached.Rates)
-	if len(rates) == 0 {
+	res := &cached{
+		Rates: currentRates(p.cached.Rates),
+		Type:  p.cached.Type,
+	}
+
+	if len(res.Rates) == 0 {
 		return nil, errors.New("no current rates")
 	}
 
-	return &cached{
-		Rates: rates,
-		Type:  p.cached.Type,
-	}, nil
+	return res, nil
 }
 
 func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
