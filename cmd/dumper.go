@@ -37,7 +37,7 @@ func (d *dumper) DumpWithHeader(name string, device interface{}) {
 
 // bo returns an exponential backoff for reading meter power quickly
 func bo() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(time.Second))
+	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(30*time.Second))
 }
 
 func (d *dumper) Dump(name string, v interface{}) {

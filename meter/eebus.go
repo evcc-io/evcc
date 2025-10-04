@@ -95,6 +95,8 @@ var _ eebus.Device = (*EEBus)(nil)
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+	c.log.TRACE.Printf("received event: %s", event)
+
 	if c.useMGCP {
 		// MGCP events for grid usage
 		switch event {
@@ -132,12 +134,14 @@ func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 			c.log.ERROR.Println("MGCP.Power:", err)
 			return
 		}
+		c.log.TRACE.Printf("MGCP.Power: %.0fW", data)
 	} else {
 		data, err = c.uc.MPC.Power(entity)
 		if err != nil {
 			c.log.ERROR.Println("MPC.Power:", err)
 			return
 		}
+		c.log.TRACE.Printf("MPC.Power: %.0fW", data)
 	}
 
 	c.power.Set(data)
@@ -153,15 +157,18 @@ func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) 
 			c.log.ERROR.Println("MGCP.EnergyConsumed:", err)
 			return
 		}
+		c.log.TRACE.Printf("MGCP.EnergyConsumed: %.1fkWh", data/1000)
 	} else {
 		data, err = c.uc.MPC.EnergyConsumed(entity)
 		if err != nil {
 			c.log.ERROR.Println("MPC.EnergyConsumed:", err)
 			return
 		}
+		c.log.TRACE.Printf("MPC.EnergyConsumed: %.1fkWh", data/1000)
 	}
 
-	c.energy.Set(data)
+	// Convert Wh to kWh
+	c.energy.Set(data / 1000)
 }
 
 func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
