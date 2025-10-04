@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -93,7 +94,7 @@ var (
 	_ api.AuthProvider     = (*OAuth)(nil)
 )
 
-func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
+func NewOauth(_ context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
@@ -108,12 +109,12 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 		return instance, nil
 	}
 
-	// create new instance
+	log := util.NewLogger("oauth-" + hash)
 	o := &OAuth{
 		subject: subject,
 		oc:      oc,
-		log:     util.NewLogger("oauth"),
-		ctx:     ctx,
+		log:     log,
+		ctx:     context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log)),
 	}
 
 	for _, opt := range opts {
@@ -170,19 +171,20 @@ func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	token, err := o.oc.TokenSource(o.ctx, token).Token()
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
+			o.onlineC <- false
 			settings.Delete(o.subject)
 		}
 
 		return nil, err
 	}
 
-	err = settings.SetJson(o.subject, token)
+	err = o.updateToken(token)
 
 	return token, err
 }
 
 // updateToken must only be called when lock is held
-func (o *OAuth) updateToken(token *oauth2.Token) {
+func (o *OAuth) updateToken(token *oauth2.Token) error {
 	var store any = token
 
 	// tokenStorer allows persisting the token together with it's extra properties
@@ -191,10 +193,20 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 	}
 
 	if err := settings.SetJson(o.subject, store); err != nil {
-		o.log.ERROR.Printf("error saving token: %v", err)
+		return err
 	}
 
 	o.onlineC <- token.Valid()
+
+	return nil
+}
+
+// updateTokenSource must only be called when lock is held
+func (o *OAuth) updateTokenSource(token *oauth2.Token) {
+	if err := o.updateToken(token); err != nil {
+		o.log.ERROR.Printf("error saving token: %v", err)
+		return
+	}
 
 	o.TokenSource = oauth.RefreshTokenSource(token, o)
 }
@@ -211,7 +223,7 @@ func (o *OAuth) HandleCallback(params url.Values) error {
 		return err
 	}
 
-	o.updateToken(token)
+	o.updateTokenSource(token)
 
 	return nil
 }
@@ -224,15 +236,13 @@ func (o *OAuth) Login(state string) (string, error) {
 	o.cv = oauth2.GenerateVerifier()
 
 	if o.deviceFlow {
-		ctx := context.Background()
-
-		da, err := o.oc.DeviceAuth(ctx, oauth2.S256ChallengeOption(o.cv))
+		da, err := o.oc.DeviceAuth(o.ctx, oauth2.S256ChallengeOption(o.cv))
 		if err != nil {
 			return "", err
 		}
 
 		go func() {
-			ctx, cancel := context.WithTimeout(ctx, time.Minute)
+			ctx, cancel := context.WithTimeout(o.ctx, 5*time.Minute)
 			defer cancel()
 
 			token, err := o.oc.DeviceAccessToken(ctx, da, oauth2.VerifierOption(o.cv))
@@ -244,7 +254,7 @@ func (o *OAuth) Login(state string) (string, error) {
 			o.mu.Lock()
 			defer o.mu.Unlock()
 
-			o.updateToken(token)
+			o.updateTokenSource(token)
 		}()
 
 		return da.VerificationURIComplete, nil
@@ -270,7 +280,9 @@ func (o *OAuth) Logout() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
+	o.onlineC <- false
 	o.TokenSource = oauth.RefreshTokenSource(nil, o)
+
 	return nil
 }
 

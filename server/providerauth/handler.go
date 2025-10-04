@@ -26,24 +26,26 @@ type Handler struct {
 	updateC   chan string
 }
 
-func (a *Handler) Publish(paramC chan<- util.Param) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+// TODO get status from update channel
+func (a *Handler) run(paramC chan<- util.Param) {
+	for range <-a.updateC {
+		a.mu.Lock()
 
-	apMap := make(map[string]*AuthProvider)
-
-	for id, provider := range a.providers {
-		ap := &AuthProvider{
-			ID:            url.QueryEscape(id),
-			Authenticated: provider.Authenticated(),
+		res := make(map[string]*AuthProvider)
+		for id, provider := range a.providers {
+			res[provider.DisplayName()] = &AuthProvider{
+				ID:            url.QueryEscape(id),
+				Authenticated: provider.Authenticated(),
+			}
 		}
-		apMap[provider.DisplayName()] = ap
+
+		a.mu.Unlock()
+
+		a.log.TRACE.Printf("publishing %d auth providers", len(res))
+
+		// publish the updated auth providers
+		paramC <- util.Param{Key: keys.AuthProviders, Val: res}
 	}
-
-	a.log.TRACE.Printf("publishing %d auth providers", len(apMap))
-
-	// publish the updated auth providers
-	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
 func (a *Handler) register(name string, handler api.AuthProvider) (chan<- string, error) {

@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -42,16 +41,11 @@ func Setup(router *mux.Router, paramC chan<- util.Param) {
 	// logout?id=...
 	router.Methods(http.MethodGet).Path("/logout").HandlerFunc(instance.handleLogout)
 
-	ticker := time.NewTicker(10 * time.Second)
-
-	go func() {
-		for range ticker.C {
-			instance.Publish(paramC)
-		}
-	}()
+	go instance.run(paramC)
 }
 
-// Register registers a specific AuthProvider. Returns login path as string.
+// Register registers a specific AuthProvider by name
+// The returned online channel is used to asynchronously update authorization status
 func Register(name string, handler api.AuthProvider) (chan<- bool, error) {
 	updateC, err := instance.register(name, handler)
 	if err != nil {
