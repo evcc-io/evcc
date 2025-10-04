@@ -195,11 +195,7 @@ func untilEndOfTomorrow() time.Time {
 }
 
 func ratesValid(rr api.Rates, until time.Time) bool {
-	if l := len(rr); l > 0 && !rr[l-1].End.Before(until) {
-		return true
-	}
-
-	return false
+	return len(rr) > 0 && !rr[len(rr)-1].End.Before(until)
 }
 
 func currentRates(rr api.Rates) api.Rates {
