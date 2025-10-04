@@ -91,13 +91,12 @@ func (t *Amber) run(done chan error) {
 			continue
 		}
 
-		// Group by hour and average intervals within each hour
-		hourlyData := make(map[time.Time]*struct {
-			totalValue    float64
-			totalDuration time.Duration
-			start         time.Time
-			currentValue  *float64 // Override with current interval if present (for accurate charging session costs)
-		})
+		// Create a time-ordered list of all Amber intervals
+		var intervals []struct {
+			start, end time.Time
+			value      float64
+			isCurrent  bool
+		}
 
 		for _, r := range res {
 			if t.channel == strings.ToLower(r.ChannelType) {
@@ -114,49 +113,74 @@ func (t *Amber) run(done chan error) {
 					value = -value
 				}
 
-				localStart := startTime.Local()
-				localEnd := endTime.Local()
-				hourStart := localStart.Truncate(time.Hour) // Preserve date+hour
-				duration := localEnd.Sub(localStart)
-
-				// Initialize hour entry if needed
-				if hourlyData[hourStart] == nil {
-					hourlyData[hourStart] = &struct {
-						totalValue    float64
-						totalDuration time.Duration
-						start         time.Time
-						currentValue  *float64
-					}{start: hourStart}
-				}
-
-				hr := hourlyData[hourStart]
-
-				// If this is the current interval, use its value directly for this hour
-				if r.Type == "CurrentInterval" {
-					hr.currentValue = &value
-				} else {
-					// Add to weighted average for forecast intervals
-					hr.totalValue += value * duration.Seconds()
-					hr.totalDuration += duration
-				}
+				intervals = append(intervals, struct {
+					start, end time.Time
+					value      float64
+					isCurrent  bool
+				}{
+					start:     startTime.Local(),
+					end:       endTime.Local(),
+					value:     value,
+					isCurrent: r.Type == "CurrentInterval",
+				})
 			}
 		}
 
-		// Convert to final hourly rates
-		data := make(api.Rates, 0, len(hourlyData))
-		for _, hr := range hourlyData {
+		if len(intervals) == 0 {
+			mergeRates(t.data, nil)
+			once.Do(func() { close(done) })
+			continue
+		}
+
+		// Find time range and create 15-minute slots
+		minTime := intervals[0].start.Truncate(SlotDuration)
+		maxTime := intervals[len(intervals)-1].end
+
+		var data api.Rates
+		for slotStart := minTime; slotStart.Before(maxTime); slotStart = slotStart.Add(SlotDuration) {
+			slotEnd := slotStart.Add(SlotDuration)
+
+			var totalValue, totalDuration float64
+			var currentPrice *float64
+
+			// Find all intervals that overlap with this 15-minute slot
+			for _, interval := range intervals {
+				if interval.end.After(slotStart) && interval.start.Before(slotEnd) {
+					// Calculate overlap duration
+					overlapStart := slotStart
+					if interval.start.After(slotStart) {
+						overlapStart = interval.start
+					}
+
+					overlapEnd := slotEnd
+					if interval.end.Before(slotEnd) {
+						overlapEnd = interval.end
+					}
+
+					overlapSecs := overlapEnd.Sub(overlapStart).Seconds()
+
+					if interval.isCurrent {
+						// Current interval overrides the entire slot
+						currentPrice = &interval.value
+					} else {
+						// Add to weighted average
+						totalValue += interval.value * overlapSecs
+						totalDuration += overlapSecs
+					}
+				}
+			}
+
+			// Determine final value for this slot
 			var finalValue float64
-			if hr.currentValue != nil {
-				// Use current interval value if available
-				finalValue = *hr.currentValue
-			} else if hr.totalDuration > 0 {
-				// Otherwise use weighted average of forecast intervals
-				finalValue = hr.totalValue / hr.totalDuration.Seconds()
+			if currentPrice != nil {
+				finalValue = *currentPrice
+			} else if totalDuration > 0 {
+				finalValue = totalValue / totalDuration
 			}
 
 			data = append(data, api.Rate{
-				Start: hr.start,
-				End:   hr.start.Add(time.Hour),
+				Start: slotStart,
+				End:   slotEnd,
 				Value: finalValue,
 			})
 		}
