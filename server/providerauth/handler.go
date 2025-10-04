@@ -19,10 +19,11 @@ import (
 // by request state obtained from the request and delegates to the registered handler.
 type Handler struct {
 	mu        sync.Mutex
+	log       *util.Logger
 	secret    []byte
 	providers map[string]api.AuthProvider
 	states    map[string]string
-	log       *util.Logger
+	updateC   chan string
 }
 
 func (a *Handler) Publish(paramC chan<- util.Param) {
@@ -45,18 +46,17 @@ func (a *Handler) Publish(paramC chan<- util.Param) {
 	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
-func (a *Handler) register(name string, handler api.AuthProvider) error {
+func (a *Handler) register(name string, handler api.AuthProvider) (chan<- string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.providers[name] != nil {
-		return fmt.Errorf("provider already registered: %s", name)
+		return nil, fmt.Errorf("provider already registered: %s", name)
 	}
 
-	a.log.DEBUG.Printf("registering provider: %s", name)
 	a.providers[name] = handler
 
-	return nil
+	return a.updateC, nil
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {

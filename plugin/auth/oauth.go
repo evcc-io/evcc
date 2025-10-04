@@ -27,6 +27,7 @@ type OAuth struct {
 	subject string
 	cv      string
 	ctx     context.Context
+	onlineC chan<- bool
 
 	deviceFlow     bool
 	tokenRetriever func(string, *oauth2.Token) error
@@ -142,11 +143,17 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 
 	o.TokenSource = oauth.RefreshTokenSource(&token, o)
 
+	// register auth redirect
+	onlineC, err := providerauth.Register(subject, o)
+	if err != nil {
+		return nil, err
+	}
+
+	onlineC <- token.Valid()
+	o.onlineC = onlineC
+
 	// add instance
 	addInstance(o.subject, o)
-
-	// register auth redirect
-	providerauth.Register(subject, o)
 
 	return o, nil
 }
