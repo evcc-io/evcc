@@ -49,6 +49,9 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	} else {
 		settings.SetInt(keys.Interval, int64(conf.Interval))
 		settings.SetString(keys.SponsorToken, conf.SponsorToken)
+		if title, ok := conf.Site["title"].(string); ok {
+			settings.SetString(keys.Title, title)
+		}
 	}
 
 	log.INFO.Println("- network")
