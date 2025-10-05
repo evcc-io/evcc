@@ -61,14 +61,10 @@ var (
 )
 
 func getInstance(subject string) *OAuth {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
 	return identities[subject]
 }
 
 func addInstance(subject string, identity *OAuth) {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
 	identities[subject] = identity
 }
 
@@ -98,6 +94,9 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
+
+	oauthMu.Lock()
+	defer oauthMu.Unlock()
 
 	// hash oauth2 config
 	h := sha256.Sum256(fmt.Append(nil, oc))
