@@ -41,6 +41,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: vin
+    required: true
     example: WBMW...
   - name: clientid
     required: true
