@@ -161,6 +161,9 @@
       "customOption": "Itsemääritelty laite",
       "delete": "Poista",
       "docsLink": "Katso dokumentaatio.",
+      "dragHandle": "Kahva",
+      "dragItem": "Raahattavissa: {title}",
+      "dragList": "Järjestettävä lista",
       "experimental": "Kokeellinen",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
       "invalidFileSelected": "Valittu virheellinen tiedosto",
@@ -171,6 +174,7 @@
       "readFromFile": "Lue tiedostosta",
       "remove": "Poista",
       "required": "vaadittu",
+      "reset": "Nollaa",
       "save": "Tallenna",
       "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
@@ -245,7 +249,7 @@
       "energyMeterHelp": "Lisämittari, jos laturissa ei ole integroitua energiamittaria.",
       "energyMeterLabel": "Energiamittari",
       "estimateLabel": "Arvioi lataustaso API-päivitysten välillä",
-      "maxCurrentHelp": "On oltava suurempi kuin minimivirta.",
+      "maxCurrentHelp": "Täytyy olla minimivirtaa suurempi.",
       "maxCurrentLabel": "Maksimivirta",
       "minCurrentHelp": "Valitse alle 6 A vain, jos tiedät mitä olet tekemässä.",
       "minCurrentLabel": "Minimivirta",
@@ -506,6 +510,10 @@
     "tariffs": {
       "description": "Määrittele energiatariffisi, jotta latausistuntojesi kustannukset lasketaan.",
       "title": "Tariffit"
+    },
+    "telemetry": {
+      "description": "Määritä tiedon jakamisesta ja auta parantamaan evcc:tä. Yksityisyytesi on meille tärkeää ja osallistuminen on vapaaehtoista.",
+      "title": "Telemetria"
     },
     "title": {
       "description": "Näytetään pääikkunassa ja selaimen välilehdessä.",
@@ -1087,6 +1095,7 @@
     "vehicle": "Ajoneuvo"
   },
   "settings": {
+    "deviceInfo": "Tämän valikon asetukset vaikuttavat vain tähän laitteeseen.",
     "fullscreen": {
       "enter": "Mene kokonäyttötilaan",
       "exit": "Poistu kokonäyttötilasta",
@@ -1099,6 +1108,12 @@
     "language": {
       "auto": "Automaattinen",
       "label": "Kieli"
+    },
+    "loadpoints": {
+      "help": "Muuta käyttöliittymän järjestystä ja näkyvyyttä.",
+      "hide": "Piilota {title}",
+      "label": "Latauspisteet",
+      "show": "Näytä {title}"
     },
     "sponsorToken": {
       "expires": "Sponsorointitunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä se tänne.",
@@ -1128,7 +1143,7 @@
   },
   "smartCost": {
     "activeHours": "{active} / {total}",
-    "activeHoursLabel": "Aktiiviset tunnit",
+    "activeHoursLabel": "Aktiivinen aika",
     "applyToAll": "Käytä kaikkialla?",
     "batteryDescription": "Lataa kodin akun sähköverkosta.",
     "cheapTitle": "Lataaminen edullisesti sähköverkosta",
@@ -1145,7 +1160,7 @@
     "saved": "Tallennettu."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Tauotettu tuntia",
+    "activeHoursLabel": "Tauotettu aika",
     "description": "Lataus tauotetaan korkean sähkön hinnan aikana, jotta voidaan priorisoida sähkön myyntiä verkkoon.",
     "priceLabel": "Verkkoon myyntihinta",
     "priceLimit": "Verkkoon syöttö rajoite",
