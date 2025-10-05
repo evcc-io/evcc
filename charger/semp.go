@@ -33,14 +33,15 @@ import (
 // SEMP charger implementation
 type SEMP struct {
 	*request.Helper
-	log       *util.Logger
-	conn      *semp.Connection
-	cache     time.Duration
-	documentG util.Cacheable[semp.Device2EM]
-	phases    int
-	current   float64
-	enabled   bool
-	deviceID  string
+	log         *util.Logger
+	conn        *semp.Connection
+	cache       time.Duration
+	documentG   util.Cacheable[semp.Device2EM]
+	parametersG util.Cacheable[[]semp.Parameter]
+	phases      int
+	current     float64
+	enabled     bool
+	deviceID    string
 }
 
 //go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
@@ -92,6 +93,11 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	// Setup cached document getter - fetches the complete SEMP document once
 	wb.documentG = util.ResettableCached(func() (semp.Device2EM, error) {
 		return wb.conn.GetFullDocument()
+	}, cache)
+
+	// Setup cached parameters getter
+	wb.parametersG = util.ResettableCached(func() ([]semp.Parameter, error) {
+		return wb.conn.GetParameters()
 	}, cache)
 
 	var (
@@ -260,6 +266,31 @@ func (wb *SEMP) CurrentPower() (float64, error) {
 	return float64(status.PowerInfo.AveragePower), nil
 }
 
+var _ api.ChargeRater = (*SEMP)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *SEMP) ChargedEnergy() (float64, error) {
+	parameters, err := wb.parametersG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	// Find Measurement.ChaSess.WhIn parameter
+	for _, param := range parameters {
+		if param.ChannelID == "Measurement.ChaSess.WhIn" {
+			var energy float64
+			if _, err := fmt.Sscanf(param.Value, "%f", &energy); err != nil {
+				return 0, fmt.Errorf("failed to parse energy value '%s': %w", param.Value, err)
+			}
+			// Convert Wh to kWh
+			return energy / 1000, nil
+		}
+	}
+
+	// Return 0 if parameter not found (device might not support it)
+	return 0, nil
+}
+
 var _ api.Diagnosis = (*SEMP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
@@ -311,6 +342,7 @@ func (wb *SEMP) phases1p3p(phases int) error {
 	err = wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 	if err == nil {
 		wb.documentG.Reset()
+		wb.parametersG.Reset()
 	}
 	return err
 }

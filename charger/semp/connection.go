@@ -87,6 +87,21 @@ func (c *Connection) HasPlanningRequest() (bool, error) {
 	return false, nil
 }
 
+// GetParameters retrieves SEMP parameters from the /Parameters endpoint
+func (c *Connection) GetParameters() ([]Parameter, error) {
+	var response Device2EM
+	uri := fmt.Sprintf("%s/Parameters", c.uri)
+	if err := c.helper.GetXML(uri, &response); err != nil {
+		return nil, err
+	}
+
+	if response.Parameters == nil {
+		return []Parameter{}, nil
+	}
+
+	return response.Parameters.Parameter, nil
+}
+
 // SendDeviceControl sends a control message to the SEMP device
 func (c *Connection) SendDeviceControl(on bool, power int) error {
 	control := DeviceControl{
