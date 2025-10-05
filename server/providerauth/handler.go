@@ -19,44 +19,46 @@ import (
 // by request state obtained from the request and delegates to the registered handler.
 type Handler struct {
 	mu        sync.Mutex
+	log       *util.Logger
 	secret    []byte
 	providers map[string]api.AuthProvider
 	states    map[string]string
-	log       *util.Logger
+	updateC   chan string
 }
 
-func (a *Handler) Publish(paramC chan<- util.Param) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+// TODO get status from update channel
+func (a *Handler) run(paramC chan<- util.Param) {
+	for range <-a.updateC {
+		a.mu.Lock()
 
-	apMap := make(map[string]*AuthProvider)
-
-	for id, provider := range a.providers {
-		ap := &AuthProvider{
-			ID:            url.QueryEscape(id),
-			Authenticated: provider.Authenticated(),
+		res := make(map[string]*AuthProvider)
+		for id, provider := range a.providers {
+			res[provider.DisplayName()] = &AuthProvider{
+				ID:            url.QueryEscape(id),
+				Authenticated: provider.Authenticated(),
+			}
 		}
-		apMap[provider.DisplayName()] = ap
+
+		a.mu.Unlock()
+
+		a.log.TRACE.Printf("publishing %d auth providers", len(res))
+
+		// publish the updated auth providers
+		paramC <- util.Param{Key: keys.AuthProviders, Val: res}
 	}
-
-	a.log.TRACE.Printf("publishing %d auth providers", len(apMap))
-
-	// publish the updated auth providers
-	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
-func (a *Handler) register(name string, handler api.AuthProvider) error {
+func (a *Handler) register(name string, handler api.AuthProvider) (chan<- string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.providers[name] != nil {
-		return fmt.Errorf("provider already registered: %s", name)
+		return nil, fmt.Errorf("provider already registered: %s", name)
 	}
 
-	a.log.DEBUG.Printf("registering provider: %s", name)
 	a.providers[name] = handler
 
-	return nil
+	return a.updateC, nil
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +71,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	provider, ok := a.providers[id]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid id")
+		fmt.Fprintln(w, "invalid id")
 		return
 	}
 
@@ -85,11 +87,18 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
+	uri, err := provider.Login(encryptedState)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "error: %v", err)
+		return
+	}
+
 	// return authorization URL
 	res := struct {
 		LoginUri string `json:"loginUri"`
 	}{
-		LoginUri: provider.Login(encryptedState),
+		LoginUri: uri,
 	}
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -109,7 +118,7 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	provider, ok := a.providers[id]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid id")
+		fmt.Fprintln(w, "invalid id")
 		return
 	}
 
@@ -161,9 +170,9 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Handle the callback
 	if err := provider.HandleCallback(r.URL.Query()); err != nil {
-		a.log.ERROR.Printf("callback handling for provider %s failed: %v", id, err)
+		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "callback handling failed")
+		fmt.Fprintln(w, "callback failed")
 		return
 	}
 

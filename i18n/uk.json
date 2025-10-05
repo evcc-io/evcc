@@ -1144,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} зі {total}",
-    "activeHoursLabel": "Активні години",
+    "activeHoursLabel": "Активний час",
     "applyToAll": "Застосовувати всюди?",
     "batteryDescription": "Заряджає домашній акумулятор енергією з мережі.",
     "cheapTitle": "Дешева зарядка від мережі",
@@ -1161,7 +1161,7 @@
     "saved": "Збережено."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Призупинені години",
+    "activeHoursLabel": "Час паузи",
     "description": "Призупиняє заряджання під час високих цін, щоб надати пріоритет вигідному постачанню електроенергії з мережі.",
     "priceLabel": "Коефіцієнт подачі електроенергії",
     "priceLimit": "Обмеження подачі електроенергії",

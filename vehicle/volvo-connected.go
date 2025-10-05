@@ -7,9 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
-	"golang.org/x/oauth2"
 )
 
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
@@ -41,11 +39,8 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
 
-	// create oauth2 config
 	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
-
-	ts, err := auth.NewOauth(ctx, oc, cc.embed.GetTitle())
+	ts, err := auth.NewOauth(ctx, cc.embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
