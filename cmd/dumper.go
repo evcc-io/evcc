@@ -15,7 +15,8 @@ import (
 )
 
 type dumper struct {
-	len int
+	len     int
+	timeout time.Duration
 }
 
 func (d *dumper) Header(name, underline string) {
@@ -36,8 +37,8 @@ func (d *dumper) DumpWithHeader(name string, device interface{}) {
 }
 
 // bo returns an exponential backoff for reading meter power quickly
-func bo() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(time.Second))
+func (d *dumper) bo() *backoff.ExponentialBackOff {
+	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(d.timeout))
 }
 
 func (d *dumper) Dump(name string, v interface{}) {
@@ -53,11 +54,8 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Meter); ok {
 		power, err := backoff.RetryWithData(func() (float64, error) {
 			f, err := v.CurrentPower()
-			if err != nil {
-				fmt.Println(err)
-			}
 			return f, err
-		}, bo())
+		}, d.bo())
 
 		if err != nil {
 			fmt.Fprintf(w, "Power:\t%v\n", err)
