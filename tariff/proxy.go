@@ -164,16 +164,7 @@ func (p *CachingProxy) cacheGet(until time.Time) (*cached, error) {
 		return nil, errors.New("not enough rates")
 	}
 
-	res := &cached{
-		Rates: currentRates(p.cached.Rates),
-		Type:  p.cached.Type,
-	}
-
-	if len(res.Rates) == 0 {
-		return nil, errors.New("no current rates")
-	}
-
-	return res, nil
+	return p.cached, nil
 }
 
 func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
@@ -196,17 +187,4 @@ func untilEndOfTomorrow() time.Time {
 
 func ratesValid(rr api.Rates, until time.Time) bool {
 	return len(rr) > 0 && !rr[len(rr)-1].End.Before(until)
-}
-
-func currentRates(rr api.Rates) api.Rates {
-	res := make(api.Rates, 0, len(rr))
-	now := time.Now().Truncate(SlotDuration)
-
-	for _, r := range rr {
-		if r.End.After(now) {
-			res = append(res, r)
-		}
-	}
-
-	return res
 }
