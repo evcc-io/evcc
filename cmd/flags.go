@@ -69,7 +69,7 @@ const (
 	flagHeartbeatDescription = "After command, continue running device heartbeats (if any) until interrupted"
 
 	flagTimeout            = "timeout"
-	flagTimeoutDescription = "Timeout for device queries"
+	flagTimeoutDescription = "Timeout"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"
