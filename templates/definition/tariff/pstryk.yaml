@@ -17,8 +17,8 @@ params:
       en: "API token (e.g. sk-...)."
       de: "API-Token (z.B. sk-...)."
     help:
-      en: "Exact Authorization header value, without 'Bearer'."
-      de: "Genauer Authorization-Wert, ohne 'Bearer'."
+      en: "Exact Authorization header value, usually WITHOUT 'Bearer'."
+      de: "Exakter Authorization-Header, üblicherweise OHNE 'Bearer'."
 
   - name: plan
     type: choice
@@ -28,18 +28,6 @@ params:
     description:
       en: "Tariff source."
       de: "Tarifquelle."
-    help:
-      en: "Path under /integrations/: 'pricing' or 'prosumer-pricing'."
-      de: "Pfad unter /integrations/: 'pricing' oder 'prosumer-pricing'."
-
-  - name: currency
-    type: choice
-    default: PLN
-    required: true
-    choice: ["PLN"]
-    description:
-      en: "Currency."
-      de: "Währung."
 
   - preset: tariff-base
 
@@ -48,45 +36,16 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    # Jeden request, 48h od lokalnej "północy PL" liczonej w UTC:
-    # - CEST: 22:00Z → 22:00Z następnego dnia
-    # - CET : 23:00Z → 23:00Z następnego dnia
-    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `
-      {{- if eq (now.Local | date "MST") "CEST" -}}
-        {{ now.UTC       | date "2006-01-02" }}T22:00:00Z
-      {{- else -}}
-        {{ now.UTC       | date "2006-01-02" }}T23:00:00Z
-      {{- end -}}
-    ` }}&window_end={{ `
-      {{- if eq (now.Local | date "MST") "CEST" -}}
-        {{ addDate (now.UTC) 0 0 1 | date "2006-01-02" }}T22:00:00Z
-      {{- else -}}
-        {{ addDate (now.UTC) 0 0 1 | date "2006-01-02" }}T23:00:00Z
-      {{- end -}}
-    ` }}
+    timeout: 5s
+    cache: 24h
+    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ if eq (now.Local | date "MST") "CEST" }}{{ now.UTC | date "2006-01-02T22:00:00Z" }}{{ else }}{{ now.UTC | date "2006-01-02T23:00:00Z" }}{{ end }}&window_end={{ if eq (now.Local | date "MST") "CEST" }}{{ dateModify "24h" (now.UTC) | date "2006-01-02T22:00:00Z" }}{{ else }}{{ dateModify "24h" (now.UTC) | date "2006-01-02T23:00:00Z" }}{{ end }}
     headers:
       Authorization: {{ .token }}
       Accept: application/json
       User-Agent: evcc-pstryk-template
-    # Pstryk może zwrócić 0 lub <0; niczego nie filtrujemy.
     jq: |
-      def toRFC3339($t):
-        ( $t | fromdateiso8601? ) as $ts
-        | if $ts == null then null
-          else
-            ($ts | strftime("%Y-%m-%dT%H:%M:%S")) as $base
-            | ($ts | strftime("%z")) as $off
-            | if ($off == "+0000" or $off == "-0000")
-                then ($base + "Z")
-                else ($base + ($off[0:3] + ":" + $off[3:5]))
-              end
-          end;
-
-      [ (.frames // [])[] as $f
-        | {
-            "start": toRFC3339($f.start),
-            "end":   toRFC3339($f.end),
-            "value": $f.price_gross
-          }
+      [ (.frames // [])[]
+        | { start: (.start | sub("\\+00:00$"; "Z")),
+            end:   (.end   | sub("\\+00:00$"; "Z")),
+            value: .price_gross }
       ]
-      | tostring
