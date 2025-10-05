@@ -77,7 +77,6 @@
       "title": "Control behavior"
     },
     "deviceValue": {
-      "allowControl": "Allow control",
       "amount": "Amount",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -162,6 +161,9 @@
       "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
+      "dragHandle": "Drag handle",
+      "dragItem": "Draggable: {title}",
+      "dragList": "Reorderable list",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
@@ -172,6 +174,7 @@
       "readFromFile": "Read from file",
       "remove": "Remove",
       "required": "required",
+      "reset": "Reset",
       "save": "Save",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
@@ -443,8 +446,6 @@
       "descriptionIds": "In Sunny Portal every consumer device needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL (/semp) to check your current identifiers.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
-      "labelAllowControl": "Accept additional power limit recommendations from SHM.",
-      "labelControl": "Allow control",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
@@ -509,6 +510,10 @@
     "tariffs": {
       "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
       "title": "Tariffs"
+    },
+    "telemetry": {
+      "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
+      "title": "Telemetry"
     },
     "title": {
       "description": "Displayed on main screen and browser tab.",
@@ -1088,6 +1093,7 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
       "exit": "Exit fullscreen",
@@ -1100,6 +1106,12 @@
     "language": {
       "auto": "Automatic",
       "label": "Language"
+    },
+    "loadpoints": {
+      "help": "Change order and visibility for the UI.",
+      "hide": "Hide {title}",
+      "label": "Charging points",
+      "show": "Show {title}"
     },
     "sponsorToken": {
       "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",
@@ -1129,7 +1141,7 @@
   },
   "smartCost": {
     "activeHours": "{active} of {total}",
-    "activeHoursLabel": "Active hours",
+    "activeHoursLabel": "Active time",
     "applyToAll": "Apply everywhere?",
     "batteryDescription": "Charges the home battery with energy from the grid.",
     "cheapTitle": "Cheap Grid Charging",
@@ -1146,7 +1158,7 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused hours",
+    "activeHoursLabel": "Paused time",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
     "priceLimit": "Feed-in limit",

@@ -77,7 +77,6 @@
       "title": "Valdymo elgesys"
     },
     "deviceValue": {
-      "allowControl": "Leisti valdymą",
       "amount": "Kiekis",
       "broker": "Broker sistema",
       "bucket": "Bucket",
@@ -162,6 +161,9 @@
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
       "docsLink": "Žiūrėkite dokumentaciją.",
+      "dragHandle": "Vilkti",
+      "dragItem": "Galima vilkti: {title}",
+      "dragList": "Galima sukeisti vietomis",
       "experimental": "Eksperimentinis",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
@@ -172,6 +174,7 @@
       "readFromFile": "Skaityti iš failo",
       "remove": "Pašalinti",
       "required": "privaloma",
+      "reset": "Grąžinti į pirminę būseną",
       "save": "Išsaugoti",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
@@ -196,7 +199,6 @@
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
       "labelBucket": "Bucket",
-      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
       "labelOrg": "Organizacija",
@@ -368,7 +370,6 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Leisti keliems klientams pasiekti vieną „Modbus“ įrenginį.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -378,7 +379,6 @@
       "descriptionTopic": "Palikite tuščią, kad išjungtumėte publikavimą.",
       "labelBroker": "Broker",
       "labelCaCert": "Serverio sertifikatas (CA)",
-      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
       "labelClientCert": "Kliento sertifikatas",
       "labelClientId": "Kliento ID",
       "labelClientKey": "Kliento raktas",
@@ -443,8 +443,6 @@
       "descriptionIds": "Sunny Portal sistemoje kiekvienam vartotojo įrenginiui reikalingas unikalus identifikatorius. evcc generuoja unikalų identifikatorių pagal jūsų aparatinę įrangą. Jei migruosite evcc į kitą aparatinę įrangą, šie identifikatoriai gali pasikeisti. Jei norite išsaugoti istoriją, čia galite pakeisti sugeneruotus identifikatorius. Atidarykite SEMP URL (/semp), kad patikrintumėte dabartinius identifikatorius.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 simbolių HEX eilutė. Bendras visų objektų prefiksas. Pagal numatytuosius nustatymus evcc naudos savo vidinį tiekėjo ID.",
-      "labelAllowControl": "Priimti papildomas SHM galios ribojimo rekomendacijas.",
-      "labelControl": "Leisti valdyti",
       "labelDeviceId": "Įrenginio ID",
       "labelVendorId": "Gamintojo ID",
       "title": "SMA Sunny Home Manager"
@@ -510,6 +508,10 @@
     "tariffs": {
       "description": "Nustatykite savo energijos tarifus, kad apskaičiuotumėte įkrovimo sesijų išlaidas.",
       "title": "Tarifai"
+    },
+    "telemetry": {
+      "description": "Konfigūruokite duomenų bendrinimą, kuris padeda tobulinti evcc. Jūsų privatumas mums yra svarbus, todėl dalyvavimas yra laisvai pasirenkamas.",
+      "title": "Duomenų perdavimas"
     },
     "title": {
       "description": "Rodoma pagrindiniame ekrane ir naršyklės kortelėje.",
@@ -1091,6 +1093,7 @@
     "vehicle": "Automobilis"
   },
   "settings": {
+    "deviceInfo": "Šiame dialoge atlikti nustatymai taikomi tik šiam įrenginiui.",
     "fullscreen": {
       "enter": "Įjungti visą ekraną",
       "exit": "Išjungti visą ekraną",
@@ -1103,6 +1106,12 @@
     "language": {
       "auto": "Automatiškai",
       "label": "Kalba"
+    },
+    "loadpoints": {
+      "help": "Pakeiskite vartotojo sąsajos išdėstymą ir matomumą.",
+      "hide": "Paslėpti {title}",
+      "label": "Įkrovikliai",
+      "show": "Rodyti {title}"
     },
     "sponsorToken": {
       "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",

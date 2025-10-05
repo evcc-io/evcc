@@ -7,9 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
-	"golang.org/x/oauth2"
 )
 
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
@@ -19,11 +17,11 @@ type VolvoConnected struct {
 }
 
 func init() {
-	registry.Add("volvo-connected", NewVolvoConnectedFromConfig)
+	registry.AddCtx("volvo-connected", NewVolvoConnectedFromConfig)
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		VIN         string
@@ -41,15 +39,13 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
 
-	// create oauth2 config
-	config := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	authorizer, err := auth.NewOauth(ctx, *config, cc.embed.GetTitle())
+	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	ts, err := auth.NewOauth(ctx, cc.embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
 
-	api := connected.NewAPI(log, cc.VccApiKey, authorizer)
+	api := connected.NewAPI(log, cc.VccApiKey, ts)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 

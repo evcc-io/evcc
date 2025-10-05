@@ -84,6 +84,12 @@ params:
       en: Service to wake up vehicle
     example: "script.vehicle_wakeup"
     type: string
+  - name: setMaxCurrent
+    description:
+      de: Ladestromstärke setzen [A]
+      en: Set charging current [A]
+    example: "number.vehicle_charging_current"
+    type: string
 render: |
   type: homeassistant
   {{ include "vehicle-common" . }}
@@ -101,3 +107,4 @@ render: |
     start_charging: {{ .start_charging }}
     stop_charging: {{ .stop_charging }}
     wakeup: {{ .wakeup }}
+    setMaxCurrent: {{ .setMaxCurrent }}

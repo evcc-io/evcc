@@ -77,7 +77,6 @@
       "title": "Comportement du contrôle"
     },
     "deviceValue": {
-      "allowControl": "Permettre contrôle",
       "amount": "Montant",
       "broker": "Courtier",
       "bucket": "Bucket",
@@ -162,6 +161,9 @@
       "customOption": "Appareil sur mesure",
       "delete": "Supprimer",
       "docsLink": "Se référer à la documentation.",
+      "dragHandle": "Poignée de déplacement",
+      "dragItem": "Déplaçable : {title}",
+      "dragList": "Liste à ordonner",
       "experimental": "Expérimental",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
@@ -172,6 +174,7 @@
       "readFromFile": "Lu depuis le fichier",
       "remove": "Supprimer",
       "required": "obligatoire",
+      "reset": "Réinitialiser",
       "save": "Enregistrer",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
@@ -443,8 +446,6 @@
       "descriptionIds": "Dans Sunny Portal, chaque appareil consommateur doit disposer d'un identifiant unique. evcc génère un identifiant unique basé sur votre matériel. Si vous migrez evcc vers un autre matériel, ces identifiants peuvent changer. Si vous souhaitez conserver l'historique, vous pouvez remplacer les identifiants générés ici. Ouvrez l'URL SEMP (/semp) pour vérifier vos identifiants actuels.",
       "descriptionSempUrl": "URL SEMP",
       "descriptionVendorId": "Chaîne HEX à 8 caractères. Préfixe général de toutes les entités. Par défaut, evcc utilisera son propre identifiant fournisseur interne.",
-      "labelAllowControl": "Accepter les recommandations supplémentaires de SHM concernant les limites de puissance.",
-      "labelControl": "Autoriser le contrôle",
       "labelDeviceId": "Identifiant de l'appareil",
       "labelVendorId": "Identifiant du fournisseur",
       "title": "SMA Sunny Home Manager"
@@ -509,6 +510,10 @@
     "tariffs": {
       "description": "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de recharge.",
       "title": "Tarifs"
+    },
+    "telemetry": {
+      "description": "Configurer le partage de données pour aider à améliorer evcc. Votre vie privée est importante pour nous et la participation est totalement optionnelle.",
+      "title": "Télémétrie"
     },
     "title": {
       "description": "Affiché sur l’écran principal et l’onglet du navigateur.",
@@ -1090,6 +1095,7 @@
     "vehicle": "Véhicule"
   },
   "settings": {
+    "deviceInfo": "Les réglages effectués dans cette fenêtre n’affectent que cet appareil.",
     "fullscreen": {
       "enter": "Passer en plein écran",
       "exit": "Quitter le plein écran",
@@ -1102,6 +1108,12 @@
     "language": {
       "auto": "Automatique",
       "label": "Langue"
+    },
+    "loadpoints": {
+      "help": "Changer l’ordre et la visibilité dans l’interface utilisateur.",
+      "hide": "Cacher {title}",
+      "label": "Points de charge",
+      "show": "Afficher {title}"
     },
     "sponsorToken": {
       "expires": "Votre jeton de sponsor expire dans {inXDays}. {getNewToken} et mettez-le à jour ici.",

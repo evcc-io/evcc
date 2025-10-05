@@ -12,10 +12,15 @@ jobs:
     name: Clean
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: false # avoid cache thrashing
@@ -47,10 +52,15 @@ jobs:
     name: Build
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: false
@@ -66,7 +76,7 @@ jobs:
             ${{ runner.os }}-go-build-
             ${{ runner.os }}-go-
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: "npm"
@@ -80,10 +90,15 @@ jobs:
     name: Test
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: false
@@ -106,10 +121,15 @@ jobs:
     name: Lint
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: false # avoid cache thrashing
@@ -140,12 +160,15 @@ jobs:
     name: UI
     permissions:
       contents: read
+      actions: write
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: "npm"
@@ -166,6 +189,8 @@ jobs:
         run: make ui
 
       - name: Cache dist
+        # avoid cache thrashing by nightly
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         uses: actions/cache/save@v4
         id: cache-dist
         with:
@@ -180,10 +205,16 @@ jobs:
     name: Integration
     runs-on: depot-ubuntu-24.04-arm-16
 
+    permissions:
+      contents: read
+      actions: write
+
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: false
@@ -199,7 +230,7 @@ jobs:
             ${{ runner.os }}-go-integration-
             ${{ runner.os }}-go-
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: "npm"
