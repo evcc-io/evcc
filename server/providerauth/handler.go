@@ -28,7 +28,7 @@ type Handler struct {
 
 // TODO get status from update channel
 func (a *Handler) run(paramC chan<- util.Param) {
-	for range <-a.updateC {
+	for range a.updateC {
 		a.mu.Lock()
 
 		res := make(map[string]*AuthProvider)
