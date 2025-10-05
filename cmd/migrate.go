@@ -136,7 +136,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 				title = meter.Name
 			}
 			if product, ok := meter.Other["template"].(string); ok {
-				properties := config.Properties{meter.Type, title, "", product}
+				properties := config.Properties{Type: meter.Type, Title: title, Product: product}
 				cnf, err := config.AddConfig(templates.Meter, meter.Other, config.WithProperties(properties))
 				if err != nil {
 					log.WARN.Printf("migration of meter failed with error: %s", err)
