@@ -41,21 +41,29 @@ func (d *dumper) bo() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(d.timeout))
 }
 
+// formatDuration returns duration as string if >= 1ms, otherwise empty string
+func formatDuration(duration time.Duration) string {
+	duration = duration.Round(time.Millisecond)
+	if duration >= time.Millisecond {
+		return duration.String()
+	}
+	return ""
+}
+
 // measureTime executes a function, measures its duration, and prints the result with timing
 func (d *dumper) measureTime(w *tabwriter.Writer, label string, fn func() (string, error)) {
 	start := time.Now()
 	value, err := fn()
-	duration := time.Since(start)
 
 	if err != nil {
-		fmt.Fprintf(w, "%s:\t%v\t%v\n", label, err, duration.Round(time.Millisecond))
+		fmt.Fprintf(w, "%s:\t%v\t%s\t\n", label, err, formatDuration(time.Since(start)))
 	} else {
-		fmt.Fprintf(w, "%s:\t%s\t%v\n", label, value, duration.Round(time.Millisecond))
+		fmt.Fprintf(w, "%s:\t%s\t%s\t\n", label, value, formatDuration(time.Since(start)))
 	}
 }
 
 func (d *dumper) Dump(name string, v interface{}) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 16, 2, ' ', 0)
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	var isHeating bool
 	if fd, ok := v.(api.FeatureDescriber); ok {
@@ -128,21 +136,20 @@ func (d *dumper) Dump(name string, v interface{}) {
 				}
 			}
 		}
-		duration := time.Since(start)
 
 		if err != nil {
-			fmt.Fprintf(w, "%s:\t%v\n", label, err)
+			fmt.Fprintf(w, "%s:\t%v\t%s\t\n", label, err, formatDuration(time.Since(start)))
 		} else {
-			fmt.Fprintf(w, "%s:\t%s\t%v\n", label, fmt.Sprintf(format, soc), duration.Round(time.Millisecond))
+			fmt.Fprintf(w, "%s:\t%s\t%s\t\n", label, fmt.Sprintf(format, soc), formatDuration(time.Since(start)))
 		}
 	}
 
 	if v, ok := v.(api.BatteryCapacity); ok {
-		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
+		fmt.Fprintf(w, "Capacity:\t%.1fkWh\t\t\n", v.Capacity())
 	}
 
 	if v, ok := v.(api.MaxACPowerGetter); ok {
-		fmt.Fprintf(w, "Max AC power:\t%.0fW\n", v.MaxACPower())
+		fmt.Fprintf(w, "Max AC power:\t%.0fW\t\t\n", v.MaxACPower())
 	}
 
 	// charger
@@ -163,7 +170,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	// controllable battery
 	if _, ok := v.(api.BatteryController); ok {
-		fmt.Fprintf(w, "Controllable:\ttrue\n")
+		fmt.Fprintf(w, "Controllable:\ttrue\t\t\n")
 	}
 
 	if v, ok := v.(api.Charger); ok {
@@ -246,10 +253,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.Vehicle); ok {
 		if len(v.Identifiers()) > 0 {
-			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+			fmt.Fprintf(w, "Identifiers:\t%v\t\t\n", v.Identifiers())
 		}
 		if !structs.IsZero(v.OnIdentified()) {
-			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
+			fmt.Fprintf(w, "OnIdentified:\t%s\t\t\n", v.OnIdentified())
 		}
 	}
 
@@ -285,12 +292,13 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.FeatureDescriber); ok {
 		if ff := v.Features(); len(ff) > 0 {
-			fmt.Fprintf(w, "Features:\t%v\n", ff)
+			fmt.Fprintf(w, "Features:\t%v\t\t\n", ff)
 		}
 	}
 
-	totalDuration := time.Since(totalStart)
-	fmt.Fprintf(w, "\nTotal time:\t\t%v\n", totalDuration.Round(time.Millisecond))
+	if totalDurationStr := formatDuration(time.Since(totalStart)); totalDurationStr != "" {
+		fmt.Fprintf(w, "\t\t\t\nTotal time:\t\t%s\t\n", totalDurationStr)
+	}
 
 	w.Flush()
 }
