@@ -7,6 +7,7 @@
 		endpoint="/config/shm"
 		state-key="shm"
 		data-testid="shm-modal"
+		disable-remove
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
