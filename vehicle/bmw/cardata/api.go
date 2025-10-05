@@ -18,6 +18,7 @@ var Config = oauth2.Config{
 	Endpoint: oauth2.Endpoint{
 		DeviceAuthURL: "https://customer.bmwgroup.com/gcdm/oauth/device/code",
 		TokenURL:      "https://customer.bmwgroup.com/gcdm/oauth/token",
+		AuthStyle:     oauth2.AuthStyleInParams,
 	},
 }
 

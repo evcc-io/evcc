@@ -124,7 +124,7 @@ func (v *Provider) any(key string) (any, error) {
 	defer v.mu.Unlock()
 
 	if a, ok := v.streaming[key]; ok {
-		return a, nil
+		return a.Value, nil
 	}
 
 	if v.initial == nil {
