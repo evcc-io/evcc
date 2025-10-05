@@ -41,6 +41,19 @@ func (d *dumper) bo() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(d.timeout))
 }
 
+// measureTime executes a function, measures its duration, and prints the result with timing
+func (d *dumper) measureTime(w *tabwriter.Writer, label string, fn func() (string, error)) {
+	start := time.Now()
+	value, err := fn()
+	duration := time.Since(start)
+
+	if err != nil {
+		fmt.Fprintf(w, "%s:\t%v\t%v\n", label, err, duration.Round(time.Millisecond))
+	} else {
+		fmt.Fprintf(w, "%s:\t%s\t%v\n", label, value, duration.Round(time.Millisecond))
+	}
+}
+
 func (d *dumper) Dump(name string, v interface{}) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 16, 2, ' ', 0)
 
@@ -55,74 +68,56 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// meter
 
 	if v, ok := v.(api.Meter); ok {
-		start := time.Now()
-		power, err := backoff.RetryWithData(func() (float64, error) {
-			f, err := v.CurrentPower()
-			return f, err
-		}, d.bo())
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Power:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Power:\t%.0fW\t%v\n", power, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Power", func() (string, error) {
+			power, err := backoff.RetryWithData(func() (float64, error) {
+				f, err := v.CurrentPower()
+				return f, err
+			}, d.bo())
+			return fmt.Sprintf("%.0fW", power), err
+		})
 	}
 
 	if v, ok := v.(api.MeterEnergy); ok {
-		start := time.Now()
-		energy, err := v.TotalEnergy()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Energy:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Energy:\t%.1fkWh\t%v\n", energy, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Energy", func() (string, error) {
+			energy, err := v.TotalEnergy()
+			return fmt.Sprintf("%.1fkWh", energy), err
+		})
 	}
 
 	if v, ok := v.(api.PhaseCurrents); ok {
-		start := time.Now()
-		i1, i2, i3, err := v.Currents()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Current L1..L3:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Current L1..L3:\t%.3gA %.3gA %.3gA\t%v\n", i1, i2, i3, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Current L1..L3", func() (string, error) {
+			i1, i2, i3, err := v.Currents()
+			return fmt.Sprintf("%.3gA %.3gA %.3gA", i1, i2, i3), err
+		})
 	}
 
 	if v, ok := v.(api.PhaseVoltages); ok {
-		start := time.Now()
-		u1, u2, u3, err := v.Voltages()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Voltage L1..L3:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Voltage L1..L3:\t%.3gV %.3gV %.3gV\t%v\n", u1, u2, u3, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Voltage L1..L3", func() (string, error) {
+			u1, u2, u3, err := v.Voltages()
+			return fmt.Sprintf("%.3gV %.3gV %.3gV", u1, u2, u3), err
+		})
 	}
 
 	if v, ok := v.(api.PhasePowers); ok {
-		start := time.Now()
-		p1, p2, p3, err := v.Powers()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Power L1..L3:\t%.0fW %.0fW %.0fW\t%v\n", p1, p2, p3, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Power L1..L3", func() (string, error) {
+			p1, p2, p3, err := v.Powers()
+			return fmt.Sprintf("%.0fW %.0fW %.0fW", p1, p2, p3), err
+		})
 	}
 
 	if v, ok := v.(api.Battery); ok {
+		label := "Soc"
+		format := "%.0f%%"
+		if isHeating {
+			label = "Temp"
+			format = "%.0f°C"
+		}
+
+		start := time.Now()
 		var soc float64
 		var err error
 
 		// wait up to 1m for the vehicle to wakeup
-		start := time.Now()
 		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
 			if soc, err = v.Soc(); err != nil {
 				if time.Since(start) > time.Minute {
@@ -135,18 +130,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 		duration := time.Since(start)
 
-		if isHeating {
-			if err != nil {
-				fmt.Fprintf(w, "Temp:\t%v\n", err)
-			} else {
-				fmt.Fprintf(w, "Temp:\t%.0f°C\t%v\n", soc, duration.Round(time.Millisecond))
-			}
+		if err != nil {
+			fmt.Fprintf(w, "%s:\t%v\n", label, err)
 		} else {
-			if err != nil {
-				fmt.Fprintf(w, "Soc:\t%v\n", err)
-			} else {
-				fmt.Fprintf(w, "Soc:\t%.0f%%\t%v\n", soc, duration.Round(time.Millisecond))
-			}
+			fmt.Fprintf(w, "%s:\t%s\t%v\n", label, fmt.Sprintf(format, soc), duration.Round(time.Millisecond))
 		}
 	}
 
@@ -161,27 +148,17 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// charger
 
 	if v, ok := v.(api.ChargeState); ok {
-		start := time.Now()
-		status, err := v.Status()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Charge status:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Charge status:\t%v\t%v\n", status, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Charge status", func() (string, error) {
+			status, err := v.Status()
+			return fmt.Sprintf("%v", status), err
+		})
 	}
 
 	if v, ok := v.(api.StatusReasoner); ok {
-		start := time.Now()
-		status, err := v.StatusReason()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Status reason:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Status reason:\t%v\t%v\n", status, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Status reason", func() (string, error) {
+			status, err := v.StatusReason()
+			return fmt.Sprintf("%v", status), err
+		})
 	}
 
 	// controllable battery
@@ -190,133 +167,81 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Charger); ok {
-		start := time.Now()
-		enabled, err := v.Enabled()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Enabled:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Enabled:\t%t\t%v\n", enabled, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Enabled", func() (string, error) {
+			enabled, err := v.Enabled()
+			return fmt.Sprintf("%t", enabled), err
+		})
 	}
 
 	if v, ok := v.(api.ChargeRater); ok {
-		start := time.Now()
-		energy, err := v.ChargedEnergy()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Charged:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Charged:\t%.1fkWh\t%v\n", energy, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Charged", func() (string, error) {
+			energy, err := v.ChargedEnergy()
+			return fmt.Sprintf("%.1fkWh", energy), err
+		})
 	}
 
 	if v, ok := v.(api.ChargeTimer); ok {
-		start := time.Now()
-		chargeDuration, err := v.ChargeDuration()
-		queryDuration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Duration:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Duration:\t%v\t%v\n", chargeDuration.Truncate(time.Second), queryDuration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Duration", func() (string, error) {
+			chargeDuration, err := v.ChargeDuration()
+			return fmt.Sprintf("%v", chargeDuration.Truncate(time.Second)), err
+		})
 	}
 
 	if v, ok := v.(api.CurrentLimiter); ok {
-		start := time.Now()
-		min, max, err := v.GetMinMaxCurrent()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Mix/Max Current:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Mix/Max Current:\t%.1f/%.1fA\t%v\n", min, max, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Mix/Max Current", func() (string, error) {
+			min, max, err := v.GetMinMaxCurrent()
+			return fmt.Sprintf("%.1f/%.1fA", min, max), err
+		})
 	}
 
 	// vehicle
 
 	if v, ok := v.(api.VehicleRange); ok {
-		start := time.Now()
-		rng, err := v.Range()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Range:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Range:\t%vkm\t%v\n", rng, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Range", func() (string, error) {
+			rng, err := v.Range()
+			return fmt.Sprintf("%vkm", rng), err
+		})
 	}
 
 	if v, ok := v.(api.VehicleOdometer); ok {
-		start := time.Now()
-		odo, err := v.Odometer()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Odometer:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Odometer:\t%.0fkm\t%v\n", odo, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Odometer", func() (string, error) {
+			odo, err := v.Odometer()
+			return fmt.Sprintf("%.0fkm", odo), err
+		})
 	}
 
 	if v, ok := v.(api.VehicleFinishTimer); ok {
-		start := time.Now()
-		ft, err := v.FinishTime()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Finish time:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Finish time:\t%v\t%v\n", ft.Truncate(time.Minute).In(time.Local), duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Finish time", func() (string, error) {
+			ft, err := v.FinishTime()
+			return fmt.Sprintf("%v", ft.Truncate(time.Minute).In(time.Local)), err
+		})
 	}
 
 	if v, ok := v.(api.VehicleClimater); ok {
-		start := time.Now()
-		active, err := v.Climater()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Climater:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Climate active:\t%v\t%v\n", active, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Climate active", func() (string, error) {
+			active, err := v.Climater()
+			return fmt.Sprintf("%v", active), err
+		})
 	}
 
 	if v, ok := v.(api.VehiclePosition); ok {
-		start := time.Now()
-		lat, lon, err := v.Position()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Position:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Position:\t%v,%v\t%v\n", lat, lon, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Position", func() (string, error) {
+			lat, lon, err := v.Position()
+			return fmt.Sprintf("%v,%v", lat, lon), err
+		})
 	}
 
 	if v, ok := v.(api.SocLimiter); ok {
-		start := time.Now()
-		limitSoc, err := v.GetLimitSoc()
-		duration := time.Since(start)
-
+		label := "Limit Soc"
+		format := "%d%%"
 		if isHeating {
-			if err != nil {
-				fmt.Fprintf(w, "Max Temp:\t%v\n", err)
-			} else {
-				fmt.Fprintf(w, "Max Temp:\t%d°C\t%v\n", limitSoc, duration.Round(time.Millisecond))
-			}
-		} else {
-			if err != nil {
-				fmt.Fprintf(w, "Limit Soc:\t%v\n", err)
-			} else {
-				fmt.Fprintf(w, "Limit Soc:\t%d%%\t%v\n", limitSoc, duration.Round(time.Millisecond))
-			}
+			label = "Max Temp"
+			format = "%d°C"
 		}
+		d.measureTime(w, label, func() (string, error) {
+			limitSoc, err := v.GetLimitSoc()
+			return fmt.Sprintf(format, limitSoc), err
+		})
 	}
 
 	if v, ok := v.(api.Vehicle); ok {
@@ -331,44 +256,29 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// currents and phases
 
 	if v, ok := v.(api.CurrentGetter); ok {
-		start := time.Now()
-		f, err := v.GetMaxCurrent()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Max Current:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Max Current:\t%.1fA\t%v\n", f, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Max Current", func() (string, error) {
+			f, err := v.GetMaxCurrent()
+			return fmt.Sprintf("%.1fA", f), err
+		})
 	}
 
 	if v, ok := v.(api.PhaseGetter); ok {
-		start := time.Now()
-		f, err := v.GetPhases()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Phases:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Phases:\t%d\t%v\n", f, duration.Round(time.Millisecond))
-		}
+		d.measureTime(w, "Phases", func() (string, error) {
+			f, err := v.GetPhases()
+			return fmt.Sprintf("%d", f), err
+		})
 	}
 
 	// Identity
 
 	if v, ok := v.(api.Identifier); ok {
-		start := time.Now()
-		id, err := v.Identify()
-		duration := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "Identifier:\t%v\n", err)
-		} else {
-			if id == "" {
+		d.measureTime(w, "Identifier", func() (string, error) {
+			id, err := v.Identify()
+			if err == nil && id == "" {
 				id = "<none>"
 			}
-			fmt.Fprintf(w, "Identifier:\t%s\t%v\n", id, duration.Round(time.Millisecond))
-		}
+			return id, err
+		})
 	}
 
 	// features
