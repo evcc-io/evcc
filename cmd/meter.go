@@ -24,6 +24,7 @@ func init() {
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
+	meterCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -71,7 +72,8 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
-		d := dumper{len: len(meters)}
+		timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+		d := dumper{len: len(meters), timeout: timeout}
 		flag := cmd.Flag(flagDiagnose).Changed
 
 	REPEAT:
