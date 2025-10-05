@@ -100,7 +100,7 @@ render: |
       | [ range(0; ($h.time | length))
           | . as $i
           | $h.time[$i] as $time
-          | ($i / 24 | floor) as $day
+          | ($i / 96 | floor) as $day
           | {
               start: ($time | todateiso8601),
               end: (($time + 900) | todateiso8601),
