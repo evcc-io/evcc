@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
 	"golang.org/x/oauth2"
 )
@@ -37,6 +35,10 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.VIN == "" {
+		return nil, errors.New("missing vin")
 	}
 
 	if cc.ClientID == "" {
@@ -75,19 +77,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	api := cardata.NewAPI(log, ts)
 
-	is429 := func(err error) bool {
-		se := new(request.StatusError)
-		return errors.As(err, &se) && se.StatusCode() == http.StatusTooManyRequests
-	}
-
-	vehicle, err := ensureVehicle(
-		cc.VIN, api.Vehicles,
-	)
-	if err != nil && (cc.VIN == "" || !is429(err)) {
-		return nil, err
-	}
-
-	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, vehicle)
+	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN)
 
 	return v, nil
 }
