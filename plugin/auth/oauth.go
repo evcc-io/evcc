@@ -61,14 +61,10 @@ var (
 )
 
 func getInstance(subject string) *OAuth {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
 	return identities[subject]
 }
 
 func addInstance(subject string, identity *OAuth) {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
 	identities[subject] = identity
 }
 
@@ -98,6 +94,9 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
+
+	oauthMu.Lock()
+	defer oauthMu.Unlock()
 
 	// hash oauth2 config
 	h := sha256.Sum256(fmt.Append(nil, oc))
@@ -185,6 +184,8 @@ func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	err = o.updateToken(token)
 
+	o.onlineC <- token.Valid()
+
 	return token, err
 }
 
@@ -197,13 +198,7 @@ func (o *OAuth) updateToken(token *oauth2.Token) error {
 		store = o.tokenStorer(token)
 	}
 
-	if err := settings.SetJson(o.subject, store); err != nil {
-		return err
-	}
-
-	o.onlineC <- token.Valid()
-
-	return nil
+	return settings.SetJson(o.subject, store)
 }
 
 // updateTokenSource must only be called when lock is held
@@ -214,6 +209,8 @@ func (o *OAuth) updateTokenSource(token *oauth2.Token) {
 	}
 
 	o.TokenSource = oauth.RefreshTokenSource(token, o)
+
+	o.onlineC <- token.Valid()
 }
 
 // HandleCallback implements api.AuthProvider.
@@ -285,8 +282,9 @@ func (o *OAuth) Logout() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	o.onlineC <- false
 	o.TokenSource = oauth.RefreshTokenSource(nil, o)
+
+	o.onlineC <- false
 
 	return nil
 }
@@ -298,6 +296,9 @@ func (o *OAuth) DisplayName() string {
 
 // Authenticated implements api.AuthProvider.
 func (o *OAuth) Authenticated() bool {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
 	token, err := o.Token()
 	return err == nil && token.Valid()
 }
