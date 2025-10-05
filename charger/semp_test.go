@@ -170,14 +170,31 @@ const (
 		</Capabilities>
 	</DeviceInfo>
 </Device2EM>`
+
+	mockParametersResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Device2EM xmlns="http://www.sma.de/communication/schema/SEMP/v1">
+	<Parameters>
+		<Parameter>
+			<channelId>Measurement.ChaSess.WhIn</channelId>
+			<timestamp>2024-04-30T15:00:36.213Z</timestamp>
+			<value>12500.0</value>
+		</Parameter>
+		<Parameter>
+			<channelId>Measurement.Operation.Health</channelId>
+			<timestamp>2024-04-30T15:00:36.347Z</timestamp>
+			<value>307</value>
+		</Parameter>
+	</Parameters>
+</Device2EM>`
 )
 
 type sempTestHandler struct {
-	statusResponse   string
-	planningResponse string
-	infoResponse     string
-	lastRequest      string
-	requestCount     int
+	statusResponse     string
+	planningResponse   string
+	infoResponse       string
+	parametersResponse string
+	lastRequest        string
+	requestCount       int
 }
 
 func (h *sempTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -241,6 +258,18 @@ func (h *sempTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Legacy endpoint - still supported
 		w.Header().Set("Content-Type", "application/xml")
 		w.Write([]byte(h.planningResponse))
+
+	case "/semp/Parameters":
+		// Parameters endpoint
+		w.Header().Set("Content-Type", "application/xml")
+		if h.parametersResponse != "" {
+			w.Write([]byte(h.parametersResponse))
+		} else {
+			// Return empty parameters if not set
+			w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Device2EM xmlns="http://www.sma.de/communication/schema/SEMP/v1">
+</Device2EM>`))
+		}
 
 	default:
 		http.NotFound(w, r)
@@ -469,5 +498,50 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 		// calcPower() = 230 * 3 * 16 = 11040 (enabled=true and current=16 from previous test)
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11040</RecommendedPowerConsumption>")
 		assert.Equal(t, 3, handler.requestCount) // 1 GET (DeviceInfo) + 2 POST (stop + restart DeviceControl)
+	})
+}
+
+func TestSEMPChargerChargedEnergy(t *testing.T) {
+	handler := &sempTestHandler{
+		statusResponse:     mockDeviceStatusResponse,
+		planningResponse:   mockPlanningRequestResponse,
+		infoResponse:       mockDeviceInfoResponse,
+		parametersResponse: mockParametersResponse,
+	}
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	wb, err := NewSEMP(server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+	require.NoError(t, err)
+
+	t.Run("ChargedEnergy", func(t *testing.T) {
+		chargeRater, ok := wb.(api.ChargeRater)
+		require.True(t, ok)
+		energy, err := chargeRater.ChargedEnergy()
+		require.NoError(t, err)
+		// Mock data has 12500.0 Wh, should be converted to 12.5 kWh
+		assert.Equal(t, 12.5, energy)
+	})
+
+	t.Run("ChargedEnergyNoParameters", func(t *testing.T) {
+		// Test with handler that doesn't provide parameters
+		handler2 := &sempTestHandler{
+			statusResponse:   mockDeviceStatusResponse,
+			planningResponse: mockPlanningRequestResponse,
+			infoResponse:     mockDeviceInfoResponse,
+			// parametersResponse left empty
+		}
+		server2 := httptest.NewServer(handler2)
+		defer server2.Close()
+
+		wb2, err := NewSEMP(server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+		require.NoError(t, err)
+
+		chargeRater2, ok := wb2.(api.ChargeRater)
+		require.True(t, ok)
+		energy, err := chargeRater2.ChargedEnergy()
+		require.NoError(t, err)
+		// Should return 0 if parameter not found
+		assert.Equal(t, 0.0, energy)
 	})
 }

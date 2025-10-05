@@ -83,6 +83,18 @@ type Timeframe struct {
 	MinPowerConsumption *int   `xml:"MinPowerConsumption,omitempty"`
 }
 
+// Parameter represents a SEMP parameter with channel ID, timestamp and value
+type Parameter struct {
+	ChannelID string `xml:"channelId"`
+	Timestamp string `xml:"timestamp"`
+	Value     string `xml:"value"`
+}
+
+// Parameters represents SEMP parameters collection
+type Parameters struct {
+	Parameter []Parameter `xml:"Parameter"`
+}
+
 // Device2EM represents the device to energy manager message
 type Device2EM struct {
 	XMLName         xml.Name          `xml:"Device2EM"`
@@ -90,6 +102,7 @@ type Device2EM struct {
 	DeviceInfo      []DeviceInfo      `xml:"DeviceInfo,omitempty"`
 	DeviceStatus    []DeviceStatus    `xml:"DeviceStatus,omitempty"`
 	PlanningRequest []PlanningRequest `xml:"PlanningRequest,omitempty"`
+	Parameters      *Parameters       `xml:"Parameters,omitempty"`
 }
 
 // EM2Device represents the energy manager to device message
