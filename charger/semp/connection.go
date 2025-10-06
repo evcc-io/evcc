@@ -24,9 +24,9 @@ func NewConnection(helper *request.Helper, uri, deviceID string) *Connection {
 	}
 }
 
-// GetFullDocument retrieves the complete SEMP document from the base URL
+// GetDeviceXML retrieves the complete SEMP document from the base URL
 // This is more efficient than making separate requests to /DeviceStatus, /DeviceInfo, /PlanningRequest
-func (c *Connection) GetFullDocument() (Device2EM, error) {
+func (c *Connection) GetDeviceXML() (Device2EM, error) {
 	var response Device2EM
 	if err := c.helper.GetXML(c.uri, &response); err != nil {
 		return Device2EM{}, err
@@ -36,7 +36,7 @@ func (c *Connection) GetFullDocument() (Device2EM, error) {
 
 // GetDeviceStatus retrieves the current device status from SEMP interface
 func (c *Connection) GetDeviceStatus() (DeviceStatus, error) {
-	response, err := c.GetFullDocument()
+	response, err := c.GetDeviceXML()
 	if err != nil {
 		return DeviceStatus{}, err
 	}
@@ -53,7 +53,7 @@ func (c *Connection) GetDeviceStatus() (DeviceStatus, error) {
 
 // GetDeviceInfo retrieves the device info from SEMP interface
 func (c *Connection) GetDeviceInfo() (DeviceInfo, error) {
-	response, err := c.GetFullDocument()
+	response, err := c.GetDeviceXML()
 	if err != nil {
 		return DeviceInfo{}, err
 	}
@@ -70,7 +70,7 @@ func (c *Connection) GetDeviceInfo() (DeviceInfo, error) {
 
 // HasPlanningRequest checks if there is a planning request/timeframe for the device
 func (c *Connection) HasPlanningRequest() (bool, error) {
-	response, err := c.GetFullDocument()
+	response, err := c.GetDeviceXML()
 	if err != nil {
 		return false, err
 	}
@@ -87,8 +87,8 @@ func (c *Connection) HasPlanningRequest() (bool, error) {
 	return false, nil
 }
 
-// GetParameters retrieves SEMP parameters from the /Parameters endpoint
-func (c *Connection) GetParameters() ([]Parameter, error) {
+// GetParametersXML retrieves SEMP parameters from the /Parameters endpoint
+func (c *Connection) GetParametersXML() ([]Parameter, error) {
 	var response Device2EM
 	uri := fmt.Sprintf("%s/Parameters", c.uri)
 	if err := c.helper.GetXML(uri, &response); err != nil {
@@ -116,9 +116,7 @@ func (c *Connection) SendDeviceControl(on bool, power int) error {
 		DeviceControl: []DeviceControl{control},
 	}
 
-	uri := fmt.Sprintf("%s", c.uri)
-
-	req, err := request.New(http.MethodPost, uri, request.MarshalXML(message), request.XMLEncoding)
+	req, err := request.New(http.MethodPost, c.uri, request.MarshalXML(message), request.XMLEncoding)
 	if err != nil {
 		return err
 	}

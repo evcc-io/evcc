@@ -298,7 +298,7 @@ func TestSEMPCharger(t *testing.T) {
 	t.Run("Enabled", func(t *testing.T) {
 		handler.requestCount = 0
 		// Reset cache to force new request
-		wb.(*SEMP).documentG.Reset()
+		wb.(*SEMP).deviceG.Reset()
 		enabled, err := wb.Enabled()
 		require.NoError(t, err)
 		assert.True(t, enabled)
@@ -308,7 +308,7 @@ func TestSEMPCharger(t *testing.T) {
 	t.Run("CurrentPower", func(t *testing.T) {
 		handler.requestCount = 0
 		// Reset cache to force new request
-		wb.(*SEMP).documentG.Reset()
+		wb.(*SEMP).deviceG.Reset()
 		meter, ok := wb.(api.Meter)
 		require.True(t, ok)
 		power, err := meter.CurrentPower()
@@ -320,7 +320,7 @@ func TestSEMPCharger(t *testing.T) {
 	t.Run("Enable", func(t *testing.T) {
 		handler.requestCount = 0
 		// Reset caches to ensure fresh requests
-		wb.(*SEMP).documentG.Reset()
+		wb.(*SEMP).deviceG.Reset()
 		err := wb.Enable(true)
 		require.NoError(t, err)
 		assert.Contains(t, handler.lastRequest, "<On>true</On>")

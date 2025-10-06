@@ -52,9 +52,9 @@ type DeviceStatus struct {
 
 // PowerInfo represents SEMP power information
 type PowerInfo struct {
-	AveragePower      int `xml:"AveragePower"`
-	Timestamp         int `xml:"Timestamp"`
-	AveragingInterval int `xml:"AveragingInterval"`
+	AveragePower      float64 `xml:"AveragePower"`
+	Timestamp         int     `xml:"Timestamp"`
+	AveragingInterval int     `xml:"AveragingInterval"`
 }
 
 // DeviceControl represents SEMP device control message
@@ -72,15 +72,15 @@ type PlanningRequest struct {
 
 // Timeframe represents SEMP timeframe
 type Timeframe struct {
-	DeviceID            string `xml:"DeviceId"`
-	EarliestStart       int    `xml:"EarliestStart"`
-	LatestEnd           int    `xml:"LatestEnd"`
-	MinRunningTime      *int   `xml:"MinRunningTime,omitempty"`
-	MaxRunningTime      *int   `xml:"MaxRunningTime,omitempty"`
-	MinEnergy           *int   `xml:"MinEnergy,omitempty"`
-	MaxEnergy           *int   `xml:"MaxEnergy,omitempty"`
-	MaxPowerConsumption *int   `xml:"MaxPowerConsumption,omitempty"`
-	MinPowerConsumption *int   `xml:"MinPowerConsumption,omitempty"`
+	DeviceID            string   `xml:"DeviceId"`
+	EarliestStart       int      `xml:"EarliestStart"`
+	LatestEnd           int      `xml:"LatestEnd"`
+	MinRunningTime      *int     `xml:"MinRunningTime,omitempty"`
+	MaxRunningTime      *int     `xml:"MaxRunningTime,omitempty"`
+	MinEnergy           *float64 `xml:"MinEnergy,omitempty"`
+	MaxEnergy           *float64 `xml:"MaxEnergy,omitempty"`
+	MaxPowerConsumption *float64 `xml:"MaxPowerConsumption,omitempty"`
+	MinPowerConsumption *float64 `xml:"MinPowerConsumption,omitempty"`
 }
 
 // Parameter represents a SEMP parameter with channel ID, timestamp and value
