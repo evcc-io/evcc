@@ -53,23 +53,14 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			slot.End = targetTime
 		}
 
-		slotDuration := slot.End.Sub(slot.Start)
-		requiredDuration -= slotDuration
-
-		// slot covers more than we need, so shorten it
-		if requiredDuration < 0 {
-			slot.End = slot.End.Add(requiredDuration)
-			requiredDuration = 0
-
-			if slot.End.Before(slot.Start) {
-				panic("slot end before start")
-			}
-		}
-
 		plan = append(plan, slot)
 
-		// we found all necessary slots
-		if requiredDuration == 0 {
+		// all necessary slots found?
+		if requiredDuration -= slot.End.Sub(slot.Start); requiredDuration <= 0 {
+			// slot covers more than we need, so shorten it
+			slot.End = slot.End.Add(requiredDuration)
+			plan[len(plan)-1] = slot
+
 			break
 		}
 	}
