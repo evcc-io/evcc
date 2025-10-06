@@ -97,7 +97,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 	var plan api.Rates
 	remainingDuration := requiredDuration
 
-	for _, source := range validRates {
+	for _, slot := range validRates {
 		if remainingDuration <= 0 {
 			break
 		}
@@ -106,7 +106,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 		inValidBlock := false
 		for _, block := range consecutiveBlocks {
 			for _, blockSlot := range block {
-				if source.Start.Equal(blockSlot.Start) && source.End.Equal(blockSlot.End) && source.Value == blockSlot.Value {
+				if slot.Start.Equal(blockSlot.Start) && slot.End.Equal(blockSlot.End) && slot.Value == blockSlot.Value {
 					inValidBlock = true
 					break
 				}
@@ -120,24 +120,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			continue
 		}
 
-		slot := source
-		slotDuration := slot.End.Sub(slot.Start)
-		remainingDuration -= slotDuration
-
-		// slot covers more than we need, so shorten it
-		if remainingDuration < 0 {
-			// the first (if not single) slot should start as late as possible
-			if IsFirst(slot, plan) && len(plan) > 0 {
-				slot.Start = slot.Start.Add(-remainingDuration)
-			} else {
-				slot.End = slot.End.Add(remainingDuration)
-			}
-			remainingDuration = 0
-
-			if slot.End.Before(slot.Start) {
-				panic("slot end before start")
-			}
-		}
+		remainingDuration -= slot.End.Sub(slot.Start)
 
 		plan = append(plan, slot)
 	}
