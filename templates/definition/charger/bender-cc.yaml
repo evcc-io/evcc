@@ -77,11 +77,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 255
-  - name: sempdeviceid
-    description:
-      generic: SEMP DeviceId (Format F-AAAAAAAA-BBBBBBBBBBBB-00)
-    example: F-12345678-ABCDEF123456-00
 render: |
   type: bender
   {{- include "modbus" . }}
-  sempdeviceid: {{ .sempdeviceid }}
