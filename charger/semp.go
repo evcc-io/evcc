@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -181,6 +180,16 @@ func (wb *SEMP) hasPlanningRequest() (bool, error) {
 	return false, nil
 }
 
+func (wb *SEMP) calcPower(enabled bool, current float64, phases int) *int {
+	if !enabled {
+		return nil
+	}
+
+	power := min(max(int(230*float64(phases)*current), wb.minPower), wb.maxPower)
+
+	return &power
+}
+
 // Status implements the api.Charger interface
 func (wb *SEMP) Status() (api.ChargeStatus, error) {
 	status, err := wb.getDeviceStatus()
@@ -220,27 +229,14 @@ func (wb *SEMP) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *SEMP) Enable(enable bool) error {
-	// Check if interruptions are allowed first
-	info, err := wb.getDeviceInfo()
+	err := wb.conn.SendDeviceControl(enable, wb.calcPower(enable, wb.current, wb.phases))
 	if err != nil {
 		return err
-	}
-
-	status, err := wb.getDeviceStatus()
-	if err != nil {
-		return err
-	}
-
-	if !info.Capabilities.InterruptionsAllowed || !status.EMSignalsAccepted {
-		return errors.New("device does not allow control")
 	}
 
 	wb.enabled = enable
-	err = wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
-	if err == nil {
-		wb.deviceG.Reset()
-		wb.parametersG.Reset()
-	}
+	wb.deviceG.Reset()
+	wb.parametersG.Reset()
 
 	return err
 }
@@ -254,13 +250,16 @@ var _ api.ChargerEx = (*SEMP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
-	wb.current = current
-	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
+	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower(wb.enabled, current, wb.phases))
+	if err != nil {
+		return err
+	}
 
+	wb.current = current
 	wb.deviceG.Reset()
 	wb.parametersG.Reset()
 
-	return err
+	return nil
 }
 
 var _ api.Meter = (*SEMP)(nil)
@@ -300,6 +299,25 @@ func (wb *SEMP) ChargedEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SEMP) phases1p3p(phases int) error {
+	// SEMP protocol doesn't have explicit phase switching
+	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower(wb.enabled, wb.current, phases))
+	if err != nil {
+		return err
+	}
+
+	wb.phases = phases
+	wb.deviceG.Reset()
+	wb.parametersG.Reset()
+
+	return nil
+}
+
+func (wb *SEMP) getPhases() (int, error) {
+	return wb.phases, nil
+}
+
 var _ api.Diagnosis = (*SEMP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
@@ -321,28 +339,4 @@ func (s *SEMP) Diagnose() {
 	} else {
 		fmt.Printf("Planning Request Error: %v\n", err)
 	}
-}
-
-// phases1p3p implements the api.PhaseSwitcher interface
-func (wb *SEMP) phases1p3p(phases int) error {
-	// SEMP protocol doesn't have explicit phase switching
-	wb.phases = phases
-	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
-
-	wb.deviceG.Reset()
-	wb.parametersG.Reset()
-
-	return err
-}
-
-func (wb *SEMP) getPhases() (int, error) {
-	return wb.phases, nil
-}
-
-func (wb *SEMP) calcPower() int {
-	if !wb.enabled {
-		return 0
-	}
-
-	return min(max(int(230*float64(wb.phases)*wb.current), wb.minPower), wb.maxPower)
 }
