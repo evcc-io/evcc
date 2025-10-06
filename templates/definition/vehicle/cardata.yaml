@@ -16,8 +16,7 @@ requirements:
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
-      vehicle.drivetrain.electricEngine.charging.level
-      vehicle.drivetrain.electricEngine.charging.timeToFullyCharged
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
       vehicle.vehicle.travelledDistance
@@ -31,8 +30,7 @@ requirements:
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
-      vehicle.drivetrain.electricEngine.charging.level
-      vehicle.drivetrain.electricEngine.charging.timeToFullyCharged
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
       vehicle.vehicle.travelledDistance

@@ -123,7 +123,7 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	return v.Float("vehicle.drivetrain.electricEngine.charging.level")
+	return v.Float("vehicle.drivetrain.batteryManagement.header")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -152,7 +152,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeToFullyCharged")
+	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeRemaining")
 	return time.Now().Add(time.Duration(res) * time.Minute), err
 }
 
