@@ -36,12 +36,14 @@ type SEMP struct {
 	log         *util.Logger
 	conn        *semp.Connection
 	cache       time.Duration
-	documentG   util.Cacheable[semp.Device2EM]
+	deviceG     util.Cacheable[semp.Device2EM]
 	parametersG util.Cacheable[[]semp.Parameter]
 	phases      int
 	current     float64
 	enabled     bool
 	deviceID    string
+	minPower    int
+	maxPower    int
 }
 
 //go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
@@ -91,13 +93,13 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	wb.conn = semp.NewConnection(wb.Helper, strings.TrimRight(uri, "/"), deviceID)
 
 	// Setup cached document getter - fetches the complete SEMP document once
-	wb.documentG = util.ResettableCached(func() (semp.Device2EM, error) {
-		return wb.conn.GetFullDocument()
+	wb.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
+		return wb.conn.GetDeviceXML()
 	}, cache)
 
 	// Setup cached parameters getter
 	wb.parametersG = util.ResettableCached(func() ([]semp.Parameter, error) {
-		return wb.conn.GetParameters()
+		return wb.conn.GetParametersXML()
 	}, cache)
 
 	var (
@@ -107,14 +109,18 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 
 	// Check if device supports phase switching by checking power characteristics
 	info, err := wb.getDeviceInfo()
-	if err == nil {
-		// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
-		if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
-			info.Characteristics.MaxPowerConsumption > 4600 {
-			phases1p3p = wb.phases1p3p
-			getPhases = wb.getPhases
-			log.DEBUG.Println("detected phase switching support")
-		}
+	if err != nil {
+		return nil, err
+	}
+
+	wb.minPower = info.Characteristics.MinPowerConsumption
+	wb.maxPower = info.Characteristics.MaxPowerConsumption
+
+	// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
+	if wb.minPower > 0 && wb.minPower < 4140 && wb.maxPower > 4600 {
+		phases1p3p = wb.phases1p3p
+		getPhases = wb.getPhases
+		log.DEBUG.Println("detected phase switching support")
 	}
 
 	wb.enabled, err = wb.Enabled()
@@ -127,7 +133,7 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 
 // getDeviceStatus retrieves device status from cached document
 func (wb *SEMP) getDeviceStatus() (semp.DeviceStatus, error) {
-	doc, err := wb.documentG.Get()
+	doc, err := wb.deviceG.Get()
 	if err != nil {
 		return semp.DeviceStatus{}, err
 	}
@@ -143,7 +149,7 @@ func (wb *SEMP) getDeviceStatus() (semp.DeviceStatus, error) {
 
 // getDeviceInfo retrieves device info from cached document
 func (wb *SEMP) getDeviceInfo() (semp.DeviceInfo, error) {
-	doc, err := wb.documentG.Get()
+	doc, err := wb.deviceG.Get()
 	if err != nil {
 		return semp.DeviceInfo{}, err
 	}
@@ -159,7 +165,7 @@ func (wb *SEMP) getDeviceInfo() (semp.DeviceInfo, error) {
 
 // hasPlanningRequest checks if planning request exists in cached document
 func (wb *SEMP) hasPlanningRequest() (bool, error) {
-	doc, err := wb.documentG.Get()
+	doc, err := wb.deviceG.Get()
 	if err != nil {
 		return false, err
 	}
@@ -232,8 +238,10 @@ func (wb *SEMP) Enable(enable bool) error {
 	wb.enabled = enable
 	err = wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 	if err == nil {
-		wb.documentG.Reset()
+		wb.deviceG.Reset()
+		wb.parametersG.Reset()
 	}
+
 	return err
 }
 
@@ -248,9 +256,10 @@ var _ api.ChargerEx = (*SEMP)(nil)
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
 	wb.current = current
 	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
-	if err == nil {
-		wb.documentG.Reset()
-	}
+
+	wb.deviceG.Reset()
+	wb.parametersG.Reset()
+
 	return err
 }
 
@@ -263,7 +272,7 @@ func (wb *SEMP) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(status.PowerInfo.AveragePower), nil
+	return status.PowerInfo.AveragePower, nil
 }
 
 var _ api.ChargeRater = (*SEMP)(nil)
@@ -288,7 +297,7 @@ func (wb *SEMP) ChargedEnergy() (float64, error) {
 	}
 
 	// Return 0 if parameter not found (device might not support it)
-	return 0, nil
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.Diagnosis = (*SEMP)(nil)
@@ -317,33 +326,12 @@ func (s *SEMP) Diagnose() {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
-	info, err := wb.getDeviceInfo()
-	if err != nil {
-		return err
-	}
-
-	var power int
-	switch phases {
-	case 1:
-		power = info.Characteristics.MinPowerConsumption
-	case 3:
-		power = info.Characteristics.MaxPowerConsumption
-	}
-
-	// stop charging and set power to extreme value to ensure phase switch
-	err = wb.conn.SendDeviceControl(false, power)
-	if err != nil {
-		return err
-	}
-
 	wb.phases = phases
+	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
 
-	// restart charging with (hopefully) new phase setting
-	err = wb.conn.SendDeviceControl(wb.enabled, wb.calcPower())
-	if err == nil {
-		wb.documentG.Reset()
-		wb.parametersG.Reset()
-	}
+	wb.deviceG.Reset()
+	wb.parametersG.Reset()
+
 	return err
 }
 
@@ -356,5 +344,5 @@ func (wb *SEMP) calcPower() int {
 		return 0
 	}
 
-	return int(230 * float64(wb.phases) * wb.current)
+	return min(max(int(230*float64(wb.phases)*wb.current), wb.minPower), wb.maxPower)
 }
