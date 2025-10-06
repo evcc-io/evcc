@@ -41,7 +41,7 @@ render: |
   type: eebus
   ski: {{ .ski }}
   {{- if .host }}
-  host: {{ .host }}
+  ip: {{ .host }}
   {{- end }}
   {{- if .usage }}
   usage: {{ .usage }}

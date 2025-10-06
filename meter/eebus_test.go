@@ -14,7 +14,7 @@ func TestEEBus(t *testing.T) {
 
 	values := map[string]any{
 		"ski":     "test-ski",
-		"host":    "192.0.2.2",
+		"ip":      "192.0.2.2",
 		"usage":   "grid",
 		"timeout": "10s",
 	}
