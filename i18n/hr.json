@@ -946,7 +946,7 @@
       "climating": "Otkriveno predkondicioniranje.",
       "connected": "Povezano.",
       "disconnectRequired": "Zadatak prekinut. Molim ponovno spojite.",
-      "disconnected": "Nepovezano.",
+      "disconnected": "Vozilo nije priključeno",
       "feedinPriorityNextStart": "Visoka tarifa prodaje počinje za {duration}.",
       "feedinPriorityPausing": "Solarno punjenje je pauzirano radi maksimiziranja predaje u mrežu.",
       "finished": "Završeno.",
