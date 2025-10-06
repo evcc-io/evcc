@@ -6,9 +6,9 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich.
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (REST-API).
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control.
+      A commercial license is required for FEMS FENECON systems for active battery control (REST-API).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
