@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 )
@@ -71,7 +72,7 @@ func (v *Provider) any(key string) (any, error) {
 			}
 		}()
 
-		container, err := v.api.EnsureContainer()
+		container, err := v.ensureContainer()
 		if err != nil {
 			v.log.ERROR.Printf("get container: %v", err)
 			return nil, api.ErrNotAvailable
@@ -92,6 +93,26 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
+func (v *Provider) ensureContainer() (string, error) {
+	containers, err := v.api.GetContainers()
+	if err != nil {
+		return "", err
+	}
+
+	if cc := lo.Filter(containers, func(c Container, _ int) bool {
+		return c.Name == "evcc.io" && c.Purpose == requiredVersion
+	}); len(cc) > 0 {
+		return cc[0].ContainerId, nil
+	}
+
+	res, err := v.api.CreateContainer(CreateContainer{
+		Name:                 "evcc.io",
+		Purpose:              requiredVersion,
+		TechnicalDescriptors: requiredKeys,
+	})
+
+	return res.ContainerId, err
+}
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
 	if err != nil {
@@ -123,7 +144,7 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	return v.Float("vehicle.drivetrain.electricEngine.charging.level")
+	return v.Float("vehicle.drivetrain.batteryManagement.header")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -152,7 +173,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeToFullyCharged")
+	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeRemaining")
 	return time.Now().Add(time.Duration(res) * time.Minute), err
 }
 
