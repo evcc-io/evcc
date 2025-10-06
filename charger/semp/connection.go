@@ -103,7 +103,8 @@ func (c *Connection) GetParametersXML() ([]Parameter, error) {
 }
 
 // SendDeviceControl sends a control message to the SEMP device
-func (c *Connection) SendDeviceControl(on bool, power int) error {
+// power is optional - if nil, RecommendedPowerConsumption will be omitted
+func (c *Connection) SendDeviceControl(on bool, power *int) error {
 	control := DeviceControl{
 		DeviceID:                    c.deviceID,
 		On:                          on,

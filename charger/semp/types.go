@@ -61,7 +61,7 @@ type PowerInfo struct {
 type DeviceControl struct {
 	DeviceID                    string `xml:"DeviceId"`
 	On                          bool   `xml:"On"`
-	RecommendedPowerConsumption int    `xml:"RecommendedPowerConsumption"`
+	RecommendedPowerConsumption *int   `xml:"RecommendedPowerConsumption,omitempty"`
 	Timestamp                   int    `xml:"Timestamp"`
 }
 
