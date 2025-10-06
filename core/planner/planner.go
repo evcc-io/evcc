@@ -36,8 +36,10 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - target time and required duration are before end of rates
 func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
-	var plan api.Rates
+	minConsecutiveSlots := 1 // minimum number of consecutive slots required
 
+	// filter and adjust rates to valid time window
+	var validRates api.Rates
 	for _, source := range rates {
 		// slot not relevant
 		if !(source.End.After(t.clock.Now()) && source.Start.Before(targetTime)) {
@@ -53,18 +55,84 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			slot.End = targetTime
 		}
 
+		validRates = append(validRates, slot)
+	}
+
+	// sort valid rates by time to identify consecutive blocks
+	validRatesByTime := slices.Clone(validRates)
+	validRatesByTime.Sort()
+
+	// find all consecutive blocks of at least minConsecutiveSlots
+	var consecutiveBlocks []api.Rates
+	var currentBlock api.Rates
+
+	for _, rate := range validRatesByTime {
+		if len(currentBlock) == 0 {
+			currentBlock = append(currentBlock, rate)
+		} else {
+			lastSlot := currentBlock[len(currentBlock)-1]
+			if lastSlot.End.Equal(rate.Start) {
+				// consecutive slot
+				currentBlock = append(currentBlock, rate)
+			} else {
+				// gap detected - save current block if valid
+				if len(currentBlock) >= minConsecutiveSlots {
+					consecutiveBlocks = append(consecutiveBlocks, slices.Clone(currentBlock))
+				}
+				currentBlock = api.Rates{rate}
+			}
+		}
+	}
+	// save last block
+	if len(currentBlock) >= minConsecutiveSlots {
+		consecutiveBlocks = append(consecutiveBlocks, currentBlock)
+	}
+
+	// if no consecutive blocks found, fall back to all valid rates
+	if len(consecutiveBlocks) == 0 {
+		consecutiveBlocks = append(consecutiveBlocks, validRates)
+	}
+
+	// select slots from consecutive blocks based on original cost order
+	var plan api.Rates
+	remainingDuration := requiredDuration
+
+	for _, source := range validRates {
+		if remainingDuration <= 0 {
+			break
+		}
+
+		// check if this slot is part of any valid consecutive block
+		inValidBlock := false
+		for _, block := range consecutiveBlocks {
+			for _, blockSlot := range block {
+				if source.Start.Equal(blockSlot.Start) && source.End.Equal(blockSlot.End) && source.Value == blockSlot.Value {
+					inValidBlock = true
+					break
+				}
+			}
+			if inValidBlock {
+				break
+			}
+		}
+
+		if !inValidBlock {
+			continue
+		}
+
+		slot := source
 		slotDuration := slot.End.Sub(slot.Start)
-		requiredDuration -= slotDuration
+		remainingDuration -= slotDuration
 
 		// slot covers more than we need, so shorten it
-		if requiredDuration < 0 {
+		if remainingDuration < 0 {
 			// the first (if not single) slot should start as late as possible
 			if IsFirst(slot, plan) && len(plan) > 0 {
-				slot.Start = slot.Start.Add(-requiredDuration)
+				slot.Start = slot.Start.Add(-remainingDuration)
 			} else {
-				slot.End = slot.End.Add(requiredDuration)
+				slot.End = slot.End.Add(remainingDuration)
 			}
-			requiredDuration = 0
+			remainingDuration = 0
 
 			if slot.End.Before(slot.Start) {
 				panic("slot end before start")
@@ -72,11 +140,6 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 		}
 
 		plan = append(plan, slot)
-
-		// we found all necessary slots
-		if requiredDuration == 0 {
-			break
-		}
 	}
 
 	return plan
