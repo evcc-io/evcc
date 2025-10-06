@@ -77,7 +77,6 @@
       "title": "Ponašanje upravljanja"
     },
     "deviceValue": {
-      "allowControl": "Dozvoli kontrolu",
       "amount": "Iznos",
       "broker": "Posrednik",
       "bucket": "Kanta",
@@ -443,8 +442,6 @@
       "descriptionIds": "U Sunny Portalu svaki potrošački uređaj mora imati jedinstveni identifikator. evcc generira jedinstveni identifikator na temelju vašeg hardvera. Ako evcc premjestite na drugi hardver, ti se identifikatori mogu promijeniti. Ako želite zadržati povijest, ovdje možete nadjačati generirane identifikatore. Otvorite SEMP URL (/semp) kako biste provjerili svoje trenutačne identifikatore.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "HEX izraz od 8 znakova. Prefiks za sve objekte. Uobičajeno je da evcc koristi svoj interni ID.",
-      "labelAllowControl": "Prihvati dodatna ograničenja snage prema savjetima SHM-a.",
-      "labelControl": "Dozvoli kontrolu",
       "labelDeviceId": "ID uređaja",
       "labelVendorId": "ID proizvođača",
       "title": "SMA Sunny Home Manager"

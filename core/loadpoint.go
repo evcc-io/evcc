@@ -152,14 +152,13 @@ type Loadpoint struct {
 	planActive       bool          // charge plan exists and has a currently active slot
 
 	// cached state
-	status         api.ChargeStatus       // Charger status
-	remoteDemand   loadpoint.RemoteDemand // External status demand
-	chargePower    float64                // Charging power
-	chargeCurrents []float64              // Phase currents
-	connectedTime  time.Time              // Time when vehicle was connected
-	pvTimer        time.Time              // PV enabled/disable timer
-	phaseTimer     time.Time              // 1p3p switch timer
-	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
+	status         api.ChargeStatus // Charger status
+	chargePower    float64          // Charging power
+	chargeCurrents []float64        // Phase currents
+	connectedTime  time.Time        // Time when vehicle was connected
+	pvTimer        time.Time        // PV enabled/disable timer
+	phaseTimer     time.Time        // 1p3p switch timer
+	wakeUpTimer    *Timer           // Vehicle wake-up timeout
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -1045,14 +1044,6 @@ func (lp *Loadpoint) disableUnlessClimater() error {
 	return lp.setLimit(current)
 }
 
-// remoteControlled returns true if remote control status is active
-func (lp *Loadpoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
-	lp.Lock()
-	defer lp.Unlock()
-
-	return lp.remoteDemand == demand
-}
-
 // statusEvents converts the observed charger status change into a logical sequence of events
 func statusEvents(prevStatus, status api.ChargeStatus) []string {
 	res := make([]string, 0, 2)
@@ -1801,8 +1792,10 @@ func (lp *Loadpoint) startWakeUpTimer() {
 
 // stopWakeUpTimer stops wakeUpTimer
 func (lp *Loadpoint) stopWakeUpTimer() {
-	lp.log.DEBUG.Printf("wake-up timer: stop")
-	lp.wakeUpTimer.Stop()
+	if lp.wakeUpTimer.Running() {
+		lp.log.DEBUG.Printf("wake-up timer: stop")
+		lp.wakeUpTimer.Stop()
+	}
 }
 
 func (lp *Loadpoint) shouldBeConsistent() bool {
@@ -1914,9 +1907,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		return
 	}
 
-	// track if remote disabled is actually active
-	remoteDisabled := loadpoint.RemoteEnable
-
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
 
@@ -1932,10 +1922,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.phasesConfigured)
-
-	case lp.remoteControlled(loadpoint.RemoteHardDisable):
-		remoteDisabled = loadpoint.RemoteHardDisable
-		fallthrough
 
 	case mode == api.ModeOff:
 		var current float64
@@ -2000,12 +1986,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			lp.resetPVTimer()
 		}
 
-		// Sunny Home Manager
-		if lp.remoteControlled(loadpoint.RemoteSoftDisable) {
-			remoteDisabled = loadpoint.RemoteSoftDisable
-			targetCurrent = 0
-		}
-
 		err = lp.setLimit(targetCurrent)
 	}
 
@@ -2022,9 +2002,10 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	}
 
 	// effective disabled status
-	if remoteDisabled != loadpoint.RemoteEnable {
-		lp.publish(keys.RemoteDisabled, remoteDisabled)
-	}
+	// TODO use for §14a
+	// if remoteDisabled != loadpoint.RemoteEnable {
+	// 	lp.publish(keys.RemoteDisabled, remoteDisabled)
+	// }
 
 	// log any error
 	if err != nil {

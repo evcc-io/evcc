@@ -24,6 +24,7 @@ type CachingProxy struct {
 	typ    string
 	config map[string]any
 
+	cached *cached
 	tariff api.Tariff
 }
 
@@ -150,21 +151,20 @@ func (p *CachingProxy) dynamicTariff() bool {
 }
 
 func (p *CachingProxy) cacheGet(until time.Time) (*cached, error) {
-	res, err := cacheGet(p.key)
-	if err != nil {
-		return nil, err
+	if p.cached == nil {
+		res, err := cacheGet(p.key)
+		if err != nil {
+			return nil, err
+		}
+
+		p.cached = res
 	}
 
-	if !ratesValid(res.Rates, until) {
+	if !ratesValid(p.cached.Rates, until) {
 		return nil, errors.New("not enough rates")
 	}
 
-	res.Rates = currentRates(res.Rates)
-	if len(res.Rates) == 0 {
-		return nil, errors.New("no current rates")
-	}
-
-	return res, nil
+	return p.cached, nil
 }
 
 func (p *CachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
@@ -186,24 +186,5 @@ func untilEndOfTomorrow() time.Time {
 }
 
 func ratesValid(rr api.Rates, until time.Time) bool {
-	if len(rr) == 0 {
-		return false
-	}
-
-	rr.Sort()
-
-	return !rr[len(rr)-1].End.Before(until)
-}
-
-func currentRates(rr api.Rates) api.Rates {
-	res := make(api.Rates, 0, len(rr))
-	now := now.With(time.Now()).BeginningOfHour()
-
-	for _, r := range rr {
-		if !r.End.Before(now) {
-			res = append(res, r)
-		}
-	}
-
-	return res
+	return len(rr) > 0 && !rr[len(rr)-1].End.Before(until)
 }

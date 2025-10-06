@@ -32,32 +32,6 @@ type PlanPreviewResponse struct {
 	Power        float64   `json:"power"`
 }
 
-// remoteDemandHandler updates minimum soc
-func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		source := vars["source"]
-		demand, err := loadpoint.RemoteDemandString(vars["demand"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		lp.RemoteControl(source, demand)
-
-		res := struct {
-			Demand loadpoint.RemoteDemand `json:"demand"`
-			Source string                 `json:"source"`
-		}{
-			Source: source,
-			Demand: demand,
-		}
-
-		jsonWrite(w, res)
-	}
-}
-
 // planHandler returns the current plan
 func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
