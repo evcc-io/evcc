@@ -29,7 +29,6 @@ var requiredKeys = []string{
 	"vehicle.cabin.hvac.preconditioning.status.comfortState",
 	"vehicle.drivetrain.batteryManagement.header",
 	"vehicle.drivetrain.electricEngine.charging.hvStatus",
-	"vehicle.drivetrain.batteryManagement.header",
 	"vehicle.drivetrain.electricEngine.charging.timeRemaining",
 	"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
 	"vehicle.powertrain.electric.battery.stateOfCharge.target",
@@ -119,19 +118,9 @@ func (v *API) EnsureContainer() (string, error) {
 	}
 
 	data := CreateContainer{
-		Name:    "evcc.io",
-		Purpose: "evcc.io",
-		TechnicalDescriptors: []string{
-			// https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
-			"vehicle.body.chargingPort.status",
-			"vehicle.cabin.hvac.preconditioning.status.comfortState",
-			"vehicle.drivetrain.batteryManagement.header",
-			"vehicle.drivetrain.electricEngine.charging.hvStatus",
-			"vehicle.drivetrain.electricEngine.charging.timeRemaining",
-			"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
-			"vehicle.powertrain.electric.battery.stateOfCharge.target",
-			"vehicle.vehicle.travelledDistance",
-		},
+		Name:                 "evcc.io",
+		Purpose:              "evcc.io",
+		TechnicalDescriptors: requiredKeys,
 	}
 
 	var res Container
