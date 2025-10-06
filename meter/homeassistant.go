@@ -4,6 +4,7 @@ package meter
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -15,8 +16,8 @@ type HomeAssistant struct {
 	conn            *homeassistant.Connection
 	power           string
 	energy          string
-	currentEntities [3]string
-	voltageEntities [3]string
+	currentEntities []string
+	voltageEntities []string
 }
 
 func init() {
@@ -55,18 +56,18 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 
 	// Set up phase currents (optional)
 	if len(cc.Currents) > 0 {
-		currents, err := homeassistant.ValidatePhaseEntities(cc.Currents, "currents")
+		currents, err := homeassistant.ValidatePhaseEntities(cc.Currents)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("currents: %w", err)
 		}
 		m.currentEntities = currents
 	}
 
 	// Set up phase voltages (optional)
 	if len(cc.Voltages) > 0 {
-		voltages, err := homeassistant.ValidatePhaseEntities(cc.Voltages, "voltages")
+		voltages, err := homeassistant.ValidatePhaseEntities(cc.Voltages)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("voltages: %w", err)
 		}
 		m.voltageEntities = voltages
 	}
@@ -90,7 +91,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 }
 
 // NewHomeAssistant creates HomeAssistant meter
-func NewHomeAssistant(baseURL, token, power, energy string, currents, voltages [3]string) (*HomeAssistant, error) {
+func NewHomeAssistant(baseURL, token, power, energy string, currents, voltages []string) (*HomeAssistant, error) {
 	if power == "" {
 		return nil, errors.New("missing power sensor entity")
 	}
@@ -117,7 +118,6 @@ var _ api.Meter = (*HomeAssistant)(nil)
 func (m *HomeAssistant) CurrentPower() (float64, error) {
 	return m.conn.GetFloatState(m.power)
 }
-
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (m *HomeAssistant) TotalEnergy() (float64, error) {
