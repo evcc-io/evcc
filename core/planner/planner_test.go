@@ -81,11 +81,11 @@ func TestPlan(t *testing.T) {
 			30,
 		},
 		{
-			"plan (30)30-0-60-0-0-0",
+			"plan 30-0-60-0-0-0",
 			90 * time.Minute,
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
-			clock.Now().Add(30 * time.Minute),
+			clock.Now(),
 			20,
 		},
 		{
@@ -303,8 +303,8 @@ func TestPrecondition(t *testing.T) {
 	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(30 * time.Minute),
-			End:   clock.Now().Add(time.Hour),
+			Start: clock.Now(),
+			End:   clock.Now().Add(30 * time.Minute),
 			Value: 0,
 		},
 		{
