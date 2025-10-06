@@ -41,12 +41,14 @@ import (
 
 type bSEMP struct {
 	*request.Helper
-	deviceId  string
-	conn      *semp.Connection
-	documentG util.Cacheable[semp.Device2EM]
-	cache     time.Duration
-	minPower  int
-	maxPower  int
+	deviceID   string
+	conn       *semp.Connection
+	deviceG    util.Cacheable[semp.Device2EM]
+	cache      time.Duration
+	minPower   int
+	maxPower   int
+	phases     int
+	lastUpdate time.Time
 }
 
 // BenderCC charger implementation
@@ -55,6 +57,7 @@ type BenderCC struct {
 	current uint16
 	regCurr uint16
 	legacy  bool
+	log     *util.Logger
 	semp    bSEMP
 }
 
@@ -98,7 +101,6 @@ func init() {
 func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		SEMPDeviceID       string
 		sempCache          time.Duration
 	}{
 		TcpSettings: modbus.TcpSettings{
@@ -111,13 +113,13 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	return NewBenderCC(ctx, cc.URI, cc.ID, cc.SEMPDeviceID, cc.sempCache)
+	return NewBenderCC(ctx, cc.URI, cc.ID, cc.sempCache)
 }
 
 // NewBenderCC creates BenderCC charger
 //
 //go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
-func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string, sempCache time.Duration) (api.Charger, error) {
+func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -135,10 +137,10 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string,
 		current: 6, // assume min current
 		regCurr: bendRegHemsCurrentLimit,
 		semp: bSEMP{
-			Helper:   request.NewHelper(log),
-			deviceId: sempDeviceID,
-			cache:    sempCache,
+			Helper: request.NewHelper(log),
+			cache:  sempCache,
 		},
+		log: log,
 	}
 
 	// check legacy register set
@@ -192,15 +194,30 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string,
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
 	}
-	if (phases1p3p == nil) && wb.semp.deviceId != "" {
+
+	// check feature semp phase switching
+	if phases1p3p == nil {
 		wb.semp.Client.Timeout = request.Timeout
-		wb.semp.conn = semp.NewConnection(wb.semp.Helper, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol", sempDeviceID)
-		wb.semp.documentG = util.ResettableCached(func() (semp.Device2EM, error) {
+		wb.semp.conn = semp.NewConnection(wb.semp.Helper, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
+		wb.semp.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 			return wb.semp.conn.GetDeviceXML()
 		}, sempCache)
 
+		doc, err := wb.semp.deviceG.Get()
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve device info: %w", err)
+		}
+
+		if len(doc.DeviceInfo) == 0 {
+			return nil, fmt.Errorf("no device info found")
+		}
+
+		// Use first device ID found
+		wb.semp.deviceID = doc.DeviceInfo[0].Identification.DeviceID
+		log.DEBUG.Printf("SEMP phase switching: found device ID: %s", wb.semp.deviceID)
+
 		// Check if device supports phase switching by checking power characteristics
-		info, err := wb.semp.conn.GetDeviceInfo()
+		info, err := wb.getDeviceInfo()
 		if err == nil {
 			wb.semp.minPower = info.Characteristics.MinPowerConsumption
 			wb.semp.maxPower = info.Characteristics.MaxPowerConsumption
@@ -218,10 +235,13 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string,
 		}
 		// set initial SEMP power limit to max + 1 so modbus control from 6 to 16 A is possible
 		var limit = wb.semp.maxPower + 1
-		err = wb.semp.conn.SendDeviceControl(true, &limit)
+		err = wb.semp.conn.SendDeviceControl(wb.semp.deviceID, limit)
 		if err != nil {
 			log.WARN.Println("SEMP phase switching: could set initial SEMP power limit:", err)
 		}
+
+		wb.semp.lastUpdate = time.Now()
+		go wb.heartbeat(ctx)
 	}
 
 	// check feature rfid
@@ -230,6 +250,22 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string,
 	}
 
 	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
+}
+
+// getDeviceInfo retrieves device info from cached document
+func (wb *BenderCC) getDeviceInfo() (semp.DeviceInfo, error) {
+	doc, err := wb.semp.deviceG.Get()
+	if err != nil {
+		return semp.DeviceInfo{}, err
+	}
+
+	for _, info := range doc.DeviceInfo {
+		if info.Identification.DeviceID == wb.semp.deviceID {
+			return info, nil
+		}
+	}
+
+	return semp.DeviceInfo{}, fmt.Errorf("device %s not found in info response", wb.semp.deviceID)
 }
 
 // Status implements the api.Charger interface
@@ -413,25 +449,49 @@ func (wb *BenderCC) getPhases() (int, error) {
 
 // phases1p3pSEMP implements the api.PhaseSwitcher interface via SEMP
 func (wb *BenderCC) phases1p3pSEMP(phases int) error {
-	wb.semp.documentG.Get()
+	wb.semp.lastUpdate = time.Now()
+
 	phaseSwitchPower := wb.semp.maxPower
-	fullPower := wb.semp.maxPower + 1
 	if phases == 1 {
 		phaseSwitchPower = wb.semp.minPower
-		fullPower = wb.semp.minPower/6*16 + 1
 	}
 
-	err := wb.semp.conn.SendDeviceControl(true, &phaseSwitchPower)
-	if err == nil {
-		// need to update power limit by +1W to make sure the charger allows charging at 16 A. With
-		// 3680 W or 11040 W, it only allows charging at 15 A. Using this limit directly for phase
-		// switching does not work.
-		err := wb.semp.conn.SendDeviceControl(true, &fullPower)
-		if err == nil {
-			wb.semp.documentG.Reset()
+	err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, phaseSwitchPower)
+	if err != nil {
+		return err
+	}
+
+	wb.semp.phases = phases
+	wb.semp.deviceG.Reset()
+
+	return nil
+}
+
+// heartbeat ensures that device control updates are sent at least once per minute
+func (wb *BenderCC) heartbeat(ctx context.Context) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// Check if we need to send an update
+			if time.Since(wb.semp.lastUpdate) >= time.Minute {
+				power := int(powerLimit3p)
+				if wb.semp.phases == 1 {
+					power = int(powerLimit1p)
+				}
+				if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, power); err != nil {
+					wb.log.ERROR.Printf("watchdog: failed to send update: %v", err)
+				} else {
+					wb.semp.lastUpdate = time.Now()
+				}
+			}
+		case <-ctx.Done():
+			wb.log.DEBUG.Println("watchdog: stopped")
+			return
 		}
 	}
-	return err
 }
 
 // getPhasesSEMP implements the api.PhaseGetter interface for semp phase switching by reading the relay state through modbus
