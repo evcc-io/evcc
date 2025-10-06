@@ -73,3 +73,12 @@ func circuitMaxPower(circuit api.Circuit) float64 {
 
 	return circuit.GetMaxPower()
 }
+
+// circuitDimmed returns a circuits dim status
+func circuitDimmed(circuit api.Circuit) bool {
+	if circuit == nil {
+		return false
+	}
+
+	return circuit.Dimmed()
+}
