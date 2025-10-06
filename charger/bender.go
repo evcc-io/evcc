@@ -74,7 +74,7 @@ const (
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
 	bendRegProtocolVersion      = 120 // Ebee Modbus TCP Server Protocol Version number
-	bendRegRelayState           = 140 // State of the internal relay
+	bendRegRelayState           = 140 // State of the internal relay (0: off, 1: 3 phases active 5: 1 phase active)
 	bendRegChargePointModel     = 142 // ChargePoint Model. Bytes 0 to 19.
 	bendRegSmartVehicleDetected = 740 // Returns 1 if an EV currently connected is a smart vehicle, or 0 if no EV connected or it is not a smart vehicle
 
@@ -200,7 +200,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string,
 		// Check if device supports phase switching by checking power characteristics
 		info, err := wb.semp.conn.GetDeviceInfo()
 		if err == nil {
-			// set initial power limit to max
+			// set initial SEMP power limit to max
 			err = wb.semp.conn.SendDeviceControl(true, 11041)
 			if err == nil {
 				// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
@@ -407,6 +407,7 @@ func (wb *BenderCC) getPhases() (int, error) {
 	return 3, nil
 }
 
+// phases1p3pSEMP implements the api.PhaseSwitcher interface via SEMP
 func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 	wb.semp.documentG.Get()
 	powerLimit := 11040
@@ -416,6 +417,8 @@ func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 
 	err := wb.semp.conn.SendDeviceControl(true, powerLimit)
 	if err == nil {
+		// need to update power limit by +1W to make sure the charger allows charging at 16 A. When
+		// directly using +1W, it will not switch phases.
 		err := wb.semp.conn.SendDeviceControl(true, powerLimit+1)
 		if err == nil {
 			wb.semp.documentG.Reset()
@@ -424,6 +427,7 @@ func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 	return err
 }
 
+// getPhasesSEMP implements the api.PhaseGetter interface for semp phase switching by reading the relay state through modbus
 func (wb *BenderCC) getPhasesSEMP() (int, error) {
 	// check relay register
 	b, err := wb.conn.ReadHoldingRegisters(bendRegRelayState, 1)
