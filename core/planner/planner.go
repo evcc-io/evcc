@@ -11,9 +11,10 @@ import (
 
 // Planner plans a series of charging slots for a given (variable) tariff
 type Planner struct {
-	log    *util.Logger
-	clock  clock.Clock // mockable time
-	tariff api.Tariff
+	log                 *util.Logger
+	clock               clock.Clock // mockable time
+	tariff              api.Tariff
+	minConsecutiveSlots int
 }
 
 // New creates a price planner
@@ -36,7 +37,7 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - target time and required duration are before end of rates
 func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
-	minConsecutiveSlots := 1 // minimum number of consecutive slots required
+	minConsecutiveSlots := min(t.minConsecutiveSlots, 1)
 
 	// filter and adjust rates to valid time window
 	var validRates api.Rates
