@@ -16,6 +16,13 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: host
+  - name: user
+    required: false
+  - name: password
+    required: false
+    mask: true
 render: |
   type: hardybarth-salia
   uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
