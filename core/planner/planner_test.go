@@ -368,3 +368,54 @@ func TestContinuousPlanOutsideRates(t *testing.T) {
 	// 3-slot plan
 	assert.Len(t, plan, 1)
 }
+
+func TestMinConsecutiveSlotsOptional(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	// Test that planner works with a tariff when minConsecutiveSlots varies
+	// This verifies that isolated slots are excluded based on minConsecutiveSlots requirement
+	// Rates: [20, 60, 10, 80, 30, 1] all consecutive
+	// Hours: 0=20, 1=60, 2=10, 3=80, 4=30, 5=1
+	testRates := api.Rates{
+		{Start: clock.Now(), End: clock.Now().Add(time.Hour), Value: 20},
+		{Start: clock.Now().Add(1 * time.Hour), End: clock.Now().Add(2 * time.Hour), Value: 60},
+		{Start: clock.Now().Add(2 * time.Hour), End: clock.Now().Add(3 * time.Hour), Value: 10},
+		{Start: clock.Now().Add(3 * time.Hour), End: clock.Now().Add(4 * time.Hour), Value: 80},
+		{Start: clock.Now().Add(4 * time.Hour), End: clock.Now().Add(5 * time.Hour), Value: 30},
+		{Start: clock.Now().Add(5 * time.Hour), End: clock.Now().Add(6 * time.Hour), Value: 1},
+	}
+
+	tc := []struct {
+		minConsecutiveSlots int
+		expectedPlan        api.Rates
+	}{
+		{
+			2, testRates[4:6],
+		},
+		// {
+		// 	3, testRates[0:3],
+		// },
+		// {
+		// 	4, testRates[2:6],
+		// },
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(append([]api.Rate(nil), testRates...), nil)
+
+	for _, tc := range tc {
+		t.Run(fmt.Sprintf("minConsecutiveSlots=%d", tc.minConsecutiveSlots), func(t *testing.T) {
+			p := &Planner{
+				log:                 util.NewLogger("foo"),
+				clock:               clock,
+				tariff:              trf,
+				minConsecutiveSlots: tc.minConsecutiveSlots,
+			}
+
+			plan := p.Plan(time.Duration(tc.minConsecutiveSlots)*time.Hour, 0, clock.Now().Add(6*time.Hour))
+			require.Len(t, tc.expectedPlan, len(plan))
+			require.Equal(t, tc.expectedPlan, plan)
+		})
+	}
+}
