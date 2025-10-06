@@ -8,7 +8,7 @@ products:
       generic: CarData (EU Data Act)
 requirements:
   description:
-    de: >
+    de: |
       Benötigt CarData Einrichtung im BMW/Mini portal. Die folgenden Datenpunkte müssen für Streaming konfiguriert werden:
 
       ```
@@ -22,7 +22,7 @@ requirements:
       vehicle.vehicle.travelledDistance
       ```
 
-    en: >
+    en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access:
 
       ```
