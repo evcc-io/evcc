@@ -328,7 +328,7 @@
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
-      "yaml": "Device from evcc.yaml are not editable."
+      "yaml": "Devices from evcc.yaml are not editable."
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
