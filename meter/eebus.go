@@ -26,9 +26,13 @@ type EEBus struct {
 	*eebus.Connector
 	uc *eebus.UseCasesCS
 
-	useMGCP            bool // true for grid usage (MGCP), false for others (MPC)
-	power, energy      *util.Value[float64]
-	voltages, currents *util.Value[[]float64]
+	useMGCP bool // true for grid usage (MGCP), false for others (MPC)
+
+	power    *util.Value[float64]
+	energy   *util.Value[float64]
+	currents *util.Value[[]float64]
+	voltages *util.Value[[]float64]
+	powers   *util.Value[[]float64]
 }
 
 func init() {
@@ -39,7 +43,7 @@ func init() {
 func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Ski     string
-		Ip      string
+		Host    string
 		Usage   templates.Usage
 		Timeout time.Duration
 	}{
@@ -50,12 +54,12 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Usage, cc.Timeout)
+	return NewEEBus(ctx, cc.Ski, cc.Host, cc.Usage, cc.Timeout)
 }
 
 // NewEEBus creates an EEBus meter
 // Uses MGCP for usage="grid", MPC for all other usages
-func NewEEBus(ctx context.Context, ski, ip string, usage templates.Usage, timeout time.Duration) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski, host string, usage templates.Usage, timeout time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -75,11 +79,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage templates.Usage, timeou
 		useMGCP:   useMGCP,
 		power:     util.NewValue[float64](timeout),
 		energy:    util.NewValue[float64](timeout),
-		voltages:  util.NewValue[[]float64](timeout),
 		currents:  util.NewValue[[]float64](timeout),
+		voltages:  util.NewValue[[]float64](timeout),
+		powers:    util.NewValue[[]float64](timeout),
 	}
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, host, c); err != nil {
 		return nil, err
 	}
 
@@ -120,6 +125,8 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 			c.dataUpdateCurrentPerPhase(entity)
 		case mpc.DataUpdateVoltagePerPhase:
 			c.dataUpdateVoltagePerPhase(entity)
+		case mpc.DataUpdatePowerPerPhase:
+			c.dataUpdatePowerPerPhase(entity)
 		}
 	}
 }
@@ -213,32 +220,74 @@ func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface)
 	c.voltages.Set(data)
 }
 
+func (c *EEBus) dataUpdatePowerPerPhase(entity spineapi.EntityRemoteInterface) {
+	// Only available in MPC, not MGCP
+	data, err := c.uc.MPC.PowerPerPhase(entity)
+	if err != nil {
+		c.log.ERROR.Println("MPC.PowerPerPhase:", err)
+		return
+	}
+
+	c.powers.Set(data)
+}
+
+var _ api.Meter = (*EEBus)(nil)
+
 func (c *EEBus) CurrentPower() (float64, error) {
 	return c.power.Get()
 }
 
+var _ api.MeterEnergy = (*EEBus)(nil)
+
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.energy.Get()
+	res, err := c.energy.Get()
+	if err != nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return res, nil
 }
 
-func (c *EEBus) PhaseCurrents() (float64, float64, float64, error) {
+var _ api.PhaseCurrents = (*EEBus)(nil)
+
+func (c *EEBus) Currents() (float64, float64, float64, error) {
 	res, err := c.currents.Get()
-	if err == nil && len(res) != 3 {
-		err = errors.New("invalid phase currents")
-	}
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	if len(res) != 3 {
+		return 0, 0, 0, errors.New("invalid phase currents")
 	}
 	return res[0], res[1], res[2], nil
 }
 
-func (c *EEBus) PhaseVoltages() (float64, float64, float64, error) {
+var _ api.PhaseVoltages = (*EEBus)(nil)
+
+func (c *EEBus) Voltages() (float64, float64, float64, error) {
 	res, err := c.voltages.Get()
-	if err == nil && len(res) != 3 {
-		err = errors.New("invalid phase voltages")
-	}
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	if len(res) != 3 {
+		return 0, 0, 0, errors.New("invalid phase voltages")
+	}
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhasePowers = (*EEBus)(nil)
+
+func (c *EEBus) Powers() (float64, float64, float64, error) {
+	// PowerPerPhase is only available in MPC, not in MGCP
+	if c.useMGCP {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	res, err := c.powers.Get()
+	if err != nil {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	if len(res) != 3 {
+		return 0, 0, 0, errors.New("invalid phase powers")
 	}
 	return res[0], res[1], res[2], nil
 }

@@ -32,18 +32,16 @@ params:
     description:
       en: SKI (Subject Key Identifier) of the EEBus device
       de: SKI (Subject Key Identifier) des EEBus-Geräts
-  - name: ip
-    description:
-      en: IP address (optional)
-      de: IP-Adresse (optional)
+  - name: host
+    required: false
     help:
-      en: The IP address of the EEBus device. If not specified, the device will be discovered automatically via mDNS.
-      de: Die IP-Adresse des EEBus-Geräts. Falls nicht angegeben, wird das Gerät automatisch über mDNS gefunden.
+      en: If not specified, the device will be discovered automatically via mDNS.
+      de: Falls nicht angegeben, wird das Gerät automatisch über mDNS gefunden.
 render: |
   type: eebus
   ski: {{ .ski }}
-  {{- if .ip }}
-  ip: {{ .ip }}
+  {{- if .host }}
+  host: {{ .host }}
   {{- end }}
   {{- if .usage }}
   usage: {{ .usage }}
