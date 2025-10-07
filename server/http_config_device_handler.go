@@ -19,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
-	"github.com/spf13/cast"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -288,7 +287,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	var conf *config.Config
 	ctx, cancel, done := startDeviceTimeout()
 
-	force := cast.ToBool(vars["force"])
+	force := r.URL.Query().Get("force") == "true"
 
 	switch class {
 	case templates.Charger:
@@ -369,7 +368,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel, done := startDeviceTimeout()
 
-	force := cast.ToBool(vars["force"])
+	force := r.URL.Query().Get("force") == "true"
 
 	switch class {
 	case templates.Charger:
