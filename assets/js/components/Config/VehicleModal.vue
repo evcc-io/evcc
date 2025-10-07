@@ -165,7 +165,9 @@
 				:is-deletable="isDeletable"
 				:test-state="test"
 				:is-saving="saving"
-				@save="isNew ? create() : update()"
+				:is-succeeded="succeeded"
+				:is-new="isNew"
+				@save="(force) => (isNew ? create(force) : update(force))"
 				@remove="remove"
 				@test="testManually"
 			/>
@@ -186,6 +188,7 @@ import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSe
 import DeviceModalActions from "./DeviceModal/Actions.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
+import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import {
 	handleError,
@@ -199,10 +202,6 @@ import defaultYaml from "./defaultYaml/vehicle.yaml?raw";
 
 const initialValues = { type: ConfigType.Template, icon: "car" };
 const device = createDeviceUtils("vehicle");
-
-function sleep(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "priority", "identifiers", "phases", "mode"];
 
@@ -241,6 +240,7 @@ export default defineComponent({
 			templateName: null as string | null,
 			template: null as Template | null,
 			saving: false,
+			succeeded: false,
 			loadingTemplate: false,
 			values: { ...initialValues } as VehicleDeviceValues,
 			test: initialTestState(),
@@ -356,6 +356,7 @@ export default defineComponent({
 				this.reset();
 				this.templateName = "offline";
 				this.test = initialTestState();
+				this.succeeded = false;
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
@@ -413,25 +414,29 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
-		async create() {
+		async create(force = false) {
 			// persist selected template product
 			if (this.template && this.$refs["templateSelect"]) {
 				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
 			}
-			if (this.test.isUnknown) {
+			if (this.test.isUnknown && !force) {
 				const success = await performTest(this.test, this.testVehicle, this.$refs["form"]);
-				if (!success) return;
-				await sleep(100);
+				if (!success) {
+					return;
+				}
 			}
 			this.saving = true;
 			try {
-				const { name } = await device.create(this.apiData);
+				const { name } = await device.create(this.apiData, force);
+				this.saving = false;
+				this.succeeded = true;
+				await sleep(1000);
 				this.$emit("vehicle-changed", name);
 				this.closed();
 			} catch (e) {
 				handleError(e, "create failed");
+				this.saving = false;
 			}
-			this.saving = false;
 		},
 		async testManually() {
 			await performTest(this.test, this.testVehicle, this.$refs["form"]);
@@ -439,21 +444,25 @@ export default defineComponent({
 		async testVehicle() {
 			return device.test(this.id, this.apiData);
 		},
-		async update() {
-			if (this.test.isUnknown) {
+		async update(force = false) {
+			if (this.test.isUnknown && !force) {
 				const success = await performTest(this.test, this.testVehicle, this.$refs["form"]);
-				if (!success) return;
-				await sleep(250);
+				if (!success) {
+					return;
+				}
 			}
 			this.saving = true;
 			try {
-				await device.update(this.id as number, this.apiData);
+				await device.update(this.id as number, this.apiData, force);
+				this.saving = false;
+				this.succeeded = true;
+				await sleep(1000);
 				this.$emit("vehicle-changed");
 				this.closed();
 			} catch (e) {
 				handleError(e, "update failed");
+				this.saving = false;
 			}
-			this.saving = false;
 		},
 		async remove() {
 			try {

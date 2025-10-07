@@ -113,7 +113,9 @@
 					:is-deletable="isDeletable"
 					:test-state="test"
 					:is-saving="saving"
-					@save="isNew ? create() : update()"
+					:is-succeeded="succeeded"
+					:is-new="isNew"
+					@save="(force) => (isNew ? create(force) : update(force))"
 					@remove="remove"
 					@test="testManually"
 				/>
@@ -137,6 +139,7 @@ import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSe
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 import { initialTestState, performTest } from "./utils/test";
+import sleep from "@/utils/sleep";
 import { ConfigType, type SelectedMeterType } from "@/types/evcc";
 import {
 	handleError,
@@ -153,10 +156,6 @@ import defaultYaml from "./defaultYaml/meter.yaml?raw";
 
 const initialValues = { type: ConfigType.Template, deviceTitle: "", deviceIcon: "" };
 const device = createDeviceUtils("meter");
-
-function sleep(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 const CUSTOM_FIELDS = ["usage", "modbus"];
 
@@ -215,6 +214,7 @@ export default defineComponent({
 			templateName: null as string | null,
 			template: null as Template | null,
 			saving: false,
+			succeeded: false,
 			selectedType: null as string | null,
 			loadingTemplate: false,
 			iconChoices: ICONS,
@@ -335,6 +335,7 @@ export default defineComponent({
 				this.selectedType = null;
 				this.reset();
 				this.test = initialTestState();
+				this.succeeded = false;
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
@@ -402,30 +403,35 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
-		async create() {
-			// persist selected template product
-			if (this.template && this.$refs["templateSelect"]) {
-				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
-			}
-
-			if (this.test.isUnknown) {
+		async create(force = false) {
+			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
 					this.testMeter,
 					this.$refs["form"] as HTMLFormElement
 				);
-				if (!success) return;
-				await sleep(100);
+				if (!success) {
+					return;
+				}
 			}
+
+			// persist selected template product
+			if (this.template && this.$refs["templateSelect"]) {
+				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
+			}
+
 			this.saving = true;
 			try {
-				const { name } = await device.create(this.apiData);
+				const { name } = await device.create(this.apiData, force);
+				this.saving = false;
+				this.succeeded = true;
+				await sleep(1000);
 				this.$emit("added", this.meterType, name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
 				handleError(e, "create failed");
+				this.saving = false;
 			}
-			this.saving = false;
 		},
 		async testManually() {
 			await performTest(this.test, this.testMeter, this.$refs["form"] as HTMLFormElement);
@@ -433,25 +439,29 @@ export default defineComponent({
 		async testMeter() {
 			return device.test(this.id, this.apiData);
 		},
-		async update() {
-			if (this.test.isUnknown) {
+		async update(force = false) {
+			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
 					this.testMeter,
 					this.$refs["form"] as HTMLFormElement
 				);
-				if (!success) return;
-				await sleep(250);
+				if (!success) {
+					return;
+				}
 			}
 			this.saving = true;
 			try {
-				await device.update(this.id as number, this.apiData);
+				await device.update(this.id as number, this.apiData, force);
+				this.saving = false;
+				this.succeeded = true;
+				await sleep(1000);
 				this.$emit("updated");
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
 				handleError(e, "update failed");
+				this.saving = false;
 			}
-			this.saving = false;
 		},
 		async remove() {
 			try {
