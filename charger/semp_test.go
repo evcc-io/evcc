@@ -109,37 +109,6 @@ const (
 	</DeviceInfo>
 </Device2EM>`
 
-	mockDeviceInfoNoInterruptionsResponse = `<?xml version="1.0" encoding="UTF-8"?>
-<Device2EM xmlns="http://www.sma.de/communication/schema/SEMP/v1">
-	<DeviceInfo>
-		<Identification>
-			<DeviceId>F-12345678-ABCDEF123456-00</DeviceId>
-			<DeviceName>Test Wallbox</DeviceName>
-			<DeviceType>EVCharger</DeviceType>
-			<DeviceSerial>123456</DeviceSerial>
-			<DeviceVendor>Test Vendor</DeviceVendor>
-		</Identification>
-		<Characteristics>
-			<MinPowerConsumption>0</MinPowerConsumption>
-			<MaxPowerConsumption>11000</MaxPowerConsumption>
-		</Characteristics>
-		<Capabilities>
-			<CurrentPower>
-				<Method>Measurement</Method>
-			</CurrentPower>
-			<Timestamps>
-				<AbsoluteTimestamps>true</AbsoluteTimestamps>
-			</Timestamps>
-			<Interruptions>
-				<InterruptionsAllowed>false</InterruptionsAllowed>
-			</Interruptions>
-			<Requests>
-				<OptionalEnergy>true</OptionalEnergy>
-			</Requests>
-		</Capabilities>
-	</DeviceInfo>
-</Device2EM>`
-
 	mockDeviceInfoPhases1p3pResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Device2EM xmlns="http://www.sma.de/communication/schema/SEMP/v1">
 	<DeviceInfo>
