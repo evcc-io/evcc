@@ -83,6 +83,7 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		log:      log,
 		cache:    cache,
 		phases:   3,
+		current:  6,
 		enabled:  true,
 		deviceID: deviceID,
 	}
@@ -91,9 +92,9 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	wb.Client.Timeout = request.Timeout
 
 	// Initialize SEMP connection
-	wb.conn = semp.NewConnection(wb.Helper, uri, deviceID)
+	wb.conn = semp.NewConnection(wb.Helper, uri)
 
-	// Setup cached document getter - fetches the complete SEMP document once
+	// Setup cached device getter
 	wb.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 		return wb.conn.GetDeviceXML()
 	}, cache)
@@ -102,6 +103,22 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	wb.parametersG = util.ResettableCached(func() ([]semp.Parameter, error) {
 		return wb.conn.GetParametersXML()
 	}, cache)
+
+	// Auto-detect deviceID if not configured
+	if deviceID == "" {
+		doc, err := wb.deviceG.Get()
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve device info: %w", err)
+		}
+
+		if len(doc.DeviceInfo) == 0 {
+			return nil, fmt.Errorf("no device info found")
+		}
+
+		// Use first device ID found
+		wb.deviceID = doc.DeviceInfo[0].Identification.DeviceID
+		log.INFO.Printf("auto-detected device ID: %s", wb.deviceID)
+	}
 
 	var (
 		phases1p3p    func(int) error
@@ -155,7 +172,7 @@ func (wb *SEMP) heartbeat(ctx context.Context) {
 		case <-ticker.C:
 			// Check if we need to send an update
 			if time.Since(wb.lastUpdate) >= time.Minute {
-				if err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
+				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
 					wb.log.ERROR.Printf("watchdog: failed to send update: %v", err)
 				} else {
 					wb.lastUpdate = time.Now()
@@ -234,14 +251,12 @@ func (wb *SEMP) getParameter(channelID string) (string, error) {
 	return "", fmt.Errorf("parameter %s not found", channelID)
 }
 
-func (wb *SEMP) calcPower(enabled bool, current float64, phases int) *int {
+func (wb *SEMP) calcPower(enabled bool, current float64, phases int) int {
 	if !enabled {
-		return nil
+		return 0
 	}
 
-	power := min(max(int(230*float64(phases)*current), wb.minPower), wb.maxPower)
-
-	return &power
+	return min(max(int(230*float64(phases)*current), wb.minPower), wb.maxPower)
 }
 
 // Status implements the api.Charger interface
@@ -303,7 +318,7 @@ func (wb *SEMP) Enabled() (bool, error) {
 func (wb *SEMP) Enable(enable bool) error {
 	wb.lastUpdate = time.Now()
 
-	err := wb.conn.SendDeviceControl(enable, wb.calcPower(enable, wb.current, wb.phases))
+	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(enable, wb.current, wb.phases))
 	if err != nil {
 		return err
 	}
@@ -326,7 +341,7 @@ var _ api.ChargerEx = (*SEMP)(nil)
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
 	wb.lastUpdate = time.Now()
 
-	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower(wb.enabled, current, wb.phases))
+	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, current, wb.phases))
 	if err != nil {
 		return err
 	}
@@ -371,7 +386,7 @@ func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
 	wb.lastUpdate = time.Now()
 
-	err := wb.conn.SendDeviceControl(wb.enabled, wb.calcPower(wb.enabled, wb.current, phases))
+	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, phases))
 	if err != nil {
 		return err
 	}
@@ -390,20 +405,20 @@ func (wb *SEMP) getPhases() (int, error) {
 var _ api.Diagnosis = (*SEMP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (s *SEMP) Diagnose() {
-	if status, err := s.conn.GetDeviceStatus(); err == nil {
+func (wb *SEMP) Diagnose() {
+	if status, err := wb.getDeviceStatus(); err == nil {
 		fmt.Printf("Device Status: %+v\n", status)
 	} else {
 		fmt.Printf("Device Status Error: %v\n", err)
 	}
 
-	if info, err := s.conn.GetDeviceInfo(); err == nil {
+	if info, err := wb.getDeviceInfo(); err == nil {
 		fmt.Printf("Device Info: %+v\n", info)
 	} else {
 		fmt.Printf("Device Info Error: %v\n", err)
 	}
 
-	if hasPlanning, err := s.conn.HasPlanningRequest(); err == nil {
+	if hasPlanning, err := wb.hasPlanningRequest(); err == nil {
 		fmt.Printf("Planning Request: %t\n", hasPlanning)
 	} else {
 		fmt.Printf("Planning Request Error: %v\n", err)

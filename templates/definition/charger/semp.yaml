@@ -25,10 +25,18 @@ params:
     required: true
   - name: deviceid
     description:
-      generic: SEMP DeviceId (Format F-AAAAAAAA-BBBBBBBBBBBB-00)
+      en: Device ID (auto-detected if empty)
+      de: Geräte-ID (automatische Erkennung wenn leer)
+    help:
+      en: Explicit specification of a specific Device ID is only required for SEMP gateways with multiple subordinate devices.
+      de: Die explizite Angabe einer bestimmten Device ID ist nur bei SEMP-Gateways mit mehreren untergeordneten Geräten erforderlich.
     example: F-12345678-ABCDEF123456-00
-    required: true
+    default: ""
+    required: false
+    advanced: true
 render: |
   type: semp
   uri: {{ .uri }}
+  {{- if .deviceid }}
   deviceId: {{ .deviceid }}
+  {{- end }}

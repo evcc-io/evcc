@@ -23,12 +23,6 @@ params:
       de: SEMP Basis-URL
     example: http://192.168.178.100/SEMP
     required: true
-  - name: deviceid
-    description:
-      generic: SEMP DeviceId (Format F-AAAAAAAA-BBBBBBBBBBBB-00)
-    example: 0-000015BB-ABCDEF123456-00
-    required: true
 render: |
   type: semp
   uri: {{ .uri }}
-  deviceId: {{ .deviceid }}
