@@ -44,7 +44,7 @@ type SEMP struct {
 	maxPower    int
 }
 
-//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
 
 func init() {
 	registry.Add("semp", NewSEMPFromConfig)
@@ -101,8 +101,9 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	}, cache)
 
 	var (
-		phases1p3p func(int) error
-		getPhases  func() (int, error)
+		phases1p3p    func(int) error
+		getPhases     func() (int, error)
+		chargedEnergy func() (float64, error)
 	)
 
 	// Check if device supports phase switching by checking power characteristics
@@ -118,7 +119,11 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	if wb.minPower > 0 && wb.minPower < 4140 && wb.maxPower > 4600 {
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
-		log.DEBUG.Println("detected phase switching support")
+	}
+
+	// Check if device supports charged energy reporting via Parameters endpoint
+	if _, err := wb.getParameter("Measurement.ChaSess.WhIn"); err == nil {
+		chargedEnergy = wb.chargedEnergy
 	}
 
 	wb.enabled, err = wb.Enabled()
@@ -126,7 +131,7 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 		return nil, err
 	}
 
-	return decorateSEMP(wb, phases1p3p, getPhases), nil
+	return decorateSEMP(wb, phases1p3p, getPhases, chargedEnergy), nil
 }
 
 // getDeviceStatus retrieves device status from cached document
@@ -177,6 +182,22 @@ func (wb *SEMP) hasPlanningRequest() (bool, error) {
 	}
 
 	return false, nil
+}
+
+// getParameter retrieves a specific parameter value by channel ID
+func (wb *SEMP) getParameter(channelID string) (string, error) {
+	parameters, err := wb.parametersG.Get()
+	if err != nil {
+		return "", err
+	}
+
+	for _, param := range parameters {
+		if param.ChannelID == channelID {
+			return param.Value, nil
+		}
+	}
+
+	return "", fmt.Errorf("parameter %s not found", channelID)
 }
 
 func (wb *SEMP) calcPower(enabled bool, current float64, phases int) *int {
@@ -273,29 +294,20 @@ func (wb *SEMP) CurrentPower() (float64, error) {
 	return status.PowerInfo.AveragePower, nil
 }
 
-var _ api.ChargeRater = (*SEMP)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *SEMP) ChargedEnergy() (float64, error) {
-	parameters, err := wb.parametersG.Get()
+// chargedEnergy implements the api.ChargeRater interface (via decorator)
+func (wb *SEMP) chargedEnergy() (float64, error) {
+	value, err := wb.getParameter("Measurement.ChaSess.WhIn")
 	if err != nil {
 		return 0, err
 	}
 
-	// Find Measurement.ChaSess.WhIn parameter
-	for _, param := range parameters {
-		if param.ChannelID == "Measurement.ChaSess.WhIn" {
-			var energy float64
-			if _, err := fmt.Sscanf(param.Value, "%f", &energy); err != nil {
-				return 0, fmt.Errorf("failed to parse energy value '%s': %w", param.Value, err)
-			}
-			// Convert Wh to kWh
-			return energy / 1000, nil
-		}
+	var energy float64
+	if _, err := fmt.Sscanf(value, "%f", &energy); err != nil {
+		return 0, fmt.Errorf("failed to parse energy value '%s': %w", value, err)
 	}
 
-	// Return 0 if parameter not found (device might not support it)
-	return 0, api.ErrNotAvailable
+	// Convert Wh to kWh
+	return energy / 1000, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
