@@ -178,6 +178,7 @@
       "reset": "Zurücksetzen",
       "save": "Speichern",
       "saved": "Gespeichert.",
+      "saving": "Speichere …",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
@@ -525,7 +526,7 @@
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
-      "running": "prüfe …",
+      "running": "Prüfe …",
       "success": "erfolgreich",
       "unknown": "unbekannt",
       "validate": "prüfen"
