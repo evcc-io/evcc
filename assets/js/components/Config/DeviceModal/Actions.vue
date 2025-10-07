@@ -35,7 +35,7 @@
 			>
 				<span
 					v-if="isSaving"
-					class="spinner-border spinner-border-sm"
+					class="spinner-border spinner-border-sm me-2"
 					role="status"
 					aria-hidden="true"
 				></span>
@@ -73,7 +73,7 @@ export default defineComponent({
 		saveButtonLabel(): string {
 			const { isError, isUnknown, isRunning } = this.testState;
 			if (isRunning) return this.$t("config.validation.running");
-			if (this.isSaving) return this.$t("config.general.save");
+			if (this.isSaving) return this.$t("config.general.saving");
 			if (isError) return this.$t("config.general.forceSave");
 			if (isUnknown) return this.$t("config.general.validateSave");
 			return this.$t("config.general.save");

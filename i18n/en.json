@@ -178,6 +178,7 @@
       "reset": "Reset",
       "save": "Save",
       "saved": "Saved.",
+      "saving": "Saving…",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
@@ -525,7 +526,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "validating…",
+      "running": "Validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"
