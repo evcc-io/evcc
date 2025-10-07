@@ -24,7 +24,6 @@ type OAuth struct {
 	log     *util.Logger
 	oc      *oauth2.Config
 	token   *oauth2.Token
-	ts      oauth2.TokenSource
 	subject string
 	cv      string
 	ctx     context.Context
@@ -145,7 +144,6 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 
 	if token.RefreshToken != "" {
 		o.token = &token
-		o.ts = oc.TokenSource(ctx, &token)
 	}
 
 	// register auth redirect
@@ -172,7 +170,11 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 		return nil, api.ErrMissingToken
 	}
 
-	token, err := o.ts.Token()
+	if o.token.Valid() {
+		return o.token, nil
+	}
+
+	token, err := o.oc.TokenSource(o.ctx, o.token).Token()
 	if err != nil {
 		// force logout
 		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
@@ -183,18 +185,13 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	if token == o.token {
-		return token, nil
-	}
-
-	fmt.Println("-- token refreshed")
-	o.updateTokenSource(token)
+	o.updateToken(token)
 
 	return token, nil
 }
 
-// updateTokenSource must only be called when lock is held
-func (o *OAuth) updateTokenSource(token *oauth2.Token) {
+// updateToken must only be called when lock is held
+func (o *OAuth) updateToken(token *oauth2.Token) {
 	var store any = token
 
 	// tokenStorer allows persisting the token together with it's extra properties
@@ -207,7 +204,6 @@ func (o *OAuth) updateTokenSource(token *oauth2.Token) {
 	}
 
 	o.token = token
-	o.ts = o.oc.TokenSource(o.ctx, token)
 
 	o.onlineC <- token.Valid()
 }
@@ -224,7 +220,7 @@ func (o *OAuth) HandleCallback(params url.Values) error {
 		return err
 	}
 
-	o.updateTokenSource(token)
+	o.updateToken(token)
 
 	return nil
 }
@@ -255,7 +251,7 @@ func (o *OAuth) Login(state string) (string, error) {
 			o.mu.Lock()
 			defer o.mu.Unlock()
 
-			o.updateTokenSource(token)
+			o.updateToken(token)
 		}()
 
 		return da.VerificationURIComplete, nil
@@ -282,7 +278,6 @@ func (o *OAuth) Logout() error {
 	defer o.mu.Unlock()
 
 	o.token = nil
-	o.ts = nil
 
 	o.onlineC <- false
 
