@@ -29,10 +29,4 @@ render: |
           value: .DayAheadPriceDKK / 1e3
         }
       ]
-      | group_by(.start)
-      | map({
-          start: .[0].start,
-          end: .[0].end,
-          value: (map(.value) | add / length)
-        })
       | tostring
