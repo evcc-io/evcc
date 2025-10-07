@@ -2,18 +2,14 @@ package cardata
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"maps"
 	"slices"
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 )
@@ -34,7 +30,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, vin string) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
@@ -43,80 +39,22 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		streaming: make(map[string]StreamingData),
 	}
 
+	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
+
 	go func() {
-		bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
+		<-ctx.Done()
+		mqtt.Unsubscribe(vin)
+	}()
 
-		for ctx.Err() == nil {
-			time.Sleep(bo.NextBackOff())
-
-			token, err := ts.Token()
-			if err != nil {
-				if !tokenError(err) {
-					v.log.ERROR.Println(err)
-				}
-
-				continue
-			}
-
-			bo.Reset()
-
-			if err := v.runMqtt(ctx, vin, token); err != nil {
-				v.log.ERROR.Println(err)
-			}
+	go func() {
+		for msg := range mqtt.Subscribe(vin) {
+			v.mu.Lock()
+			maps.Copy(v.streaming, msg.Data)
+			v.mu.Unlock()
 		}
 	}()
 
 	return v
-}
-
-func (v *Provider) runMqtt(ctx context.Context, vin string, token *oauth2.Token) error {
-	gcid := TokenExtra(token, "gcid")
-	idToken := TokenExtra(token, "id_token")
-
-	paho := mqtt.NewClient(
-		mqtt.NewClientOptions().
-			AddBroker(StreamingURL).
-			SetAutoReconnect(true).
-			SetUsername(gcid).
-			SetPassword(idToken))
-
-	timeout := 30 * time.Second
-	if t := paho.Connect(); !t.WaitTimeout(timeout) {
-		return errors.New("connect timeout")
-	} else if err := t.Error(); err != nil {
-		return fmt.Errorf("connect: %w", err)
-	}
-	defer paho.Disconnect(0)
-
-	topic := fmt.Sprintf("%s/%s", gcid, vin)
-
-	if t := paho.Subscribe(topic, 0, v.handler); !t.WaitTimeout(timeout) {
-		return errors.New("subcribe timeout")
-	} else if err := t.Error(); err != nil {
-		return fmt.Errorf("subscribe: %w", err)
-	}
-
-	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
-	defer cancel()
-
-	<-ctx.Done()
-
-	return nil
-}
-
-func (v *Provider) handler(c mqtt.Client, m mqtt.Message) {
-	var res StreamingMessage
-	if err := json.Unmarshal(m.Payload(), &res); err != nil {
-		v.log.ERROR.Println(m.Topic(), string(m.Payload()), err)
-		return
-	}
-
-	v.log.TRACE.Println("recv: " + string(m.Payload()))
-
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
-	maps.Copy(v.streaming, res.Data)
 }
 
 func (v *Provider) any(key string) (any, error) {
@@ -124,7 +62,7 @@ func (v *Provider) any(key string) (any, error) {
 	defer v.mu.Unlock()
 
 	if a, ok := v.streaming[key]; ok {
-		return a, nil
+		return a.Value, nil
 	}
 
 	if v.initial == nil {
@@ -139,7 +77,7 @@ func (v *Provider) any(key string) (any, error) {
 			}
 		}()
 
-		container, err := v.api.EnsureContainer()
+		container, err := v.ensureContainer()
 		if err != nil {
 			v.log.ERROR.Printf("get container: %v", err)
 			return nil, api.ErrNotAvailable
@@ -160,6 +98,26 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
+func (v *Provider) ensureContainer() (string, error) {
+	containers, err := v.api.GetContainers()
+	if err != nil {
+		return "", err
+	}
+
+	if cc := lo.Filter(containers, func(c Container, _ int) bool {
+		return c.Name == "evcc.io" && c.Purpose == requiredVersion
+	}); len(cc) > 0 {
+		return cc[0].ContainerId, nil
+	}
+
+	res, err := v.api.CreateContainer(CreateContainer{
+		Name:                 "evcc.io",
+		Purpose:              requiredVersion,
+		TechnicalDescriptors: requiredKeys,
+	})
+
+	return res.ContainerId, err
+}
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
 	if err != nil {
@@ -191,7 +149,7 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	return v.Float("vehicle.drivetrain.electricEngine.charging.level")
+	return v.Float("vehicle.drivetrain.batteryManagement.header")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -220,7 +178,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeToFullyCharged")
+	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeRemaining")
 	return time.Now().Add(time.Duration(res) * time.Minute), err
 }
 

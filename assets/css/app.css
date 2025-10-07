@@ -241,6 +241,13 @@ a:hover {
 	opacity: 0.3;
 }
 
+.btn-succeeded:disabled {
+	color: var(--bs-primary) !important;
+	background-color: transparent !important;
+	border-color: var(--bs-primary) !important;
+	opacity: 1 !important;
+}
+
 .dark .btn-disabled {
 	opacity: 0.4;
 }
