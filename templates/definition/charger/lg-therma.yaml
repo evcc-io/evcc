@@ -15,7 +15,7 @@ requirements:
       Modbus Register sind im Installationshandbuch zu finden (Adresse jeweils ohne die führende Ziffer und -1).
       Informationen zu den Energiezuständen finden sich auch im Installationshandbuch.
       Die Energiezustände 6 und 7 können an der Inneneinheit in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Definition der Energiezustände" angepasst werden.
-      Wenn die interne Energiemessung nicht funktioniert (nicht jedes Model unterstützt das Register), dann "powersource" auf "External" stellen.
+      Wenn die interne Energiemessung nicht funktioniert (nicht jedes Model unterstützt das Register), dann "haspower" auf "false" stellen.
     en: |
       Modbus connection to LG Therma V heat pump.
       Uses SG Ready energy states for intelligent control.
@@ -25,7 +25,7 @@ requirements:
       Modbus registers can be found within the installation manual (address without the leading number and -1).
       Information on the energy state can be found within the installation manual. 
       Energy states 6 and 7 can be adapted at the indoor unit in the installer settings > "Connectivity" > "Energy state" >"Energy state definition".
-      If the internal power measurement does not work (not all models support this register), please set powersource to "External".
+      If the internal power measurement does not work (not all models support this register), please set haspower to "false".
 params:
   - name: modbus
     choice: ["rs485"]
@@ -46,14 +46,13 @@ params:
     description:
       de: SGReady oder anpassbare Energiezustände 6 und 7
       en: SGReady states or modifyable energy state 6 and 7
-  - name: powersource
+  - name: haspower
     required: true
-    type: choice
-    choice: ["Internal", "External"]
-    default: Internal
+    type: bool
+    default: true
     description:
-      de: Interne oder externe Energiemessung
-      en: Internal or external energy metering
+      de: Mit oder ohne interne Energiemessung
+      en: With or without internal energy metering
 render: |
   type: sgready
   setmode:
@@ -96,7 +95,7 @@ render: |
       address:  {{ if eq .tempsource "water_inlet" -}} 2 {{ else }} 5 {{- end }} # 5 DHW Tank Temperatur, 2 Wassereinlasstemperatur
       type: input
       encoding: uint16
-  {{ if eq .powersource "External" -}}{{else }} 
+  {{ if eq .haspower "false" -}}{{else if eq .haspower "true" -}} 
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
