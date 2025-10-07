@@ -15,6 +15,7 @@
 		:on-template-change="handleTemplateChange"
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
+		:get-product-name="getProductName"
 		@added="$emit('added', $event)"
 		@updated="$emit('updated')"
 		@removed="$emit('removed')"
@@ -230,6 +231,14 @@ export default defineComponent({
 				default: // template
 					return "";
 			}
+		},
+		getProductName(values: DeviceValues, templateName: string | null): string {
+			// For YAML input types, return the translated custom name
+			if (values.type && this.isYamlInput(values.type)) {
+				return this.$t(customChargerName(values.type, this.isHeating));
+			}
+			// For template types, use the standard logic (deviceProduct or templateName)
+			return values.deviceProduct || templateName || "";
 		},
 	},
 });
