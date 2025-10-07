@@ -45,6 +45,8 @@ type bSEMP struct {
 	conn      *semp.Connection
 	documentG util.Cacheable[semp.Device2EM]
 	cache     time.Duration
+	minPower  int
+	maxPower  int
 }
 
 // BenderCC charger implementation
@@ -194,29 +196,31 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempDeviceID string,
 		wb.semp.Client.Timeout = request.Timeout
 		wb.semp.conn = semp.NewConnection(wb.semp.Helper, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol", sempDeviceID)
 		wb.semp.documentG = util.ResettableCached(func() (semp.Device2EM, error) {
-			return wb.semp.conn.GetFullDocument()
+			return wb.semp.conn.GetDeviceXML()
 		}, sempCache)
 
 		// Check if device supports phase switching by checking power characteristics
 		info, err := wb.semp.conn.GetDeviceInfo()
 		if err == nil {
-			// set initial SEMP power limit to max
-			err = wb.semp.conn.SendDeviceControl(true, 11041)
-			if err == nil {
-				// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
-				if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
-					info.Characteristics.MaxPowerConsumption > 4600 {
-					phases1p3p = wb.phases1p3pSEMP
-					getPhases = wb.getPhasesSEMP
-					log.DEBUG.Println("detected SEMP phase switching support")
-				} else {
-					log.WARN.Println("no SEMP phase switching support detected")
-				}
+			wb.semp.minPower = info.Characteristics.MinPowerConsumption
+			wb.semp.maxPower = info.Characteristics.MaxPowerConsumption
+			// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
+			if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
+				info.Characteristics.MaxPowerConsumption > 4600 {
+				phases1p3p = wb.phases1p3pSEMP
+				getPhases = wb.getPhasesSEMP
+				log.DEBUG.Println("SEMP phase switching: detected")
 			} else {
-				log.WARN.Println("cannot set initial SEMP power limit:", err)
+				log.WARN.Println("SEMP phase switching: not supported")
 			}
 		} else {
-			log.WARN.Println("cannot get SEMP device info:", err)
+			log.WARN.Println("SEMP phase switching: cannot get device info: ", err)
+		}
+		// set initial SEMP power limit to max + 1 so modbus control from 6 to 16 A is possible
+		var limit = wb.semp.maxPower + 1
+		err = wb.semp.conn.SendDeviceControl(true, &limit)
+		if err != nil {
+			log.WARN.Println("SEMP phase switching: could set initial SEMP power limit:", err)
 		}
 	}
 
@@ -410,16 +414,19 @@ func (wb *BenderCC) getPhases() (int, error) {
 // phases1p3pSEMP implements the api.PhaseSwitcher interface via SEMP
 func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 	wb.semp.documentG.Get()
-	powerLimit := 11040
+	phaseSwitchPower := wb.semp.maxPower
+	fullPower := wb.semp.maxPower + 1
 	if phases == 1 {
-		powerLimit = 3680
+		phaseSwitchPower = wb.semp.minPower
+		fullPower = wb.semp.minPower/6*16 + 1
 	}
 
-	err := wb.semp.conn.SendDeviceControl(true, powerLimit)
+	err := wb.semp.conn.SendDeviceControl(true, &phaseSwitchPower)
 	if err == nil {
-		// need to update power limit by +1W to make sure the charger allows charging at 16 A. When
-		// directly using +1W, it will not switch phases.
-		err := wb.semp.conn.SendDeviceControl(true, powerLimit+1)
+		// need to update power limit by +1W to make sure the charger allows charging at 16 A. With
+		// 3680 W or 11040 W, it only allows charging at 15 A. Using this limit directly for phase
+		// switching does not work.
+		err := wb.semp.conn.SendDeviceControl(true, &fullPower)
 		if err == nil {
 			wb.semp.documentG.Reset()
 		}
