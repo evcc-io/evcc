@@ -82,6 +82,8 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	gcid := TokenExtra(token, "gcid")
 	idToken := TokenExtra(token, "id_token")
 
+	v.log.DEBUG.Printf("connect streaming (using gcid %s/ id %s, valid until: %v)", gcid, idToken, token.Expiry.Round(time.Second))
+
 	paho := mqtt.NewClient(
 		mqtt.NewClientOptions().
 			AddBroker(StreamingURL).
@@ -95,7 +97,7 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	} else if err := t.Error(); err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}
-	defer paho.Disconnect(0)
+	defer paho.Disconnect(1000)
 
 	topic := fmt.Sprintf("%s/#", gcid)
 
