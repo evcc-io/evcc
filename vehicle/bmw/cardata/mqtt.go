@@ -10,6 +10,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.mqtt.golang/packets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
@@ -71,11 +72,16 @@ func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
 			continue
 		}
 
-		bo.Reset()
-
 		if err := v.runMqtt(ctx, token); err != nil {
 			v.log.ERROR.Println(err)
+
+			// don't reset backoff
+			if errors.Is(err, packets.ErrorRefusedBadUsernameOrPassword) {
+				continue
+			}
 		}
+
+		bo.Reset()
 	}
 }
 
