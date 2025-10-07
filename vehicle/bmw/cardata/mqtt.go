@@ -11,6 +11,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/util"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -82,7 +83,14 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	gcid := TokenExtra(token, "gcid")
 	idToken := TokenExtra(token, "id_token")
 
-	v.log.DEBUG.Printf("connect streaming (using gcid %s/ id %s, valid until: %v)", gcid, idToken, token.Expiry.Round(time.Second))
+	var claims jwt.RegisteredClaims
+	parsed, err := jwt.ParseWithClaims(idToken, &claims, nil)
+	if err != nil && !errors.Is(err, jwt.ErrTokenUnverifiable) {
+		return fmt.Errorf("get %w for %s", err, idToken)
+	}
+	idExpiry, _ := parsed.Claims.GetExpirationTime()
+
+	v.log.DEBUG.Printf("connect streaming (using gcid %s/ id_token %s, IDT valid: %v, AT valid: %v)", gcid, idToken, idExpiry.Round(time.Second), token.Expiry.Round(time.Second))
 
 	paho := mqtt.NewClient(
 		mqtt.NewClientOptions().
