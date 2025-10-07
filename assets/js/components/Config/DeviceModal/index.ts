@@ -45,6 +45,8 @@ export type DeviceValues = {
   [key: string]: any;
 };
 
+export type ApiData = Record<string, any>;
+
 export function handleError(e: any, msg: string) {
   console.error(e);
   let message = msg;
@@ -85,8 +87,9 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return api.post(url, data, { timeout });
   }
 
-  function update(id: number, data: any) {
-    return api.put(`config/devices/${deviceType}/${id}`, data);
+  function update(id: number, data: any, force = false) {
+    const params = { force };
+    return api.put(`config/devices/${deviceType}/${id}`, data, { params });
   }
 
   function remove(id: number) {
@@ -98,8 +101,9 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function create(data: any) {
-    const response = await api.post(`config/devices/${deviceType}`, data);
+  async function create(data: any, force = false) {
+    const params = { force };
+    const response = await api.post(`config/devices/${deviceType}`, data, { params });
     return response.data;
   }
 
