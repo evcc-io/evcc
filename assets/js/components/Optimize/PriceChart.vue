@@ -72,8 +72,21 @@ export default defineComponent({
 		timeLabels(): string[] {
 			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
-				const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
-				return currentTime.getHours().toString();
+				// Calculate cumulative time from dt array
+				let cumulativeSeconds = 0;
+				for (let i = 0; i < index; i++) {
+					cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
+				}
+
+				const currentTime = new Date(startTime.getTime() + cumulativeSeconds * 1000);
+				const hour = currentTime.getHours();
+				const minute = currentTime.getMinutes();
+
+				// Only show labels at exact hour boundaries divisible by 4
+				if (minute === 0 && hour % 4 === 0) {
+					return hour.toString();
+				}
+				return "";
 			});
 		},
 		chartData(): ChartData {
@@ -114,6 +127,10 @@ export default defineComponent({
 						mode: "index",
 						intersect: false,
 						callbacks: {
+							title: (context) => {
+								const index = context[0]?.dataIndex;
+								return this.formatTimeRange(index ?? 0);
+							},
 							label: (context) => {
 								const label = context.dataset.label || "";
 								const value = context.parsed.y;
@@ -132,7 +149,43 @@ export default defineComponent({
 							display: false,
 						},
 						grid: {
-							display: false,
+							display: true,
+							drawOnChartArea: true,
+							drawTicks: true,
+							color: "transparent",
+							tickLength: 4,
+						},
+						ticks: {
+							autoSkip: false,
+							maxRotation: 0,
+							minRotation: 0,
+							callback: (_value, index) => {
+								const startTime = new Date(this.timestamp);
+
+								// Calculate cumulative time from dt array
+								let cumulativeSeconds = 0;
+								for (let i = 0; i < index; i++) {
+									cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
+								}
+
+								const currentTime = new Date(
+									startTime.getTime() + cumulativeSeconds * 1000
+								);
+								const hour = currentTime.getHours();
+								const minute = currentTime.getMinutes();
+
+								// Show ticks at exact hour boundaries
+								if (minute === 0) {
+									// Show labels only at hours divisible by 4
+									if (hour % 4 === 0) {
+										return hour.toString();
+									}
+									// Show tick but no label for other hours
+									return "";
+								}
+								// Return undefined to skip this tick entirely
+								return undefined;
+							},
 						},
 					},
 					y: {
@@ -217,6 +270,28 @@ export default defineComponent({
 			const formattedValue = this.fmtPricePerKWh(price, this.currency, false, false);
 			const unit = this.pricePerKWhUnit(this.currency, false);
 			return `${formattedValue} ${unit}`;
+		},
+
+		formatTimeRange(index: number): string {
+			const startTime = new Date(this.timestamp);
+
+			// Calculate cumulative time from dt array
+			let cumulativeSeconds = 0;
+			for (let i = 0; i < index; i++) {
+				cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
+			}
+
+			const slotStart = new Date(startTime.getTime() + cumulativeSeconds * 1000);
+			const slotDuration = this.evopt.req.time_series.dt[index] || 0;
+			const slotEnd = new Date(slotStart.getTime() + slotDuration * 1000);
+
+			const formatTime = (date: Date): string => {
+				const hours = date.getHours().toString().padStart(2, "0");
+				const minutes = date.getMinutes().toString().padStart(2, "0");
+				return `${hours}:${minutes}`;
+			};
+
+			return `${formatTime(slotStart)} - ${formatTime(slotEnd)}`;
 		},
 	},
 });

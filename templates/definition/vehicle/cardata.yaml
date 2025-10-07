@@ -1,0 +1,52 @@
+template: cardata
+products:
+  - brand: BMW
+    description:
+      generic: CarData (EU Data Act)
+  - brand: Mini
+    description:
+      generic: CarData (EU Data Act)
+requirements:
+  description:
+    de: |
+      Benötigt CarData Einrichtung im BMW/Mini portal. Die folgenden Datenpunkte müssen für Streaming konfiguriert werden:
+
+      ```
+      vehicle.body.chargingPort.status
+      vehicle.cabin.hvac.preconditioning.status.comfortState
+      vehicle.drivetrain.batteryManagement.header
+      vehicle.drivetrain.electricEngine.charging.hvStatus
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
+      vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.vehicle.travelledDistance
+      ```
+
+    en: |
+      Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access:
+
+      ```
+      vehicle.body.chargingPort.status
+      vehicle.cabin.hvac.preconditioning.status.comfortState
+      vehicle.drivetrain.batteryManagement.header
+      vehicle.drivetrain.electricEngine.charging.hvStatus
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
+      vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.vehicle.travelledDistance
+      ```
+
+params:
+  - preset: vehicle-common
+  - name: vin
+    required: true
+    example: WBMW...
+  - name: clientid
+    required: true
+  - preset: vehicle-features
+render: |
+  type: cardata
+  vin: {{ .vin }}
+  clientid: {{ .clientid }}
+  {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}

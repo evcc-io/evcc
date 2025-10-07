@@ -316,20 +316,24 @@
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
 					:circuits="circuits"
-					:fade="loadpointSubModalOpen ? 'left' : ''"
+					:fade="loadpointSubModalOpen ? 'left' : undefined"
 					:hasDeviceError="hasDeviceError"
 					@updated="loadpointChanged"
 					@open-charger-modal="editLoadpointCharger"
 					@open-meter-modal="editLoadpointMeter"
 					@opened="loadpointSubModalOpen = false"
 				/>
-				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
+				<VehicleModal
+					:id="selectedVehicleId"
+					:is-sponsor="isSponsor"
+					@vehicle-changed="vehicleChanged"
+				/>
 				<MeterModal
 					:id="selectedMeterId"
-					:name="selectedMeterName"
 					:type="selectedMeterType"
 					:typeChoices="selectedMeterTypeChoices"
-					:fade="loadpointSubModalOpen ? 'right' : ''"
+					:fade="loadpointSubModalOpen ? 'right' : undefined"
+					:is-sponsor="isSponsor"
 					@added="meterAdded"
 					@updated="meterChanged"
 					@removed="meterRemoved"
@@ -337,10 +341,9 @@
 				/>
 				<ChargerModal
 					:id="selectedChargerId"
-					:name="selectedChargerName"
 					:loadpointType="selectedLoadpointType"
-					:fade="loadpointSubModalOpen ? 'right' : ''"
-					:isSponsor="isSponsor"
+					:fade="loadpointSubModalOpen ? 'right' : undefined"
+					:is-sponsor="isSponsor"
 					@added="chargerAdded"
 					@updated="chargerChanged"
 					@removed="chargerRemoved"
@@ -605,8 +608,7 @@ export default defineComponent({
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		shmTags() {
-			const { allowControl } = store.state?.shm || {};
-			return { allowControl: { value: allowControl || false } };
+			return { configured: { value: true } };
 		},
 		hemsTags() {
 			const { type } = store.state?.hems || {};
