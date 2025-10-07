@@ -165,6 +165,7 @@
       "dragItem": "Перетягується: {title}",
       "dragList": "Список, який можна перевпорядкувати",
       "experimental": "Експериментальний",
+      "forceSave": "Зберегти все одно",
       "hideAdvancedSettings": "Приховати розширені налаштування",
       "invalidFileSelected": "Вибрано недійсний файл",
       "noFileSelected": "Не вибрано файл.",
@@ -176,6 +177,8 @@
       "required": "обов'язковий",
       "reset": "Скинути",
       "save": "зберегти",
+      "saved": "Збережено.",
+      "saving": "Збереження…",
       "selectFile": "Переглянути",
       "showAdvancedSettings": "Показати розширені налаштування",
       "telemetry": "Телеметрія",
@@ -524,7 +527,7 @@
     "validation": {
       "failed": "не вдалося",
       "label": "Статус",
-      "running": "перевірка…",
+      "running": "Перевірка…",
       "success": "успіх",
       "unknown": "невідомо",
       "validate": "перевірити"
