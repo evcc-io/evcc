@@ -1,7 +1,6 @@
 package semp
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -11,25 +10,22 @@ import (
 
 // Connection represents a SEMP HTTP connection with helper methods
 type Connection struct {
-	helper   *request.Helper
-	uri      string
-	deviceID string
+	helper *request.Helper
+	uri    string
 }
 
 // NewConnection creates a new SEMP client
-func NewConnection(helper *request.Helper, uri, deviceID string) *Connection {
+func NewConnection(helper *request.Helper, uri string) *Connection {
 	// Ensure URI ends with exactly one trailing slash
 	uri = strings.TrimRight(uri, "/") + "/"
 
 	return &Connection{
-		helper:   helper,
-		uri:      uri,
-		deviceID: deviceID,
+		helper: helper,
+		uri:    uri,
 	}
 }
 
 // GetDeviceXML retrieves the complete SEMP document from the base URL
-// This is more efficient than making separate requests to /DeviceStatus, /DeviceInfo, /PlanningRequest
 func (c *Connection) GetDeviceXML() (Device2EM, error) {
 	var response Device2EM
 	if err := c.helper.GetXML(c.uri, &response); err != nil {
@@ -38,60 +34,7 @@ func (c *Connection) GetDeviceXML() (Device2EM, error) {
 	return response, nil
 }
 
-// GetDeviceStatus retrieves the current device status from SEMP interface
-func (c *Connection) GetDeviceStatus() (DeviceStatus, error) {
-	response, err := c.GetDeviceXML()
-	if err != nil {
-		return DeviceStatus{}, err
-	}
-
-	// Find device status for our device ID
-	for _, status := range response.DeviceStatus {
-		if status.DeviceID == c.deviceID {
-			return status, nil
-		}
-	}
-
-	return DeviceStatus{}, fmt.Errorf("device %s not found in status response", c.deviceID)
-}
-
-// GetDeviceInfo retrieves the device info from SEMP interface
-func (c *Connection) GetDeviceInfo() (DeviceInfo, error) {
-	response, err := c.GetDeviceXML()
-	if err != nil {
-		return DeviceInfo{}, err
-	}
-
-	// Find device info for our device ID
-	for _, info := range response.DeviceInfo {
-		if info.Identification.DeviceID == c.deviceID {
-			return info, nil
-		}
-	}
-
-	return DeviceInfo{}, fmt.Errorf("device %s not found in info response", c.deviceID)
-}
-
-// HasPlanningRequest checks if there is a planning request/timeframe for the device
-func (c *Connection) HasPlanningRequest() (bool, error) {
-	response, err := c.GetDeviceXML()
-	if err != nil {
-		return false, err
-	}
-
-	// Check if there are any timeframes for our device ID
-	for _, planningRequest := range response.PlanningRequest {
-		for _, timeframe := range planningRequest.Timeframe {
-			if timeframe.DeviceID == c.deviceID {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
-// GetParametersXML retrieves SEMP parameters from the /Parameters endpoint
+// GetParametersXML retrieves device parameters from the /Parameters endpoint
 func (c *Connection) GetParametersXML() ([]Parameter, error) {
 	var response Device2EM
 	uri := c.uri + "Parameters"
@@ -108,12 +51,15 @@ func (c *Connection) GetParametersXML() ([]Parameter, error) {
 
 // SendDeviceControl sends a control message to the SEMP device
 // power is optional - if nil, RecommendedPowerConsumption will be omitted
-func (c *Connection) SendDeviceControl(on bool, power *int) error {
+func (c *Connection) SendDeviceControl(deviceId string, power int) error {
 	control := DeviceControl{
-		DeviceID:                    c.deviceID,
-		On:                          on,
-		RecommendedPowerConsumption: power,
-		Timestamp:                   int(time.Now().Unix()),
+		DeviceID:  deviceId,
+		On:        power > 0,
+		Timestamp: int(time.Now().Unix()),
+	}
+
+	if power > 0 {
+		control.RecommendedPowerConsumption = &power
 	}
 
 	message := EM2Device{
