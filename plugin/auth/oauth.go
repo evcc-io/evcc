@@ -15,16 +15,16 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
 type OAuth struct {
-	oauth2.TokenSource
 	mu      sync.Mutex
 	log     *util.Logger
 	oc      *oauth2.Config
+	token   *oauth2.Token
+	ts      oauth2.TokenSource
 	subject string
 	cv      string
 	ctx     context.Context
@@ -85,10 +85,7 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 	return NewOauth(ctx, cc.Name, &cc.Config)
 }
 
-var (
-	_ oauth.TokenRefresher = (*OAuth)(nil)
-	_ api.AuthProvider     = (*OAuth)(nil)
-)
+var _ api.AuthProvider = (*OAuth)(nil)
 
 func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
 	if name == "" {
@@ -146,7 +143,10 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 		}
 	}
 
-	o.TokenSource = oauth.RefreshTokenSource(&token, o)
+	if token.RefreshToken != "" {
+		o.token = &token
+		o.ts = oc.TokenSource(ctx, &token)
+	}
 
 	// register auth redirect
 	onlineC, err := providerauth.Register(subject, o)
@@ -163,17 +163,18 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	return o, nil
 }
 
-// RefreshToken implements oauth.TokenRefresher.
-func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	if token.RefreshToken == "" {
+// Token
+func (o *OAuth) Token() (*oauth2.Token, error) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if o.token == nil {
 		return nil, api.ErrMissingToken
 	}
 
-	o.log.DEBUG.Printf("refreshing token for %s", o.subject)
-
-	// refresh token source
-	token, err := o.oc.TokenSource(o.ctx, token).Token()
+	token, err := o.ts.Token()
 	if err != nil {
+		// force logout
 		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
 			o.onlineC <- false
 			settings.Delete(o.subject)
@@ -182,15 +183,18 @@ func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	err = o.updateToken(token)
+	if token == o.token {
+		return token, nil
+	}
 
-	o.onlineC <- token.Valid()
+	fmt.Println("-- token refreshed")
+	o.updateTokenSource(token)
 
-	return token, err
+	return token, nil
 }
 
-// updateToken must only be called when lock is held
-func (o *OAuth) updateToken(token *oauth2.Token) error {
+// updateTokenSource must only be called when lock is held
+func (o *OAuth) updateTokenSource(token *oauth2.Token) {
 	var store any = token
 
 	// tokenStorer allows persisting the token together with it's extra properties
@@ -198,17 +202,12 @@ func (o *OAuth) updateToken(token *oauth2.Token) error {
 		store = o.tokenStorer(token)
 	}
 
-	return settings.SetJson(o.subject, store)
-}
-
-// updateTokenSource must only be called when lock is held
-func (o *OAuth) updateTokenSource(token *oauth2.Token) {
-	if err := o.updateToken(token); err != nil {
+	if err := settings.SetJson(o.subject, store); err != nil {
 		o.log.ERROR.Printf("error saving token: %v", err)
-		return
 	}
 
-	o.TokenSource = oauth.RefreshTokenSource(token, o)
+	o.token = token
+	o.ts = o.oc.TokenSource(o.ctx, token)
 
 	o.onlineC <- token.Valid()
 }
@@ -282,7 +281,8 @@ func (o *OAuth) Logout() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	o.TokenSource = oauth.RefreshTokenSource(nil, o)
+	o.token = nil
+	o.ts = nil
 
 	o.onlineC <- false
 
@@ -296,9 +296,6 @@ func (o *OAuth) DisplayName() string {
 
 // Authenticated implements api.AuthProvider.
 func (o *OAuth) Authenticated() bool {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
 	token, err := o.Token()
 	return err == nil && token.Valid()
 }
