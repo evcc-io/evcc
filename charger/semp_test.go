@@ -299,8 +299,8 @@ func TestSEMPCharger(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(t, handler.lastRequest, "<On>true</On>")
 		assert.Contains(t, handler.lastRequest, "F-12345678-ABCDEF123456-00")
-		// calcPower() returns 0 because current is not set yet
-		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>0</RecommendedPowerConsumption>")
+		// calcPower() returns 4140 because current is initialized to 6A: 230V * 3phases * 6A = 4140W
+		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>4140</RecommendedPowerConsumption>")
 		assert.Equal(t, 1, handler.requestCount) // Only 1 POST for DeviceControl (getDeviceInfo is cached)
 	})
 

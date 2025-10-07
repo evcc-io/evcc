@@ -252,7 +252,7 @@ func (wb *SEMP) getParameter(channelID string) (string, error) {
 }
 
 func (wb *SEMP) calcPower(enabled bool, current float64, phases int) int {
-	if !enabled {
+	if !enabled || current == 0 {
 		return 0
 	}
 
