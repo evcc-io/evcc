@@ -32,18 +32,19 @@ import (
 // SEMP charger implementation
 type SEMP struct {
 	*request.Helper
-	log         *util.Logger
-	conn        *semp.Connection
-	cache       time.Duration
-	deviceG     util.Cacheable[semp.Device2EM]
-	parametersG util.Cacheable[[]semp.Parameter]
-	phases      int
-	current     float64
-	enabled     bool
-	deviceID    string
-	minPower    int
-	maxPower    int
-	lastUpdate  time.Time
+	log            *util.Logger
+	conn           *semp.Connection
+	cache          time.Duration
+	deviceG        util.Cacheable[semp.Device2EM]
+	parametersG    util.Cacheable[[]semp.Parameter]
+	phases         int
+	current        float64
+	enabled        bool
+	deviceID       string
+	minPower       int
+	maxPower       int
+	lastUpdate     time.Time
+	hasStatusParam bool
 }
 
 //go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
@@ -126,6 +127,11 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	// Check if device supports charged energy reporting via Parameters endpoint
 	if _, err := wb.getParameter("Measurement.ChaSess.WhIn"); err == nil {
 		chargedEnergy = wb.chargedEnergy
+	}
+
+	// Check if device supports status reporting via Parameters endpoint
+	if _, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt"); err == nil {
+		wb.hasStatusParam = true
 	}
 
 	wb.enabled, err = wb.Enabled()
@@ -240,6 +246,24 @@ func (wb *SEMP) calcPower(enabled bool, current float64, phases int) *int {
 
 // Status implements the api.Charger interface
 func (wb *SEMP) Status() (api.ChargeStatus, error) {
+	if wb.hasStatusParam {
+		value, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt")
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		switch value {
+		case "200111": // "nicht verbunden"
+			return api.StatusA, nil
+		case "200112": // "verbunden"
+			return api.StatusB, nil
+		case "200113": // "Ladevorgang aktiv"
+			return api.StatusC, nil
+		default:
+			return api.StatusNone, fmt.Errorf("unknown status value: %s", value)
+		}
+	}
+
 	status, err := wb.getDeviceStatus()
 	if err != nil {
 		return api.StatusNone, err
