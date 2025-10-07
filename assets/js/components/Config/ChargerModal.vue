@@ -6,7 +6,6 @@
 		:fade="fade"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
-		:template-options="[]"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-yaml-input-type="isYamlInput"

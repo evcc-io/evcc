@@ -149,7 +149,6 @@ export default defineComponent({
 		isSponsor: Boolean,
 		// Computed/derived props that must be provided by parent
 		modalTitle: { type: String, required: true },
-		templateOptions: { type: Array as PropType<TemplateGroup[]>, required: true },
 		initialValues: { type: Object as PropType<DeviceValues>, required: true },
 		customFields: { type: Array as PropType<string[]>, default: () => CUSTOM_FIELDS },
 		modalId: { type: String, required: true },
@@ -205,7 +204,7 @@ export default defineComponent({
 			if (this.provideTemplateOptions) {
 				return this.provideTemplateOptions(this.products);
 			}
-			return this.templateOptions;
+			return [];
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
@@ -337,6 +336,8 @@ export default defineComponent({
 		usage() {
 			// Reload products when usage changes (e.g., meter type selection)
 			this.loadProducts();
+			// Apply defaults when usage changes (e.g., set default icon for meter type)
+			this.applyDefaults();
 		},
 		values: {
 			handler() {

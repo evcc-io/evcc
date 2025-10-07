@@ -358,12 +358,17 @@
 					@open-meter-modal="editLoadpointMeter"
 					@opened="loadpointSubModalOpen = false"
 				/>
-				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
+				<VehicleModal
+					:id="selectedVehicleId"
+					:is-sponsor="isSponsor"
+					@vehicle-changed="vehicleChanged"
+				/>
 				<MeterModal
 					:id="selectedMeterId"
 					:type="selectedMeterType"
 					:typeChoices="selectedMeterTypeChoices"
 					:fade="loadpointSubModalOpen ? 'right' : undefined"
+					:is-sponsor="isSponsor"
 					@added="meterAdded"
 					@updated="meterChanged"
 					@removed="meterRemoved"
@@ -373,7 +378,7 @@
 					:id="selectedChargerId"
 					:loadpointType="selectedLoadpointType"
 					:fade="loadpointSubModalOpen ? 'right' : undefined"
-					:isSponsor="isSponsor"
+					:is-sponsor="isSponsor"
 					@added="chargerAdded"
 					@updated="chargerChanged"
 					@removed="chargerRemoved"

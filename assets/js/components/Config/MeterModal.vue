@@ -5,8 +5,8 @@
 		modal-id="meterModal"
 		device-type="meter"
 		:fade="fade"
+		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
-		:template-options="[]"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-yaml-input-type="isYamlInput"
@@ -130,6 +130,7 @@ export default defineComponent({
 			default: () => ["pv", "battery", "aux", "ext"],
 		},
 		fade: String as PropType<ModalFade>,
+		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {
@@ -167,16 +168,6 @@ export default defineComponent({
 		},
 		isNew(): boolean {
 			return this.id === undefined;
-		},
-	},
-	watch: {
-		meterType(type) {
-			if (!type) return;
-			// Set default icon when type changes
-			const deviceModalBase = this.$refs["deviceModalBase"] as any;
-			if (deviceModalBase && deviceModalBase.values) {
-				deviceModalBase.values["deviceIcon"] = defaultIcons[type] || "";
-			}
 		},
 	},
 	methods: {

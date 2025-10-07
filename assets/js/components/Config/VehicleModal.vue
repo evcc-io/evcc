@@ -3,8 +3,8 @@
 		:id="id"
 		modal-id="vehicleModal"
 		device-type="vehicle"
+		:is-sponsor="isSponsor"
 		:modal-title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
-		:template-options="[]"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-yaml-input-type="isYamlInput"
@@ -161,6 +161,7 @@ export default defineComponent({
 	},
 	props: {
 		id: Number,
+		isSponsor: Boolean,
 	},
 	emits: ["vehicle-changed"],
 	data() {
