@@ -261,7 +261,7 @@ func TestSEMPCharger(t *testing.T) {
 		status, err := wb.Status()
 		require.NoError(t, err)
 		assert.Equal(t, api.StatusC, status)
-		assert.Equal(t, 1, handler.requestCount) // Only 1 request to base URL for full document (DeviceInfo in NewSEMP was cached)
+		assert.Equal(t, 2, handler.requestCount) // 1 request to base URL + 1 to /Parameters during NewSEMP (DeviceInfo was cached)
 	})
 
 	t.Run("Enabled", func(t *testing.T) {
@@ -459,14 +459,8 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 		wb2, err := NewSEMP(server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 		require.NoError(t, err)
 
-		chargeRater2, ok := wb2.(api.ChargeRater)
-		require.True(t, ok)
-		energy, err := chargeRater2.ChargedEnergy()
-		// Should return 0 or error if parameter not found - both are acceptable
-		if err == nil {
-			assert.Equal(t, 0.0, energy)
-		} else {
-			assert.Equal(t, 0.0, energy)
-		}
+		// ChargeRater interface should NOT be available when parameters are not supported
+		_, ok := wb2.(api.ChargeRater)
+		assert.False(t, ok, "ChargeRater should not be available when device doesn't support parameters")
 	})
 }

@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() (int, error), chargeRater func() (float64, error)) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case chargeRater == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseGetter == nil && phaseSwitcher != nil:
+	case chargeRater == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*SEMP
 			api.PhaseSwitcher
@@ -22,7 +22,7 @@ func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() 
 			},
 		}
 
-	case phaseGetter != nil && phaseSwitcher != nil:
+	case chargeRater == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*SEMP
 			api.PhaseGetter
@@ -36,9 +36,62 @@ func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() 
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
+
+	case chargeRater != nil && phaseSwitcher == nil:
+		return &struct {
+			*SEMP
+			api.ChargeRater
+		}{
+			SEMP: base,
+			ChargeRater: &decorateSEMPChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+		}
+
+	case chargeRater != nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*SEMP
+			api.ChargeRater
+			api.PhaseSwitcher
+		}{
+			SEMP: base,
+			ChargeRater: &decorateSEMPChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			PhaseSwitcher: &decorateSEMPPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case chargeRater != nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*SEMP
+			api.ChargeRater
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			SEMP: base,
+			ChargeRater: &decorateSEMPChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			PhaseGetter: &decorateSEMPPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateSEMPPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateSEMPChargeRaterImpl struct {
+	chargeRater func() (float64, error)
+}
+
+func (impl *decorateSEMPChargeRaterImpl) ChargedEnergy() (float64, error) {
+	return impl.chargeRater()
 }
 
 type decorateSEMPPhaseGetterImpl struct {
