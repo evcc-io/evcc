@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -130,6 +131,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	time.Sleep(10 * time.Minute)
 	// wait for shutdown
 	<-shutdownDoneC()
 }
