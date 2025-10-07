@@ -45,6 +45,8 @@ export type DeviceValues = {
   [key: string]: any;
 };
 
+export type ApiData = Record<string, any>;
+
 export function handleError(e: any, msg: string) {
   console.error(e);
   let message = msg;

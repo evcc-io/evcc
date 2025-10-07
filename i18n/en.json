@@ -160,7 +160,6 @@
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
-      "saved": "Saved.",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
@@ -178,6 +177,8 @@
       "required": "required",
       "reset": "Reset",
       "save": "Save",
+      "saved": "Saved.",
+      "saving": "Saving…",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
@@ -525,7 +526,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "validating…",
+      "running": "Validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"

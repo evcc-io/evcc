@@ -351,7 +351,7 @@
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
 					:circuits="circuits"
-					:fade="loadpointSubModalOpen ? 'left' : ''"
+					:fade="loadpointSubModalOpen ? 'left' : undefined"
 					:hasDeviceError="hasDeviceError"
 					@updated="loadpointChanged"
 					@open-charger-modal="editLoadpointCharger"
@@ -361,10 +361,9 @@
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
 				<MeterModal
 					:id="selectedMeterId"
-					:name="selectedMeterName"
 					:type="selectedMeterType"
 					:typeChoices="selectedMeterTypeChoices"
-					:fade="loadpointSubModalOpen ? 'right' : ''"
+					:fade="loadpointSubModalOpen ? 'right' : undefined"
 					@added="meterAdded"
 					@updated="meterChanged"
 					@removed="meterRemoved"
@@ -372,9 +371,8 @@
 				/>
 				<ChargerModal
 					:id="selectedChargerId"
-					:name="selectedChargerName"
 					:loadpointType="selectedLoadpointType"
-					:fade="loadpointSubModalOpen ? 'right' : ''"
+					:fade="loadpointSubModalOpen ? 'right' : undefined"
 					:isSponsor="isSponsor"
 					@added="chargerAdded"
 					@updated="chargerChanged"
