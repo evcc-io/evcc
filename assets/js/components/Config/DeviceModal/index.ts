@@ -40,14 +40,27 @@ export type ModbusParam = TemplateParam & {
 
 export type DeviceValues = {
   type: ConfigType;
-  icon: string | undefined;
-  deviceProduct: string | undefined;
-  yaml: string | undefined;
+  icon?: string;
+  deviceProduct?: string;
+  yaml?: string;
   template: string | null;
+  deviceTitle?: string;
+  deviceIcon?: string;
+  usage?: MeterUsage;
+  heating?: boolean;
+  integrateddevice?: boolean;
+  stationid?: string;
   [key: string]: any;
 };
 
-export type ApiData = Record<string, any>;
+export type ApiData = {
+  type?: ConfigType;
+  icon?: string;
+  usage?: MeterUsage;
+  title?: string;
+  identifiers?: string[];
+  [key: string]: any;
+};
 
 export function handleError(e: any, msg: string) {
   console.error(e);

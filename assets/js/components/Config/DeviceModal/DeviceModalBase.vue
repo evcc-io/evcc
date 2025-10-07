@@ -181,8 +181,12 @@ export default defineComponent({
 		defaultTemplate: String,
 		// Optional: disable template selector (e.g., for ext meters until usage is selected)
 		templateSelectorDisabled: Boolean,
+		// Optional: callback after configuration is loaded (receives values)
+		onConfigurationLoaded: Function as PropType<(values: DeviceValues) => void>,
+		// Optional: external template selection control (for parent to reset template)
+		externalTemplate: String as PropType<string | null>,
 	},
-	emits: ["added", "updated", "removed", "close", "template-changed"],
+	emits: ["added", "updated", "removed", "close", "template-changed", "update:externalTemplate"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -312,10 +316,18 @@ export default defineComponent({
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
+				} else {
+					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
+					this.applyDefaults();
 				}
 			}
 		},
 		templateName(newValue, oldValue) {
+			// Sync back to parent if using externalTemplate
+			if (this.externalTemplate !== undefined && newValue !== this.externalTemplate) {
+				this.$emit("update:externalTemplate", newValue);
+			}
+
 			// Reset values when template changes (except on initial load or when switching to YAML input)
 			// YAML input types set values.type and values.yaml in handleTemplateChange callback
 			const isYamlInput =
@@ -342,6 +354,19 @@ export default defineComponent({
 			// Apply defaults when usage changes (e.g., set default icon for meter type)
 			this.applyDefaults();
 		},
+		externalTemplate(newValue) {
+			// Allow parent to control template selection
+			if (newValue !== this.templateName) {
+				this.templateName = newValue;
+			}
+		},
+		showMainContent(visible) {
+			// When main content becomes visible (e.g., meter type selected in MeterModal),
+			// apply defaults like icon based on type
+			if (visible) {
+				this.applyDefaults();
+			}
+		},
 		values: {
 			handler() {
 				this.test = initialTestState();
@@ -363,13 +388,18 @@ export default defineComponent({
 				this.values.type = device.type;
 				this.values.deviceProduct = device.deviceProduct;
 				if (device.deviceTitle !== undefined) {
-					this.values["deviceTitle"] = device.deviceTitle;
+					this.values.deviceTitle = device.deviceTitle;
 				}
 				if (device.deviceIcon !== undefined) {
-					this.values["deviceIcon"] = device.deviceIcon;
+					this.values.deviceIcon = device.deviceIcon;
 				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
+
+				// Allow parent to handle post-load logic
+				if (this.onConfigurationLoaded) {
+					this.onConfigurationLoaded(this.values);
+				}
 			} catch (e) {
 				console.error(e);
 			}

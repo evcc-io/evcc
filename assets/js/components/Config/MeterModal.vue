@@ -1,7 +1,6 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		ref="deviceModalBase"
 		modal-id="meterModal"
 		device-type="meter"
 		:fade="fade"
@@ -10,6 +9,7 @@
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-yaml-input-type="isYamlInput"
+		v-model:external-template="selectedTemplate"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
 		:on-template-change="handleTemplateChange"
@@ -19,6 +19,7 @@
 		:preserve-on-template-change="preserveFields"
 		:usage="effectiveUsage"
 		:template-selector-disabled="templateSelectorDisabled"
+		:on-configuration-loaded="onConfigurationLoaded"
 		@added="handleAdded"
 		@updated="$emit('updated')"
 		@removed="handleRemoved"
@@ -47,7 +48,6 @@
 				v-if="hasDeviceTitle"
 				id="meterParamDeviceTitle"
 				:label="$t('config.meter.titleLabel')"
-				help="Will be displayed in the user interface"
 			>
 				<PropertyField
 					id="meterParamDeviceTitle"
@@ -154,6 +154,7 @@ export default defineComponent({
 		return {
 			selectedType: null as string | null,
 			extMeterUsage: undefined as MeterUsage | undefined,
+			selectedTemplate: null as string | null,
 			iconChoices: ICONS,
 			initialValues,
 			customFields: CUSTOM_FIELDS,
@@ -206,24 +207,13 @@ export default defineComponent({
 			return this.meterType === "ext" && this.extMeterUsage === undefined;
 		},
 	},
-	watch: {
-		// When editing an existing ext meter, restore extMeterUsage from API data
-		id: {
-			immediate: true,
-			handler() {
-				if (this.id !== undefined && this.meterType === "ext") {
-					// This will be called after DeviceModalBase loads the configuration
-					this.$nextTick(() => {
-						const deviceModalBase = this.$refs["deviceModalBase"] as any;
-						if (deviceModalBase?.values?.usage) {
-							this.extMeterUsage = deviceModalBase.values.usage as MeterUsage;
-						}
-					});
-				}
-			},
-		},
-	},
 	methods: {
+		onConfigurationLoaded(values: DeviceValues) {
+			// Restore extMeterUsage when editing an existing ext meter
+			if (this.meterType === "ext" && values.usage) {
+				this.extMeterUsage = values.usage;
+			}
+		},
 		selectType(type: string) {
 			this.selectedType = type;
 		},
@@ -263,7 +253,7 @@ export default defineComponent({
 				// For other meters, use meterType
 				const usage: MeterUsage | undefined =
 					(this.meterType === "ext" ? this.extMeterUsage : this.meterType) || undefined;
-				data["usage"] = usage;
+				data.usage = usage;
 			}
 			return data;
 		},
@@ -280,18 +270,14 @@ export default defineComponent({
 		},
 		applyCustomDefaults(_template: Template | null, values: DeviceValues) {
 			// Apply default icon when template is loaded or meter type is selected
-			if (this.meterType && !values["deviceIcon"]) {
-				values["deviceIcon"] = defaultIcons[this.meterType] || "";
+			if (this.meterType && !values.deviceIcon) {
+				values.deviceIcon = defaultIcons[this.meterType] || "";
 			}
 		},
 		extMeterUsageChanged() {
-			// When ext meter usage changes, reset the form to trigger product reload
-			const deviceModalBase = this.$refs["deviceModalBase"] as any;
-			if (deviceModalBase) {
-				// Reset template selection to force user to reselect after usage change
-				deviceModalBase.templateName = null;
-				// Trigger product reload via effectiveUsage computed property change
-			}
+			// When ext meter usage changes, reset template selection to force user to reselect
+			// This triggers product reload via effectiveUsage computed property change
+			this.selectedTemplate = null;
 		},
 		handleAdded(name: string) {
 			this.$emit("added", this.meterType, name);

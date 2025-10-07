@@ -229,11 +229,11 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData, values: DeviceValues): ApiData {
 			if (values.type === ConfigType.Custom) {
-				delete data["icon"];
-				delete data["title"];
+				delete data.icon;
+				delete data.title;
 			}
-			if (Array.isArray(data["identifiers"])) {
-				data["identifiers"] = data["identifiers"].map((i) => i.trim()).filter((i) => i);
+			if (Array.isArray(data.identifiers)) {
+				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);
 			}
 			return data;
 		},
