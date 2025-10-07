@@ -80,8 +80,10 @@
 				:is-deletable="isDeletable"
 				:test-state="test"
 				:is-saving="saving"
+				:is-succeeded="succeeded"
+				:is-new="isNew"
 				:sponsor-token-required="sponsorTokenRequired"
-				@save="isNew ? create() : update()"
+				@save="(force) => (isNew ? create(force) : update(force))"
 				@remove="remove"
 				@test="testManually"
 			/>
@@ -102,6 +104,7 @@ import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 import TemplateSelector, { customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
 import { initialTestState, performTest } from "./utils/test";
+import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import {
 	handleError,
@@ -125,10 +128,6 @@ import { LOADPOINT_TYPE, type LoadpointType } from "@/types/evcc";
 
 const initialValues = { type: ConfigType.Template };
 const device = createDeviceUtils("charger");
-
-function sleep(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 const CUSTOM_FIELDS = ["modbus"];
 
@@ -178,6 +177,7 @@ export default defineComponent({
 			templateName: null as string | null,
 			template: null as Template | null,
 			saving: false,
+			succeeded: false,
 			loadingTemplate: false,
 			values: { ...initialValues } as ChargerDeviceValues,
 			test: initialTestState(),
@@ -332,6 +332,7 @@ export default defineComponent({
 				this.templateName = null;
 				this.reset();
 				this.test = initialTestState();
+				this.succeeded = false;
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
@@ -406,30 +407,34 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
-		async create() {
+		async create(force = false) {
 			// persist selected template product
 			if (this.template && this.$refs["templateSelect"]) {
 				this.values.deviceProduct = (this.$refs["templateSelect"] as any).getProductName();
 			}
 
-			if (this.test.isUnknown) {
+			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
 					this.testCharger,
 					this.$refs["form"] as HTMLFormElement
 				);
-				if (!success) return;
-				await sleep(100);
+				if (!success) {
+					return;
+				}
 			}
 			this.saving = true;
 			try {
-				const { name } = await device.create(this.apiData);
+				const { name } = await device.create(this.apiData, force);
+				this.saving = false;
+				this.succeeded = true;
+				await sleep(1000);
 				this.$emit("added", name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
 				handleError(e, "create failed");
+				this.saving = false;
 			}
-			this.saving = false;
 		},
 		async testManually() {
 			await performTest(this.test, this.testCharger, this.$refs["form"] as HTMLFormElement);
@@ -437,25 +442,29 @@ export default defineComponent({
 		async testCharger() {
 			return device.test(this.id, this.apiData);
 		},
-		async update() {
-			if (this.test.isUnknown) {
+		async update(force = false) {
+			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
 					this.testCharger,
 					this.$refs["form"] as HTMLFormElement
 				);
-				if (!success) return;
-				await sleep(250);
+				if (!success) {
+					return;
+				}
 			}
 			this.saving = true;
 			try {
-				await device.update(this.id as number, this.apiData);
+				await device.update(this.id as number, this.apiData, force);
+				this.saving = false;
+				this.succeeded = true;
+				await sleep(1000);
 				this.$emit("updated");
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
 				handleError(e, "update failed");
+				this.saving = false;
 			}
-			this.saving = false;
 		},
 		async remove() {
 			try {

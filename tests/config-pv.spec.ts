@@ -70,4 +70,38 @@ test.describe("pv meter", async () => {
     await page.reload();
     await expect(page.getByTestId("pv")).toHaveCount(0);
   });
+
+  test("create broken pv meter with validation failure", async ({ page }) => {
+    await page.goto("/#/config");
+    await enableExperimental(page, false);
+
+    await expect(page.getByTestId("pv")).toHaveCount(0);
+
+    // create broken meter
+    await page.getByRole("button", { name: "Add solar or battery" }).click();
+
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByRole("button", { name: "Add solar meter" }).click();
+    await meterModal.getByLabel("Title").fill("Broken PV");
+    await meterModal.getByLabel("Manufacturer").selectOption("SunSpec Inverter");
+    await meterModal.getByLabel("IP address or hostname").fill("0.0.0.0");
+    await meterModal.getByRole("button", { name: "Validate & save" }).click();
+
+    // wait for validation to complete and check failure
+    const testResult = meterModal.getByTestId("test-result");
+    await expect(testResult).toContainText("Status: failed");
+    await expect(testResult).toContainText("connection refused");
+
+    // verify "Save anyway" button is now visible
+    await expect(meterModal.getByRole("button", { name: "Save anyway" })).toBeVisible();
+
+    // save anyway
+    await meterModal.getByRole("button", { name: "Save anyway" }).click();
+    await expectModalHidden(meterModal);
+
+    // verify broken meter is visible in list
+    await expect(page.getByTestId("pv")).toBeVisible();
+    await expect(page.getByTestId("pv")).toContainText("Broken PV");
+  });
 });
