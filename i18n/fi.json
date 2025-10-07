@@ -165,6 +165,7 @@
       "dragItem": "Raahattavissa: {title}",
       "dragList": "Järjestettävä lista",
       "experimental": "Kokeellinen",
+      "forceSave": "Tallenna joka tapauksessa",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
       "invalidFileSelected": "Valittu virheellinen tiedosto",
       "noFileSelected": "Ei valittua tiedostoa.",
@@ -176,6 +177,8 @@
       "required": "vaadittu",
       "reset": "Nollaa",
       "save": "Tallenna",
+      "saved": "Tallennettu.",
+      "saving": "Tallentaa…",
       "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
       "telemetry": "Telemetria",
@@ -249,7 +252,7 @@
       "energyMeterHelp": "Lisämittari, jos laturissa ei ole integroitua energiamittaria.",
       "energyMeterLabel": "Energiamittari",
       "estimateLabel": "Arvioi lataustaso API-päivitysten välillä",
-      "maxCurrentHelp": "Täytyy olla minimivirtaa suurempi.",
+      "maxCurrentHelp": "On oltava minimivirtaa suurempi.",
       "maxCurrentLabel": "Maksimivirta",
       "minCurrentHelp": "Valitse alle 6 A vain, jos tiedät mitä olet tekemässä.",
       "minCurrentLabel": "Minimivirta",
@@ -328,7 +331,7 @@
       "title": "Määritykset",
       "unconfigured": "ei määritetty",
       "vehicles": "Minun ajoneuvot",
-      "yaml": "Laitteita jotka ovat määritetty evcc.yaml, ei voi muokata."
+      "yaml": "evcc.yaml-asetuksissa määritettyjä laitteita ei voi muokata."
     },
     "messaging": {
       "description": "Vastaanota viestejä koskien lataustapahtumiasi.",
@@ -523,7 +526,7 @@
     "validation": {
       "failed": "epäonnistui",
       "label": "Tila",
-      "running": "vahvistetaan…",
+      "running": "Vahvistetaan…",
       "success": "onnistui",
       "unknown": "tuntematon",
       "validate": "vahvista"
