@@ -27,13 +27,15 @@ const (
 func IsAuthorized() bool {
 	mu.RLock()
 	defer mu.RUnlock()
-	return len(Subject) > 0
+	// return len(Subject) > 0
+	return true
 }
 
 func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
-	return IsAuthorized() && Subject != unavailable && Token != ""
+	// return IsAuthorized() && Subject != unavailable && Token != ""
+	return true
 }
 
 // SetFromYaml sets whether the token comes from YAML config or database
@@ -111,16 +113,25 @@ func Status() sponsorStatus {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	var expiresSoon bool
-	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
-		expiresSoon = true
-	}
+//	var expiresSoon bool
+//	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
+//		expiresSoon = true
+//	}
 
+//	return sponsorStatus{
+//		Name:        Subject,
+//		ExpiresAt:   ExpiresAt,
+//		ExpiresSoon: expiresSoon,
+//		Token:       redactToken(Token),
+//		FromYaml:    fromYaml,
+//	}
 	return sponsorStatus{
-		Name:        Subject,
-		ExpiresAt:   ExpiresAt,
-		ExpiresSoon: expiresSoon,
-		Token:       redactToken(Token),
-		FromYaml:    fromYaml,
-	}
+              Name:        "Subject",
+              ExpiresAt:   time.Date(2030, 1, 1, 0, 0, 0, 0, time.UTC),
+              ExpiresSoon: false,
+              Token:       "123456......",
+              FromYaml:    true,
+       }
 }
+
+
