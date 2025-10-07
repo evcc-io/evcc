@@ -21,7 +21,7 @@ var supportedRegions = []string{
 	"SE4", "SE3", "SE1", "DK1", "DK2",
 	"FI", "NO1", "NO2", "NO3", "NO4", "NO5",
 	"LV", "LT", "PL", "PT", "RO", "RS",
-	"SI", "SK", "HU", "AT", "CZ", "HR", "EE", "BE-900", "NL-900",
+	"SI", "SK", "HU", "AT", "CZ", "HR", "EE",
 }
 
 // Stekker provider
@@ -57,6 +57,14 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	if err := cc.init(); err != nil {
 		return nil, err
+	}
+
+	// NL and BE to 15 min
+	switch cc.Region {
+	case "BE":
+		cc.Region = "BE-900"
+	case "NL":
+		cc.Region = "NL-900"
 	}
 
 	t := &Stekker{
