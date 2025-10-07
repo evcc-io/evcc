@@ -218,7 +218,7 @@ export default defineComponent({
 			selectedType: null as string | null,
 			loadingTemplate: false,
 			iconChoices: ICONS,
-			values: { ...initialValues} as MeterDeviceValues,
+			values: { ...initialValues } as MeterDeviceValues,
 			test: initialTestState(),
 		};
 	},
