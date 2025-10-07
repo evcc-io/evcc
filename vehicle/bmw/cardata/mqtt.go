@@ -56,6 +56,16 @@ func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
 	return ch
 }
 
+func (v *MqttConnector) Unsubscribe(vin string) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if ch, ok := v.subscriptions[vin]; ok {
+		delete(v.subscriptions, vin)
+		close(ch)
+	}
+}
+
 func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
 

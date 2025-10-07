@@ -39,9 +39,14 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		streaming: make(map[string]StreamingData),
 	}
 
-	go func() {
-		mqtt := NewMqttConnector(ctx, log, clientID, ts)
+	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
 
+	go func() {
+		<-ctx.Done()
+		mqtt.Unsubscribe(vin)
+	}()
+
+	go func() {
 		for msg := range mqtt.Subscribe(vin) {
 			v.mu.Lock()
 			maps.Copy(v.streaming, msg.Data)
