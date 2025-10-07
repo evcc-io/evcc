@@ -3,6 +3,7 @@ package semp
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util/request"
@@ -17,6 +18,9 @@ type Connection struct {
 
 // NewConnection creates a new SEMP client
 func NewConnection(helper *request.Helper, uri, deviceID string) *Connection {
+	// Ensure URI ends with exactly one trailing slash
+	uri = strings.TrimRight(uri, "/") + "/"
+
 	return &Connection{
 		helper:   helper,
 		uri:      uri,
@@ -90,7 +94,7 @@ func (c *Connection) HasPlanningRequest() (bool, error) {
 // GetParametersXML retrieves SEMP parameters from the /Parameters endpoint
 func (c *Connection) GetParametersXML() ([]Parameter, error) {
 	var response Device2EM
-	uri := fmt.Sprintf("%s/Parameters", c.uri)
+	uri := c.uri + "Parameters"
 	if err := c.helper.GetXML(uri, &response); err != nil {
 		return nil, err
 	}
