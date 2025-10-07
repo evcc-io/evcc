@@ -63,7 +63,7 @@ func (s *Estimator) Reset() {
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
 	// For 100% target with calculated SoC >= 100%, return small remaining duration
 	// This allows the vehicle to charge until it stops itself when actually full
-	if targetSoc >= 100 && s.vehicleSoc >= 100 && chargePower > 0 {
+	if targetSoc >= 100 && s.vehicleSoc >= 100 {
 		return time.Minute
 	}
 
