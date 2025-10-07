@@ -19,7 +19,6 @@ package charger
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -89,7 +88,7 @@ func NewSEMP(uri, deviceID string, cache time.Duration) (api.Charger, error) {
 	wb.Client.Timeout = request.Timeout
 
 	// Initialize SEMP connection
-	wb.conn = semp.NewConnection(wb.Helper, strings.TrimRight(uri, "/"), deviceID)
+	wb.conn = semp.NewConnection(wb.Helper, uri, deviceID)
 
 	// Setup cached document getter - fetches the complete SEMP document once
 	wb.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {

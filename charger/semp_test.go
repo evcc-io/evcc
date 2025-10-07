@@ -180,7 +180,7 @@ func (h *sempTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Handle GET requests
 	switch r.URL.Path {
-	case "/semp":
+	case "/semp/":
 		// Return complete SEMP document at base URL
 		// Extract and combine the XML fragments
 		var parts []string
