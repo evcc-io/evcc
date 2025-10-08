@@ -9,9 +9,8 @@ requirements:
   evcc: ["skiptest"]
 params:
   - name: baseurl
-    description:
-      de: Basis-URL der Home Assistant Instanz
-      en: Base URL of the Home Assistant instance
+    deprecated: true
+  - name: uri
     required: true
     example: http://homeassistant.local:8123
   - name: token
@@ -37,8 +36,8 @@ params:
   - preset: switchsocket
 render: |
   type: homeassistant-switch
-  baseurl: {{ .baseurl }}
+  uri: {{ if (eq .uri "") }}{{ .baseurl }}{{ else }}{{ .uri }}{{ end }}
   token: {{ .token }}
-  switchentity: {{ .switchentity }}
-  powerentity: {{ .powerentity }}
+  enable: {{ .switchentity }}
+  power: {{ .powerentity }}
   {{ include "switchsocket" . }}

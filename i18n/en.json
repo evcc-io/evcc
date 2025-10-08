@@ -165,6 +165,7 @@
       "dragItem": "Draggable: {title}",
       "dragList": "Reorderable list",
       "experimental": "Experimental",
+      "forceSave": "Save anyway",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
       "noFileSelected": "No file selected.",
@@ -176,6 +177,8 @@
       "required": "required",
       "reset": "Reset",
       "save": "Save",
+      "saved": "Saved.",
+      "saving": "Saving…",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
@@ -328,7 +331,7 @@
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
-      "yaml": "Device from evcc.yaml are not editable."
+      "yaml": "Devices from evcc.yaml are not editable."
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
@@ -523,7 +526,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "validating…",
+      "running": "Validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"

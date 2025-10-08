@@ -209,9 +209,9 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	Login(state string) string
+	Login(state string) (string, error)
 	Logout() error
-	HandleCallback(responseValues url.Values) error
+	HandleCallback(params url.Values) error
 	Authenticated() bool
 	DisplayName() string
 }
