@@ -204,44 +204,44 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 		}, sempCache)
 
 		doc, err := wb.semp.deviceG.Get()
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve device info: %w", err)
-		}
-
-		if len(doc.DeviceInfo) == 0 {
-			return nil, fmt.Errorf("no device info found")
-		}
-
-		// Use first device ID found
-		wb.semp.deviceID = doc.DeviceInfo[0].Identification.DeviceID
-		log.DEBUG.Printf("SEMP phase switching: found device ID: %s", wb.semp.deviceID)
-
-		// Check if device supports phase switching by checking power characteristics
-		info, err := wb.getDeviceInfo()
 		if err == nil {
-			wb.semp.minPower = info.Characteristics.MinPowerConsumption
-			wb.semp.maxPower = info.Characteristics.MaxPowerConsumption
-			// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
-			if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
-				info.Characteristics.MaxPowerConsumption > 4600 {
-				phases1p3p = wb.phases1p3pSEMP
-				getPhases = wb.getPhasesSEMP
-				log.DEBUG.Println("SEMP phase switching: detected")
+			if len(doc.DeviceInfo) != 0 {
+				// Use first device ID found
+				wb.semp.deviceID = doc.DeviceInfo[0].Identification.DeviceID
+				log.DEBUG.Printf("SEMP phase switching: found device ID: %s", wb.semp.deviceID)
+
+				// Check if device supports phase switching by checking power characteristics
+				info, err := wb.getDeviceInfo()
+				if err == nil {
+					wb.semp.minPower = info.Characteristics.MinPowerConsumption
+					wb.semp.maxPower = info.Characteristics.MaxPowerConsumption
+					// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
+					if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
+						info.Characteristics.MaxPowerConsumption > 4600 {
+						phases1p3p = wb.phases1p3pSEMP
+						getPhases = wb.getPhasesSEMP
+						log.INFO.Println("SEMP phase switching: detected")
+					} else {
+						log.WARN.Println("SEMP phase switching: not supported")
+					}
+				} else {
+					log.WARN.Println("SEMP phase switching: cannot get device info:", err)
+				}
+				// set initial SEMP power limit to max + 1 so modbus control from 6 to 16 A is possible
+				var limit = wb.semp.maxPower + 1
+				err = wb.semp.conn.SendDeviceControl(wb.semp.deviceID, limit)
+				if err != nil {
+					log.WARN.Println("SEMP phase switching: could set initial SEMP power limit:", err)
+				}
+
+				wb.semp.lastUpdate = time.Now()
+				go wb.heartbeat(ctx)
 			} else {
-				log.WARN.Println("SEMP phase switching: not supported")
+				log.WARN.Println("SEMP phase switching: no devices found")
 			}
 		} else {
-			log.WARN.Println("SEMP phase switching: cannot get device info:", err)
+			log.DEBUG.Println("SEMP phase switching: cannot get XML", err)
 		}
-		// set initial SEMP power limit to max + 1 so modbus control from 6 to 16 A is possible
-		var limit = wb.semp.maxPower + 1
-		err = wb.semp.conn.SendDeviceControl(wb.semp.deviceID, limit)
-		if err != nil {
-			log.WARN.Println("SEMP phase switching: could set initial SEMP power limit:", err)
-		}
-
-		wb.semp.lastUpdate = time.Now()
-		go wb.heartbeat(ctx)
 	}
 
 	// check feature rfid
