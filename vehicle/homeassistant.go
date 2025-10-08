@@ -98,16 +98,16 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		climater = func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }
 	}
 	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return res.getTimeSensor(cc.Sensors.FinishTime) }
+		finish = func() (time.Time, error) { return res.finishTime(cc.Sensors.FinishTime) }
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
 		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
 	}
 	if cc.Services.Wakeup != "" {
-		wakeup = func() error { return conn.CallService(cc.Services.Wakeup) }
+		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
 	}
 	if cc.Services.SetMaxCurrent != "" {
-		maxcurrent = func(current int64) error { return res.setMaxCurrent(cc.Services.SetMaxCurrent, current) }
+		maxcurrent = func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }
 	}
 
 	// decorate all features
@@ -130,11 +130,7 @@ func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
 }
 
-func (v *HomeAssistant) setMaxCurrent(entity string, current int64) error {
-	return v.conn.CallNumberService(entity, float64(current))
-}
-
-func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
+func (v *HomeAssistant) finishTime(entity string) (time.Time, error) {
 	s, err := v.conn.GetState(entity)
 	if err != nil {
 		return time.Time{}, err
@@ -149,8 +145,8 @@ func (v *HomeAssistant) getTimeSensor(entity string) (time.Time, error) {
 
 func (v *HomeAssistant) enable(on, off string, enable bool) error {
 	if enable {
-		return v.conn.CallService(on)
+		return v.conn.CallSwitchService(on, true)
 	}
 
-	return v.conn.CallService(off)
+	return v.conn.CallSwitchService(off, true)
 }
