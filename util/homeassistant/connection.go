@@ -48,8 +48,8 @@ func NewConnection(log *util.Logger, baseURL, token string) (*Connection, error)
 
 // StateResponse represents a Home Assistant entity state
 type StateResponse struct {
-	State      string                 `json:"state"`
-	Attributes map[string]interface{} `json:"attributes"`
+	State      string         `json:"state"`
+	Attributes map[string]any `json:"attributes"`
 }
 
 // GetState retrieves the state of an entity
@@ -66,6 +66,21 @@ func (c *Connection) GetState(entity string) (string, error) {
 	}
 
 	return res.State, nil
+}
+
+// GetIntState retrieves the state of an entity as int64
+func (c *Connection) GetIntState(entity string) (int64, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return 0, err
+	}
+
+	value, err := strconv.ParseInt(state, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+	}
+
+	return value, nil
 }
 
 // GetFloatState retrieves the state of an entity as float64
@@ -101,85 +116,6 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	}
 }
 
-// CallService calls a Home Assistant service
-func (c *Connection) CallService(domain, service string, data map[string]interface{}) error {
-	uri := fmt.Sprintf("%s/api/services/%s/%s", c.uri, domain, service)
-
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
-
-	_, err = c.DoBody(req)
-	return err
-}
-
-// CallSwitchService is a convenience method for switch services
-func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
-	parts := strings.Split(entity, ".")
-	if len(parts) == 0 {
-		return fmt.Errorf("invalid entity format: %s", entity)
-	}
-
-	domain := parts[0]
-	service := "turn_off"
-	if turnOn {
-		service = "turn_on"
-	}
-
-	data := map[string]interface{}{
-		"entity_id": entity,
-	}
-
-	return c.CallService(domain, service, data)
-}
-
-// CallNumberService is a convenience method for setting number entity values
-func (c *Connection) CallNumberService(entity string, value float64) error {
-	data := map[string]interface{}{
-		"entity_id": entity,
-		"value":     value,
-	}
-
-	return c.CallService("number", "set_value", data)
-}
-
-// GetPhaseStates retrieves three phase values (currents, voltages, etc.)
-func (c *Connection) GetPhaseStates(entities []string) (float64, float64, float64, error) {
-	if len(entities) != 3 {
-		return 0, 0, 0, errors.New("invalid phase entities")
-	}
-
-	var l1, l2, l3 float64
-	var err error
-
-	if l1, err = c.GetFloatState(entities[0]); err != nil {
-		return 0, 0, 0, fmt.Errorf("phase L1: %w", err)
-	}
-
-	if l2, err = c.GetFloatState(entities[1]); err != nil {
-		return 0, 0, 0, fmt.Errorf("phase L2: %w", err)
-	}
-
-	if l3, err = c.GetFloatState(entities[2]); err != nil {
-		return 0, 0, 0, fmt.Errorf("phase L3: %w", err)
-	}
-
-	return l1, l2, l3, nil
-}
-
-// ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
-func ValidatePhaseEntities(entities []string) ([]string, error) {
-	switch len(entities) {
-	case 0:
-		return nil, nil
-	case 3:
-		return entities, nil
-	default:
-		return nil, fmt.Errorf("must contain three-phase entities (L1, L2, L3), got %d", len(entities))
-	}
-}
-
 // chargeStatusMap maps Home Assistant states to EVCC charge status
 var chargeStatusMap = map[string]api.ChargeStatus{
 	// Status C - Charging
@@ -212,12 +148,95 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"0":                   api.StatusA,
 }
 
-// ParseChargeStatus maps Home Assistant states to EVCC charge status
-func ParseChargeStatus(state string) (api.ChargeStatus, error) {
-	normalized := strings.ToLower(strings.TrimSpace(state))
-	if status, ok := chargeStatusMap[normalized]; ok {
+// GetChargeStatus maps Home Assistant states to api.ChargeStatus
+func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state))]; ok {
 		return status, nil
 	}
 
 	return api.StatusNone, fmt.Errorf("unknown charge status: %s", state)
+}
+
+// CallService calls a Home Assistant service
+func (c *Connection) CallService(domain, service string, data map[string]any) error {
+	uri := fmt.Sprintf("%s/api/services/%s/%s", c.uri, domain, service)
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.DoBody(req)
+	return err
+}
+
+// CallSwitchService is a convenience method for switch services
+func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
+	parts := strings.Split(entity, ".")
+	if len(parts) == 0 {
+		return fmt.Errorf("invalid entity format: %s", entity)
+	}
+
+	domain := parts[0]
+	service := "turn_off"
+	if turnOn {
+		service = "turn_on"
+	}
+
+	data := map[string]any{
+		"entity_id": entity,
+	}
+
+	return c.CallService(domain, service, data)
+}
+
+// CallNumberService is a convenience method for setting number entity values
+func (c *Connection) CallNumberService(entity string, value float64) error {
+	data := map[string]any{
+		"entity_id": entity,
+		"value":     value,
+	}
+
+	return c.CallService("number", "set_value", data)
+}
+
+// GetPhaseFloatStates retrieves three phase values (currents, voltages, etc.)
+func (c *Connection) GetPhaseFloatStates(entities []string) (float64, float64, float64, error) {
+	if len(entities) != 3 {
+		return 0, 0, 0, errors.New("invalid phase entities")
+	}
+
+	var l1, l2, l3 float64
+	var err error
+
+	if l1, err = c.GetFloatState(entities[0]); err != nil {
+		return 0, 0, 0, fmt.Errorf("phase L1: %w", err)
+	}
+
+	if l2, err = c.GetFloatState(entities[1]); err != nil {
+		return 0, 0, 0, fmt.Errorf("phase L2: %w", err)
+	}
+
+	if l3, err = c.GetFloatState(entities[2]); err != nil {
+		return 0, 0, 0, fmt.Errorf("phase L3: %w", err)
+	}
+
+	return l1, l2, l3, nil
+}
+
+// ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
+func ValidatePhaseEntities(entities []string) ([]string, error) {
+	switch len(entities) {
+	case 0:
+		return nil, nil
+	case 3:
+		return entities, nil
+	default:
+		return nil, fmt.Errorf("must contain three-phase entities (L1, L2, L3), got %d", len(entities))
+	}
 }
