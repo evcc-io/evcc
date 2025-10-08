@@ -1,7 +1,4 @@
 {{ define "vehicle-common" }}
-{{- if .icon }}
-icon: {{ .icon }}
-{{- end }}
 {{- if .capacity }}
 capacity: {{ .capacity }}
 {{- end }}
