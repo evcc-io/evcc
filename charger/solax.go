@@ -224,7 +224,7 @@ func (wb *Solax) TotalEnergy() (float64, error) {
 	if wb.isLegacyHw {
 		return float64(binary.BigEndian.Uint32(b)) / 10, err
 	} else {
-		return float64(encoding.Uint32(b)) / 10, err
+		return float64(encoding.Uint32LswFirst(b)) / 10, err
 	}
 }
 
