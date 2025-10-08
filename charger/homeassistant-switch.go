@@ -37,8 +37,6 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 }
 
 func NewHomeAssistantSwitch(embed embed, uri, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
-	log := util.NewLogger("ha-switch")
-
 	if switchEntity == "" {
 		return nil, errors.New("missing switch entity")
 	}
@@ -48,6 +46,7 @@ func NewHomeAssistantSwitch(embed embed, uri, token, switchEntity, powerEntity s
 		return nil, errors.New("missing either power entity or negative standbypower")
 	}
 
+	log := util.NewLogger("ha-switch")
 	conn, err := homeassistant.NewConnection(log, uri, token)
 	if err != nil {
 		return nil, err
