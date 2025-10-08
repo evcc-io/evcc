@@ -409,6 +409,10 @@
         "no": "no",
         "yes": "yes"
       },
+      "dischargemode": {
+        "2": "Charge-PV (use PV to charge battery)",
+        "8": "Standby (battery idle)"
+      },
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"

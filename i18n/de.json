@@ -409,6 +409,10 @@
         "no": "nein",
         "yes": "ja"
       },
+      "dischargemode": {
+        "2": "Charge-PV (PV für Batterieladung nutzen)",
+        "8": "Standby (Batterie im Leerlauf)"
+      },
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
