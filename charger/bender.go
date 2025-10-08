@@ -452,9 +452,9 @@ func (wb *BenderCC) getPhases() (int, error) {
 func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 	wb.semp.lastUpdate = time.Now()
 
-	phaseSwitchPower := wb.semp.maxPower
+	phaseSwitchPower := wb.semp.maxPower / 2
 	if phases == 1 {
-		phaseSwitchPower = wb.semp.minPower
+		phaseSwitchPower = wb.semp.minPower * 2
 	}
 
 	err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, phaseSwitchPower)
