@@ -11,11 +11,8 @@ requirements:
 params:
   - preset: vehicle-common
   - name: uri
-    description:
-      de: Home Assistant URI
-      en: Home Assistant URI
-    example: "http://192.168.1.10:8123"
     required: true
+    example: http://homeassistant.local:8123
   - name: token
     description:
       de: Home Assistant Long-Lived Access Token
