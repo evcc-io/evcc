@@ -8,6 +8,8 @@ group: switchsockets
 requirements:
   evcc: ["skiptest"]
 params:
+  - name: baseurl
+    deprecated: true
   - name: uri
     required: true
     example: http://homeassistant.local:8123
@@ -34,7 +36,7 @@ params:
   - preset: switchsocket
 render: |
   type: homeassistant-switch
-  uri: {{ if (ne .uri "") .uri .baseurl }}
+  uri: {{ if (eq .uri "") }}{{ .baseurl }}{{ else }}{{ .uri }}{{ end }}
   token: {{ .token }}
   switchentity: {{ .switchentity }}
   powerentity: {{ .powerentity }}
