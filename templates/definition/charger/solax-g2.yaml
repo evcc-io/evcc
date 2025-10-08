@@ -1,4 +1,4 @@
-template: solax-hac
+template: solax-g2
 products:
   - brand: Solax
     description:
@@ -16,5 +16,5 @@ params:
     comset: 8N1
     id: 70
 render: |
-  type: solax-hac
+  type: solax-g2
   {{- include "modbus" . }}

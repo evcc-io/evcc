@@ -31,9 +31,9 @@ import (
 
 // Solax charger implementation
 type Solax struct {
-	log   *util.Logger
-	conn  *modbus.Connection
-	isEvc bool
+	log        *util.Logger
+	conn       *modbus.Connection
+	isLegacyHw bool
 }
 
 const (
@@ -59,20 +59,20 @@ const (
 )
 
 func init() {
-	registry.AddCtx("solax", NewSolaxEVCFromConfig)
-	registry.AddCtx("solax-hac", NewSolaxHACFromConfig)
+	registry.AddCtx("solax", NewSolaxG1FromConfig)
+	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
 
-func NewSolaxEVCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxG1FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
 }
 
-func NewSolaxHACFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxG2FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, false)
 }
 
 // NewSolaxFromConfig creates a Solax charger from generic config
-func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}, isEvc bool) (api.Charger, error) {
+func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}, isLegacyHw bool) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -81,11 +81,11 @@ func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}, isEvc
 		return nil, err
 	}
 
-	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, isEvc)
+	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, isLegacyHw)
 }
 
 // NewSolax creates Solax charger
-func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, isEvc bool) (api.Charger, error) {
+func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, isLegacyHw bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
@@ -99,9 +99,9 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	conn.Logger(log.TRACE)
 
 	wb := &Solax{
-		log:   log,
-		conn:  conn,
-		isEvc: isEvc,
+		log:        log,
+		conn:       conn,
+		isLegacyHw: isLegacyHw,
 	}
 
 	return wb, err
@@ -117,7 +117,7 @@ func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	var res [3]float64
 	for i := range res {
 		var v uint16
-		if wb.isEvc {
+		if wb.isLegacyHw {
 			v = binary.BigEndian.Uint16(b[2*i:])
 		} else {
 			v = encoding.Uint16(b[2*i:])
@@ -160,7 +160,7 @@ func (wb *Solax) Enabled() (bool, error) {
 		return false, err
 	}
 
-	if wb.isEvc {
+	if wb.isLegacyHw {
 		return binary.BigEndian.Uint16(b) != solaxModeStop, nil
 	} else {
 		return encoding.Uint16(b) != solaxModeStop, nil
@@ -205,7 +205,7 @@ func (wb *Solax) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	if wb.isEvc {
+	if wb.isLegacyHw {
 		return float64(binary.BigEndian.Uint16(b)), err
 	} else {
 		return float64(encoding.Uint16(b)), err
@@ -221,7 +221,7 @@ func (wb *Solax) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	if wb.isEvc {
+	if wb.isLegacyHw {
 		return float64(binary.BigEndian.Uint32(b)) / 10, err
 	} else {
 		return float64(encoding.Uint32(b)) / 10, err
