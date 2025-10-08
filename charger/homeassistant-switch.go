@@ -38,7 +38,7 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 
 func NewHomeAssistantSwitch(embed embed, uri, token, enable, power string, standbypower float64) (api.Charger, error) {
 	if enable == "" {
-		return nil, errors.New("missing switch entity")
+		return nil, errors.New("missing enable switch entity")
 	}
 
 	// standbypower < 0 ensures that currentPower is never used by the switch socket if not present
