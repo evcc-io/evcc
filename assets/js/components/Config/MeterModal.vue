@@ -17,8 +17,7 @@
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
 		:preserve-on-template-change="preserveFields"
-		:usage="effectiveUsage"
-		:template-selector-disabled="templateSelectorDisabled"
+		:usage="templateUsage"
 		:on-configuration-loaded="onConfigurationLoaded"
 		@added="handleAdded"
 		@updated="$emit('updated')"
@@ -98,7 +97,7 @@ import PropertyField from "./PropertyField.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
-import { ConfigType, type SelectedMeterType } from "@/types/evcc";
+import { ConfigType, type MeterType, type MeterTemplateUsage } from "@/types/evcc";
 import type { ModalFade } from "../Helper/GenericModal.vue";
 import {
 	type DeviceValues,
@@ -106,8 +105,6 @@ import {
 	type Product,
 	type TemplateParam,
 	type ApiData,
-	type TemplateType,
-	type MeterUsage,
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 
@@ -138,22 +135,16 @@ export default defineComponent({
 	},
 	props: {
 		id: Number,
-		type: {
-			type: String as () => SelectedMeterType | undefined,
-			default: undefined,
-		},
-		typeChoices: {
-			type: Array as () => string[],
-			default: () => ["pv", "battery", "aux", "ext"],
-		},
+		type: { type: String as PropType<MeterType>, default: null },
+		typeChoices: { type: Array as () => MeterType[], default: () => [] },
 		fade: String as PropType<ModalFade>,
 		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {
 		return {
-			selectedType: null as string | null,
-			extMeterUsage: undefined as MeterUsage | undefined,
+			selectedType: null as MeterType | null,
+			extMeterUsage: "charge" as MeterTemplateUsage,
 			selectedTemplate: null as string | null,
 			iconChoices: ICONS,
 			initialValues,
@@ -172,17 +163,20 @@ export default defineComponent({
 			}
 			return this.$t(`config.${this.meterType}.titleEdit`);
 		},
-		meterType(): Exclude<TemplateType, "vehicle" | "charger"> | null {
-			// @ts-expect-error either this.type or this.selectedType is given
+		meterType(): MeterType | null {
 			return this.type || this.selectedType;
 		},
-		effectiveUsage(): string | undefined {
-			// For ext meters, use the selected ext meter usage type
-			// For other meters, use the meter type directly
+		templateUsage(): MeterTemplateUsage | undefined {
+			if (!this.meterType) return undefined;
+
+			// For ext meters, the user selects the template usage explicitly
+			// For other meter types, the meter type IS the template usage
 			if (this.meterType === "ext") {
 				return this.extMeterUsage;
 			}
-			return this.meterType || undefined;
+			// For non-ext meters, meterType directly maps to template usage
+			// (grid->grid, pv->pv, battery->battery, charge->charge, aux->aux)
+			return this.meterType;
 		},
 		hasDeviceTitle(): boolean {
 			return ["pv", "battery", "aux", "ext"].includes(this.meterType || "");
@@ -202,10 +196,6 @@ export default defineComponent({
 				key,
 			}));
 		},
-		templateSelectorDisabled() {
-			// Disable template selector for ext meters until usage is selected
-			return this.meterType === "ext" && this.extMeterUsage === undefined;
-		},
 	},
 	methods: {
 		onConfigurationLoaded(values: DeviceValues) {
@@ -214,7 +204,7 @@ export default defineComponent({
 				this.extMeterUsage = values.usage;
 			}
 		},
-		selectType(type: string) {
+		selectType(type: MeterType) {
 			this.selectedType = type;
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
@@ -236,7 +226,9 @@ export default defineComponent({
 			const filtered = params.filter(
 				(p) =>
 					!CUSTOM_FIELDS.includes(p.Name) &&
-					(p.Usages && this.meterType ? p.Usages.includes(this.meterType) : true)
+					(p.Usages && this.templateUsage
+						? p.Usages.includes(this.templateUsage as any)
+						: true)
 			);
 
 			// Make capacity non-advanced for battery meters
@@ -249,11 +241,10 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData, values: DeviceValues): ApiData {
 			if (values.type === ConfigType.Template) {
-				// For ext meters, use extMeterUsage as the usage value
-				// For other meters, use meterType
-				const usage: MeterUsage | undefined =
-					(this.meterType === "ext" ? this.extMeterUsage : this.meterType) || undefined;
-				data.usage = usage;
+				// Set the template usage (what the template should do)
+				// For ext meters: user-selected usage (grid, pv, battery, charge, aux)
+				// For other meters: meterType itself is the usage
+				data.usage = this.templateUsage;
 			}
 			return data;
 		},
@@ -287,7 +278,7 @@ export default defineComponent({
 		},
 		handleClose() {
 			this.selectedType = null;
-			this.extMeterUsage = undefined;
+			this.extMeterUsage = "charge";
 			this.$emit("close");
 		},
 	},

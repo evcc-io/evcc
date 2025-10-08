@@ -1,4 +1,4 @@
-import type { DeviceType } from "@/types/evcc";
+import type { DeviceType, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 
@@ -15,9 +15,7 @@ export type Template = {
   };
 };
 
-export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
-
-export type MeterUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
 export type TemplateParam = {
   Name: string;
@@ -26,7 +24,7 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
-  Usages?: TemplateType[];
+  Usages?: TemplateParamUsage[];
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
@@ -46,7 +44,7 @@ export type DeviceValues = {
   template: string | null;
   deviceTitle?: string;
   deviceIcon?: string;
-  usage?: MeterUsage;
+  usage?: MeterTemplateUsage;
   heating?: boolean;
   integrateddevice?: boolean;
   stationid?: string;
@@ -56,7 +54,7 @@ export type DeviceValues = {
 export type ApiData = {
   type?: ConfigType;
   icon?: string;
-  usage?: MeterUsage;
+  usage?: MeterTemplateUsage;
   title?: string;
   identifiers?: string[];
   [key: string]: any;

@@ -427,7 +427,7 @@ import type {
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
-	SelectedMeterType,
+	MeterType,
 	SiteConfig,
 	DeviceType,
 } from "@/types/evcc";
@@ -493,8 +493,8 @@ export default defineComponent({
 			circuits: [] as ConfigCircuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
-			selectedMeterType: undefined as SelectedMeterType | undefined,
-			selectedMeterTypeChoices: [] as string[],
+			selectedMeterType: undefined as MeterType | undefined,
+			selectedMeterTypeChoices: [] as MeterType[],
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
 			selectedLoadpointType: undefined as LoadpointType | undefined,
@@ -805,12 +805,12 @@ export default defineComponent({
 			this.loadpointModal().hide();
 			this.$nextTick(() => this.editMeter("charge", meter?.id));
 		},
-		editMeter(type: SelectedMeterType, id?: number) {
+		editMeter(type: MeterType, id?: number) {
 			this.selectedMeterType = type;
 			this.selectedMeterId = id;
 			this.$nextTick(() => this.meterModal().show());
 		},
-		newMeter(type: SelectedMeterType) {
+		newMeter(type: MeterType) {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
@@ -818,13 +818,13 @@ export default defineComponent({
 		addSolarBatteryMeter() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["pv", "battery"];
+			this.selectedMeterTypeChoices = ["pv", "battery"] as MeterType[];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		newAdditionalMeter() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["aux", "ext"];
+			this.selectedMeterTypeChoices = ["aux", "ext"] as MeterType[];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		editCharger(id?: number, loadpointType?: LoadpointType) {
@@ -879,7 +879,7 @@ export default defineComponent({
 		yamlChanged() {
 			this.loadDirty();
 		},
-		meterAdded(type: SelectedMeterType, name: string) {
+		meterAdded(type: MeterType, name: string) {
 			if (type === "charge") {
 				// update loadpoint
 				(
@@ -913,7 +913,7 @@ export default defineComponent({
 			}
 			this.meterChanged();
 		},
-		meterRemoved(type: SelectedMeterType) {
+		meterRemoved(type: MeterType) {
 			if (type === "charge") {
 				// update loadpoint
 				(

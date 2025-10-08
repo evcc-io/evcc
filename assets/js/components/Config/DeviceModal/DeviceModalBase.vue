@@ -25,7 +25,6 @@
 					:is-new="isNew"
 					:product-name="productName"
 					:groups="computedTemplateOptions"
-					:disabled="templateSelectorDisabled"
 					@change="handleTemplateChange"
 				/>
 
@@ -179,8 +178,6 @@ export default defineComponent({
 		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => Promise<void>>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
-		// Optional: disable template selector (e.g., for ext meters until usage is selected)
-		templateSelectorDisabled: Boolean,
 		// Optional: callback after configuration is loaded (receives values)
 		onConfigurationLoaded: Function as PropType<(values: DeviceValues) => void>,
 		// Optional: external template selection control (for parent to reset template)
@@ -328,23 +325,34 @@ export default defineComponent({
 				this.$emit("update:externalTemplate", newValue);
 			}
 
-			// Reset values when template changes (except on initial load or when switching to YAML input)
-			// YAML input types set values.type and values.yaml in handleTemplateChange callback
-			const isYamlInput =
-				this.isYamlInputType && newValue && this.isYamlInputType(newValue as any);
-			if (oldValue != null && !isYamlInput) {
+			// Reset values when template changes (except on initial load)
+			if (oldValue != null) {
+				// Determine which fields to preserve
+				const fieldsToPreserve: string[] = [];
+
+				// Always preserve configured fields (e.g., deviceTitle, deviceIcon)
 				if (this.preserveOnTemplateChange) {
-					const preserved: Record<string, any> = {};
-					this.preserveOnTemplateChange.forEach((field) => {
-						preserved[field] = this.values[field];
-					});
-					this.reset();
-					this.preserveOnTemplateChange.forEach((field) => {
-						this.values[field] = preserved[field];
-					});
-				} else {
-					this.reset();
+					fieldsToPreserve.push(...this.preserveOnTemplateChange);
 				}
+
+				// For YAML/custom templates, also preserve type and yaml fields
+				const isYamlInput =
+					this.isYamlInputType && newValue && this.isYamlInputType(newValue as any);
+				if (isYamlInput) {
+					fieldsToPreserve.push("type", "yaml");
+				}
+
+				// Preserve specified fields across reset
+				const preserved: Record<string, any> = {};
+				fieldsToPreserve.forEach((field) => {
+					preserved[field] = this.values[field];
+				});
+
+				this.reset();
+
+				fieldsToPreserve.forEach((field) => {
+					this.values[field] = preserved[field];
+				});
 			}
 			this.loadTemplate();
 		},

@@ -143,9 +143,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kann für Lastmanagement oder Statistikzwecke verwendet werden.",
-      "titleAdd": "Zusätzlichen Zähler hinzufügen",
-      "titleEdit": "Zusätzlichen Zähler bearbeiten"
+      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
@@ -345,7 +345,7 @@
       "option": {
         "aux": "Intelligenten Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Zusätzlichen Zähler hinzufügen",
+        "ext": "Regulären Verbraucher hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
@@ -355,11 +355,11 @@
       "titleLabel": "Titel",
       "usage": {
         "aux": "Intelligenter Verbraucher",
-        "battery": "Batterie Zähler",
-        "charge": "Ladegerät Zähler",
-        "grid": "Netz Zähler",
+        "battery": "Batteriezähler",
+        "charge": "Ladegerätzähler",
+        "grid": "Netzzähler",
         "label": "Verwendung",
-        "pv": "PV Zähler"
+        "pv": "PV-Zähler"
       },
       "validateSave": "Überprüfen & speichern"
     },

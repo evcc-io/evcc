@@ -143,9 +143,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Can be used for load management or statistics purposes.",
-      "titleAdd": "Add External Meter",
-      "titleEdit": "Edit External Meter"
+      "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
+      "titleAdd": "Add Consumer Meter",
+      "titleEdit": "Edit Consumer Meter"
     },
     "form": {
       "danger": "Danger",
@@ -345,7 +345,7 @@
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "ext": "Add external meter",
+        "ext": "Add regular consumer",
         "pv": "Add solar meter"
       },
       "save": "Save",
