@@ -46,12 +46,16 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	}
 
 	if token.AccessToken == "" {
-		err = errors.New("token refresh failed to obtain access token")
-	} else {
-		err = ts.mergeToken(token)
+		return nil, errors.New("token refresh failed to obtain access token")
 	}
 
-	return ts.token, err
+	if token.RefreshToken == "" {
+		token.RefreshToken = ts.token.RefreshToken
+	}
+
+	ts.token = token
+
+	return ts.token, nil
 }
 
 // mergeToken updates a token while preventing wiping the refresh token
