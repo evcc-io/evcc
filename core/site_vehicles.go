@@ -32,10 +32,11 @@ type vehicleStruct struct {
 
 // publishVehicles returns a list of vehicle titles
 func (site *Site) publishVehicles() {
-	vv := site.Vehicles().Settings()
-	res := make(map[string]vehicleStruct, len(vv))
+	devs := config.Vehicles().Devices()
+	res := make(map[string]vehicleStruct, len(devs))
 
-	for _, v := range vv {
+	for _, dev := range devs {
+		v := dev.Instance()
 		var plan *planStruct
 
 		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {

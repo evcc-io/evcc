@@ -367,8 +367,9 @@ func configureChargers(static []config.Named, names ...string) error {
 	return eg.Wait()
 }
 
-func vehicleInstance(cc config.Named) (api.Vehicle, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+func vehicleInstance(ctx context.Context, cc config.Named) (api.Vehicle, error) {
+	// TODO move key
+	ctx = util.WithLogger(ctx, util.NewLogger(cc.Name))
 
 	props, err := customDevice(cc.Other)
 
@@ -384,13 +385,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 		// wrap non-config vehicle errors to prevent fatals
 		log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-		instance = vehicle.NewWrapper(cc.Name, cc.Type, cc.Other, err)
-	}
-
-	// ensure vehicle config has title
-	if instance.GetTitle() == "" {
-		//lint:ignore SA1019 as Title is safe on ascii
-		instance.SetTitle(strings.Title(cc.Name))
+		instance = vehicle.NewWrapper(ctx, cc.Name, cc.Type, cc.Other, err)
 	}
 
 	return instance, nil
@@ -417,7 +412,9 @@ func configureVehicles(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			instance, err := vehicleInstance(cc)
+			ctx := context.WithValue(context.Background(), api.ContextTitle, cc.Name)
+
+			instance, err := vehicleInstance(ctx, cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
@@ -447,7 +444,14 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			instance, err := vehicleInstance(cc)
+			title := conf.Properties.Title
+			if title == "" {
+				title = cc.Name
+			}
+
+			ctx := context.WithValue(context.Background(), api.ContextTitle, title)
+
+			instance, err := vehicleInstance(ctx, cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
