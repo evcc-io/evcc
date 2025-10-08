@@ -236,7 +236,7 @@ export default defineComponent({
 					try {
 						const response = await baseAPI.get(logoutPath, {
 							validateStatus: (code) => [200, 400, 500].includes(code),
-						})
+						});
 						if (response.status === 200) {
 							alert(this.$t("header.authProviders.loggedOut"));
 						} else {
