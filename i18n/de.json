@@ -165,6 +165,7 @@
       "dragItem": "Verschiebbar: {title}",
       "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
+      "forceSave": "Trotzdem speichern",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "noFileSelected": "Keine Datei ausgewählt.",
@@ -176,6 +177,8 @@
       "required": "erforderlich",
       "reset": "Zurücksetzen",
       "save": "Speichern",
+      "saved": "Gespeichert.",
+      "saving": "Speichere …",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
@@ -523,7 +526,7 @@
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
-      "running": "prüfe …",
+      "running": "Prüfe …",
       "success": "erfolgreich",
       "unknown": "unbekannt",
       "validate": "prüfen"

@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/hashicorp/go-version"
 )
 
@@ -57,8 +58,10 @@ func init() {
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Cache time.Duration
+		URI      string
+		User     string
+		Password string
+		Cache    time.Duration
 	}{
 		Cache: time.Second,
 	}
@@ -67,12 +70,13 @@ func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewSalia(ctx, cc.URI, cc.Cache)
+	return NewSalia(ctx, cc.URI, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSalia creates Hardy Barth charger with Salia controller
-func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("salia")
+func NewSalia(ctx context.Context, uri, user, password string, cache time.Duration) (api.Charger, error) {
+	basicAuth := transport.BasicAuthHeader(user, password)
+	log := util.NewLogger("salia").Redact(user, password, basicAuth)
 
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 
@@ -81,6 +85,10 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		Helper:  request.NewHelper(log),
 		uri:     util.DefaultScheme(uri, "http"),
 		current: 6,
+	}
+
+	if user != "" && password != "" {
+		wb.Client.Transport = transport.BasicAuth(user, password, wb.Client.Transport)
 	}
 
 	wb.apiG = util.ResettableCached(func() (salia.Api, error) {

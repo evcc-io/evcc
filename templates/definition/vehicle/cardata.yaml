@@ -8,7 +8,7 @@ products:
       generic: CarData (EU Data Act)
 requirements:
   description:
-    de: >
+    de: |
       Benötigt CarData Einrichtung im BMW/Mini portal. Die folgenden Datenpunkte müssen für Streaming konfiguriert werden:
 
       ```
@@ -16,14 +16,13 @@ requirements:
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
-      vehicle.drivetrain.electricEngine.charging.level
-      vehicle.drivetrain.electricEngine.charging.timeToFullyCharged
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
       vehicle.vehicle.travelledDistance
       ```
 
-    en: >
+    en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access:
 
       ```
@@ -31,8 +30,7 @@ requirements:
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
-      vehicle.drivetrain.electricEngine.charging.level
-      vehicle.drivetrain.electricEngine.charging.timeToFullyCharged
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
       vehicle.vehicle.travelledDistance
@@ -41,6 +39,7 @@ requirements:
 params:
   - preset: vehicle-common
   - name: vin
+    required: true
     example: WBMW...
   - name: clientid
     required: true
