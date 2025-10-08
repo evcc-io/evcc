@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -26,11 +25,6 @@ func NewWrapper(name, typ string, other map[string]interface{}, err error) api.V
 	// try to decode vehicle-specific config and look for title attribute
 	_ = util.DecodeOther(other, &cc)
 
-	if cc.Title_ == "" {
-		//lint:ignore SA1019 as Title is safe on ascii
-		cc.Title_ = strings.Title(name)
-	}
-
 	v := &Wrapper{
 		embed:  cc.embed,
 		typ:    typ,
@@ -39,7 +33,6 @@ func NewWrapper(name, typ string, other map[string]interface{}, err error) api.V
 	}
 
 	v.Features_ = append(v.Features_, api.Offline, api.Retryable)
-	v.SetTitle(cc.Title_)
 
 	return v
 }
@@ -47,11 +40,6 @@ func NewWrapper(name, typ string, other map[string]interface{}, err error) api.V
 // WrappedConfig indicates a device with wrapped configuration
 func (v *Wrapper) WrappedConfig() (string, map[string]interface{}) {
 	return v.typ, v.config
-}
-
-// SetTitle implements the api.TitleSetter interface
-func (v *Wrapper) SetTitle(title string) {
-	v.Title_ = title
 }
 
 var _ api.Battery = (*Wrapper)(nil)

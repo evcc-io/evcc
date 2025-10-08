@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -15,24 +17,16 @@ type embed struct {
 	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
 }
 
-// Title implements the api.Vehicle interface
-func (v *embed) fromVehicle(title string, capacity float64) {
-	if v.Title_ == "" {
-		v.Title_ = title
+func (v embed) withContext(ctx context.Context) *embed {
+	if title := ctx.Value(api.ContextTitle); title != nil {
+		v.Title_ = title.(string)
 	}
-	if v.Capacity_ == 0 {
-		v.Capacity_ = capacity
-	}
+	return &v
 }
 
 // GetTitle implements the api.Vehicle interface
 func (v *embed) GetTitle() string {
 	return v.Title_
-}
-
-// SetTitle implements the api.TitleSetter interface
-func (v *embed) SetTitle(title string) {
-	v.Title_ = title
 }
 
 // Capacity implements the api.Vehicle interface

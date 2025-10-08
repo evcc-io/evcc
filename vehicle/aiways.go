@@ -20,7 +20,7 @@ type Aiways struct {
 }
 
 func init() {
-	registry.Add("aiways", NewAiwaysFromConfig)
+	registry.AddCtx("aiways", NewAiwaysFromConfig)
 }
 
 // NewAiwaysFromConfig creates a new vehicle
@@ -44,7 +44,7 @@ func NewAiwaysFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Aiways{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("aiways").Redact(cc.User, cc.Password, cc.VIN)

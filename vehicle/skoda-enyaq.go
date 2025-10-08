@@ -19,7 +19,7 @@ type Enyaq struct {
 }
 
 func init() {
-	registry.Add("enyaq", NewEnyaqFromConfig)
+	registry.AddCtx("enyaq", NewEnyaqFromConfig)
 }
 
 // NewEnyaqFromConfig creates a new vehicle
@@ -43,7 +43,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Enyaq{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	var err error
@@ -70,7 +70,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil {
-		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
+		v.Capacity_ = float64(vehicle.Specification.Battery.CapacityInKWh)
 	}
 
 	// reuse tokenService to build provider

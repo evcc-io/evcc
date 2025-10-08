@@ -20,7 +20,7 @@ type Cupra struct {
 }
 
 func init() {
-	registry.Add("cupra", NewCupraFromConfig)
+	registry.AddCtx("cupra", NewCupraFromConfig)
 }
 
 // NewCupraFromConfig creates a new vehicle
@@ -44,7 +44,7 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Cupra{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
@@ -73,7 +73,6 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	)
 
 	if err == nil {
-		v.fromVehicle(vehicle.VehicleNickname, 0)
 		v.Provider = cupra.NewProvider(api, ui.Subject, vehicle.VIN, cc.Cache)
 	}
 

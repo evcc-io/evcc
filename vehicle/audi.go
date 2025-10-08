@@ -85,7 +85,6 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		api := id.NewAPI(log, its)
 		api.Client.Timeout = cc.Timeout
 
-		v.fromVehicle(vehicle.Nickname, 0)
 		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
