@@ -1,6 +1,7 @@
 <template>
 	<DeviceModalBase
 		:id="id"
+		v-model:external-template="selectedTemplate"
 		modal-id="meterModal"
 		device-type="meter"
 		:fade="fade"
@@ -9,7 +10,6 @@
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-yaml-input-type="isYamlInput"
-		v-model:external-template="selectedTemplate"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
 		:on-template-change="handleTemplateChange"
