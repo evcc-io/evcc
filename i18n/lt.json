@@ -165,6 +165,7 @@
       "dragItem": "Galima vilkti: {title}",
       "dragList": "Galima sukeisti vietomis",
       "experimental": "Eksperimentinis",
+      "forceSave": "Vistiek įrašyti",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
       "noFileSelected": "Nepasirinktas failas.",
@@ -176,6 +177,8 @@
       "required": "privaloma",
       "reset": "Grąžinti į pirminę būseną",
       "save": "Išsaugoti",
+      "saved": "Išsaugota.",
+      "saving": "Įrašoma…",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
       "telemetry": "Telemetrija",
@@ -524,7 +527,7 @@
     "validation": {
       "failed": "nepavyko",
       "label": "Statusas",
-      "running": "tikrinama…",
+      "running": "Tikrinama…",
       "success": "sėkmingai",
       "unknown": "nežinomas",
       "validate": "tikrinti"
