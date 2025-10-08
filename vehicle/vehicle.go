@@ -49,7 +49,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	}
 
 	v := &Vehicle{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 		socG:  socG,
 	}
 

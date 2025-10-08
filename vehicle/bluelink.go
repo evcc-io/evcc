@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -18,12 +19,12 @@ type Bluelink struct {
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig)
-	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.AddCtx("kia", NewKiaFromConfig)
+	registry.AddCtx("hyundai", NewHyundaiFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
-func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewHyundaiFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
@@ -40,11 +41,11 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		// BrandAuthUrl:  "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
 	}
 
-	return newBluelinkFromConfig("hyundai", other, settings)
+	return newBluelinkFromConfig(ctx, "hyundai", other, settings)
 }
 
 // NewKiaFromConfig creates a new vehicle
-func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewKiaFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
@@ -58,11 +59,11 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Brand:             "kia",
 	}
 
-	return newBluelinkFromConfig("kia", other, settings)
+	return newBluelinkFromConfig(ctx, "kia", other, settings)
 }
 
 // newBluelinkFromConfig creates a new Vehicle
-func newBluelinkFromConfig(brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
+func newBluelinkFromConfig(ctx context.Context, brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -100,7 +101,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 	}
 
 	v := &Bluelink{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
 	}
 

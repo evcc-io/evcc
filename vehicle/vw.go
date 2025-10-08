@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -24,7 +25,7 @@ func init() {
 }
 
 // NewIDFromConfig creates a new vehicle
-func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewIDFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

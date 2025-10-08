@@ -144,9 +144,9 @@ type PhaseDescriber interface {
 type Vehicle interface {
 	Battery
 	BatteryCapacity
-	IconDescriber
 	FeatureDescriber
 	PhaseDescriber
+	TitleDescriber
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }

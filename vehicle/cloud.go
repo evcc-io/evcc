@@ -25,11 +25,11 @@ type Cloud struct {
 }
 
 func init() {
-	registry.Add("cloud", NewCloudFromConfig)
+	registry.AddCtx("cloud", NewCloudFromConfig)
 }
 
 // NewCloudFromConfig creates a new vehicle
-func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewCloudFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed `mapstructure:",squash"`
 		Brand string
@@ -53,7 +53,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Cloud{
-		embed:  &cc.embed,
+		embed:  cc.embed.withContext(ctx),
 		token:  sponsor.Token,
 		brand:  cc.Brand,
 		config: cc.Other,

@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -16,16 +17,16 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.Add("mercedes", func(other map[string]interface{}) (api.Vehicle, error) {
-		return newMercedesFromConfig("mercedes", other)
+	registry.AddCtx("mercedes", func(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+		return newMercedesFromConfig(ctx, "mercedes", other)
 	})
-	registry.Add("smart-eq", func(other map[string]interface{}) (api.Vehicle, error) {
-		return newMercedesFromConfig("smart-eq", other)
+	registry.AddCtx("smart-eq", func(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+		return newMercedesFromConfig(ctx, "smart-eq", other)
 	})
 }
 
 // newMercedesFromConfig creates a new vehicle
-func newMercedesFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func newMercedesFromConfig(ctx context.Context, brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Tokens   Tokens
@@ -71,7 +72,7 @@ func newMercedesFromConfig(brand string, other map[string]interface{}) (api.Vehi
 	}
 
 	v := &Mercedes{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Provider: mercedes.NewProvider(api, cc.VIN, cc.Cache),
 	}
 

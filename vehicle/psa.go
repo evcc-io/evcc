@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -12,17 +13,17 @@ import (
 // https://github.com/TA2k/ioBroker.psa
 
 func init() {
-	registry.Add("citroen", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("citroen", "clientsB2CCitroen", other)
+	registry.AddCtx("citroen", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "citroen", "clientsB2CCitroen", other)
 	})
-	registry.Add("ds", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("ds", "clientsB2CDS", other)
+	registry.AddCtx("ds", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "ds", "clientsB2CDS", other)
 	})
-	registry.Add("opel", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("opel", "clientsB2COpel", other)
+	registry.AddCtx("opel", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "opel", "clientsB2COpel", other)
 	})
-	registry.Add("peugeot", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("peugeot", "clientsB2CPeugeot", other)
+	registry.AddCtx("peugeot", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "peugeot", "clientsB2CPeugeot", other)
 	})
 }
 
@@ -33,7 +34,7 @@ type PSA struct {
 }
 
 // newPSA creates a new vehicle
-func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
+func newPSA(ctx context.Context, brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		VIN      string
@@ -60,7 +61,7 @@ func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, err
 	}
 
 	v := &PSA{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger(brand)

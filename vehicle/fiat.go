@@ -44,7 +44,7 @@ func NewFiatFromConfig(ctx context.Context, other map[string]interface{}) (api.V
 	}
 
 	v := &Fiat{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)

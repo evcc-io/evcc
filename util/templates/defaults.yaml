@@ -485,6 +485,7 @@ presets:
   vehicle-common:
     params:
       - name: title
+        deprecated: true
       - name: icon
         default: car
         advanced: true

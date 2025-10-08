@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -21,11 +22,11 @@ type Ford struct {
 }
 
 func init() {
-	registry.Add("ford", NewFordFromConfig)
+	registry.AddCtx("ford", NewFordFromConfig)
 }
 
 // NewFordFromConfig creates a new vehicle
-func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewFordFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -45,7 +46,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Ford{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("ford").Redact(cc.User, cc.Password, cc.VIN)

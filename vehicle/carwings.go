@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -31,11 +32,11 @@ type CarWings struct {
 }
 
 func init() {
-	registry.Add("carwings", NewCarWingsFromConfig)
+	registry.AddCtx("carwings", NewCarWingsFromConfig)
 }
 
 // NewCarWingsFromConfig creates a new vehicle
-func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewCarWingsFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
@@ -75,7 +76,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &CarWings{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		user:     cc.User,
 		password: cc.Password,
 		session: &carwings.Session{

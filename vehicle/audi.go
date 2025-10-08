@@ -24,12 +24,11 @@ type Audi struct {
 }
 
 func init() {
-	registry.Add("audi", NewAudiFromConfig)
-	registry.Add("etron", NewAudiFromConfig)
+	registry.AddCtx("audi", NewAudiFromConfig)
 }
 
 // NewAudiFromConfig creates a new vehicle
-func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewAudiFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -49,7 +48,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Audi{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)

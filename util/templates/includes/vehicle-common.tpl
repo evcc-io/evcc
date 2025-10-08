@@ -1,7 +1,4 @@
 {{ define "vehicle-common" }}
-{{- if .title }}
-title: {{ .title }}
-{{- end }}
 {{- if .icon }}
 icon: {{ .icon }}
 {{- end }}

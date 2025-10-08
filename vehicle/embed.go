@@ -8,8 +8,9 @@ import (
 
 // TODO align phases with OnIdentify
 type embed struct {
-	Title_       string           `mapstructure:"title"`
-	Icon_        string           `mapstructure:"icon"`
+	_Title       string           `mapstructure:"title"` // TODO deprecated
+	_Icon        string           `mapstructure:"-"`     // TODO deprecated
+	Title_       string           `mapstructure:"-" json:"-"`
 	Capacity_    float64          `mapstructure:"capacity"`
 	Phases_      int              `mapstructure:"phases"`
 	Identifiers_ []string         `mapstructure:"identifiers"`
@@ -51,12 +52,12 @@ func (v *embed) OnIdentified() api.ActionConfig {
 	return v.OnIdentify
 }
 
-var _ api.IconDescriber = (*embed)(nil)
+// var _ api.IconDescriber = (*embed)(nil)
 
-// Icon implements the api.IconDescriber interface
-func (v *embed) Icon() string {
-	return v.Icon_
-}
+// // Icon implements the api.IconDescriber interface
+// func (v *embed) Icon() string {
+// 	return v.Icon_
+// }
 
 var _ api.FeatureDescriber = (*embed)(nil)
 

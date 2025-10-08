@@ -9,7 +9,7 @@ import (
 type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
-	Vehicles() Vehicles
+	// Vehicles() Vehicles
 
 	// Meta
 	GetTitle() string

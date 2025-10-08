@@ -45,13 +45,13 @@ type Tronity struct {
 }
 
 func init() {
-	registry.Add("tronity", NewTronityFromConfig)
+	registry.AddCtx("tronity", NewTronityFromConfig)
 }
 
 //go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
 
 // NewTronityFromConfig creates a new vehicle
-func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewTronityFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials
@@ -84,7 +84,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Tronity{
 		log:    log,
-		embed:  &cc.embed,
+		embed:  cc.embed.withContext(ctx),
 		Helper: request.NewHelper(log),
 		oc:     oc,
 	}
