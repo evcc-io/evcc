@@ -21,9 +21,9 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, baseURL, token string) (*Connection, error) {
-	if baseURL == "" {
-		return nil, errors.New("missing baseURL")
+func NewConnection(log *util.Logger, uri, token string) (*Connection, error) {
+	if uri == "" {
+		return nil, errors.New("missing uri")
 	}
 	if token == "" {
 		return nil, errors.New("missing token")
@@ -31,7 +31,7 @@ func NewConnection(log *util.Logger, baseURL, token string) (*Connection, error)
 
 	c := &Connection{
 		Helper: request.NewHelper(log.Redact(token)),
-		uri:    strings.TrimSuffix(baseURL, "/"),
+		uri:    strings.TrimSuffix(uri, "/"),
 	}
 
 	// Set up authentication headers

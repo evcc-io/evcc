@@ -28,7 +28,7 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		BaseURL    string
+		URI        string
 		Token      string
 		Status     string   // required - sensor for charge status
 		Enabled    string   // required - sensor for enabled state
@@ -55,7 +55,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, erro
 	}
 
 	log := util.NewLogger("ha-charger")
-	conn, err := homeassistant.NewConnection(log, cc.BaseURL, cc.Token)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Token)
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,7 @@ func init() {
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed   `mapstructure:",squash"`
-		BaseURL string
+		URI     string
 		Token   string
 		Sensors struct {
 			Soc        string // required
@@ -49,8 +49,8 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	switch {
-	case cc.BaseURL == "":
-		return nil, errors.New("missing BaseURL")
+	case cc.URI == "":
+		return nil, errors.New("missing uri")
 	case cc.Token == "":
 		return nil, errors.New("missing token")
 	case cc.Sensors.Soc == "":
@@ -58,7 +58,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	log := util.NewLogger("ha-charger")
-	conn, err := homeassistant.NewConnection(log, cc.BaseURL, cc.Token)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Token)
 	if err != nil {
 		return nil, err
 	}
