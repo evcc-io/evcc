@@ -13,9 +13,9 @@ import (
 )
 
 type HomeAssistantSwitch struct {
-	baseURL      string
-	switchEntity string
-	powerEntity  string
+	baseURL string
+	switchE string
+	powerE  string
 	*request.Helper
 	*switchSocket
 }
@@ -29,8 +29,8 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 		embed        `mapstructure:",squash"`
 		BaseURL      string
 		Token        string
-		SwitchEntity string
-		PowerEntity  string
+		Switch       string
+		Power        string
 		StandbyPower float64
 	}
 
@@ -38,23 +38,25 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.BaseURL, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.BaseURL, cc.Token, cc.Switch, cc.Power, cc.StandbyPower)
 }
 
-func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
+func NewHomeAssistantSwitch(embed embed, baseURL, token, switchE, powerE string, standbypower float64) (api.Charger, error) {
+	log := util.NewLogger("ha-switch")
+
 	c := &HomeAssistantSwitch{
-		baseURL:      strings.TrimSuffix(baseURL, "/"),
-		switchEntity: switchEntity,
-		powerEntity:  powerEntity,
-		Helper:       request.NewHelper(util.NewLogger("ha-switch")),
+		baseURL: strings.TrimSuffix(baseURL, "/"),
+		switchE: switchE,
+		powerE:  powerE,
+		Helper:  request.NewHelper(log),
 	}
 
-	if switchEntity == "" {
+	if switchE == "" {
 		return nil, errors.New("missing switch entity")
 	}
 
 	// standbypower < 0 ensures that currentPower is never used by the switch socket if not present
-	if powerEntity == "" && standbypower >= 0 {
+	if powerE == "" && standbypower >= 0 {
 		return nil, errors.New("missing either power entity or negative standbypower")
 	}
 
@@ -76,7 +78,7 @@ func (c *HomeAssistantSwitch) Enabled() (bool, error) {
 		State string `json:"state"`
 	}
 
-	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.switchEntity)
+	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.switchE)
 	err := c.Helper.GetJSON(uri, &res)
 
 	return res.State == "on", err
@@ -89,9 +91,9 @@ func (c *HomeAssistantSwitch) Enable(enable bool) error {
 		service = "turn_on"
 	}
 
-	data := map[string]any{"entity_id": c.switchEntity}
+	data := map[string]any{"entity_id": c.switchE}
 	// the domain must not be necessary a 'switch' - it can be also an `input_boolean`
-	domain := strings.Split(c.switchEntity, ".")[0]
+	domain := strings.Split(c.switchE, ".")[0]
 
 	uri := fmt.Sprintf("%s/api/services/%s/%s", c.baseURL, domain, service)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
@@ -105,7 +107,7 @@ func (c *HomeAssistantSwitch) currentPower() (float64, error) {
 		State float64 `json:"state,string"`
 	}
 
-	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerEntity)
+	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerE)
 	err := c.Helper.GetJSON(uri, &res)
 
 	return res.State, err

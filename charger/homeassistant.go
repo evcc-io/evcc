@@ -58,7 +58,8 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, erro
 		return nil, errors.New("missing enable switch entity")
 	}
 
-	conn, err := homeassistant.NewConnection(cc.BaseURL, cc.Token)
+	log := util.NewLogger("ha-charger")
+	conn, err := homeassistant.NewConnection(log, cc.BaseURL, cc.Token)
 	if err != nil {
 		return nil, err
 	}

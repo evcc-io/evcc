@@ -43,7 +43,8 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	conn, err := homeassistant.NewConnection(cc.BaseURL, cc.Token)
+	log := util.NewLogger("ha-meter")
+	conn, err := homeassistant.NewConnection(log, cc.BaseURL, cc.Token)
 	if err != nil {
 		return nil, err
 	}
