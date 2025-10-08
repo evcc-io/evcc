@@ -87,7 +87,7 @@ test.describe("ext meter", async () => {
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 
-  test("custom ext meter with yaml", async ({ page }) => {
+  test("switch from template to custom ext meter", async ({ page }) => {
     await page.goto("/#/config");
     await enableExperimental(page, false);
 
@@ -97,6 +97,10 @@ test.describe("ext meter", async () => {
     await meterModal.getByRole("button", { name: "Add regular consumer" }).click();
 
     await meterModal.getByLabel("Title").fill("Custom ext meter");
+    await meterModal.getByLabel("Usage").selectOption("battery");
+    await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
+    await meterModal.getByLabel("Charge").fill("50");
+
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
 

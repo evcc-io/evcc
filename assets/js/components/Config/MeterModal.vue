@@ -9,7 +9,6 @@
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
-		:is-yaml-input-type="isYamlInput"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
 		:on-template-change="handleTemplateChange"
@@ -107,6 +106,7 @@ import {
 	type ApiData,
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
+import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -248,15 +248,13 @@ export default defineComponent({
 			}
 			return data;
 		},
-		isYamlInput(type: ConfigType): boolean {
-			return type === ConfigType.Custom;
-		},
-		async handleTemplateChange(e: Event, values: DeviceValues) {
+		handleTemplateChange(e: Event, values: DeviceValues) {
+			console.log("[MeterModal] handleTemplateChange", { e, values });
 			const value = (e.target as HTMLSelectElement).value;
 			if (value === ConfigType.Custom) {
-				const defaultYaml = await import("./defaultYaml/meter.yaml?raw");
 				values.type = ConfigType.Custom;
-				values.yaml = defaultYaml.default;
+				values.yaml = defaultMeterYaml;
+				console.log("[MeterModal] set type/yaml", { type: values.type, yaml: values.yaml });
 			}
 		},
 		applyCustomDefaults(_template: Template | null, values: DeviceValues) {

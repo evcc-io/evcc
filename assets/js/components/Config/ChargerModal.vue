@@ -189,7 +189,7 @@ export default defineComponent({
 				ConfigType.SgReadyBoost,
 			].includes(type);
 		},
-		async handleTemplateChange(e: Event, values: DeviceValues) {
+		handleTemplateChange(e: Event, values: DeviceValues) {
 			const value = (e.target as HTMLSelectElement).value as ConfigType;
 			if (this.isYamlInput(value)) {
 				values.type = value;

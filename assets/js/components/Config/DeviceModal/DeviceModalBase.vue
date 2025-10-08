@@ -175,7 +175,7 @@ export default defineComponent({
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
 		// Optional: handle template change (receives event and values, allows setting values.yaml)
-		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => Promise<void>>,
+		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => void>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
 		// Optional: callback after configuration is loaded (receives values)
@@ -293,10 +293,7 @@ export default defineComponent({
 			return this.templateName || this.showYamlInput;
 		},
 		showYamlInput() {
-			if (this.isYamlInputType) {
-				return this.isYamlInputType(this.values.type);
-			}
-			return this.values.type === ConfigType.Custom;
+			return this.isYamlInputTypeByValue(this.values.type);
 		},
 		showTemplateSelector() {
 			return this.computedTemplateOptions.length > 0;
@@ -325,36 +322,28 @@ export default defineComponent({
 				this.$emit("update:externalTemplate", newValue);
 			}
 
-			// Reset values when template changes (except on initial load)
+			console.log("templateName changed", { newValue, oldValue });
+			// Reset values when template changes (except on initial load or when switching to YAML input)
+			// YAML input types set values.type and values.yaml in handleTemplateChange callback
 			if (oldValue != null) {
-				// Determine which fields to preserve
-				const fieldsToPreserve: string[] = [];
-
-				// Always preserve configured fields (e.g., deviceTitle, deviceIcon)
 				if (this.preserveOnTemplateChange) {
-					fieldsToPreserve.push(...this.preserveOnTemplateChange);
+					const preserved: Record<string, any> = {};
+					this.preserveOnTemplateChange.forEach((field) => {
+						preserved[field] = this.values[field];
+					});
+					this.reset();
+					this.preserveOnTemplateChange.forEach((field) => {
+						this.values[field] = preserved[field];
+					});
+				} else {
+					this.reset();
 				}
-
-				// For YAML/custom templates, also preserve type and yaml fields
-				const isYamlInput =
-					this.isYamlInputType && newValue && this.isYamlInputType(newValue as any);
-				if (isYamlInput) {
-					fieldsToPreserve.push("type", "yaml");
-				}
-
-				// Preserve specified fields across reset
-				const preserved: Record<string, any> = {};
-				fieldsToPreserve.forEach((field) => {
-					preserved[field] = this.values[field];
-				});
-
-				this.reset();
-
-				fieldsToPreserve.forEach((field) => {
-					this.values[field] = preserved[field];
-				});
 			}
-			this.loadTemplate();
+
+			const isYamlInput = this.isYamlInputTypeByValue(newValue as ConfigType);
+			if (!isYamlInput) {
+				this.loadTemplate();
+			}
 		},
 		usage() {
 			// Reload products when usage changes (e.g., meter type selection)
@@ -526,13 +515,13 @@ export default defineComponent({
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		async handleTemplateChange(e: Event) {
-			// Allow parent to handle custom logic (e.g., loading default YAML)
-			if (this.onTemplateChange) {
-				await this.onTemplateChange(e, this.values);
-			}
-			// Emit to parent for notification
-			this.$emit("template-changed", e);
+		handleTemplateChange(e: Event) {
+			// ensure this triggers after tempateName watcher
+			this.$nextTick(() => {
+				if (this.onTemplateChange) {
+					this.onTemplateChange(e, this.values);
+				}
+			});
 		},
 		handleSave(force: boolean) {
 			if (this.isNew) {
@@ -543,6 +532,12 @@ export default defineComponent({
 		},
 		handleRemove() {
 			this.remove();
+		},
+		isYamlInputTypeByValue(value: ConfigType): boolean {
+			if (this.isYamlInputType) {
+				return this.isYamlInputType(value);
+			}
+			return value === ConfigType.Custom;
 		},
 	},
 });
