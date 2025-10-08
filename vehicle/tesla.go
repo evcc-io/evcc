@@ -20,7 +20,7 @@ type Tesla struct {
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.AddCtx("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
@@ -84,12 +84,10 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	tcc.SetBaseUrl(cc.CommandProxy)
 
 	v := &Tesla{
-		embed:      &cc.embed,
+		embed:      cc.embed.withContext(ctx),
 		Provider:   tesla.NewProvider(vehicle, cc.Cache),
 		Controller: tesla.NewController(vehicle.WithClient(tcc)),
 	}
-
-	v.fromVehicle(vehicle.DisplayName, 0)
 
 	return v, nil
 }
