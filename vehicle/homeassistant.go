@@ -71,16 +71,15 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	// prepare optional feature functions with concise names
 	var (
-		limitSoc      func() (int64, error)
-		status        func() (api.ChargeStatus, error)
-		rng           func() (int64, error)
-		odo           func() (float64, error)
-		climater      func() (bool, error)
-		finish        func() (time.Time, error)
-		chargeEnable  func(bool) error
-		wakeup        func() error
-		maxCurrent    func(int64) error
-		getMaxCurrent func() (float64, error)
+		limitSoc   func() (int64, error)
+		status     func() (api.ChargeStatus, error)
+		rng        func() (int64, error)
+		odo        func() (float64, error)
+		climater   func() (bool, error)
+		finish     func() (time.Time, error)
+		enable     func(bool) error
+		wakeup     func() error
+		maxcurrent func(int64) error
 	)
 
 	if cc.Sensors.LimitSoc != "" {
@@ -102,14 +101,13 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		finish = func() (time.Time, error) { return res.getTimeSensor(cc.Sensors.FinishTime) }
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
-		chargeEnable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
 	}
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return conn.CallService(cc.Services.Wakeup) }
 	}
 	if cc.Services.SetMaxCurrent != "" {
-		maxCurrent = func(current int64) error { return res.setMaxCurrent(cc.Services.SetMaxCurrent, current) }
-		getMaxCurrent = func() (float64, error) { return conn.GetFloatState(cc.Services.SetMaxCurrent) }
+		maxcurrent = func(current int64) error { return res.setMaxCurrent(cc.Services.SetMaxCurrent, current) }
 	}
 
 	// decorate all features
@@ -120,11 +118,11 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		rng,
 		odo,
 		climater,
-		maxCurrent,
-		getMaxCurrent,
+		maxcurrent,
+		nil,
 		finish,
 		wakeup,
-		chargeEnable,
+		enable,
 	), nil
 }
 
