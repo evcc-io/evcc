@@ -204,7 +204,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
 				// TODO precise slot placement
-				if slot := int(time.Until(ts) / time.Hour); slot < minLen {
+				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
