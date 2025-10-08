@@ -165,6 +165,7 @@
       "dragItem": "Déplaçable : {title}",
       "dragList": "Liste à ordonner",
       "experimental": "Expérimental",
+      "forceSave": "Enregistrer quand même",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
       "noFileSelected": "Aucun fichier sélectionné.",
@@ -176,6 +177,8 @@
       "required": "obligatoire",
       "reset": "Réinitialiser",
       "save": "Enregistrer",
+      "saved": "Enregistré.",
+      "saving": "Enregistrement en cours…",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
       "telemetry": "Télémétrie",
@@ -328,7 +331,7 @@
       "title": "Configuration",
       "unconfigured": "non configuré",
       "vehicles": "Mes véhicules",
-      "yaml": "Les appareils provenant de evcc.yaml ne sont pas modifiables."
+      "yaml": "Un appareil provenant du evcc.yaml n’est pas modifiable."
     },
     "messaging": {
       "description": "Recevoir des messages à propos de vos sessions de charge.",
@@ -523,7 +526,7 @@
     "validation": {
       "failed": "échec",
       "label": "Statut",
-      "running": "en cours de validation…",
+      "running": "En cours de validation…",
       "success": "réussi",
       "unknown": "inconnu",
       "validate": "valider"
