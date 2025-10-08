@@ -9,9 +9,9 @@ import (
 )
 
 type HomeAssistantSwitch struct {
-	conn         *homeassistant.Connection
-	switchEntity string
-	powerEntity  string
+	conn   *homeassistant.Connection
+	enable string
+	power  string
 	*switchSocket
 }
 
@@ -24,8 +24,8 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 		embed        `mapstructure:",squash"`
 		URI          string
 		Token        string
-		SwitchEntity string
-		PowerEntity  string
+		Enable       string
+		Power        string
 		StandbyPower float64
 	}
 
@@ -33,16 +33,16 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Token, cc.Enable, cc.Power, cc.StandbyPower)
 }
 
-func NewHomeAssistantSwitch(embed embed, uri, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
-	if switchEntity == "" {
+func NewHomeAssistantSwitch(embed embed, uri, token, enable, power string, standbypower float64) (api.Charger, error) {
+	if enable == "" {
 		return nil, errors.New("missing switch entity")
 	}
 
 	// standbypower < 0 ensures that currentPower is never used by the switch socket if not present
-	if powerEntity == "" && standbypower >= 0 {
+	if power == "" && standbypower >= 0 {
 		return nil, errors.New("missing either power entity or negative standbypower")
 	}
 
@@ -53,9 +53,9 @@ func NewHomeAssistantSwitch(embed embed, uri, token, switchEntity, powerEntity s
 	}
 
 	c := &HomeAssistantSwitch{
-		switchEntity: switchEntity,
-		powerEntity:  powerEntity,
-		conn:         conn,
+		enable: enable,
+		power:  power,
+		conn:   conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
@@ -65,15 +65,15 @@ func NewHomeAssistantSwitch(embed embed, uri, token, switchEntity, powerEntity s
 
 // Enabled implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enabled() (bool, error) {
-	return c.conn.GetBoolState(c.switchEntity)
+	return c.conn.GetBoolState(c.enable)
 }
 
 // Enable implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enable(enable bool) error {
-	return c.conn.CallSwitchService(c.switchEntity, enable)
+	return c.conn.CallSwitchService(c.enable, enable)
 }
 
 // currentPower implements the api.Meter interface (optional)
 func (c *HomeAssistantSwitch) currentPower() (float64, error) {
-	return c.conn.GetFloatState(c.powerEntity)
+	return c.conn.GetFloatState(c.power)
 }

@@ -38,6 +38,6 @@ render: |
   type: homeassistant-switch
   uri: {{ if (eq .uri "") }}{{ .baseurl }}{{ else }}{{ .uri }}{{ end }}
   token: {{ .token }}
-  switchentity: {{ .switchentity }}
-  powerentity: {{ .powerentity }}
+  enable: {{ .switchentity }}
+  power: {{ .powerentity }}
   {{ include "switchsocket" . }}
