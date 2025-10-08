@@ -31,8 +31,9 @@ import (
 
 // Solax charger implementation
 type Solax struct {
-	log  *util.Logger
-	conn *modbus.Connection
+	log   *util.Logger
+	conn  *modbus.Connection
+	isEvc bool
 }
 
 const (
@@ -58,11 +59,20 @@ const (
 )
 
 func init() {
-	registry.AddCtx("solax", NewSolaxFromConfig)
+	registry.AddCtx("solax", NewSolaxEVCFromConfig)
+	registry.AddCtx("solax-hac", NewSolaxHACFromConfig)
+}
+
+func NewSolaxEVCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	return NewSolaxFromConfig(ctx, other, true)
+}
+
+func NewSolaxHACFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	return NewSolaxFromConfig(ctx, other, false)
 }
 
 // NewSolaxFromConfig creates a Solax charger from generic config
-func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}, isEvc bool) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -71,11 +81,11 @@ func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, isEvc)
 }
 
 // NewSolax creates Solax charger
-func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
+func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, isEvc bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
@@ -89,8 +99,9 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	conn.Logger(log.TRACE)
 
 	wb := &Solax{
-		log:  log,
-		conn: conn,
+		log:   log,
+		conn:  conn,
+		isEvc: isEvc,
 	}
 
 	return wb, err
@@ -105,7 +116,13 @@ func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+		var v uint16
+		if wb.isEvc {
+			v = binary.BigEndian.Uint16(b[2*i:])
+		} else {
+			v = encoding.Uint16(b[2*i:])
+		}
+		res[i] = float64(v) / 100
 	}
 
 	return res[0], res[1], res[2], nil
@@ -143,7 +160,11 @@ func (wb *Solax) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != solaxModeStop, nil
+	if wb.isEvc {
+		return binary.BigEndian.Uint16(b) != solaxModeStop, nil
+	} else {
+		return encoding.Uint16(b) != solaxModeStop, nil
+	}
 }
 
 // Enable implements the api.Charger interface
@@ -184,7 +205,11 @@ func (wb *Solax) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)), err
+	if wb.isEvc {
+		return float64(binary.BigEndian.Uint16(b)), err
+	} else {
+		return float64(encoding.Uint16(b)), err
+	}
 }
 
 var _ api.MeterEnergy = (*Solax)(nil)
@@ -196,7 +221,11 @@ func (wb *Solax) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 10, err
+	if wb.isEvc {
+		return float64(binary.BigEndian.Uint32(b)) / 10, err
+	} else {
+		return float64(encoding.Uint32(b)) / 10, err
+	}
 }
 
 var _ api.PhaseCurrents = (*Solax)(nil)
