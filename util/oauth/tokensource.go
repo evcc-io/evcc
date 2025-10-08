@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync"
 
-	"dario.cat/mergo"
 	"golang.org/x/oauth2"
 )
 
@@ -56,9 +55,4 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.token = token
 
 	return ts.token, nil
-}
-
-// mergeToken updates a token while preventing wiping the refresh token
-func (ts *TokenSource) mergeToken(t *oauth2.Token) error {
-	return mergo.Merge(ts.token, t, mergo.WithOverride)
 }
