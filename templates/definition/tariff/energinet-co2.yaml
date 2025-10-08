@@ -19,16 +19,22 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now
+    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now&sort=Minutes5UTC%20DESC
     jq: |
       [.records[]
         | {
-          start: (.Minutes5UTC[0:13] + ":00:00Z"),
-          end: (.Minutes5UTC[0:13] 
-                | strptime("%Y-%m-%dT%H") 
-                | mktime + 3600 
-                | strftime("%Y-%m-%dT%H:%M:%SZ")),
-          value: .CO2Emission
+            # Parse the timestamp
+            ts: (.Minutes5UTC | strptime("%Y-%m-%dT%H:%M:%S")),
+            value: .CO2Emission
+        }
+        | {
+            # Calculate the 15-minute start slot
+            slot: (mktime | floor / 900 | floor * 900)
+        }
+        | {
+            start: (.slot | strftime("%Y-%m-%dT%H:%M:%SZ")),
+            end: ((.slot + 900) | strftime("%Y-%m-%dT%H:%M:%SZ")),
+            value: .value
         }
       ]
       | group_by(.start)
