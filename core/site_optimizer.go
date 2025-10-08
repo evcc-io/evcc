@@ -203,18 +203,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 
 			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
-				// calculate slot index based on 15-minute slots
-				bos := time.Now().Truncate(tariff.SlotDuration)
-				eos := bos.Add(tariff.SlotDuration)
-				// calculate time from end of first slot to target
-				remainingTime := ts.Sub(eos)
-				// slot 0 is the partial/full current slot (until eos)
-				// subsequent slots are full 15-minute slots
-				slot := 0
-				if remainingTime > 0 {
-					slot = 1 + int(remainingTime/tariff.SlotDuration)
-				}
-				if slot < minLen {
+				// TODO precise slot placement
+				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
