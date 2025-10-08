@@ -57,7 +57,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, errors.New("missing soc sensor")
 	}
 
-	log := util.NewLogger("ha-charger")
+	log := util.NewLogger("ha-vehicle")
 	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Token)
 	if err != nil {
 		return nil, err

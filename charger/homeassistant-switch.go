@@ -2,7 +2,6 @@ package charger
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -10,10 +9,9 @@ import (
 )
 
 type HomeAssistantSwitch struct {
-	baseURL      string
+	conn         *homeassistant.Connection
 	switchEntity string
 	powerEntity  string
-	conn         *homeassistant.Connection
 	*switchSocket
 }
 
@@ -24,7 +22,7 @@ func init() {
 func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
-		BaseURL      string
+		URI          string
 		Token        string
 		SwitchEntity string
 		PowerEntity  string
@@ -35,10 +33,10 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.BaseURL, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
 }
 
-func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
+func NewHomeAssistantSwitch(embed embed, uri, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
 	log := util.NewLogger("ha-switch")
 
 	if switchEntity == "" {
@@ -50,13 +48,12 @@ func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEnti
 		return nil, errors.New("missing either power entity or negative standbypower")
 	}
 
-	conn, err := homeassistant.NewConnection(log, baseURL, token)
+	conn, err := homeassistant.NewConnection(log, uri, token)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &HomeAssistantSwitch{
-		baseURL:      strings.TrimSuffix(baseURL, "/"),
 		switchEntity: switchEntity,
 		powerEntity:  powerEntity,
 		conn:         conn,
