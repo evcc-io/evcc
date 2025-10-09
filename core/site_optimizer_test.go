@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -50,6 +51,9 @@ func TestSqliteTimestamp(t *testing.T) {
 
 func TestUpdateHouseholdProfile(t *testing.T) {
 	clock := clock.NewMock()
+
+	// make sure test data added starting 00:00 local time
+	clock.Set(now.With(clock.Now()).BeginningOfDay())
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	metrics.Init()
