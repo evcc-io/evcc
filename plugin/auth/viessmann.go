@@ -34,6 +34,7 @@ func init() {
 func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
 		ClientID string
+		Gateway  string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -43,5 +44,5 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.T
 	log := util.NewLogger("viessmann").Redact(cc.ClientID)
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
-	return NewOauth(ctx, "Viessmann", oauth2Config(cc.ClientID))
+	return NewOauth(ctx, "Viessmann", cc.Gateway, oauth2Config(cc.ClientID))
 }

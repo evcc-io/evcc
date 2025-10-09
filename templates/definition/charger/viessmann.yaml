@@ -150,6 +150,7 @@ render: |
     auth:
       source: viessmann
       clientid: {{ .clientid }}
+      gateway: {{ .gateway_serial }}
     jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
@@ -170,6 +171,7 @@ render: |
           auth:
             source: viessmann
             clientid: {{ .clientid }}
+            gateway: {{ .gateway_serial }}
           body: >
             { }
       - case: 3 # boost
@@ -182,6 +184,7 @@ render: |
           auth:
             source: viessmann
             clientid: {{ .clientid }}
+            gateway: {{ .gateway_serial }}
           body: >
             { }
       - case: 1 # dimm
