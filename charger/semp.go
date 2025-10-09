@@ -25,13 +25,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SEMP charger implementation
 type SEMP struct {
-	*request.Helper
 	log            *util.Logger
 	conn           *semp.Connection
 	cache          time.Duration
@@ -43,7 +41,7 @@ type SEMP struct {
 	deviceID       string
 	minPower       int
 	maxPower       int
-	lastUpdate     time.Time
+	updated        time.Time
 	hasStatusParam bool
 }
 
@@ -79,7 +77,6 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	log := util.NewLogger("semp")
 
 	wb := &SEMP{
-		Helper:   request.NewHelper(log),
 		log:      log,
 		cache:    cache,
 		phases:   3,
@@ -88,11 +85,8 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		deviceID: deviceID,
 	}
 
-	// Set default timeout
-	wb.Client.Timeout = request.Timeout
-
 	// Initialize SEMP connection
-	wb.conn = semp.NewConnection(wb.Helper, uri)
+	wb.conn = semp.NewConnection(log, uri)
 
 	// Setup cached device getter
 	wb.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
@@ -117,7 +111,7 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 
 		// Use first device ID found
 		wb.deviceID = doc.DeviceInfo[0].Identification.DeviceID
-		log.INFO.Printf("auto-detected device ID: %s", wb.deviceID)
+		log.DEBUG.Printf("auto-detected device ID: %s", wb.deviceID)
 	}
 
 	var (
@@ -156,7 +150,6 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		return nil, err
 	}
 
-	wb.lastUpdate = time.Now()
 	go wb.heartbeat(ctx)
 
 	return decorateSEMP(wb, phases1p3p, getPhases, chargedEnergy), nil
@@ -171,15 +164,14 @@ func (wb *SEMP) heartbeat(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			// Check if we need to send an update
-			if time.Since(wb.lastUpdate) >= time.Minute {
+			if time.Since(wb.updated) >= time.Minute {
 				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
 					wb.log.ERROR.Printf("watchdog: failed to send update: %v", err)
 				} else {
-					wb.lastUpdate = time.Now()
+					wb.updated = time.Now()
 				}
 			}
 		case <-ctx.Done():
-			wb.log.DEBUG.Println("watchdog: stopped")
 			return
 		}
 	}
@@ -316,7 +308,7 @@ func (wb *SEMP) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *SEMP) Enable(enable bool) error {
-	wb.lastUpdate = time.Now()
+	wb.updated = time.Now()
 
 	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(enable, wb.current, wb.phases))
 	if err != nil {
@@ -339,7 +331,7 @@ var _ api.ChargerEx = (*SEMP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
-	wb.lastUpdate = time.Now()
+	wb.updated = time.Now()
 
 	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, current, wb.phases))
 	if err != nil {
@@ -384,7 +376,7 @@ func (wb *SEMP) chargedEnergy() (float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
-	wb.lastUpdate = time.Now()
+	wb.updated = time.Now()
 
 	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, phases))
 	if err != nil {
