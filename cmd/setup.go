@@ -368,7 +368,6 @@ func configureChargers(static []config.Named, names ...string) error {
 }
 
 func vehicleInstance(ctx context.Context, cc config.Named) (api.Vehicle, error) {
-	// TODO move key
 	ctx = util.WithLogger(ctx, util.NewLogger(cc.Name))
 
 	props, err := customDevice(cc.Other)
