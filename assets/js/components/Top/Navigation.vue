@@ -219,19 +219,32 @@ export default defineComponent({
 			const { title, authenticated, loginPath, logoutPath } = provider;
 			if (!authenticated) {
 				try {
-					const response = await baseAPI.get(loginPath);
-					window.location.href = response.data.loginUri;
+					const response = await baseAPI.get(loginPath, {
+						validateStatus: (code) => [200, 400].includes(code),
+					});
+					if (response.status === 200) {
+						window.open(response.data?.loginUri, "_blank");
+					} else {
+						alert(`Failed to login: ${response.data?.error}`);
+					}
 				} catch (error: any) {
 					console.error(error);
-					alert(`Failed to login: ${error.response?.data}`);
+					alert("Unexpected login error: " + error.message);
 				}
 			} else {
 				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
 					try {
-						await baseAPI.get(logoutPath);
+						const response = await baseAPI.get(logoutPath, {
+							validateStatus: (code) => [200, 400, 500].includes(code),
+						});
+						if (response.status === 200) {
+							alert(this.$t("header.authProviders.loggedOut"));
+						} else {
+							alert(`Failed to logout: ${response.data?.error}`);
+						}
 					} catch (error: any) {
 						console.error(error);
-						alert(`Failed to logout: ${error.response?.data}`);
+						alert(`Unexpected logout error: ${error.response?.data}`);
 					}
 				}
 			}
