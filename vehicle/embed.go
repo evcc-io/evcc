@@ -11,8 +11,9 @@ var CtxDeviceTitle internal.ContextKey
 
 // TODO align phases with OnIdentify
 type embed struct {
-	_Title string `mapstructure:"title"` // TODO deprecated
-	_Icon  string `mapstructure:"icon"`  // TODO deprecated
+	// TODO deprecated
+	_Title string `mapstructure:"title"` //nolint:unused
+	_Icon  string `mapstructure:"icon"`  //nolint:unused
 
 	Title_       string           `mapstructure:"-" json:"-"`
 	Capacity_    float64          `mapstructure:"capacity"`
