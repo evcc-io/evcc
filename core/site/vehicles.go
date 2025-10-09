@@ -12,6 +12,6 @@ type Vehicles interface {
 	// ByName returns a single vehicle adapter by name
 	ByName(string) (vehicle.API, error)
 
-	// Instance returns the list of vehicle instances
+	// Instances returns the list of vehicle instances
 	Instances() []api.Vehicle
 }
