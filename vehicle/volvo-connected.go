@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
-	"github.com/spf13/cast"
 )
 
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
@@ -39,9 +38,10 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 	}
 
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
+	embed := cc.embed.withContext(ctx)
 
 	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ts, err := auth.NewOauth(ctx, cast.ToString(ctx.Value(CtxDeviceTitle)), oc)
+	ts, err := auth.NewOauth(ctx, embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	v := &VolvoConnected{
-		embed:    cc.embed.withContext(ctx),
+		embed:    embed,
 		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
 	}
 
