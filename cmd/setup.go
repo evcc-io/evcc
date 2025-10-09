@@ -412,7 +412,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := context.WithValue(context.Background(), api.ContextTitle, cc.Name)
+			ctx := context.WithValue(context.Background(), vehicle.CtxDeviceTitle, cc.Name)
 
 			instance, err := vehicleInstance(ctx, cc)
 			if err != nil {
@@ -449,7 +449,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 				title = cc.Name
 			}
 
-			ctx := context.WithValue(context.Background(), api.ContextTitle, title)
+			ctx := context.WithValue(context.Background(), vehicle.CtxDeviceTitle, title)
 
 			instance, err := vehicleInstance(ctx, cc)
 			if err != nil {

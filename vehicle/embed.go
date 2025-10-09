@@ -4,13 +4,18 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/vehicle/internal"
 )
+
+var CtxDeviceTitle internal.ContextKey
 
 // TODO align phases with OnIdentify
 type embed struct {
-	_Title       string           `mapstructure:"title"` // TODO deprecated
-	_Icon        string           `mapstructure:"-"`     // TODO deprecated
-	Title_       string           `mapstructure:"-" json:"-"`
+	_Title string `mapstructure:"title"`      // TODO deprecated
+	_Icon  string `mapstructure:"icon"`       // TODO deprecated
+	Title_ string `mapstructure:"-" json:"-"` // TODO deprecated
+	Icon_  string `mapstructure:"-" json:"-"` // TODO deprecated
+
 	Capacity_    float64          `mapstructure:"capacity"`
 	Phases_      int              `mapstructure:"phases"`
 	Identifiers_ []string         `mapstructure:"identifiers"`
@@ -18,8 +23,9 @@ type embed struct {
 	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
 }
 
+// withContext extracts the device title from the context
 func (v embed) withContext(ctx context.Context) *embed {
-	if title := ctx.Value(api.ContextTitle); title != nil {
+	if title := ctx.Value(CtxDeviceTitle); title != nil {
 		v.Title_ = title.(string)
 	}
 	return &v
