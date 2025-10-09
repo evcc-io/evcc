@@ -178,6 +178,7 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 	if err != nil {
 		// force logout
 		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
+			o.token = nil
 			o.onlineC <- false
 			settings.Delete(o.subject)
 		}
