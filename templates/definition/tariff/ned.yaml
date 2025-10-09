@@ -24,6 +24,7 @@ render: |
     headers:
       - content-type: application/json
       - X-AUTH-TOKEN: {{ .apiKey }}
+    TZ=Europe/Amsterdam  
     jq: |
       ."hydra:member" | map({ 
         start: (.validfrom | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime | strflocaltime("%FT%T")), #convert to local time summer/winter
