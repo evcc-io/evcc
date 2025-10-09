@@ -42,11 +42,13 @@ import (
 // Salia charger implementation
 type Salia struct {
 	*request.Helper
-	log     *util.Logger
-	uri     string
-	current int64
-	fw      int // 2 if fw 2.0
-	apiG    util.Cacheable[salia.Api]
+	log      *util.Logger
+	uri      string
+	current  int64
+	fw       int // 2 if fw 2.0
+	apiG     util.Cacheable[salia.Api]
+	user     string
+	password string
 }
 
 func init() {
@@ -81,10 +83,12 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 
 	wb := &Salia{
-		log:     log,
-		Helper:  request.NewHelper(log),
-		uri:     util.DefaultScheme(uri, "http"),
-		current: 6,
+		log:      log,
+		Helper:   request.NewHelper(log),
+		uri:      util.DefaultScheme(uri, "http"),
+		current:  6,
+		user:     user,
+		password: password,
 	}
 
 	if user != "" && password != "" {
@@ -182,6 +186,10 @@ func (wb *Salia) post(key, val string) error {
 
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
+		if wb.user != "" && wb.password != "" {
+			req.SetBasicAuth(wb.user, wb.password)
+		}
+
 		var res struct {
 			Result string
 		}
