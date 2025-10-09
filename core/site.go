@@ -382,8 +382,9 @@ func meterCapabilities(name string, meter any) string {
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
 	// verify vehicle detection
-	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
-		for _, v := range vehicles {
+	if devs := config.Vehicles().Devices(); len(devs) > 1 {
+		for _, dev := range devs {
+			v := dev.Instance()
 			if _, ok := v.(api.ChargeState); !ok && len(v.Identifiers()) == 0 {
 				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
 			}

@@ -5,6 +5,9 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
 )
@@ -36,21 +39,21 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(devs))
 
 	for _, dev := range devs {
-		v := dev.Instance()
-		var plan *planStruct
-
-		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
-		}
+		v := vehicle.Adapter(site.log, dev)
 
 		instance := v.Instance()
 		ac := instance.OnIdentified()
 
+		var plan *planStruct
+		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
+			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
+		}
+
 		res[v.Name()] = vehicleStruct{
-			Title: instance.GetTitle(),
-			// Icon:           instance.Icon(),
+			Title:          instance.GetTitle(),
 			Capacity:       instance.Capacity(),
 			Phases:         instance.Phases(),
+			Icon:           deviceProperties(dev).Icon, // device meta data
 			MinSoc:         v.GetMinSoc(),
 			LimitSoc:       v.GetLimitSoc(),
 			MinCurrent:     ac.MinCurrent,
@@ -85,39 +88,39 @@ func (site *Site) updateVehicles(op config.Operation, dev config.Device[api.Vehi
 	site.publishVehicles()
 }
 
-// var _ site.Vehicles = (*vehicles)(nil)
+var _ site.Vehicles = (*vehicles)(nil)
 
-// type vehicles struct {
-// 	log *util.Logger
-// }
+type vehicles struct {
+	log *util.Logger
+}
 
-// func (vv *vehicles) Instances() []api.Vehicle {
-// 	devs := config.Vehicles().Devices()
+func (vv *vehicles) Instances() []api.Vehicle {
+	devs := config.Vehicles().Devices()
 
-// 	res := make([]api.Vehicle, 0, len(devs))
-// 	for _, dev := range devs {
-// 		res = append(res, dev.Instance())
-// 	}
+	res := make([]api.Vehicle, 0, len(devs))
+	for _, dev := range devs {
+		res = append(res, dev.Instance())
+	}
 
-// 	return res
-// }
+	return res
+}
 
-// func (vv *vehicles) Settings() []vehicle.API {
-// 	devs := config.Vehicles().Devices()
+func (vv *vehicles) Settings() []vehicle.API {
+	devs := config.Vehicles().Devices()
 
-// 	res := make([]vehicle.API, 0, len(devs))
-// 	for _, dev := range devs {
-// 		res = append(res, vehicle.Adapter(vv.log, dev))
-// 	}
+	res := make([]vehicle.API, 0, len(devs))
+	for _, dev := range devs {
+		res = append(res, vehicle.Adapter(vv.log, dev))
+	}
 
-// 	return res
-// }
+	return res
+}
 
-// func (vv *vehicles) ByName(name string) (vehicle.API, error) {
-// 	dev, err := config.Vehicles().ByName(name)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (vv *vehicles) ByName(name string) (vehicle.API, error) {
+	dev, err := config.Vehicles().ByName(name)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return vehicle.Adapter(vv.log, dev), nil
-// }
+	return vehicle.Adapter(vv.log, dev), nil
+}
