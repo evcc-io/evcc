@@ -5,22 +5,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
 // Connection represents a SEMP HTTP connection with helper methods
 type Connection struct {
-	helper *request.Helper
-	uri    string
+	*request.Helper
+	uri string
 }
 
 // NewConnection creates a new SEMP client
-func NewConnection(helper *request.Helper, uri string) *Connection {
+func NewConnection(log *util.Logger, uri string) *Connection {
 	// Ensure URI ends with exactly one trailing slash
 	uri = strings.TrimRight(uri, "/") + "/"
 
 	return &Connection{
-		helper: helper,
+		Helper: request.NewHelper(log),
 		uri:    uri,
 	}
 }
@@ -28,7 +29,7 @@ func NewConnection(helper *request.Helper, uri string) *Connection {
 // GetDeviceXML retrieves the complete SEMP document from the base URL
 func (c *Connection) GetDeviceXML() (Device2EM, error) {
 	var response Device2EM
-	if err := c.helper.GetXML(c.uri, &response); err != nil {
+	if err := c.GetXML(c.uri, &response); err != nil {
 		return Device2EM{}, err
 	}
 	return response, nil
@@ -38,7 +39,7 @@ func (c *Connection) GetDeviceXML() (Device2EM, error) {
 func (c *Connection) GetParametersXML() ([]Parameter, error) {
 	var response Device2EM
 	uri := c.uri + "Parameters"
-	if err := c.helper.GetXML(uri, &response); err != nil {
+	if err := c.GetXML(uri, &response); err != nil {
 		return nil, err
 	}
 
@@ -72,6 +73,6 @@ func (c *Connection) SendDeviceControl(deviceId string, power int) error {
 		return err
 	}
 
-	_, err = c.helper.DoBody(req)
+	_, err = c.DoBody(req)
 	return err
 }
