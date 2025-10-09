@@ -31,21 +31,44 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 	return p
 }
 
-// plan creates a lowest-cost plan or required duration.
-// It MUST already established that
-// - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
-// - target time and required duration are before end of rates
-func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
-	var plan api.Rates
+// Configuration for charge planning optimization
+const (
+	// InterruptionPenaltyPercent is the cost penalty for fragmenting charging sessions
+	// Applied as percentage of average cost per interruption (gap between windows)
+	// Example: 0.05 means 5% penalty, so fragmentation only occurs if it saves >5% per gap
+	// With typical charging (11-22 kW, 2-4h): Fragmentation only if saves ~0.50-1.50 €
+	InterruptionPenaltyPercent = 0.05
+)
 
-	for _, source := range rates {
-		// slot not relevant
-		if !(source.End.After(t.clock.Now()) && source.Start.Before(targetTime)) {
+// chargingWindow represents a continuous block of charging slots
+type chargingWindow struct {
+	slots    api.Rates
+	start    time.Time
+	end      time.Time
+	duration time.Duration
+	avgCost  float64
+}
+
+// planCandidate represents a potential charging plan
+type planCandidate struct {
+	windows     []chargingWindow
+	totalCost   float64
+	score       float64 // lower is better (pure average cost)
+	plan        api.Rates
+}
+
+// filterValidSlots filters and adjusts slots to the valid time range
+func (t *Planner) filterValidSlots(rates api.Rates, targetTime time.Time) api.Rates {
+	var validSlots api.Rates
+
+	for _, rate := range rates {
+		// Skip slots outside valid time range (updated logic from latest version)
+		if !(rate.End.After(t.clock.Now()) && rate.Start.Before(targetTime)) {
 			continue
 		}
 
-		// adjust slot start and end
-		slot := source
+		// Adjust slot boundaries
+		slot := rate
 		if slot.Start.Before(t.clock.Now()) {
 			slot.Start = t.clock.Now()
 		}
@@ -53,36 +76,302 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			slot.End = targetTime
 		}
 
-		slotDuration := slot.End.Sub(slot.Start)
-		requiredDuration -= slotDuration
+		validSlots = append(validSlots, slot)
+	}
 
-		// slot covers more than we need, so shorten it
-		if requiredDuration < 0 {
-			// the first (if not single) slot should start as late as possible
-			if IsFirst(slot, plan) && len(plan) > 0 {
-				slot.Start = slot.Start.Add(-requiredDuration)
-			} else {
-				slot.End = slot.End.Add(requiredDuration)
+	return validSlots
+}
+
+// generateChargingWindows creates all possible continuous charging windows
+// AND individual slots as single-slot windows
+func (t *Planner) generateChargingWindows(slots api.Rates) []chargingWindow {
+	if len(slots) == 0 {
+		return nil
+	}
+
+	// Sort slots by start time
+	slices.SortFunc(slots, func(a, b api.Rate) int {
+		return a.Start.Compare(b.Start)
+	})
+
+	var windows []chargingWindow
+
+	// Generate windows of different lengths starting from each position
+	for i := 0; i < len(slots); i++ {
+		window := chargingWindow{
+			start: slots[i].Start,
+		}
+
+		for j := i; j < len(slots); j++ {
+			// Check if slots are consecutive
+			if j > i {
+				prevSlot := slots[j-1]
+				currSlot := slots[j]
+
+				// If there's a gap, break this window
+				if !currSlot.Start.Equal(prevSlot.End) {
+					break
+				}
 			}
-			requiredDuration = 0
 
-			if slot.End.Before(slot.Start) {
-				panic("slot end before start")
+			// Add slot to window
+			window.slots = append(window.slots, slots[j])
+			window.end = slots[j].End
+			window.duration = window.end.Sub(window.start)
+
+			// Calculate average cost for this window
+			window.avgCost = AverageCost(window.slots)
+
+			// Always add the window (including single-slot windows)
+			windows = append(windows, window)
+		}
+	}
+
+	return windows
+}
+
+// findBestWindowCombination finds the optimal combination of windows
+func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDuration time.Duration) *planCandidate {
+	if len(windows) == 0 {
+		return nil
+	}
+
+	// Sort windows by a composite score that favors:
+	// 1. Lower cost (primary)
+	// 2. Longer duration (secondary - for hardware protection)
+	// 3. Later start time (tertiary - original behavior)
+	slices.SortFunc(windows, func(a, b chargingWindow) int {
+		// Compare costs with a small tolerance to allow duration preference
+		costDiff := a.avgCost - b.avgCost
+		const costTolerance = 0.001 // Very small tolerance for floating point comparison
+		
+		if costDiff < -costTolerance {
+			return -1 // a is significantly cheaper
+		}
+		if costDiff > costTolerance {
+			return 1 // b is significantly cheaper
+		}
+		
+		// Costs are essentially equal - prefer longer duration (hardware friendly)
+		if a.duration > b.duration {
+			return -1
+		}
+		if a.duration < b.duration {
+			return 1
+		}
+		
+		// Same cost and duration: prefer later start time (original behavior)
+		return b.start.Compare(a.start)
+	})
+
+	// Try to find the best combination by evaluating different strategies:
+	// 1. Single continuous window (preferred for hardware)
+	// 2. Multiple windows with lowest total cost
+
+	var bestCandidate *planCandidate
+	var bestScore float64
+
+	// Strategy 1: Try single continuous window first (best for hardware)
+	for i := range windows {
+		w := &windows[i]
+		if w.duration >= requiredDuration {
+			candidate := t.evaluateWindowCombination([]chargingWindow{*w}, requiredDuration)
+			if candidate != nil {
+				// Score favors single windows: pure cost
+				score := candidate.score
+				if bestCandidate == nil || score < bestScore {
+					bestCandidate = candidate
+					bestScore = score
+				}
+			}
+		}
+	}
+
+	// Strategy 2: Greedy selection of multiple windows
+	// Only consider this if no single window was found or if it could be cheaper
+	var selected []chargingWindow
+	var totalDuration time.Duration
+
+	for _, w := range windows {
+		// Check if this window overlaps with already selected ones
+		overlaps := false
+		for _, sel := range selected {
+			if w.start.Before(sel.end) && w.end.After(sel.start) {
+				overlaps = true
+				break
 			}
 		}
 
-		plan = append(plan, slot)
+		if overlaps {
+			continue
+		}
 
-		// we found all necessary slots
-		if requiredDuration == 0 {
+		// Add this window
+		selected = append(selected, w)
+		totalDuration += w.duration
+
+		// Stop if we have enough duration
+		if totalDuration >= requiredDuration {
 			break
 		}
 	}
 
-	return plan
+	// Evaluate the multi-window combination
+	if len(selected) > 0 && (bestCandidate == nil || len(selected) > 1) {
+		candidate := t.evaluateWindowCombination(selected, requiredDuration)
+		if candidate != nil {
+			// Apply interruption penalty to favor continuous charging
+			// This balances hardware protection with cost efficiency
+			interruptionPenalty := candidate.score * InterruptionPenaltyPercent * float64(len(candidate.windows)-1)
+			score := candidate.score + interruptionPenalty
+			
+			if bestCandidate == nil || score < bestScore {
+				bestCandidate = candidate
+				bestScore = score
+			}
+		}
+	}
+
+	return bestCandidate
 }
 
-// Plan creates a continuous emergency charging plan
+// evaluateWindowCombination calculates the score for a window combination
+func (t *Planner) evaluateWindowCombination(windows []chargingWindow, requiredDuration time.Duration) *planCandidate {
+	if len(windows) == 0 {
+		return nil
+	}
+
+	// Sort windows by start time
+	slices.SortFunc(windows, func(a, b chargingWindow) int {
+		return a.start.Compare(b.start)
+	})
+
+	// Calculate total duration and ensure we have enough
+	var totalDuration time.Duration
+	var allSlots api.Rates
+	for _, w := range windows {
+		totalDuration += w.duration
+		allSlots = append(allSlots, w.slots...)
+	}
+
+	// Check if we have enough duration to meet the requirement
+	if totalDuration < requiredDuration {
+		return nil
+	}
+
+	// Adjust if we have too much duration - using original logic
+	if totalDuration > requiredDuration {
+		excess := totalDuration - requiredDuration
+
+		// Apply original shortening logic:
+		// - First (but not single) window: shift start forward (late start)
+		// - Otherwise: shift last window's end backward (early end)
+		
+		if len(windows) > 1 {
+			// Multiple windows: adjust first window's start
+			firstWindow := &windows[0]
+			if firstWindow.duration > excess {
+				firstWindow.start = firstWindow.start.Add(excess)
+				firstWindow.duration -= excess
+
+				// Adjust slots in first window
+				var adjustedSlots api.Rates
+				for _, slot := range firstWindow.slots {
+					if slot.End.After(firstWindow.start) {
+						adjustedSlot := slot
+						if adjustedSlot.Start.Before(firstWindow.start) {
+							adjustedSlot.Start = firstWindow.start
+						}
+						adjustedSlots = append(adjustedSlots, adjustedSlot)
+					}
+				}
+				firstWindow.slots = adjustedSlots
+
+				// Recalculate average cost
+				if len(firstWindow.slots) > 0 {
+					firstWindow.avgCost = AverageCost(firstWindow.slots)
+				}
+			} else {
+				// If first window is too short, we need to remove it and shorten the next
+				// This shouldn't happen with correct window selection
+				return nil
+			}
+		} else {
+			// Single window: adjust end
+			lastWindow := &windows[0]
+			if lastWindow.duration > excess {
+				lastWindow.duration -= excess
+				lastWindow.end = lastWindow.end.Add(-excess)
+
+				// Remove excess slots from the end
+				var adjustedSlots api.Rates
+				for _, slot := range lastWindow.slots {
+					if slot.Start.Before(lastWindow.end) {
+						adjustedSlot := slot
+						if adjustedSlot.End.After(lastWindow.end) {
+							adjustedSlot.End = lastWindow.end
+						}
+						adjustedSlots = append(adjustedSlots, adjustedSlot)
+					}
+				}
+				lastWindow.slots = adjustedSlots
+
+				// Recalculate average cost
+				if len(lastWindow.slots) > 0 {
+					lastWindow.avgCost = AverageCost(lastWindow.slots)
+				}
+			} else {
+				return nil
+			}
+		}
+
+		// Rebuild allSlots after adjustment
+		allSlots = allSlots[:0]
+		totalDuration = 0
+		for _, w := range windows {
+			allSlots = append(allSlots, w.slots...)
+			totalDuration += w.duration
+		}
+	}
+
+	// Calculate weighted average cost across all windows
+	var totalCost float64
+	for _, w := range windows {
+		totalCost += w.avgCost * float64(w.duration)
+	}
+
+	return &planCandidate{
+		windows:   windows,
+		totalCost: totalCost,
+		score:     totalCost / float64(totalDuration),
+		plan:      allSlots,
+	}
+}
+
+// plan creates a lowest-cost plan using window bundling optimization
+func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
+	// Filter and adjust slots to valid time range
+	validSlots := t.filterValidSlots(rates, targetTime)
+	if len(validSlots) == 0 {
+		return nil
+	}
+
+	// Generate all possible charging windows
+	windows := t.generateChargingWindows(validSlots)
+	if len(windows) == 0 {
+		return nil
+	}
+
+	// Find best combination of windows
+	bestCandidate := t.findBestWindowCombination(windows, requiredDuration)
+	if bestCandidate == nil {
+		return nil
+	}
+
+	return bestCandidate.plan
+}
+
+// continuousPlan creates a continuous emergency charging plan
 func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	rates.Sort()
 
@@ -175,44 +464,94 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// rates are by default sorted by date, oldest to newest
 	last := rates[len(rates)-1].End
 
+	// Two-phase approach for precondition:
+	// Phase 1: Extract and reserve precondition slots (separate from optimization)
+	// Phase 2: Optimize remaining duration with window bundling
+	
+	var preconditionPlan api.Rates
+	var remainingDuration = requiredDuration
+	var optimizationEnd = targetTime
+	
+	if precondition > 0 {
+		// Precondition zone should not exceed required duration
+		// Example: If need 2h and precondition is "all" (10h), only mark last 2h
+		effectivePrecondition := precondition
+		if effectivePrecondition > requiredDuration {
+			effectivePrecondition = requiredDuration
+		}
+		
+		preCondStart := targetTime.Add(-effectivePrecondition)
+		
+		// Extract precondition slots - these are handled separately
+		// to prevent them from being merged into optimization windows
+		for _, r := range rates {
+			if r.End.After(preCondStart) && r.Start.Before(targetTime) {
+				slot := r
+				
+				// Adjust to precondition boundaries
+				if slot.Start.Before(preCondStart) {
+					slot.Start = preCondStart
+				}
+				if slot.End.After(targetTime) {
+					slot.End = targetTime
+				}
+				
+				preconditionPlan = append(preconditionPlan, slot)
+				slotDuration := slot.End.Sub(slot.Start)
+				remainingDuration -= slotDuration
+			}
+		}
+		
+		// Adjust optimization window to exclude precondition zone
+		optimizationEnd = preCondStart
+		
+		// If precondition covers all or more than required duration
+		if remainingDuration <= 0 {
+			if remainingDuration < 0 {
+				// Need to shorten precondition plan
+				excess := -remainingDuration
+				if len(preconditionPlan) > 0 {
+					preconditionPlan[0].Start = preconditionPlan[0].Start.Add(excess)
+				}
+			}
+			preconditionPlan.Sort()
+			return preconditionPlan
+		}
+	}
+
+	// Now optimize the remaining duration BEFORE precondition zone
+	// This prevents precondition slots from affecting window optimization
+	
 	// sort rates by price and time
 	slices.SortStableFunc(rates, sortByCost)
-
-	// for late start ensure that the last slot is the cheapest
-	rates, adjusted := splitPreconditionSlots(rates, precondition, targetTime)
 
 	// reduce planning horizon to available rates
-	if targetTime.After(last) {
-		// there is enough time for charging after end of current rates
-		durationAfterRates := targetTime.Sub(last)
-		if durationAfterRates >= requiredDuration {
-			return nil
+	if optimizationEnd.After(last) {
+		durationAfterRates := optimizationEnd.Sub(last)
+		if durationAfterRates >= remainingDuration {
+			// All remaining can be charged after known rates
+			if len(preconditionPlan) == 0 {
+				return nil
+			}
+			preconditionPlan.Sort()
+			return preconditionPlan
 		}
 
-		// need to use some of the available slots
 		t.log.DEBUG.Printf("target time beyond available slots- reducing plan horizon from %v to %v",
-			requiredDuration.Round(time.Second), durationAfterRates.Round(time.Second))
+			remainingDuration.Round(time.Second), (remainingDuration-durationAfterRates).Round(time.Second))
 
-		targetTime = last
-		requiredDuration -= durationAfterRates
+		optimizationEnd = last
+		remainingDuration -= durationAfterRates
 	}
 
-	// sort rates by price and time
-	slices.SortStableFunc(rates, sortByCost)
+	// Get optimized plan for remaining duration (excludes precondition zone)
+	optimizedPlan := t.plan(rates, remainingDuration, optimizationEnd)
 
-	plan := t.plan(rates, requiredDuration, targetTime)
+	// Combine: optimized main charging + mandatory precondition
+	combinedPlan := append(optimizedPlan, preconditionPlan...)
+	combinedPlan.Sort()
 
-	// correct plan slots to show original, non-adjusted prices
-	for i, r := range plan {
-		if rr, err := adjusted.At(r.Start); err == nil {
-			plan[i].Value = rr.Value
-		}
-	}
-
-	// sort plan by time
-	plan.Sort()
-
-	return plan
+	return combinedPlan
 }
 
 func splitPreconditionSlots(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
