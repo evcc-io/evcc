@@ -659,6 +659,7 @@
     "about": "Про evcc",
     "authProviders": {
       "confirmLogout": "Ви впевнені, що хочете відключити {title}?",
+      "loggedOut": "Успішно вийшов з системи",
       "title": "Статус авторизації"
     },
     "blog": "Блог",
