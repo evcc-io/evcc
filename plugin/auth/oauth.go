@@ -24,6 +24,8 @@ type OAuth struct {
 	log     *util.Logger
 	oc      *oauth2.Config
 	token   *oauth2.Token
+	name    string
+	devices []string
 	subject string
 	cv      string
 	ctx     context.Context
@@ -73,7 +75,7 @@ func init() {
 
 func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Name          string
+		Name, Device  string
 		oauth2.Config `mapstructure:",squash"`
 	}
 
@@ -81,12 +83,12 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 		return nil, err
 	}
 
-	return NewOauth(ctx, cc.Name, &cc.Config)
+	return NewOauth(ctx, cc.Name, cc.Device, &cc.Config)
 }
 
 var _ api.AuthProvider = (*OAuth)(nil)
 
-func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
+func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
@@ -97,10 +99,13 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	// hash oauth2 config
 	h := sha256.Sum256(fmt.Append(nil, oc))
 	hash := hex.EncodeToString(h[:])[:8]
-	subject := name + " (" + hash + ")"
+	subject := oc.ClientID + "-" + hash
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
+		if device != "" {
+			instance.devices = append(instance.devices, device)
+		}
 		return instance, nil
 	}
 
@@ -111,10 +116,15 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	}
 
 	o := &OAuth{
-		subject: subject,
 		oc:      oc,
 		log:     log,
 		ctx:     ctx,
+		subject: subject,
+		name:    name,
+	}
+
+	if device != "" {
+		o.devices = append(o.devices, device)
 	}
 
 	for _, opt := range opts {
@@ -287,7 +297,10 @@ func (o *OAuth) Logout() error {
 
 // DisplayName implements api.AuthProvider.
 func (o *OAuth) DisplayName() string {
-	return o.subject
+	if len(o.devices) > 0 {
+		return fmt.Sprintf("%s (%s)", o.name, strings.Join(o.devices, ", "))
+	}
+	return o.name
 }
 
 // Authenticated implements api.AuthProvider.
