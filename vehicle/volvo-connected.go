@@ -53,7 +53,7 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, cc.VccApiKey)
 
 	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ts, err := auth.NewOauth(ctx, "Volvo", oc)
+	ts, err := auth.NewOauth(ctx, "Volvo", cc.embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
