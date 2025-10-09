@@ -85,7 +85,7 @@ func TestPlan(t *testing.T) {
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute), // first slot shortened, starts at 0:30
-			20, // 30min@20 + 60min@10 = 10 + 10
+			20,                                 // 30min@20 + 60min@10 = 10 + 10
 		},
 		{
 			"plan 0-0-60-0-0-0",

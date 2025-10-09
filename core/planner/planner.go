@@ -169,7 +169,6 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 	// 2. Multiple windows with lowest total cost
 
 	var bestCandidate *planCandidate
-	var bestScore float64
 
 	// Strategy 1: Try single continuous window first (best for hardware)
 	for i := range windows {
@@ -178,10 +177,8 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 			candidate := t.evaluateWindowCombination([]chargingWindow{*w}, requiredDuration)
 			if candidate != nil {
 				// Score favors single windows: pure cost
-				score := candidate.score
-				if bestCandidate == nil || score < bestScore {
+				if bestCandidate == nil || candidate.score < bestCandidate.score {
 					bestCandidate = candidate
-					bestScore = score
 				}
 			}
 		}
@@ -225,9 +222,8 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 			interruptionPenalty := candidate.score * InterruptionPenaltyPercent * float64(len(candidate.windows)-1)
 			score := candidate.score + interruptionPenalty
 			
-			if bestCandidate == nil || score < bestScore {
+			if bestCandidate == nil || score < bestCandidate.score {
 				bestCandidate = candidate
-				bestScore = score
 			}
 		}
 	}
@@ -552,46 +548,4 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	combinedPlan.Sort()
 
 	return combinedPlan
-}
-
-func splitPreconditionSlots(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
-	var res, adjusted api.Rates
-
-	for _, r := range slices.Clone(rates) {
-		preCondStart := targetTime.Add(-precondition)
-
-		if !r.End.After(preCondStart) {
-			res = append(res, r)
-			continue
-		}
-
-		// split slot
-		if !r.Start.After(preCondStart) {
-			// keep the first part of the slot
-			res = append(res, api.Rate{
-				Start: r.Start,
-				End:   preCondStart,
-				Value: r.Value,
-			})
-
-			// adjust the second part of the slot
-			r = api.Rate{
-				Start: preCondStart,
-				End:   r.End,
-				Value: r.Value,
-			}
-		}
-
-		// set the value to 0 to include slot in the plan
-		res = append(res, api.Rate{
-			Start: r.Start,
-			End:   r.End,
-			Value: 0,
-		})
-
-		// keep a copy of the adjusted slot
-		adjusted = append(adjusted, r)
-	}
-
-	return res, adjusted
 }
