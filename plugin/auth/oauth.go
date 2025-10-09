@@ -187,7 +187,7 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 	token, err := o.oc.TokenSource(o.ctx, o.token).Token()
 	if err != nil {
 		// force logout
-		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
+		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
 			o.token = nil
 			o.onlineC <- false
 			settings.Delete(o.subject)
@@ -289,7 +289,6 @@ func (o *OAuth) Logout() error {
 	defer o.mu.Unlock()
 
 	o.token = nil
-
 	o.onlineC <- false
 
 	return nil
