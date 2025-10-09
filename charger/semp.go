@@ -310,8 +310,7 @@ func (wb *SEMP) Enabled() (bool, error) {
 func (wb *SEMP) Enable(enable bool) error {
 	wb.updated = time.Now()
 
-	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(enable, wb.current, wb.phases))
-	if err != nil {
+	if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(enable, wb.current, wb.phases)); err != nil {
 		return err
 	}
 
@@ -319,7 +318,7 @@ func (wb *SEMP) Enable(enable bool) error {
 	wb.deviceG.Reset()
 	wb.parametersG.Reset()
 
-	return err
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -333,8 +332,7 @@ var _ api.ChargerEx = (*SEMP)(nil)
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
 	wb.updated = time.Now()
 
-	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, current, wb.phases))
-	if err != nil {
+	if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, current, wb.phases)); err != nil {
 		return err
 	}
 
@@ -378,8 +376,7 @@ func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
 	wb.updated = time.Now()
 
-	err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, phases))
-	if err != nil {
+	if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, phases)); err != nil {
 		return err
 	}
 
