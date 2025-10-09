@@ -53,7 +53,7 @@ func (site *Site) publishVehicles() {
 			Title:          instance.GetTitle(),
 			Capacity:       instance.Capacity(),
 			Phases:         instance.Phases(),
-			Icon:           deviceProperties(dev).Icon, // device meta data
+			Icon:           config.DeviceProperties(dev).Icon, // device meta data
 			MinSoc:         v.GetMinSoc(),
 			LimitSoc:       v.GetLimitSoc(),
 			MinCurrent:     ac.MinCurrent,

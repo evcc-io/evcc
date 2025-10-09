@@ -519,7 +519,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			}
 		}
 
-		props := deviceProperties(dev)
+		props := config.DeviceProperties(dev)
 		mm[i] = measurement{
 			Title:  props.Title,
 			Icon:   props.Icon,
