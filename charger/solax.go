@@ -116,13 +116,7 @@ func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 
 	var res [3]float64
 	for i := range res {
-		var v uint16
-		if wb.isLegacyHw {
-			v = binary.BigEndian.Uint16(b[2*i:])
-		} else {
-			v = encoding.Uint16(b[2*i:])
-		}
-		res[i] = float64(v) / 100
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
 	}
 
 	return res[0], res[1], res[2], nil
@@ -160,11 +154,7 @@ func (wb *Solax) Enabled() (bool, error) {
 		return false, err
 	}
 
-	if wb.isLegacyHw {
-		return binary.BigEndian.Uint16(b) != solaxModeStop, nil
-	} else {
-		return encoding.Uint16(b) != solaxModeStop, nil
-	}
+	return binary.BigEndian.Uint16(b) != solaxModeStop, nil
 }
 
 // Enable implements the api.Charger interface
@@ -205,11 +195,7 @@ func (wb *Solax) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	if wb.isLegacyHw {
-		return float64(binary.BigEndian.Uint16(b)), err
-	} else {
-		return float64(encoding.Uint16(b)), err
-	}
+	return float64(binary.BigEndian.Uint16(b)), err
 }
 
 var _ api.MeterEnergy = (*Solax)(nil)
