@@ -51,10 +51,10 @@ type chargingWindow struct {
 
 // planCandidate represents a potential charging plan
 type planCandidate struct {
-	windows     []chargingWindow
-	totalCost   float64
-	score       float64 // lower is better (pure average cost)
-	plan        api.Rates
+	windows   []chargingWindow
+	totalCost float64
+	score     float64 // lower is better (pure average cost)
+	plan      api.Rates
 }
 
 // filterValidSlots filters and adjusts slots to the valid time range
@@ -144,14 +144,14 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 		// Compare costs with a small tolerance to allow duration preference
 		costDiff := a.avgCost - b.avgCost
 		const costTolerance = 0.001 // Very small tolerance for floating point comparison
-		
+
 		if costDiff < -costTolerance {
 			return -1 // a is significantly cheaper
 		}
 		if costDiff > costTolerance {
 			return 1 // b is significantly cheaper
 		}
-		
+
 		// Costs are essentially equal - prefer longer duration (hardware friendly)
 		if a.duration > b.duration {
 			return -1
@@ -159,7 +159,7 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 		if a.duration < b.duration {
 			return 1
 		}
-		
+
 		// Same cost and duration: prefer later start time (original behavior)
 		return b.start.Compare(a.start)
 	})
@@ -221,7 +221,7 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 			// This balances hardware protection with cost efficiency
 			interruptionPenalty := candidate.score * InterruptionPenaltyPercent * float64(len(candidate.windows)-1)
 			score := candidate.score + interruptionPenalty
-			
+
 			if bestCandidate == nil || score < bestCandidate.score {
 				bestCandidate = candidate
 			}
@@ -262,7 +262,7 @@ func (t *Planner) evaluateWindowCombination(windows []chargingWindow, requiredDu
 		// Apply original shortening logic:
 		// - First (but not single) window: shift start forward (late start)
 		// - Otherwise: shift last window's end backward (early end)
-		
+
 		if len(windows) > 1 {
 			// Multiple windows: adjust first window's start
 			firstWindow := &windows[0]
@@ -463,11 +463,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// Two-phase approach for precondition:
 	// Phase 1: Extract and reserve precondition slots (separate from optimization)
 	// Phase 2: Optimize remaining duration with window bundling
-	
+
 	var preconditionPlan api.Rates
 	var remainingDuration = requiredDuration
 	var optimizationEnd = targetTime
-	
+
 	if precondition > 0 {
 		// Precondition zone should not exceed required duration
 		// Example: If need 2h and precondition is "all" (10h), only mark last 2h
@@ -475,15 +475,15 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		if effectivePrecondition > requiredDuration {
 			effectivePrecondition = requiredDuration
 		}
-		
+
 		preCondStart := targetTime.Add(-effectivePrecondition)
-		
+
 		// Extract precondition slots - these are handled separately
 		// to prevent them from being merged into optimization windows
 		for _, r := range rates {
 			if r.End.After(preCondStart) && r.Start.Before(targetTime) {
 				slot := r
-				
+
 				// Adjust to precondition boundaries
 				if slot.Start.Before(preCondStart) {
 					slot.Start = preCondStart
@@ -491,16 +491,16 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 				if slot.End.After(targetTime) {
 					slot.End = targetTime
 				}
-				
+
 				preconditionPlan = append(preconditionPlan, slot)
 				slotDuration := slot.End.Sub(slot.Start)
 				remainingDuration -= slotDuration
 			}
 		}
-		
+
 		// Adjust optimization window to exclude precondition zone
 		optimizationEnd = preCondStart
-		
+
 		// If precondition covers all or more than required duration
 		if remainingDuration <= 0 {
 			if remainingDuration < 0 {
@@ -517,7 +517,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// Now optimize the remaining duration BEFORE precondition zone
 	// This prevents precondition slots from affecting window optimization
-	
+
 	// sort rates by price and time
 	slices.SortStableFunc(rates, sortByCost)
 
@@ -534,7 +534,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		}
 
 		t.log.DEBUG.Printf("target time beyond available slots- reducing plan horizon from %v to %v",
-			remainingDuration.Round(time.Second), (remainingDuration-durationAfterRates).Round(time.Second))
+			remainingDuration.Round(time.Second), (remainingDuration - durationAfterRates).Round(time.Second))
 
 		optimizationEnd = last
 		remainingDuration -= durationAfterRates

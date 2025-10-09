@@ -85,7 +85,7 @@ func TestPlan(t *testing.T) {
 			clock.Now(),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(30 * time.Minute), // first slot shortened, starts at 0:30
-			20,                                 // 30min@20 + 60min@10 = 10 + 10
+			20,                                // 30min@20 + 60min@10 = 10 + 10
 		},
 		{
 			"plan 0-0-60-0-0-0",
@@ -101,7 +101,7 @@ func TestPlan(t *testing.T) {
 			clock.Now().Add(30 * time.Minute),
 			clock.Now().Add(6 * time.Hour),
 			clock.Now().Add(time.Hour), // starts at hour 1
-			70, // continuous hours 1-2: 60 + 10 = 70
+			70,                         // continuous hours 1-2: 60 + 10 = 70
 		},
 		{
 			"plan (30)30-0-60-0-0-0",
@@ -209,15 +209,15 @@ func TestSlotBundlingEdgeCases(t *testing.T) {
 		plan := p.plan(testRates, 2*time.Hour, clock.Now().Add(4*time.Hour))
 
 		assert.Equal(t, 2*time.Hour, Duration(plan))
-		
+
 		// With equal prices, continuous window is preferred, and later start is preferred
 		// Should pick continuous 2-hour window, preferably starting at hour 2 (latest possible)
 		startTime := Start(plan)
-		validStarts := startTime.Equal(clock.Now()) || 
-			startTime.Equal(clock.Now().Add(time.Hour)) || 
+		validStarts := startTime.Equal(clock.Now()) ||
+			startTime.Equal(clock.Now().Add(time.Hour)) ||
 			startTime.Equal(clock.Now().Add(2*time.Hour))
 		assert.True(t, validStarts, "should use a valid 2-hour continuous window")
-		
+
 		// Verify it's continuous
 		assert.Equal(t, 1, countChargingWindows(plan), "should be continuous")
 	})
@@ -239,7 +239,7 @@ func TestSlotBundlingEdgeCases(t *testing.T) {
 		plan := p.plan(testRates, 4*time.Hour, clock.Now().Add(6*time.Hour))
 
 		assert.Equal(t, 4*time.Hour, Duration(plan))
-		
+
 		totalCost := AverageCost(plan) * float64(Duration(plan)) / float64(time.Hour)
 		assert.InDelta(t, 50.0, totalCost, 0.01)
 	})
@@ -261,7 +261,7 @@ func TestSlotBundlingWithPrecondition(t *testing.T) {
 	plan := p.Plan(2*time.Hour, time.Hour, clock.Now().Add(6*time.Hour))
 
 	assert.Equal(t, 2*time.Hour, Duration(plan))
-	
+
 	lastSlot := plan[len(plan)-1]
 	assert.Equal(t, clock.Now().Add(6*time.Hour), lastSlot.End)
 }
@@ -280,7 +280,7 @@ func TestFirstSlotShortening(t *testing.T) {
 	plan := p.plan(testRates, 90*time.Minute, clock.Now().Add(4*time.Hour))
 
 	assert.Equal(t, 90*time.Minute, Duration(plan))
-	
+
 	firstSlot := plan[0]
 	slotDuration := firstSlot.End.Sub(firstSlot.Start)
 	assert.True(t, slotDuration <= time.Hour, "first slot should be at most 60min")
@@ -452,40 +452,40 @@ func TestPrecondition(t *testing.T) {
 	// Should use only the precondition slot (last hour)
 	plan := p.Plan(time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, time.Hour, Duration(plan), "expected 1 hour total")
-	
+
 	// Must end at target time
 	lastSlot := plan[len(plan)-1]
 	assert.Equal(t, clock.Now().Add(4*time.Hour), lastSlot.End, "must end at target time")
-	
+
 	// Should be in precondition zone (hour 3-4)
-	assert.True(t, lastSlot.Start.Equal(clock.Now().Add(3*time.Hour)) || 
-		lastSlot.Start.After(clock.Now().Add(3*time.Hour)), 
+	assert.True(t, lastSlot.Start.Equal(clock.Now().Add(3*time.Hour)) ||
+		lastSlot.Start.After(clock.Now().Add(3*time.Hour)),
 		"should use precondition zone")
 
 	// Test 2: 2h duration, 1h precondition
 	// Should use 1h optimized (cheapest from 0-3) + 1h precondition (hour 3-4)
 	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, 2*time.Hour, Duration(plan), "expected 2 hours total")
-	
+
 	// Must end at target time
 	lastSlot = plan[len(plan)-1]
 	assert.Equal(t, clock.Now().Add(4*time.Hour), lastSlot.End, "must end at target time")
-	
+
 	// Should have at least one slot in precondition zone
 	hasPreconditionSlot := false
 	for _, slot := range plan {
-		if slot.Start.Before(clock.Now().Add(4*time.Hour)) && 
+		if slot.Start.Before(clock.Now().Add(4*time.Hour)) &&
 			slot.End.After(clock.Now().Add(3*time.Hour)) {
 			hasPreconditionSlot = true
 			break
 		}
 	}
 	assert.True(t, hasPreconditionSlot, "must include precondition zone")
-	
+
 	// Should have optimized slot before precondition (cheapest is hour 0)
 	hasOptimizedSlot := false
 	for _, slot := range plan {
-		if slot.Start.Before(clock.Now().Add(3*time.Hour)) {
+		if slot.Start.Before(clock.Now().Add(3 * time.Hour)) {
 			hasOptimizedSlot = true
 			break
 		}
@@ -496,15 +496,15 @@ func TestPrecondition(t *testing.T) {
 	// Should use 30min optimized + 30min precondition
 	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, time.Hour, Duration(plan), "expected 1 hour total")
-	
+
 	// Must end at target time
 	lastSlot = plan[len(plan)-1]
 	assert.Equal(t, clock.Now().Add(4*time.Hour), lastSlot.End, "must end at target time")
-	
+
 	// Should have slot(s) covering the last 30 minutes (precondition)
 	hasPreconditionPart := false
 	for _, slot := range plan {
-		if slot.Start.Before(clock.Now().Add(4*time.Hour)) && 
+		if slot.Start.Before(clock.Now().Add(4*time.Hour)) &&
 			slot.End.After(clock.Now().Add(210*time.Minute)) {
 			hasPreconditionPart = true
 			break
@@ -533,9 +533,9 @@ func TestPreconditionSeparation(t *testing.T) {
 	// Should use: 1h from cheap slots (0 or 1) + 1h precondition (slot 3)
 	// Should NOT create window including slot 2 (expensive) with slot 3 (precondition)
 	plan := p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
-	
+
 	assert.Equal(t, 2*time.Hour, Duration(plan), "expected 2 hours total")
-	
+
 	// Verify precondition slot is included
 	hasPrecondition := false
 	for _, slot := range plan {
@@ -545,13 +545,13 @@ func TestPreconditionSeparation(t *testing.T) {
 		}
 	}
 	assert.True(t, hasPrecondition, "must include precondition slot")
-	
+
 	// Verify we didn't use the expensive slot 2
 	usedExpensiveSlot := false
 	for _, slot := range plan {
-		if slot.Start.Equal(clock.Now().Add(2*time.Hour)) || 
-			(slot.Start.Before(clock.Now().Add(2*time.Hour)) && 
-			 slot.End.After(clock.Now().Add(2*time.Hour))) {
+		if slot.Start.Equal(clock.Now().Add(2*time.Hour)) ||
+			(slot.Start.Before(clock.Now().Add(2*time.Hour)) &&
+				slot.End.After(clock.Now().Add(2*time.Hour))) {
 			usedExpensiveSlot = true
 			break
 		}
@@ -577,9 +577,9 @@ func TestPreconditionLimiting(t *testing.T) {
 	// Test 1: requiredDuration 2h, precondition "all" (10h)
 	// Should only mark last 2h, not all 10h
 	plan := p.Plan(2*time.Hour, 10*time.Hour, clock.Now().Add(10*time.Hour))
-	
+
 	assert.Equal(t, 2*time.Hour, Duration(plan), "expected 2 hours total")
-	
+
 	// Should use only the last 2 hours (hours 8-10)
 	// Not all 10 hours
 	allSlotsInLastTwoHours := true
@@ -594,9 +594,9 @@ func TestPreconditionLimiting(t *testing.T) {
 	// Test 2: requiredDuration 30min, precondition 2h
 	// Should only mark last 30min, not 2h
 	plan = p.Plan(30*time.Minute, 2*time.Hour, clock.Now().Add(10*time.Hour))
-	
+
 	assert.Equal(t, 30*time.Minute, Duration(plan), "expected 30 minutes total")
-	
+
 	// Should use only the last 30 minutes (9.5h - 10h)
 	allSlotsInLastThirtyMin := true
 	for _, slot := range plan {
@@ -610,24 +610,24 @@ func TestPreconditionLimiting(t *testing.T) {
 	// Test 3: requiredDuration 5h, precondition 1h
 	// Should mark last 1h + optimize 4h before that
 	plan = p.Plan(5*time.Hour, 1*time.Hour, clock.Now().Add(10*time.Hour))
-	
+
 	assert.Equal(t, 5*time.Hour, Duration(plan), "expected 5 hours total")
-	
+
 	// Should have at least one slot in the last hour (precondition)
 	hasPreconditionSlot := false
 	for _, slot := range plan {
-		if slot.Start.Before(clock.Now().Add(10*time.Hour)) && 
+		if slot.Start.Before(clock.Now().Add(10*time.Hour)) &&
 			slot.End.After(clock.Now().Add(9*time.Hour)) {
 			hasPreconditionSlot = true
 			break
 		}
 	}
 	assert.True(t, hasPreconditionSlot, "must include precondition hour")
-	
+
 	// Should also have optimized slots before hour 9
 	hasOptimizedSlots := false
 	for _, slot := range plan {
-		if slot.End.Before(clock.Now().Add(9*time.Hour)) || 
+		if slot.End.Before(clock.Now().Add(9*time.Hour)) ||
 			slot.End.Equal(clock.Now().Add(9*time.Hour)) {
 			hasOptimizedSlots = true
 			break
