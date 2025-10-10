@@ -59,6 +59,14 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	// NL and BE to 15 min
+	switch cc.Region {
+	case "BE":
+		cc.Region = "BE-900"
+	case "NL":
+		cc.Region = "NL-900"
+	}
+
 	t := &Stekker{
 		embed:  &cc.embed,
 		region: cc.Region,
@@ -75,7 +83,6 @@ func (t *Stekker) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, t.region)
-
 		resp, err := client.Get(url)
 		if err != nil {
 			once.Do(func() { done <- err })
@@ -137,7 +144,7 @@ func (t *Stekker) run(done chan error) {
 					continue
 				}
 
-				start = start.UTC()
+				//start = start.UTC()
 				end := start.Add(time.Hour)
 
 				res = append(res, api.Rate{
@@ -160,6 +167,9 @@ func (t *Stekker) Rates() (api.Rates, error) {
 		res = slices.Clone(val)
 	})
 	return res, err
+
+	//this for 15M intervals
+	//return api.ConvertTo15mSlots(res, t.Type()), err
 }
 
 // Type implements api.Tariff
