@@ -26,8 +26,8 @@ render: |
       - X-AUTH-TOKEN: {{ .apiKey }}
     jq: |
       ."hydra:member" | map({ 
-        start: (.validfrom | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime | strflocaltime("%FT%TZ")), #convert to local time summer/winter
-        end: (.validto | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime | strflocaltime("%FT%TZ")), #convert to local time summer/winter
+        start: .validfrom,
+        end:   .validto,
         value: .emissionfactor * 100000  | round/100
       }) | tostring
     cache: 1h
