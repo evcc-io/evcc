@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -111,7 +112,7 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 
 	log := util.NewLogger("oauth-" + hash)
 
-	if ctx.Value(oauth2.HTTPClient) == nil {
+	if client, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); client == nil || !ok {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 	}
 
