@@ -25,7 +25,7 @@ jobs:
 
       - name: Check language
         id: language_check
-        uses: actions/ai-inference@v1
+        uses: actions/ai-inference@v2
         with:
           model: openai/gpt-4o-mini
           prompt-file: .github/prompts/language-check.prompt.yml
