@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -37,21 +38,31 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 		return nil, err
 	}
 
-	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
+	if cc.VccApiKey == "" {
+		return nil, errors.New("missing vccapikey")
+	}
+
+	if cc.VIN == "" {
+		return nil, errors.New("missing vin")
+	}
+
+	if err := cc.Credentials.Error(); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, cc.VccApiKey)
 
 	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ts, err := auth.NewOauth(ctx, cc.embed.GetTitle(), oc)
+	ts, err := auth.NewOauth(ctx, "Volvo", cc.embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
 
 	api := connected.NewAPI(log, cc.VccApiKey, ts)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-
 	v := &VolvoConnected{
 		embed:    &cc.embed,
-		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
+		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
 	}
 
 	return v, err
