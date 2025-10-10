@@ -659,6 +659,7 @@
     "about": "Apie",
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
+      "loggedOut": "Sėkmingai atsijungta",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
