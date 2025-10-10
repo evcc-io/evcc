@@ -1,0 +1,51 @@
+template: pstryk
+products:
+  - brand: Pstryk.pl
+requirements:
+  description:
+    en: "Get your API token from the Pstryk App"
+    de: "Hol dir deinen API-Token aus der Pstryk App"
+  evcc: ["skiptest"]
+group: price
+countries: ["PL"]
+
+params:
+  - name: token
+    type: string
+    required: true
+    description:
+      en: "API token (e.g. sk-...)."
+      de: "API-Token (z.B. sk-...)."
+    help:
+      en: "Exact Authorization header value, usually WITHOUT 'Bearer'."
+      de: "Exakter Authorization-Header, üblicherweise OHNE 'Bearer'."
+
+  - name: plan
+    type: choice
+    default: pricing
+    choice: ["pricing", "prosumer-pricing"]
+    required: true
+    description:
+      en: "Tariff source."
+      de: "Tarifquelle."
+
+  - preset: tariff-base
+
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    timeout: 5s
+    cache: 24h
+    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ if eq (now.Local | date "MST") "CEST" }}{{ now.UTC | date "2006-01-02T22:00:00Z" }}{{ else }}{{ now.UTC | date "2006-01-02T23:00:00Z" }}{{ end }}&window_end={{ if eq (now.Local | date "MST") "CEST" }}{{ dateModify "24h" (now.UTC) | date "2006-01-02T22:00:00Z" }}{{ else }}{{ dateModify "24h" (now.UTC) | date "2006-01-02T23:00:00Z" }}{{ end }}
+    headers:
+      Authorization: {{ .token }}
+      Accept: application/json
+      User-Agent: evcc-pstryk-template
+    jq: |
+      [ (.frames // [])[]
+        | { start: (.start | sub("\\+00:00$"; "Z")),
+            end:   (.end   | sub("\\+00:00$"; "Z")),
+            value: .price_gross }
+      ]
