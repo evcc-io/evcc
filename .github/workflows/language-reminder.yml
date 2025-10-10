@@ -18,6 +18,7 @@ jobs:
   check-language:
     name: Check Comment Language
     runs-on: ubuntu-latest
+    if: github.event.issue.pull_request || github.event.pull_request
 
     steps:
       - uses: actions/checkout@v5
