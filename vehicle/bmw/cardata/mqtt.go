@@ -123,6 +123,8 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 		return fmt.Errorf("subscribe: %w", err)
 	}
 
+	v.log.DEBUG.Println("connected streaming")
+
 	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
 	defer cancel()
 
