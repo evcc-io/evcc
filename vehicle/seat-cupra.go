@@ -20,11 +20,11 @@ type Cupra struct {
 }
 
 func init() {
-	registry.Add("cupra", NewCupraFromConfig)
+	registry.AddCtx("cupra", NewCupraFromConfig)
 }
 
 // NewCupraFromConfig creates a new vehicle
-func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewCupraFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -44,7 +44,7 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Cupra{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
@@ -55,8 +55,8 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// get OIDC user information
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	ui, err := vwidentity.Config.NewProvider(ctx).UserInfo(ctx, ts)
+	oidcCtx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	ui, err := vwidentity.Config.NewProvider(oidcCtx).UserInfo(oidcCtx, ts)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting user information: %w", err)
 	}
@@ -73,7 +73,6 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	)
 
 	if err == nil {
-		v.fromVehicle(vehicle.VehicleNickname, 0)
 		v.Provider = cupra.NewProvider(api, ui.Subject, vehicle.VIN, cc.Cache)
 	}
 

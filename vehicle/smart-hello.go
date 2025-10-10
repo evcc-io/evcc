@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,11 +17,11 @@ type SmartHello struct {
 }
 
 func init() {
-	registry.Add("smart-hello", NewSmartHelloFromConfig)
+	registry.AddCtx("smart-hello", NewSmartHelloFromConfig)
 }
 
 // NewSmartHelloFromConfig creates a new vehicle
-func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewSmartHelloFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -41,7 +42,7 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	log := util.NewLogger("smart-hello").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &SmartHello{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	identity, err := hello.NewIdentity(log, cc.User, cc.Password)

@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,22 +16,22 @@ type BMW struct {
 }
 
 func init() {
-	registry.Add("bmw", NewBMWFromConfig)
-	registry.Add("mini", NewMiniFromConfig)
+	registry.AddCtx("bmw", NewBMWFromConfig)
+	registry.AddCtx("mini", NewMiniFromConfig)
 }
 
 // NewBMWFromConfig creates a new vehicle
-func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	return NewBMWMiniFromConfig("bmw", other)
+func NewBMWFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+	return NewBMWMiniFromConfig(ctx, "bmw", other)
 }
 
 // NewMiniFromConfig creates a new vehicle
-func NewMiniFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	return NewBMWMiniFromConfig("mini", other)
+func NewMiniFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+	return NewBMWMiniFromConfig(ctx, "mini", other)
 }
 
 // NewBMWMiniFromConfig creates a new vehicle
-func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewBMWMiniFromConfig(ctx context.Context, brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -51,7 +52,7 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	}
 
 	v := &BMW{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)

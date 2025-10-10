@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,11 +17,11 @@ type Toyota struct {
 }
 
 func init() {
-	registry.Add("toyota", NewToyotaFromConfig)
+	registry.AddCtx("toyota", NewToyotaFromConfig)
 }
 
 // NewToyotaFromConfig creates a new vehicle
-func NewToyotaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewToyotaFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -38,7 +39,7 @@ func NewToyotaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Toyota{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("toyota").Redact(cc.User, cc.Password, cc.VIN)

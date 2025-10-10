@@ -46,7 +46,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	}
 
 	v := &Cardata{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	oc := cardata.Config

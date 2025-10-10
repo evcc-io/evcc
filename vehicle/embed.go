@@ -1,13 +1,21 @@
 package vehicle
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/vehicle/internal"
 )
+
+var CtxDeviceTitle internal.ContextKey
 
 // TODO align phases with OnIdentify
 type embed struct {
-	Title_       string           `mapstructure:"title"`
-	Icon_        string           `mapstructure:"icon"`
+	// TODO deprecated
+	_Title string `mapstructure:"title"` //nolint:unused
+	_Icon  string `mapstructure:"icon"`  //nolint:unused
+
+	Title_       string           `mapstructure:"-" json:"-"`
 	Capacity_    float64          `mapstructure:"capacity"`
 	Phases_      int              `mapstructure:"phases"`
 	Identifiers_ []string         `mapstructure:"identifiers"`
@@ -15,24 +23,17 @@ type embed struct {
 	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
 }
 
-// Title implements the api.Vehicle interface
-func (v *embed) fromVehicle(title string, capacity float64) {
-	if v.Title_ == "" {
-		v.Title_ = title
+// withContext extracts the device title from the context
+func (v embed) withContext(ctx context.Context) *embed {
+	if title := ctx.Value(CtxDeviceTitle); title != nil {
+		v.Title_ = title.(string)
 	}
-	if v.Capacity_ == 0 {
-		v.Capacity_ = capacity
-	}
+	return &v
 }
 
 // GetTitle implements the api.Vehicle interface
 func (v *embed) GetTitle() string {
 	return v.Title_
-}
-
-// SetTitle implements the api.TitleSetter interface
-func (v *embed) SetTitle(title string) {
-	v.Title_ = title
 }
 
 // Capacity implements the api.Vehicle interface
@@ -57,12 +58,12 @@ func (v *embed) OnIdentified() api.ActionConfig {
 	return v.OnIdentify
 }
 
-var _ api.IconDescriber = (*embed)(nil)
+// var _ api.IconDescriber = (*embed)(nil)
 
-// Icon implements the api.IconDescriber interface
-func (v *embed) Icon() string {
-	return v.Icon_
-}
+// // Icon implements the api.IconDescriber interface
+// func (v *embed) Icon() string {
+// 	return v.Icon_
+// }
 
 var _ api.FeatureDescriber = (*embed)(nil)
 

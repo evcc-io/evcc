@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -27,16 +28,16 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("dacia", func(other map[string]interface{}) (api.Vehicle, error) {
-		return NewRenaultDaciaFromConfig("dacia", other)
+	registry.AddCtx("dacia", func(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+		return NewRenaultDaciaFromConfig(ctx, "dacia", other)
 	})
-	registry.Add("renault", func(other map[string]interface{}) (api.Vehicle, error) {
-		return NewRenaultDaciaFromConfig("renault", other)
+	registry.AddCtx("renault", func(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+		return NewRenaultDaciaFromConfig(ctx, "renault", other)
 	})
 }
 
 // NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
-func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewRenaultDaciaFromConfig(ctx context.Context, brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
@@ -61,7 +62,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Renault{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	keys := keys.New(log)

@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -16,11 +17,11 @@ type MG struct {
 }
 
 func init() {
-	registry.Add("mg", NewMGFromConfig)
+	registry.AddCtx("mg", NewMGFromConfig)
 }
 
 // NewBMWFromConfig creates a new vehicle
-func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewMGFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -57,7 +58,7 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	api := saic.NewAPI(log, identity)
 
 	v := &MG{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Provider: saic.NewProvider(api, cc.VIN, cc.Cache),
 	}
 

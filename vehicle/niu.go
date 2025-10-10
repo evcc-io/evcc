@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
@@ -27,11 +28,11 @@ type Niu struct {
 }
 
 func init() {
-	registry.Add("niu", NewNiuFromConfig)
+	registry.AddCtx("niu", NewNiuFromConfig)
 }
 
 // NewFordFromConfig creates a new vehicle
-func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewNiuFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                  `mapstructure:",squash"`
 		User, Password, Serial string
@@ -55,7 +56,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("niu").Redact(cc.User, cc.Password)
 
 	v := &Niu{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,

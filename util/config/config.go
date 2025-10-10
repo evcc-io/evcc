@@ -14,7 +14,7 @@ import (
 // Config is the database mapping for device configurations
 // The device prefix ensures unique namespace
 //
-// TODO migrate vehicle and loadpoints to this schema
+// TODO migrate loadpoints to this schema
 type Config struct {
 	ID         int `gorm:"primarykey"`
 	Class      templates.Class

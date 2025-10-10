@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,11 @@ type ZeroMotorcycle struct {
 }
 
 func init() {
-	registry.Add("zero", NewZeroFromConfig)
+	registry.AddCtx("zero", NewZeroFromConfig)
 }
 
 // NewZeroFromConfig creates a new vehicle
-func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewZeroFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	var res *zero.API
 	var err error
 
@@ -55,7 +56,7 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &ZeroMotorcycle{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Provider: zero.NewProvider(res, vehicle.UnitNumber, cc.Cache),
 	}
 

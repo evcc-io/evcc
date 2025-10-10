@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -17,11 +18,11 @@ type Porsche struct {
 }
 
 func init() {
-	registry.Add("porsche", NewPorscheFromConfig)
+	registry.AddCtx("porsche", NewPorscheFromConfig)
 }
 
 // NewPorscheFromConfig creates a new vehicle
-func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewPorscheFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -70,7 +71,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	provider := porsche.NewProvider(log, api, emobApi, vehicle.VIN, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Provider: provider,
 	}
 

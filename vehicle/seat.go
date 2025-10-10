@@ -29,11 +29,11 @@ type Seat struct {
 }
 
 func init() {
-	registry.Add("seat", NewSeatFromConfig)
+	registry.AddCtx("seat", NewSeatFromConfig)
 }
 
 // NewSeatFromConfig creates a new vehicle
-func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewSeatFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -53,7 +53,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Seat{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("seat").Redact(cc.User, cc.Password, cc.VIN)
@@ -64,8 +64,8 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// get OIDC user information
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	ui, err := vwidentity.Config.NewProvider(ctx).UserInfo(ctx, trs)
+	oidcCtx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	ui, err := vwidentity.Config.NewProvider(oidcCtx).UserInfo(oidcCtx, trs)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting user information: %w", err)
 	}

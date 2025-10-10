@@ -256,7 +256,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		details.BatteryDetails = append(details.BatteryDetails, batteryDetail{
 			Type:     batteryTypeBattery,
 			Name:     dev.Config().Name,
-			Title:    deviceProperties(dev).Title,
+			Title:    config.DeviceProperties(dev).Title,
 			Capacity: *b.Capacity,
 		})
 	}
