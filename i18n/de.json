@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Smarter Verbraucher",
       "batteryStorage": "Batterie",
+      "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
     "editor": {
