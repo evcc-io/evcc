@@ -115,7 +115,7 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	}
 	defer paho.Disconnect(1000)
 
-	topic := fmt.Sprintf("%s/#", gcid)
+	topic := fmt.Sprintf("%s/+", gcid)
 
 	if t := paho.Subscribe(topic, 0, v.handler); !t.WaitTimeout(timeout) {
 		return errors.New("subcribe timeout")
