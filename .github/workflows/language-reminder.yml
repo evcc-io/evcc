@@ -35,11 +35,23 @@ jobs:
           enable-ai-detection: false
 
       - name: Add friendly reminder and remove label
-        if: contains(github.event.pull_request.labels.*.name, 'needs-english')
         uses: actions/github-script@v8
         with:
           script: |
             const comment = context.payload.comment;
+
+            // Check if the label was added by ai-moderator
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const hasLabel = labels.some(label => label.name === 'needs-english');
+            if (!hasLabel) {
+              console.log('No needs-english label found, skipping');
+              return;
+            }
 
             await github.rest.pulls.createReviewComment({
               owner: context.repo.owner,
