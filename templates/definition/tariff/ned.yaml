@@ -26,8 +26,8 @@ render: |
       - X-AUTH-TOKEN: {{ .apiKey }}
     jq: |
       ."hydra:member" | map({ 
-        start: (.validfrom),
-        end: (.validto),
+        start: .validfrom,
+        end:   .validto,
         value: .emissionfactor * 100000  | round/100
       }) | tostring
     cache: 1h
