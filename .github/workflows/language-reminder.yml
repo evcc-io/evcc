@@ -30,7 +30,7 @@ jobs:
           spam-label: "needs-english"
           minimize-detected-comments: false
           custom-prompt-path: ".github/prompts/language-check.prompt.yml"
-          enable-spam-detection: false
+          enable-spam-detection: true
           enable-link-spam-detection: false
           enable-ai-detection: false
 
