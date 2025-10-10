@@ -143,9 +143,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan bruges til belastningsstyring eller statistikformål.",
-      "titleAdd": "Tilføj ekstern måler",
-      "titleEdit": "Rediger ekstern måler"
+      "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
+      "titleAdd": "Tilføj forbrugsmåler",
+      "titleEdit": "Rediger forbrugsmåler"
     },
     "form": {
       "danger": "Pas på",
@@ -196,7 +196,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ændre"
+      "change": "ændre",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data.",
@@ -344,13 +345,22 @@
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
-        "ext": "Tilføj en ekstra måler",
+        "ext": "Tilføj almindelig forbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
       "specific": "Specifikke integrationer",
       "template": "Fabrikant",
       "titleChoice": "Hvad ønsker du at tilføje?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Selvregulerende belastningsmåler",
+        "battery": "Batterimåler",
+        "charge": "Ladepunktmåler",
+        "grid": "Måler til elnettet",
+        "label": "Brug",
+        "pv": "Solproduktionsmåler"
+      },
       "validateSave": "Valider og gem"
     },
     "modbus": {
@@ -659,6 +669,7 @@
     "about": "Om",
     "authProviders": {
       "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
+      "loggedOut": "Du er nu logget ud",
       "title": "Autorisation status"
     },
     "blog": "Blog",
