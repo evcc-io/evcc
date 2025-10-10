@@ -58,7 +58,10 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
-  battery?: Battery[];
+  battery?: BatteryMeter[];
+  pv?: Meter[];
+  aux?: Meter[];
+  ext?: Meter[];
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
@@ -354,12 +357,17 @@ export interface Notification {
   count: number;
 }
 
-export interface Battery {
+export interface Meter {
   power: number;
+  title?: string;
+  icon?: string;
+  energy?: number;
+}
+
+export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  title?: string;
 }
 
 export interface Vehicle {
