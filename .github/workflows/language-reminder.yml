@@ -3,11 +3,10 @@ name: Language Reminder
 on:
   pull_request_review_comment:
     types: [created]
-  # TODO: enable for issues, once we are confident this works
-  # issues:
-  #   types: [opened]
-  # issue_comment:
-  #   types: [created]
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
 
 permissions:
   pull-requests: write
