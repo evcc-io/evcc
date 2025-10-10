@@ -1,0 +1,59 @@
+name: Language Reminder
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  # TODO: enable for issues, once we are confident this works
+  # issues:
+  #   types: [opened]
+  # issue_comment:
+  #   types: [created]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  check-language:
+    name: Check Comment Language
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check for non-English comments
+        uses: github/ai-moderator@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          spam-label: "needs-english"
+          minimize-detected-comments: false
+          custom-prompt-path: ".github/prompts/language-check.prompt.yml"
+          enable-spam-detection: false
+          enable-link-spam-detection: false
+          enable-ai-detection: false
+
+      - name: Add friendly reminder
+        if: contains(github.event.pull_request.labels.*.name, 'needs-english')
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const comment = context.payload.comment;
+
+            await github.rest.pulls.createReviewComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              body: `@${comment.user.login} 🇬🇧 Please use English so everyone can participate. See [Contributing Guidelines](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/CONTRIBUTING.md#communication-language).`,
+              commit_id: comment.commit_id,
+              path: comment.path,
+              in_reply_to: comment.id
+            });
+
+            // Remove the label after posting reminder
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              name: 'needs-english'
+            });

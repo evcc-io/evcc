@@ -134,6 +134,23 @@ make ui build
 ./evcc --config tests/simulator.evcc.yaml
 ```
 
+## Communication Language
+
+### Issues and Pull Requests
+
+**English is required for all issues and pull requests.** This ensures that everyone can participate and benefit from technical discussions.
+
+We understand that:
+- Technical terms may not always have good English translations (e.g., "Bundesnetzagentur", "Einspeisevergütung")
+- You can mix native language terms with English when needed
+- The goal is understanding, not perfection
+
+### GitHub Discussions
+
+English is preferred but not required for GitHub Discussions. When in doubt, respond in the language of the discussion starter.
+
+Thank you for helping make evcc accessible! 🌍
+
 ## Adding or modifying translations
 
 evcc already includes many translations for the UI. We're using [Weblate](https://hosted.weblate.org/projects/evcc/evcc/) to maintain translations. Feel free to add more languages or verify and edit existing translations. Weblate will automatically push all modifications to the evcc repository where they get reviewed and merged.
