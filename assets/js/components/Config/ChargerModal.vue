@@ -106,7 +106,7 @@ export default defineComponent({
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "connector") &&
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid");
 			if (isOcpp && this.currentValues) {
-				return `ws://${window.location.hostname}:8887/${this.currentValues["stationid"] || ""}`;
+				return `ws://${window.location.hostname}:8887/${this.currentValues.stationid || ""}`;
 			}
 			return null;
 		},
@@ -174,9 +174,9 @@ export default defineComponent({
 			);
 		},
 		transformApiData(data: ApiData): ApiData {
-			if (this.isYamlInput(data["type"] as ConfigType)) {
+			if (data.type && this.isYamlInput(data.type)) {
 				// Icon is extracted from yaml on GET for UI purpose only. Don't write it back.
-				delete data["icon"];
+				delete data.icon;
 			}
 			return data;
 		},
@@ -189,7 +189,7 @@ export default defineComponent({
 				ConfigType.SgReadyBoost,
 			].includes(type);
 		},
-		async handleTemplateChange(e: Event, values: DeviceValues) {
+		handleTemplateChange(e: Event, values: DeviceValues) {
 			const value = (e.target as HTMLSelectElement).value as ConfigType;
 			if (this.isYamlInput(value)) {
 				values.type = value;
@@ -210,8 +210,8 @@ export default defineComponent({
 					}
 				});
 				// default heater icon
-				if (hasParam("icon") && values["icon"] === undefined) {
-					values["icon"] = "heater";
+				if (hasParam("icon") && values.icon === undefined) {
+					values.icon = "heater";
 				}
 			}
 		},
