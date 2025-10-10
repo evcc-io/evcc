@@ -23,49 +23,32 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Check for non-English comments
-        uses: github/ai-moderator@v1
+      - name: Check language
+        id: language_check
+        uses: actions/ai-inference@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          spam-label: "needs-english"
-          minimize-detected-comments: false
-          custom-prompt-path: ".github/prompts/language-check.prompt.yml"
-          enable-spam-detection: true
-          enable-link-spam-detection: false
-          enable-ai-detection: false
+          model: openai/gpt-4o-mini
+          prompt-file: .github/prompts/language-check.prompt.yml
+          input: |
+            comment: ${{ github.event.comment.body }}
 
-      - name: Add friendly reminder and remove label
+      - name: Post reminder if non-English
+        if: steps.language_check.outputs.response != ''
         uses: actions/github-script@v8
         with:
           script: |
-            const comment = context.payload.comment;
+            const analysis = JSON.parse('${{ steps.language_check.outputs.response }}');
+            console.log('Analysis:', analysis);
 
-            // Check if the label was added by ai-moderator
-            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number
-            });
-
-            const hasLabel = labels.some(label => label.name === 'needs-english');
-            if (!hasLabel) {
-              console.log('No needs-english label found, skipping');
-              return;
+            if (analysis.is_non_english) {
+              const comment = context.payload.comment;
+              await github.rest.pulls.createReviewComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                body: `@${comment.user.login} 🇬🇧 Please use English so everyone can participate. See [Contributing Guidelines](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/CONTRIBUTING.md#communication-language).`,
+                commit_id: comment.commit_id,
+                path: comment.path,
+                in_reply_to: comment.id
+              });
             }
-
-            await github.rest.pulls.createReviewComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              body: `@${comment.user.login} 🇬🇧 Please use English so everyone can participate. See [Contributing Guidelines](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/CONTRIBUTING.md#communication-language).`,
-              commit_id: comment.commit_id,
-              path: comment.path,
-              in_reply_to: comment.id
-            });
-
-            await github.rest.issues.removeLabel({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              name: 'needs-english'
-            });
