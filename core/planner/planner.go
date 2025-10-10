@@ -35,9 +35,19 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 const (
 	// InterruptionPenaltyPercent is the cost penalty for fragmenting charging sessions
 	// Applied as percentage of average cost per interruption (gap between windows)
-	// Example: 0.05 means 5% penalty, so fragmentation only occurs if it saves >5% per gap
-	// With typical charging (11-22 kW, 2-4h): Fragmentation only if saves ~0.50-1.50 €
+	//
+	// Special values:
+	// - 0.00: No penalty, pure cost optimization (old behavior, maximum fragmentation)
+	// - 0.05: 5% penalty, fragmentation only if saves >5% per gap (recommended, balanced)
+	// - 0.10: 10% penalty, strong preference for continuous charging
+	//
+	// Example with 0.05: Fragmentation only occurs if it saves ~0.50-1.50 € per interruption
+	// With typical charging (11-22 kW, 2-4h) this balances hardware protection with cost efficiency
 	InterruptionPenaltyPercent = 0.05
+
+	// MaxChargingWindows limits the number of separate charging windows
+	// This protects hardware from excessive switching cycles
+	MaxChargingWindows = 3
 )
 
 // chargingWindow represents a continuous block of charging slots
@@ -138,10 +148,10 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 
 	// Sort windows by a composite score that favors:
 	// 1. Lower cost (primary)
-	// 2. Longer duration (secondary - for hardware protection)
+	// 2. Longer duration (secondary - for hardware protection, fewer switching cycles)
 	// 3. Later start time (tertiary - original behavior)
 	slices.SortFunc(windows, func(a, b chargingWindow) int {
-		// Compare costs with a small tolerance to allow duration preference
+		// Compare costs with a small tolerance
 		costDiff := a.avgCost - b.avgCost
 		const costTolerance = 0.001 // Very small tolerance for floating point comparison
 
@@ -152,7 +162,8 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 			return 1 // b is significantly cheaper
 		}
 
-		// Costs are essentially equal - prefer longer duration (hardware friendly)
+		// Costs are essentially equal - prefer longer duration for hardware protection
+		// This reduces fragmentation when costs are identical
 		if a.duration > b.duration {
 			return -1
 		}
@@ -214,7 +225,13 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 	}
 
 	// Evaluate the multi-window combination
-	if len(selected) > 0 && (bestCandidate == nil || len(selected) > 1) {
+	if len(selected) > 0 {
+		// Check if we exceed MaxChargingWindows
+		if len(selected) > MaxChargingWindows {
+			// Too many windows - find best combination with limited windows
+			selected = t.reduceToBestWindows(windows, selected, requiredDuration, MaxChargingWindows)
+		}
+
 		candidate := t.evaluateWindowCombination(selected, requiredDuration)
 		if candidate != nil {
 			// Apply interruption penalty to favor continuous charging
@@ -222,6 +239,7 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 			interruptionPenalty := candidate.score * InterruptionPenaltyPercent * float64(len(candidate.windows)-1)
 			score := candidate.score + interruptionPenalty
 
+			// Always compare multi-window with best candidate (including single window)
 			if bestCandidate == nil || score < bestCandidate.score {
 				bestCandidate = candidate
 			}
@@ -229,6 +247,183 @@ func (t *Planner) findBestWindowCombination(windows []chargingWindow, requiredDu
 	}
 
 	return bestCandidate
+}
+
+// reduceToBestWindows reduces the number of windows to maxWindows while maintaining required duration
+// Prioritizes: 1. Cheapest slots, 2. Latest slots when costs are equal
+// allWindows: all available windows to consider for replacements
+// selectedWindows: windows that were initially selected (may exceed maxWindows)
+func (t *Planner) reduceToBestWindows(allWindows []chargingWindow, selectedWindows []chargingWindow, requiredDuration time.Duration, maxWindows int) []chargingWindow {
+	if len(selectedWindows) <= maxWindows {
+		return selectedWindows
+	}
+
+	// Sort selected windows by: cost (cheapest first), then by latest start
+	sorted := make([]chargingWindow, len(selectedWindows))
+	copy(sorted, selectedWindows)
+
+	slices.SortFunc(sorted, func(a, b chargingWindow) int {
+		costDiff := a.avgCost - b.avgCost
+		const costTolerance = 0.001
+
+		if costDiff < -costTolerance {
+			return -1
+		}
+		if costDiff > costTolerance {
+			return 1
+		}
+
+		// Equal cost: prefer later start
+		return b.start.Compare(a.start)
+	})
+
+	// Greedy selection: pick maxWindows cheapest (and latest for equal cost)
+	var selected []chargingWindow
+	var totalDuration time.Duration
+
+	for _, w := range sorted {
+		if len(selected) >= maxWindows {
+			break
+		}
+
+		// Check for overlaps with already selected
+		overlaps := false
+		for _, sel := range selected {
+			if w.start.Before(sel.end) && w.end.After(sel.start) {
+				overlaps = true
+				break
+			}
+		}
+
+		if overlaps {
+			continue
+		}
+
+		selected = append(selected, w)
+		totalDuration += w.duration
+
+		// If we have enough duration, we can stop
+		if totalDuration >= requiredDuration {
+			break
+		}
+	}
+
+	// If we still don't have enough duration, we need to expand a window or replace one
+	if totalDuration < requiredDuration {
+		stillNeeded := requiredDuration - totalDuration
+
+		// Find windows that could fill the gap
+		var candidates []chargingWindow
+		for _, w := range sorted {
+			// Skip windows already selected with exact same boundaries
+			alreadySelected := false
+			for _, sel := range selected {
+				if w.start.Equal(sel.start) && w.end.Equal(sel.end) {
+					alreadySelected = true
+					break
+				}
+			}
+			if alreadySelected {
+				continue
+			}
+
+			// Check for overlaps with selected windows
+			overlaps := false
+			for _, sel := range selected {
+				if w.start.Before(sel.end) && w.end.After(sel.start) {
+					overlaps = true
+					break
+				}
+			}
+
+			// If no overlap and provides needed duration, it's a candidate
+			if !overlaps && w.duration >= stillNeeded {
+				candidates = append(candidates, w)
+			}
+		}
+
+		// If we can add another window (haven't reached maxWindows yet)
+		if len(selected) < maxWindows && len(candidates) > 0 {
+			// Sort candidates by cost, then latest
+			slices.SortFunc(candidates, func(a, b chargingWindow) int {
+				costDiff := a.avgCost - b.avgCost
+				const costTolerance = 0.001
+
+				if costDiff < -costTolerance {
+					return -1
+				}
+				if costDiff > costTolerance {
+					return 1
+				}
+
+				return b.start.Compare(a.start)
+			})
+
+			selected = append(selected, candidates[0])
+		} else if len(selected) == maxWindows {
+			// Already at maxWindows - need to replace a short window with a longer one
+			// Strategy: Look for windows from allWindows that can replace one selected window
+			// and provide the additional duration needed
+
+			var bestReplacement struct {
+				indexToReplace int
+				newWindow      chargingWindow
+				costIncrease   float64
+			}
+			bestReplacement.indexToReplace = -1
+
+			for i, sel := range selected {
+				// Find replacement windows from allWindows
+				for _, w := range allWindows {
+					// Skip if same window
+					if w.start.Equal(sel.start) && w.end.Equal(sel.end) {
+						continue
+					}
+
+					// Check if replacement window overlaps with other selected windows
+					overlapsOthers := false
+					for j, other := range selected {
+						if i == j {
+							continue // skip the window we're replacing
+						}
+						if w.start.Before(other.end) && w.end.After(other.start) {
+							overlapsOthers = true
+							break
+						}
+					}
+
+					if overlapsOthers {
+						continue
+					}
+
+					// Calculate duration gain and cost increase
+					durationIncrease := w.duration - sel.duration
+
+					// Must provide enough additional duration
+					if durationIncrease < stillNeeded {
+						continue
+					}
+
+					costIncrease := (w.avgCost * float64(w.duration)) - (sel.avgCost * float64(sel.duration))
+					avgCostIncrease := costIncrease / float64(durationIncrease)
+
+					// This is a valid replacement - check if it's the best one
+					if bestReplacement.indexToReplace == -1 || avgCostIncrease < bestReplacement.costIncrease {
+						bestReplacement.indexToReplace = i
+						bestReplacement.newWindow = w
+						bestReplacement.costIncrease = avgCostIncrease
+					}
+				}
+			}
+
+			// Apply the best replacement if found
+			if bestReplacement.indexToReplace != -1 {
+				selected[bestReplacement.indexToReplace] = bestReplacement.newWindow
+			}
+		}
+	}
+
+	return selected
 }
 
 // evaluateWindowCombination calculates the score for a window combination

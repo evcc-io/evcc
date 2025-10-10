@@ -140,11 +140,11 @@ func TestSlotBundling(t *testing.T) {
 		expectedCost float64
 	}{
 		{
-			desc:         "single continuous cheap window",
-			rates:        []float64{10, 10, 10, 50, 50, 50},
+			desc:         "single continuous cheapest window",
+			rates:        []float64{12, 18, 21, 17, 13, 10, 10, 10, 50, 50, 50, 10, 11, 10, 12},
 			duration:     3 * time.Hour,
-			target:       clock.Now().Add(6 * time.Hour),
-			expectedCost: 30, // continuous 0-2 @ 10 each
+			target:       clock.Now().Add(15 * time.Hour),
+			expectedCost: 30, // continuous 5-7 @ 10 each
 		},
 		{
 			desc:         "two separate cheap slots when much cheaper",
@@ -166,6 +166,27 @@ func TestSlotBundling(t *testing.T) {
 			duration:     2 * time.Hour,
 			target:       clock.Now().Add(6 * time.Hour),
 			expectedCost: 20, // hours 0 and 3 @ 10 each
+		},
+		{
+			desc:         "three separate cheap windows, latest slots",
+			rates:        []float64{10, 80, 10, 80, 10, 80, 10, 80, 10, 80},
+			duration:     3 * time.Hour,
+			target:       clock.Now().Add(10 * time.Hour),
+			expectedCost: 30, // hours 4,6,8 @ 10 each
+		},
+		{
+			desc:         "4 hours grouped in three separate windows, to reach target at latest slots",
+			rates:        []float64{10, 80, 10, 80, 10, 80, 10, 80, 10, 80},
+			duration:     4 * time.Hour,
+			target:       clock.Now().Add(10 * time.Hour),
+			expectedCost: 110, // hours 4,6,8 @ 10 each and 9 @ 80
+		},
+		{
+			desc:         "4 hours grouped in three separate windows, to reach target at latest slots",
+			rates:        []float64{10, 80, 10, 80, 10, 80, 10, 80, 10, 81},
+			duration:     4 * time.Hour,
+			target:       clock.Now().Add(10 * time.Hour),
+			expectedCost: 110, // hours 4,6,8 @ 10 each and 7 @ 80
 		},
 	}
 
