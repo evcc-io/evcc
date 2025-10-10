@@ -707,3 +707,141 @@ func TestContinuousPlanOutsideRates(t *testing.T) {
 
 	assert.Len(t, plan, 1)
 }
+
+// TestMaxChargingWindows tests the MaxChargingWindows=3 constraint and related logic
+func TestMaxChargingWindows(t *testing.T) {
+	clock := clock.NewMock()
+
+	p := &Planner{
+		log:   util.NewLogger("foo"),
+		clock: clock,
+	}
+
+	t.Run("interruption penalty prefers continuous over fragmented", func(t *testing.T) {
+		// Test that 5% InterruptionPenalty makes continuous charging preferred
+		// when fragmented charging saves less than ~5% per interruption
+		// Continuous: 100€, Fragmented (2 windows): 96€ + 5% penalty = 100.8€
+		// Should choose continuous
+		testRates := rates([]float64{50, 50, 48, 48}, clock.Now(), time.Hour)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 2*time.Hour, clock.Now().Add(4*time.Hour))
+
+		assert.Equal(t, 2*time.Hour, Duration(plan))
+		windows := countChargingWindows(plan)
+		// With 5% penalty, continuous (100€) should be chosen over 2 windows (96€ + ~4.8€ penalty)
+		assert.Equal(t, 1, windows, "should prefer continuous charging when savings are marginal")
+	})
+
+	t.Run("many cheap windows prefer latest three", func(t *testing.T) {
+		// 8 equally cheap slots - should pick the latest 3 (hours 12, 14, 16)
+		testRates := rates([]float64{10, 50, 10, 50, 10, 50, 10, 50, 10, 50, 10, 50, 10, 50, 10, 50, 10, 50}, clock.Now(), time.Hour)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 3*time.Hour, clock.Now().Add(18*time.Hour))
+
+		assert.Equal(t, 3*time.Hour, Duration(plan))
+		windows := countChargingWindows(plan)
+		assert.LessOrEqual(t, windows, 3, "should not exceed MaxChargingWindows")
+
+		// Should prefer later slots
+		firstSlotStart := Start(plan)
+		assert.True(t, firstSlotStart.After(clock.Now().Add(10*time.Hour)) ||
+			firstSlotStart.Equal(clock.Now().Add(10*time.Hour)),
+			"should prefer latest slots when all are equally cheap")
+	})
+
+	t.Run("replacement chooses lowest cost increase", func(t *testing.T) {
+		// Test that when replacing a window to meet duration requirement,
+		// the algorithm picks the replacement with lowest cost increase
+		// Windows: 0-1h@10, 2-3h@10, 4-5h@10, 6-7h@10 (4 cheap windows)
+		// Need 4 hours, max 3 windows
+		// Options: replace any 1h window with 2h window
+		// 6-8h@10+15 (avg 12.5, +2.5/h increase) is better than others
+		testRates := rates([]float64{10, 50, 10, 50, 10, 50, 10, 15, 50}, clock.Now(), time.Hour)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 4*time.Hour, clock.Now().Add(9*time.Hour))
+
+		assert.Equal(t, 4*time.Hour, Duration(plan))
+		windows := countChargingWindows(plan)
+		assert.LessOrEqual(t, windows, 3, "should not exceed MaxChargingWindows")
+
+		// Cost should be optimal: 3x10 + 1x15 = 45
+		totalCost := AverageCost(plan) * float64(Duration(plan)) / float64(time.Hour)
+		assert.InDelta(t, 45.0, totalCost, 0.01, "should choose replacement with lowest cost increase")
+	})
+
+	t.Run("no valid replacement falls back gracefully", func(t *testing.T) {
+		// Scenario where no valid replacement exists without overlaps
+		// Should still produce a valid plan (possibly continuous)
+		testRates := rates([]float64{10, 10, 10, 10, 80}, clock.Now(), time.Hour)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 4*time.Hour, clock.Now().Add(5*time.Hour))
+
+		assert.Equal(t, 4*time.Hour, Duration(plan), "should still meet duration requirement")
+		windows := countChargingWindows(plan)
+		assert.LessOrEqual(t, windows, 3, "should not exceed MaxChargingWindows")
+
+		// Should use continuous 0-3 @ 10 each = 40
+		totalCost := AverageCost(plan) * float64(Duration(plan)) / float64(time.Hour)
+		assert.InDelta(t, 40.0, totalCost, 0.01)
+	})
+
+	t.Run("exactly three windows optimal", func(t *testing.T) {
+		// Scenario where exactly 3 separate windows are the optimal solution
+		// Should use all 3 without any reduction needed
+		testRates := rates([]float64{10, 50, 10, 50, 10, 50}, clock.Now(), time.Hour)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 3*time.Hour, clock.Now().Add(6*time.Hour))
+
+		assert.Equal(t, 3*time.Hour, Duration(plan))
+		windows := countChargingWindows(plan)
+		assert.Equal(t, 3, windows, "should use exactly 3 windows when optimal")
+
+		// Cost: 3x10 = 30
+		totalCost := AverageCost(plan) * float64(Duration(plan)) / float64(time.Hour)
+		assert.InDelta(t, 30.0, totalCost, 0.01)
+	})
+
+	t.Run("mixed duration windows", func(t *testing.T) {
+		// Different slot durations: 15min, 30min, 1h
+		// Tests replacement of short window with longer mixed-duration window
+		testRates := rates([]float64{10, 50, 50, 50}, clock.Now(), 15*time.Minute)
+		testRates = append(testRates, rates([]float64{10, 50}, clock.Now().Add(time.Hour), 15*time.Minute)...)
+		testRates = append(testRates, rates([]float64{10, 50}, clock.Now().Add(90*time.Minute), 15*time.Minute)...)
+		testRates = append(testRates, rates([]float64{10, 15}, clock.Now().Add(2*time.Hour), 15*time.Minute)...)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 60*time.Minute, clock.Now().Add(150*time.Minute))
+
+		assert.Equal(t, 60*time.Minute, Duration(plan))
+		windows := countChargingWindows(plan)
+		assert.LessOrEqual(t, windows, 3, "should not exceed MaxChargingWindows")
+
+		// Should find an efficient combination of the 10-cost slots
+		totalCost := AverageCost(plan) * float64(Duration(plan)) / float64(15*time.Minute)
+		assert.LessOrEqual(t, totalCost, 50.0, "should minimize cost with mixed durations")
+	})
+
+	t.Run("replacement considers all window types", func(t *testing.T) {
+		// Ensures replacement logic considers windows that don't start at same time
+		// 5 single slots @10 (hours 0,2,4,6,8), need 5h with max 3 windows
+		// Should select 3 latest windows and extend one to 2h
+		testRates := rates([]float64{10, 100, 10, 100, 10, 100, 10, 100, 10, 100}, clock.Now(), time.Hour)
+		slices.SortStableFunc(testRates, sortByCost)
+
+		plan := p.plan(testRates, 5*time.Hour, clock.Now().Add(10*time.Hour))
+
+		assert.Equal(t, 5*time.Hour, Duration(plan))
+		windows := countChargingWindows(plan)
+		assert.LessOrEqual(t, windows, 3, "should not exceed MaxChargingWindows")
+
+		// With 3 windows limit and 5h need: expects hours 4,6,8-9 = 10+10+10+100 = 130
+		// Or similar combination with some expensive slots
+		totalCost := AverageCost(plan) * float64(Duration(plan)) / float64(time.Hour)
+		assert.LessOrEqual(t, totalCost, 140.0, "should find 5h plan in max 3 windows")
+	})
+}
