@@ -13,6 +13,7 @@ permissions:
   pull-requests: write
   issues: write
   contents: read
+  models: read
 
 jobs:
   check-language:
@@ -33,7 +34,7 @@ jobs:
           enable-link-spam-detection: false
           enable-ai-detection: false
 
-      - name: Add friendly reminder
+      - name: Add friendly reminder and remove label
         if: contains(github.event.pull_request.labels.*.name, 'needs-english')
         uses: actions/github-script@v8
         with:
@@ -50,7 +51,6 @@ jobs:
               in_reply_to: comment.id
             });
 
-            // Remove the label after posting reminder
             await github.rest.issues.removeLabel({
               owner: context.repo.owner,
               repo: context.repo.repo,
