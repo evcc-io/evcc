@@ -21,11 +21,11 @@ params:
     default: 5033
   - name: user
     required: true
-    hint:
+    help:
       en: Identical with Web Portal or E3/DC App.
       de: Identisch mit Web-Portal bzw. E3/DC App.
   - name: password
-    hint:
+    help:
       en: Identical with Web Portal or E3/DC App.
       de: Identisch mit Web-Portal bzw. E3/DC App.
     required: true
@@ -33,7 +33,7 @@ params:
     description:
       en: RSCP password
       de: RSCP-Passwort
-    hint:
+    help:
       en: Must be set on the screen of your E3/DC system at 'Personalize' > 'User Profile'.
       de: Muss auf dem Bildschirm des Hauskraftwerks unter 'Personalisieren' > 'Benutzerprofil' angelegt werden.
     mask: true
