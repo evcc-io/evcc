@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Smart consumer",
       "batteryStorage": "Battery storage",
+      "consumer": "Consumer",
       "solarSystem": "Solar system"
     },
     "editor": {
