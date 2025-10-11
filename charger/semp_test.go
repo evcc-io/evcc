@@ -391,7 +391,8 @@ func TestSEMPChargerReady(t *testing.T) {
 	t.Run("EnabledWhenReady", func(t *testing.T) {
 		enabled, err := wb.Enabled()
 		require.NoError(t, err)
-		assert.False(t, enabled) // Status is not "On" so not enabled
+		// Returns true because EMSignalsAccepted=true and wb.enabled=true (workaround for phase switching)
+		assert.True(t, enabled)
 	})
 }
 
