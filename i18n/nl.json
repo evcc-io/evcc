@@ -162,7 +162,10 @@
       "delete": "Wissen",
       "docsLink": "Zie documentatie.",
       "dragHandle": "Schuifknop",
+      "dragItem": "Verplaatsbaar: {title}",
+      "dragList": "Herschikbare lijst",
       "experimental": "Experimenteel",
+      "forceSave": "Toch opslaan",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
       "noFileSelected": "Geen bestand geselecteerd.",
@@ -172,7 +175,10 @@
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
       "required": "vereist",
+      "reset": "Reset",
       "save": "Opslaan",
+      "saved": "Opgeslagen.",
+      "saving": "Bezig met opslaan…",
       "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
       "telemetry": "Telemetrie",
@@ -508,6 +514,10 @@
       "description": "Voer jouw energietarief in om de kosten van het laden te berekenen.",
       "title": "Tarieven"
     },
+    "telemetry": {
+      "description": "Configureer het delen van gegevens om evcc te helpen verbeteren. Uw privacy is belangrijk voor ons en deelname is volledig vrijwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wordt weergegeven op het hoofdscherm en op het browsertabblad.",
       "label": "Titel",
@@ -516,7 +526,7 @@
     "validation": {
       "failed": "mislukt",
       "label": "Status",
-      "running": "bezig met valideren…",
+      "running": "Bezig met valideren…",
       "success": "succesvol",
       "unknown": "onbekend",
       "validate": "valideer"
@@ -697,11 +707,15 @@
       "yamlConfigDescription": "Je complete configuratie bestand."
     },
     "additionalContext": "Additionele context",
+    "additionalContextPlaceholder": "Alle aanvullende informatie die nuttig kan zijn...\n- Configuratiegegevens\n- Wat u hebt geprobeerd\n- Omgevingsgegevens",
     "createButtonDiscussion": "Start GitHub discussie...",
     "createButtonIssue": "Creëer GitHub Issue...",
+    "description": "Werkt uw installatie niet zoals verwacht? Gebruik deze pagina om hulp te krijgen of problemen te melden. Geef voldoende details om ons te helpen het probleem te begrijpen en te reproduceren, maar houd uw beschrijving beknopt, duidelijk en gemakkelijk te volgen.",
     "helpType": {
       "discussion": "Hulp nodig met mijn installatie",
+      "discussionDescription": "Discussies binnen de community bieden antwoorden.",
       "issue": "Bug gevonden",
+      "issueDescription": "Ik weet zeker dat er iets kapot is en gemaakt moet worden.",
       "title": "Welk probleem speelt er?"
     },
     "issueDescription": "Omschrijving",
@@ -710,9 +724,18 @@
     "subTitleDiscussion": "Omschrijf je probleem",
     "subTitleIssue": "Beschrijf het probleem",
     "summary": {
+      "confirmationButtonDiscussion": "Start GitHub-discussie",
+      "confirmationButtonIssue": "Maak een GitHub-issue aan",
       "copied": "Gekopiëerd!",
       "copyButton": "Kopieer additionele informatie",
-      "stepOneDiscussion": "Stap 1: Creëer basis discussie"
+      "instructions": "Vanwege de beperkingen van GitHub op het gebied van URL-lengte, bestaat dit proces uit twee stappen:",
+      "singleStepDescription": "Klik op de onderstaande knop om GitHub te openen met een vooraf ingevuld formulier met uw probleemgegevens. Gevoelige gegevens zijn automatisch verwijderd, maar controleer dit nogmaals voordat u het formulier deelt.",
+      "step1Description": "Klik op de onderstaande knop om een basis GitHub-vermelding aan te maken met uw titel, beschrijving en details.",
+      "step2Description": "Nadat je het item hebt aangemaakt, ga je terug naar deze pagina om de onderstaande aanvullende informatie te kopiëren en in je GitHub-formulier te plakken. Gevoelige gegevens zijn verwijderd, maar controleer dit nogmaals voordat je de informatie deelt.",
+      "stepOneDiscussion": "Stap 1: Creëer basis discussie",
+      "stepOneIssue": "Stap 1: Maak een basis issue aan",
+      "stepTwo": "Stap 2: Kopieer aanvullende informatie",
+      "title": "GitHub Probleemoverzicht"
     },
     "title": "Rapporteer een probleem",
     "version": "Versie"
@@ -1075,6 +1098,7 @@
     "vehicle": "Voertuig"
   },
   "settings": {
+    "deviceInfo": "De instellingen die u in dit dialoogvenster maakt, zijn alleen van toepassing op dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",
       "exit": "Volledig scherm afsluiten",
@@ -1087,6 +1111,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Taal"
+    },
+    "loadpoints": {
+      "help": "Wijzig de volgorde en zichtbaarheid van de gebruikersinterface.",
+      "hide": "Verberg {title}",
+      "label": "Laadpunten",
+      "show": "Toon {title}"
     },
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
@@ -1116,7 +1146,7 @@
   },
   "smartCost": {
     "activeHours": "{active} van {total}",
-    "activeHoursLabel": "Actieve uren",
+    "activeHoursLabel": "Actieve tijd",
     "applyToAll": "Overal toepassen?",
     "batteryDescription": "Laadt de huisbatterij op met stroom uit het net.",
     "cheapTitle": "Goedkoop netstroom laden",
@@ -1133,7 +1163,7 @@
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Gepauzeerde uren",
+    "activeHoursLabel": "Gepauzeerde tijd",
     "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",

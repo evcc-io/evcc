@@ -143,9 +143,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan bruges til belastningsstyring eller statistikformål.",
-      "titleAdd": "Tilføj ekstern måler",
-      "titleEdit": "Rediger ekstern måler"
+      "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
+      "titleAdd": "Tilføj forbrugsmåler",
+      "titleEdit": "Rediger forbrugsmåler"
     },
     "form": {
       "danger": "Pas på",
@@ -165,6 +165,7 @@
       "dragItem": "Kan trækkes: {title}",
       "dragList": "Rækkefølgen kan ændres",
       "experimental": "Eksperimentel",
+      "forceSave": "Gem alligevel",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
       "noFileSelected": "Ingen fil valgt.",
@@ -176,6 +177,8 @@
       "required": "påkrævet",
       "reset": "Nulstil",
       "save": "Gem",
+      "saved": "Gemt.",
+      "saving": "Gemmer…",
       "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
       "telemetry": "Telemetri",
@@ -193,7 +196,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ændre"
+      "change": "ændre",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data.",
@@ -341,13 +345,22 @@
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
-        "ext": "Tilføj en ekstra måler",
+        "ext": "Tilføj almindelig forbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
       "specific": "Specifikke integrationer",
       "template": "Fabrikant",
       "titleChoice": "Hvad ønsker du at tilføje?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Selvregulerende belastningsmåler",
+        "battery": "Batterimåler",
+        "charge": "Ladepunktmåler",
+        "grid": "Måler til elnettet",
+        "label": "Brug",
+        "pv": "Solproduktionsmåler"
+      },
       "validateSave": "Valider og gem"
     },
     "modbus": {
@@ -524,7 +537,7 @@
     "validation": {
       "failed": "mislykkedes",
       "label": "Status",
-      "running": "validering…",
+      "running": "Validering…",
       "success": "succes",
       "unknown": "ukendt",
       "validate": "validerer"
@@ -656,6 +669,7 @@
     "about": "Om",
     "authProviders": {
       "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
+      "loggedOut": "Du er nu logget ud",
       "title": "Autorisation status"
     },
     "blog": "Blog",
@@ -1144,7 +1158,7 @@
   },
   "smartCost": {
     "activeHours": "{active} af {total}",
-    "activeHoursLabel": "Aktive timer",
+    "activeHoursLabel": "Aktiv tid",
     "applyToAll": "Anvendes overalt?",
     "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",
     "cheapTitle": "Billig opladning fra elnettet",
@@ -1161,7 +1175,7 @@
     "saved": "Gemt."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pauserede timer",
+    "activeHoursLabel": "Pauseret tid",
     "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
     "priceLabel": "Indfødningspris",
     "priceLimit": "Indfødningsgrænse",

@@ -161,7 +161,11 @@
       "customOption": "Itsemääritelty laite",
       "delete": "Poista",
       "docsLink": "Katso dokumentaatio.",
+      "dragHandle": "Kahva",
+      "dragItem": "Raahattavissa: {title}",
+      "dragList": "Järjestettävä lista",
       "experimental": "Kokeellinen",
+      "forceSave": "Tallenna joka tapauksessa",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
       "invalidFileSelected": "Valittu virheellinen tiedosto",
       "noFileSelected": "Ei valittua tiedostoa.",
@@ -171,7 +175,10 @@
       "readFromFile": "Lue tiedostosta",
       "remove": "Poista",
       "required": "vaadittu",
+      "reset": "Nollaa",
       "save": "Tallenna",
+      "saved": "Tallennettu.",
+      "saving": "Tallentaa…",
       "selectFile": "Selaa",
       "showAdvancedSettings": "Näytä edistyneet asetukset",
       "telemetry": "Telemetria",
@@ -245,7 +252,7 @@
       "energyMeterHelp": "Lisämittari, jos laturissa ei ole integroitua energiamittaria.",
       "energyMeterLabel": "Energiamittari",
       "estimateLabel": "Arvioi lataustaso API-päivitysten välillä",
-      "maxCurrentHelp": "On oltava suurempi kuin minimivirta.",
+      "maxCurrentHelp": "On oltava minimivirtaa suurempi.",
       "maxCurrentLabel": "Maksimivirta",
       "minCurrentHelp": "Valitse alle 6 A vain, jos tiedät mitä olet tekemässä.",
       "minCurrentLabel": "Minimivirta",
@@ -324,7 +331,7 @@
       "title": "Määritykset",
       "unconfigured": "ei määritetty",
       "vehicles": "Minun ajoneuvot",
-      "yaml": "Laitteita jotka ovat määritetty evcc.yaml, ei voi muokata."
+      "yaml": "evcc.yaml-asetuksissa määritettyjä laitteita ei voi muokata."
     },
     "messaging": {
       "description": "Vastaanota viestejä koskien lataustapahtumiasi.",
@@ -507,6 +514,10 @@
       "description": "Määrittele energiatariffisi, jotta latausistuntojesi kustannukset lasketaan.",
       "title": "Tariffit"
     },
+    "telemetry": {
+      "description": "Määritä tiedon jakamisesta ja auta parantamaan evcc:tä. Yksityisyytesi on meille tärkeää ja osallistuminen on vapaaehtoista.",
+      "title": "Telemetria"
+    },
     "title": {
       "description": "Näytetään pääikkunassa ja selaimen välilehdessä.",
       "label": "Otsikko",
@@ -515,7 +526,7 @@
     "validation": {
       "failed": "epäonnistui",
       "label": "Tila",
-      "running": "vahvistetaan…",
+      "running": "Vahvistetaan…",
       "success": "onnistui",
       "unknown": "tuntematon",
       "validate": "vahvista"
@@ -1087,6 +1098,7 @@
     "vehicle": "Ajoneuvo"
   },
   "settings": {
+    "deviceInfo": "Tämän valikon asetukset vaikuttavat vain tähän laitteeseen.",
     "fullscreen": {
       "enter": "Mene kokonäyttötilaan",
       "exit": "Poistu kokonäyttötilasta",
@@ -1099,6 +1111,12 @@
     "language": {
       "auto": "Automaattinen",
       "label": "Kieli"
+    },
+    "loadpoints": {
+      "help": "Muuta käyttöliittymän järjestystä ja näkyvyyttä.",
+      "hide": "Piilota {title}",
+      "label": "Latauspisteet",
+      "show": "Näytä {title}"
     },
     "sponsorToken": {
       "expires": "Sponsorointitunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä se tänne.",
@@ -1128,7 +1146,7 @@
   },
   "smartCost": {
     "activeHours": "{active} / {total}",
-    "activeHoursLabel": "Aktiiviset tunnit",
+    "activeHoursLabel": "Aktiivinen aika",
     "applyToAll": "Käytä kaikkialla?",
     "batteryDescription": "Lataa kodin akun sähköverkosta.",
     "cheapTitle": "Lataaminen edullisesti sähköverkosta",
@@ -1145,7 +1163,7 @@
     "saved": "Tallennettu."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Tauotettu tuntia",
+    "activeHoursLabel": "Tauotettu aika",
     "description": "Lataus tauotetaan korkean sähkön hinnan aikana, jotta voidaan priorisoida sähkön myyntiä verkkoon.",
     "priceLabel": "Verkkoon myyntihinta",
     "priceLimit": "Verkkoon syöttö rajoite",

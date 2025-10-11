@@ -763,7 +763,7 @@
       "departureTab": "Odlazak",
       "goal": "Cilj punjenja",
       "modalTitle": "Plan punjenja",
-      "none": "nema plana",
+      "none": "nema, dodaj",
       "planNumber": "Plan {number}",
       "preconditionDescription": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
       "preconditionLong": "Kasnije punjenje",
@@ -820,17 +820,17 @@
       "finished": "Vrijeme završetka",
       "power": "Snaga",
       "price": "Trošak",
-      "remaining": "Preostalo",
+      "remaining": "Preostalo vrijeme",
       "remoteDisabledHard": "{source}: isključeno",
       "remoteDisabledSoft": "{source}: adaptivno solarno punjenje isključeno",
       "solar": "Solarno"
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Brzo napuni iz kućne baterije.",
-        "label": "Pojačaj s baterijom",
+        "description": "Napuni brže uz pomoć kućne baterije",
+        "label": "Ubrzaj punjenje s baterijom",
         "mode": "Dostupno samo u 'Solarno' i 'Min+Solar' načinima rada.",
-        "once": "Pojačavanje je aktivirano za ovu sesiju punjenja."
+        "once": "Ubrzano punjenje je aktivno za ovu sesiju punjenja."
       },
       "batteryUsage": "Kućna baterija",
       "currents": "Struja punjenja",
@@ -841,10 +841,10 @@
         "label": "Zadano ograničenje"
       },
       "maxCurrent": {
-        "label": "Maks. struja"
+        "label": "Maksimalna struja punjenja"
       },
       "minCurrent": {
-        "label": "Min. struja"
+        "label": "Minimalna struja punjenja"
       },
       "minSoc": {
         "description": "Vozilo se „brzo” puni na {0} u solarnom načinu rada, zatim sa solarnim viškom. Korisno za osiguravanje minimalnog dometa čak i u danima s manje sunca.",
@@ -853,7 +853,7 @@
       "onlyForSocBasedCharging": "Navedene opcije dostupne samo za vozila s poznatom razinom napunjenosti baterije.",
       "phasesConfigured": {
         "label": "Faze",
-        "no1p3pSupport": "Kako je vaš punjač povezan?",
+        "no1p3pSupport": "Kako je spojen vaš punjač?",
         "phases_0": "automatsko prebacivanje",
         "phases_1": "jednofazno",
         "phases_1_hint": "({min} do {max})",
@@ -862,7 +862,7 @@
       },
       "smartCostCheap": "Punjenje jeftinom energijom iz mreže",
       "smartCostClean": "Punjenje čistom energijom iz mreže",
-      "title": "Postavke za {0}",
+      "title": "Postavke za mjesto {0}",
       "vehicle": "Vozilo"
     },
     "mode": {
@@ -917,7 +917,7 @@
     },
     "targetEnergy": {
       "label": "Ograničenje",
-      "noLimit": "bez ograničenja"
+      "noLimit": "nema, dodaj"
     },
     "vehicle": {
       "addVehicle": "Dodaj vozilo",
@@ -946,7 +946,7 @@
       "climating": "Otkriveno predkondicioniranje.",
       "connected": "Povezano.",
       "disconnectRequired": "Zadatak prekinut. Molim ponovno spojite.",
-      "disconnected": "Nepovezano.",
+      "disconnected": "Vozilo nije priključeno",
       "feedinPriorityNextStart": "Visoka tarifa prodaje počinje za {duration}.",
       "feedinPriorityPausing": "Solarno punjenje je pauzirano radi maksimiziranja predaje u mrežu.",
       "finished": "Završeno.",
@@ -1087,18 +1087,22 @@
     "vehicle": "Vozilo"
   },
   "settings": {
+    "deviceInfo": "Postavke koje ovdje promijenite primjenjuju se samo na ovaj uređaj.",
     "fullscreen": {
       "enter": "Puni zaslon",
       "exit": "Izlaz iz punog zaslona",
-      "label": "Puni zaslon"
+      "label": "Postavke prikaza"
     },
     "hiddenFeatures": {
       "label": "Eksperimentalno",
-      "value": "Prikaži eksperimentalne značajke korisničkog sučelja."
+      "value": "Prikaži eksperimentalne značajke korisničkog sučelja"
     },
     "language": {
       "auto": "Automatski",
       "label": "Jezik"
+    },
+    "loadpoints": {
+      "help": "Promijenite redoslijed i vidljivost u sučelju."
     },
     "sponsorToken": {
       "expires": "Vaš sponzorski token isteče {inXDays}. {getNewToken} i obnovi ga ovdje.",
