@@ -461,41 +461,36 @@ func (t *Planner) evaluateWindowCombination(windows []chargingWindow, requiredDu
 		excess := totalDuration - requiredDuration
 
 		// Apply original shortening logic:
-		// - First (but not single) window: shift start forward (late start)
+		// - First (but not single) window: shift start forward (late start) - ONLY if long enough
 		// - Otherwise: shift last window's end backward (early end)
 
-		if len(windows) > 1 {
-			// Multiple windows: adjust first window's start
+		// Try to adjust first window if multiple windows AND first window is long enough
+		if len(windows) > 1 && windows[0].duration > excess {
+			// Multiple windows with sufficient first window: adjust first window's start
 			firstWindow := &windows[0]
-			if firstWindow.duration > excess {
-				firstWindow.start = firstWindow.start.Add(excess)
-				firstWindow.duration -= excess
+			firstWindow.start = firstWindow.start.Add(excess)
+			firstWindow.duration -= excess
 
-				// Adjust slots in first window
-				var adjustedSlots api.Rates
-				for _, slot := range firstWindow.slots {
-					if slot.End.After(firstWindow.start) {
-						adjustedSlot := slot
-						if adjustedSlot.Start.Before(firstWindow.start) {
-							adjustedSlot.Start = firstWindow.start
-						}
-						adjustedSlots = append(adjustedSlots, adjustedSlot)
+			// Adjust slots in first window
+			var adjustedSlots api.Rates
+			for _, slot := range firstWindow.slots {
+				if slot.End.After(firstWindow.start) {
+					adjustedSlot := slot
+					if adjustedSlot.Start.Before(firstWindow.start) {
+						adjustedSlot.Start = firstWindow.start
 					}
+					adjustedSlots = append(adjustedSlots, adjustedSlot)
 				}
-				firstWindow.slots = adjustedSlots
+			}
+			firstWindow.slots = adjustedSlots
 
-				// Recalculate average cost
-				if len(firstWindow.slots) > 0 {
-					firstWindow.avgCost = AverageCost(firstWindow.slots)
-				}
-			} else {
-				// If first window is too short, we need to remove it and shorten the next
-				// This shouldn't happen with correct window selection
-				return nil
+			// Recalculate average cost
+			if len(firstWindow.slots) > 0 {
+				firstWindow.avgCost = AverageCost(firstWindow.slots)
 			}
 		} else {
-			// Single window: adjust end
-			lastWindow := &windows[0]
+			// Single window OR first window too short: adjust last window's end
+			lastWindow := &windows[len(windows)-1]
 			if lastWindow.duration > excess {
 				lastWindow.duration -= excess
 				lastWindow.end = lastWindow.end.Add(-excess)

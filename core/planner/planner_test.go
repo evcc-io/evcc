@@ -96,12 +96,12 @@ func TestPlan(t *testing.T) {
 			10,
 		},
 		{
-			"plan 60-0-60-0-0-0", // after 30min start: picks continuous 1-2
+			"plan (30)30-0-60-0-30(30)-0", // after 30min start: picks fragmented windows
 			2 * time.Hour,
 			clock.Now().Add(30 * time.Minute),
 			clock.Now().Add(6 * time.Hour),
-			clock.Now().Add(time.Hour), // starts at hour 1
-			70,                         // continuous hours 1-2: 60 + 10 = 70
+			clock.Now().Add(30 * time.Minute), // starts at 0:30
+			40,                                // 30min@20 + 60min@10 + 30min@40 = 10 + 10 + 20
 		},
 		{
 			"plan (30)30-0-60-0-0-0",
