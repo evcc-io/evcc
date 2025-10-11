@@ -41,7 +41,6 @@ type SEMP struct {
 	deviceID       string
 	minPower       int
 	maxPower       int
-	updated        time.Time
 	hasStatusParam bool
 }
 
@@ -164,11 +163,9 @@ func (wb *SEMP) heartbeat(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			// Check if we need to send an update
-			if time.Since(wb.updated) >= time.Minute {
+			if wb.conn.TimeSinceLastUpdate() >= time.Minute {
 				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
-					wb.log.ERROR.Printf("watchdog: failed to send update: %v", err)
-				} else {
-					wb.updated = time.Now()
+					wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
 				}
 			}
 		case <-ctx.Done():
@@ -308,8 +305,6 @@ func (wb *SEMP) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *SEMP) Enable(enable bool) error {
-	wb.updated = time.Now()
-
 	if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(enable, wb.current, wb.phases)); err != nil {
 		return err
 	}
@@ -330,8 +325,6 @@ var _ api.ChargerEx = (*SEMP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SEMP) MaxCurrentMillis(current float64) error {
-	wb.updated = time.Now()
-
 	if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, current, wb.phases)); err != nil {
 		return err
 	}
@@ -374,8 +367,6 @@ func (wb *SEMP) chargedEnergy() (float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *SEMP) phases1p3p(phases int) error {
 	// SEMP protocol doesn't have explicit phase switching
-	wb.updated = time.Now()
-
 	if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, phases)); err != nil {
 		return err
 	}

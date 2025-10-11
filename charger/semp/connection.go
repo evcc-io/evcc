@@ -3,6 +3,7 @@ package semp
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -12,7 +13,9 @@ import (
 // Connection represents a SEMP HTTP connection with helper methods
 type Connection struct {
 	*request.Helper
-	uri string
+	uri     string
+	mu      sync.Mutex
+	updated time.Time
 }
 
 // NewConnection creates a new SEMP client
@@ -74,5 +77,17 @@ func (c *Connection) SendDeviceControl(deviceId string, power int) error {
 	}
 
 	_, err = c.DoBody(req)
+	if err == nil {
+		c.mu.Lock()
+		c.updated = time.Now()
+		c.mu.Unlock()
+	}
 	return err
+}
+
+// TimeSinceLastUpdate returns the duration since the last successful device control update
+func (c *Connection) TimeSinceLastUpdate() time.Duration {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return time.Since(c.updated)
 }
