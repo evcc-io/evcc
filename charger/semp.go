@@ -300,7 +300,16 @@ func (wb *SEMP) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return status.EMSignalsAccepted && status.Status == semp.StatusOn, nil
+	if status.EMSignalsAccepted {
+		if status.Status == semp.StatusOn {
+			return true, nil
+		}
+
+		// work around wrong status reporting during phase switching (SMA Chargers...)
+		return wb.enabled, nil
+	}
+
+	return false, nil
 }
 
 // Enable implements the api.Charger interface
