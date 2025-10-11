@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -219,8 +218,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
-	v, ok := lp.GetVehicle().(api.FeatureDescriber)
-	return ok && slices.Contains(v.Features(), f)
+	return hasFeature(lp.GetVehicle(), f)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.

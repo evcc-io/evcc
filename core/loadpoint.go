@@ -1092,7 +1092,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
-					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge)
+					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
 
 					// Enable charging on connect if any available vehicle requires it.
 					// We're using the PV timer to disable after the welcome
