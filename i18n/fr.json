@@ -103,7 +103,7 @@
       "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "no": "non",
-      "odometer": "Kilométrage",
+      "odometer": "Compteur kilométrique",
       "org": "Organisation",
       "phaseCurrents": "Courant L1, L2, L3",
       "phasePowers": "Puissance L1, L2, L3",
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Consommateur intelligent",
       "batteryStorage": "Batterie",
+      "consumer": "Consommateur",
       "solarSystem": "Système photovoltaïque"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Peut être utilisé pour la gestion de la charge ou à des fins statistiques.",
-      "titleAdd": "Ajouter un compteur externe",
-      "titleEdit": "Modifier le compteur externe"
+      "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisé pour de la gestion de charge (par ex. Sous-distribution).",
+      "titleAdd": "Ajouter un compteur de consommateur",
+      "titleEdit": "Modifier le compteur de consommateur"
     },
     "form": {
       "danger": "Attention",
@@ -196,7 +197,8 @@
       "title": "SGED"
     },
     "icon": {
-      "change": "changer"
+      "change": "changer",
+      "label": "Icône"
     },
     "influx": {
       "description": "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données.",
@@ -344,13 +346,22 @@
       "option": {
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
-        "ext": "Ajouter un compteur externe",
+        "ext": "Ajouter un consommateur régulier",
         "pv": "Ajouter un compteur solaire"
       },
       "save": "Enregistrer",
       "specific": "Intégrations spécifiques",
       "template": "Fabricant",
       "titleChoice": "Que voulez-vous ajouter ?",
+      "titleLabel": "Titre",
+      "usage": {
+        "aux": "Compteur de consommateur auto-régulé",
+        "battery": "Compteur de batterie",
+        "charge": "Compteur de chargeur",
+        "grid": "Compteur du réseau",
+        "label": "Utilisation",
+        "pv": "Compteur production solaire"
+      },
       "validateSave": "Valider et enregistrer"
     },
     "modbus": {
@@ -658,6 +669,7 @@
     "about": "À propos",
     "authProviders": {
       "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
+      "loggedOut": "Déconnexion réussie",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
