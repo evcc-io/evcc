@@ -84,12 +84,13 @@ export default defineComponent({
 		},
 		options() {
 			const HOUR = 60 * 60;
+			const QUARTER_HOUR = 0.25 * HOUR;
 			const HALF_HOUR = 0.5 * HOUR;
 			const ONE_HOUR = 1 * HOUR;
 			const TWO_HOURS = 2 * HOUR;
 			const EVERYTHING = 7 * 24 * HOUR;
 
-			const options = [HALF_HOUR, ONE_HOUR, TWO_HOURS, EVERYTHING];
+			const options = [QUARTER_HOUR, HALF_HOUR, ONE_HOUR, TWO_HOURS, EVERYTHING];
 
 			// support custom values (via API)
 			if (this.localValue && !options.includes(this.localValue)) {
