@@ -456,41 +456,73 @@ func (t *Planner) evaluateWindowCombination(windows []chargingWindow, requiredDu
 		return nil
 	}
 
-	// Adjust if we have too much duration - using original logic
+	// Adjust if we have too much duration
 	if totalDuration > requiredDuration {
 		excess := totalDuration - requiredDuration
 
-		// Apply original shortening logic:
-		// - First (but not single) window: shift start forward (late start) - ONLY if long enough
-		// - Otherwise: shift last window's end backward (early end)
+		// Shortening strategy depends on number of windows:
+		// - Multiple windows: late start (shift first window's start forward)
+		//   This allows cost optimization by delaying the first charging window
+		// - Single window: early end (shift window's end backward)
+		//   Start charging immediately (tariffs ensure slots aren't > 1h in practice)
+		// - Fallback: if first window too short in multi-window, use early end
 
-		// Try to adjust first window if multiple windows AND first window is long enough
-		if len(windows) > 1 && windows[0].duration > excess {
-			// Multiple windows with sufficient first window: adjust first window's start
+		if len(windows) > 1 {
+			// Multiple windows: try late start on first window
 			firstWindow := &windows[0]
-			firstWindow.start = firstWindow.start.Add(excess)
-			firstWindow.duration -= excess
+			if firstWindow.duration > excess {
+				// First window is long enough: adjust its start (late start)
+				firstWindow.start = firstWindow.start.Add(excess)
+				firstWindow.duration -= excess
 
-			// Adjust slots in first window
-			var adjustedSlots api.Rates
-			for _, slot := range firstWindow.slots {
-				if slot.End.After(firstWindow.start) {
-					adjustedSlot := slot
-					if adjustedSlot.Start.Before(firstWindow.start) {
-						adjustedSlot.Start = firstWindow.start
+				// Adjust slots in first window
+				var adjustedSlots api.Rates
+				for _, slot := range firstWindow.slots {
+					if slot.End.After(firstWindow.start) {
+						adjustedSlot := slot
+						if adjustedSlot.Start.Before(firstWindow.start) {
+							adjustedSlot.Start = firstWindow.start
+						}
+						adjustedSlots = append(adjustedSlots, adjustedSlot)
 					}
-					adjustedSlots = append(adjustedSlots, adjustedSlot)
+				}
+				firstWindow.slots = adjustedSlots
+
+				// Recalculate average cost
+				if len(firstWindow.slots) > 0 {
+					firstWindow.avgCost = AverageCost(firstWindow.slots)
+				}
+			} else {
+				// First window too short: fallback to early end on last window
+				lastWindow := &windows[len(windows)-1]
+				if lastWindow.duration > excess {
+					lastWindow.duration -= excess
+					lastWindow.end = lastWindow.end.Add(-excess)
+
+					// Remove excess slots from the end
+					var adjustedSlots api.Rates
+					for _, slot := range lastWindow.slots {
+						if slot.Start.Before(lastWindow.end) {
+							adjustedSlot := slot
+							if adjustedSlot.End.After(lastWindow.end) {
+								adjustedSlot.End = lastWindow.end
+							}
+							adjustedSlots = append(adjustedSlots, adjustedSlot)
+						}
+					}
+					lastWindow.slots = adjustedSlots
+
+					// Recalculate average cost
+					if len(lastWindow.slots) > 0 {
+						lastWindow.avgCost = AverageCost(lastWindow.slots)
+					}
+				} else {
+					return nil
 				}
 			}
-			firstWindow.slots = adjustedSlots
-
-			// Recalculate average cost
-			if len(firstWindow.slots) > 0 {
-				firstWindow.avgCost = AverageCost(firstWindow.slots)
-			}
 		} else {
-			// Single window OR first window too short: adjust last window's end
-			lastWindow := &windows[len(windows)-1]
+			// Single window: early end (start as early as possible)
+			lastWindow := &windows[0]
 			if lastWindow.duration > excess {
 				lastWindow.duration -= excess
 				lastWindow.end = lastWindow.end.Add(-excess)
