@@ -220,25 +220,52 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	log.INFO.Println("- vehicles")
+	vehicleDbIDs := make(map[string]int) // used to migrate loadpoints
+	if reset {
+		// config table already cleared
+	} else if len(conf.Vehicles) > 0 {
+		for _, vehicle := range conf.Vehicles {
+			log.INFO.Printf("migrating vehicle %s", vehicle)
+			title, _ := vehicle.Other["title"].(string)
+			if product, ok := vehicle.Other["template"].(string); ok {
+				properties := config.Properties{Type: vehicle.Type, Title: title, Product: product}
+				if cnf, err := config.AddConfig(templates.Vehicle, vehicle.Other, config.WithProperties(properties)); err != nil {
+					log.WARN.Printf("migration of vehicle failed with error: %s", err)
+				} else {
+					vehicleDbIDs[vehicle.Name] = cnf.ID
+				}
+			}
+		}
+	}
+
 	log.INFO.Println("- loadpoints")
 	if reset {
 		// config table already cleared
 	} else if len(conf.Loadpoints) > 0 {
 		for _, lp := range conf.Loadpoints {
+			log.INFO.Printf("migrating loadpoint %s", lp)
+			title, _ := lp.Other["title"].(string)
+			mode, ok := lp.Other["mode"].(string)
+			if ok {
+				lp.Other["defaultMode"] = mode
+			}
+			// migrate charger and vehicle names to device references
 			if c, ok := lp.Other["charger"].(string); ok {
 				if id, found := chargerDbIDs[c]; found {
 					lp.Other["charger"] = fmt.Sprintf("db:%d", id)
-					log.INFO.Printf("loadpoint '%s' charger changed from '%v' to '%v'", lp.Name, c, lp.Other["charger"])
+					log.INFO.Printf("loadpoint '%s' charger changed from '%v' to '%v'", title, c, lp.Other["charger"])
 				} else {
-					log.WARN.Printf("meter '%s' of circuit '%s' not found in database", c, lp.Name)
+					log.WARN.Printf("charger '%s' of loadpoint '%s' not found in database", c, title)
 				}
 			}
-			log.INFO.Printf("migrating loadpoint %s", lp)
-			title, ok := lp.Other["title"].(string)
-			if ok {
-				delete(lp.Other, "title")
-			} else {
-				title = lp.Name
+			if v, ok := lp.Other["vehicle"].(string); ok {
+				if id, found := vehicleDbIDs[v]; found {
+					lp.Other["vehicle"] = fmt.Sprintf("db:%d", id)
+					log.INFO.Printf("loadpoint '%s' vehicle changed from '%v' to '%v'", title, v, lp.Other["vehicle"])
+				} else {
+					log.WARN.Printf("vehicle '%s' of loadpoint '%s' not found in database", v, title)
+				}
 			}
 			if _, err := config.AddConfig(templates.Loadpoint, lp.Other, config.WithProperties(config.Properties{
 				Type:  lp.Type,
