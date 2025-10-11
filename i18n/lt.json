@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Išmanusis vartotojas",
       "batteryStorage": "Energijos kaupiklis",
+      "consumer": "Vartojantis įrenginys",
       "solarSystem": "Saulės elektrinė"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Gali būti naudojamas apkrovos valdymo ar statistikos tikslais.",
-      "titleAdd": "Pridėti Išorinį skaitiklį",
-      "titleEdit": "Redaguoti Išorinį skaitiklį"
+      "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
+      "titleAdd": "Pridėti vartojančio įrenginio skaitiklį",
+      "titleEdit": "Redaguoti vartojančio įrenginio skaitiklį"
     },
     "form": {
       "danger": "Pavojus",
@@ -196,7 +197,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "pakeisti"
+      "change": "pakeisti",
+      "label": "Piktograma"
     },
     "influx": {
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
@@ -344,13 +346,22 @@
       "option": {
         "aux": "Pridėti savireguliuojantį vartotoją",
         "battery": "Pridėti kaupiklio skaitiklį",
-        "ext": "Pridėti išorinį skaitiklį",
+        "ext": "Pridėti paprastą vartojantį įrenginį",
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
       "save": "Išsaugoti",
       "specific": "Specifinės integracijos",
       "template": "Gamintojas",
       "titleChoice": "Ką norite pridėti?",
+      "titleLabel": "Pavadinimas",
+      "usage": {
+        "aux": "Savireguliuojančio įrenginio skaitiklis",
+        "battery": "Kaupiklio skaitiklis",
+        "charge": "Įkroviklio skaitiklis",
+        "grid": "Tinklo įvado skaitiklis",
+        "label": "Naudojimas",
+        "pv": "Saulės jėgainės skaitiklis"
+      },
       "validateSave": "Patikrinti ir išsaugoti"
     },
     "modbus": {
