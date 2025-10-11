@@ -185,7 +185,7 @@ func (wb *Salia) post(key, val string) error {
 	httpmethod := http.MethodPut
 	uri := fmt.Sprintf("%s/secc", wb.uri)
 
-	// for fw >= 2.3.0 replace remove /api  and use /save_mqtt.php instead of /api/secc
+	// for fw >= 2.3.0 replace use /save_mqtt.php instead of /api/secc
 	if wb.fw >= 3 {
 		httpmethod = http.MethodPost
 		uri = strings.TrimSuffix(wb.uri, "/api") + "/save_mqtt.php"
