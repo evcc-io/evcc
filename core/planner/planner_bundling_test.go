@@ -72,7 +72,7 @@ func TestSlotBundling(t *testing.T) {
 			expectedCost: 110, // hours 4,6,8 @ 10 each and 9 @ 80
 		},
 		{
-			desc:         "4 hours grouped in three separate windows with slight variation",
+			desc:         "4 hours grouped in three separate windows, not choosing the last expensive slot",
 			rates:        []float64{10, 80, 10, 80, 10, 80, 10, 80, 10, 81},
 			duration:     4 * time.Hour,
 			target:       clock.Now().Add(10 * time.Hour),
@@ -337,7 +337,6 @@ func TestMaxChargingWindows(t *testing.T) {
 	t.Run("interruption penalty prefers continuous over fragmented", func(t *testing.T) {
 		// Test that 6% InterruptionPenalty makes continuous charging preferred
 		// when fragmented charging saves less than ~6% per interruption
-		// Continuous: 100€, Fragmented (2 windows): 96€ + 6% penalty = 101.76€
 		// Should choose continuous
 		testRates := rates([]float64{50, 50, 48, 48}, clock.Now(), time.Hour)
 		slices.SortStableFunc(testRates, sortByCost)
@@ -346,7 +345,6 @@ func TestMaxChargingWindows(t *testing.T) {
 
 		assert.Equal(t, 2*time.Hour, Duration(plan))
 		windows := countChargingWindows(plan)
-		// With 6% penalty, continuous (100€) should be chosen over 2 windows (96€ + ~5.76€ penalty)
 		assert.Equal(t, 1, windows, "should prefer continuous charging when savings are marginal")
 	})
 
