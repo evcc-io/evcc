@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Розумний споживач",
       "batteryStorage": "Акумуляторне зберігання",
+      "consumer": "Споживач",
       "solarSystem": "Сонячна система"
     },
     "editor": {
