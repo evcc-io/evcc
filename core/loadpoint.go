@@ -1006,7 +1006,9 @@ func (lp *Loadpoint) LimitSocReached() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 	limit := lp.effectiveLimitSoc()
-	return limit > 0 && limit < 100 && lp.vehicleSoc >= float64(limit)
+	// Use floor of vehicleSoc and only consider limit reached when floor(soc) > limit
+	// This ensures the battery is actually charged beyond the target before stopping
+	return limit > 0 && limit < 100 && int(lp.vehicleSoc) > limit
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
