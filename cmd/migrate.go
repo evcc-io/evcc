@@ -200,6 +200,57 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		_ = settings.SetYaml(keys.Circuits, conf.Circuits)
 	}
 
+	log.INFO.Println("- charger")
+	chargerDbIDs := make(map[string]int) // used to migrate loadpoints
+	if reset {
+		// config table already cleared
+	} else if len(conf.Chargers) > 0 {
+		for _, charger := range conf.Chargers {
+			log.INFO.Printf("migrating charger %s", charger)
+			if cnf, err := config.AddConfig(templates.Charger, charger.Other, config.WithProperties(config.Properties{
+				Type:    charger.Type,
+				Title:   charger.Name,
+				Product: charger.Other["template"].(string),
+			})); err != nil {
+				log.WARN.Printf("migration of charger failed with error: %s", err)
+			} else {
+				chargerDbIDs[charger.Name] = cnf.ID
+				log.INFO.Printf("added charger %s with ID %d to database", charger.Name, cnf.ID)
+			}
+		}
+	}
+
+	log.INFO.Println("- loadpoints")
+	if reset {
+		// config table already cleared
+	} else if len(conf.Loadpoints) > 0 {
+		for _, lp := range conf.Loadpoints {
+			if c, ok := lp.Other["charger"].(string); ok {
+				if id, found := chargerDbIDs[c]; found {
+					lp.Other["charger"] = fmt.Sprintf("db:%d", id)
+					log.INFO.Printf("loadpoint '%s' charger changed from '%v' to '%v'", lp.Name, c, lp.Other["charger"])
+				} else {
+					log.WARN.Printf("meter '%s' of circuit '%s' not found in database", c, lp.Name)
+				}
+			}
+			log.INFO.Printf("migrating loadpoint %s", lp)
+			title, ok := lp.Other["title"].(string)
+			if ok {
+				delete(lp.Other, "title")
+			} else {
+				title = lp.Name
+			}
+			if _, err := config.AddConfig(templates.Loadpoint, lp.Other, config.WithProperties(config.Properties{
+				Type:  lp.Type,
+				Title: title,
+			})); err != nil {
+				log.WARN.Printf("migration of loadpoint failed with error: %s", err)
+			}
+		}
+	}
+
+	log.INFO.Println("migration done")
+
 	// wait for shutdown
 	<-shutdownDoneC()
 }
