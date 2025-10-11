@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/vehicle/bmw"
+	bmw "github.com/evcc-io/evcc/vehicle/bmw/connected"
 )
 
 // BMW is an api.Vehicle implementation for BMW and Mini cars

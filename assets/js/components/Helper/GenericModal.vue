@@ -36,7 +36,9 @@
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+
+export type ModalFade = "left" | "right" | undefined;
 
 export default defineComponent({
 	name: "GenericModal",
@@ -45,7 +47,7 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
-		fade: String,
+		fade: String as PropType<ModalFade>,
 		size: String,
 		autofocus: { type: Boolean, default: true },
 	},
