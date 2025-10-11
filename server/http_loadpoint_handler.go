@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,15 +14,18 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 )
 
 type PlanResponse struct {
 	PlanId       int       `json:"planId"`
 	PlanTime     time.Time `json:"planTime"`
 	Duration     int64     `json:"duration"`
-	Precondition int64     `json:"precondition"`
-	Plan         api.Rates `json:"plan"`
+	Precondition int64     `json:"precondition,omitempty"`
+	Plan         api.Rates `json:"plan,omitempty"`
 	Power        float64   `json:"power"`
+
+	planLatestStart time.Time
 }
 
 type PlanPreviewResponse struct {
@@ -30,6 +34,63 @@ type PlanPreviewResponse struct {
 	Precondition int64     `json:"precondition"`
 	Plan         api.Rates `json:"plan"`
 	Power        float64   `json:"power"`
+}
+
+// metaPlanHandler returns the current plan
+func metaPlanHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res struct {
+			LatestStart   time.Time      `json:"latestStart"`
+			TotalDuration time.Duration  `json:"totalDuration"`
+			Loadpoints    []PlanResponse `json:"loadpoints"`
+		}
+
+		var totalDuration time.Duration
+
+		for _, lp := range site.Loadpoints() {
+			maxPower := lp.EffectiveMaxPower()
+			planTime := lp.EffectivePlanTime()
+			id := lp.EffectivePlanId()
+
+			goal, _ := lp.GetPlanGoal()
+			requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+			// precondition := lp.GetPlanPreCondDuration()
+			// plan := lp.GetPlan(planTime, requiredDuration, precondition)
+
+			res.Loadpoints = append(res.Loadpoints, PlanResponse{
+				PlanId:   id,
+				PlanTime: planTime,
+				Duration: int64(requiredDuration.Seconds()),
+				Power:    maxPower,
+
+				planLatestStart: planTime.Add(-requiredDuration),
+			})
+
+			totalDuration += requiredDuration
+		}
+
+		latestStart := lo.MinBy(res.Loadpoints, func(a, b PlanResponse) bool {
+			return a.planLatestStart.Before(b.planLatestStart)
+		}).planLatestStart
+
+		for i := 0; i < len(res.Loadpoints); i++ {
+			for j := i + 1; j < len(res.Loadpoints); j++ {
+				maxStart := slices.MaxFunc([]time.Time{res.Loadpoints[i].planLatestStart, res.Loadpoints[j].planLatestStart}, time.Time.Compare)
+				minEnd := slices.MinFunc([]time.Time{res.Loadpoints[i].PlanTime, res.Loadpoints[j].PlanTime}, time.Time.Compare)
+
+				// add overlapping ranges to total require duration
+				if d := minEnd.Sub(maxStart); d > 0 {
+					totalDuration += d
+					latestStart = latestStart.Add(-d)
+				}
+			}
+		}
+
+		res.LatestStart = latestStart.Round(time.Minute)
+		res.TotalDuration = totalDuration.Round(time.Second)
+
+		jsonWrite(w, res)
+	}
 }
 
 // planHandler returns the current plan
