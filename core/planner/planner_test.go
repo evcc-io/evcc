@@ -1,4 +1,3 @@
-
 package planner
 
 import (
@@ -369,4 +368,3 @@ func TestContinuousPlanOutsideRates(t *testing.T) {
 	// 3-slot plan
 	assert.Len(t, plan, 1)
 }
-
