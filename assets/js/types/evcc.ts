@@ -52,7 +52,7 @@ export interface State {
   offline: boolean;
   startup?: boolean;
   loadpoints: Loadpoint[];
-  forecast?: Forecast;
+  forecast: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
   authProviders?: AuthProviders;
