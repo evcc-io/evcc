@@ -9,11 +9,11 @@ import (
 
 func TestEEBus(t *testing.T) {
 	acceptable := []string{
-		"eebus not configured",
+		"eebus is not configured yet. check config regarding cert, keys etc.",
 	}
 
 	values := map[string]any{
-		"ski":     "test-ski",
+		"ski":     "22dd0b546beaa6a720302119c87fc5e0e7ae2e07",
 		"ip":      "192.0.2.2",
 		"usage":   "grid",
 		"timeout": "10s",
