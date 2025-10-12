@@ -9,4 +9,5 @@ const (
 	UsageBattery
 	UsageCharge
 	UsageAux
+	UsageExt
 )
