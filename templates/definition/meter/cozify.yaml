@@ -5,8 +5,8 @@ products:
       generic: Cozify HAN
 requirements:
   description:
-    de: 'Erfordert eine Verbindung zum Cozify HAN Gateway.'
-    en: 'Requires a connection to the Cozify HAN gateway.'
+    de: Erfordert eine Verbindung zum Cozify HAN Gateway.
+    en: Requires a connection to the Cozify HAN gateway.
 params:
   - name: usage
     choice: ["grid"]
