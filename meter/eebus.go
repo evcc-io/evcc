@@ -277,10 +277,8 @@ func (c *EEBus) Dimmed() (bool, error) {
 func (c *EEBus) Dim(dim bool) error {
 	// Sets or removes the consumption power limit
 
-	// TODO: make limit configurable
-	// For now, use 4200W as a reasonable default
-	// Setting limit to 0 deactivates it again
-	// Note: some chargers may have a minimum limit above 0
+	// TODO: change api.Dimmer to make limit configurable
+	// For now, we use a fixed limit of 4200W
 	limit := 4200.0
 
 	var value float64
