@@ -9,7 +9,7 @@ import (
 
 func TestEEBus(t *testing.T) {
 	acceptable := []string{
-		"eebus is not configured yet. check config regarding cert, keys etc.",
+		"eebus not configured",
 	}
 
 	values := map[string]any{
