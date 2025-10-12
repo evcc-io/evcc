@@ -276,16 +276,20 @@ func (c *EEBus) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface
 func (c *EEBus) Dim(dim bool) error {
 	// Sets or removes the consumption power limit
-	// When dim=true, a default limit is set (4200W per §14a EnWG)
-	// When dim=false, the limit is removed
 
-	var limit float64
+	// TODO: make limit configurable
+	// For now, use 4200W as a reasonable default
+	// Setting limit to 0 deactivates it again
+	// Note: some chargers may have a minimum limit above 0
+	limit := 4200.0
+
+	var value float64
 	if dim {
-		limit = 4200
+		value = limit
 	}
 
 	return c.uc.LPC.SetConsumptionLimit(ucapi.LoadLimit{
-		Value:    limit,
+		Value:    value,
 		IsActive: dim,
 	})
 }
