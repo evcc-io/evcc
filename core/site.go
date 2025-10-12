@@ -510,7 +510,9 @@ func (site *Site) publishPartialUpdates(key string, val any) {
 	for _, f := range structs.Fields(val) {
 		name := f.Name()
 		if t := f.Tag("json"); t != "" {
-			name = strings.Split(t, ",")[0]
+			if n := strings.Split(t, ",")[0]; n != "" {
+				name = n
+			}
 		}
 
 		site.publishCached(key+"."+name, f.Value())
