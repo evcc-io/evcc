@@ -153,14 +153,6 @@ type Requirements struct {
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
 }
 
-// Linked Template
-type LinkedTemplate struct {
-	Template        string
-	Usage           string // usage: "grid", "pv", "battery"
-	Multiple        bool   // if true, multiple instances of this template can be added
-	ExcludeTemplate string // only consider this if no device of the named linked template was added
-}
-
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -276,14 +268,13 @@ func (c CountryCode) IsValid() bool {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
-	Deprecated   bool             `json:"-"`
-	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
-	Covers       []string         `json:",omitempty"` // list of covered outdated template names
-	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []string         `json:",omitempty"`
-	Countries    []CountryCode    `json:",omitempty"` // list of countries supported by this template
-	Requirements Requirements     `json:",omitempty"`
-	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
-	Params       []Param          `json:",omitempty"`
-	Render       string           `json:"-"` // rendering template
+	Deprecated   bool          `json:"-"`
+	Group        string        `json:",omitempty"` // the group this template belongs to, references groupList entries
+	Covers       []string      `json:",omitempty"` // list of covered outdated template names
+	Products     []Product     `json:",omitempty"` // list of products this template is compatible with
+	Capabilities []string      `json:",omitempty"`
+	Countries    []CountryCode `json:",omitempty"` // list of countries supported by this template
+	Requirements Requirements  `json:",omitempty"`
+	Params       []Param       `json:",omitempty"`
+	Render       string        `json:"-"` // rendering template
 }
