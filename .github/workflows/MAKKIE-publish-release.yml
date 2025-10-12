@@ -14,8 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # fetch full history
+          fetch-depth: 1
           fetch-tags: true
+
+      - name: Fetch tags
+        run: git fetch --tags --force
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -25,6 +28,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
+
+      - name: Debug git tags
+        run: |
+          git fetch --tags
+          git describe --tags --always
+          git tag -l | tail -n 10
 
       - name: Run Make publish-release
         run: make publish-release
