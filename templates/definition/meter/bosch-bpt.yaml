@@ -10,7 +10,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: uri
   - name: capacity
     advanced: true

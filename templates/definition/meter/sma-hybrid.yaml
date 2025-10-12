@@ -8,7 +8,6 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     port: 502
