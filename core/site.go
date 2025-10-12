@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -36,6 +37,7 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/fatih/structs"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
@@ -97,14 +99,13 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
-	loadpoints   []*Loadpoint             // Loadpoints
-	tariffs      *tariff.Tariffs          // Tariffs
-	coordinator  *coordinator.Coordinator // Vehicles
-	prioritizer  *prioritizer.Prioritizer // Power budgets
-	stats        *Stats                   // Stats
-	fcstEnergy   *meterEnergy
-	pvEnergy     map[string]*meterEnergy
-	lastForecast forecast
+	loadpoints  []*Loadpoint             // Loadpoints
+	tariffs     *tariff.Tariffs          // Tariffs
+	coordinator *coordinator.Coordinator // Vehicles
+	prioritizer *prioritizer.Prioritizer // Power budgets
+	stats       *Stats                   // Stats
+	fcstEnergy  *meterEnergy
+	pvEnergy    map[string]*meterEnergy
 
 	householdEnergy    *meterEnergy
 	householdSlotStart time.Time
@@ -477,7 +478,7 @@ func (site *Site) DumpConfig() {
 }
 
 // publish sends values to UI and databases
-func (site *Site) publish(key string, val interface{}) {
+func (site *Site) publish(key string, val any) {
 	// test helper
 	if site.uiChan == nil {
 		return
@@ -486,8 +487,8 @@ func (site *Site) publish(key string, val interface{}) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
-// publishIfUpdated sends values to UI and databases
-func (site *Site) publishIfUpdated(key string, val interface{}) {
+// publishCached uses SHA256 to calculate a hash and publishes only if updated
+func (site *Site) publishCached(key string, val any) {
 	hash := sha256.Sum256(fmt.Append(nil, val))
 	if site.uiCache == nil {
 		site.uiCache = make(map[string][32]byte)
@@ -496,6 +497,23 @@ func (site *Site) publishIfUpdated(key string, val interface{}) {
 	if !ok || hash != cached {
 		site.uiCache[key] = hash
 		site.publish(key, val)
+	}
+}
+
+// publishPartialUpdates publishes structs field by field to improve caching
+func (site *Site) publishPartialUpdates(key string, val any) {
+	if rv := reflect.ValueOf(val); rv.Kind() != reflect.Struct {
+		site.publishCached(key, val)
+		return
+	}
+
+	for _, f := range structs.Fields(val) {
+		name := f.Name()
+		if t := f.Tag("json"); t != "" {
+			name = strings.Split(t, ",")[0]
+		}
+
+		site.publishCached(key+"."+name, f.Value())
 	}
 }
 
