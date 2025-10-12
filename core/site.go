@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math"
@@ -67,6 +68,7 @@ var _ site.API = (*Site)(nil)
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
 	uiChan       chan<- util.Param // client push messages
+	uiCache      map[string][32]byte
 	lpUpdateChan chan *Loadpoint
 
 	*Health
@@ -95,13 +97,14 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
-	loadpoints  []*Loadpoint             // Loadpoints
-	tariffs     *tariff.Tariffs          // Tariffs
-	coordinator *coordinator.Coordinator // Vehicles
-	prioritizer *prioritizer.Prioritizer // Power budgets
-	stats       *Stats                   // Stats
-	fcstEnergy  *meterEnergy
-	pvEnergy    map[string]*meterEnergy
+	loadpoints   []*Loadpoint             // Loadpoints
+	tariffs      *tariff.Tariffs          // Tariffs
+	coordinator  *coordinator.Coordinator // Vehicles
+	prioritizer  *prioritizer.Prioritizer // Power budgets
+	stats        *Stats                   // Stats
+	fcstEnergy   *meterEnergy
+	pvEnergy     map[string]*meterEnergy
+	lastForecast forecast
 
 	householdEnergy    *meterEnergy
 	householdSlotStart time.Time
@@ -481,6 +484,19 @@ func (site *Site) publish(key string, val interface{}) {
 	}
 
 	site.uiChan <- util.Param{Key: key, Val: val}
+}
+
+// publishIfUpdated sends values to UI and databases
+func (site *Site) publishIfUpdated(key string, val interface{}) {
+	hash := sha256.Sum256(fmt.Append(nil, val))
+	if site.uiCache == nil {
+		site.uiCache = make(map[string][32]byte)
+	}
+	cached, ok := site.uiCache[key]
+	if !ok || hash != cached {
+		site.uiCache[key] = hash
+		site.publish(key, val)
+	}
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
