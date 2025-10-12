@@ -166,7 +166,6 @@ func (t *Stekker) Rates() (api.Rates, error) {
 		res = slices.Clone(val)
 	})
 	return res, err
-
 }
 
 // Type implements api.Tariff
