@@ -169,10 +169,10 @@ func (wb *SgReady) Dimmed() (bool, error) {
 	return mode == Dim, err
 }
 
-// Dimm implements the api.Dimmer interface
-func (wb *SgReady) Dim(dim bool) error {
+// Dim implements the api.Dimmer interface
+func (wb *SgReady) Dim(enable bool, limit float64) error {
 	mode := Normal
-	if dim {
+	if enable {
 		mode = Dim
 	}
 
@@ -180,7 +180,12 @@ func (wb *SgReady) Dim(dim bool) error {
 		return err
 	}
 
-	wb.mode = Dim
+	wb.mode = mode
+
+	// Set power limit when dimming is enabled
+	if enable {
+		return wb.setMaxPower(int64(limit))
+	}
 
 	return nil
 }

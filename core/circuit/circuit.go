@@ -376,10 +376,11 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	return c.parent.ValidateCurrent(old, new)
 }
 
-func (c *Circuit) Dim(dim bool) {
+func (c *Circuit) Dim(enable bool, limit float64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.dimmed = dim
+	c.dimmed = enable
+	c.maxPower = limit
 }
 
 func (c *Circuit) Dimmed() bool {

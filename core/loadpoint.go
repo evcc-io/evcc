@@ -1851,7 +1851,10 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		dim := lp.circuit != nil && lp.circuit.Dimmed()
 
 		if dim != dimmed {
-			if err := dimmer.Dim(dim); err != nil {
+			//TODO: calculate limit
+			limit := 4200.0
+
+			if err := dimmer.Dim(dim, limit); err != nil {
 				lp.log.ERROR.Printf("dim: %v", err)
 				return
 			}

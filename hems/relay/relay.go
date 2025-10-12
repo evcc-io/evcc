@@ -95,8 +95,7 @@ func (c *Relay) run() error {
 		power = c.maxPower
 	}
 
-	c.root.Dim(limit)
-	c.root.SetMaxPower(power)
+	c.root.Dim(limit, power)
 
 	return nil
 }
