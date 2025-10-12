@@ -60,7 +60,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.
 // Uses MGCP for usage="grid", MPC for all other usages
 func NewEEBus(ctx context.Context, ski, ip string, usage templates.Usage, timeout time.Duration) (api.Meter, error) {
 	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+		return nil, errors.New("eebus is not configured yet. check config regarding cert, keys etc.")
 	}
 
 	// Use MGCP for grid connection points, MPC for everything else
