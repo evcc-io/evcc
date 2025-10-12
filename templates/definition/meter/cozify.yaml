@@ -53,3 +53,4 @@ render: |
       uri: http://{{ .host }}:80/meter/data
       cache: {{ .cache }}
       jq: .u[2]
+      
