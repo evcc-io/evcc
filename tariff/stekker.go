@@ -144,11 +144,14 @@ func (t *Stekker) run(done chan error) {
 					continue
 				}
 
-				end := start.Add(time.Hour)
+				duration := time.Hour
+				if strings.HasSuffix(t.region, "-900") {
+					duration = 15 * time.Minute
+				}
 
 				res = append(res, api.Rate{
 					Start: start,
-					End:   end,
+					End:   start.Add(duration),
 					Value: t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh
 				})
 			}
