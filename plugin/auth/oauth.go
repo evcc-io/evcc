@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -15,18 +16,21 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
 type OAuth struct {
-	oauth2.TokenSource
 	mu      sync.Mutex
 	log     *util.Logger
 	oc      *oauth2.Config
+	token   *oauth2.Token
+	name    string
+	devices []string
 	subject string
 	cv      string
 	ctx     context.Context
+	onlineC chan<- bool
 
 	deviceFlow     bool
 	tokenRetriever func(string, *oauth2.Token) error
@@ -59,14 +63,10 @@ var (
 )
 
 func getInstance(subject string) *OAuth {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
 	return identities[subject]
 }
 
 func addInstance(subject string, identity *OAuth) {
-	oauthMu.Lock()
-	defer oauthMu.Unlock()
 	identities[subject] = identity
 }
 
@@ -76,7 +76,7 @@ func init() {
 
 func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Name          string
+		Name, Device  string
 		oauth2.Config `mapstructure:",squash"`
 	}
 
@@ -84,35 +84,48 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 		return nil, err
 	}
 
-	return NewOauth(ctx, cc.Name, &cc.Config)
+	return NewOauth(ctx, cc.Name, cc.Device, &cc.Config)
 }
 
-var (
-	_ oauth.TokenRefresher = (*OAuth)(nil)
-	_ api.AuthProvider     = (*OAuth)(nil)
-)
+var _ api.AuthProvider = (*OAuth)(nil)
 
-func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
+func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
 
+	oauthMu.Lock()
+	defer oauthMu.Unlock()
+
 	// hash oauth2 config
 	h := sha256.Sum256(fmt.Append(nil, oc))
 	hash := hex.EncodeToString(h[:])[:8]
-	subject := name + " (" + hash + ")"
+	subject := oc.ClientID + "-" + hash
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
+		if device != "" {
+			instance.devices = append(instance.devices, device)
+		}
 		return instance, nil
 	}
 
-	// create new instance
+	log := util.NewLogger("oauth-" + hash)
+
+	if client, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); client == nil || !ok {
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
+	}
+
 	o := &OAuth{
-		subject: subject,
 		oc:      oc,
-		log:     util.NewLogger("oauth"),
+		log:     log,
 		ctx:     ctx,
+		subject: subject,
+		name:    name,
+	}
+
+	if device != "" {
+		o.devices = append(o.devices, device)
 	}
 
 	for _, opt := range opts {
@@ -140,38 +153,53 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 		}
 	}
 
-	o.TokenSource = oauth.RefreshTokenSource(&token, o)
+	if token.RefreshToken != "" {
+		o.token = &token
+	}
+
+	// register auth redirect
+	onlineC, err := providerauth.Register(subject, o)
+	if err != nil {
+		return nil, err
+	}
+	o.onlineC = onlineC
+
+	o.onlineC <- token.Valid()
 
 	// add instance
 	addInstance(o.subject, o)
 
-	// register auth redirect
-	providerauth.Register(subject, o)
-
 	return o, nil
 }
 
-// RefreshToken implements oauth.TokenRefresher.
-func (o *OAuth) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	if token.RefreshToken == "" {
+// Token
+func (o *OAuth) Token() (*oauth2.Token, error) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if o.token == nil {
 		return nil, api.ErrMissingToken
 	}
 
-	o.log.DEBUG.Printf("refreshing token for %s", o.subject)
+	if o.token.Valid() {
+		return o.token, nil
+	}
 
-	// refresh token source
-	token, err := o.oc.TokenSource(o.ctx, token).Token()
+	token, err := o.oc.TokenSource(o.ctx, o.token).Token()
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
+		// force logout
+		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
+			o.token = nil
+			o.onlineC <- false
 			settings.Delete(o.subject)
 		}
 
 		return nil, err
 	}
 
-	err = settings.SetJson(o.subject, token)
+	o.updateToken(token)
 
-	return token, err
+	return token, nil
 }
 
 // updateToken must only be called when lock is held
@@ -187,7 +215,9 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 		o.log.ERROR.Printf("error saving token: %v", err)
 	}
 
-	o.TokenSource = oauth.RefreshTokenSource(token, o)
+	o.token = token
+
+	o.onlineC <- token.Valid()
 }
 
 // HandleCallback implements api.AuthProvider.
@@ -215,15 +245,13 @@ func (o *OAuth) Login(state string) (string, error) {
 	o.cv = oauth2.GenerateVerifier()
 
 	if o.deviceFlow {
-		ctx := context.Background()
-
-		da, err := o.oc.DeviceAuth(ctx, oauth2.S256ChallengeOption(o.cv))
+		da, err := o.oc.DeviceAuth(o.ctx, oauth2.S256ChallengeOption(o.cv))
 		if err != nil {
 			return "", err
 		}
 
 		go func() {
-			ctx, cancel := context.WithTimeout(ctx, time.Minute)
+			ctx, cancel := context.WithTimeout(o.ctx, 5*time.Minute)
 			defer cancel()
 
 			token, err := o.oc.DeviceAccessToken(ctx, da, oauth2.VerifierOption(o.cv))
@@ -261,13 +289,18 @@ func (o *OAuth) Logout() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	o.TokenSource = oauth.RefreshTokenSource(nil, o)
+	o.token = nil
+	o.onlineC <- false
+
 	return nil
 }
 
 // DisplayName implements api.AuthProvider.
 func (o *OAuth) DisplayName() string {
-	return o.subject
+	if len(o.devices) > 0 {
+		return fmt.Sprintf("%s (%s)", o.name, strings.Join(o.devices, ", "))
+	}
+	return o.name
 }
 
 // Authenticated implements api.AuthProvider.

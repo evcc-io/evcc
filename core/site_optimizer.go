@@ -204,7 +204,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
 				// TODO precise slot placement
-				if slot := int(time.Until(ts) / time.Hour); slot < minLen {
+				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
@@ -219,8 +219,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for i, b := range battery {
-		// TODO decide if nil should be only indicator
-		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil || *b.Soc == 0 {
+		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
 			continue
 		}
 
@@ -229,10 +228,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		bat := evopt.BatteryConfig{
 			CMax:     batteryPower,
 			DMax:     batteryPower,
-			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
 		}
+		bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
 
 		instance := dev.Instance()
 
