@@ -1143,7 +1143,7 @@
   },
   "smartCost": {
     "activeHours": "{active} vun {total}",
-    "activeHoursLabel": "Aktiv Stonnen",
+    "activeHoursLabel": "Aktiv Zäit",
     "applyToAll": "Iwwerall uwennen?",
     "batteryDescription": "Luet d'Hausbatterie aus dem Netz.",
     "cheapTitle": "Gënschtegt Oplueden vum Netz",
@@ -1160,7 +1160,7 @@
     "saved": "Gepäichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paus-Stonnen",
+    "activeHoursLabel": "Paus-Zäit",
     "description": "Ënnerbrécht d'Luede bei héije Präisser, fir der profitabler Netzaspeisung Prioritéit ze ginn.",
     "priceLabel": "Aspeisetarif",
     "priceLimit": "Aspeisegrenz",

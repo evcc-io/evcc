@@ -6,6 +6,7 @@
 			ref="select"
 			v-model="modelProxy"
 			class="form-select w-100"
+			:disabled="disabled"
 			@change="changed"
 		>
 			<template v-for="group in groups" :key="group.label">
@@ -63,6 +64,7 @@ export default defineComponent({
 		modelValue: String as PropType<string | null>,
 		productName: String,
 		groups: Array as PropType<TemplateGroup[]>,
+		disabled: Boolean,
 	},
 	emits: ["update:modelValue", "change"],
 	computed: {
@@ -87,6 +89,6 @@ export default defineComponent({
 });
 
 export function customTemplateOption(name: string, template = "custom") {
-	return { name, template };
+	return { name, template, group: "" };
 }
 </script>

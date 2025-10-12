@@ -1,4 +1,5 @@
 import type { AxiosResponse } from "axios";
+import sleep from "@/utils/sleep";
 
 export type TestState = {
   isUnknown: boolean;
@@ -20,6 +21,8 @@ export const initialTestState = (): TestState => ({
   errorLine: null,
 });
 
+const MIN_TEST_DURATION = 500;
+
 export const performTest = async (
   state: TestState,
   api: () => Promise<AxiosResponse<any, any>>,
@@ -28,12 +31,13 @@ export const performTest = async (
   if (form && !(form as HTMLFormElement).reportValidity()) return false;
   state.isUnknown = false;
   state.isSuccess = false;
-  state.isError = false;
   state.isRunning = true;
-  state.error = null;
-  state.errorLine = null;
+  const startTime = Date.now();
   try {
     const res = await api();
+    state.isError = false;
+    state.error = null;
+    state.errorLine = null;
     for (const [key, value] of Object.entries(res.data)) {
       const { error } = value as { error?: string };
       if (error) {
@@ -50,6 +54,11 @@ export const performTest = async (
     state.error = e.response?.data?.error || e.message;
     state.errorLine = e.response?.data?.line || null;
   } finally {
+    const elapsed = Date.now() - startTime;
+    const remainingTime = MIN_TEST_DURATION - elapsed;
+    if (remainingTime > 0) {
+      await sleep(remainingTime);
+    }
     state.isRunning = false;
   }
   return false;

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.mqtt.golang/packets"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
@@ -55,8 +56,18 @@ func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
 	return ch
 }
 
+func (v *MqttConnector) Unsubscribe(vin string) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if ch, ok := v.subscriptions[vin]; ok {
+		delete(v.subscriptions, vin)
+		close(ch)
+	}
+}
+
 func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute))
 
 	for ctx.Err() == nil {
 		time.Sleep(bo.NextBackOff())
@@ -70,17 +81,24 @@ func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
 			continue
 		}
 
-		bo.Reset()
-
 		if err := v.runMqtt(ctx, token); err != nil {
 			v.log.ERROR.Println(err)
+
+			// don't reset backoff
+			if errors.Is(err, packets.ErrorRefusedBadUsernameOrPassword) || errors.Is(err, packets.ErrorRefusedNotAuthorised) {
+				continue
+			}
 		}
+
+		bo.Reset()
 	}
 }
 
 func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error {
 	gcid := TokenExtra(token, "gcid")
 	idToken := TokenExtra(token, "id_token")
+
+	v.log.DEBUG.Printf("connect streaming (using gcid %s, id_token %s, valid: %v)", gcid, idToken, token.Expiry.Round(time.Second))
 
 	paho := mqtt.NewClient(
 		mqtt.NewClientOptions().
@@ -95,15 +113,17 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	} else if err := t.Error(); err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}
-	defer paho.Disconnect(0)
+	defer paho.Disconnect(1000)
 
-	topic := fmt.Sprintf("%s/#", gcid)
+	topic := fmt.Sprintf("%s/+", gcid)
 
 	if t := paho.Subscribe(topic, 0, v.handler); !t.WaitTimeout(timeout) {
 		return errors.New("subcribe timeout")
 	} else if err := t.Error(); err != nil {
 		return fmt.Errorf("subscribe: %w", err)
 	}
+
+	v.log.DEBUG.Println("connected streaming")
 
 	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
 	defer cancel()

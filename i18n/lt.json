@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Išmanusis vartotojas",
       "batteryStorage": "Energijos kaupiklis",
+      "consumer": "Vartojantis įrenginys",
       "solarSystem": "Saulės elektrinė"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Gali būti naudojamas apkrovos valdymo ar statistikos tikslais.",
-      "titleAdd": "Pridėti Išorinį skaitiklį",
-      "titleEdit": "Redaguoti Išorinį skaitiklį"
+      "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
+      "titleAdd": "Pridėti vartojančio įrenginio skaitiklį",
+      "titleEdit": "Redaguoti vartojančio įrenginio skaitiklį"
     },
     "form": {
       "danger": "Pavojus",
@@ -165,6 +166,7 @@
       "dragItem": "Galima vilkti: {title}",
       "dragList": "Galima sukeisti vietomis",
       "experimental": "Eksperimentinis",
+      "forceSave": "Vistiek įrašyti",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
       "noFileSelected": "Nepasirinktas failas.",
@@ -176,6 +178,8 @@
       "required": "privaloma",
       "reset": "Grąžinti į pirminę būseną",
       "save": "Išsaugoti",
+      "saved": "Išsaugota.",
+      "saving": "Įrašoma…",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
       "telemetry": "Telemetrija",
@@ -193,12 +197,14 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "pakeisti"
+      "change": "pakeisti",
+      "label": "Piktograma"
     },
     "influx": {
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
       "labelBucket": "Bucket",
+      "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
       "labelOrg": "Organizacija",
@@ -340,13 +346,22 @@
       "option": {
         "aux": "Pridėti savireguliuojantį vartotoją",
         "battery": "Pridėti kaupiklio skaitiklį",
-        "ext": "Pridėti išorinį skaitiklį",
+        "ext": "Pridėti paprastą vartojantį įrenginį",
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
       "save": "Išsaugoti",
       "specific": "Specifinės integracijos",
       "template": "Gamintojas",
       "titleChoice": "Ką norite pridėti?",
+      "titleLabel": "Pavadinimas",
+      "usage": {
+        "aux": "Savireguliuojančio įrenginio skaitiklis",
+        "battery": "Kaupiklio skaitiklis",
+        "charge": "Įkroviklio skaitiklis",
+        "grid": "Tinklo įvado skaitiklis",
+        "label": "Naudojimas",
+        "pv": "Saulės jėgainės skaitiklis"
+      },
       "validateSave": "Patikrinti ir išsaugoti"
     },
     "modbus": {
@@ -370,6 +385,7 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
+      "description": "Leidžia keliems klientams pasiekti vieną Modbus įrenginį.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -379,6 +395,7 @@
       "descriptionTopic": "Palikite tuščią, kad išjungtumėte publikavimą.",
       "labelBroker": "Broker",
       "labelCaCert": "Serverio sertifikatas (CA)",
+      "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelClientCert": "Kliento sertifikatas",
       "labelClientId": "Kliento ID",
       "labelClientKey": "Kliento raktas",
@@ -521,7 +538,7 @@
     "validation": {
       "failed": "nepavyko",
       "label": "Statusas",
-      "running": "tikrinama…",
+      "running": "Tikrinama…",
       "success": "sėkmingai",
       "unknown": "nežinomas",
       "validate": "tikrinti"
@@ -653,6 +670,7 @@
     "about": "Apie",
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
+      "loggedOut": "Sėkmingai atsijungta",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
@@ -1141,7 +1159,7 @@
   },
   "smartCost": {
     "activeHours": "{active} iš {total}",
-    "activeHoursLabel": "Aktyvumo valandos",
+    "activeHoursLabel": "Aktyvumo laikas",
     "applyToAll": "Pritaikyti visur?",
     "batteryDescription": "Įkrauna kaupiklį energija iš tinklo.",
     "cheapTitle": "Pigus įkrovimas iš tinklo",
@@ -1158,7 +1176,7 @@
     "saved": "Išsaugota."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pristabdyta valandomis",
+    "activeHoursLabel": "Pristabdymo laikas",
     "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
     "priceLabel": "Pardavimo kaina",
     "priceLimit": "Pardavimo limitas",
