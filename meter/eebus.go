@@ -17,8 +17,8 @@ import (
 )
 
 // EEBus is an EEBus meter implementation supporting MGCP, MPC, and LPC use cases
-// Uses MGCP (Monitoring of Grid Connection Point) for usage=grid
-// Uses MPC (Monitoring & Power Consumption) for all other usages
+// Uses MGCP (Monitoring of Grid Connection Point) only when usage="grid"
+// Uses MPC (Monitoring & Power Consumption) for all other cases (default)
 // Additionally supports LPC (Limitation of Power Consumption)
 type EEBus struct {
 	log *util.Logger
@@ -43,7 +43,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.
 	cc := struct {
 		Ski     string
 		Ip      string
-		Usage   templates.Usage
+		Usage   *templates.Usage
 		Timeout time.Duration
 	}{
 		Timeout: 10 * time.Second,
@@ -57,17 +57,17 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.
 }
 
 // NewEEBus creates an EEBus meter
-// Uses MGCP for usage="grid", MPC for all other usages
-func NewEEBus(ctx context.Context, ski, ip string, usage templates.Usage, timeout time.Duration) (api.Meter, error) {
+// Uses MGCP only when usage="grid", otherwise uses MPC (default)
+func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeout time.Duration) (api.Meter, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
-	// Use MGCP for grid connection points, MPC for everything else
-	useMGCP := usage == templates.UsageGrid
-
+	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
-	if useMGCP {
+	useMGCP := false
+	if usage != nil && *usage == templates.UsageGrid {
+		useMGCP = true
 		useCase = "mgcp"
 	}
 

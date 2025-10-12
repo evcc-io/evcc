@@ -15,19 +15,20 @@ requirements:
   evcc: ["eebus"]
 params:
   - name: usage
+    required: false
     choice: ["grid", "aux", "ext"]
     description:
-      en: Usage type (grid=MGCP, aux/ext=MPC)
-      de: Verwendungsart (grid=MGCP, aux/ext=MPC)
+      en: Usage type (grid=MGCP, default/others=MPC)
+      de: Verwendungsart (grid=MGCP, Standard/andere=MPC)
     help:
       en: |
-        Determines the EEBus use case:
-        - grid: Uses MGCP (Monitoring of Grid Connection Point)
-        - aux, ext: Use MPC (Monitoring & Power Consumption)
+        Optional. Determines the EEBus use case:
+        - grid: MGCP (Monitoring of Grid Connection Point)
+        - other: MPC (Monitoring & Power Consumption)
       de: |
-        Bestimmt den EEBus Use Case:
-        - grid: Verwendet MGCP (Monitoring of Grid Connection Point)
-        - aux, ext: Verwenden MPC (Monitoring & Power Consumption)
+        Optional. Bestimmt den EEBus Anwendungsfall:
+        - grid: MGCP (Monitoring of Grid Connection Point)
+        - andere: MPC (Monitoring & Power Consumption)
   - name: ski
     description:
       en: SKI (Subject Key Identifier) of the EEBus device
