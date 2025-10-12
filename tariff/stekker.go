@@ -144,7 +144,6 @@ func (t *Stekker) run(done chan error) {
 					continue
 				}
 
-				//start = start.UTC()
 				end := start.Add(time.Hour)
 
 				res = append(res, api.Rate{
@@ -168,8 +167,6 @@ func (t *Stekker) Rates() (api.Rates, error) {
 	})
 	return res, err
 
-	//this for 15M intervals
-	//return api.ConvertTo15mSlots(res, t.Type()), err
 }
 
 // Type implements api.Tariff
