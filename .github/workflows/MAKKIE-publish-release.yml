@@ -1,0 +1,24 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - main        # adjust if you use 'master' or another branch
+  workflow_dispatch: # allows manual trigger from the Actions tab
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Run Make publish-release
+        run: make publish-release
