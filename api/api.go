@@ -188,7 +188,7 @@ type SocLimiter interface {
 // Dimmer provides §14a dimming
 type Dimmer interface {
 	Dimmed() (bool, error)
-	Dim(bool) error
+	Dim(enable bool, limit float64) error
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side
@@ -266,7 +266,7 @@ type Circuit interface {
 	ValidatePower(old, new float64) float64
 
 	// §14a
-	Dim(bool)
+	Dim(enable bool, limit float64)
 	Dimmed() bool
 }
 
