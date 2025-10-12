@@ -41,14 +41,10 @@ import (
 
 type bSEMP struct {
 	*request.Helper
-	deviceID   string
-	conn       *semp.Connection
-	deviceG    util.Cacheable[semp.Device2EM]
-	cache      time.Duration
-	minPower   int
-	maxPower   int
-	phases     int
-	lastUpdate time.Time
+	deviceID string
+	conn     *semp.Connection
+	deviceG  util.Cacheable[semp.Device2EM]
+	cache    time.Duration
 }
 
 // BenderCC charger implementation
@@ -139,7 +135,6 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 		semp: bSEMP{
 			Helper: request.NewHelper(log),
 			cache:  sempCache,
-			phases: 3,
 		},
 		log: log,
 	}
@@ -199,7 +194,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 	// check feature semp phase switching
 	if phases1p3p == nil {
 		wb.semp.Client.Timeout = request.Timeout
-		wb.semp.conn = semp.NewConnection(wb.semp.Helper, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
+		wb.semp.conn = semp.NewConnection(log, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
 		wb.semp.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 			return wb.semp.conn.GetDeviceXML()
 		}, sempCache)
@@ -214,8 +209,6 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 				// Check if device supports phase switching by checking power characteristics
 				info, err := wb.getDeviceInfo()
 				if err == nil {
-					wb.semp.minPower = info.Characteristics.MinPowerConsumption
-					wb.semp.maxPower = info.Characteristics.MaxPowerConsumption
 					// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
 					if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
 						info.Characteristics.MaxPowerConsumption > 4600 {
@@ -235,7 +228,6 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 					log.WARN.Println("SEMP phase switching: could set initial SEMP power limit:", err)
 				}
 
-				wb.semp.lastUpdate = time.Now()
 				go wb.heartbeat(ctx)
 			} else {
 				log.WARN.Println("SEMP phase switching: no devices found")
@@ -450,8 +442,6 @@ func (wb *BenderCC) getPhases() (int, error) {
 
 // phases1p3pSEMP implements the api.PhaseSwitcher interface via SEMP
 func (wb *BenderCC) phases1p3pSEMP(phases int) error {
-	wb.semp.lastUpdate = time.Now()
-
 	phaseSwitchPower := 9936 // 207V * 3p * 16A
 	if phases == 1 {
 		phaseSwitchPower = 1518 // 253 * 1p * 6A
@@ -462,7 +452,6 @@ func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 		return err
 	}
 
-	wb.semp.phases = phases
 	wb.semp.deviceG.Reset()
 
 	return nil
@@ -477,19 +466,14 @@ func (wb *BenderCC) heartbeat(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			// Check if we need to send an update
-			if time.Since(wb.semp.lastUpdate) >= time.Minute {
-				power := int(powerLimit3p)
-				if wb.semp.phases == 1 {
-					power = int(powerLimit1p)
-				}
+			if wb.semp.conn.TimeSinceLastUpdate() >= time.Minute {
+				power := 0xffff
 				if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, power); err != nil {
-					wb.log.ERROR.Printf("watchdog: failed to send update: %v", err)
-				} else {
-					wb.semp.lastUpdate = time.Now()
+					wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
 				}
 			}
 		case <-ctx.Done():
-			wb.log.DEBUG.Println("watchdog: stopped")
+			wb.log.DEBUG.Println("heartbeat: stopped")
 			return
 		}
 	}
