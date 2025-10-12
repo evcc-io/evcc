@@ -94,7 +94,7 @@
 							@details-clicked="openForecastModal"
 							@toggle="togglePv"
 						>
-							<template v-if="multiplePv" #expanded>
+							<template v-if="pv.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
@@ -127,7 +127,7 @@
 							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
 							</template>
-							<template v-if="multipleBattery" #expanded>
+							<template v-if="battery.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -171,7 +171,21 @@
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
 							data-testid="energyflow-entry-home"
-						/>
+							:expanded="consumersExpanded"
+							@toggle="toggleConsumers"
+						>
+							<template v-if="consumers.length > 0" #expanded>
+								<EnergyflowEntry
+									v-for="(c, index) in consumers"
+									:key="index"
+									:name="c.title || genericConsumerTitle(index)"
+									:power="c.power"
+									:powerUnit="powerUnit"
+									icon="vehicle"
+									:iconProps="{ names: [c.icon || 'generic'] }"
+								/>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							:name="loadpointsLabel"
 							icon="vehicle"
@@ -248,7 +262,7 @@
 									</span>
 								</button>
 							</template>
-							<template v-if="multipleBattery" #expanded>
+							<template v-if="battery.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -290,7 +304,8 @@ import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
-	type Battery,
+	type BatteryMeter,
+	type Meter,
 	type CURRENCY,
 	type Forecast,
 	type UiLoadpoint,
@@ -309,11 +324,13 @@ export default defineComponent({
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
-		pv: { type: Array as PropType<Pv[]> },
+		pv: { type: Array as PropType<Meter[]>, default: () => [] },
+		aux: { type: Array as PropType<Meter[]>, default: () => [] },
+		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		pvPower: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Array as PropType<Battery[]> },
+		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
@@ -410,12 +427,6 @@ export default defineComponent({
 		batteryFmt() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
-		multipleBattery() {
-			return (this.battery?.length || 0) > 1;
-		},
-		multiplePv() {
-			return (this.pv?.length || 0) > 1;
-		},
 		fmtLoadpointSoc() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
@@ -478,11 +489,17 @@ export default defineComponent({
 		loadpointsExpanded() {
 			return settings.energyflowLoadpoints;
 		},
+		consumersExpanded() {
+			return settings.energyflowConsumers;
+		},
 		loadpointsLabel() {
 			// @ts-expect-error plural
 			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
 				count: this.activeLoadpointsCount,
 			});
+		},
+		consumers() {
+			return [...this.aux, ...this.ext];
 		},
 	},
 	watch: {
@@ -582,11 +599,18 @@ export default defineComponent({
 			settings.energyflowLoadpoints = !settings.energyflowLoadpoints;
 			this.$nextTick(this.updateHeight);
 		},
+		toggleConsumers() {
+			settings.energyflowConsumers = !settings.energyflowConsumers;
+			this.$nextTick(this.updateHeight);
+		},
 		genericBatteryTitle(index: number) {
 			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
 		},
 		genericPvTitle(index: number) {
 			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
+		},
+		genericConsumerTitle(index: number) {
+			return `${this.$t("config.devices.consumer")} #${index + 1}`;
 		},
 	},
 });

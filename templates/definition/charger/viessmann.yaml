@@ -2,7 +2,7 @@ template: viessmann
 products:
   - brand: Viessmann
     description:
-      generic: Heatpump (SG Ready)
+      generic: Heatpump (API)
 group: heating
 requirements:
   # evcc: ["sponsorship"]
@@ -14,20 +14,11 @@ requirements:
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 params:
   - name: user
-    required: true
-    help:
-      de: Registrieren auf [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
-      en: Register at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+    deprecated: true
   - name: password
-    required: true
-    help:
-      de: Für den konfigurierten Viessmann Account.
-      en: For the configured Viessmann account.
+    deprecated: true
   - name: clientid
     required: true
-    description:
-      de: Client ID
-      en: Client ID
     help:
       de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
       en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
@@ -158,9 +149,8 @@ render: |
     cache: 2s # to prevent making two identical requests straight after each other for "getmode"
     auth:
       source: viessmann
-      user: {{ .user }}
-      password: {{ .password }}
       clientid: {{ .clientid }}
+      gateway: {{ .gateway_serial }}
     jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
@@ -180,9 +170,8 @@ render: |
             - content-type: application/json
           auth:
             source: viessmann
-            user: {{ .user }}
-            password: {{ .password }}
             clientid: {{ .clientid }}
+            gateway: {{ .gateway_serial }}
           body: >
             { }
       - case: 3 # boost
@@ -194,9 +183,8 @@ render: |
             - content-type: application/json
           auth:
             source: viessmann
-            user: {{ .user }}
-            password: {{ .password }}
             clientid: {{ .clientid }}
+            gateway: {{ .gateway_serial }}
           body: >
             { }
       - case: 1 # dimm
