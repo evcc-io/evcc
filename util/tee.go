@@ -1,6 +1,8 @@
 package util
 
 import (
+	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -37,12 +39,12 @@ func (t *Tee) add(out chan<- Param) {
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
 		// TODO MUST NOT PUBLISH POINTERS
-		//
-		// if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
-		// 	if ptr := reflect.Indirect(val); ptr.IsValid() {
-		// 		msg.Val = ptr.Addr().Elem().Interface()
-		// 	}
-		// }
+
+		if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
+			if ptr := reflect.Indirect(val); ptr.IsValid() {
+				fmt.Println("DANGER pointer value:", msg.Key)
+			}
+		}
 
 		if val, ok := (msg.Val).(api.Redactor); ok {
 			msg.Val = val.Redacted()
