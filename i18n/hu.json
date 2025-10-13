@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez.",
-      "title": "Terhelés Menedzsment"
+      "title": "Terhelés Menedzsment",
+      "usableMeters": "Használható mérőreferenciák"
     },
     "control": {
       "description": "Általában az alapértelmezett értékek működőképesek. Csak akkor változtasd meg őket, ha tudod, hogy mit csinálsz.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Kötelező átvételi ár",
       "gridPrice": "Villamosenergia ára",
       "heaterTempLimit": "Fűtés limit",
-      "hemsType": "Rendszer",
+      "hemsActiveLimit": "Aktív limit",
+      "hemsType": "Kommunikáció",
       "identifier": "RFID-Azonosító",
       "no": "nem",
       "odometer": "Óraállás",
@@ -124,6 +126,10 @@
       "B": "B (csatlakoztatva)",
       "C": "C (töltés)"
     },
+    "deviceValueHemsType": {
+      "eebus": "EEBus által",
+      "relay": "Relé által"
+    },
     "devices": {
       "auxMeter": "Okos fogyasztó",
       "batteryStorage": "Akkumulátoros tároló",
@@ -148,12 +154,16 @@
       "optional": "opcionális"
     },
     "general": {
+      "applyAndClose": "Alkalmaz & bezárás",
       "cancel": "Mégse",
+      "close": "Bezárás",
       "customHelp": "Hozz létre egy felhasználó által definiált eszközt az evcc bővítményrendszerével.",
       "customOption": "Felhasználó által definiált eszköz",
       "delete": "Törlés",
       "docsLink": "Dokumentáció megtekintése",
+      "dragList": "Átrendezhető lista",
       "experimental": "Kísérleti",
+      "forceSave": "Mentés mindenképpen",
       "hideAdvancedSettings": "Speciális beállítások elrejtése",
       "invalidFileSelected": "Érvénytelen fájl kiválasztva",
       "noFileSelected": "Nincs fájl kiválasztva.",
@@ -162,7 +172,11 @@
       "password": "Jelszó",
       "readFromFile": "Fájlból olvasás",
       "remove": "Eltávolítás",
+      "required": "szükséges",
+      "reset": "Visszaállítás",
       "save": "Mentés",
+      "saved": "Elmentve.",
+      "saving": "Mentés…",
       "selectFile": "Tallózás",
       "showAdvancedSettings": "Speciális beállítások megjelenítése",
       "telemetry": "Telemetria",
@@ -176,7 +190,7 @@
       "titleEdit": "Hálózati Mérő Szerkesztése"
     },
     "hems": {
-      "description": "Az evcc csatlakoztatása más otthoni energia menedzsment rendszerhez.",
+      "description": "Külső rendszerek (pl. EnWG 14a vezérlők) általi teljesítménykorlátozás. Terheléskezelési konfigurációt igényel.",
       "title": "HEMS"
     },
     "icon": {
@@ -278,7 +292,7 @@
       "thresholdEnableDelayLabel": "Késleltetés engedélyezése",
       "thresholdEnableHelpInvalid": "Kérlek használj negatív értéket.",
       "thresholdEnableHelpNegative": "Indítás, amikor {surplus} többlet elérhető {delay} ideig.\"",
-      "thresholdEnableHelpZero": "Indítás, amikor a minimálisan szükséges teljesítmény kielégíthető  {delay} időtartamra.",
+      "thresholdEnableHelpZero": "Akkor induljon el, amikor a minimálisan szükséges teljesítmény kielégíthető a {delay} időtartamra.",
       "thresholdEnableLabel": "Hálózati áramellátás engedélyezése",
       "titleAdd": {
         "charging": "Töltőpont hozzáadása",
@@ -425,6 +439,18 @@
       "system": "Rendszer",
       "vehicles": "Járművek"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "Az evcc integrálva van az SMA Sunny Home Manager (SHM) rendszerrel SEMP protokollon keresztül. Ha ugyanazon a hálózaton fut, a Sunny Portal fiókjába való bejelentkezés után automatikusan fel kell ajánlani, hogy az evcc-ben konfigurált összes töltőt újonnan felfedezett fogyasztóként adja hozzá. Mindennek azonnal használatra késznek kell lennie, az alábbiakban felsorolt beállítások nélkül.",
+      "descriptionDeviceId": "12 karakteres HEX karakterlánc. Előtag minden eszközhöz (töltőpont, ..).",
+      "descriptionIdPattern": "Azonosító minta",
+      "descriptionIds": "A Sunny Portalban minden felhasználói eszköznek egyedi azonosítóra van szüksége. Az evcc a hardvered alapján generál egyedi azonosítót. Ha az evcc-t egy másik hardverre migrálod, ezek az azonosítók megváltozhatnak. Ha meg szeretnéd őrizni az előzményeket, itt felülbírálhatod a generált azonosítókat. Nyisd meg a SEMP URL-t (/semp) az aktuális azonosítóid ellenőrzéséhez.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 karakteres HEX karakterlánc. Minden entitás általános előtagja. Alapértelmezés szerint az evcc a saját belső szállítói azonosítóját használja.",
+      "labelDeviceId": "Eszközazonosító",
+      "labelVendorId": "Szállítóazonosító",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Token beírása",
       "changeToken": "Token megváltoztatása",
@@ -486,6 +512,10 @@
       "description": "Határozza meg energiatarifáját a töltési folyamatok költségeinek kiszámításához.",
       "title": "Tarifák"
     },
+    "telemetry": {
+      "description": "Az adatmegosztás konfigurálása az evcc fejlesztésének elősegítése érdekében. Az Ön adatainak védelme fontos számunkra, és a részvétel teljesen opcionális.",
+      "title": "Telemetria"
+    },
     "title": {
       "description": "Ez jelenik meg a főképernyőn és a böngésző címsorában.",
       "label": "Megnevezés",
@@ -494,7 +524,7 @@
     "validation": {
       "failed": "sikertelen",
       "label": "Státusz",
-      "running": "ellenőrzés…",
+      "running": "Ellenőrzés…",
       "success": "sikeres",
       "unknown": "ismeretlen",
       "validate": "ellenőrzés"
@@ -640,7 +670,7 @@
   "help": {
     "discussionsButton": "GitHub Közösségi oldalát",
     "documentationButton": "Dokumentáció",
-    "issueButton": "Hibabejelentés",
+    "issueButton": "Probléma jelentése",
     "issueDescription": "Furcsa vagy hibás működést észleltél?",
     "logsButton": "Napló megtekintése",
     "logsDescription": "Ellenőrizd a naplót hiba esetén.",
@@ -656,6 +686,57 @@
     "restartButton": "Újraindítás",
     "restartDescription": "Próbáltad már be- és kikapcsolni?",
     "secondaryActions": "Még mindíg nem oldódott meg a problémád? Itt van néhány keményebb lehetőség."
+  },
+  "issue": {
+    "additional": {
+      "description": "Mellékeljen konfigurációt és naplókat, hogy gyorsan reprodukálhassuk a problémát. Javasoljuk, hogy a lehető legtöbbet ossza meg. Az állapot megadása általában nem szükséges.",
+      "include": "tartalmaz",
+      "lines": "vonalakat",
+      "logs": "Naplók",
+      "logsDescription": "Legutóbbi naplóbejegyzések, amelyek segíthetnek a probléma azonosításában.",
+      "showDetails": "részletek megjelenítése",
+      "source": "Forrás",
+      "state": "Állapot",
+      "stateDescription": "Teljes üzemidő állapota, beleértve a töltőpontot, az eszközt és az energiafogyasztási információkat. Csak akkor adja meg, ha kéri.",
+      "title": "További információk",
+      "uiConfig": "Konfiguráció (UI)",
+      "uiConfigDescription": "A webes felületen keresztül elvégzett konfigurációs beállítások.",
+      "yamlConfig": "Konfiguráció (YAML)",
+      "yamlConfigDescription": "A teljes konfigurációs fájlod."
+    },
+    "additionalContext": "További kontextus",
+    "additionalContextPlaceholder": "Bármilyen további hasznos információ...\n- Konfigurációs adatok\n- Amit kipróbáltál\n- Környezeti adatok",
+    "createButtonDiscussion": "GitHub-vita indítása...",
+    "createButtonIssue": "GitHub-feladat létrehozása...",
+    "description": "Nem a várt módon működik a telepítésed? Ezen az oldalon segítséget kérhetsz, vagy problémákat jelenthetsz. Adj meg elég részletes leírást ahhoz, hogy megérthessük és reprodukálhassuk a problémát, miközben a leírásod legyen tömör, világos és könnyen követhető.",
+    "helpType": {
+      "discussion": "Segítségre van szükségem a beállítással kapcsolatban",
+      "discussionDescription": "A közösségi beszélgetések választ adnak.",
+      "issue": "Hibát találtam",
+      "issueDescription": "Biztos vagyok benne, hogy valami elromlott, és meg kell javítani.",
+      "title": "Milyen problémáról beszélünk?"
+    },
+    "issueDescription": "Leírás",
+    "issueTitle": "Cím",
+    "stepsToReproduce": "A reprodukálás lépései",
+    "subTitleDiscussion": "Írd le a problémádat",
+    "subTitleIssue": "Írd le a problémát",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub-vita indítása",
+      "confirmationButtonIssue": "GitHub-probléma létrehozása",
+      "copied": "Másolva!",
+      "copyButton": "További információk másolása",
+      "instructions": "A GitHub URL-méretkorlátai miatt ez egy kétlépéses folyamat:",
+      "singleStepDescription": "Kattintson az alábbi gombra a GitHub megnyitásához, ahol egy előre kitöltött űrlap található a probléma részleteivel. A bizalmas adatokat automatikusan töröltük, de kérjük, megosztás előtt ellenőrizze őket.",
+      "step1Description": "Kattints az alábbi gombra egy alapvető GitHub-bejegyzés létrehozásához a címeddel, leírásoddal és a részletekkel.",
+      "step2Description": "A bejegyzés létrehozása után térjen vissza ide, hogy kimásolja az alábbi kiegészítő információkat, és beillessze azokat a GitHub-űrlapjába. A bizalmas adatokat töröltük, de kérjük, megosztás előtt ellenőrizze őket.",
+      "stepOneDiscussion": "1. lépés: Hozz létre alapvető beszélgetést",
+      "stepOneIssue": "1. lépés: Alapvető probléma létrehozása",
+      "stepTwo": "2. lépés: További információk másolása",
+      "title": "GitHub problémaösszefoglaló"
+    },
+    "title": "Probléma jelentése",
+    "version": "Verzió"
   },
   "log": {
     "areaLabel": "Szűrés terület alapján",
@@ -722,6 +803,7 @@
       "gridImport": "Hálózatból import",
       "homePower": "Fogyasztás",
       "loadpoints": "Töltő| Töltő | {count} töltő",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "Nincs mérési adat",
       "pv": "Napelemes rendszer",
       "pvExport": "Hálózatba export",
@@ -733,6 +815,10 @@
       "connected": "Készenlét.",
       "vehicleLimit": "Fűtés limit",
       "waitForVehicle": "Üzemkész. Fűtésre várakozás…"
+    },
+    "hemsWarning": {
+      "description": "Csökkentett töltés, amely nem haladhatja meg a {limit}-et.",
+      "title": "Külső határérték:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Ár",
@@ -1010,6 +1096,7 @@
     "vehicle": "Jármű"
   },
   "settings": {
+    "deviceInfo": "Az ezen a párbeszédpanelen végzett beállítások csak erre az eszközre vonatkoznak.",
     "fullscreen": {
       "enter": "Teljes képernyő",
       "exit": "Kilépés a teljes képernyőből",
@@ -1022,6 +1109,12 @@
     "language": {
       "auto": "Automatikus",
       "label": "Nyelv"
+    },
+    "loadpoints": {
+      "help": "Módosítsa a felhasználói felület sorrendjét és láthatóságát.",
+      "hide": "{title} elrejtése",
+      "label": "Töltőpontok",
+      "show": "Mutasd a {title}-t"
     },
     "sponsorToken": {
       "expires": "A szponzor token-ed le fog járni {inXDays}. {getNewToken} és frissítsd itt.",
@@ -1051,7 +1144,7 @@
   },
   "smartCost": {
     "activeHours": "{active} / {total}",
-    "activeHoursLabel": "Aktív órák",
+    "activeHoursLabel": "Aktív idő",
     "applyToAll": "Minenhol alkalmazás?",
     "batteryDescription": "Az otthoni töltéstároló töltése a hálózatról.",
     "cheapTitle": "Olcsó Hálózati Töltés",
@@ -1068,7 +1161,7 @@
     "saved": "Elmentve."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Szüneteltetett órák",
+    "activeHoursLabel": "Szüneteltetett idő",
     "description": "Magas árak esetén szünetelteti a töltést, hogy a nyereséges hálózati betáplálást részesítse előnyben.",
     "priceLabel": "Betáplálási ráta",
     "priceLimit": "Betáplálási korlát",

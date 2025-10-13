@@ -28,5 +28,10 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 		return nil, fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
 	}
 
-	return v, nil
+	// check slot length
+	if rr, err := v.Rates(); err == nil && len(rr) > 0 && rr[0].End.Sub(rr[0].Start) == SlotDuration {
+		return v, nil
+	}
+
+	return &SlotWrapper{Tariff: v}, nil
 }

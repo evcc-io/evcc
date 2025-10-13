@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -25,6 +26,7 @@ func init() {
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	vehicleCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	vehicleCmd.Flags().Bool(flagCloud, false, flagCloudDescription)
+	vehicleCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -112,7 +114,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
-		d := dumper{len: len(vehicles)}
+		timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+		d := dumper{len: len(vehicles), timeout: timeout}
 		flag := cmd.Flag(flagDiagnose).Changed
 
 		for _, dev := range vehicles {

@@ -77,7 +77,6 @@
       "title": "Comportamento de controlo"
     },
     "deviceValue": {
-      "allowControl": "Permitir controlo",
       "amount": "Quantidade",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -155,11 +154,16 @@
       "optional": "opcional"
     },
     "general": {
+      "applyAndClose": "Aplicar e fechar",
       "cancel": "Cancelar",
+      "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
       "docsLink": "Ver documentação.",
+      "dragHandle": "Arrastar",
+      "dragItem": "Arrastável: {title}",
+      "dragList": "Lista reordenável",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
@@ -169,6 +173,8 @@
       "password": "Palavra-passe",
       "readFromFile": "Ler ficheiro",
       "remove": "Apagar",
+      "required": "obrigatório",
+      "reset": "Reiniciar",
       "save": "Guardar",
       "selectFile": "Explorar",
       "showAdvancedSettings": "Mostrar definições avançadas",
@@ -440,8 +446,6 @@
       "descriptionIds": "No Sunny Portal cada dispositivo necessita duma identidade única. O evcc gera uma identidade única com base no seu hardware. Se migrar o evcc para outro hardware estas identidades podem mudar. Se quiser manter o histórico pode substituir as identidades geradas aqui. Abra o SEMP URL(/semp) para ver as identidade atuais.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "string 8 caratecteres HEX. Prefixo geral de todas as entidades. O evcc usa o seu próprio vendor ID interno Por defeito.",
-      "labelAllowControl": "Aceitar recomendações adicionais de limite de potência do SHM.",
-      "labelControl": "Permitir controlo",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
@@ -506,6 +510,10 @@
     "tariffs": {
       "description": "Defina as suas tarifas de energia para calcular os custos das suas sessões de carregamento.",
       "title": "Tarifas"
+    },
+    "telemetry": {
+      "description": "Configure a partilha de dados para ajudar a melhorar o evcc. A sua privacidade é importante para nós e a participação é totalmente opcional.",
+      "title": "Telemetria"
     },
     "title": {
       "description": "Exibido no menu principal e na barra do navegador.",
@@ -661,7 +669,7 @@
   "help": {
     "discussionsButton": "Discussões no GitHub",
     "documentationButton": "Documentação",
-    "issueButton": "Reportar um erro",
+    "issueButton": "Reportar um problema",
     "issueDescription": "Encontrou um comportamento estranho ou errado?",
     "logsButton": "Ver registos",
     "logsDescription": "Verifique os registos para erros.",
@@ -677,6 +685,57 @@
     "restartButton": "Reiniciar",
     "restartDescription": "Tentou desligar e ligar de novo?",
     "secondaryActions": "Ainda não conseguiu resolver o seu problema? Aqui estão algumas sugestões mais complexas."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inclua definições e registos para nos ajudar a reproduzir o problema rapidamente. Recomendamos que partilhe o máximo possível. Geralmente, o estado não é necessário.",
+      "include": "incluir",
+      "lines": "linhas",
+      "logs": "Jornais",
+      "logsDescription": "Entradas de registo recentes que podem ajudar a identificar o problema.",
+      "showDetails": "mostrar detalhes",
+      "source": "Fonte",
+      "state": "Estado",
+      "stateDescription": "Estado completo do tempo de execução, incluindo o ponto de carregamento, o dispositivo e a informação sobre a energia. Inclua apenas se solicitado.",
+      "title": "Informações adicionais",
+      "uiConfig": "Configuração (IU)",
+      "uiConfigDescription": "Definições de configuração efetuadas através da interface web.",
+      "yamlConfig": "Configuração (YAML)",
+      "yamlConfigDescription": "O seu ficheiro de configuração completo."
+    },
+    "additionalContext": "Contexto adicional",
+    "additionalContextPlaceholder": "Alguma informação adicional que possa ser útil...\n- Detalhes da configuração\n- O que tentou\n- Detalhes do ambiente",
+    "createButtonDiscussion": "Iniciar discussão no GitHub...",
+    "createButtonIssue": "Criar problema no GitHub...",
+    "description": "A sua instalação não está a funcionar conforme o esperado? Utilize esta página para obter ajuda ou para comunicar problemas. Forneça detalhes suficientes para nos ajudar a compreender e reproduzir o problema, mantendo a sua descrição concisa, clara e fácil de compreender.",
+    "helpType": {
+      "discussion": "Preciso de ajuda com a minha configuração",
+      "discussionDescription": "As discussões comunitárias fornecem respostas.",
+      "issue": "Encontrou um bug",
+      "issueDescription": "Tenho a certeza de que algo está avariado e precisa de ser reparado.",
+      "title": "De que problema estamos a falar?"
+    },
+    "issueDescription": "Descrição",
+    "issueTitle": "Título",
+    "stepsToReproduce": "Passos para reproduzir",
+    "subTitleDiscussion": "Descreva o seu problema",
+    "subTitleIssue": "Descreva o problema",
+    "summary": {
+      "confirmationButtonDiscussion": "Iniciar discussão no GitHub",
+      "confirmationButtonIssue": "Criar problema no GitHub",
+      "copied": "Copiado!",
+      "copyButton": "Copiar informações adicionais",
+      "instructions": "Devido às limitações de tamanho de URL do GitHub, este é um processo de duas etapas:",
+      "singleStepDescription": "Clique no botão abaixo para abrir o GitHub com um formulário pré-preenchido contendo os detalhes do seu problema. Os dados confidenciais foram automaticamente eliminados, mas verifique novamente antes de partilhar.",
+      "step1Description": "Clique no botão abaixo para criar uma entrada básica no GitHub com o seu título, descrição e detalhes.",
+      "step2Description": "Após criar a entrada, volte aqui para copiar as informações adicionais abaixo e colá-las no seu formulário GitHub. Os dados confidenciais foram censurados, mas verifique novamente antes de partilhar.",
+      "stepOneDiscussion": "Passo 1: Crie uma discussão básica",
+      "stepOneIssue": "Passo 1: Criar problema básico",
+      "stepTwo": "Passo 2: Copie informações adicionais",
+      "title": "Resumo do problema do GitHub"
+    },
+    "title": "Reportar um problema",
+    "version": "Versão"
   },
   "log": {
     "areaLabel": "Filtrar por área",
@@ -1036,6 +1095,7 @@
     "vehicle": "Veículo"
   },
   "settings": {
+    "deviceInfo": "As definições efetuadas nesta caixa de diálogo afetam apenas este dispositivo.",
     "fullscreen": {
       "enter": "Entrar em tela cheia",
       "exit": "Sair da tela cheia",
@@ -1048,6 +1108,12 @@
     "language": {
       "auto": "Automático",
       "label": "Idioma"
+    },
+    "loadpoints": {
+      "help": "Alterar a ordem e visibilidade da interface do utilizador.",
+      "hide": "Ocultar {title}",
+      "label": "Pontos de carregamento",
+      "show": "Mostrar {title}"
     },
     "sponsorToken": {
       "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}. {getNewToken} e atualize-o aqui.",
@@ -1077,7 +1143,7 @@
   },
   "smartCost": {
     "activeHours": "{active} de {total}",
-    "activeHoursLabel": "Horas ativas",
+    "activeHoursLabel": "Tempo ativo",
     "applyToAll": "Aplicar em todo o lado?",
     "batteryDescription": "Carrega a bateria doméstica com energia da Rede.",
     "cheapTitle": "Carregamento da Rede mais económico",
@@ -1094,7 +1160,7 @@
     "saved": "Guardado."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Horas de pausa",
+    "activeHoursLabel": "Tempo de pausa",
     "description": "Faz uma pausa no carregamento quando os preços são elevados para dar prioridade à alimentação rentável da rede.",
     "priceLabel": "Taxa de alimentação",
     "priceLimit": "Limite de alimentação",

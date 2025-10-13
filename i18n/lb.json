@@ -77,7 +77,6 @@
       "title": "Kontrollverhalen"
     },
     "deviceValue": {
-      "allowControl": "Steierung erlaben",
       "amount": "Unzahl",
       "broker": "Broker",
       "bucket": "Eemer",
@@ -155,11 +154,16 @@
       "optional": "optionell"
     },
     "general": {
+      "applyAndClose": "Uwennen & Zoumaachen",
       "cancel": "Ofbriechen",
+      "close": "Zoumaachen",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
       "docsLink": "D'Dokumentatioun kucken.",
+      "dragHandle": "Verréckelen",
+      "dragItem": "Verréckelbar: {title}",
+      "dragList": "Sortéirbar Lëscht",
       "experimental": "Experimentell",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
@@ -169,6 +173,8 @@
       "password": "Passwuert",
       "readFromFile": "Vun der Datei liesen",
       "remove": "Ewechhuelen",
+      "required": "obligatoresch",
+      "reset": "Zerécksetzen",
       "save": "Späicheren",
       "selectFile": "Duerchsichen",
       "showAdvancedSettings": "Fortgeschratten Astellungen uweisen",
@@ -440,8 +446,6 @@
       "descriptionIds": "Am Sunny Portal brauch all Ladung (Luedpunkt, etc.) eng eenzegaarteg Identifikatioun. evcc generéiert eng eenzegaarteg Identifikatioun, déi op Ärer Hardware baséiert. Wann Dir evcc op aner Hardware migréiert, kann dësen Identifikator sech änneren. Fir den Historique ze späicheren, kënnt Dir déi generéiert Identifikatoren hei iwwerschreiwen. Maacht d'SEMP URL op (/semp) fir Är aktuell Identifikatoren ze kontrolléieren.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stellegen HEX-String. Allgemenge Präfix fir all Entiéiten. Standardméisseg verwennt evcc seng eegen intern Hiersteller-ID.",
-      "labelAllowControl": "Zousätzlech Recommandatioune fir d'Leeschtungslimit vun SHM z'akzeptéieren.",
-      "labelControl": "Steierung erlaben",
       "labelDeviceId": "Geräter-ID",
       "labelVendorId": "Hiersteller-ID",
       "title": "SMA Sunny Home Manager"
@@ -506,6 +510,10 @@
     "tariffs": {
       "description": "Definéier d'Stroumtariffer fir d'Käschte vun den Opluedsessiounen ze berechnen.",
       "title": "Tariffer"
+    },
+    "telemetry": {
+      "description": "Konfiguréier den Datenaustausch fir den evcc ze verbesseren. Deng Privatsphär ass eis wichteg an d'Participatioun ass komplett fakultativ.",
+      "title": "Telemetrie"
     },
     "title": {
       "description": "Um Haaptbildschierm an am Browser Tab ugewisen.",
@@ -661,7 +669,7 @@
   "help": {
     "discussionsButton": "GitHub Diskussiounen",
     "documentationButton": "Dokumentatioun",
-    "issueButton": "Bug mellen",
+    "issueButton": "Problem mellen",
     "issueDescription": "Hues du ee komescht oder falscht Verhalen identifizéiert?",
     "logsButton": "Logs ukucken",
     "logsDescription": "Kontrolléier d'Logbicher op Feeler.",
@@ -677,6 +685,57 @@
     "restartButton": "Nei starten",
     "restartDescription": "Hues du schonns probéiert d'Gerät aus- an erëm unzemaachen?",
     "secondaryActions": "Nach ëmmer keng Léisung fonnt? Hei sinn e puer weider Méiglechkeeten."
+  },
+  "issue": {
+    "additional": {
+      "description": "Füügt d'Konfiguratioun an d'Logbicher derbäi, fir datt mir de Problem séier reproduzéiere kënnen. Mir encouragéieren, esou vill wéi méiglech ze deelen. \"State\" ass normalerweis net néideg.",
+      "include": "abezéien",
+      "lines": "Zeilen",
+      "logs": "Logge",
+      "logsDescription": "Rezent Log-Entréen, déi hëllefe kéinten, de Problem z'identifizéieren.",
+      "showDetails": "Detailer uweisen",
+      "source": "Quell",
+      "state": "Zoustand",
+      "stateDescription": "Komplette Lafzäitzoustand inklusiv Luedepunkt, Apparat an Energieinformatiounen. Nëmmen op Ufro bäifügen.",
+      "title": "Zousätzlech Informatiounen",
+      "uiConfig": "Konfiguratioun (UI)",
+      "uiConfigDescription": "Konfiguratiounsastellungen, déi iwwer d'Webinterface gemaach ginn.",
+      "yamlConfig": "Konfiguratioun (YAML)",
+      "yamlConfigDescription": "Deng komplett Konfiguratiounsdatei."
+    },
+    "additionalContext": "Zousätzleche Kontext",
+    "additionalContextPlaceholder": "All zousätzlech Informatiounen, déi hëllefräich kéinte sinn...\n- Konfiguratiounsdetailer\n- Wat Dir probéiert hutt\n- Ëmfelddetailer",
+    "createButtonDiscussion": "GitHub Diskussioun starten...",
+    "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Funktionéiert Är Installatioun net wéi erwaart? Benotzt dës Säit fir Hëllef ze kréien oder Problemer ze mellen. Gitt genuch Detailer fir eis ze hëllefen de Problem ze verstoen a reproduzéieren, wärend Är Beschreiwung präzis, kloer an einfach ze verstoen ass.",
+    "helpType": {
+      "discussion": "Brauch Hëllef mat menger Installatioun",
+      "discussionDescription": "Gemeinschaftsdiskussiounen liwweren Äntwerten.",
+      "issue": "Hunn ee Feeler fonnt",
+      "issueDescription": "Ech si sécher, datt eppes futti ass a muss reparéiert ginn.",
+      "title": "Wat ass de Problem?"
+    },
+    "issueDescription": "Beschreiwung",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Schrëtt fir de Problem ze reproduzéieren",
+    "subTitleDiscussion": "Beschreif däi Problem",
+    "subTitleIssue": "Beschreif de Problem",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub Diskussioun starten",
+      "confirmationButtonIssue": "GitHub Issue erstellen",
+      "copied": "Kopéiert!",
+      "copyButton": "Zousätzlech Informatioune kopéieren",
+      "instructions": "Wéinst de Limitatioune vun der URL-Gréisst op GitHub ass dëst e Prozess an zwee Schrëtt:",
+      "singleStepDescription": "Klickt op de Knäppchen hei ënnendrënner fir GitHub mat engem virausgefëllte Formulaire mat Äre Problemdetailer opzemaachen. Sensibel Donnéeë goufen automatesch redigéiert, awer kontrolléiert w.e.g. nach eng Kéier ier Dir se deelt.",
+      "step1Description": "Klickt op de Knäppchen hei ënnendrënner fir e Basis-GitHub-Eintrag mat Ärem Titel, Beschreiwung an Detailer ze erstellen.",
+      "step2Description": "Nodeems Dir den Artikel erstallt hutt, gitt zréck heihinner fir déi zousätzlech Informatiounen hei ënnendrënner ze kopéieren an an Äre GitHub-Formular anzeféieren. Sensibel Donnéeë goufen ewechgeholl, awer kontrolléiert w.e.g. nach eng Kéier ier Dir se deelt.",
+      "stepOneDiscussion": "Schrëtt 1: Basisdiskussioun erstellen",
+      "stepOneIssue": "Schrëtt 1: Basisproblem erstellen",
+      "stepTwo": "Schrëtt 2: Zousätzlech Informatioune kopéieren",
+      "title": "Iwwersiicht vum GitHub-Problem"
+    },
+    "title": "Problem mellen",
+    "version": "Versioun"
   },
   "log": {
     "areaLabel": "No Beräich filteren",
@@ -1036,6 +1095,7 @@
     "vehicle": "Gefier"
   },
   "settings": {
+    "deviceInfo": "Astellungen, déi Dir an dësem Dialog maacht, betreffen nëmmen dësen Apparat.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Aus dem Vollbild erausgoen",
@@ -1048,6 +1108,12 @@
     "language": {
       "auto": "Automatesch",
       "label": "Sprooch"
+    },
+    "loadpoints": {
+      "help": "Ännert d'Reiefolleg an d'Visibilitéit fir d'UI.",
+      "hide": "{title} ausblenden",
+      "label": "Luedpunkte",
+      "show": "{title} uweisen"
     },
     "sponsorToken": {
       "expires": "Däi Sponsor Token leeft aus an {inXDays}. {getNewToken} an update et hei.",
@@ -1077,7 +1143,7 @@
   },
   "smartCost": {
     "activeHours": "{active} vun {total}",
-    "activeHoursLabel": "Aktiv Stonnen",
+    "activeHoursLabel": "Aktiv Zäit",
     "applyToAll": "Iwwerall uwennen?",
     "batteryDescription": "Luet d'Hausbatterie aus dem Netz.",
     "cheapTitle": "Gënschtegt Oplueden vum Netz",
@@ -1094,7 +1160,7 @@
     "saved": "Gepäichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paus-Stonnen",
+    "activeHoursLabel": "Paus-Zäit",
     "description": "Ënnerbrécht d'Luede bei héije Präisser, fir der profitabler Netzaspeisung Prioritéit ze ginn.",
     "priceLabel": "Aspeisetarif",
     "priceLimit": "Aspeisegrenz",

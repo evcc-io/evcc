@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync"
 
-	"dario.cat/mergo"
 	"golang.org/x/oauth2"
 )
 
@@ -46,15 +45,14 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	}
 
 	if token.AccessToken == "" {
-		err = errors.New("token refresh failed to obtain access token")
-	} else {
-		err = ts.mergeToken(token)
+		return nil, errors.New("token refresh failed to obtain access token")
 	}
 
-	return ts.token, err
-}
+	if token.RefreshToken == "" {
+		token.RefreshToken = ts.token.RefreshToken
+	}
 
-// mergeToken updates a token while preventing wiping the refresh token
-func (ts *TokenSource) mergeToken(t *oauth2.Token) error {
-	return mergo.Merge(ts.token, t, mergo.WithOverride)
+	ts.token = token
+
+	return ts.token, nil
 }

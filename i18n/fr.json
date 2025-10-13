@@ -77,7 +77,6 @@
       "title": "Comportement du contrôle"
     },
     "deviceValue": {
-      "allowControl": "Permettre contrôle",
       "amount": "Montant",
       "broker": "Courtier",
       "bucket": "Bucket",
@@ -104,7 +103,7 @@
       "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "no": "non",
-      "odometer": "Kilométrage",
+      "odometer": "Compteur kilométrique",
       "org": "Organisation",
       "phaseCurrents": "Courant L1, L2, L3",
       "phasePowers": "Puissance L1, L2, L3",
@@ -134,6 +133,7 @@
     "devices": {
       "auxMeter": "Consommateur intelligent",
       "batteryStorage": "Batterie",
+      "consumer": "Consommateur",
       "solarSystem": "Système photovoltaïque"
     },
     "editor": {
@@ -144,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Peut être utilisé pour la gestion de la charge ou à des fins statistiques.",
-      "titleAdd": "Ajouter un compteur externe",
-      "titleEdit": "Modifier le compteur externe"
+      "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisé pour de la gestion de charge (par ex. Sous-distribution).",
+      "titleAdd": "Ajouter un compteur de consommateur",
+      "titleEdit": "Modifier le compteur de consommateur"
     },
     "form": {
       "danger": "Attention",
@@ -162,7 +162,11 @@
       "customOption": "Appareil sur mesure",
       "delete": "Supprimer",
       "docsLink": "Se référer à la documentation.",
+      "dragHandle": "Poignée de déplacement",
+      "dragItem": "Déplaçable : {title}",
+      "dragList": "Liste à ordonner",
       "experimental": "Expérimental",
+      "forceSave": "Enregistrer quand même",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
       "noFileSelected": "Aucun fichier sélectionné.",
@@ -172,7 +176,10 @@
       "readFromFile": "Lu depuis le fichier",
       "remove": "Supprimer",
       "required": "obligatoire",
+      "reset": "Réinitialiser",
       "save": "Enregistrer",
+      "saved": "Enregistré.",
+      "saving": "Enregistrement en cours…",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
       "telemetry": "Télémétrie",
@@ -190,7 +197,8 @@
       "title": "SGED"
     },
     "icon": {
-      "change": "changer"
+      "change": "changer",
+      "label": "Icône"
     },
     "influx": {
       "description": "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données.",
@@ -325,7 +333,7 @@
       "title": "Configuration",
       "unconfigured": "non configuré",
       "vehicles": "Mes véhicules",
-      "yaml": "Les appareils provenant de evcc.yaml ne sont pas modifiables."
+      "yaml": "Un appareil provenant du evcc.yaml n’est pas modifiable."
     },
     "messaging": {
       "description": "Recevoir des messages à propos de vos sessions de charge.",
@@ -338,13 +346,22 @@
       "option": {
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
-        "ext": "Ajouter un compteur externe",
+        "ext": "Ajouter un consommateur régulier",
         "pv": "Ajouter un compteur solaire"
       },
       "save": "Enregistrer",
       "specific": "Intégrations spécifiques",
       "template": "Fabricant",
       "titleChoice": "Que voulez-vous ajouter ?",
+      "titleLabel": "Titre",
+      "usage": {
+        "aux": "Compteur de consommateur auto-régulé",
+        "battery": "Compteur de batterie",
+        "charge": "Compteur de chargeur",
+        "grid": "Compteur du réseau",
+        "label": "Utilisation",
+        "pv": "Compteur production solaire"
+      },
       "validateSave": "Valider et enregistrer"
     },
     "modbus": {
@@ -443,8 +460,6 @@
       "descriptionIds": "Dans Sunny Portal, chaque appareil consommateur doit disposer d'un identifiant unique. evcc génère un identifiant unique basé sur votre matériel. Si vous migrez evcc vers un autre matériel, ces identifiants peuvent changer. Si vous souhaitez conserver l'historique, vous pouvez remplacer les identifiants générés ici. Ouvrez l'URL SEMP (/semp) pour vérifier vos identifiants actuels.",
       "descriptionSempUrl": "URL SEMP",
       "descriptionVendorId": "Chaîne HEX à 8 caractères. Préfixe général de toutes les entités. Par défaut, evcc utilisera son propre identifiant fournisseur interne.",
-      "labelAllowControl": "Accepter les recommandations supplémentaires de SHM concernant les limites de puissance.",
-      "labelControl": "Autoriser le contrôle",
       "labelDeviceId": "Identifiant de l'appareil",
       "labelVendorId": "Identifiant du fournisseur",
       "title": "SMA Sunny Home Manager"
@@ -510,6 +525,10 @@
       "description": "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de recharge.",
       "title": "Tarifs"
     },
+    "telemetry": {
+      "description": "Configurer le partage de données pour aider à améliorer evcc. Votre vie privée est importante pour nous et la participation est totalement optionnelle.",
+      "title": "Télémétrie"
+    },
     "title": {
       "description": "Affiché sur l’écran principal et l’onglet du navigateur.",
       "label": "Titre",
@@ -518,7 +537,7 @@
     "validation": {
       "failed": "échec",
       "label": "Statut",
-      "running": "en cours de validation…",
+      "running": "En cours de validation…",
       "success": "réussi",
       "unknown": "inconnu",
       "validate": "valider"
@@ -650,6 +669,7 @@
     "about": "À propos",
     "authProviders": {
       "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
+      "loggedOut": "Déconnexion réussie",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
@@ -1090,6 +1110,7 @@
     "vehicle": "Véhicule"
   },
   "settings": {
+    "deviceInfo": "Les réglages effectués dans cette fenêtre n’affectent que cet appareil.",
     "fullscreen": {
       "enter": "Passer en plein écran",
       "exit": "Quitter le plein écran",
@@ -1102,6 +1123,12 @@
     "language": {
       "auto": "Automatique",
       "label": "Langue"
+    },
+    "loadpoints": {
+      "help": "Changer l’ordre et la visibilité dans l’interface utilisateur.",
+      "hide": "Cacher {title}",
+      "label": "Points de charge",
+      "show": "Afficher {title}"
     },
     "sponsorToken": {
       "expires": "Votre jeton de sponsor expire dans {inXDays}. {getNewToken} et mettez-le à jour ici.",
@@ -1131,7 +1158,7 @@
   },
   "smartCost": {
     "activeHours": "{active} sur {total}",
-    "activeHoursLabel": "Heures actives",
+    "activeHoursLabel": "Temps actif",
     "applyToAll": "Appliquer partout ?",
     "batteryDescription": "Charge la batterie domestique avec du courant du réseau.",
     "cheapTitle": "Charge bon marché depuis le réseau",
@@ -1148,7 +1175,7 @@
     "saved": "Enregistré."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Heures de pause",
+    "activeHoursLabel": "Temps de pause",
     "description": "La charge est interrompue lorsque les prix sont élevés afin de donner la priorité à l'alimentation rentable du réseau.",
     "priceLabel": "Taux d'alimentation",
     "priceLimit": "Limite d'alimentation",

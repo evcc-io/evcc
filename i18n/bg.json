@@ -77,7 +77,6 @@
       "title": "Поведение на управление"
     },
     "deviceValue": {
-      "allowControl": "Разреши контрол",
       "amount": "Количество",
       "broker": "Брокер",
       "bucket": "Кофа",

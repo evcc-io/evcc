@@ -12,12 +12,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
-	"moul.io/http2curl"
 )
 
 var (
@@ -94,7 +94,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		firstSlotDuration,
 	)
 
-	gt := site.homeProfile(minLen)
+	gt, err := site.homeProfile(minLen, firstSlotDuration)
+	if err != nil {
+		return err
+	}
 
 	solarEnergy, err := ratesToEnergy(solar, firstSlotDuration)
 	if err != nil {
@@ -201,7 +204,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
 				// TODO precise slot placement
-				if slot := int(time.Until(ts) / time.Hour); slot < minLen {
+				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
@@ -216,8 +219,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	for i, b := range battery {
-		// TODO decide if nil should be only indicator
-		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil || *b.Soc == 0 {
+		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
 			continue
 		}
 
@@ -226,10 +228,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		bat := evopt.BatteryConfig{
 			CMax:     batteryPower,
 			DMax:     batteryPower,
-			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
 		}
+		bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
 
 		instance := dev.Instance()
 
@@ -267,12 +269,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
-	var curl *http2curl.CurlCommand
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
 		if sponsor.IsAuthorized() {
 			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
 		}
-		curl, _ = http2curl.GetCurlCommand(req)
 		return nil
 	})
 	if err != nil {
@@ -294,12 +294,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	site.publish("evopt", struct {
 		Req     evopt.OptimizationInput  `json:"req"`
 		Res     evopt.OptimizationResult `json:"res"`
-		Curl    string                   `json:"curl"`
 		Details responseDetails          `json:"details"`
 	}{
 		Req:     req,
 		Res:     *resp.JSON200,
-		Curl:    curl.String(),
 		Details: details,
 	})
 
@@ -360,27 +358,22 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 }
 
 // homeProfile returns the home base load in Wh
-func (site *Site) homeProfile(minLen int) []float64 {
+func (site *Site) homeProfile(minLen int, firstSlotDuration time.Duration) ([]float64, error) {
 	// kWh over last 30 days
 	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
-		site.log.WARN.Println("optimizer:", err)
-		return lo.RepeatBy(minLen, func(_ int) float64 {
-			return 0
-		})
+		return nil, err
 	}
 
 	// max 4 days
-	hours := make([]float64, 0, minLen+1)
-
-	combined := combineSlots(profile[:])
-	for len(hours) <= minLen+24 { // allow for prorating first day
-		hours = append(hours, combined...)
+	slots := make([]float64, 0, minLen+1)
+	for len(slots) <= minLen+24*4 { // allow for prorating first day
+		slots = append(slots, profile[:]...)
 	}
 
-	res := prorateFirstHour(time.Now(), hours)
+	res := prorateFirstSlot(slots, firstSlotDuration)
 	if len(res) < minLen {
-		panic("minimum home profile length failed")
+		return nil, fmt.Errorf("minimum home profile length %d is less than required %d", len(res), minLen)
 	}
 	if len(res) > minLen {
 		res = res[:minLen]
@@ -389,41 +382,17 @@ func (site *Site) homeProfile(minLen int) []float64 {
 	// convert to Wh
 	return lo.Map(res, func(v float64, i int) float64 {
 		return v * 1e3
-	})
+	}), nil
 }
 
-// combineSlots combines 15-minute slots into hourly values
-func combineSlots(profile []float64) []float64 {
-	if profile == nil {
-		return []float64{}
-	}
+// prorateFirstSlot strips away any slots before "now" and prorates the first slot based on remaining time in current slot.
+// The profile contains 48 15min slots (00:00-23:45) that repeat for multiple days.
+func prorateFirstSlot(profile []float64, firstSlotDuration time.Duration) []float64 {
+	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
 
-	result := make([]float64, 0, 24)
-
-	// Process complete hours starting from the start slot
-	for hour := range 24 {
-		var sum float64
-		for i := range 4 {
-			sum += profile[4*hour+i]
-		}
-
-		result = append(result, sum)
-	}
-
-	return result
-}
-
-// prorateFirstHour strips away any slots before "now" and prorates the first remaining hour
-// based on remaining time in current hour. The profile contains hourly slots (0-23) that repeat for multiple days.
-func prorateFirstHour(now time.Time, profile []float64) []float64 {
 	// Take only slots from current hour onwards
-	res := profile[now.Hour():]
-
-	// Prorate the first hour based on remaining time in current hour
-	if minutesIntoHour := now.Minute(); minutesIntoHour > 0 {
-		fractionOfHour := float64(60-minutesIntoHour) / 60.0
-		res[0] *= fractionOfHour
-	}
+	res := profile[firstSlot:]
+	res[0] *= float64(firstSlotDuration) / float64(tariff.SlotDuration)
 
 	return res
 }
@@ -435,7 +404,7 @@ func ratesToEnergy(rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
 		from := r.Start
 
 		if len(res) == 0 {
-			from = endOfHour(r.Start).Add(-firstSlot)
+			from = r.End.Add(-firstSlot)
 		}
 
 		if _, err := rr.At(from); err != nil {
@@ -487,13 +456,14 @@ func currentRates(tariff api.Tariff) api.Rates {
 func timeSteps(minLen int) []int {
 	res := make([]int, 0, minLen)
 
-	eoh := now.BeginningOfHour().Add(time.Hour)
-	if d := time.Until(eoh); d > time.Second {
+	bos := time.Now().Truncate(tariff.SlotDuration)
+	eos := bos.Add(tariff.SlotDuration)
+	if d := time.Until(eos); d > time.Second && d < tariff.SlotDuration {
 		res = append(res, int(d.Seconds()))
 	}
 
 	for i := len(res); i < minLen; i++ {
-		res = append(res, 3600) // 1 hour in seconds
+		res = append(res, int(tariff.SlotDuration.Seconds())) // 15min slots
 	}
 
 	return res

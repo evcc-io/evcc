@@ -13,50 +13,70 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
+type loginResponse struct {
+	LoginUri string `json:"loginUri"`
+}
+
+// jsonWrite writes a JSON response
+func jsonWrite(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+// jsonError writes an error response
+func jsonError(w http.ResponseWriter, status int, message string) {
+	w.WriteHeader(status)
+	jsonWrite(w, errorResponse{Error: message})
+}
+
 // Handler manages a dynamic map of routes for handling the redirect during
 // OAuth authentication. When a route is registered a token OAuth state is returned.
 // On GET request the generic handler identifies route and target handler
 // by request state obtained from the request and delegates to the registered handler.
 type Handler struct {
 	mu        sync.Mutex
+	log       *util.Logger
 	secret    []byte
 	providers map[string]api.AuthProvider
 	states    map[string]string
-	log       *util.Logger
+	updateC   chan string
 }
 
-func (a *Handler) Publish(paramC chan<- util.Param) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+// TODO get status from update channel
+func (a *Handler) run(paramC chan<- util.Param) {
+	for range a.updateC {
+		a.mu.Lock()
 
-	apMap := make(map[string]*AuthProvider)
-
-	for id, provider := range a.providers {
-		ap := &AuthProvider{
-			ID:            url.QueryEscape(id),
-			Authenticated: provider.Authenticated(),
+		res := make(map[string]*AuthProvider)
+		for id, provider := range a.providers {
+			res[provider.DisplayName()] = &AuthProvider{
+				ID:            url.QueryEscape(id),
+				Authenticated: provider.Authenticated(),
+			}
 		}
-		apMap[provider.DisplayName()] = ap
+
+		a.mu.Unlock()
+
+		// publish the updated auth providers
+		paramC <- util.Param{Key: keys.AuthProviders, Val: res}
 	}
-
-	a.log.TRACE.Printf("publishing %d auth providers", len(apMap))
-
-	// publish the updated auth providers
-	paramC <- util.Param{Key: keys.AuthProviders, Val: apMap}
 }
 
-func (a *Handler) register(name string, handler api.AuthProvider) error {
+func (a *Handler) register(name string, handler api.AuthProvider) (chan<- string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.providers[name] != nil {
-		return fmt.Errorf("provider already registered: %s", name)
+		return nil, fmt.Errorf("provider already registered: %s", name)
 	}
 
-	a.log.DEBUG.Printf("registering provider: %s", name)
 	a.providers[name] = handler
 
-	return nil
+	return a.updateC, nil
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +88,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	provider, ok := a.providers[id]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid id")
+		jsonError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
@@ -85,18 +104,13 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
-	// return authorization URL
-	res := struct {
-		LoginUri string `json:"loginUri"`
-	}{
-		LoginUri: provider.Login(encryptedState),
+	uri, err := provider.Login(encryptedState)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		a.log.ERROR.Printf("failed to encode login URI response: %v", err)
-	}
-
-	w.WriteHeader(http.StatusFound)
+	jsonWrite(w, loginResponse{LoginUri: uri})
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -108,17 +122,18 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 	provider, ok := a.providers[id]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid id")
+		jsonError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	// Handle logout
 	if err := provider.Logout(); err != nil {
 		a.log.ERROR.Printf("logout for provider %s failed: %v", id, err)
+		jsonError(w, http.StatusInternalServerError, "logout failed")
+		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	jsonWrite(w, "OK")
 }
 
 func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
@@ -161,9 +176,9 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Handle the callback
 	if err := provider.HandleCallback(r.URL.Query()); err != nil {
-		a.log.ERROR.Printf("callback handling for provider %s failed: %v", id, err)
+		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "callback handling failed")
+		fmt.Fprintln(w, "callback failed")
 		return
 	}
 
