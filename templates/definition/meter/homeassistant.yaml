@@ -12,24 +12,16 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]
-    help:
-      en: "Meter usage type: 'grid' for main grid connection, 'pv' for solar panels, 'battery' for battery storage, 'aux' for auxiliary loads, 'charge' for EV charging point"
-      de: "Zählerverwendung: 'grid' für Netzanschluss, 'pv' für Solaranlage, 'battery' für Batteriespeicher, 'aux' für zusätzliche Verbraucher, 'charge' für Ladestation"
   - name: uri
     required: true
     example: "http://homeassistant.local:8123"
-    help:
-      en: Base URL of your Home Assistant instance
-      de: Basis-URL Ihrer Home Assistant Instanz
   - name: token
     description:
-      de: Access Token
-      en: Access Token
+      de: Home Assistant Long-Lived Access Token
+      en: Home Assistant Long-Lived Access Token
+    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
     required: true
     mask: true
-    help:
-      en: Long-lived access token for Home Assistant API
-      de: Dauerhafter Zugangstoken für die Home Assistant API
   - name: power
     description:
       de: Leistungs-Entität
@@ -41,7 +33,7 @@ params:
       de: Entitäts-ID für momentane Leistungsmessung in Watt. Die Entität muss nur numerische Werte liefern (z.B. "1234", nicht "1234 W").
   - name: energy
     description:
-      de: Energie Entity
+      de: Energie Entität
       en: Energy Entity
     example: "sensor.house_energy"
     advanced: true
@@ -50,7 +42,7 @@ params:
       de: Entitäts-ID für kumulative Energiemessung in kWh (optional). Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
   - name: currentL1
     description:
-      de: L1 Strom Entity
+      de: L1 Strom Entität
       en: L1 Current Entity
     example: "sensor.house_current_l1"
     advanced: true
@@ -59,7 +51,7 @@ params:
       de: Entitäts-ID für L1 Strommessung in Ampere (optional)
   - name: currentL2
     description:
-      de: L2 Strom Entity
+      de: L2 Strom Entität
       en: L2 Current Entity
     example: "sensor.house_current_l2"
     advanced: true
@@ -68,7 +60,7 @@ params:
       de: Entitäts-ID für L2 Strommessung in Ampere (optional)
   - name: currentL3
     description:
-      de: L3 Strom Entity
+      de: L3 Strom Entität
       en: L3 Current Entity
     example: "sensor.house_current_l3"
     advanced: true
@@ -77,7 +69,7 @@ params:
       de: Entitäts-ID für L3 Strommessung in Ampere (optional)
   - name: voltageL1
     description:
-      de: L1 Spannung Entity
+      de: L1 Spannung Entität
       en: L1 Voltage Entity
     example: "sensor.house_voltage_l1"
     advanced: true
@@ -86,7 +78,7 @@ params:
       de: Entitäts-ID für L1 Spannungsmessung in Volt (optional)
   - name: voltageL2
     description:
-      de: L2 Spannung Entity
+      de: L2 Spannung Entität
       en: L2 Voltage Entity
     example: "sensor.house_voltage_l2"
     advanced: true
@@ -95,7 +87,7 @@ params:
       de: Entitäts-ID für L2 Spannungsmessung in Volt (optional)
   - name: voltageL3
     description:
-      de: L3 Spannung Entity
+      de: L3 Spannung Entität
       en: L3 Voltage Entity
     example: "sensor.house_voltage_l3"
     advanced: true
@@ -107,9 +99,7 @@ render: |
   uri: {{ .uri }}
   token: {{ .token }}
   power: {{ .power }}
-  {{- if .energy }}
   energy: {{ .energy }}
-  {{- end }}
   {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
   {{- if .currentL1 }}
