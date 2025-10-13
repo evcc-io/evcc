@@ -376,7 +376,7 @@ export type ModbusProxy = {
     RTU?: boolean;
     Device?: string;
     Baudrate?: MODBUS_BAUDRATE;
-    Comset?: string;
+    Comset?: MODBUS_COMSET;
   };
 };
 

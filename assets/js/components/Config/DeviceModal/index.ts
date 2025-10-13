@@ -1,4 +1,4 @@
-import type { DeviceType } from "@/types/evcc";
+import type { DeviceType, MODBUS_COMSET } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 
@@ -31,7 +31,7 @@ export type ModbusCapability = "rs485" | "tcpip";
 
 export type ModbusParam = TemplateParam & {
   ID?: string;
-  Comset?: string;
+  Comset?: MODBUS_COMSET;
   Baudrate?: number;
   Port?: number;
 };

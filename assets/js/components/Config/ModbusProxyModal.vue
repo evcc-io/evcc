@@ -14,7 +14,7 @@
 		<template #default="{ values }: { values: ModbusProxy[] }">
 			<div class="mb-3">
 				<pre class="text-monospace">{{ ASCII_DIAGRAM }}</pre>
-				<div v-for="(connection, index) in values">
+				<div v-for="(connection, index) in values" :key="index">
 					<div class="d-none d-lg-block">
 						<hr class="mt-5" />
 						<h5>
@@ -22,13 +22,14 @@
 						</h5>
 					</div>
 					<Modbus
+						:id="index"
+						v-model:host="connection.Settings.URI"
+						v-model:port="connection.Port"
+						v-model:baudrate="connection.Settings.Baudrate"
+						v-model:comset="connection.Settings.Comset"
+						v-model:device="connection.Settings.Device"
+						v-model:readonly="connection.ReadOnly"
 						:capabilities="['rs485', 'tcpip']"
-						:host="connection.Settings.URI"
-						:port="connection.Port"
-						:baudrate="connection.Settings.Baudrate"
-						:comset="connection.Settings.Comset"
-						:device="connection.Settings.Device"
-						:read-only="connection.ReadOnly"
 						:is-proxy="true"
 					/>
 					<div class="align-items-center d-flex mb-4">
@@ -51,7 +52,7 @@
 					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
 					data-testid="networkconnection-add"
 					tabindex="0"
-					@click="addConnection(values)"
+					@click="values.push(DEFAULT_MODBUS_PROXY)"
 				>
 					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 					Add network connection
@@ -68,7 +69,6 @@ import JsonModal from "./JsonModal.vue";
 import { MODBUS_PROXY_READONLY, type ModbusProxy } from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
 import Modbus from "./DeviceModal/Modbus.vue";
-import deepClone from "@/utils/deepClone";
 
 const DEFAULT_MODBUS_PROXY: ModbusProxy = {
 	Port: 502,
@@ -85,14 +85,7 @@ export default {
 			ASCII_DIAGRAM,
 			MODBUS_PROXY_READONLY,
 			DEFAULT_MODBUS_PROXY,
-			deepClone,
 		};
-	},
-	methods: {
-		addConnection(values: ModbusProxy[]) {
-			const newConnection = { ...deepClone(DEFAULT_MODBUS_PROXY) }; // Ensures reactivity with spread
-			values.push(newConnection);
-		},
 	},
 };
 </script>

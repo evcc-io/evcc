@@ -11,29 +11,29 @@
 	>
 		<div class="btn-group" role="group">
 			<input
-				id="modbusTcpIp"
+				:id="formId('modbusTcpIp')"
 				v-model="connection"
 				type="radio"
 				class="btn-check"
-				name="modbusConnection"
+				:name="formId('modbusConnection')"
 				value="tcpip"
 				tabindex="0"
 				autocomplete="off"
 			/>
-			<label class="btn btn-outline-primary" for="modbusTcpIp">
+			<label class="btn btn-outline-primary" :for="formId('modbusTcpIp')">
 				{{ $t("config.modbus.connectionValueTcpip") }}
 			</label>
 			<input
-				id="modbusSerial"
+				:id="formId('modbusSerial')"
 				v-model="connection"
 				type="radio"
 				class="btn-check"
-				name="modbusConnection"
+				:name="formId('modbusConnection')"
 				value="serial"
 				tabindex="0"
 				autocomplete="off"
 			/>
-			<label class="btn btn-outline-primary" for="modbusSerial">
+			<label class="btn btn-outline-primary" :for="formId('modbusSerial')">
 				{{ $t("config.modbus.connectionValueSerial") }}
 			</label>
 		</div>
@@ -100,29 +100,29 @@
 		>
 			<div class="btn-group" role="group">
 				<input
-					id="modbusTcp"
+					:id="formId('modbusTcp')"
 					v-model="protocol"
 					type="radio"
 					class="btn-check"
-					name="modbusProtocol"
+					:name="formId('modbusProtocol')"
 					value="tcp"
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" for="modbusTcp">
+				<label class="btn btn-outline-primary" :for="formId('modbusTcp')">
 					{{ $t("config.modbus.protocolValueTcp") }}
 				</label>
 				<input
-					id="modbusRtu"
+					:id="formId('modbusRtu')"
 					v-model="protocol"
 					type="radio"
 					class="btn-check"
-					name="modbusProtocol"
+					:name="formId('modbusProtocol')"
 					value="rtu"
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" for="modbusRtu">
+				<label class="btn btn-outline-primary" :for="formId('modbusRtu')">
 					{{ $t("config.modbus.protocolValueRtu") }}
 				</label>
 			</div>
@@ -170,18 +170,18 @@
 		id="serialConnectionReadonly"
 		label="Readonly"
 		:help="
-			readOnly === MODBUS_PROXY_READONLY.TRUE
+			readonly === MODBUS_PROXY_READONLY.TRUE
 				? 'Write access is blocked without response.'
-				: readOnly === MODBUS_PROXY_READONLY.FALSE
+				: readonly === MODBUS_PROXY_READONLY.FALSE
 					? 'Write access is blocked with a modbus error as response.'
-					: readOnly === MODBUS_PROXY_READONLY.DENY
+					: readonly === MODBUS_PROXY_READONLY.DENY
 						? 'Write access is forwarded.'
 						: 'Whether Modbus write accesses by third-party systems should be blocked.'
 		"
 	>
 		<SelectGroup
 			id="serialConnectionReadonly"
-			:model-value="readOnly || defaultReadOnly"
+			:model-value="readonly || defaultReadonly"
 			class="w-100"
 			:options="
 				Object.values(MODBUS_PROXY_READONLY).map((v) => ({
@@ -190,7 +190,7 @@
 				}))
 			"
 			transparent
-			@update:model-value="$emit('update:readOnly', $event.target.value)"
+			@update:model-value="$emit('update:readonly', $event)"
 		/>
 	</FormRow>
 </template>
@@ -222,12 +222,12 @@ export default defineComponent({
 		baudrate: [Number, String],
 		comset: String,
 		device: String,
-		readOnly: String as PropType<MODBUS_PROXY_READONLY>,
+		readonly: String as PropType<MODBUS_PROXY_READONLY>,
 		defaultPort: { type: Number, default: 502 },
 		defaultId: { type: Number, default: 1 },
 		defaultComset: { type: String as PropType<MODBUS_COMSET>, default: "8N1" },
 		defaultBaudrate: { type: Number as PropType<MODBUS_BAUDRATE>, default: 1200 },
-		defaultReadOnly: {
+		defaultReadonly: {
 			type: String as PropType<MODBUS_PROXY_READONLY>,
 			default: MODBUS_PROXY_READONLY.DENY,
 		},
@@ -241,7 +241,7 @@ export default defineComponent({
 		"update:device",
 		"update:baudrate",
 		"update:comset",
-		"update:readOnly",
+		"update:readonly",
 	],
 	data() {
 		return {
@@ -315,6 +315,9 @@ export default defineComponent({
 					this.protocol = "tcp";
 					break;
 			}
+		},
+		formId(name: string): string {
+			return `${name}-${this.id}`;
 		},
 	},
 });
