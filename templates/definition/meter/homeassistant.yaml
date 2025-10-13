@@ -16,9 +16,6 @@ params:
       en: "Meter usage type: 'grid' for main grid connection, 'pv' for solar panels, 'battery' for battery storage, 'aux' for auxiliary loads, 'charge' for EV charging point"
       de: "Zählerverwendung: 'grid' für Netzanschluss, 'pv' für Solaranlage, 'battery' für Batteriespeicher, 'aux' für zusätzliche Verbraucher, 'charge' für Ladestation"
   - name: uri
-    description:
-      de: Home Assistant URL
-      en: Home Assistant URL
     required: true
     example: "http://homeassistant.local:8123"
     help:
