@@ -166,23 +166,19 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	// Try primary datapoint for BEV
-	hv, hvErr := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if hvErr == nil && hv == "CHARGING" {
+	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	if err != nil || hv == "INVALID" {
+		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.status")
+	}
+
+	if slices.Contains([]string{
+		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"CHARGINGACTIVE", // vehicle.drivetrain.electricEngine.charging.status
+	}, hv) {
 		return api.StatusC, nil
 	}
 
-	// Fallback to alternative datapoint for PHEV if primary is invalid or unavailable
-	if hv == "INVALID" || hvErr != nil {
-		if alt, altErr := v.String("vehicle.drivetrain.electricEngine.charging.status"); altErr == nil {
-			if alt == "CHARGINGACTIVE" {
-				return api.StatusC, nil
-			}
-			return status, nil
-		}
-	}
-
-	return status, hvErr
+	return status, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -218,16 +214,13 @@ var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
-	// Try primary datapoint for BEV
 	res, err := v.String("vehicle.cabin.hvac.preconditioning.status.comfortState")
 	if err == nil && res != "" {
 		return slices.Contains([]string{"COMFORT_HEATING", "COMFORT_COOLING", "COMFORT_VENTILATION", "DEFROST"}, res), nil
 	}
 
-	// Fallback to alternative datapoint for PHEV
-	alt, altErr := v.String("vehicle.vehicle.preConditioning.activity")
-	if altErr == nil {
-		return slices.Contains([]string{"HEATING", "COOLING", "VENTILATION"}, alt), altErr
+	if res, err = v.String("vehicle.vehicle.preConditioning.activity"); err == nil {
+		return slices.Contains([]string{"HEATING", "COOLING", "VENTILATION"}, res), nil
 	}
 
 	return false, err
