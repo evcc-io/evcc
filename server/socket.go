@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -110,18 +111,31 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	var msg strings.Builder
-	msg.WriteString("{")
+	res := make(map[string]json.RawMessage, len(params))
+
 	for _, p := range params {
-		if msg.Len() > 1 {
-			msg.WriteString(",")
+		k := p.Key
+		if p.Loadpoint != nil {
+			k = "loadpoints." + p.UniqueID()
 		}
-		msg.WriteString(kv(p))
+
+		// Sharder splits data into chunks
+		if sp, ok := (p.Val).(util.Sharder); ok {
+			for _, shard := range sp.Shards() {
+				res[k+"."+shard.Key] = json.RawMessage(kv(shard.Value))
+			}
+		} else {
+			res[k] = json.RawMessage(kv(p.Val))
+		}
 	}
-	msg.WriteString("}")
+
+	b, err := json.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
 
 	// should not block
-	subscriber.send <- []byte(msg.String())
+	subscriber.send <- b
 }
 
 func (h *SocketHub) broadcast(p util.Param) {

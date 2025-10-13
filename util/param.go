@@ -4,7 +4,6 @@ import (
 	"maps"
 	"slices"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/util/encode"
@@ -19,15 +18,11 @@ type Param struct {
 
 // UniqueID returns unique identifier for parameter Loadpoint/Key combination
 func (p Param) UniqueID() string {
-	var b strings.Builder
-
 	if p.Loadpoint != nil {
-		b.WriteString(strconv.Itoa(*p.Loadpoint) + ".")
+		return strconv.Itoa(*p.Loadpoint) + "." + p.Key
 	}
 
-	b.WriteString(p.Key)
-
-	return b.String()
+	return p.Key
 }
 
 // ParamCache is a data store

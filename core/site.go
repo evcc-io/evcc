@@ -3,11 +3,9 @@ package core
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math"
-	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -37,7 +35,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/fatih/structs"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
@@ -263,6 +260,7 @@ func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
+		uiCache:         make(map[string][32]byte),
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},
@@ -487,37 +485,37 @@ func (site *Site) publish(key string, val any) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
-// publishCached uses SHA256 to calculate a hash and publishes only if updated
-func (site *Site) publishCached(key string, val any) {
-	hash := sha256.Sum256(fmt.Append(nil, val))
-	if site.uiCache == nil {
-		site.uiCache = make(map[string][32]byte)
-	}
-	cached, ok := site.uiCache[key]
-	if !ok || hash != cached {
-		site.uiCache[key] = hash
-		site.publish(key, val)
-	}
-}
+// // publishCached uses SHA256 to calculate a hash and publishes only if updated
+// func (site *Site) publishCached(key string, val any) {
+// 	hash := sha256.Sum256(fmt.Append(nil, val))
+// 	if site.uiCache == nil {
+// 		site.uiCache = make(map[string][32]byte)
+// 	}
+// 	cached, ok := site.uiCache[key]
+// 	if !ok || hash != cached {
+// 		site.uiCache[key] = hash
+// 		site.publish(key, val)
+// 	}
+// }
 
-// publishPartialUpdates publishes structs field by field to improve caching
-func (site *Site) publishPartialUpdates(key string, val any) {
-	if rv := reflect.ValueOf(val); rv.Kind() != reflect.Struct {
-		site.publishCached(key, val)
-		return
-	}
+// // publishPartialUpdates publishes structs field by field to improve caching
+// func (site *Site) publishPartialUpdates(key string, val any) {
+// 	if rv := reflect.ValueOf(val); rv.Kind() != reflect.Struct {
+// 		site.publishCached(key, val)
+// 		return
+// 	}
 
-	for _, f := range structs.Fields(val) {
-		name := f.Name()
-		if t := f.Tag("json"); t != "" {
-			if n := strings.Split(t, ",")[0]; n != "" {
-				name = n
-			}
-		}
+// 	for _, f := range structs.Fields(val) {
+// 		name := f.Name()
+// 		if t := f.Tag("json"); t != "" {
+// 			if n := strings.Split(t, ",")[0]; n != "" {
+// 				name = n
+// 			}
+// 		}
 
-		site.publishCached(key+"."+name, f.Value())
-	}
-}
+// 		site.publishCached(key+"."+name, f.Value())
+// 	}
+// }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
 	mm := make([]measurement, len(meters))
