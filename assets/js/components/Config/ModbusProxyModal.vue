@@ -9,31 +9,66 @@
 		:store-values-in-array="true"
 		disable-remove
 		data-testid="modbusproxy-modal"
+		size="lg"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: ModbusProxy[] }">
 			<div class="mb-3">
 				<pre class="text-monospace">{{ ASCII_DIAGRAM }}</pre>
 				<div v-for="(connection, index) in values" :key="index">
-					<div class="d-none d-lg-block">
+					<div class="d-block">
 						<hr class="mt-5" />
 						<h5>
-							<div class="inner mb-3">Connection #{{ index + 1 }}</div>
+							<div class="inner mb-3">Modbus Proxy Connection #{{ index + 1 }}</div>
 						</h5>
 					</div>
-					<Modbus
-						:id="index"
-						:host="getHost(connection.Settings.URI)"
-						:port="getPort(connection.Settings.URI)"
-						@update:host="updateHost(connection, $event)"
-						@update:port="updatePort(connection, $event)"
-						v-model:baudrate="connection.Settings.Baudrate"
-						v-model:comset="connection.Settings.Comset"
-						v-model:device="connection.Settings.Device"
-						v-model:readonly="connection.ReadOnly"
-						:capabilities="['rs485', 'tcpip']"
-						:is-proxy="true"
-					/>
+					<div class="row align-items-center">
+						<div class="col-4 border rounded">
+							<div class="d-none d-lg-block">
+								<hr class="mt-4" />
+								<h5>
+									<div class="inner">Client</div>
+								</h5>
+							</div>
+							<FormRow id="modbusPort" :label="$t('config.modbus.port')">
+								<PropertyField
+									id="modbusPort"
+									v-model="connection.Port"
+									property="port"
+									type="Int"
+									class="w-50"
+									required
+								/>
+							</FormRow>
+						</div>
+						<div class="col m-auto d-flex justify-content-center">
+							<shopicon-regular-arrowright
+								size="l"
+								class="flex-shrink-0"
+							></shopicon-regular-arrowright>
+						</div>
+						<div class="col-6 border rounded">
+							<div class="d-none d-lg-block">
+								<hr class="mt-4" />
+								<h5>
+									<div class="inner">Device</div>
+								</h5>
+							</div>
+							<Modbus
+								:id="index"
+								v-model:baudrate="connection.Settings.Baudrate"
+								v-model:comset="connection.Settings.Comset"
+								v-model:device="connection.Settings.Device"
+								v-model:readonly="connection.ReadOnly"
+								:host="getHost(connection.Settings.URI)"
+								:port="getPort(connection.Settings.URI)"
+								:capabilities="['rs485', 'tcpip']"
+								:is-proxy="true"
+								@update:host="updateHost(connection, $event)"
+								@update:port="updatePort(connection, $event)"
+							/>
+						</div>
+					</div>
 					<div class="align-items-center d-flex mb-4">
 						<button
 							type="button"
@@ -65,12 +100,16 @@
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/arrowright";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
 import { MODBUS_PROXY_READONLY, type ModbusProxy } from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
 import Modbus from "./DeviceModal/Modbus.vue";
+import PropertyField from "./PropertyField.vue";
+import FormRow from "./FormRow.vue";
+import { defineComponent } from "vue";
 
 const DEFAULT_MODBUS_PROXY: ModbusProxy = {
 	Port: 502,
@@ -78,9 +117,9 @@ const DEFAULT_MODBUS_PROXY: ModbusProxy = {
 	Settings: {},
 };
 
-export default {
+export default defineComponent({
 	name: "ModbusProxyModal",
-	components: { JsonModal, Modbus },
+	components: { JsonModal, Modbus, FormRow, PropertyField },
 	emits: ["changed"],
 	data() {
 		return {
@@ -105,7 +144,7 @@ export default {
 			connection.Settings.URI = `${host}:${newPort}`;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

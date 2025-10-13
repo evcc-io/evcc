@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" :title="title" @open="open">
+	<GenericModal ref="modal" :title="title" :size="size" @open="open">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -86,6 +86,7 @@ export default {
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
 		storeValuesInArray: Boolean,
+		size: { type: String },
 	},
 	emits: ["changed", "open"],
 	data() {
