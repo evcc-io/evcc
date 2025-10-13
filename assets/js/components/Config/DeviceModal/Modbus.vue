@@ -50,23 +50,7 @@
 		/>
 	</FormRow>
 	<div v-if="connection === 'tcpip'">
-		<FormRow
-			v-if="isProxy"
-			id="modbusURI"
-			:label="$t('config.modbus.uri')"
-			example="192.0.2.2:502"
-		>
-			<PropertyField
-				id="modbusURI"
-				property="uri"
-				type="String"
-				class="me-2"
-				required
-				:model-value="host"
-				@change="$emit('update:host', $event.target.value)"
-			/>
-		</FormRow>
-		<FormRow v-else id="modbusHost" :label="$t('config.modbus.host')" example="192.0.2.2">
+		<FormRow id="modbusHost" :label="$t('config.modbus.host')" example="192.0.2.2">
 			<PropertyField
 				id="modbusHost"
 				property="host"

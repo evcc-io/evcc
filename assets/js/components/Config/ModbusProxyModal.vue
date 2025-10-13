@@ -23,8 +23,10 @@
 					</div>
 					<Modbus
 						:id="index"
-						v-model:host="connection.Settings.URI"
-						v-model:port="connection.Port"
+						:host="getHost(connection.Settings.URI)"
+						:port="getPort(connection.Settings.URI)"
+						@update:host="updateHost(connection, $event)"
+						@update:port="updatePort(connection, $event)"
 						v-model:baudrate="connection.Settings.Baudrate"
 						v-model:comset="connection.Settings.Comset"
 						v-model:device="connection.Settings.Device"
@@ -86,6 +88,22 @@ export default {
 			MODBUS_PROXY_READONLY,
 			DEFAULT_MODBUS_PROXY,
 		};
+	},
+	methods: {
+		getHost(uri?: string) {
+			return uri?.split(":")[0] || "";
+		},
+		getPort(uri?: string) {
+			return uri?.split(":")[1] || "";
+		},
+		updateHost(connection: ModbusProxy, newHost: string) {
+			const port = this.getPort(connection.Settings.URI);
+			connection.Settings.URI = `${newHost}:${port}`;
+		},
+		updatePort(connection: ModbusProxy, newPort: string | number) {
+			const host = this.getHost(connection.Settings.URI);
+			connection.Settings.URI = `${host}:${newPort}`;
+		},
 	},
 };
 </script>
