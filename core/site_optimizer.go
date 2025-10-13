@@ -392,7 +392,7 @@ func prorateFirstSlot(profile []float64, firstSlotDuration time.Duration) []floa
 
 	// Take only slots from current hour onwards
 	res := profile[firstSlot:]
-	res[0] *= float64(firstSlotDuration / tariff.SlotDuration)
+	res[0] *= float64(firstSlotDuration) / float64(tariff.SlotDuration)
 
 	return res
 }
