@@ -12,7 +12,10 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]
-  - name: baseurl
+    help:
+      en: "Meter usage type: 'grid' for main grid connection, 'pv' for solar panels, 'battery' for battery storage, 'aux' for auxiliary loads, 'charge' for EV charging point"
+      de: "Zählerverwendung: 'grid' für Netzanschluss, 'pv' für Solaranlage, 'battery' für Batteriespeicher, 'aux' für zusätzliche Verbraucher, 'charge' für Ladestation"
+  - name: uri
     description:
       de: Home Assistant URL
       en: Home Assistant URL
@@ -37,8 +40,8 @@ params:
     required: true
     example: "sensor.house_power"
     help:
-      en: Entity ID for power measurement in watts
-      de: Entitäts-ID für Leistungsmessung in Watt
+      en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").
+      de: Entitäts-ID für momentane Leistungsmessung in Watt. Die Entität muss nur numerische Werte liefern (z.B. "1234", nicht "1234 W").
   - name: energy
     description:
       de: Energie Entity
@@ -46,8 +49,8 @@ params:
     example: "sensor.house_energy"
     advanced: true
     help:
-      en: Entity ID for energy measurement in kWh (optional)
-      de: Entitäts-ID für Energiemessung in kWh (optional)
+      en: Entity ID for cumulative energy measurement in kWh (optional). Should provide total energy consumed/produced, not daily or interval values.
+      de: Entitäts-ID für kumulative Energiemessung in kWh (optional). Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
   - name: currentL1
     description:
       de: L1 Strom Entity
@@ -104,7 +107,7 @@ params:
       de: Entitäts-ID für L3 Spannungsmessung in Volt (optional)
 render: |
   type: homeassistant
-  uri: {{ .baseurl }}
+  uri: {{ .uri }}
   token: {{ .token }}
   power: {{ .power }}
   {{- if .energy }}
