@@ -16,37 +16,37 @@ render: |
   type: custom
   power:
     source: http
-    uri: http://{{ .host }}:80/meter/data
+    uri: http://{{ .host }}/meter/data
     jq: (.pi[0] - .pe[0])
     timeout: 1s
   energy:
     source: http
-    uri: http://{{ .host }}:80/meter/data
+    uri: http://{{ .host }}/meter/data
     jq:  (.ic | tonumber)
     timeout: 1s
   currents:
     - source: http
-      uri: http://{{ .host }}:80/meter/data
+      uri: http://{{ .host }}/meter/data
       jq: .i[0]
       timeout: 1s
     - source: http
-      uri: http://{{ .host }}:80/meter/data
+      uri: http://{{ .host }}/meter/data
       jq: .i[1]
       timeout: 1s
     - source: http
-      uri: http://{{ .host }}:80/meter/data
+      uri: http://{{ .host }}/meter/data
       jq: .i[2]
       timeout: 1s
   voltages:
     - source: http
-      uri: http://{{ .host }}:80/meter/data
+      uri: http://{{ .host }}/meter/data
       jq: .u[0]
       timeout: 1s
     - source: http
-      uri: http://{{ .host }}:80/meter/data
+      uri: http://{{ .host }}/meter/data
       jq: .u[1]
       timeout: 1s
     - source: http
-      uri: http://{{ .host }}:80/meter/data
+      uri: http://{{ .host }}/meter/data
       jq: .u[2]
       timeout: 1s
