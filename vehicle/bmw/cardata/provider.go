@@ -167,21 +167,22 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	// Try primary datapoint for BEV
-	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if hv == "CHARGING" {
-		status = api.StatusC
+	hv, hvErr := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	if hvErr == nil && hv == "CHARGING" {
+		return api.StatusC, nil
 	}
 
 	// Fallback to alternative datapoint for PHEV if primary is invalid or unavailable
-	if hv == "INVALID" || err != nil {
+	if hv == "INVALID" || hvErr != nil {
 		if alt, altErr := v.String("vehicle.drivetrain.electricEngine.charging.status"); altErr == nil {
-			if slices.Contains([]string{"CHARGINGACTIVE"}, alt) {
-				status = api.StatusC
+			if alt == "CHARGINGACTIVE" {
+				return api.StatusC, nil
 			}
+			return status, nil
 		}
 	}
 
-	return status, err
+	return status, hvErr
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
