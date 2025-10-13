@@ -96,123 +96,102 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 
 var _ eebus.Device = (*EEBus)(nil)
 
+// useCaseAPI provides a unified interface for MGCP and MPC use cases
+type useCaseAPI struct {
+	power           func(spineapi.EntityRemoteInterface) (float64, error)
+	energyConsumed  func(spineapi.EntityRemoteInterface) (float64, error)
+	currentPerPhase func(spineapi.EntityRemoteInterface) ([]float64, error)
+	voltagePerPhase func(spineapi.EntityRemoteInterface) ([]float64, error)
+	powerEvent      eebusapi.EventType
+	energyEvent     eebusapi.EventType
+	currentEvent    eebusapi.EventType
+	voltageEvent    eebusapi.EventType
+}
+
+// getUseCaseAPI returns the appropriate API wrapper based on use case
+func (c *EEBus) getUseCaseAPI() *useCaseAPI {
+	if c.useMGCP {
+		return &useCaseAPI{
+			power:           c.uc.MGCP.Power,
+			energyConsumed:  c.uc.MGCP.EnergyConsumed,
+			currentPerPhase: c.uc.MGCP.CurrentPerPhase,
+			voltagePerPhase: c.uc.MGCP.VoltagePerPhase,
+			powerEvent:      mgcp.DataUpdatePower,
+			energyEvent:     mgcp.DataUpdateEnergyConsumed,
+			currentEvent:    mgcp.DataUpdateCurrentPerPhase,
+			voltageEvent:    mgcp.DataUpdateVoltagePerPhase,
+		}
+	}
+	return &useCaseAPI{
+		power:           c.uc.MPC.Power,
+		energyConsumed:  c.uc.MPC.EnergyConsumed,
+		currentPerPhase: c.uc.MPC.CurrentPerPhase,
+		voltagePerPhase: c.uc.MPC.VoltagePerPhase,
+		powerEvent:      mpc.DataUpdatePower,
+		energyEvent:     mpc.DataUpdateEnergyConsumed,
+		currentEvent:    mpc.DataUpdateCurrentsPerPhase,
+		voltageEvent:    mpc.DataUpdateVoltagePerPhase,
+	}
+}
+
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	c.log.TRACE.Printf("received event: %s", event)
 
-	if c.useMGCP {
-		// MGCP events for grid usage
-		switch event {
-		case mgcp.DataUpdatePower:
-			c.dataUpdatePower(entity)
-		case mgcp.DataUpdateEnergyConsumed:
-			c.dataUpdateEnergyConsumed(entity)
-		case mgcp.DataUpdateCurrentPerPhase:
-			c.dataUpdateCurrentPerPhase(entity)
-		case mgcp.DataUpdateVoltagePerPhase:
-			c.dataUpdateVoltagePerPhase(entity)
-		}
-	} else {
-		// MPC events for all other usages
-		switch event {
-		case mpc.DataUpdatePower:
-			c.dataUpdatePower(entity)
-		case mpc.DataUpdateEnergyConsumed:
-			c.dataUpdateEnergyConsumed(entity)
-		case mpc.DataUpdateCurrentsPerPhase:
-			c.dataUpdateCurrentPerPhase(entity)
-		case mpc.DataUpdateVoltagePerPhase:
-			c.dataUpdateVoltagePerPhase(entity)
-		}
+	api := c.getUseCaseAPI()
+
+	switch event {
+	case api.powerEvent:
+		c.dataUpdatePower(entity)
+	case api.energyEvent:
+		c.dataUpdateEnergyConsumed(entity)
+	case api.currentEvent:
+		c.dataUpdateCurrentPerPhase(entity)
+	case api.voltageEvent:
+		c.dataUpdateVoltagePerPhase(entity)
 	}
 }
 
 func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
-	var data float64
-	var err error
-
-	if c.useMGCP {
-		data, err = c.uc.MGCP.Power(entity)
-		if err != nil {
-			c.log.ERROR.Println("MGCP.Power:", err)
-			return
-		}
-		c.log.TRACE.Printf("MGCP.Power: %.0fW", data)
-	} else {
-		data, err = c.uc.MPC.Power(entity)
-		if err != nil {
-			c.log.ERROR.Println("MPC.Power:", err)
-			return
-		}
-		c.log.TRACE.Printf("MPC.Power: %.0fW", data)
+	api := c.getUseCaseAPI()
+	data, err := api.power(entity)
+	if err != nil {
+		c.log.ERROR.Println("Power:", err)
+		return
 	}
-
+	c.log.TRACE.Printf("Power: %.0fW", data)
 	c.power.Set(data)
 }
 
 func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
-	var data float64
-	var err error
-
-	if c.useMGCP {
-		data, err = c.uc.MGCP.EnergyConsumed(entity)
-		if err != nil {
-			c.log.ERROR.Println("MGCP.EnergyConsumed:", err)
-			return
-		}
-		c.log.TRACE.Printf("MGCP.EnergyConsumed: %.1fkWh", data/1000)
-	} else {
-		data, err = c.uc.MPC.EnergyConsumed(entity)
-		if err != nil {
-			c.log.ERROR.Println("MPC.EnergyConsumed:", err)
-			return
-		}
-		c.log.TRACE.Printf("MPC.EnergyConsumed: %.1fkWh", data/1000)
+	api := c.getUseCaseAPI()
+	data, err := api.energyConsumed(entity)
+	if err != nil {
+		c.log.ERROR.Println("EnergyConsumed:", err)
+		return
 	}
-
+	c.log.TRACE.Printf("EnergyConsumed: %.1fkWh", data/1000)
 	// Convert Wh to kWh
 	c.energy.Set(data / 1000)
 }
 
 func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
-	var data []float64
-	var err error
-
-	if c.useMGCP {
-		data, err = c.uc.MGCP.CurrentPerPhase(entity)
-		if err != nil {
-			c.log.ERROR.Println("MGCP.CurrentPerPhase:", err)
-			return
-		}
-	} else {
-		data, err = c.uc.MPC.CurrentPerPhase(entity)
-		if err != nil {
-			c.log.ERROR.Println("MPC.CurrentPerPhase:", err)
-			return
-		}
+	api := c.getUseCaseAPI()
+	data, err := api.currentPerPhase(entity)
+	if err != nil {
+		c.log.ERROR.Println("CurrentPerPhase:", err)
+		return
 	}
-
 	c.currents.Set(data)
 }
 
 func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
-	var data []float64
-	var err error
-
-	if c.useMGCP {
-		data, err = c.uc.MGCP.VoltagePerPhase(entity)
-		if err != nil {
-			c.log.ERROR.Println("MGCP.VoltagePerPhase:", err)
-			return
-		}
-	} else {
-		data, err = c.uc.MPC.VoltagePerPhase(entity)
-		if err != nil {
-			c.log.ERROR.Println("MPC.VoltagePerPhase:", err)
-			return
-		}
+	api := c.getUseCaseAPI()
+	data, err := api.voltagePerPhase(entity)
+	if err != nil {
+		c.log.ERROR.Println("VoltagePerPhase:", err)
+		return
 	}
-
 	c.voltages.Set(data)
 }
 
