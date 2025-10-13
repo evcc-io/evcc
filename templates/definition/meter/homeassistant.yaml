@@ -35,7 +35,7 @@ params:
       de: Dauerhafter Zugangstoken für die Home Assistant API
   - name: power
     description:
-      de: Leistung Entity
+      de: Leistungs-Entität
       en: Power Entity
     required: true
     example: "sensor.house_power"
