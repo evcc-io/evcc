@@ -167,7 +167,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if err != nil || hv == "INVALID" {
+	if err != nil || hv == "" || hv == "INVALID" {
 		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.status")
 	}
 
