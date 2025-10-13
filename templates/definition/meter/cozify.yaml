@@ -50,4 +50,3 @@ render: |
       uri: http://{{ .host }}:80/meter/data
       jq: .u[2]
       timeout: 1s
-      
