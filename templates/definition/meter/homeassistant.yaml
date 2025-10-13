@@ -113,7 +113,7 @@ render: |
   {{- if .energy }}
   energy: {{ .energy }}
   {{- end }}
-  {{- if or .currentL1 .currentL2 .currentL3 }}
+  {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
   {{- if .currentL1 }}
     - {{ .currentL1 }}
