@@ -17,15 +17,16 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/Elspotprices?filter={"PriceArea":["{{ .region }}"]}
+    uri: https://api.energidataservice.dk/dataset/DayAheadPrices?start=now&filter={"PriceArea":["{{ .region }}"]}
     jq: |
-      [.records[] |
-        {
-          start: (.HourUTC[0:13] + ":00:00Z"),
-          end: (.HourUTC[0:13] 
-                | strptime("%Y-%m-%dT%H") 
-                | mktime + 3600 
+      [.records[]
+        | {
+          start: (.TimeUTC[0:13] + ":00:00Z"),
+          end: (.TimeUTC[0:13]
+                | strptime("%Y-%m-%dT%H")
+                | mktime + 3600
                 | strftime("%Y-%m-%dT%H:%M:%SZ")),
-          value: .SpotPriceDKK / 1e3
+          value: .DayAheadPriceDKK / 1e3
         }
-      ] | tostring
+      ]
+      | tostring

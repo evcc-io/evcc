@@ -38,7 +38,6 @@ export interface HemsConfig {
 }
 
 export interface ShmConfig {
-  allowControl: boolean;
   vendorId: string;
   deviceId: string;
 }
@@ -59,7 +58,10 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
-  battery?: Battery[];
+  battery?: BatteryMeter[];
+  pv?: Meter[];
+  aux?: Meter[];
+  ext?: Meter[];
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
@@ -388,12 +390,17 @@ export interface Notification {
   count: number;
 }
 
-export interface Battery {
+export interface Meter {
   power: number;
+  title?: string;
+  icon?: string;
+  energy?: number;
+}
+
+export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  title?: string;
 }
 
 export interface Vehicle {
@@ -424,8 +431,8 @@ export interface Rate {
 export interface Slot {
   day: string;
   value?: number;
-  startHour: number;
-  endHour: number;
+  start: Date;
+  end: Date;
   charging: boolean;
   toLate?: boolean | null;
   warning?: boolean | null;
@@ -449,7 +456,8 @@ export interface SelectOption<T> {
 }
 
 export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
-export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -470,7 +478,6 @@ export type ValueOf<T> = T[keyof T];
 export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
-  curl: string;
   details: OptimizationDetails;
 }
 

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -47,6 +48,12 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 	return a == nil && b == nil || (*a) == (*b)
 }
 
+// hasFeature returns true if features are supported and given feature present
+func hasFeature(a any, f api.Feature) bool {
+	c, ok := a.(api.FeatureDescriber)
+	return ok && slices.Contains(c.Features(), f)
+}
+
 // deviceProperties returns the common device data for the given reference
 func deviceProperties[T any](dev config.Device[T]) config.Properties {
 	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
@@ -72,4 +79,13 @@ func circuitMaxPower(circuit api.Circuit) float64 {
 	}
 
 	return circuit.GetMaxPower()
+}
+
+// circuitDimmed returns a circuits dim status
+func circuitDimmed(circuit api.Circuit) bool {
+	if circuit == nil {
+		return false
+	}
+
+	return circuit.Dimmed()
 }

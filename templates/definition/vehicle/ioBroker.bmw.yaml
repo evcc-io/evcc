@@ -34,54 +34,29 @@ render: |
   type: custom
   {{ include "vehicle-common" . }}
   soc:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingLevelPercent
-  limitsoc:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingTarget
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value
   status:
-    source: valid
-    valid:
+    source: combined
+    plugged:
       source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: combined
-      plugged:
-        source: http
-        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.isChargerConnected
-      charging:
-        source: http
-        uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.chargingStatus
-        jq: '. == "CHARGING"'
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.body.chargingPort.status.value
+      jq: '. == "CONNECTED"'
+    charging:
+      source: http
+      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.charging.status.value
+      jq: '. == "CHARGINGACTIVE"'
   range:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.electricChargingState.range
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.kombiRemainingElectricRange.value
   odometer:
-    source: valid
-    valid:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.info.connection
-      cache: 10s
-    value:
-      source: http
-      uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.state.currentMileage
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.travelledDistance.value
+  climater:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.preConditioning.activity.value
+    jq: if .state == "HEATING" or .state == "heating" or .state == "COOLING" or .state == "cooling" then true else false end
+  limitsoc:
+    source: http
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateOfCharge.target.value
   {{ include "vehicle-features" . }}

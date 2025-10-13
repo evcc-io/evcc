@@ -20,14 +20,14 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://api.ned.nl/v1/utilizations?point=0&type=27&granularity=5&granularitytimezone=0&classification=1&activity=1&validfrom[strictly_before]={{ `{{ addDate now 0 0 2 | date "2006-01-02" }}` }}&validfrom[after]={{ `{{ now | date "2006-01-02" }}` }}
+    uri: https://api.ned.nl/v1/utilizations?point=0&type=27&granularity=4&granularitytimezone=0&classification=1&activity=1&validfrom[strictly_before]={{ `{{ addDate now 0 0 2 | date "2006-01-02" }}` }}&validfrom[after]={{ `{{ now | date "2006-01-02" }}` }}
     headers:
       - content-type: application/json
       - X-AUTH-TOKEN: {{ .apiKey }}
     jq: |
       ."hydra:member" | map({ 
-        start: (.validfrom | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime | strflocaltime("%FT%TZ")), #convert to local time summer/winter
-        end: (.validto | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime | strflocaltime("%FT%TZ")), #convert to local time summer/winter
+        start: .validfrom,
+        end:   .validto,
         value: .emissionfactor * 100000  | round/100
       }) | tostring
     cache: 1h

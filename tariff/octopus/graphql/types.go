@@ -38,9 +38,22 @@ func (d *tariffData) TariffCode() string {
 	return d.standardTariff.TariffCode
 }
 
-// IsExport is a shortcut function for determining whether the given tariff is for export, regardless of tariff type.
-func (d *tariffData) IsExport() bool {
-	return d.standardTariff.IsExport
+// TariffDirection defines which direction of energy flow is being denoted by the given tariff.
+type TariffDirection string
+
+const (
+	// TariffDirectionImport is for energy flow INTO the meter FROM the grid (to the property)
+	TariffDirectionImport TariffDirection = "import"
+
+	// TariffDirectionExport is for energy flow OUT OF the meter FROM the property (to the grid)
+	TariffDirectionExport TariffDirection = "export"
+)
+
+func (d *tariffData) TariffDirection() TariffDirection {
+	if d.standardTariff.IsExport {
+		return TariffDirectionExport
+	}
+	return TariffDirectionImport
 }
 
 type tariffType struct {

@@ -1,4 +1,5 @@
 template: bmw
+deprecated: true
 products:
   - brand: BMW
 requirements:
