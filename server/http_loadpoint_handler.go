@@ -81,6 +81,15 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
+		maxSlots := 0
+		if maxWindowsStr := query.Get("maxSlots"); maxWindowsStr != "" {
+			maxSlots, err = strconv.Atoi(maxWindowsStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid maxSlots: %w", err))
+				return
+			}
+		}
+
 		switch typ := vars["type"]; typ {
 		case "soc":
 			if !lp.SocBasedPlanning() {
@@ -99,7 +108,8 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, precondition)
+
+		plan := lp.GetPlan(planTime, requiredDuration, precondition, maxSlots)
 
 		res := PlanPreviewResponse{
 			PlanTime:     planTime,

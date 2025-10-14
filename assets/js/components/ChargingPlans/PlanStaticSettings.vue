@@ -12,7 +12,7 @@
 
 		<div class="row d-none d-lg-flex mb-2">
 			<div v-if="multiplePlans" class="plan-id d-flex"></div>
-			<div class="col-3">
+			<div class="col-2">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.day") }}
 				</label>
@@ -22,7 +22,7 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div :class="showPrecondition ? 'col-3' : 'col-4'">
+			<div :class="showPrecondition ? 'col-2' : 'col-3'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
@@ -30,6 +30,11 @@
 			<div v-if="showPrecondition" class="col-1">
 				<label :for="formId('precondition')">
 					{{ $t("main.chargingPlan.preconditionShort") }}
+				</label>
+			</div>
+			<div class="col-2">
+				<label :for="formId('maxslots')">
+					{{ $t("main.chargingPlan.maxSlotsShort") }}
 				</label>
 			</div>
 			<div class="col-1">
@@ -48,7 +53,7 @@
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
+			<div class="col-7 col-lg-2 mb-2 mb-lg-0">
 				<select
 					:id="formId('day')"
 					v-model="selectedDay"
@@ -83,7 +88,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div :class="['col-7', showPrecondition ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
+			<div :class="['col-7', showPrecondition ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
 				<select
 					v-if="socBasedPlanning"
 					:id="formId('goal')"
@@ -122,6 +127,20 @@
 					:id="formId('precondition')"
 					v-model="selectedPrecondition"
 					testid="static-plan-precondition"
+				/>
+			</div>
+			<div class="col-5 d-lg-none col-form-label">
+				<label :for="formId('maxslots')">
+					{{ $t("main.chargingPlan.maxSlotsShort") }}
+				</label>
+			</div>
+			<div class="col-7 col-lg-2 mb-2 mb-lg-0 d-flex align-items-center">
+				<MaxSlotSlider
+					:id="formId('maxslots')"
+					:default-value="1" 
+					v-model="selectedMaxSlots"
+					testid="static-plan-maxslots"
+					compact
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -190,6 +209,7 @@ import formatter from "@/mixins/formatter";
 import { energyOptions } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
 import PreconditionSelect from "./PreconditionSelect.vue";
+import MaxSlotSlider from "./MaxSlotSlider.vue";
 
 const LAST_TARGET_TIME_KEY = "last_target_time";
 const LAST_SOC_GOAL_KEY = "last_soc_goal";
@@ -198,7 +218,7 @@ const DEFAULT_TARGET_TIME = "7:00";
 
 export default defineComponent({
 	name: "ChargingPlanStaticSettings",
-	components: { PreconditionSelect },
+	components: { PreconditionSelect, MaxSlotSlider },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -212,6 +232,7 @@ export default defineComponent({
 		multiplePlans: Boolean,
 		precondition: Number,
 		showPrecondition: Boolean,
+		maxSlots: Number,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data() {
@@ -222,6 +243,7 @@ export default defineComponent({
 			selectedEnergy: this.energy,
 			active: false,
 			selectedPrecondition: this.precondition,
+			selectedMaxSlots: this.maxSlots ?? 1,
 		};
 	},
 	computed: {
@@ -266,6 +288,7 @@ export default defineComponent({
 				day: this.fmtDayString(t),
 				time: this.fmtTimeString(t),
 				precondition: this.precondition,
+				maxSlots: this.maxSlots,
 			};
 		},
 		dataChanged() {
@@ -276,7 +299,8 @@ export default defineComponent({
 				? this.originalData.soc != this.selectedSoc
 				: this.originalData.energy != this.selectedEnergy;
 			const preconditionChanged = this.originalData.precondition != this.selectedPrecondition;
-			return dateChanged || goalChanged || preconditionChanged;
+			const maxSlotsChanged = this.originalData.maxSlots != this.selectedMaxSlots;
+			return dateChanged || goalChanged || preconditionChanged || maxSlotsChanged;
 		},
 		isNew() {
 			return !this.time && (!this.soc || !this.energy);
@@ -307,6 +331,12 @@ export default defineComponent({
 			this.selectedPrecondition = value;
 		},
 		selectedPrecondition() {
+			this.preview();
+		},
+		maxSlots(value) {
+			this.selectedMaxSlots = value || 1;
+		},
+		selectedMaxSlots() {
 			this.preview();
 		},
 	},
@@ -384,6 +414,7 @@ export default defineComponent({
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
 				precondition: this.selectedPrecondition,
+				maxSlots: this.selectedMaxSlots,
 			});
 		},
 		preview(force = false) {
@@ -395,6 +426,7 @@ export default defineComponent({
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
 				precondition: this.selectedPrecondition,
+				maxSlots: this.selectedMaxSlots,
 			});
 		},
 		toggle(e: Event) {

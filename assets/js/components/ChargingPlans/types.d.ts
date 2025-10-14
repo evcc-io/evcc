@@ -7,6 +7,7 @@ export interface RepeatingPlan {
   soc: number;
   active: boolean;
   precondition: number;
+  maxSlots?: number;
 }
 
 export interface PlanWrapper {
@@ -28,10 +29,12 @@ export interface StaticSocPlan {
   soc: number;
   time: Date;
   precondition: number;
+  maxSlots?: number;
 }
 
 export interface StaticEnergyPlan {
   energy: number;
   time: Date;
   precondition: number;
+  maxSlots?: number;
 }
