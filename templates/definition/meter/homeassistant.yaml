@@ -24,7 +24,7 @@ params:
     mask: true
   - name: power
     description:
-      de: Leistungs-Entität
+      de: Leistungsentität
       en: Power Entity
     required: true
     example: "sensor.house_power"
@@ -33,16 +33,16 @@ params:
       de: Entitäts-ID für momentane Leistungsmessung in Watt. Die Entität muss nur numerische Werte liefern (z.B. "1234", nicht "1234 W").
   - name: energy
     description:
-      de: Energie Entität
+      de: Energieentität
       en: Energy Entity
     example: "sensor.house_energy"
     advanced: true
     help:
       en: Entity ID for cumulative energy measurement in kWh. Should provide total energy consumed/produced, not daily or interval values.
-      de: Entitäts-ID für kumulative Energiemessung in kWh (optional). Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
+      de: Entitäts-ID für kumulative Energiemessung in kWh. Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
   - name: currentL1
     description:
-      de: L1 Strom Entität
+      de: L1 Stromentität
       en: L1 Current Entity
     example: "sensor.house_current_l1"
     advanced: true
@@ -51,7 +51,7 @@ params:
       de: Entitäts-ID für L1 Strommessung in Ampere (optional)
   - name: currentL2
     description:
-      de: L2 Strom Entität
+      de: L2 Stromentität
       en: L2 Current Entity
     example: "sensor.house_current_l2"
     advanced: true
@@ -60,7 +60,7 @@ params:
       de: Entitäts-ID für L2 Strommessung in Ampere (optional)
   - name: currentL3
     description:
-      de: L3 Strom Entität
+      de: L3 Stromentität
       en: L3 Current Entity
     example: "sensor.house_current_l3"
     advanced: true
@@ -69,7 +69,7 @@ params:
       de: Entitäts-ID für L3 Strommessung in Ampere (optional)
   - name: voltageL1
     description:
-      de: L1 Spannung Entität
+      de: L1 Spannungsentität
       en: L1 Voltage Entity
     example: "sensor.house_voltage_l1"
     advanced: true
@@ -78,7 +78,7 @@ params:
       de: Entitäts-ID für L1 Spannungsmessung in Volt (optional)
   - name: voltageL2
     description:
-      de: L2 Spannung Entität
+      de: L2 Spannungsentität
       en: L2 Voltage Entity
     example: "sensor.house_voltage_l2"
     advanced: true
@@ -87,7 +87,7 @@ params:
       de: Entitäts-ID für L2 Spannungsmessung in Volt (optional)
   - name: voltageL3
     description:
-      de: L3 Spannung Entität
+      de: L3 Spannungsentität
       en: L3 Voltage Entity
     example: "sensor.house_voltage_l3"
     advanced: true
