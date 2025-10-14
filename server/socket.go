@@ -122,10 +122,7 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 		msg[k] = json.RawMessage(socketEncode(p.Val))
 	}
 
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
+	b, _ := json.Marshal(msg)
 
 	// should not block
 	subscriber.send <- b
@@ -160,10 +157,7 @@ func (h *SocketHub) broadcast(p util.Param) {
 		msg[k] = json.RawMessage(socketEncode(p.Val))
 	}
 
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
+	b, _ := json.Marshal(msg)
 
 	for s := range h.subscribers {
 		select {
