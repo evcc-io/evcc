@@ -17,7 +17,7 @@ func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Ra
 	res := make(api.Rates, 0, len(prices))
 
 	for i, v := range prices {
-		slotStart := start.Add(time.Duration(i) * slotDuration)
+		slotStart := start.Add(time.Duration(i) * time.Hour)
 		ar := api.Rate{
 			Start: slotStart,
 			End:   slotStart.Add(slotDuration),
@@ -303,8 +303,8 @@ func TestPrecondition(t *testing.T) {
 	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now(),
-			End:   clock.Now().Add(30 * time.Minute),
+			Start: clock.Now().Add(30 * time.Minute),
+			End:   clock.Now().Add(time.Hour),
 			Value: 0,
 		},
 		{
@@ -312,7 +312,7 @@ func TestPrecondition(t *testing.T) {
 			End:   clock.Now().Add(4 * time.Hour),
 			Value: 3,
 		},
-	}, plan, "expected short early slot and split late precondition slot")
+	}, plan, "expected short early and split late slot")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
