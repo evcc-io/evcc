@@ -15,14 +15,6 @@ import (
 	"github.com/samber/lo"
 )
 
-type forecast struct {
-	Co2     api.Rates     `json:"co2,omitempty"`
-	FeedIn  api.Rates     `json:"feedin,omitempty"`
-	Grid    api.Rates     `json:"grid,omitempty"`
-	Planner api.Rates     `json:"planner,omitempty"`
-	Solar   *solarDetails `json:"solar,omitempty"`
-}
-
 type solarDetails struct {
 	Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
@@ -108,7 +100,13 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		site.publish(keys.TariffCo2Loadpoints, v)
 	}
 
-	fc := forecast{
+	fc := struct {
+		Co2     api.Rates     `json:"co2,omitempty"`
+		FeedIn  api.Rates     `json:"feedin,omitempty"`
+		Grid    api.Rates     `json:"grid,omitempty"`
+		Planner api.Rates     `json:"planner,omitempty"`
+		Solar   *solarDetails `json:"solar,omitempty"`
+	}{
 		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
 		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
 		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
