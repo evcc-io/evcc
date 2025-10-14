@@ -23,14 +23,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Prepare input
+        id: prepare
+        shell: bash
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          # Use environment variable for security (prevents injection)
+          # Write comment to file to avoid YAML escaping issues
+          printf '%s' "$COMMENT_BODY" > /tmp/comment.txt
+
       - name: Check language
         id: language_check
         uses: actions/ai-inference@v2
         with:
           model: openai/gpt-4o-mini
           prompt-file: .github/prompts/language-check.prompt.yml
-          input: |
-            comment: ${{ toJson(github.event.comment.body) }}
+          file_input: |
+            comment: /tmp/comment.txt
 
       - name: Post reminder if non-English
         if: steps.language_check.outputs.response != ''
