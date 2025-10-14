@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"math"
 	"slices"
 	"time"
 
@@ -111,6 +112,7 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 		res = append(res, r)
 	}
 
+	// if no slots remain, create a full slot
 	if len(res) == 0 {
 		res = append(res, api.Rate{
 			Start: start,
@@ -136,10 +138,108 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time) api.Rates {
+func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
+	now := t.clock.Now()
+	if len(rates) == 0 || effectiveDuration <= 0 {
+		return nil, 0
+	}
+
+	rates.Sort() // sort slots by start time
+
+	// prepare all relevant points (start/end of all slots)
+	points := make([]time.Time, 0, 2*len(rates))
+	for _, r := range rates {
+		points = append(points, r.Start, r.End)
+	}
+	points = append(points, now, targetTime)
+	slices.SortFunc(points, func(a, b time.Time) int { return int(a.Sub(b)) })
+	points = slices.Compact(points)
+
+	type windowSlot struct {
+		Start, End time.Time
+		Value      float64
+	}
+
+	var bestPlan api.Rates
+	minCost := math.Inf(1)
+
+	left := 0
+	right := 0
+	currentCost := 0.0
+	activeSlots := []windowSlot{}
+
+	// sliding-window over all relevant time points
+	for left < len(points) {
+		windowStart := points[left]
+		windowEnd := windowStart.Add(effectiveDuration)
+		if windowEnd.After(targetTime) {
+			break
+		}
+
+		// remove slots that fall out on the left of the window
+		newActive := activeSlots[:0]
+		for _, s := range activeSlots {
+			if s.End.After(windowStart) {
+				newActive = append(newActive, s)
+			} else {
+				duration := s.End.Sub(s.Start).Hours()
+				currentCost -= s.Value * duration
+			}
+		}
+		activeSlots = newActive
+
+		// add slots that come into the window on the right
+		for right < len(rates) && !rates[right].Start.After(windowEnd) {
+			s := rates[right]
+
+			trimStart := s.Start
+			if windowStart.After(trimStart) {
+				trimStart = windowStart
+			}
+			trimEnd := s.End
+			if windowEnd.Before(trimEnd) {
+				trimEnd = windowEnd
+			}
+
+			if trimStart.Before(trimEnd) {
+				activeSlots = append(activeSlots, windowSlot{
+					Start: trimStart,
+					End:   trimEnd,
+					Value: s.Value,
+				})
+				currentCost += s.Value * trimEnd.Sub(trimStart).Hours()
+			}
+			right++
+		}
+
+		// check if this window has the minimal cost
+		if currentCost < minCost {
+			minCost = currentCost
+			bestPlan = make(api.Rates, len(activeSlots))
+			for i, s := range activeSlots {
+				bestPlan[i] = api.Rate{
+					Start: s.Start,
+					End:   s.End,
+					Value: s.Value,
+				}
+			}
+			bestPlan.Sort()
+		}
+
+		left++
+	}
+
+	return bestPlan, minCost
+}
+
+// Plan creates a charging plan based on the configured or passed-in mode
+// supports a continuous boolean flag to use single cheapest window mode
+func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous ...bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
+
+	useContinuous := len(continuous) > 0 && continuous[0]
 
 	latestStart := targetTime.Add(-requiredDuration)
 	if latestStart.Before(t.clock.Now()) {
@@ -175,15 +275,8 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// rates are by default sorted by date, oldest to newest
 	last := rates[len(rates)-1].End
 
-	// sort rates by price and time
-	slices.SortStableFunc(rates, sortByCost)
-
-	// for late start ensure that the last slot is the cheapest
-	rates, adjusted := splitPreconditionSlots(rates, precondition, targetTime)
-
 	// reduce planning horizon to available rates
 	if targetTime.After(last) {
-		// there is enough time for charging after end of current rates
 		durationAfterRates := targetTime.Sub(last)
 		if durationAfterRates >= requiredDuration {
 			return nil
@@ -196,6 +289,38 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		targetTime = last
 		requiredDuration -= durationAfterRates
 	}
+
+	// use continuous window mode if selected
+	if useContinuous {
+		effectiveDuration := requiredDuration
+		if precondition > 0 {
+			effectiveDuration -= precondition
+		}
+
+		preCondWindow := targetTime.Add(-precondition)
+		plan, _ := t.findOptimalContinuousWindow(rates, effectiveDuration, preCondWindow)
+
+		if plan == nil {
+			return t.continuousPlan(rates, latestStart, targetTime)
+		}
+
+		// add preconditioning at the end
+		if precondition > 0 {
+			preCondStart := targetTime.Add(-precondition)
+			preCondPlan := t.continuousPlan(rates, preCondStart, targetTime)
+			plan = append(plan, preCondPlan...)
+		}
+
+		// sort plan by time
+		plan.Sort()
+		
+		return plan
+	}
+
+	// default mode: cheapest combination of slots
+	slices.SortStableFunc(rates, sortByCost)
+
+	rates, adjusted := splitPreconditionSlots(rates, precondition, targetTime)
 
 	// sort rates by price and time
 	slices.SortStableFunc(rates, sortByCost)
