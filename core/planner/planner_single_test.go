@@ -12,7 +12,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// Test, dass Planner.plan mehrere Fenster erzeugt, wenn nötig
+// TestPlannerMultipleWindows verifies that Planner.plan generates multiple windows when necessary
 func TestPlannerMultipleWindows(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
@@ -26,38 +26,41 @@ func TestPlannerMultipleWindows(t *testing.T) {
 		tariff: trf,
 	}
 
-	// Plane eine Ladedauer, die mehrere Slots umfasst
+	// Plan a charging duration spanning multiple slots
 	plan0 := p.Plan(2*time.Hour, 0, clock.Now().Add(8*time.Hour))
 	require.NotNil(t, plan0)
 
 	plan0p := p.Plan(2*time.Hour, 15*time.Minute, clock.Now().Add(8*time.Hour))
 	require.NotNil(t, plan0)
 
+	// Single window optimization (minGap=0)
 	plan1 := p.Plan(2*time.Hour, 0, clock.Now().Add(8*time.Hour), 0)
 	require.NotNil(t, plan1)
 
 	plan1p := p.Plan(2*time.Hour, 15*time.Minute, clock.Now().Add(8*time.Hour), 0)
 	require.NotNil(t, plan1p)
-	
+
+	// Minimize charging windows (minGap>1)
 	plan2 := p.Plan(2*time.Hour, 0, clock.Now().Add(8*time.Hour), 0)
 	require.NotNil(t, plan2)
 
-	// Anzahl der Ladefenster zählen
+	// Count the number of charging windows
 	windows0 := countChargingWindows(plan0)
 	windows0p := countChargingWindows(plan0p)
 	windows1 := countChargingWindows(plan1)
 	windows1p := countChargingWindows(plan1p)
 	windows2 := countChargingWindows(plan2)
+	
 	t.Logf("Number of charging windows (cost-optimized): %d", windows0)
 	t.Logf("Number of charging windows (cost-optimized+precondition): %d", windows0p)
 	t.Logf("Number of charging windows (single): %d", windows1)
 	t.Logf("Number of charging windows (single+precondition): %d", windows1p)
 	t.Logf("Number of charging windows (minimize windows): %d", windows2)
 
-	// Wir erwarten mindestens 2 Fenster, da Lücken im Tarif sind
+	// We expect at least 2 windows due to gaps in the tariff
 	assert.GreaterOrEqual(t, 2, windows0, "expected more than one charging window")
-	assert.Equal(t, windows0+1, windows0p, "expected more than one charging window plus precondition")
+	assert.Equal(t, windows0+1, windows0p, "expected one additional window for precondition")
 	assert.Equal(t, 1, windows1, "expected a single charging window")
-	assert.Equal(t, 2, windows1p, "expected a single+predondition charging window")
-	assert.GreaterOrEqual(t, windows0, windows2, "expected a single+predondition charging window")
+	assert.Equal(t, 2, windows1p, "expected single window plus precondition window")
+	assert.GreaterOrEqual(t, windows0, windows2, "expected minimized window count")
 }
