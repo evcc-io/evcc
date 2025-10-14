@@ -40,7 +40,14 @@ func (s *sharderImpl) Shards() []Shard {
 			}
 		}
 
-		hash := sha256.Sum256(fmt.Append(nil, f.Value()))
+		// Use JSON for stable hashing (fmt.Append includes pointer addresses)
+		b, err := json.Marshal(f.Value())
+		if err != nil {
+			// Fallback to fmt.Append if JSON fails
+			b = fmt.Append(nil, f.Value())
+		}
+
+		hash := sha256.Sum256(b)
 		if cached, ok := s.cache[key]; ok && hash == cached {
 			continue
 		}
