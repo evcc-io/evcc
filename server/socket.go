@@ -111,7 +111,7 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	res := make(map[string]json.RawMessage, len(params))
+	msg := make(map[string]json.RawMessage, len(params))
 
 	for _, p := range params {
 		k := p.Key
@@ -119,17 +119,10 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		// Sharder splits data into chunks
-		if sp, ok := (p.Val).(util.Sharder); ok {
-			for _, shard := range sp.Shards() {
-				res[k+"."+shard.Key] = json.RawMessage(kv(shard.Value))
-			}
-		} else {
-			res[k] = json.RawMessage(kv(p.Val))
-		}
+		msg[k] = json.RawMessage(kv(p.Val))
 	}
 
-	b, err := json.Marshal(res)
+	b, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -142,15 +135,41 @@ func (h *SocketHub) broadcast(p util.Param) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	if len(h.subscribers) > 0 {
-		msg := "{" + kv(p) + "}"
+	if len(h.subscribers) == 0 {
+		return
+	}
 
-		for s := range h.subscribers {
-			select {
-			case s.send <- []byte(msg):
-			default:
-				s.closeSlow()
-			}
+	msg := make(map[string]json.RawMessage)
+
+	k := p.Key
+	if p.Loadpoint != nil {
+		k = "loadpoints." + p.UniqueID()
+	}
+
+	// Sharder splits data into chunks
+	if sp, ok := (p.Val).(util.Sharder); ok {
+		shards := sp.Shards()
+		if len(shards) == 0 {
+			return // nothing changed, skip broadcast
+		}
+
+		for _, shard := range shards {
+			msg[k+"."+shard.Key] = json.RawMessage(kv(shard.Value))
+		}
+	} else {
+		msg[k] = json.RawMessage(kv(p.Val))
+	}
+
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	for s := range h.subscribers {
+		select {
+		case s.send <- b:
+		default:
+			s.closeSlow()
 		}
 	}
 }
