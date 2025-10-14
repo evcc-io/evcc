@@ -38,7 +38,7 @@ params:
     example: "sensor.house_energy"
     advanced: true
     help:
-      en: Entity ID for cumulative energy measurement in kWh (optional). Should provide total energy consumed/produced, not daily or interval values.
+      en: Entity ID for cumulative energy measurement in kWh. Should provide total energy consumed/produced, not daily or interval values.
       de: Entitäts-ID für kumulative Energiemessung in kWh (optional). Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
   - name: currentL1
     description:
