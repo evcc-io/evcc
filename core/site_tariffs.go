@@ -120,7 +120,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
-	site.publish(keys.Forecast, util.NewSharder(site.uiCache, fc))
+	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {

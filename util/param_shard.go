@@ -20,9 +20,12 @@ type Shard struct {
 }
 
 type sharderImpl struct {
-	cache map[string][32]byte
-	struc any
+	prefix string
+	struc  any
 }
+
+// shared shard cache
+var shardCache = make(map[string][32]byte)
 
 func (s *sharderImpl) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.struc)
@@ -48,11 +51,11 @@ func (s *sharderImpl) Shards() []Shard {
 		}
 
 		hash := sha256.Sum256(b)
-		if cached, ok := s.cache[key]; ok && hash == cached {
+		if cached, ok := shardCache[s.prefix+key]; ok && hash == cached {
 			continue
 		}
 
-		s.cache[key] = hash
+		shardCache[s.prefix+key] = hash
 
 		res = append(res, Shard{
 			Key:   key,
@@ -67,6 +70,6 @@ var _ Sharder = (*sharderImpl)(nil)
 
 // NewSharder creates a Sharder that splits structs into sub-structs for space-efficient socket publishing
 // Passing anything else than a struct will panic
-func NewSharder(cache map[string][32]byte, struc any) Sharder {
-	return &sharderImpl{cache, struc}
+func NewSharder(prefix string, struc any) Sharder {
+	return &sharderImpl{prefix, struc}
 }

@@ -67,7 +67,6 @@ var _ site.API = (*Site)(nil)
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
 	uiChan       chan<- util.Param // client push messages
-	uiCache      map[string][32]byte
 	lpUpdateChan chan *Loadpoint
 
 	*Health
@@ -260,7 +259,6 @@ func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
-		uiCache:         make(map[string][32]byte),
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},
@@ -476,7 +474,7 @@ func (site *Site) DumpConfig() {
 }
 
 // publish sends values to UI and databases
-func (site *Site) publish(key string, val any) {
+func (site *Site) publish(key string, val interface{}) {
 	// test helper
 	if site.uiChan == nil {
 		return
