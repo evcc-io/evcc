@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/fatih/structs"
 )
@@ -25,7 +26,10 @@ type sharderImpl struct {
 }
 
 // shared shard cache
-var shardCache = make(map[string][32]byte)
+var (
+	shardCache = make(map[string][32]byte)
+	shardMu    sync.Mutex
+)
 
 func (s *sharderImpl) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.struc)
@@ -34,6 +38,9 @@ func (s *sharderImpl) MarshalJSON() ([]byte, error) {
 func (s *sharderImpl) Shards() []Shard {
 	ff := structs.Fields(s.struc)
 	res := make([]Shard, 0, len(ff))
+
+	shardMu.Lock()
+	defer shardMu.Unlock()
 
 	for _, f := range ff {
 		key := f.Name()
@@ -54,7 +61,6 @@ func (s *sharderImpl) Shards() []Shard {
 		if cached, ok := shardCache[s.prefix+key]; ok && hash == cached {
 			continue
 		}
-
 		shardCache[s.prefix+key] = hash
 
 		res = append(res, Shard{
