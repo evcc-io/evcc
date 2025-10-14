@@ -45,7 +45,7 @@ jobs:
                 messages: [
                   {
                     role: 'system',
-                    content: 'Determine if a user comment requires a language reminder. This project requires English communication to ensure everyone can participate. Exceptions: very brief comments (1-5 words), comments mixing English with technical native language terms (e.g. "Bundesnetzagentur", "Einspeisevergütung"), or uncertain cases should not be flagged. Return true if the comment is predominantly non-English (especially German) and requires a reminder, false otherwise.'
+                    content: 'This project requires English communication to ensure everyone can participate. Determine if a user comment requires a language reminder. The comment is markdown formatted. When analyzing: ignore text inside markdown code blocks (```), code suggestions, and quotes (>) as these may contain translations/i18n content (e.g. "de: Text"). Only analyze the regular text content. Short comments (one sentence) should not be flagged. Return `true` if you think a reminder to switch to English is needed, `false` otherwise. When unsure, return `false`.'
                   },
                   {
                     role: 'user',
