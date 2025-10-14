@@ -37,7 +37,7 @@ func kv(pval any) string {
 	)
 
 	// unwrap slices
-	if pval != nil && reflect.TypeOf(pval).Kind() == reflect.Slice {
+	if rv := reflect.ValueOf(pval); pval != nil && rv.Kind() == reflect.Slice && !rv.IsNil() {
 		val, err = encodeSliceAsString(pval)
 	} else {
 		val, err = encodeAsString(pval)
