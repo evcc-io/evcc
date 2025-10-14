@@ -429,7 +429,6 @@ func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]rscp.Tag
 }
 
 func rscpValuesWithTag[T any](msg []rscp.Message, fun func(any) (T, error)) ([]rscp.Tag, []T, error) {
-
 	var err error
 	var tags []rscp.Tag
 	var vals []T
