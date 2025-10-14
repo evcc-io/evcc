@@ -1,8 +1,9 @@
-template: e3dc-rscp
+template: e3dc-wallbox
 products:
   - brand: E3/DC
     description:
-      generic: Wallbox
+      de: Wallbox über E3/DC Hauskraftwerk verbunden
+      en: Wallbox connected via E3/DC system
 capabilities: ["1p3p"]
 requirements:
   description:
@@ -31,10 +32,17 @@ params:
       de: Muss auf dem Bildschirm des Hauskraftwerks unter 'Personalisieren' > 'Benutzerprofil' angelegt werden.
     mask: true
     required: true
+  - name: deviceindex
+    required: true
+    default: 0
+    type: int
+    description:
+      de: Index der Wallbox im E3/DC System.
+      en: Index of the wallbox device in the E3/DC system.
 render: |
-  type: e3dc-rscp
-  usage: {{ .usage }}
+  type: e3dc-wallbox
   uri: {{ .host }}:{{ .port }}
   user: {{ .user }}
   password: {{ .password }}
   key: {{ .key }}
+  deviceindex: {{ .deviceindex }}
