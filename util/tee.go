@@ -36,7 +36,7 @@ func (t *Tee) add(out chan<- Param) {
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
-		// TODO MUST NOT PUBLISH POINTERS
+		// TODO MUST NOT PUBLISH POINTERS (WHO'S VALUES ARE LATER MODIFIED)
 		// if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
 		// 	if ptr := reflect.Indirect(val); ptr.IsValid() {
 		// 		fmt.Println("DANGER pointer value:", msg.Key)
