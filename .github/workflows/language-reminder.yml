@@ -28,6 +28,7 @@ jobs:
         uses: actions/github-script@v8
         env:
           COMMENT_BODY: ${{ github.event.comment.body }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           script: |
             // Use environment variable for security (prevents injection)
