@@ -780,6 +780,8 @@
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
       "arrivalTab": "Arrival",
+      "continuous":"Continous",
+      "continuousLong":"Continous",
       "day": "Day",
       "departureTab": "Departure",
       "goal": "Charging goal",

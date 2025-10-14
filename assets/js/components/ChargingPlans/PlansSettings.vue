@@ -240,7 +240,13 @@ export default defineComponent({
 		},
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
-			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
+			const params: Record<string, unknown> = {};
+			if (plan.precondition) {
+				params.precondition = plan.precondition;
+			}
+			if (plan.continuous) {
+				params.continuous = plan.continuous;
+			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
 				params
@@ -249,13 +255,27 @@ export default defineComponent({
 		async fetchRepeatingPreview(
 			plan: PartialBy<RepeatingPlan, "active">
 		): Promise<PlanResponse | undefined> {
+			const params: Record<string, unknown> = {};
+			if (plan.precondition) {
+				params.precondition = plan.precondition;
+			}
+			if (plan.continuous) {
+				params.continuous = plan.continuous;
+			}
 			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/repeating/preview/${plan.soc}/${plan.weekdays}/${plan.time}/${encodeURIComponent(plan.tz)}`
+				`loadpoints/${this.id}/plan/repeating/preview/${plan.soc}/${plan.weekdays}/${plan.time}/${encodeURIComponent(plan.tz)}`,
+				params
 			);
 		},
 		async fetchStaticPreviewEnergy(plan: StaticEnergyPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
-			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
+			const params: Record<string, unknown> = {};
+			if (plan.precondition) {
+				params.precondition = plan.precondition;
+			}
+			if (plan.continuous) {
+				params.continuous = plan.continuous;
+			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`,
 				params
@@ -295,6 +315,7 @@ export default defineComponent({
 							soc: plan.soc,
 							time: plan.time,
 							precondition: plan.precondition,
+							continuous: plan.continuous, // ← Hinzufügen
 						});
 					} else {
 						plan = plan as StaticEnergyPlan;
@@ -302,6 +323,7 @@ export default defineComponent({
 							energy: plan.energy,
 							time: plan.time,
 							precondition: plan.precondition,
+							continuous: plan.continuous, // ← Hinzufügen
 						});
 					}
 				} else {
@@ -310,7 +332,7 @@ export default defineComponent({
 					if (!plan) {
 						return;
 					}
-					const { weekdays, soc, time, tz, precondition } = plan;
+					const { weekdays, soc, time, tz, precondition, continuous } = plan;
 					if (weekdays.length === 0) {
 						return;
 					}
@@ -320,6 +342,7 @@ export default defineComponent({
 						time,
 						tz,
 						precondition,
+						continuous, // ← Hinzufügen
 					});
 				}
 				this.plan = planRes?.data ?? ({} as PlanWrapper);

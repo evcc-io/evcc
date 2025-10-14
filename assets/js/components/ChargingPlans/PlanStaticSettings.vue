@@ -32,6 +32,11 @@
 					{{ $t("main.chargingPlan.preconditionShort") }}
 				</label>
 			</div>
+			<div class="col-2">
+				<label :for="formId('continuous')">
+					{{ $t("main.chargingPlan.continuous") }}
+				</label>
+			</div>
 			<div class="col-1">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
@@ -125,6 +130,24 @@
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
+				<label :for="formId('continuous')">
+					{{ $t("main.chargingPlan.continuous") }}
+				</label>
+			</div>
+			<div class="col-7 col-lg-2 mb-2 mb-lg-0 d-flex align-items-center">
+				<div class="form-check form-switch">
+					<input
+					    :id="formId('continuous')"
+					    class="form-check-input"
+					    type="checkbox"
+					    role="switch"
+					    data-testid="static-plan-continuous"
+					    v-model="continuousPlanning"
+					    @change="preview(true)"
+					/>
+				</div>
+			</div>
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
@@ -212,6 +235,7 @@ export default defineComponent({
 		multiplePlans: Boolean,
 		precondition: Number,
 		showPrecondition: Boolean,
+		continuous: Boolean,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data() {
@@ -222,6 +246,7 @@ export default defineComponent({
 			selectedEnergy: this.energy,
 			active: false,
 			selectedPrecondition: this.precondition,
+			continuousPlanning: this.continuous ?? false,
 		};
 	},
 	computed: {
@@ -379,15 +404,16 @@ export default defineComponent({
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("static-plan-updated", {
+			this.$emit("plan-preview", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
 				precondition: this.selectedPrecondition,
+				continuous: this.continuousPlanning,
 			});
-		},
+			},
 		preview(force = false) {
-			if (!this.isNew && !force) {
+			if (!this.isNew && !force && !this.dataChanged) {
 				return;
 			}
 			this.$emit("plan-preview", {
@@ -395,6 +421,7 @@ export default defineComponent({
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
 				precondition: this.selectedPrecondition,
+				continuous: this.continuousPlanning,
 			});
 		},
 		toggle(e: Event) {

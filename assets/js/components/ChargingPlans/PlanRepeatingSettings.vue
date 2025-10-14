@@ -24,7 +24,7 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div :class="showPrecondition ? 'col-3' : 'col-4'">
+			<div :class="showPrecondition ? 'col-2' : 'col-3'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
@@ -32,6 +32,11 @@
 			<div v-if="showPrecondition" class="col-1">
 				<label :for="formId('precondition')">
 					{{ $t("main.chargingPlan.preconditionShort") }}
+				</label>
+			</div>
+			<div class="col-1">
+				<label :for="formId('continuous')">
+					{{ $t("main.chargingPlan.continuous") }}
 				</label>
 			</div>
 			<div class="col-1">
@@ -81,7 +86,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div :class="['col-7', showPrecondition ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
+			<div :class="['col-7', showPrecondition ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
 				<select
 					:id="formId('goal')"
 					v-model="selectedSoc"
@@ -108,6 +113,25 @@
 					v-model="selectedPrecondition"
 					testid="repeating-plan-precondition"
 				/>
+			</div>
+			<div class="col-5 d-lg-none col-form-label">
+				<label :for="formId('continuous')">
+					{{ $t("main.chargingPlan.continuous") }}
+				</label>
+			</div>
+			<div class="col-7 col-lg-1 mb-2 mb-lg-0 d-flex align-items-center">
+				<div class="form-check form-switch">
+					<input
+						:id="formId('continuous')"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						data-testid="repeating-plan-continuous"
+						v-model="selectedContinuous"
+						tabindex="0"
+						@change="update()"
+					/>
+				</div>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
@@ -172,6 +196,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
+import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "@/units";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import formatter from "@/mixins/formatter";
@@ -191,6 +216,7 @@ export default defineComponent({
 		tz: String,
 		soc: Number,
 		precondition: Number,
+		continuous: Boolean,
 		showHeader: Boolean,
 		active: Boolean,
 		rangePerSoc: Number,
@@ -205,6 +231,7 @@ export default defineComponent({
 			selectedSoc: this.soc,
 			selectedActive: this.active,
 			selectedPrecondition: this.precondition,
+			selectedContinuous: this.continuous ?? false,
 		};
 	},
 	computed: {
@@ -214,7 +241,8 @@ export default defineComponent({
 				this.time !== this.selectedTime ||
 				this.soc !== this.selectedSoc ||
 				this.active !== this.selectedActive ||
-				this.precondition !== this.selectedPrecondition
+				this.precondition !== this.selectedPrecondition ||
+				this.continuous !== this.selectedContinuous
 			);
 		},
 		showApply(): boolean {
@@ -251,6 +279,9 @@ export default defineComponent({
 		precondition(newValue: number) {
 			this.selectedPrecondition = newValue;
 		},
+		continuous(newValue: boolean) {
+			this.selectedContinuous = newValue;
+		},
 	},
 	methods: {
 		id(): number {
@@ -275,6 +306,7 @@ export default defineComponent({
 				tz: this.tz,
 				active: this.selectedActive,
 				precondition: this.selectedPrecondition,
+				continuous: this.selectedContinuous,
 			};
 
 			if (forceSave || !this.selectedActive) {
