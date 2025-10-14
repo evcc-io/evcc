@@ -47,8 +47,8 @@ params:
     example: "sensor.house_current_l1"
     advanced: true
     help:
-      en: Entity ID for L1 current measurement in amperes (optional)
-      de: Entitäts-ID für L1 Strommessung in Ampere (optional)
+      en: Entity ID for L1 current measurement in amperes
+      de: Entitäts-ID für L1 Strommessung in Ampere
   - name: currentL2
     description:
       de: L2 Stromentität
@@ -56,8 +56,8 @@ params:
     example: "sensor.house_current_l2"
     advanced: true
     help:
-      en: Entity ID for L2 current measurement in amperes (optional)
-      de: Entitäts-ID für L2 Strommessung in Ampere (optional)
+      en: Entity ID for L2 current measurement in amperes
+      de: Entitäts-ID für L2 Strommessung in Ampere
   - name: currentL3
     description:
       de: L3 Stromentität
@@ -65,8 +65,8 @@ params:
     example: "sensor.house_current_l3"
     advanced: true
     help:
-      en: Entity ID for L3 current measurement in amperes (optional)
-      de: Entitäts-ID für L3 Strommessung in Ampere (optional)
+      en: Entity ID for L3 current measurement in amperes
+      de: Entitäts-ID für L3 Strommessung in Ampere
   - name: voltageL1
     description:
       de: L1 Spannungsentität
@@ -74,8 +74,8 @@ params:
     example: "sensor.house_voltage_l1"
     advanced: true
     help:
-      en: Entity ID for L1 voltage measurement in volts (optional)
-      de: Entitäts-ID für L1 Spannungsmessung in Volt (optional)
+      en: Entity ID for L1 voltage measurement in volts
+      de: Entitäts-ID für L1 Spannungsmessung in Volt
   - name: voltageL2
     description:
       de: L2 Spannungsentität
@@ -83,8 +83,8 @@ params:
     example: "sensor.house_voltage_l2"
     advanced: true
     help:
-      en: Entity ID for L2 voltage measurement in volts (optional)
-      de: Entitäts-ID für L2 Spannungsmessung in Volt (optional)
+      en: Entity ID for L2 voltage measurement in volts
+      de: Entitäts-ID für L2 Spannungsmessung in Volt
   - name: voltageL3
     description:
       de: L3 Spannungsentität
@@ -92,8 +92,8 @@ params:
     example: "sensor.house_voltage_l3"
     advanced: true
     help:
-      en: Entity ID for L3 voltage measurement in volts (optional)
-      de: Entitäts-ID für L3 Spannungsmessung in Volt (optional)
+      en: Entity ID for L3 voltage measurement in volts
+      de: Entitäts-ID für L3 Spannungsmessung in Volt
 render: |
   type: homeassistant
   uri: {{ .uri }}
