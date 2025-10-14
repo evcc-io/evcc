@@ -80,3 +80,20 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 	}
 	return true
 }
+
+// countChargingWindows counts the number of separate charging windows in a plan
+// A window is considered separate if there's a gap between consecutive slots
+func countChargingWindows(plan api.Rates) int {
+	if len(plan) == 0 {
+		return 0
+	}
+
+	plan.Sort()
+	windows := 1
+	for i := 1; i < len(plan); i++ {
+		if !plan[i].Start.Equal(plan[i-1].End) {
+			windows++
+		}
+	}
+	return windows
+}
