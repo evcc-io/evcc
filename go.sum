@@ -694,6 +694,8 @@ github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 h1:+jumHNA0Wrel
 github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8/go.mod h1:3n1Cwaq1E1/1lhQhtRK2ts/ZwZEhjcQeJQ1RuC6Q/8U=
 github.com/spali/go-rscp v0.2.1 h1:WF5wmEWDsZayQCuMPLwgo89uO5GDkgzf47uKb04V75k=
 github.com/spali/go-rscp v0.2.1/go.mod h1:q03ZcXJw9UlC3ez2Qhye5c/7NVWVJajFgbSr3SXr/aQ=
+github.com/spali/go-rscp v0.2.2 h1:+3dBED09ZD5Hf9Kt9Etm9Yv7M43E5KPxDAZdFBUIRpc=
+github.com/spali/go-rscp v0.2.2/go.mod h1:rFBvIWKN4D36zA9YR6enXz1sLr0DmvSWR8kN4UFln0s=
 github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 h1:YDqvwAH/l3S4ZULmKlUYszPyLBjHq73CLuUPU+2jJeE=
 github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127/go.mod h1:nf5bOq6n8UugtmQiD3l0BzkE5VP4NvyngFZVkH3ZzgM=
 github.com/spf13/afero v1.15.0 h1:b/YBCLWAJdFWJTN9cLhiXXcD7mzKn9Dm86dNnfyQw1I=
