@@ -17,7 +17,7 @@ import (
 
 type E3dc struct {
 	mu          sync.Mutex
-	deviceIdx   uint8 // device index, usually 0 needed for powermeter and wallbox
+	deviceIdx   uint8 // device index, usually 0 for a single wallbox
 	e3dcSunMode bool
 	conn        *rscp.Client
 	retry       func() error
@@ -108,31 +108,35 @@ func NewE3dc(cfg rscp.ClientConfig, deviceIdx uint8, phases bool) (api.Charger, 
 }
 
 // retryMessage executes a single message request with retry
-func (m *E3dc) retryMessage(msg rscp.Message) (*rscp.Message, error) {
-	result, err := m.conn.Send(msg)
+func (wb *E3dc) retryMessage(msg rscp.Message) (*rscp.Message, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+	result, err := wb.conn.Send(msg)
 	if err == nil {
 		return result, nil
 	}
 
-	if err := m.retry(); err != nil {
+	if err := wb.retry(); err != nil {
 		return nil, err
 	}
 
-	return m.conn.Send(msg)
+	return wb.conn.Send(msg)
 }
 
 // retryMessages executes a multiple message request with retry
-func (m *E3dc) retryMessages(msgs []rscp.Message) ([]rscp.Message, error) {
-	result, err := m.conn.SendMultiple(msgs)
+func (wb *E3dc) retryMessages(msgs []rscp.Message) ([]rscp.Message, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+	result, err := wb.conn.SendMultiple(msgs)
 	if err == nil {
 		return result, nil
 	}
 
-	if err := m.retry(); err != nil {
+	if err := wb.retry(); err != nil {
 		return nil, err
 	}
 
-	return m.conn.SendMultiple(msgs)
+	return wb.conn.SendMultiple(msgs)
 }
 
 func (wb *E3dc) CurrentPower() (float64, error) {
@@ -158,7 +162,6 @@ func (wb *E3dc) getPhasePowers() (float64, float64, float64, error) {
 }
 
 func (wb *E3dc) Status() (api.ChargeStatus, error) {
-
 	data, err := ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil)}, []rscp.Tag{rscp.WB_EXTERN_DATA}, cast.ToUint8SliceE)
 	status_byte := data[0][2]
 	if err != nil {
@@ -179,22 +182,9 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *E3dc) Enabled() (bool, error) {
-	wb.TestWallboxExternData()
-	wb.GetEmsStatus()
-	wb.TestWallboxTags()
-	//
-	res22, err22 := wb.retryMessage(*rscp.NewMessage(rscp.EMS_REQ_SET_OVERRIDE_AVAILABLE_POWER, int32(0)))
-	if err22 != nil {
-		return false, err22
-	}
-	_, err33 := rscpValue(*res22, cast.ToBoolE)
-	if err33 != nil {
-		return false, err33
-	}
-
-	stat, err4 := wb.Status()
-	if err4 != nil {
-		return false, err4
+	stat, err := wb.Status()
+	if err != nil {
+		return false, err
 	}
 
 	switch stat {
@@ -225,18 +215,18 @@ func (wb *E3dc) Enable(enable bool) error {
 	}
 
 	// Set E3DC to Sunmode if charger is disabled to avoid Netcharging
-	_, err = ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_SET_SUN_MODE_ACTIVE, true)}, nil, cast.ToUint8E)
+	_, err = ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_SET_SUN_MODE_ACTIVE, !enable)}, nil, cast.ToUint8E)
 	if err != nil {
 		return err
 	}
 	// Set E3DC override power to 0 if charger is disabled to avoid charging
 	if enable {
-		_, err = ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.EMS_REQ_SET_OVERRIDE_AVAILABLE_POWER, uint32(11000))}, nil, cast.ToUint8E)
+		_, err = wb.retryMessage(*rscp.NewMessage(rscp.EMS_REQ_SET_OVERRIDE_AVAILABLE_POWER, int32(11000)))
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err = ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.EMS_REQ_SET_OVERRIDE_AVAILABLE_POWER, uint32(0))}, nil, cast.ToUint8E)
+		_, err = wb.retryMessage(*rscp.NewMessage(rscp.EMS_REQ_SET_OVERRIDE_AVAILABLE_POWER, int32(0)))
 		if err != nil {
 			return err
 		}
@@ -299,8 +289,6 @@ func (wb *E3dc) TotalEnergy() (float64, error) {
 }
 
 func (wb *E3dc) SetEmsStatus(e3dc_battery_prio bool, battery2car bool, epWbAllow bool) error {
-
-	// ---------------------------------
 	res, err := wb.retryMessages([]rscp.Message{
 		*rscp.NewMessage(rscp.EMS_REQ_SET_BATTERY_BEFORE_CAR_MODE, e3dc_battery_prio),
 		*rscp.NewMessage(rscp.EMS_REQ_SET_BATTERY_TO_CAR_MODE, battery2car),
@@ -362,8 +350,6 @@ func (wb *E3dc) GetEmsStatus() (bool, bool, bool, error) {
 }
 
 func ReadComplexTags[T any](wb *E3dc, req_msg []rscp.Message, rsp_tags []rscp.Tag, fun func(any) (T, error)) ([]T, error) {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
 	var zero []T
 	var zeroval T
 
@@ -378,11 +364,12 @@ func ReadComplexTags[T any](wb *E3dc, req_msg []rscp.Message, rsp_tags []rscp.Ta
 	if err != nil {
 		return zero, err
 	}
-	if rsp_tags == nil && len(values) == 2 { // One overhead tag WB_INDEX
+	if len(tags) == 1 && len(values) == 1 { // only WB_INDEX
+		return []T{values[0]}, errors.New("Received only WB_INDEX, no data tag")
+	} else if rsp_tags == nil && len(values) == 2 { // One overhead tag WB_INDEX
 		for i, tag := range tags {
 			if tag != rscp.WB_INDEX {
 				return []T{values[i]}, nil
-				break
 			}
 		}
 		return zero, nil
@@ -478,9 +465,6 @@ func rscpValuesWithTag[T any](msg []rscp.Message, fun func(any) (T, error)) ([]r
 // ######################################################################################################
 // Test functions and tags
 func (m *E3dc) ReadFromWBTestTags(wb_idx uint8) ([3]float64, float64, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	var power = [3]float64{0}
 	var total_energy = float64(0)
 
@@ -560,8 +544,6 @@ func (m *E3dc) ReadFromWBTestTags(wb_idx uint8) ([3]float64, float64, error) {
 }
 
 func (wb *E3dc) TestWallboxExternData() (map[string]uint64, error) {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
 	outObj := map[string]uint64{}
 
 	request := *rscp.NewMessage(
@@ -677,9 +659,6 @@ func (wb *E3dc) TestWallboxExternData() (map[string]uint64, error) {
 	return outObj, nil
 }
 func (wb *E3dc) TestWallboxSetExternData(current, mode, switchPases, cancelCharging uint8) error {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
 	var newData = make([]uint8, 6)
 	newData[0] = current        // current in amps
 	newData[1] = mode           // 1 = SunMode, 2 = Mixed
