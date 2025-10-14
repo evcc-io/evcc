@@ -30,7 +30,7 @@ jobs:
           model: openai/gpt-4o-mini
           prompt-file: .github/prompts/language-check.prompt.yml
           input: |
-            comment: ${{ github.event.comment.body }}
+            comment: ${{ toJson(github.event.comment.body) }}
 
       - name: Post reminder if non-English
         if: steps.language_check.outputs.response != ''
