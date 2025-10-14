@@ -145,7 +145,7 @@ func (t *Stekker) run(done chan error) {
 				}
 
 				duration := time.Hour
-				if strings.HasSuffix(t.region, "-900") {
+				if t.region == "BE" || t.region == "NL" {
 					duration = 15 * time.Minute
 				}
 
