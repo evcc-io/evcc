@@ -146,7 +146,7 @@ evcc has a large German-speaking user base, but we want to be open and accessibl
 - **GitHub Discussions**
   - 🇬🇧 🇩🇪 Both English and German allowed
 
-💬 _Non-German speakers: We'll stronglyencourage you to ask participants to switch to English. For pull requests, we have a language check bot that does this automatically._
+💬 _Non-German speakers: We strongly encourage you to ask participants to switch to English. For pull requests, we have a language check bot that does this automatically._
 
 Thank you all for helping make evcc accessible! 🌍
 
