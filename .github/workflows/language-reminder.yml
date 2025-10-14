@@ -1,0 +1,54 @@
+name: Language Reminder
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+  models: read
+
+jobs:
+  check-language:
+    name: Check Comment Language
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request || github.event.pull_request
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check language
+        id: language_check
+        uses: actions/ai-inference@v2
+        with:
+          model: openai/gpt-4o-mini
+          prompt-file: .github/prompts/language-check.prompt.yml
+          input: |
+            comment: ${{ github.event.comment.body }}
+
+      - name: Post reminder if non-English
+        if: steps.language_check.outputs.response != ''
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const analysis = JSON.parse('${{ steps.language_check.outputs.response }}');
+            console.log('Analysis:', analysis);
+
+            if (analysis.is_non_english) {
+              const comment = context.payload.comment;
+              await github.rest.pulls.createReviewComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                body: `@${comment.user.login} 🇬🇧 Please use English so everyone can participate. See [Contributing Guidelines](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/CONTRIBUTING.md#communication-language).`,
+                commit_id: comment.commit_id,
+                path: comment.path,
+                in_reply_to: comment.id
+              });
+            }
