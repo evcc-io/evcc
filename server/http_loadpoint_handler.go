@@ -80,7 +80,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-		
+
 		switch typ := vars["type"]; typ {
 		case "soc":
 			if !lp.SocBasedPlanning() {

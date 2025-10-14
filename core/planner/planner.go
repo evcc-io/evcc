@@ -313,7 +313,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 		// sort plan by time
 		plan.Sort()
-		
+
 		return plan
 	}
 

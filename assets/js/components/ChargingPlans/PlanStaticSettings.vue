@@ -404,16 +404,16 @@ export default defineComponent({
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("plan-preview", {
+			this.$emit("static-plan-updated", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
 				precondition: this.selectedPrecondition,
 				continuous: this.continuousPlanning,
 			});
-			},
+		},
 		preview(force = false) {
-			if (!this.isNew && !force && !this.dataChanged) {
+			if (!this.isNew && !force) {
 				return;
 			}
 			this.$emit("plan-preview", {

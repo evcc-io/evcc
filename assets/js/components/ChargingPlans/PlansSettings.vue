@@ -315,7 +315,7 @@ export default defineComponent({
 							soc: plan.soc,
 							time: plan.time,
 							precondition: plan.precondition,
-							continuous: plan.continuous, // ← Hinzufügen
+							continuous: plan.continuous,
 						});
 					} else {
 						plan = plan as StaticEnergyPlan;
@@ -323,7 +323,7 @@ export default defineComponent({
 							energy: plan.energy,
 							time: plan.time,
 							precondition: plan.precondition,
-							continuous: plan.continuous, // ← Hinzufügen
+							continuous: plan.continuous,
 						});
 					}
 				} else {
@@ -342,7 +342,7 @@ export default defineComponent({
 						time,
 						tz,
 						precondition,
-						continuous, // ← Hinzufügen
+						continuous,
 					});
 				}
 				this.plan = planRes?.data ?? ({} as PlanWrapper);
