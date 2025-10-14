@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"golang.org/x/oauth2"
 )
 
 // Provider implements the vehicle api
@@ -14,14 +15,23 @@ type Provider struct {
 	odoG    func() (OdometerState, error)
 }
 
+func tokenGuard[T any](fun func(string) (T, error), ts oauth2.TokenSource, vin string) (T, error) {
+	// don't try as long as there's no token
+	if _, err := ts.Token(); err != nil {
+		var zero T
+		return zero, api.ErrNotAvailable
+	}
+	return fun(vin)
+}
+
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(api *API, ts oauth2.TokenSource, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: util.Cached(func() (EnergyState, error) {
-			return api.EnergyState(vin)
+			return tokenGuard(api.EnergyState, ts, vin)
 		}, cache),
 		odoG: util.Cached(func() (OdometerState, error) {
-			return api.OdometerState(vin)
+			return tokenGuard(api.OdometerState, ts, vin)
 		}, cache),
 	}
 	return impl

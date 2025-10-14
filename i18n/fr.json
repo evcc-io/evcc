@@ -103,7 +103,7 @@
       "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "no": "non",
-      "odometer": "Kilométrage",
+      "odometer": "Compteur kilométrique",
       "org": "Organisation",
       "phaseCurrents": "Courant L1, L2, L3",
       "phasePowers": "Puissance L1, L2, L3",
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Consommateur intelligent",
       "batteryStorage": "Batterie",
+      "consumer": "Consommateur",
       "solarSystem": "Système photovoltaïque"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Peut être utilisé pour la gestion de la charge ou à des fins statistiques.",
-      "titleAdd": "Ajouter un compteur externe",
-      "titleEdit": "Modifier le compteur externe"
+      "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisé pour de la gestion de charge (par ex. Sous-distribution).",
+      "titleAdd": "Ajouter un compteur de consommateur",
+      "titleEdit": "Modifier le compteur de consommateur"
     },
     "form": {
       "danger": "Attention",
@@ -165,6 +166,7 @@
       "dragItem": "Déplaçable : {title}",
       "dragList": "Liste à ordonner",
       "experimental": "Expérimental",
+      "forceSave": "Enregistrer quand même",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
       "noFileSelected": "Aucun fichier sélectionné.",
@@ -176,6 +178,8 @@
       "required": "obligatoire",
       "reset": "Réinitialiser",
       "save": "Enregistrer",
+      "saved": "Enregistré.",
+      "saving": "Enregistrement en cours…",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
       "telemetry": "Télémétrie",
@@ -193,7 +197,8 @@
       "title": "SGED"
     },
     "icon": {
-      "change": "changer"
+      "change": "changer",
+      "label": "Icône"
     },
     "influx": {
       "description": "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données.",
@@ -328,7 +333,7 @@
       "title": "Configuration",
       "unconfigured": "non configuré",
       "vehicles": "Mes véhicules",
-      "yaml": "Les appareils provenant de evcc.yaml ne sont pas modifiables."
+      "yaml": "Un appareil provenant du evcc.yaml n’est pas modifiable."
     },
     "messaging": {
       "description": "Recevoir des messages à propos de vos sessions de charge.",
@@ -341,13 +346,22 @@
       "option": {
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
-        "ext": "Ajouter un compteur externe",
+        "ext": "Ajouter un consommateur régulier",
         "pv": "Ajouter un compteur solaire"
       },
       "save": "Enregistrer",
       "specific": "Intégrations spécifiques",
       "template": "Fabricant",
       "titleChoice": "Que voulez-vous ajouter ?",
+      "titleLabel": "Titre",
+      "usage": {
+        "aux": "Compteur de consommateur auto-régulé",
+        "battery": "Compteur de batterie",
+        "charge": "Compteur de chargeur",
+        "grid": "Compteur du réseau",
+        "label": "Utilisation",
+        "pv": "Compteur production solaire"
+      },
       "validateSave": "Valider et enregistrer"
     },
     "modbus": {
@@ -523,7 +537,7 @@
     "validation": {
       "failed": "échec",
       "label": "Statut",
-      "running": "en cours de validation…",
+      "running": "En cours de validation…",
       "success": "réussi",
       "unknown": "inconnu",
       "validate": "valider"
@@ -655,6 +669,7 @@
     "about": "À propos",
     "authProviders": {
       "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
+      "loggedOut": "Déconnexion réussie",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
@@ -1143,7 +1158,7 @@
   },
   "smartCost": {
     "activeHours": "{active} sur {total}",
-    "activeHoursLabel": "Heures actives",
+    "activeHoursLabel": "Temps actif",
     "applyToAll": "Appliquer partout ?",
     "batteryDescription": "Charge la batterie domestique avec du courant du réseau.",
     "cheapTitle": "Charge bon marché depuis le réseau",
@@ -1160,7 +1175,7 @@
     "saved": "Enregistré."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Heures de pause",
+    "activeHoursLabel": "Temps de pause",
     "description": "La charge est interrompue lorsque les prix sont élevés afin de donner la priorité à l'alimentation rentable du réseau.",
     "priceLabel": "Taux d'alimentation",
     "priceLimit": "Limite d'alimentation",

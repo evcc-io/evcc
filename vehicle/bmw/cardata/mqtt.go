@@ -67,7 +67,7 @@ func (v *MqttConnector) Unsubscribe(vin string) {
 }
 
 func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute))
 
 	for ctx.Err() == nil {
 		time.Sleep(bo.NextBackOff())
@@ -115,13 +115,15 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	}
 	defer paho.Disconnect(1000)
 
-	topic := fmt.Sprintf("%s/#", gcid)
+	topic := fmt.Sprintf("%s/+", gcid)
 
 	if t := paho.Subscribe(topic, 0, v.handler); !t.WaitTimeout(timeout) {
 		return errors.New("subcribe timeout")
 	} else if err := t.Error(); err != nil {
 		return fmt.Errorf("subscribe: %w", err)
 	}
+
+	v.log.DEBUG.Println("connected streaming")
 
 	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
 	defer cancel()
