@@ -80,7 +80,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-
+		
 		switch typ := vars["type"]; typ {
 		case "soc":
 			if !lp.SocBasedPlanning() {
@@ -99,7 +99,16 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, precondition)
+		
+		continuous := false
+		if contStr := query.Get("continuous"); contStr != "" {
+			continuous, err = strconv.ParseBool(contStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid continuous flag: %w", err))
+				return
+			}
+		}
+		plan := lp.GetPlan(planTime, requiredDuration, precondition, continuous)
 
 		res := PlanPreviewResponse{
 			PlanTime:     planTime,
@@ -151,7 +160,16 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, precondition)
+		
+		continuous := false
+		if contStr := query.Get("continuous"); contStr != "" {
+			continuous, err = strconv.ParseBool(contStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid continuous flag: %w", err))
+				return
+			}
+		}
+		plan := lp.GetPlan(planTime, requiredDuration, precondition, continuous)
 
 		res := PlanPreviewResponse{
 			PlanTime:     planTime,

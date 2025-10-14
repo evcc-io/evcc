@@ -94,12 +94,12 @@ func (lp *Loadpoint) GetPlanPreCondDuration() time.Duration {
 
 // GetPlan creates a charging plan for given time and duration
 // The plan is sorted by time
-func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continous ...bool) api.Rates {
 	if lp.planner == nil || targetTime.IsZero() {
 		return nil
 	}
 
-	return lp.planner.Plan(requiredDuration, precondition, targetTime)
+	return lp.planner.Plan(requiredDuration, precondition, targetTime, continous...)
 }
 
 // plannerActive checks if the charging plan has a currently active slot
