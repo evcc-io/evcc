@@ -167,8 +167,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if hv == "CHARGING" {
-		status = api.StatusC
+	if err != nil || hv == "" || hv == "INVALID" {
+		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.status")
+	}
+
+	if slices.Contains([]string{
+		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"CHARGINGACTIVE", // vehicle.drivetrain.electricEngine.charging.status
+	}, hv) {
+		return api.StatusC, nil
 	}
 
 	return status, err
@@ -208,5 +215,13 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
 	res, err := v.String("vehicle.cabin.hvac.preconditioning.status.comfortState")
-	return slices.Contains([]string{"COMFORT_HEATING", "COMFORT_COOLING", "COMFORT_VENTILATION", "DEFROST"}, res), err
+	if err == nil && res != "" {
+		return slices.Contains([]string{"COMFORT_HEATING", "COMFORT_COOLING", "COMFORT_VENTILATION", "DEFROST"}, res), nil
+	}
+
+	if res, err = v.String("vehicle.vehicle.preConditioning.activity"); err == nil {
+		return slices.Contains([]string{"HEATING", "COOLING", "VENTILATION"}, res), nil
+	}
+
+	return false, err
 }

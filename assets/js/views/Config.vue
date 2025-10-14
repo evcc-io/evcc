@@ -80,22 +80,14 @@
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<div class="p-0 config-list">
-						<DeviceCard
+						<MeterCard
 							v-if="gridMeter"
-							:title="$t('config.grid.title')"
-							:name="gridMeter.name"
-							:editable="!!gridMeter.id"
-							:error="hasDeviceError('meter', gridMeter.name)"
-							data-testid="grid"
-							@edit="editMeter('grid', gridMeter.id)"
-						>
-							<template #icon>
-								<shopicon-regular-powersupply></shopicon-regular-powersupply>
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', gridMeter.name)" />
-							</template>
-						</DeviceCard>
+							:meter="gridMeter"
+							meter-type="grid"
+							:has-error="hasDeviceError('meter', gridMeter.name)"
+							:tags="deviceTags('meter', gridMeter.name)"
+							@edit="editMeter"
+						/>
 						<NewDeviceButton
 							v-else
 							:title="$t('config.main.addGrid')"
@@ -126,48 +118,24 @@
 					</div>
 					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
 					<div class="p-0 config-list">
-						<DeviceCard
+						<MeterCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="
-								meter.deviceTitle ||
-								meter.config?.template ||
-								$t('config.devices.solarSystem')
-							"
-							:name="meter.name"
-							:editable="!!meter.id"
-							:error="hasDeviceError('meter', meter.name)"
-							data-testid="pv"
-							@edit="editMeter('pv', meter.id)"
-						>
-							<template #icon>
-								<shopicon-regular-sun></shopicon-regular-sun>
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', meter.name)" />
-							</template>
-						</DeviceCard>
-						<DeviceCard
+							:meter="meter"
+							meter-type="pv"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
+						<MeterCard
 							v-for="meter in batteryMeters"
 							:key="meter.name"
-							:title="
-								meter.deviceTitle ||
-								meter.config?.template ||
-								$t('config.devices.batteryStorage')
-							"
-							:name="meter.name"
-							:editable="!!meter.id"
-							:error="hasDeviceError('meter', meter.name)"
-							data-testid="battery"
-							@edit="editMeter('battery', meter.id)"
-						>
-							<template #icon>
-								<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', meter.name)" />
-							</template>
-						</DeviceCard>
+							:meter="meter"
+							meter-type="battery"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
 						<NewDeviceButton
 							:title="$t('config.main.addPvBattery')"
 							@click="addSolarBatteryMeter"
@@ -176,27 +144,24 @@
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }} 🧪</h2>
 					<div class="p-0 config-list">
-						<DeviceCard
+						<MeterCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
-							:title="
-								meter.deviceTitle ||
-								meter.config?.template ||
-								$t('config.devices.auxMeter')
-							"
-							:name="meter.name"
-							:editable="!!meter.id"
-							:error="hasDeviceError('meter', meter.name)"
-							data-testid="aux"
-							@edit="editMeter('aux', meter.id)"
-						>
-							<template #icon>
-								<VehicleIcon :name="meter.deviceIcon || 'smartconsumer'" />
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', meter.name)" />
-							</template>
-						</DeviceCard>
+							:meter="meter"
+							meter-type="aux"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
+						<MeterCard
+							v-for="meter in extMeters"
+							:key="meter.name"
+							:meter="meter"
+							meter-type="ext"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
 						<NewDeviceButton
 							:title="$t('config.main.addAdditional')"
 							@click="newAdditionalMeter"
@@ -436,6 +401,7 @@ import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
+import MeterCard from "../components/Config/MeterCard.vue";
 import Modal from "bootstrap/js/dist/modal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
@@ -461,7 +427,7 @@ import type {
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
-	SelectedMeterType,
+	MeterType,
 	SiteConfig,
 	DeviceType,
 } from "@/types/evcc";
@@ -495,6 +461,7 @@ export default defineComponent({
 		InfluxModal,
 		MessagingModal,
 		MeterModal,
+		MeterCard,
 		LoadpointModal,
 		LoadpointIcon,
 		ModbusProxyIcon,
@@ -526,8 +493,8 @@ export default defineComponent({
 			circuits: [] as ConfigCircuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
-			selectedMeterType: undefined as SelectedMeterType | undefined,
-			selectedMeterTypeChoices: [] as string[],
+			selectedMeterType: undefined as MeterType | undefined,
+			selectedMeterTypeChoices: [] as MeterType[],
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
 			selectedLoadpointType: undefined as LoadpointType | undefined,
@@ -838,12 +805,12 @@ export default defineComponent({
 			this.loadpointModal().hide();
 			this.$nextTick(() => this.editMeter("charge", meter?.id));
 		},
-		editMeter(type: SelectedMeterType, id?: number) {
+		editMeter(type: MeterType, id?: number) {
 			this.selectedMeterType = type;
 			this.selectedMeterId = id;
 			this.$nextTick(() => this.meterModal().show());
 		},
-		newMeter(type: SelectedMeterType) {
+		newMeter(type: MeterType) {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
@@ -851,13 +818,13 @@ export default defineComponent({
 		addSolarBatteryMeter() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["pv", "battery"];
+			this.selectedMeterTypeChoices = ["pv", "battery"] as MeterType[];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		newAdditionalMeter() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["aux", "ext"];
+			this.selectedMeterTypeChoices = ["aux", "ext"] as MeterType[];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		editCharger(id?: number, loadpointType?: LoadpointType) {
@@ -912,7 +879,7 @@ export default defineComponent({
 		yamlChanged() {
 			this.loadDirty();
 		},
-		meterAdded(type: SelectedMeterType, name: string) {
+		meterAdded(type: MeterType, name: string) {
 			if (type === "charge") {
 				// update loadpoint
 				(
@@ -946,7 +913,7 @@ export default defineComponent({
 			}
 			this.meterChanged();
 		},
-		meterRemoved(type: SelectedMeterType) {
+		meterRemoved(type: MeterType) {
 			if (type === "charge") {
 				// update loadpoint
 				(

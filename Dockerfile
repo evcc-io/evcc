@@ -11,6 +11,7 @@ RUN npm ci
 
 # build ui
 COPY Makefile .
+COPY *.js ./
 COPY .*.ts .*.mts ./
 COPY *.ts *.mts ./
 COPY assets assets

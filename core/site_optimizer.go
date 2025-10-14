@@ -228,10 +228,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		bat := evopt.BatteryConfig{
 			CMax:     batteryPower,
 			DMax:     batteryPower,
-			SMax:     float32(*b.Capacity * 1e3),         // Wh
 			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
 			PA:       pa,
 		}
+		bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
 
 		instance := dev.Instance()
 
@@ -392,7 +392,7 @@ func prorateFirstSlot(profile []float64, firstSlotDuration time.Duration) []floa
 
 	// Take only slots from current hour onwards
 	res := profile[firstSlot:]
-	res[0] *= float64(firstSlotDuration / tariff.SlotDuration)
+	res[0] *= float64(firstSlotDuration) / float64(tariff.SlotDuration)
 
 	return res
 }
