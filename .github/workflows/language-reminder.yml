@@ -23,34 +23,72 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Prepare input
-        id: prepare
-        shell: bash
-        env:
-          COMMENT_BODY: ${{ github.event.comment.body }}
-        run: |
-          # Use environment variable for security (prevents injection)
-          # Write comment to file to avoid YAML escaping issues
-          printf '%s' "$COMMENT_BODY" > /tmp/comment.txt
-
       - name: Check language
         id: language_check
-        uses: actions/ai-inference@v2
+        uses: actions/github-script@v8
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
         with:
-          model: openai/gpt-4o-mini
-          prompt-file: .github/prompts/language-check.prompt.yml
-          file_input: |
-            comment: /tmp/comment.txt
+          script: |
+            // Use environment variable for security (prevents injection)
+            const commentBody = process.env.COMMENT_BODY;
+
+            const response = await fetch('https://models.github.ai/inference/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'openai/gpt-4o-mini',
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'Determine if a user comment requires a language reminder. This project requires English communication to ensure everyone can participate. Exceptions: very brief comments (1-5 words), comments mixing English with technical native language terms (e.g. "Bundesnetzagentur", "Einspeisevergütung"), or uncertain cases should not be flagged. Return true if the comment is predominantly non-English (especially German) and requires a reminder, false otherwise.'
+                  },
+                  {
+                    role: 'user',
+                    content: commentBody
+                  }
+                ],
+                response_format: {
+                  type: 'json_schema',
+                  json_schema: {
+                    name: 'language_check',
+                    strict: true,
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        requires_reminder: { type: 'boolean' }
+                      },
+                      required: ['requires_reminder'],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                max_tokens: 200
+              })
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Inference failed: ${response.statusText} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            const analysis = JSON.parse(result.choices[0].message.content);
+            core.setOutput('analysis', JSON.stringify(analysis));
+            return analysis;
 
       - name: Post reminder if non-English
-        if: steps.language_check.outputs.response != ''
+        if: steps.language_check.outputs.analysis != ''
         uses: actions/github-script@v8
         with:
           script: |
-            const analysis = JSON.parse('${{ steps.language_check.outputs.response }}');
+            const analysis = JSON.parse('${{ steps.language_check.outputs.analysis }}');
             console.log('Analysis:', analysis);
 
-            if (analysis.is_non_english) {
+            if (analysis.requires_reminder) {
               const comment = context.payload.comment;
               await github.rest.pulls.createReviewComment({
                 owner: context.repo.owner,
