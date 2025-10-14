@@ -11,9 +11,6 @@ import (
 )
 
 const (
-	// DefaultMaxChargingWindows is the default for unlimited charging windows
-	//DefaultMaxChargingWindows = 0
-	
 	// DefaultAllowSlotGap is the default to reduce costs
 	DefaultAllowSlotGap = 1
 )
@@ -406,14 +403,27 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	}
 
 	// minimize charging windows, avoid small gaps
-	//if t.maxChargingWindows == 2 {
-	if t.minGap > 1  {	
-		plan = t.optimizeChargingWindows(plan, originalRates, requiredDuration)
-		if precondition > 0 {
-			plan = t.ensurePreconditioningWindow(plan, precondition, targetTime, originalRates)
+		if t.minGap > 1  {	
+			plan = t.optimizeChargingWindows(plan, originalRates, requiredDuration)
+			
+			// Fallback to single-window if cheaper than optimized multi-slot plan
+			if len(plan) > 1 {
+			    singleWindowPlan := t.planSingleWindow(originalRates, requiredDuration, precondition, targetTime)
+			    if singleWindowPlan != nil {
+			        multiCost := t.calculateTotalCostWithRates(plan, originalRates)
+			        singleCost := t.calculateTotalCostWithRates(singleWindowPlan, originalRates)
+			        
+			        if singleCost < multiCost {
+			            t.log.DEBUG.Printf("Single-window is cheaper, using it instead of multi-slot plan")
+			            plan = singleWindowPlan
+			        }
+			    }
+			}
+			if precondition > 0 {
+				plan = t.ensurePreconditioningWindow(plan, precondition, targetTime, originalRates)
+			}
 		}
-	}
-
+		
 	// recalculate costs
 	plan = t.correctPricesFromOriginalRates(plan, originalRates)
 
