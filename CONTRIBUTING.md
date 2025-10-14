@@ -136,20 +136,19 @@ make ui build
 
 ## Communication Language
 
-### Issues and Pull Requests
+evcc has a large German-speaking user base, but we want to be open and accessible to everyone in the global community. To balance these needs:
 
-**English is required for all issues and pull requests.** This ensures that everyone can participate and benefit from technical discussions.
+- **Pull Requests**
+  - 🇬🇧 English required
+- **Issues**
+  - 🇬🇧 English recommended
+  - 🇩🇪 German acceptable to start, must switch to English after first English comment
+- **GitHub Discussions**
+  - 🇬🇧 🇩🇪 Both English and German allowed
 
-We understand that:
-- Technical terms may not always have good English translations (e.g., "Bundesnetzagentur", "Einspeisevergütung")
-- You can mix native language terms with English when needed
-- The goal is understanding, not perfection
+💬 _Non-German speakers: We'll stronglyencourage you to ask participants to switch to English. For pull requests, we have a language check bot that does this automatically._
 
-### GitHub Discussions
-
-English is preferred but not required for GitHub Discussions. When in doubt, respond in the language of the discussion starter.
-
-Thank you for helping make evcc accessible! 🌍
+Thank you all for helping make evcc accessible! 🌍
 
 ## Adding or modifying translations
 
