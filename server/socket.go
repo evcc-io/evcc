@@ -119,7 +119,7 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		msg[k] = json.RawMessage(kv(p.Val))
+		msg[k] = json.RawMessage(socketEncode(p.Val))
 	}
 
 	b, err := json.Marshal(msg)
@@ -154,10 +154,10 @@ func (h *SocketHub) broadcast(p util.Param) {
 		}
 
 		for _, shard := range shards {
-			msg[k+"."+shard.Key] = json.RawMessage(kv(shard.Value))
+			msg[k+"."+shard.Key] = json.RawMessage(socketEncode(shard.Value))
 		}
 	} else {
-		msg[k] = json.RawMessage(kv(p.Val))
+		msg[k] = json.RawMessage(socketEncode(p.Val))
 	}
 
 	b, err := json.Marshal(msg)

@@ -30,7 +30,7 @@ func encodeSliceAsString(v any) (string, error) {
 	return fmt.Sprintf("[%s]", strings.Join(res, ",")), nil
 }
 
-func kv(pval any) string {
+func socketEncode(pval any) string {
 	var (
 		val string
 		err error
