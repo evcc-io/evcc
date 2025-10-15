@@ -711,7 +711,7 @@ export default defineComponent({
 .battery-soc-value {
 	font-size: 1rem;
 	font-weight: 600;
-	color: var(--bs-body-color);
+	color: var(--evcc-default-text);
 	width: 100%;
 	text-align: center;
 }
