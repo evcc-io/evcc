@@ -692,6 +692,7 @@ export default defineComponent({
 .battery-soc-value {
 	font-size: 0.75rem;
 	font-weight: 400;
+	line-height: 0.9;
 	white-space: nowrap;
 }
 </style>
