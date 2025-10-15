@@ -13,6 +13,7 @@ const (
 	Shm                = "shm"
 	Messaging          = "messaging"
 	ModbusProxy        = "modbusproxy"
+	Ocpp               = "ocpp"
 	Tariffs            = "tariffs"
 	Version            = "version"
 	Config             = "config"

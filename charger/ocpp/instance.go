@@ -16,10 +16,22 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
+const (
+	Port = 8887
+)
+
 var (
 	once     sync.Once
 	instance *CS
 )
+
+// Status returns the OCPP status
+func Status() status {
+	if instance == nil {
+		return status{}
+	}
+	return instance.status()
+}
 
 func Instance() *CS {
 	once.Do(func() {
@@ -55,7 +67,7 @@ func Instance() *CS {
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 
 		go instance.errorHandler(cs.Errors())
-		go cs.Start(8887, "/{ws}")
+		go cs.Start(Port, "/{ws}")
 
 		// wait for server to start
 		for range time.Tick(10 * time.Millisecond) {

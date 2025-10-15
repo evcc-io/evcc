@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
@@ -157,12 +158,19 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI listening at http://127.0.0.1:%d/", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
+
+	// start OCPP server
+	ocppCS := ocpp.Instance()
+	ocppCS.SetUpdated(func() {
+		valueChan <- util.Param{Key: keys.Ocpp, Val: ocpp.Status()}
+	})
+	log.INFO.Printf("OCPP listening at ws://127.0.0.1:%d/<stationId>", ocpp.Port)
 
 	// value cache
 	cache := util.NewParamCache()
@@ -290,6 +298,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
+	valueChan <- util.Param{Key: keys.Ocpp, Val: ocpp.Status()}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// publish system infos
