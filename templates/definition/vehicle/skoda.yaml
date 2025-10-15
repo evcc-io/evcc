@@ -6,6 +6,6 @@ params:
   - preset: vehicle-base
   - name: timeout
 render: |
-  type: enyaq
+  type: skoda
   {{ include "vehicle-base" . }}
   timeout: {{ .timeout }}
