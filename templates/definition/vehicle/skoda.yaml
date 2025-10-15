@@ -1,13 +1,10 @@
-template: enyaq
-covers: ["skoda"]
+template: skoda
+covers: ["enyaq"]
 products:
   - brand: Skoda
-    description:
-      generic: Enyaq
 params:
   - preset: vehicle-base
   - name: timeout
-    default: 10s
 render: |
   type: enyaq
   {{ include "vehicle-base" . }}
