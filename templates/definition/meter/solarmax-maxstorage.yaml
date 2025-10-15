@@ -44,15 +44,6 @@ render: |
       decode: int32s
   maxacpower: {{ .maxacpower }}
   {{- end }}
-  energy:
-  {{- if eq .usage "pv" }}
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 150 # Produzierte PV-Energie
-      type: input
-      decode: int32s
-  {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -61,6 +52,15 @@ render: |
       type: input
       decode: int32s
     scale: -1
+  energy:
+  {{- if eq .usage "pv" }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 150 # Produzierte PV-Energie
+      type: input
+      decode: int32s
+  {{- end }} 
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
