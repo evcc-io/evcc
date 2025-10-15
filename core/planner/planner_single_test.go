@@ -60,5 +60,5 @@ func TestSinglePlanContinuousWindow(t *testing.T) {
 
 	// Use InDelta for float comparison with tolerance
 	const delta = 0.01
-	assert.InDelta(t, 0.21, plan[0].Value, delta, "plan value should be the cheapest")
+	assert.InDelta(t, 0.105, plan[0].Value, delta, "plan value should be the cheapest")
 }

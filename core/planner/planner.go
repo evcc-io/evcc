@@ -256,23 +256,27 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 	//		}
 	//	}
 
-	// Merge individual slots into a single continuous slot with total cost as value (bugfix)
+	// Merge individual slots into a single continuous slot with weighted average price
 	if len(bestPlan) > 0 {
 		mergedSlot := api.Rate{
 			Start: bestPlan[0].Start,
 			End:   bestPlan[len(bestPlan)-1].End,
 		}
 
-		// Calculate total cost of the window
+		// Calculate weighted average price per kWh
 		totalCost := 0.0
+		totalDuration := 0.0
 		for _, slot := range bestPlan {
 			duration := slot.End.Sub(slot.Start).Hours()
 			totalCost += slot.Value * duration
+			totalDuration += duration
 		}
-		mergedSlot.Value = totalCost
+
+		if totalDuration > 0 {
+			mergedSlot.Value = totalCost / totalDuration
+		}
 
 		bestPlan = api.Rates{mergedSlot}
-		//t.log.DEBUG.Printf("Merged into single slot: [%v, %v] total value=%.2f", mergedSlot.Start, mergedSlot.End, mergedSlot.Value)
 	}
 
 	return bestPlan, minCost
