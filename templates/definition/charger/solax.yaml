@@ -21,6 +21,7 @@ params:
     baudrate: 9600
     comset: 8N1
     id: 70
+  - name: timeout
 render: |
   type: solax
   {{- include "modbus" . }}
