@@ -90,26 +90,6 @@
 				</div>
 			</div>
 		</FormRow>
-		<FormRow
-			v-if="batteryConfigured"
-			id="batteryStateEnabled"
-			:label="$t('settings.batteryState.label')"
-		>
-			<div class="form-check form-switch my-1">
-				<input
-					id="batteryStateEnabled"
-					v-model="batteryState"
-					class="form-check-input"
-					type="checkbox"
-					role="switch"
-				/>
-				<div class="form-check-label">
-					<label for="batteryStateEnabled">
-						{{ $t("settings.batteryState.value") }}
-					</label>
-				</div>
-			</div>
-		</FormRow>
 		<div class="small text-muted mb-3">
 			{{ $t("settings.deviceInfo") }}
 		</div>
@@ -132,8 +112,6 @@ import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
 import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
-import settings from "@/settings";
-import store from "@/store";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
@@ -172,17 +150,6 @@ export default defineComponent({
 				(navigator as any).standalone ||
 				window.matchMedia("(display-mode: standalone)").matches;
 			return isSupported && !isPwa && !isApp();
-		},
-		batteryConfigured() {
-			return (store.state.battery?.length || 0) > 0;
-		},
-		batteryState: {
-			get() {
-				return settings.batteryState;
-			},
-			set(value: boolean) {
-				settings.batteryState = value;
-			},
 		},
 	},
 	watch: {

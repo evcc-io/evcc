@@ -5,42 +5,29 @@
 		data-testid="energyflow"
 		@click="toggleDetails"
 	>
-		<div class="d-flex align-items-center">
-			<div class="flex-grow-1">
-				<Visualization
-					class="mb-3 mb-md-4"
-					:gridImport="gridImport"
-					:selfPv="selfPv"
-					:selfBattery="selfBattery"
-					:loadpoints="loadpoints"
-					:pvExport="pvExport"
-					:batteryCharge="batteryCharge"
-					:batteryDischarge="batteryDischarge"
-					:batteryGridCharge="batteryGridChargeActive"
-					:batteryHold="batteryHold"
-					:pvProduction="pvProduction"
-					:homePower="homePower"
-					:batterySoc="batterySoc"
-					:powerUnit="powerUnit"
-					:vehicleIcons="vehicleIcons"
-					:inPower="inPower"
-					:outPower="outPower"
-				/>
-			</div>
+		<div class="visualization-wrapper">
+			<Visualization
+				class="mb-3 mb-md-4"
+				:gridImport="gridImport"
+				:selfPv="selfPv"
+				:selfBattery="selfBattery"
+				:loadpoints="loadpoints"
+				:pvExport="pvExport"
+				:batteryCharge="batteryCharge"
+				:batteryDischarge="batteryDischarge"
+				:batteryGridCharge="batteryGridChargeActive"
+				:batteryHold="!showBatteryState && batteryHold"
+				:pvProduction="pvProduction"
+				:homePower="homePower"
+				:batterySoc="batterySoc"
+				:powerUnit="powerUnit"
+				:vehicleIcons="vehicleIcons"
+				:inPower="inPower"
+				:outPower="outPower"
+			/>
 			<div v-if="showBatteryState" class="battery-state-display">
-				<div class="text-center">
-					<BatteryIcon
-						:soc="batterySoc"
-						:size="ICON_SIZE.L"
-						class="battery-icon mb-1"
-						:class="{
-							'battery-icon--charging': batteryCharge > 0,
-							'battery-icon--discharging': batteryDischarge > 0,
-							'battery-icon--idle': batteryCharge === 0 && batteryDischarge === 0,
-						}"
-					/>
-					<div class="battery-soc-value">{{ batteryFmt(batterySoc) }}</div>
-				</div>
+				<BatteryIcon :soc="batterySoc" :hold="batteryHold" class="battery-icon" />
+				<div class="battery-soc-value">{{ batterySocFmt(batterySoc) }}</div>
 			</div>
 		</div>
 		<div
@@ -452,6 +439,9 @@ export default defineComponent({
 		batteryFmt() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
+		batterySocFmt() {
+			return (soc: number) => Math.round(soc).toString();
+		},
 		fmtLoadpointSoc() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
@@ -524,7 +514,7 @@ export default defineComponent({
 			});
 		},
 		showBatteryState() {
-			return this.batteryConfigured && settings.batteryState;
+			return this.batteryConfigured;
 		},
 		consumers() {
 			return [...this.aux, ...this.ext];
@@ -687,32 +677,21 @@ export default defineComponent({
 .legend-battery--mixed {
 	clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
+.visualization-wrapper {
+	position: relative;
+}
 .battery-state-display {
+	position: absolute;
+	top: 2.2rem;
+	right: -0.35rem;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	min-width: 55px;
-}
-@media (min-width: 768px) {
-	.battery-state-display {
-		min-width: 80px;
-	}
-}
-.battery-icon--charging {
-	color: var(--evcc-dark-green);
-}
-.battery-icon--discharging {
-	color: var(--bs-body-color);
-}
-.battery-icon--idle {
-	color: var(--bs-secondary);
+	color: var(--evcc-gray);
 }
 .battery-soc-value {
-	font-size: 1rem;
-	font-weight: 600;
-	color: var(--evcc-default-text);
-	width: 100%;
-	text-align: center;
+	font-size: 0.75rem;
+	font-weight: 400;
+	white-space: nowrap;
 }
 </style>
