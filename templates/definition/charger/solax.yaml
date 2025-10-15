@@ -25,3 +25,4 @@ params:
 render: |
   type: solax
   {{- include "modbus" . }}
+  timeout: {{ .timeout }}
