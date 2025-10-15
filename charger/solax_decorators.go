@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSolax(base *Solax, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateSolax(base *Solax, phaseSwitcher func(int) error, phaseGetter func() (int, error), battery func() (float64, error)) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case battery == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseGetter == nil && phaseSwitcher != nil:
+	case battery == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Solax
 			api.PhaseSwitcher
@@ -22,7 +22,7 @@ func decorateSolax(base *Solax, phaseSwitcher func(int) error, phaseGetter func(
 			},
 		}
 
-	case phaseGetter != nil && phaseSwitcher != nil:
+	case battery == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Solax
 			api.PhaseGetter
@@ -36,9 +36,62 @@ func decorateSolax(base *Solax, phaseSwitcher func(int) error, phaseGetter func(
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
+
+	case battery != nil && phaseSwitcher == nil:
+		return &struct {
+			*Solax
+			api.Battery
+		}{
+			Solax: base,
+			Battery: &decorateSolaxBatteryImpl{
+				battery: battery,
+			},
+		}
+
+	case battery != nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Solax
+			api.Battery
+			api.PhaseSwitcher
+		}{
+			Solax: base,
+			Battery: &decorateSolaxBatteryImpl{
+				battery: battery,
+			},
+			PhaseSwitcher: &decorateSolaxPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Solax
+			api.Battery
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Solax: base,
+			Battery: &decorateSolaxBatteryImpl{
+				battery: battery,
+			},
+			PhaseGetter: &decorateSolaxPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateSolaxPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateSolaxBatteryImpl struct {
+	battery func() (float64, error)
+}
+
+func (impl *decorateSolaxBatteryImpl) Soc() (float64, error) {
+	return impl.battery()
 }
 
 type decorateSolaxPhaseGetterImpl struct {
