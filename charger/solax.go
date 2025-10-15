@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -48,9 +49,9 @@ const (
 	solaxRegVoltages           = 0x0000 // 3x uint16 0.01V
 	solaxRegCurrents           = 0x0004 // 3x uint16 0.01A
 	solaxRegActivePower        = 0x000B // uint16 1W
-	solaxRegTotalEnergy        = 0x0010 // uint32s 0.1kWh
+	solaxRegTotalEnergy        = 0x0010 // uint32 0.1kWh
 	solaxRegState              = 0x001D // uint16
-	solaxRegFaultCode          = 0x001E // uint32
+	solaxRegFaultCode          = 0x001E // 2x uint32
 	solaxRegFirmwareVersion    = 0x0025 // uint16 Vx.xx
 	solaxRegConnectionStrength = 0x0027 // uint16 1%
 	solaxRegPhases             = 0x0028 // uint16
@@ -120,6 +121,10 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	var soc func() (float64, error)
 
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
+		if err != nil {
+			return nil, err
+		}
+
 		v := encoding.Uint16(b)
 		if !wb.isLegacyHw && v >= 200 {
 			phases1p3p = wb.phases1p3p
@@ -296,7 +301,7 @@ var _ api.Diagnosis = (*Delta)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Solax) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(solaxRegSerialNumber, 10); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegSerialNumber, 7); err == nil {
 		fmt.Printf("\tSerial Number:\t%s\n", bytesAsString(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
@@ -306,8 +311,22 @@ func (wb *Solax) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(solaxRegConnectionStrength, 1); err == nil {
 		fmt.Printf("\tConnection Strength (RSSI):\t%d%%\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(solaxRegFaultCode, 1); err == nil {
-		fmt.Printf("\tFault Code:\t%d\n", encoding.Uint16(b))
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFaultCode, 2); err == nil {
+		code := binary.BigEndian.Uint32(b)
+		fmt.Printf("\tFault Code:\t0x%08X", code)
+
+		// Collect all set bits
+		var setBits []string
+		for bitIndex := 0; bitIndex < 32; bitIndex++ {
+			if (code & (1 << bitIndex)) != 0 { // Check if the bit is set
+				setBits = append(setBits, fmt.Sprintf("%d", bitIndex+1)) // Add the 1-based bit number
+			}
+		}
+		if len(setBits) > 0 {
+			fmt.Printf(", Set Bits: %s\n", strings.Join(setBits, ","))
+		} else {
+			fmt.Printf(", Set Bits: None\n")
+		}
 	}
 	if b, err := wb.conn.ReadInputRegisters(solaxRegLockState, 1); err == nil {
 		switch state := encoding.Uint16(b); state {
