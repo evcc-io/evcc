@@ -58,7 +58,6 @@ func TestSinglePlanContinuousWindow(t *testing.T) {
 	assert.Equal(t, rates[2].Start, plan[0].Start, "start of the plan should match cheapest slot")
 	assert.Equal(t, rates[3].End, plan[0].End, "end of the plan should match cheapest slot")
 
-	// Use InDelta for float comparison with tolerance
 	const delta = 0.01
 	assert.InDelta(t, 0.105, plan[0].Value, delta, "plan value should be the cheapest")
 }
