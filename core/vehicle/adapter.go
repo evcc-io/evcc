@@ -82,7 +82,7 @@ func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int, bool) {
 	}
 	var continuous bool
 	if v, err := settings.Bool(v.key() + keys.PlanContinuous); err == nil {
-		continuous = bool(v)
+		continuous = v
 	}
 	var soc int
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {

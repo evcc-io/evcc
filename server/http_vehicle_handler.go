@@ -98,7 +98,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-		
+
 		continuous := false
 		if contStr := query.Get("continuous"); contStr != "" {
 			continuous, err = strconv.ParseBool(contStr)
@@ -123,7 +123,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 		}{
 			Soc:          soc,
 			Precondition: int64(precondition.Seconds()),
-			Continuous:   bool(continuous),
+			Continuous:   continuous,
 			Time:         ts,
 		}
 

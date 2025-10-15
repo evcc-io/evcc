@@ -103,7 +103,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		
+
 		continuous := false
 		if contStr := query.Get("continuous"); contStr != "" {
 			continuous, err = strconv.ParseBool(contStr)
@@ -165,7 +165,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		
+
 		continuous := false
 		if contStr := query.Get("continuous"); contStr != "" {
 			continuous, err = strconv.ParseBool(contStr)
@@ -212,7 +212,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-		
+
 		continuous := false
 		if contStr := query.Get("continuous"); contStr != "" {
 			continuous, err = strconv.ParseBool(contStr)
@@ -237,7 +237,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 		}{
 			Energy:       energy,
 			Precondition: int64(precondition.Seconds()),
-			Continuous:   bool(continuous),
+			Continuous:   continuous,
 			Time:         ts,
 		}
 

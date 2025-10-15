@@ -374,7 +374,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 	lp.publish(keys.PlanContinuous, continuous)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
 	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
-	lp.settings.SetBool(keys.PlanContinuous, bool(continuous))
+	lp.settings.SetBool(keys.PlanContinuous, continuous)
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
