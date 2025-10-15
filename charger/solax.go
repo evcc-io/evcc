@@ -238,6 +238,8 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
+var _ api.PhaseSwitcher = (*Solax)(nil)
+
 func (wb *Solax) Phases1p3p(phases int) error {
 	var u uint16
 
