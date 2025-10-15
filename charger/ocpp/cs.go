@@ -52,15 +52,13 @@ func (cs *CS) status() status {
 			continue // skip anonymous registrations
 		}
 
-		var state StationStatus
+		state := StationStatusUnknown
 		if cp := reg.cp; cp != nil {
 			if cp.Connected() {
 				state = StationStatusConnected
 			} else {
 				state = StationStatusConfigured
 			}
-		} else {
-			state = StationStatusUnknown
 		}
 
 		stations = append(stations, stationStatus{
