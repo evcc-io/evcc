@@ -71,7 +71,7 @@ func (v *adapter) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int) {
+func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int, bool) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
@@ -80,15 +80,19 @@ func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int) {
 	if v, err := settings.Int(v.key() + keys.PlanPrecondition); err == nil {
 		precondition = time.Duration(v) * time.Second
 	}
+	var continuous bool
+	if v, err := settings.Bool(v.key() + keys.PlanContinuous); err == nil {
+		continuous = bool(v)
+	}
 	var soc int
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
-	return ts, precondition, soc
+	return ts, precondition, soc, continuous
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
+func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int, continuous bool) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -98,11 +102,12 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 		ts = time.Time{}
 		v.log.DEBUG.Printf("delete %s plan", v.name)
 	} else {
-		v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition)
+		v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v, continuous: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition, continuous)
 	}
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))
+	settings.SetBool(v.key()+keys.PlanContinuous, continuous)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
 	v.publish()

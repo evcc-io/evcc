@@ -6,5 +6,6 @@ type RepeatingPlanStruct struct {
 	Tz           string `json:"tz"`           // timezone in IANA format
 	Soc          int    `json:"soc"`          // target soc
 	Precondition int64  `json:"precondition"` // precondition duration in seconds
+	Continuous   bool   `json:"continuous"`   // force continuous planning
 	Active       bool   `json:"active"`       // active flag
 }

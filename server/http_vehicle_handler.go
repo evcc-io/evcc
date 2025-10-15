@@ -98,21 +98,32 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+		
+		continuous := false
+		if contStr := query.Get("continuous"); contStr != "" {
+			continuous, err = strconv.ParseBool(contStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+		}
 
-		if err := v.SetPlanSoc(ts, precondition, soc); err != nil {
+		if err := v.SetPlanSoc(ts, precondition, soc, continuous); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, precondition, soc = v.GetPlanSoc()
+		ts, precondition, soc, continuous = v.GetPlanSoc()
 
 		res := struct {
 			Soc          int       `json:"soc"`
 			Precondition int64     `json:"precondition"`
+			Continuous   bool      `json:"continuous"`
 			Time         time.Time `json:"time"`
 		}{
 			Soc:          soc,
 			Precondition: int64(precondition.Seconds()),
+			Continuous:   bool(continuous),
 			Time:         ts,
 		}
 
@@ -161,7 +172,7 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0, 0); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0, 0, false); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

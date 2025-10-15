@@ -116,19 +116,21 @@ type API interface {
 	//
 
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() (time.Time, time.Duration, float64)
+	GetPlanEnergy() (time.Time, time.Duration, float64, bool)
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(time.Time, time.Duration, float64) error
+	SetPlanEnergy(time.Time, time.Duration, float64, bool) error
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
 	// GetPlanPreCondDuration returns the precondition duration
 	GetPlanPreCondDuration() time.Duration
+	// GetPlanContinuous returns the forced continuous planning
+	GetPlanContinuous() bool
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continous ...bool) api.Rates
+	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig

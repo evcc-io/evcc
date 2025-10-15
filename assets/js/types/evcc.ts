@@ -224,6 +224,7 @@ export interface Loadpoint {
   planEnergy: number;
   planOverrun: number;
   planPrecondition: number;
+  planContinuous: boolean;
   planProjectedEnd: string | null;
   planProjectedStart: string | null;
   planTime: string | null;

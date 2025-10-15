@@ -39,12 +39,12 @@ func (v *dummy) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *dummy) GetPlanSoc() (time.Time, time.Duration, int) {
-	return time.Time{}, 0, 0
+func (v *dummy) GetPlanSoc() (time.Time, time.Duration, int, bool) {
+	return time.Time{}, 0, 0, false
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *dummy) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
+func (v *dummy) SetPlanSoc(ts time.Time, precondition time.Duration, soc int, continuous bool) error {
 	return nil
 }
 

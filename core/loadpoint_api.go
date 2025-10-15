@@ -343,19 +343,19 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 }
 
 // GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
+func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getPlanEnergy()
 }
 
 // getPlanEnergy returns plan target energy
-func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
-	return lp.planTime, lp.planPrecondition, lp.planEnergy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64, bool) {
+	return lp.planTime, lp.planPrecondition, lp.planEnergy, lp.planContinuous
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) {
+func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64, continuous bool) {
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -368,10 +368,13 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 
 	lp.planTime = finishAt
 	lp.planPrecondition = precondition
+	lp.planContinuous = continuous
 	lp.publish(keys.PlanTime, finishAt)
 	lp.publish(keys.PlanPrecondition, precondition)
+	lp.publish(keys.PlanContinuous, continuous)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
 	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
+	lp.settings.SetBool(keys.PlanContinuous, bool(continuous))
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -379,7 +382,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 }
 
 // SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) error {
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64, continuous bool) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -390,8 +393,8 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duratio
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) {
-		lp.setPlanEnergy(finishAt, precondition, energy)
+	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) || lp.planContinuous != continuous {
+		lp.setPlanEnergy(finishAt, precondition, energy, continuous)
 		lp.requestUpdate()
 	}
 

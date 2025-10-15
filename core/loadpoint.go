@@ -147,6 +147,7 @@ type Loadpoint struct {
 	planner          *planner.Planner
 	planTime         time.Time     // time goal
 	planPrecondition time.Duration // precondition duration
+	planContinuous   bool          // force continuous charge plan
 	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
 	planSlotEnd      time.Time     // current plan slot end time
 	planActive       bool          // charge plan exists and has a currently active slot
@@ -368,8 +369,9 @@ func (lp *Loadpoint) restoreSettings() {
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
 	d, _ := lp.settings.Int(keys.PlanPrecondition)
+	c, _ := lp.settings.Bool(keys.PlanContinuous)
 	if err1 == nil && err2 == nil {
-		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
+		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v, c)
 	}
 }
 
@@ -681,6 +683,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
 	lp.publish(keys.PlanPrecondition, lp.planPrecondition)
+	lp.publish(keys.PlanContinuous, lp.planContinuous)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -977,7 +980,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, _, id := lp.NextVehiclePlan()
+	_, _, _, id, _ := lp.NextVehiclePlan()
 	return id > 1
 }
 

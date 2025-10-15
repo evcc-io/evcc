@@ -121,6 +121,7 @@ export default defineComponent({
 		planTime: String,
 		planTimeUnreachable: Boolean,
 		planPrecondition: Number,
+		planContinuous: Boolean,
 		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,

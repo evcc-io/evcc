@@ -36,6 +36,7 @@ type plan struct {
 	Start        time.Time // last possible start time
 	End          time.Time // user-selected finish time
 	Precondition time.Duration
+	Continuous   bool
 	Soc          int
 }
 
@@ -60,20 +61,20 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 }
 
 // NextVehiclePlan returns the next vehicle plan time, soc and id
-func (lp *Loadpoint) NextVehiclePlan() (time.Time, time.Duration, int, int) {
+func (lp *Loadpoint) NextVehiclePlan() (time.Time, time.Duration, int, int, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.nextVehiclePlan()
 }
 
-// nextVehiclePlan returns the next vehicle plan time, precondition duration, soc and id
-func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
+// nextVehiclePlan returns the next vehicle plan time, precondition duration, soc, id and  continuous planning
+func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int, bool) {
 	if v := lp.GetVehicle(); v != nil {
 		var plans []plan
 
 		// static plan
-		if planTime, precondition, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, Precondition: precondition, Soc: soc, End: planTime})
+		if planTime, precondition, soc, continuous := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
+			plans = append(plans, plan{Id: 1, Precondition: precondition, Continuous: continuous, Soc: soc, End: planTime})
 		}
 
 		// repeating plans
@@ -89,27 +90,28 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, time.Duration, int, int) {
 			}
 
 			precondition := time.Duration(rp.Precondition) * time.Second
-			plans = append(plans, plan{Id: index + 2, Precondition: precondition, Soc: rp.Soc, End: planTime})
+			continuous := rp.Continuous
+			plans = append(plans, plan{Id: index + 2, Precondition: precondition, Continuous: continuous, Soc: rp.Soc, End: planTime})
 		}
 
 		// calculate earliest required plan start
 		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), plans); plan != nil {
-			return plan.End, plan.Precondition, plan.Soc, plan.Id
+			return plan.End, plan.Precondition, plan.Soc, plan.Id, plan.Continuous
 		}
 	}
-	return time.Time{}, 0, 0, 0
+	return time.Time{}, 0, 0, 0, false
 }
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, _, soc, _ := lp.NextVehiclePlan()
+	_, _, soc, _, _ := lp.NextVehiclePlan()
 	return soc
 }
 
 // EffectivePlanId returns the id for the current plan
 func (lp *Loadpoint) EffectivePlanId() int {
 	if lp.socBasedPlanning() {
-		_, _, _, id := lp.NextVehiclePlan()
+		_, _, _, id, _ := lp.NextVehiclePlan()
 		return id
 	}
 	if lp.planEnergy > 0 {
@@ -122,11 +124,11 @@ func (lp *Loadpoint) EffectivePlanId() int {
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if lp.socBasedPlanning() {
-		ts, _, _, _ := lp.NextVehiclePlan()
+		ts, _, _, _, _ := lp.NextVehiclePlan()
 		return ts
 	}
 
-	ts, _, _ := lp.GetPlanEnergy()
+	ts, _, _, _ := lp.GetPlanEnergy()
 	return ts
 }
 

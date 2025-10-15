@@ -122,6 +122,7 @@ export default defineComponent({
 		planTime: String,
 		planTimeUnreachable: Boolean,
 		planPrecondition: { type: Number, default: 0 },
+		planContinuous: { type: Boolean, default: false },
 		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostType: String,
@@ -167,6 +168,7 @@ export default defineComponent({
 						soc: plan.soc,
 						time: new Date(plan.time),
 						precondition: plan.precondition,
+						continuous: plan.continuous,
 					};
 				}
 				return null;
@@ -176,6 +178,7 @@ export default defineComponent({
 					energy: this.planEnergy,
 					time: new Date(this.planTime),
 					precondition: this.planPrecondition,
+					continuous: this.planContinuous,
 				};
 			}
 			return null;
@@ -282,7 +285,13 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
-			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
+			const params: any = {};
+			if (plan.precondition) {
+			    params.precondition = plan.precondition;
+			}
+			if (plan.continuous !== undefined) {
+			    params.continuous = plan.continuous;
+			}
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
 				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });

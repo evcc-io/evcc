@@ -39,9 +39,9 @@ type API interface {
 	SetLimitSoc(soc int)
 
 	// GetPlanSoc returns the charge plan soc
-	GetPlanSoc() (time.Time, time.Duration, int)
+	GetPlanSoc() (time.Time, time.Duration, int, bool)
 	// SetPlanSoc sets the charge plan time and soc
-	SetPlanSoc(time.Time, time.Duration, int) error
+	SetPlanSoc(time.Time, time.Duration, int, bool) error
 
 	// GetRepeatingPlans returns every repeating plan
 	GetRepeatingPlans() []api.RepeatingPlanStruct

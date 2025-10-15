@@ -178,6 +178,7 @@ export default defineComponent({
 		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
 		planPrecondition: Number,
+		planContinuous: Boolean,
 		planTime: String as PropType<string | null>,
 		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
