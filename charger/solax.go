@@ -38,22 +38,23 @@ type Solax struct {
 
 const (
 	// holding (FC 0x03, 0x06, 0x10)
-	solaxSerialNumber      = 0x0600 // 7x string
+	solaxRegSerialNumber   = 0x0600 // 7x string
 	solaxRegDeviceMode     = 0x060D // uint16
 	solaxRegCommandControl = 0x0627 // uint16
 	solaxRegMaxCurrent     = 0x0628 // uint16 0.01A
 	solaxRegPhaseSwitch    = 0xA105 // uint16
 
 	// input (FC 0x04)
-	solaxRegVoltages        = 0x0000 // 3x uint16 0.01V
-	solaxRegCurrents        = 0x0004 // 3x uint16 0.01A
-	solaxRegActivePower     = 0x000B // uint16 1W
-	solaxRegTotalEnergy     = 0x0010 // uint32s 0.1kWh
-	solaxRegState           = 0x001D // uint16
-	solaxFaultCode          = 0x001E // uint32
-	solaxFirmwareVersion    = 0x0025 // uint16 Vx.xx
-	solaxConnectionStrength = 0x0027 // uint16 1%
-	solaxLockState          = 0x002D // uint16
+	solaxRegVoltages           = 0x0000 // 3x uint16 0.01V
+	solaxRegCurrents           = 0x0004 // 3x uint16 0.01A
+	solaxRegActivePower        = 0x000B // uint16 1W
+	solaxRegTotalEnergy        = 0x0010 // uint32s 0.1kWh
+	solaxRegState              = 0x001D // uint16
+	solaxRegFaultCode          = 0x001E // uint32
+	solaxRegFirmwareVersion    = 0x0025 // uint16 Vx.xx
+	solaxRegConnectionStrength = 0x0027 // uint16 1%
+	solaxRegPhases             = 0x0028 // uint16
+	solaxRegLockState          = 0x002D // uint16
 
 	// commands
 	solaxCmdStop  = 3
@@ -111,7 +112,18 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 		isLegacyHw: isLegacyHw,
 	}
 
-	return wb, err
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
+
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
+		v := encoding.Uint16(b)
+		if !wb.isLegacyHw && v >= 200 {
+			phases1p3p = wb.phases1p3p
+			phasesG = wb.getPhases
+		}
+	}
+
+	return decorateSolax(wb, phases1p3p, phasesG), nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -238,9 +250,7 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
-var _ api.PhaseSwitcher = (*Solax)(nil)
-
-func (wb *Solax) Phases1p3p(phases int) error {
+func (wb *Solax) phases1p3p(phases int) error {
 	var u uint16
 
 	if phases == 3 {
@@ -252,24 +262,39 @@ func (wb *Solax) Phases1p3p(phases int) error {
 	return err
 }
 
+// getPhases implements the api.PhaseGetter interface
+func (wb *Solax) getPhases() (int, error) {
+	b, err := wb.conn.ReadInputRegisters(solaxRegPhases, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// 0=three-phase, 1/2/3=single-phase
+	if binary.BigEndian.Uint16(b) == 0 {
+		return 0, nil
+	}
+
+	return 1, nil
+}
+
 var _ api.Diagnosis = (*Delta)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Solax) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(solaxSerialNumber, 10); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegSerialNumber, 10); err == nil {
 		fmt.Printf("\tSerial Number:\t%s\n", bytesAsString(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(solaxFirmwareVersion, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
 		v := encoding.Uint16(b)
 		fmt.Printf("\tFirmware Version:\tV%d.%02d\n", v/100, v%100)
 	}
-	if b, err := wb.conn.ReadInputRegisters(solaxConnectionStrength, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(solaxRegConnectionStrength, 1); err == nil {
 		fmt.Printf("\tConnection Strength (RSSI):\t%d%%\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(solaxFaultCode, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFaultCode, 1); err == nil {
 		fmt.Printf("\tFault Code:\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(solaxLockState, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(solaxRegLockState, 1); err == nil {
 		switch state := encoding.Uint16(b); state {
 		case 0:
 			fmt.Printf("\tLock State:\tUnlocked (%d)\n", state)
