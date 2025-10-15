@@ -87,15 +87,15 @@ func NewE3dc(cfg rscp.ClientConfig, deviceIdx uint8, phases bool) (api.Charger, 
 		e3dcSunMode: false,
 	}
 
-	var phasesSet func(int) error
-	var phasesGet func() (int, error)
 	var phasePowers func() (float64, float64, float64, error)
 
-	if phases && false {
-		// Disabled Untested!!
-		phasesSet = wb.setPhases1p3p
-		phasesGet = wb.getPhases1p3p
-	}
+	var phasesSet func(int) error
+	var phasesGet func() (int, error)
+	// if phases {	// TODO untested!!
+	// 	phasesSet = wb.setPhases1p3p
+	// 	phasesGet = wb.getPhases1p3p
+	// }
+
 	phasePowers = wb.getPhasePowers
 
 	wb.retry = func() (err error) {
@@ -161,6 +161,7 @@ func (wb *E3dc) getPhasePowers() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil // Power in W
 }
 
+// Status implements the api.Charger interface
 func (wb *E3dc) Status() (api.ChargeStatus, error) {
 	data, err := ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil)}, []rscp.Tag{rscp.WB_EXTERN_DATA}, cast.ToUint8SliceE)
 	status_byte := data[0][2]
@@ -205,7 +206,7 @@ func (wb *E3dc) Enabled() (bool, error) {
 	return !res[0], nil
 }
 
-// Enabled implements the api.Charger interface
+// Enable implements the api.Charger interface
 func (wb *E3dc) Enable(enable bool) error {
 	wb.GetEmsStatus()
 	wb.SetEmsStatus(true, true, false)
@@ -235,36 +236,35 @@ func (wb *E3dc) Enable(enable bool) error {
 	return nil
 }
 
-// Enabled implements the api.Charger interface
-func (wb *E3dc) setPhases1p3p(phases int) error {
-	switch phases {
-	case 1:
-		phases = 1
-	case 2:
-		phases = 3
-	case 3:
-		phases = 7
-	}
-	_, err := ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_SET_NUMBER_PHASES, uint8(phases))}, nil, cast.ToFloat64E)
-	return err
-}
+// func (wb *E3dc) setPhases1p3p(phases int) error {
+// 	switch phases {
+// 	case 1:
+// 		phases = 1
+// 	case 2:
+// 		phases = 3
+// 	case 3:
+// 		phases = 7
+// 	}
+// 	_, err := ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_SET_NUMBER_PHASES, uint8(phases))}, nil, cast.ToFloat64E)
+// 	return err
+// }
 
-func (wb *E3dc) getPhases1p3p() (int, error) {
-	data, err := ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_PM_ACTIVE_PHASES, nil)}, nil, cast.ToUint8E)
-	if err != nil {
-		return 0, err
-	}
-	switch data[0] {
-	case 1:
-		return 1, nil
-	case 3:
-		return 2, nil
-	case 7:
-		return 3, nil
-	default:
-	}
-	return 0, nil
-}
+// func (wb *E3dc) getPhases1p3p() (int, error) {
+// 	data, err := ReadComplexTags(wb, []rscp.Message{*rscp.NewMessage(rscp.WB_REQ_PM_ACTIVE_PHASES, nil)}, nil, cast.ToUint8E)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	switch data[0] {
+// 	case 1:
+// 		return 1, nil
+// 	case 3:
+// 		return 2, nil
+// 	case 7:
+// 		return 3, nil
+// 	default:
+// 	}
+// 	return 0, nil
+// }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *E3dc) MaxCurrent(current int64) error {
