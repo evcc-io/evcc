@@ -38,24 +38,31 @@ type Solax struct {
 
 const (
 	// holding (FC 0x03, 0x06, 0x10)
-	solaxRegDeviceMode      = 0x060D // uint16
-	solaxRegStartChargeMode = 0x0610 // uint16
-	solaxRegPhases          = 0x0625 // uint16
-	solaxRegCommandControl  = 0x0627 // uint16
-	solaxRegMaxCurrent      = 0x0628 // uint16 0.01A
+	solaxSerialNumber      = 0x0600 // 7x string
+	solaxRegDeviceMode     = 0x060D // uint16
+	solaxRegCommandControl = 0x0627 // uint16
+	solaxRegMaxCurrent     = 0x0628 // uint16 0.01A
+	solaxRegPhaseSwitch    = 0xA105 // uint16
 
 	// input (FC 0x04)
-	solaxRegVoltages    = 0x0000 // 3x uint16 0.01V
-	solaxRegCurrents    = 0x0004 // 3x uint16 0.01A
-	solaxRegActivePower = 0x000B // uint16 1W
-	solaxRegTotalEnergy = 0x0010 // uint32s 0.1kWh
-	solaxRegState       = 0x001D // uint16
+	solaxRegVoltages        = 0x0000 // 3x uint16 0.01V
+	solaxRegCurrents        = 0x0004 // 3x uint16 0.01A
+	solaxRegActivePower     = 0x000B // uint16 1W
+	solaxRegTotalEnergy     = 0x0010 // uint32s 0.1kWh
+	solaxRegState           = 0x001D // uint16
+	solaxFaultCode          = 0x001E // uint32
+	solaxFirmwareVersion    = 0x0025 // uint16 Vx.xx
+	solaxConnectionStrength = 0x0027 // uint16 1%
+	solaxLockState          = 0x002D // uint16
 
+	// commands
 	solaxCmdStop  = 3
 	solaxCmdStart = 4
 
+	// modes
 	solaxModeStop = 0
 	solaxModeFast = 1
+	solaxModeECO  = 2
 )
 
 func init() {
@@ -135,10 +142,13 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		5: // "Unavailable"
 		return api.StatusA, nil
 	case
-		1, // "Preparing"
-		8, // "SuspendedEVSE"
-		7, // "SuspendedEV"
-		3: // "Finishing"
+		1,  // "Preparing"
+		3,  // "Finishing"
+		7,  // "SuspendedEV"
+		8,  // "SuspendedEVSE"
+		11, // "StartDelay"
+		12, // "ChargPause"
+		17: // "PhaseSwitching"
 		return api.StatusB, nil
 	case 2: // "Charging"
 		return api.StatusC, nil
@@ -228,19 +238,55 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
-/* https://github.com/evcc-io/evcc/pull/14108
-var _ api.PhaseSwitcher = (*Solax)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Solax) Phases1p3p(phases int) error {
 	var u uint16
 
-	if phases == 1 {
-		u = 1
+	if phases == 3 {
+		u = 2
 	}
 
-	_, err := wb.conn.WriteSingleRegister(solaxRegPhases, u)
+	_, err := wb.conn.WriteSingleRegister(solaxRegPhaseSwitch, u)
 
 	return err
 }
-*/
+
+var _ api.Diagnosis = (*Delta)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Solax) Diagnose() {
+	if b, err := wb.conn.ReadHoldingRegisters(solaxSerialNumber, 10); err == nil {
+		fmt.Printf("\tSerial Number:\t%s\n", bytesAsString(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxFirmwareVersion, 1); err == nil {
+		v := encoding.Uint16(b)
+		fmt.Printf("\tFirmware Version:\tV%d.%02d\n", v/100, v%100)
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxConnectionStrength, 1); err == nil {
+		fmt.Printf("\tConnection Strength (RSSI):\t%d%%\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxFaultCode, 1); err == nil {
+		fmt.Printf("\tFault Code:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxLockState, 1); err == nil {
+		switch state := encoding.Uint16(b); state {
+		case 0:
+			fmt.Printf("\tLock State:\tUnlocked (%d)\n", state)
+		case 1:
+			fmt.Printf("\tLock State:\tLocked (%d)\n", state)
+		default:
+			fmt.Printf("\tLock State:\tUnknown (%d)\n", state)
+		}
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1); err == nil {
+		switch state := encoding.Uint16(b); state {
+		case solaxModeStop:
+			fmt.Printf("\tLock State:\tStop (%d)\n", state)
+		case solaxModeFast:
+			fmt.Printf("\tLock State:\tFast (%d)\n", state)
+		case solaxModeECO:
+			fmt.Printf("\tLock State:\tECO (%d)\n", state)
+		default:
+			fmt.Printf("\tLock State:\tUnknown (%d)\n", state)
+		}
+	}
+}
