@@ -145,6 +145,7 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 	}
 
 	rates.Sort() // sort slots by start time
+	//t.log.DEBUG.Printf("findOptimalContinuousWindow: now=%v, targetTime=%v, effectiveDuration=%v", now, targetTime, effectiveDuration)
 
 	// prepare all relevant points (start/end of all slots)
 	points := make([]time.Time, 0, 2*len(rates))
@@ -154,6 +155,11 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 	points = append(points, now, targetTime)
 	slices.SortFunc(points, func(a, b time.Time) int { return int(a.Sub(b)) })
 	points = slices.Compact(points)
+
+	//t.log.DEBUG.Printf("findOptimalContinuousWindow: evaluated points: %v", len(points))
+	for i, p := range points {
+		t.log.DEBUG.Printf("  point[%d]: %v", i, p)
+	}
 
 	type windowSlot struct {
 		Start, End time.Time
@@ -172,7 +178,12 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 	for left < len(points) {
 		windowStart := points[left]
 		windowEnd := windowStart.Add(effectiveDuration)
+
+		//t.log.DEBUG.Printf("  left=%d: window [%v, %v]", left, windowStart, windowEnd)
+
+		// Allow windowEnd == targetTime
 		if windowEnd.After(targetTime) {
+			//t.log.DEBUG.Printf("    windowEnd after targetTime, breaking")
 			break
 		}
 
@@ -184,13 +195,15 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 			} else {
 				duration := s.End.Sub(s.Start).Hours()
 				currentCost -= s.Value * duration
+				//t.log.DEBUG.Printf("    removing left slot [%v, %v], duration=%.2fh, cost adjustment=%.4f", s.Start, s.End, duration, -s.Value*duration)
 			}
 		}
 		activeSlots = newActive
 
 		// add slots that come into the window on the right
-		for right < len(rates) && !rates[right].Start.After(windowEnd) {
+		for right < len(rates) && rates[right].Start.Before(windowEnd) {
 			s := rates[right]
+			//t.log.DEBUG.Printf("    evaluating rate[%d]: [%v, %v] value=%.2f", right, s.Start, s.End, s.Value)
 
 			trimStart := s.Start
 			if windowStart.After(trimStart) {
@@ -202,17 +215,23 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 			}
 
 			if trimStart.Before(trimEnd) {
+				slotDuration := trimEnd.Sub(trimStart).Hours()
+				slotCost := s.Value * slotDuration
 				activeSlots = append(activeSlots, windowSlot{
 					Start: trimStart,
 					End:   trimEnd,
 					Value: s.Value,
 				})
-				currentCost += s.Value * trimEnd.Sub(trimStart).Hours()
+				currentCost += slotCost
+				//t.log.DEBUG.Printf("      added to window [%v, %v], duration=%.2fh, cost=%.4f, total=%.4f", trimStart, trimEnd, slotDuration, slotCost, currentCost)
+			} else {
+				//t.log.DEBUG.Printf("      trimmed slot invalid (start >= end)")
 			}
 			right++
 		}
 
 		// check if this window has the minimal cost
+		//t.log.DEBUG.Printf("    window cost: %.4f (current min: %.4f), activeSlots: %d", currentCost, minCost, len(activeSlots))
 		if currentCost < minCost {
 			minCost = currentCost
 			bestPlan = make(api.Rates, len(activeSlots))
@@ -224,9 +243,36 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 				}
 			}
 			bestPlan.Sort()
+			//t.log.DEBUG.Printf("    NEW BEST: cost=%.4f with %d slots", minCost, len(bestPlan))
 		}
 
 		left++
+	}
+
+	//	t.log.DEBUG.Printf("findOptimalContinuousWindow result: bestPlan length=%d, minCost=%.4f", len(bestPlan), minCost)
+	//	if bestPlan != nil {
+	//		for i, slot := range bestPlan {
+	//			t.log.DEBUG.Printf("  slot[%d]: [%v, %v] value=%.2f", i, slot.Start, slot.End, slot.Value)
+	//		}
+	//	}
+
+	// Merge individual slots into a single continuous slot with total cost as value (bugfix)
+	if len(bestPlan) > 0 {
+		mergedSlot := api.Rate{
+			Start: bestPlan[0].Start,
+			End:   bestPlan[len(bestPlan)-1].End,
+		}
+
+		// Calculate total cost of the window
+		totalCost := 0.0
+		for _, slot := range bestPlan {
+			duration := slot.End.Sub(slot.Start).Hours()
+			totalCost += slot.Value * duration
+		}
+		mergedSlot.Value = totalCost
+
+		bestPlan = api.Rates{mergedSlot}
+		//t.log.DEBUG.Printf("Merged into single slot: [%v, %v] total value=%.2f", mergedSlot.Start, mergedSlot.End, mergedSlot.Value)
 	}
 
 	return bestPlan, minCost
