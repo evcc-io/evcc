@@ -5,26 +5,43 @@
 		data-testid="energyflow"
 		@click="toggleDetails"
 	>
-		<div class="row">
-			<Visualization
-				class="col-12 mb-3 mb-md-4"
-				:gridImport="gridImport"
-				:selfPv="selfPv"
-				:selfBattery="selfBattery"
-				:loadpoints="loadpoints"
-				:pvExport="pvExport"
-				:batteryCharge="batteryCharge"
-				:batteryDischarge="batteryDischarge"
-				:batteryGridCharge="batteryGridChargeActive"
-				:batteryHold="batteryHold"
-				:pvProduction="pvProduction"
-				:homePower="homePower"
-				:batterySoc="batterySoc"
-				:powerUnit="powerUnit"
-				:vehicleIcons="vehicleIcons"
-				:inPower="inPower"
-				:outPower="outPower"
-			/>
+		<div class="d-flex align-items-center">
+			<div class="flex-grow-1">
+				<Visualization
+					class="mb-3 mb-md-4"
+					:gridImport="gridImport"
+					:selfPv="selfPv"
+					:selfBattery="selfBattery"
+					:loadpoints="loadpoints"
+					:pvExport="pvExport"
+					:batteryCharge="batteryCharge"
+					:batteryDischarge="batteryDischarge"
+					:batteryGridCharge="batteryGridChargeActive"
+					:batteryHold="batteryHold"
+					:pvProduction="pvProduction"
+					:homePower="homePower"
+					:batterySoc="batterySoc"
+					:powerUnit="powerUnit"
+					:vehicleIcons="vehicleIcons"
+					:inPower="inPower"
+					:outPower="outPower"
+				/>
+			</div>
+			<div v-if="showBatteryState" class="battery-state-display">
+				<div class="text-center">
+					<BatteryIcon
+						:soc="batterySoc"
+						:size="ICON_SIZE.L"
+						class="battery-icon mb-1"
+						:class="{
+							'battery-icon--charging': batteryCharge > 0,
+							'battery-icon--discharging': batteryDischarge > 0,
+							'battery-icon--idle': batteryCharge === 0 && batteryDischarge === 0,
+						}"
+					/>
+					<div class="battery-soc-value">{{ batteryFmt(batterySoc) }}</div>
+				</div>
+			</div>
 		</div>
 		<div
 			class="details"
@@ -296,6 +313,7 @@
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
+import BatteryIcon from "./BatteryIcon.vue";
 import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
@@ -303,6 +321,7 @@ import settings from "@/settings";
 import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
+	ICON_SIZE,
 	SMART_COST_TYPE,
 	type BatteryMeter,
 	type Meter,
@@ -315,6 +334,7 @@ export default defineComponent({
 	name: "Energyflow",
 	components: {
 		Visualization,
+		BatteryIcon,
 		EnergyflowEntry: Entry,
 		AnimatedNumber,
 	},
@@ -352,7 +372,12 @@ export default defineComponent({
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
+		return {
+			detailsOpen: false,
+			detailsCompleteHeight: null as number | null,
+			ready: false,
+			ICON_SIZE,
+		};
 	},
 	computed: {
 		gridImport() {
@@ -497,6 +522,9 @@ export default defineComponent({
 			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
 				count: this.activeLoadpointsCount,
 			});
+		},
+		showBatteryState() {
+			return this.batteryConfigured && settings.batteryState;
 		},
 		consumers() {
 			return [...this.aux, ...this.ext];
@@ -658,5 +686,33 @@ export default defineComponent({
 }
 .legend-battery--mixed {
 	clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.battery-state-display {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-width: 55px;
+}
+@media (min-width: 768px) {
+	.battery-state-display {
+		min-width: 80px;
+	}
+}
+.battery-icon--charging {
+	color: var(--evcc-dark-green);
+}
+.battery-icon--discharging {
+	color: var(--bs-body-color);
+}
+.battery-icon--idle {
+	color: var(--bs-secondary);
+}
+.battery-soc-value {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--bs-body-color);
+	width: 100%;
+	text-align: center;
 }
 </style>

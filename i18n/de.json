@@ -1108,6 +1108,11 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "batteryState": {
+      "label": "Batteriezustand",
+      "shortLabel": "Batterie",
+      "value": "Batteriezustand neben der Energiefluss-Visualisierung anzeigen."
+    },
     "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
