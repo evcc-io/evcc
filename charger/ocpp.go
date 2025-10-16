@@ -166,6 +166,18 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasConnected():
 			}
 
+			//wait for boot notification
+			log.DEBUG.Printf("waiting for boot notification: %v", connectTimeout)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(connectTimeout):
+				log.ERROR.Printf("Timeout issues HF for boot notification: %v", connectTimeout)
+				return api.ErrTimeout
+			case <-cp.HasBootNotification():
+			}
+
+			log.DEBUG.Printf("ready for setup %v",meterValues)
 			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
 		},
 	)

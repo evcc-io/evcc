@@ -20,8 +20,19 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 		Status:      core.RegistrationStatusAccepted,
 	}
 
+	if cp.log != nil {
+        cp.log.INFO.Printf(
+            "BootNotification: Vendor=%s, Model=%s, Serial=%s, Firmware=%s",
+            request.ChargePointVendor,
+            request.ChargePointModel,
+            request.ChargePointSerialNumber,
+            request.FirmwareVersion,
+        )
+    }
+
 	cp.onceBoot.Do(func() {
-		cp.bootNotificationRequestC <- request
+		cp.BootNotificationResult = request
+		close(cp.bootNotificationC)
 	})
 
 	return res, nil
