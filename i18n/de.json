@@ -360,7 +360,7 @@
         "charge": "Ladegerät",
         "grid": "Netzanschluss",
         "label": "Verwendung",
-        "pv": "PV-Zähler"
+        "pv": "Erzeugung"
       },
       "validateSave": "Überprüfen & speichern"
     },
