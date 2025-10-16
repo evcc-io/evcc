@@ -163,7 +163,7 @@ func (wb *SEMP) heartbeat(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			// Check if we need to send an update
-			if wb.conn.TimeSinceLastUpdate() >= time.Minute {
+			if time.Since(wb.conn.Updated()) >= time.Minute {
 				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
 					wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
 				}
