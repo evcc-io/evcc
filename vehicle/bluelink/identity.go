@@ -499,7 +499,7 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
-	var code string
+	// var code string
 	switch brand {
 	case "kia":
 		// the "password" now is the refresh token ...
@@ -513,6 +513,14 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 		}
 		// }
 	case "hyundai":
+		var token *oauth2.Token
+		token, err = v.exchangeCodeKiaEURefreshToken(password)
+		if err == nil {
+			v.TokenSource = oauth.RefreshTokenSource(token, v)
+			v.deviceID, err = v.getDeviceID()
+		}
+
+		/* disabled since Hyundai now uses the refresh token as well
 		v.deviceID, err = v.getDeviceID()
 
 		var cookieClient *request.Helper
@@ -536,6 +544,7 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 				}
 			}
 		}
+		*/
 	default:
 		err = fmt.Errorf("unknown brand (%s)", brand)
 	}
