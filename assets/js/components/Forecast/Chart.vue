@@ -433,14 +433,9 @@ export default defineComponent({
 			);
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
-			// include 1 hour before and after
-			const start = new Date(this.startDate);
-			start.setHours(start.getHours() - 1);
-			const end = new Date(this.endDate);
-			end.setHours(end.getHours() + 1);
-
 			return entries.filter(
-				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
+				(entry) =>
+					new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
 			);
 		},
 		onMouseLeave() {
