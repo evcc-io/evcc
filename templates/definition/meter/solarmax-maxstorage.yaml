@@ -25,17 +25,8 @@ params:
     advanced: true
 render: |
   type: custom
-  energy:
-  {{- if eq .usage "pv" }}
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 150 # Produzierte PV-Energie
-      type: input
-      decode: int32s
-  {{- end }} 
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
@@ -45,10 +36,18 @@ render: |
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 110 # PV-Leistung MAX.STORAGE
+      type: input
+      decode: int32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 150 # Produzierte PV-Energie
       type: input
       decode: int32s
   maxacpower: {{ .maxacpower }}
