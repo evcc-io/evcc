@@ -100,27 +100,12 @@ render: |
   token: {{ .token }}
   power: {{ .power }}
   energy: {{ .energy }}
-  {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
-  {{- if .currentL1 }}
     - {{ .currentL1 }}
-  {{- end }}
-  {{- if .currentL2 }}
     - {{ .currentL2 }}
-  {{- end }}
-  {{- if .currentL3 }}
     - {{ .currentL3 }}
-  {{- end }}
-  {{- end }}
-  {{- if or .voltageL1 .voltageL2 .voltageL3 }}
   voltages:
-  {{- if .voltageL1 }}
     - {{ .voltageL1 }}
-  {{- end }}
-  {{- if .voltageL2 }}
     - {{ .voltageL2 }}
-  {{- end }}
-  {{- if .voltageL3 }}
     - {{ .voltageL3 }}
-  {{- end }}
-  {{- end }}
+
