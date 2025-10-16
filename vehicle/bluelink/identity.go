@@ -140,7 +140,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		headers = map[string]string{
 			"Authorization": "Basic " + v.config.BasicToken,
 			"Content-type":  "application/x-www-form-urlencoded",
-			"User-Agent": "okhttp/3.10.0",
+			"User-Agent":    "okhttp/3.10.0",
 		}
 
 		data = url.Values{
