@@ -35,9 +35,6 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Brand:             "hyundai",
 		LoginFormHost:     "https://idpconnect-eu.hyundai.com",
 		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
-		// BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
-		// AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		// BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
