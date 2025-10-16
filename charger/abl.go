@@ -2,8 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
-// Copyright (c) 2022-2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -129,7 +128,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *ABLeMH) set(reg, val uint16) error {

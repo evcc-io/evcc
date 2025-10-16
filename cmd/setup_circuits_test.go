@@ -22,11 +22,8 @@ type circuitsTestSuite struct {
 }
 
 func (suite *circuitsTestSuite) SetupSuite() {
-	db, err := db.New("sqlite", ":memory:")
-	if err != nil {
-		suite.T().Fatal(err)
-	}
-	config.Init(db)
+	_ = db.NewInstance("sqlite", ":memory:")
+	config.Init()
 }
 
 func (suite *circuitsTestSuite) SetupTest() {

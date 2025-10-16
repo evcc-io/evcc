@@ -88,6 +88,11 @@
 	--bs-success-rgb: var(--bs-primary-rgb);
 	--bs-code-color: var(--evcc-darkest-green);
 	--evcc-backdrop: #93949eaa; /* --bs-gray-medium + transparent */
+
+	--safe-area-inset-top: env(safe-area-inset-top, 0px);
+	--safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+	--safe-area-inset-left: env(safe-area-inset-left, 0px);
+	--safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
 :root.dark {
@@ -236,6 +241,13 @@ a:hover {
 	opacity: 0.3;
 }
 
+.btn-succeeded:disabled {
+	color: var(--bs-primary) !important;
+	background-color: transparent !important;
+	border-color: var(--bs-primary) !important;
+	opacity: 1 !important;
+}
+
 .dark .btn-disabled {
 	opacity: 0.4;
 }
@@ -289,6 +301,11 @@ a:hover {
 .btn-link:focus {
 	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
 	outline-width: var(--bs-focus-ring-width);
+}
+
+.btn-link:disabled {
+	border-color: transparent !important;
+	opacity: 0.2;
 }
 
 .dark .btn-outline-secondary {
@@ -607,8 +624,8 @@ html.app .hide-in-app {
 }
 
 html.app .safe-area-inset {
-	padding: max(1rem, env(safe-area-inset-top)) env(safe-area-inset-right)
-		calc(0.5 * env(safe-area-inset-bottom)) env(safe-area-inset-left);
+	padding: max(1rem, var(--safe-area-inset-top)) var(--safe-area-inset-right)
+		var(--safe-area-inset-bottom) var(--safe-area-inset-left);
 	position: relative;
 }
 
@@ -619,15 +636,15 @@ html.app .safe-area-inset::before {
 	top: 0;
 	left: 0;
 	right: 0;
-	height: env(safe-area-inset-top);
+	height: var(--safe-area-inset-top);
 	z-index: 1000;
 	opacity: 0.9;
 	background-color: var(--evcc-background);
 }
 
 html.app .modal-dialog {
-	margin-top: env(safe-area-inset-top);
-	margin-bottom: env(safe-area-inset-bottom);
+	margin-top: var(--safe-area-inset-top);
+	margin-bottom: var(--safe-area-inset-bottom);
 }
 
 .btn-neutral {
@@ -681,4 +698,17 @@ input::-webkit-date-and-time-value {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+}
+
+.textarea--tiny {
+	font-size: 8px;
+}
+
+@media (min-width: 576px) {
+	.textarea--tiny {
+		font-size: 0.875em;
+	}
+}
+.tabular {
+	font-variant-numeric: tabular-nums;
 }

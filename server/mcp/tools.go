@@ -3,13 +3,18 @@ package mcp
 import (
 	"context"
 
-	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func docsTool(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func docsTool(_ context.Context, _ *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			mcp.NewResourceLink("https://docs.evcc.io", "evcc-docs", "evcc documentation", "text/html"),
+			&mcp.ResourceLink{
+				URI:      "https://docs.evcc.io",
+				Name:     "evcc-docs",
+				Title:    "evcc documentation",
+				MIMEType: "text/html",
+			},
 		},
-	}, nil
+	}, nil, nil
 }

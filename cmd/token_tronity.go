@@ -64,20 +64,18 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/auth/tronity", handler)
 
-	wg := new(sync.WaitGroup)
 	s := &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
 
 	// start server
-	wg.Add(1)
-	go func() {
+	var wg sync.WaitGroup
+	wg.Go(func() {
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
 			log.FATAL.Fatal(err)
 		}
-		wg.Done()
-	}()
+	})
 
 	// close on exit
 	defer func() {

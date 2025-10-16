@@ -98,6 +98,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// EffectiveLimitSoc returns the effective session limit soc
+	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id
 	EffectivePlanId() int
 	// EffectivePlanTime returns the effective plan time
@@ -117,7 +119,7 @@ type API interface {
 	GetPlanEnergy() (time.Time, time.Duration, float64)
 	// SetPlanEnergy sets the charge plan energy
 	SetPlanEnergy(time.Time, time.Duration, float64) error
-	// GetPlanGoal returns the plan goal, precondition duration and if the goal is soc based
+	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
@@ -160,9 +162,6 @@ type API interface {
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 
-	// RemoteControl sets remote status demand
-	RemoteControl(string, RemoteDemand)
-
 	//
 	// smart grid charging
 	//
@@ -197,7 +196,7 @@ type API interface {
 	IsFastChargingActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
-	// GetRemainingEnergy is the remaining charge energy in Wh
+	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
 
 	//
@@ -210,4 +209,6 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
+	// GetSoc returns the last vehicle or charger soc in %
+	GetSoc() float64
 }

@@ -1,4 +1,6 @@
 name: Nightly Build
+permissions:
+  contents: read
 
 on:
   schedule: # runs on the default branch: master
@@ -9,10 +11,15 @@ jobs:
   check_date:
     runs-on: depot-ubuntu-24.04-arm
     name: Check latest commit
+
+    permissions:
+      contents: read
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: print latest_commit
         run: echo ${{ github.sha }}
 
@@ -30,6 +37,9 @@ jobs:
       && startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
+    permissions:
+      contents: read
+      actions: write
 
   docker:
     name: Publish Docker :nightly
@@ -37,11 +47,16 @@ jobs:
       - call-build-workflow
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+      actions: read
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: refs/heads/master # force master
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Get dist from cache
         uses: actions/cache/restore@v4
@@ -75,6 +90,8 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Delete old nightly.* tags
         run: |
@@ -90,12 +107,15 @@ jobs:
       - docker
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v5
         with:
           repository: evcc-io/hassio-addon
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
           path: ./hassio
 
       - name: Update version
@@ -119,14 +139,19 @@ jobs:
       - call-build-workflow
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+      actions: read
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.24.0"
+          go-version-file: go.mod
         id: go
 
       - name: Patch ASN1
@@ -142,12 +167,12 @@ jobs:
       - name: Create nightly build
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.12
 

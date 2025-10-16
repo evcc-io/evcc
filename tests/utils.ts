@@ -28,8 +28,8 @@ export async function closeTopNavigation(page: Page): Promise<void> {
 }
 
 export async function expectTopNavigationOpened(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByTestId("topnavigation-dropdown")).toBeVisible();
+  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
 }
 
 export async function expectTopNavigationClosed(page: Page): Promise<void> {
@@ -50,15 +50,15 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
 export async function editorClear(editor: Locator, iterations = 10): Promise<void> {
   for (let i = 0; i < iterations; i++) {
     await editor.locator(".view-line").nth(0).click();
-    await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 10 });
-    await editor.page().keyboard.press("Backspace", { delay: 10 });
+    await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 50 });
+    await editor.page().keyboard.press("Backspace", { delay: 50 });
   }
 }
 
 export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
   await editor.locator(".view-line").nth(0).click();
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
-  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 50 });
+  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 100 });
 }
 
 export enum LoadpointType {
@@ -122,4 +122,27 @@ export async function newLoadpoint(
     })
     .click();
   await lpModal.getByLabel("Title").fill(title);
+}
+
+export async function dragElement(
+  page: Page,
+  sourceElement: Locator,
+  targetElement: Locator
+): Promise<void> {
+  // Get bounding boxes to calculate actual positions
+  const sourceBox = await sourceElement.boundingBox();
+  const targetBox = await targetElement.boundingBox();
+
+  if (sourceBox && targetBox) {
+    // Move from center of source item to center of target item
+    const startX = sourceBox.x + sourceBox.width / 2;
+    const startY = sourceBox.y + sourceBox.height / 2;
+    const endX = targetBox.x + targetBox.width / 2;
+    const endY = targetBox.y + targetBox.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(endX, endY, { steps: 10 });
+    await page.mouse.up();
+  }
 }

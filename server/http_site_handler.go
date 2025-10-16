@@ -91,10 +91,12 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 
 	res := struct {
-		Error string `json:"error"`
-		Line  int    `json:"line,omitempty"`
+		Error       string `json:"error"`
+		Line        int    `json:"line,omitempty"`
+		IsAuthError bool   `json:"isAuthError,omitempty"`
 	}{
-		Error: err.Error(),
+		Error:       err.Error(),
+		IsAuthError: errors.Is(err, api.ErrLoginRequired) || errors.Is(err, api.ErrMissingToken),
 	}
 
 	var (
@@ -379,6 +381,13 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 
 		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
 
+		fi, err := f.Stat()
+		if err != nil {
+			http.Error(w, "Could not stat DB file: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Length", strconv.FormatInt(fi.Size(), 10))
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 

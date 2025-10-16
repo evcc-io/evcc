@@ -43,7 +43,7 @@ func backoffPermanentError(err error) error {
 
 // mergeRates blends new and existing rates, keeping existing rates after current hour
 func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
-	mergeRatesAfter(data, new, now.With(time.Now()).BeginningOfHour())
+	mergeRatesAfter(data, new, time.Now().Truncate(SlotDuration))
 }
 
 // mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
@@ -52,13 +52,14 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 
 	var newStart time.Time
 	if len(new) > 0 {
+		new.Sort()
 		newStart = new[0].Start
 	}
 
 	data.SetFunc(func(old api.Rates) api.Rates {
 		var between api.Rates
 		for _, r := range old {
-			if (r.Start.Before(newStart) && !r.Start.Before(now) || newStart.IsZero()) && r.End.After(now) {
+			if (newStart.IsZero() || !r.End.After(newStart)) && r.End.After(now) {
 				between = append(between, r)
 			}
 		}
@@ -69,5 +70,23 @@ func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time
 
 // beginningOfDay returns the beginning of the current day
 func beginningOfDay() time.Time {
-	return now.With(time.Now()).BeginningOfDay()
+	return now.BeginningOfDay()
+}
+
+type runnable[T any] interface {
+	*T
+	run(done chan error)
+}
+
+// https://groups.google.com/g/golang-nuts/c/1cl9v_hPYHk
+// runOrError invokes t.run(chan error) and waits for the channel to return
+func runOrError[T any, I runnable[T]](t I) (*T, error) {
+	done := make(chan error)
+	go t.run(done)
+
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return t, nil
 }

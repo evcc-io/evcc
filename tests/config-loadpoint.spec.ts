@@ -43,7 +43,21 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByLabel("Charge status").selectOption("C");
     await chargerModal.getByLabel("Power").fill("11000");
     await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport");
+    // verify defaults
+    await expect(lpModal.getByLabel("Default mode")).toHaveValue("");
+    // mode
+    await expect(lpModal.getByTestId("loadpointSolarMode-default")).toHaveClass(/active/);
+    await expect(lpModal.getByTestId("loadpointSolarMode-custom")).not.toHaveClass(/active/);
+    // min/max current
+    await expect(lpModal.getByTestId("chargerPower-11kw")).toHaveClass(/active/);
+    await expect(lpModal.getByTestId("chargerPower-22kw")).not.toHaveClass(/active/);
+    await expect(lpModal.getByTestId("chargerPower-other")).not.toHaveClass(/active/);
+    // phases
+    await expect(lpModal.getByTestId("loadpointParamPhases-1")).not.toHaveClass(/active/);
+    await expect(lpModal.getByTestId("loadpointParamPhases-3")).toHaveClass(/active/);
 
     // create loadpoint
     await lpModal.getByRole("button", { name: "Save" }).click();
@@ -70,6 +84,7 @@ test.describe("charging loadpoint", async () => {
     await expect(lpModal.getByRole("heading", { name: "Edit Charging Point" })).toBeVisible();
     await lpModal.getByLabel("Title").fill("Solar Carport 2");
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
 
     // restart
@@ -460,6 +475,7 @@ power:
     await expect(meterRestResult).toContainText(["Power", "5.0 kW"].join(""));
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
+    await expectModalVisible(lpModal);
 
     // create
     await lpModal.getByRole("button", { name: "Save" }).click();

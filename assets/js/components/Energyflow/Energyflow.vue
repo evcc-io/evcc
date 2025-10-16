@@ -11,7 +11,7 @@
 				:gridImport="gridImport"
 				:selfPv="selfPv"
 				:selfBattery="selfBattery"
-				:loadpoints="loadpointsCompact"
+				:loadpoints="loadpoints"
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
@@ -94,7 +94,7 @@
 							@details-clicked="openForecastModal"
 							@toggle="togglePv"
 						>
-							<template v-if="multiplePv" #expanded>
+							<template v-if="pv.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
@@ -127,7 +127,7 @@
 							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
 							</template>
-							<template v-if="multipleBattery" #expanded>
+							<template v-if="battery.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -171,14 +171,23 @@
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
 							data-testid="energyflow-entry-home"
-						/>
+							:expanded="consumersExpanded"
+							@toggle="toggleConsumers"
+						>
+							<template v-if="consumers.length > 0" #expanded>
+								<EnergyflowEntry
+									v-for="(c, index) in consumers"
+									:key="index"
+									:name="c.title || genericConsumerTitle(index)"
+									:power="c.power"
+									:powerUnit="powerUnit"
+									icon="vehicle"
+									:iconProps="{ names: [c.icon || 'generic'] }"
+								/>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
-							:name="
-								// @ts-ignore
-								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
-									count: activeLoadpointsCount,
-								})
-							"
+							:name="loadpointsLabel"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
 							:power="loadpointsPower"
@@ -199,14 +208,18 @@
 							<template v-if="activeLoadpointsCount > 0" #expanded>
 								<EnergyflowEntry
 									v-for="lp in activeLoadpoints"
-									:key="lp.index"
-									:name="lp.title"
-									:power="lp.power"
+									:key="lp.id"
+									:name="lp.displayTitle"
+									:power="lp.chargePower"
 									:powerUnit="powerUnit"
 									icon="vehicle"
 									:iconProps="{ names: [lp.icon] }"
-									:details="lp.soc || undefined"
-									:detailsFmt="lp.heating ? fmtLoadpointTemp : fmtLoadpointSoc"
+									:details="lp.vehicleSoc || undefined"
+									:detailsFmt="
+										lp.chargerFeatureHeating
+											? fmtLoadpointTemp
+											: fmtLoadpointSoc
+									"
 								/>
 							</template>
 						</EnergyflowEntry>
@@ -249,7 +262,7 @@
 									</span>
 								</button>
 							</template>
-							<template v-if="multipleBattery" #expanded>
+							<template v-if="battery.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery"
 									:key="index"
@@ -291,10 +304,11 @@ import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
-	type Battery,
+	type BatteryMeter,
+	type Meter,
 	type CURRENCY,
 	type Forecast,
-	type LoadpointCompact,
+	type UiLoadpoint,
 } from "@/types/evcc";
 
 export default defineComponent({
@@ -310,11 +324,13 @@ export default defineComponent({
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
-		pv: { type: Array as PropType<Pv[]> },
+		pv: { type: Array as PropType<Meter[]>, default: () => [] },
+		aux: { type: Array as PropType<Meter[]>, default: () => [] },
+		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		pvPower: { type: Number, default: 0 },
-		loadpointsCompact: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Array as PropType<Battery[]> },
+		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
@@ -370,7 +386,7 @@ export default defineComponent({
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
 		activeLoadpoints() {
-			return this.loadpointsCompact.filter((lp) => lp.charging);
+			return this.loadpoints.filter((lp) => lp.charging);
 		},
 		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;
@@ -382,8 +398,8 @@ export default defineComponent({
 			return ["car"];
 		},
 		loadpointsPower() {
-			return this.loadpointsCompact.reduce((sum, lp) => {
-				return sum + (lp.power || 0);
+			return this.loadpoints.reduce((sum, lp) => {
+				return sum + (lp.chargePower || 0);
 			}, 0);
 		},
 		pvExport() {
@@ -410,12 +426,6 @@ export default defineComponent({
 		},
 		batteryFmt() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
-		},
-		multipleBattery() {
-			return (this.battery?.length || 0) > 1;
-		},
-		multiplePv() {
-			return (this.pv?.length || 0) > 1;
 		},
 		fmtLoadpointSoc() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
@@ -478,6 +488,18 @@ export default defineComponent({
 		},
 		loadpointsExpanded() {
 			return settings.energyflowLoadpoints;
+		},
+		consumersExpanded() {
+			return settings.energyflowConsumers;
+		},
+		loadpointsLabel() {
+			// @ts-expect-error plural
+			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
+				count: this.activeLoadpointsCount,
+			});
+		},
+		consumers() {
+			return [...this.aux, ...this.ext];
 		},
 	},
 	watch: {
@@ -577,11 +599,18 @@ export default defineComponent({
 			settings.energyflowLoadpoints = !settings.energyflowLoadpoints;
 			this.$nextTick(this.updateHeight);
 		},
+		toggleConsumers() {
+			settings.energyflowConsumers = !settings.energyflowConsumers;
+			this.$nextTick(this.updateHeight);
+		},
 		genericBatteryTitle(index: number) {
 			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
 		},
 		genericPvTitle(index: number) {
 			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
+		},
+		genericConsumerTitle(index: number) {
+			return `${this.$t("config.devices.consumer")} #${index + 1}`;
 		},
 	},
 });

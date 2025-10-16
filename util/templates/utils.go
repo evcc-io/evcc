@@ -16,6 +16,11 @@ func yamlQuote(value string) string {
 		return value
 	}
 
+	// quote multi-line strings with "" and convert line breaks to literal \n
+	if strings.Contains(value, "\n") {
+		return `"` + strings.ReplaceAll(value, "\n", "\\n") + `"`
+	}
+
 	input := fmt.Sprintf("key: %s", value)
 
 	var res struct {

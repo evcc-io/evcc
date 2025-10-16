@@ -79,11 +79,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err = <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Entsoe) run(done chan error) {
@@ -142,7 +138,7 @@ func (t *Entsoe) run(done chan error) {
 		}
 
 		// extract desired series
-		res, err := entsoe.GetTsPriceData(tr.TimeSeries, entsoe.ResolutionHour)
+		res, err := entsoe.GetTsPriceData(tr.TimeSeries, entsoe.ResolutionQuarterHour)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

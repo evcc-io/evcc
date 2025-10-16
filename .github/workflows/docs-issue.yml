@@ -1,4 +1,7 @@
 name: Create Documentation Issue
+permissions:
+  issues: write
+  contents: read
 
 on:
   pull_request_target:
@@ -8,13 +11,13 @@ on:
 jobs:
   check-label-and-create-issue:
     runs-on: depot-ubuntu-24.04-arm
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.repo.full_name == github.event.pull_request.head.repo.full_name
     steps:
       - name: Check for 'needs documentation' label
         id: check-label
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
-          github-token: ${{ secrets.GH_TOKEN }}
+          github-token: ${{ secrets.DOCS_ISSUE_TOKEN }}
           script: |
             const { data: labels } = await github.rest.issues.listLabelsOnIssue({
               owner: context.repo.owner,
@@ -27,9 +30,9 @@ jobs:
 
       - name: Create Docs Issue
         if: steps.check-label.outputs.result == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
-          github-token: ${{ secrets.GH_TOKEN }}
+          github-token: ${{ secrets.DOCS_ISSUE_TOKEN }}
           script: |
             const title = `Document: ${context.payload.pull_request.title}`;
             const body = `We need to document the new feature introduced in this PR: ${context.payload.pull_request.html_url}`;

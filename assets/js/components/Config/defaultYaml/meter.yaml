@@ -15,9 +15,7 @@ power: # current power
 #soc: # state of charge in % (for battery)
 #  source: const
 #  value: 75
-#capacity: # capacity in kWh (for battery)
-#  source: const
-#  value: 10.5
+#capacity: 10.5 # capacity in kWh (for battery)
 #powers: # phase powers in W
 #  - source: const
 #    value: 330

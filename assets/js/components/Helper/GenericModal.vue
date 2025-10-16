@@ -36,7 +36,9 @@
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+
+export type ModalFade = "left" | "right" | undefined;
 
 export default defineComponent({
 	name: "GenericModal",
@@ -45,8 +47,9 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
-		fade: String,
+		fade: String as PropType<ModalFade>,
 		size: String,
+		autofocus: { type: Boolean, default: true },
 	},
 	emits: ["open", "opened", "close", "closed"],
 	data() {
@@ -95,13 +98,16 @@ export default defineComponent({
 		handleShown() {
 			console.log(this.dataTestid, "> shown");
 			this.$emit("opened");
-			// focus first input or select
-			this.$nextTick(() => {
-				const firstInput = this.$refs["modalBody"]?.querySelector("input, select, button");
-				if (firstInput instanceof HTMLElement) {
-					firstInput.focus();
-				}
-			});
+			// focus first input or select if autofocus is enabled
+			if (this.autofocus) {
+				this.$nextTick(() => {
+					const firstInput =
+						this.$refs["modalBody"]?.querySelector("input, select, button");
+					if (firstInput instanceof HTMLElement) {
+						firstInput.focus();
+					}
+				});
+			}
 			this.isModalVisible = true;
 		},
 		handleHide() {

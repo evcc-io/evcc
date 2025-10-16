@@ -22,22 +22,22 @@ test.describe("currents", async () => {
     await expectModalVisible(modal);
 
     const minCurrent = modal.getByLabel("Min. current");
+    const minCurrentSelected = minCurrent.locator("option:checked");
     const maxCurrent = modal.getByLabel("Max. current");
-    const minPower = modal.getByTestId("min-power");
-    const maxPower = modal.getByTestId("max-power");
+    const maxCurrentSelected = maxCurrent.locator("option:checked");
 
     // initial values
     await expect(maxCurrent).toHaveValue("16");
-    await expect(maxPower).toContainText("~ 11.0 kW");
+    await expect(maxCurrentSelected).toHaveText("16 A (11.0 kW) [default]");
     await expect(minCurrent).toHaveValue("6");
-    await expect(minPower).toContainText("~ 4.1 kW");
+    await expect(minCurrentSelected).toHaveText("6 A (4.1 kW) [default]");
 
     // change min current
-    await minCurrent.selectOption("0.125 A");
-    await expect(minPower).toContainText("~ 0.1 kW");
+    await minCurrent.selectOption("0.125 A (0.1 kW)");
+    await expect(minCurrentSelected).toHaveText("0.125 A (0.1 kW)");
 
     // change max current
-    await maxCurrent.selectOption("32 A");
-    await expect(maxPower).toContainText("~ 22.1 kW");
+    await maxCurrent.selectOption("32 A (22.1 kW)");
+    await expect(maxCurrentSelected).toHaveText("32 A (22.1 kW)");
   });
 });

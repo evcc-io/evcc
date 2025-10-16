@@ -22,12 +22,8 @@ params:
   - name: capacity
     advanced: true
   - name: minsoc
-    type: int
-    default: 20
     advanced: true
   - name: maxsoc
-    type: int
-    default: 95
     advanced: true
   - name: maxacpower
   - name: includegenport
@@ -36,6 +32,12 @@ params:
     description:
       de: GEN-Anschluss als Solar-Eingang verwenden
       en: Treat GEN port as solar input
+  - name: firmware1098
+    type: bool
+    advanced: true
+    description:
+      de: Firmware 1098 oder neuer
+      en: Firmware 1098 or newer
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -53,7 +55,9 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
+    {{- if ne .firmware1098 "true" }}
     scale: 0.1
+    {{- end }}
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -127,7 +131,9 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
+      {{- if ne .firmware1098 "true" }}
       scale: 0.1
+      {{- end }}
     {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -135,7 +141,9 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
+      {{- if ne .firmware1098 "true" }}
       scale: 0.1
+      {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
@@ -160,7 +168,9 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
+    {{- if ne .firmware1098 "true" }}
     scale: 0.1
+    {{- end }}
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

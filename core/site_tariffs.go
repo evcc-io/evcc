@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
@@ -106,18 +107,18 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		Planner api.Rates     `json:"planner,omitempty"`
 		Solar   *solarDetails `json:"solar,omitempty"`
 	}{
-		Co2:     tariff.Forecast(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Forecast(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Forecast(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Forecast(site.GetTariff(api.TariffUsageGrid)),
+		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
+		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
+		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
 	}
 
-	// calculate adjusted solar forecast
-	if solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
+	// calculate adjusted solar rates
+	if solar := tariff.Rates(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
-	site.publish(keys.Forecast, fc)
+	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
@@ -149,12 +150,18 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	}
 
 	// accumulate forecasted energy since last update
-	site.fcstEnergy.AddEnergy(solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3)
+	energy := solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3
+	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
+		energy, site.fcstEnergy.updated.Truncate(time.Second), time.Now().Truncate(time.Second),
+	)
+
+	site.fcstEnergy.AddEnergy(energy)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
 
 	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
 		return v.AccumulatedEnergy()
 	})
+	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
 	if fcst := site.fcstEnergy.AccumulatedEnergy(); fcst > 0 {
 		scale := produced / fcst

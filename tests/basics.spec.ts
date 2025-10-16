@@ -69,16 +69,19 @@ test.describe("session info", async () => {
 
 test.describe("loadpoint settings", async () => {
   test("phase selection", async ({ page }) => {
+    const minCurrentSelected = page.getByLabel("Min. current").locator("option:checked");
+    const maxCurrentSelected = page.getByLabel("Max. current").locator("option:checked");
+
     await page.getByTestId("loadpoint-settings-button").nth(1).click();
     await expect(page.getByLabel("auto-switching")).not.toBeVisible();
     await expect(page.getByLabel("3 phase")).toBeChecked();
     await expect(page.getByLabel("1 phase")).not.toBeChecked();
-    await expect(page.getByText("~ 11.0 kW")).toBeVisible();
-    await expect(page.getByText("~ 4.1 kW")).toBeVisible();
+    await expect(maxCurrentSelected).toHaveText("16 A (11.0 kW) [default]");
+    await expect(minCurrentSelected).toHaveText("6 A (4.1 kW) [default]");
 
     await page.getByLabel("1 phase").click();
-    await expect(page.getByText("~ 3.7 kW")).toBeVisible();
-    await expect(page.getByText("~ 1.4 kW")).toBeVisible();
+    await expect(maxCurrentSelected).toHaveText("16 A (3.7 kW) [default]");
+    await expect(minCurrentSelected).toHaveText("6 A (1.4 kW) [default]");
   });
 });
 

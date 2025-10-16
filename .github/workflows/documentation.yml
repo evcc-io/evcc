@@ -12,12 +12,17 @@ jobs:
     name: Deploy updated templates
     runs-on: depot-ubuntu-24.04-arm
 
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      contents: read
 
-      - uses: actions/setup-go@v5
+    steps:
+      - uses: actions/checkout@v5
         with:
-          go-version: "1.24.0"
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
         id: go
 
       - name: Build docs
@@ -26,7 +31,7 @@ jobs:
       - name: Deploy to docs repo
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.GH_TOKEN }}
+          personal_token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
           publish_dir: ./templates/docs
           external_repository: evcc-io/docs
           publish_branch: main

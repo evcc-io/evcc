@@ -2,19 +2,19 @@
   "batterySettings": {
     "batteryLevel": "Nivell de bateria",
     "bufferStart": {
-      "full": "quan gairebé ple",
+      "full": "quan gairebé ple {soc}.",
       "never": "només amb prous excedents"
     },
     "capacity": "{energy} de {total}",
     "disclaimerHint": "Nota:",
     "disclaimerText": "aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència.",
     "legendBottomName": "prioritat de la casa",
-    "legendBottomSubline": "no utilitzat per carregar",
+    "legendBottomSubline": "fins que arriba a {soc}.",
     "legendMiddleName": "primer, el vehicle",
-    "legendMiddleSubline": "segón, la casa",
+    "legendMiddleSubline": "quan la bateria de casa està per sobre {soc}.",
     "legendTopAutostart": "s'inicia automaticament",
     "legendTopName": "càrrega soportada per bateria",
-    "legendTopSubline": "sensa interrupcions",
+    "legendTopSubline": "quan la bateria de casa està per sobre {soc}.",
     "modalTitle": "Configuració bateria"
   },
   "footer": {
@@ -217,8 +217,8 @@
       "pvEnable": "Excedent disponible. Començar en {remaining}...",
       "scale1p": "Reduint a càrrega monofàsica a {remaining}...",
       "scale3p": "Augmentant la càrrega trifàsica en {remaining}...",
-      "targetChargeActive": "Càrrega objectiu activa...",
-      "targetChargePlanned": "La càrrega objectiu comença a {time}.",
+      "targetChargeActive": "Càrrega objectiu activa. Finalització estimada en {duration}.",
+      "targetChargePlanned": "La càrrega objectiu comença en {duration}.",
       "targetChargeWaitForVehicle": "Càrrega objectiu llesta. Esperar vehicle.",
       "vehicleLimitReached": "Límit de vehicle {soc} assolit.",
       "waitForVehicle": "A punt per carregar. Esperant vehicle."

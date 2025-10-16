@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -241,12 +241,11 @@ func (wb *smartEVSE) Phases1p3p(phases int) error {
 		settings |= 1 // set bit 0 (smartEVSEConfPhases)
 	}
 
-	if _, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, settings); err != nil {
+	return whenDisabled(wb, func() error {
+		// Switch phases
+		_, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, settings)
 		return err
-	}
-
-	// we need to stop charging quickly for the setting to take effect
-	return wb.Enable(false)
+	})
 }
 
 var _ api.Diagnosis = (*smartEVSE)(nil)

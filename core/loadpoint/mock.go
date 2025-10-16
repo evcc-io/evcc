@@ -55,6 +55,20 @@ func (mr *MockAPIMockRecorder) ActivePhases() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivePhases", reflect.TypeOf((*MockAPI)(nil).ActivePhases))
 }
 
+// EffectiveLimitSoc mocks base method.
+func (m *MockAPI) EffectiveLimitSoc() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveLimitSoc")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// EffectiveLimitSoc indicates an expected call of EffectiveLimitSoc.
+func (mr *MockAPIMockRecorder) EffectiveLimitSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveLimitSoc", reflect.TypeOf((*MockAPI)(nil).EffectiveLimitSoc))
+}
+
 // EffectiveMaxPower mocks base method.
 func (m *MockAPI) EffectiveMaxPower() float64 {
 	m.ctrl.T.Helper()
@@ -562,6 +576,20 @@ func (mr *MockAPIMockRecorder) GetSmartFeedInPriorityLimit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartFeedInPriorityLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartFeedInPriorityLimit))
 }
 
+// GetSoc mocks base method.
+func (m *MockAPI) GetSoc() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSoc")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetSoc indicates an expected call of GetSoc.
+func (mr *MockAPIMockRecorder) GetSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSoc", reflect.TypeOf((*MockAPI)(nil).GetSoc))
+}
+
 // GetSocConfig mocks base method.
 func (m *MockAPI) GetSocConfig() SocConfig {
 	m.ctrl.T.Helper()
@@ -670,18 +698,6 @@ func (m *MockAPI) PublishEffectiveValues() {
 func (mr *MockAPIMockRecorder) PublishEffectiveValues() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishEffectiveValues", reflect.TypeOf((*MockAPI)(nil).PublishEffectiveValues))
-}
-
-// RemoteControl mocks base method.
-func (m *MockAPI) RemoteControl(arg0 string, arg1 RemoteDemand) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RemoteControl", arg0, arg1)
-}
-
-// RemoteControl indicates an expected call of RemoteControl.
-func (mr *MockAPIMockRecorder) RemoteControl(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoteControl", reflect.TypeOf((*MockAPI)(nil).RemoteControl), arg0, arg1)
 }
 
 // SetBatteryBoost mocks base method.

@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Zajišťuje, že součet všech nabíjecích bodů připojených k danému okruhu nepřekročí nastavené limity výkonu a proudu. Okruhy lze vnořovat a vytvářet tak hierarchii.",
-      "title": "Řízení zátěže"
+      "title": "Řízení zátěže",
+      "usableMeters": "Použitelné elektroměry"
     },
     "control": {
       "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
@@ -95,10 +96,11 @@
       "currentRange": "Proud",
       "enabled": "Zapnuto",
       "energy": "Energie",
-      "feedinPrice": "Výkupní cena",
+      "feedinPrice": "Cena za výkup energie",
       "gridPrice": "Cena ze sítě",
       "heaterTempLimit": "Limit topení",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktivní limit",
+      "hemsType": "Komunikace",
       "identifier": "RFID identifikátor",
       "no": "ne",
       "odometer": "Ujetých km",
@@ -123,6 +125,10 @@
       "A": "A (nepřipojeno)",
       "B": "B (připojeno)",
       "C": "C (nabíjení)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "skrze EEBus",
+      "relay": "skrze relé"
     },
     "devices": {
       "auxMeter": "Chytrý spotřebič",
@@ -176,7 +182,7 @@
       "titleEdit": "Editovat měřič spotřeby ze sítě"
     },
     "hems": {
-      "description": "Umožňuje propojení evcc s dalším systémem pro správu energie v domácnosti.",
+      "description": "Limitace výkonu externími systémy (např. EnWG 14a kontroléry). Vyžaduje konfiguraci systému řízení zátěže.",
       "title": "HEMS"
     },
     "icon": {
@@ -425,35 +431,52 @@
       "system": "Systém",
       "vehicles": "Vozidla"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "EVCC disponuje integrací s SMA Sunny Home Manager (SHM) skrze SEMP protokol. Pokud je provozován na stejné lokální síti (LAN) mělo be po přihlášení do Sunny Portal účtu nastat automatické nabídnutí k přidání všech nabíječek, které byly konfigurovány skrze EVCC jako nová zařízení. Vše by mělo být připraveno k okamžitému použití, bez nutných změn požadovaných níže.",
+      "descriptionDeviceId": "12 znaků v HEX string. Předpona pro všechna zařízení (nabíjecí místo, ..).",
+      "descriptionIdPattern": "Identifikace řetězce",
+      "descriptionIds": "V Sunny Portálu každé zařízení potřebuje unikátní identifikátor. EVCC generuje tento identifikátor v závisosti na vašem HW. Pokud zmigrujete EVCC na jiný HW mohou se tyto identifikátory změnit. Pokud chcete uchovat statistiky můžete zde přepsat generované identifikátory. Otevřete SEMP URL (/semp) abyste zkontrolovali současné identifikátory.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 znaků HEX string. Obecné předpony všech entit. Ve výchozím stavu EVCC použije vlastní interní ID.",
+      "labelDeviceId": "ID zařízení",
+      "labelVendorId": "ID výrobce",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
       "description": "Sponzorský model nám pomáhá udržovat projekt a udržitelně vyvíjet nové a vzrušující funkce. Jako sponzor získáte přístup ke všem implementacím nabíječek.",
-      "descriptionToken": "Token získáte na {url}. Nabízíme také zkušební token pro testování.",
+      "descriptionToken": "Sponzorský token získáte na {url}. Pro začátek nabízíme také zkušební token {trialToken}.",
+      "enterYourToken": "Vložte svůj sponzorský token",
       "error": "Sponzorský token není platný.",
+      "invalid": "Neplatný sponzorský token",
       "labelToken": "Sponzorský token",
       "title": "Sponzorství",
       "tokenRequired": "Před vytvořením tohoto zařízení musíte nakonfigurovat sponzorský token.",
       "tokenRequiredLearnMore": "Zjistit více.",
-      "trialToken": "Zkušební token"
+      "tokenRequiredShort": "Nebyl přidán sponzorský token.",
+      "trialToken": "zkušební token",
+      "viaYaml": "skrze evcc.yaml",
+      "yourToken": "Váš sponzorský token"
     },
     "system": {
       "backupRestore": {
         "backup": {
-          "action": "Stahování zálohy...",
+          "action": "Stáhnout zálohu...",
           "confirmationButton": "Stáhnout zálohu",
           "confirmationText": "Prosím, zadejte své heslo pro stažení databázového souboru.",
           "description": "Zálohuje vaši konfiguraci do souboru. Tento soubor může být později použit pro obnovu, např. v případě selhání systému.",
-          "title": "Zálohování"
+          "title": "Záloha"
         },
         "cancel": "Zrušit",
         "description": "Umožňuje zálohu a obnovení dat či provedení kompletního smazání a resetu systému. Může se hodit, když chcete svá data přesunout do jiného systému.",
         "note": "Poznámka: Všechny akce uvedené výše ovlivní jen data v databázi. Data v evcc.yaml souboru zůstanou nedotčena.",
         "reset": {
-          "action": "Provádím reset systému...",
+          "action": "Resetovat systém...",
           "confirmationButton": "Resetovat a restartovat",
           "confirmationText": "Dočasně smaže Vámi vybraná data. Ujistěte se, že jste prvně provedli zálohu dat.",
-          "description": "Máte problémy s konfigurací a chcete začít znovu? Smažte všechna svá data a začněte znovu.",
+          "description": "Máte problémy a chcete začít znovu? Můžete smazat data a pustit se znovu do nastavování.",
           "sessions": "Nabíjecí relace",
           "sessionsDescription": "Smaže veškerou historii nabíjení.",
           "settings": "Konfigurace a nastavení",
@@ -461,7 +484,7 @@
           "title": "Reset"
         },
         "restore": {
-          "action": "Obnovování ze zálohy...",
+          "action": "Obnovit zálohu...",
           "confirmationButton": "Obnovit a restartovat",
           "confirmationText": "Přepíše celou vaši databázi. Ujistěte se, že jste prvně provedli zálohu dat.",
           "description": "Obnoví vaše data ze zálohy. Vaše současná data budou přepsána.",
@@ -619,6 +642,10 @@
   },
   "header": {
     "about": "O",
+    "authProviders": {
+      "confirmLogout": "Opravdu chcete odpojit {title}?",
+      "title": "Stav autorizace"
+    },
     "blog": "Blog",
     "docs": "Dokumentace",
     "github": "GitHub",
@@ -684,11 +711,11 @@
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
       "planNumber": "Plán {number}",
-      "preconditionDescription": "Před odjezdem nabijte {duration} pro stabilizaci baterie.",
-      "preconditionLong": "Pozdní Nabíjení",
+      "preconditionDescription": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
+      "preconditionLong": "Odložené nabíjení",
       "preconditionOptionAll": "všechen",
       "preconditionOptionNo": "ne",
-      "preconditionShort": "Pozdní",
+      "preconditionShort": "Odložené nabíjení",
       "remove": "Odebrat",
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",
@@ -713,6 +740,7 @@
       "gridImport": "Odběr ze sítě",
       "homePower": "Spotřeba domu",
       "loadpoints": "Nabíječka | Nabíječka | {count} nabíječek",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "Žádná data z měřiče",
       "pv": "FVE",
       "pvExport": "Export do sítě",
@@ -724,6 +752,10 @@
       "connected": "Pohotovostní režim.",
       "vehicleLimit": "Limit topení",
       "waitForVehicle": "Připraven. Čekám na odpověď topidla…"
+    },
+    "hemsWarning": {
+      "description": "Zpomalené nabíjení zamezující přesáhnutí {limit}.",
+      "title": "Externí limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -845,7 +877,7 @@
       "temp": "Teplota",
       "tempLimit": "Cílová teplota",
       "unknown": "Vozidlo hosta",
-      "vehicleSoc": "Úroveň nabití"
+      "vehicleSoc": "Aktuální stav baterie"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Čeká se na autorizaci.",
@@ -861,8 +893,8 @@
       "connected": "Připojeno.",
       "disconnectRequired": "Relace byla ukončena. Prosím, připojte se znovu.",
       "disconnected": "Odpojeno.",
-      "feedinPriorityNextStart": "Vysoký tarif začne za {duration}.",
-      "feedinPriorityPausing": "Nabíjení z FVE pozastaveno pro maximální využití distribuční sítě.",
+      "feedinPriorityNextStart": "Vysoká cena výkupu začne za {duration}.",
+      "feedinPriorityPausing": "Nabíjení z FVE pozastaveno pro maximální dodávku do distribuční sítě.",
       "finished": "Dokončeno.",
       "minCharge": "Okamžité nabíjení na {soc}.",
       "pvDisable": "Nedostatečný přebytek. Nabíjení bude brzy pozastaveno.",
@@ -1060,11 +1092,11 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pozastaveno",
-    "description": "Pozastaví nabíjení během vysokých cen pro efektivní výhodné použití distribuční sítě.",
-    "priceLabel": "Cena dodávky energie",
-    "priceLimit": "Cenový strop pro dodávku energie",
-    "resetWarning": "Nenastavili jste žádný dynamický tarif dodávky energie. Přesto je nastavení limit {limit}. Zkontrolujte konfiguraci.",
-    "title": "Priorita dodávky energie"
+    "description": "Pozastaví nabíjení pro maximalizaci výdělečné dodávky do distribuční sítě.",
+    "priceLabel": "Cena výkupu energie",
+    "priceLimit": "Cenový strop pro výkup energie",
+    "resetWarning": "Nenastavili jste žádný dynamický tarif výkupu energie. Přesto je nastavení limit {limit}. Zkontrolujte konfiguraci.",
+    "title": "Priorita výkupu energie"
   },
   "startupError": {
     "configFile": "Konfigurační soubor užívá:",

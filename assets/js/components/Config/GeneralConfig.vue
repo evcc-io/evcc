@@ -19,7 +19,7 @@
 			test-id="generalconfig-telemetry"
 			:label="$t('config.general.telemetry')"
 			:text="$t(`config.general.${telemetryEnabled ? 'on' : 'off'}`)"
-			modal-id="globalSettingsModal"
+			modal-id="telemetryModal"
 		/>
 
 		<GeneralConfigEntry
@@ -33,15 +33,16 @@
 			v-if="$hiddenFeatures()"
 			test-id="generalconfig-sponsoring"
 			:label="$t('config.sponsor.title')"
-			:text="sponsorStatus.name || '---'"
-			:text-class="sponsorStatus.cssClass"
+			:text="sponsorStatus.title"
+			:text-class="sponsorStatus.textClass"
 			modal-id="sponsorModal"
 			experimental
 		>
 			<template #text-prefix>
 				<span
-					v-if="sponsorStatus.expiresSoon && sponsorStatus.name"
-					class="d-inline-block me-1 p-1 rounded-circle bg-warning rounded-circle"
+					v-if="sponsorStatus.badgeClass"
+					class="d-inline-block me-1 p-1 rounded-circle"
+					:class="sponsorStatus.badgeClass"
 				></span>
 			</template>
 		</GeneralConfigEntry>
@@ -79,6 +80,9 @@ export default {
 	name: "GeneralConfig",
 	components: { TitleModal, GeneralConfigEntry },
 	mixins: [formatter],
+	props: {
+		sponsorError: Boolean,
+	},
 	emits: ["site-changed"],
 	data() {
 		return {
@@ -103,12 +107,27 @@ export default {
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};
 			const { name, expiresSoon } = sponsor;
-			let cssClass = "";
+			let textClass = "";
+			let badgeClass = "";
+			let title = name;
 			if (name) {
-				cssClass = expiresSoon ? "text-warning" : "text-primary";
+				if (expiresSoon) {
+					textClass = "text-warning";
+					badgeClass = "bg-warning";
+				} else {
+					badgeClass = "bg-primary";
+				}
+			} else {
+				title = "---";
 			}
 
-			return { name, expiresSoon, cssClass };
+			if (this.sponsorError) {
+				textClass = "text-danger";
+				badgeClass = "bg-danger";
+				title = this.$t("config.sponsor.invalid");
+			}
+
+			return { title, expiresSoon, textClass, badgeClass };
 		},
 	},
 	async mounted() {

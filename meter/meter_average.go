@@ -70,7 +70,7 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 		powers = m.Powers
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil), nil
+	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil, nil), nil
 }
 
 type MovingAverage struct {

@@ -22,7 +22,7 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div :class="showPrecondition ? 'col-2' : 'col-3'">
+			<div :class="showPrecondition ? 'col-3' : 'col-4'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
@@ -83,7 +83,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div :class="['col-7', showPrecondition ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
+			<div :class="['col-7', showPrecondition ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
 				<select
 					v-if="socBasedPlanning"
 					:id="formId('goal')"
@@ -145,18 +145,23 @@
 				</div>
 			</div>
 			<div
-				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
+				class="col-4 col-lg-1 d-flex align-items-center justify-content-end justify-content-lg-start"
 			>
 				<button
 					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline text-truncate"
 					data-testid="static-plan-apply"
 					:disabled="timeInThePast"
 					tabindex="0"
+					:aria-label="$t('main.chargingPlan.update')"
 					@click="update"
 				>
-					{{ $t("main.chargingPlan.update") }}
+					<span class="d-lg-none">{{ $t("main.chargingPlan.update") }}</span>
+					<shopicon-regular-checkmark
+						size="s"
+						class="flex-shrink-0 d-none d-lg-block"
+					></shopicon-regular-checkmark>
 				</button>
 			</div>
 		</div>
@@ -225,9 +230,17 @@ export default defineComponent({
 		},
 		socOptions() {
 			// a list of entries from 5 to 100 with a step of 5
-			return Array.from(Array(20).keys())
+			const options = Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
+
+			// add current soc value if it's not in the list
+			if (this.selectedSoc && !options.find((o) => o.value === this.selectedSoc)) {
+				options.push(this.socOption(this.selectedSoc));
+				options.sort((a, b) => a.value - b.value);
+			}
+
+			return options;
 		},
 		energyOptions() {
 			const options = energyOptions(
@@ -236,7 +249,8 @@ export default defineComponent({
 				this.fmtWh,
 				this.fmtPercentage,
 				"-",
-				this.socPerKwh
+				this.socPerKwh,
+				Number(this.selectedEnergy)
 			);
 			// remove the first entry (0)
 			return options.slice(1);

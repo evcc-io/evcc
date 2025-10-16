@@ -557,18 +557,27 @@
 </template>
 
 <script lang="ts">
+import type { PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
-import GenericModal from "../Helper/GenericModal.vue";
+import GenericModal, { type ModalFade } from "../Helper/GenericModal.vue";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
-import { type ConfigType, handleError, customChargerName } from "./DeviceModal";
-import { LOADPOINT_TYPE } from "@/types/evcc";
+import { handleError, customChargerName } from "./DeviceModal";
+import {
+	LOADPOINT_TYPE,
+	type DeviceType,
+	type LoadpointType,
+	type ConfigCharger,
+	type ConfigMeter,
+	type ConfigCircuit,
+	type ConfigLoadpoint,
+} from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
 
@@ -592,31 +601,11 @@ const defaultValues = {
 	charger: "",
 	circuit: "",
 	meter: "",
-};
+} as ConfigLoadpoint;
 
 const defaultThresholds = {
 	enable: { delay: 1 * nsPerMin, threshold: 0 },
 	disable: { delay: 3 * nsPerMin, threshold: 0 },
-};
-
-type LoadpointValues = typeof defaultValues;
-
-type Charger = {
-	name: string;
-	deviceProduct: string;
-	type: ConfigType;
-	config: { template: string };
-};
-
-type Meter = {
-	name: string;
-	deviceProduct: string;
-	config: { template: string };
-};
-
-type Circuit = {
-	name: string;
-	config: { title: string };
 };
 
 export default {
@@ -628,20 +617,23 @@ export default {
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 		loadpointCount: { type: Number, default: 0 },
-		fade: String,
-		chargers: { type: Array as () => Charger[], default: () => [] },
+		fade: String as PropType<ModalFade>,
+		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
-		meters: { type: Array as () => Meter[], default: () => [] },
-		circuits: { type: Array as () => Circuit[], default: () => [] },
-		hasDeviceError: { type: Function, default: () => false },
+		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
+		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
+		hasDeviceError: {
+			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
+			default: () => false,
+		},
 	},
 	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
 	data() {
 		return {
 			isModalVisible: false,
 			saving: false,
-			selectedType: null as LOADPOINT_TYPE | null,
-			values: deepClone(defaultValues) as LoadpointValues,
+			selectedType: null as LoadpointType | null,
+			values: deepClone(defaultValues) as ConfigLoadpoint,
 			chargerPower: "11kw",
 			solarMode: "default",
 			tab: "solar",
@@ -714,15 +706,15 @@ export default {
 				key?: number;
 				name: string;
 			}[];
-			result[0].name = "0 (default)";
-			result[0].key = undefined;
-			result[10].name = "10 (highest)";
+			result[0]!.name = "0 (default)";
+			result[0]!.key = undefined;
+			result[10]!.name = "10 (highest)";
 			return result;
 		},
 		phasesOptions() {
 			return [
-				{ value: "1", name: this.$t("config.loadpoint.phases1p") },
-				{ value: "3", name: this.$t("config.loadpoint.phases3p") },
+				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
+				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
 			];
 		},
 		showCircuit() {
@@ -742,10 +734,10 @@ export default {
 				...this.vehicleOptions,
 			];
 		},
-		typeChoices(): LOADPOINT_TYPE[] {
+		typeChoices(): LoadpointType[] {
 			return Object.values(LOADPOINT_TYPE);
 		},
-		loadpointType(): LOADPOINT_TYPE | null {
+		loadpointType(): LoadpointType | null {
 			return this.selectedType ?? this.chargerType;
 		},
 		addChargerLabel() {
@@ -894,7 +886,7 @@ export default {
 				return;
 			}
 		},
-		selectType(type: LOADPOINT_TYPE) {
+		selectType(type: LoadpointType) {
 			this.selectedType = type;
 		},
 	},

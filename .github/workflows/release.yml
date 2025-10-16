@@ -1,5 +1,8 @@
 name: Release
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:
@@ -9,17 +12,23 @@ jobs:
   call-build-workflow:
     if: startsWith(github.ref, 'refs/tags')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
+    permissions:
+      contents: read
+      actions: write
 
   docker:
     name: Publish Docker :release
     needs:
       - call-build-workflow
     runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Login
         uses: docker/login-action@v3
@@ -53,15 +62,20 @@ jobs:
       - call-build-workflow
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: write
+      actions: read
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.24.0"
+          go-version-file: go.mod
         id: go
 
       - name: Patch ASN1
@@ -91,13 +105,13 @@ jobs:
       - name: Create Github Release
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
-          # use GH_TOKEN for access to evcc-io/homebrew-tap
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          # use RELEASE_DEPLOY_TOKEN for access to evcc-io/homebrew-tap
+          GITHUB_TOKEN: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
@@ -114,10 +128,16 @@ jobs:
     needs:
       - docker
     runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
+
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --local-only --config packaging/fly.toml
 
@@ -127,12 +147,15 @@ jobs:
       - docker
     runs-on: depot-ubuntu-24.04-arm
 
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@master
         with:
           repository: evcc-io/hassio-addon
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
           path: ./hassio
 
       - name: Update version

@@ -1,10 +1,12 @@
 package connected
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"golang.org/x/oauth2"
 )
 
 // Provider implements the vehicle api
@@ -13,14 +15,23 @@ type Provider struct {
 	odoG    func() (OdometerState, error)
 }
 
+func tokenGuard[T any](fun func(string) (T, error), ts oauth2.TokenSource, vin string) (T, error) {
+	// don't try as long as there's no token
+	if _, err := ts.Token(); err != nil {
+		var zero T
+		return zero, api.ErrNotAvailable
+	}
+	return fun(vin)
+}
+
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(api *API, ts oauth2.TokenSource, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: util.Cached(func() (EnergyState, error) {
-			return api.EnergyState(vin)
+			return tokenGuard(api.EnergyState, ts, vin)
 		}, cache),
 		odoG: util.Cached(func() (OdometerState, error) {
-			return api.OdometerState(vin)
+			return tokenGuard(api.OdometerState, ts, vin)
 		}, cache),
 	}
 	return impl
@@ -34,25 +45,25 @@ func (v *Provider) Soc() (float64, error) {
 
 // Range implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
 	res, err := v.statusG()
 	if err != nil {
-		return status, nil
+		return api.StatusNone, err
 	}
 
-	switch res.ChargingConnectionStatus.Value {
-	case "DISCONNECTED":
-		status = api.StatusA
-	case "CONNECTED", "FAULT":
+	status := api.StatusA // disconnected
+
+	switch s := res.ChargerConnectionStatus.Value; s {
+	case "CONNECTED":
 		status = api.StatusB
+	case "FAULT":
+		return status, fmt.Errorf("invalid status: %s", s)
 	}
 
-	if res.ChargingStatus.Status == "CHARGING" {
+	if res.ChargingStatus.Value == "CHARGING" {
 		status = api.StatusC
 	}
 
-	return status, err
+	return status, nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)

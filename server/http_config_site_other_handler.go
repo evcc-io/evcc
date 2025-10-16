@@ -24,6 +24,7 @@ func updateSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+		sponsor.SetFromYaml(false)
 	}
 
 	// TODO find better place

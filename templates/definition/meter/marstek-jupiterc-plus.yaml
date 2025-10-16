@@ -1,0 +1,98 @@
+template: marstek-jupiterc-plus
+products:
+  - brand: Marstek
+    description:
+      generic: Jupiter C Plus Battery Storage
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 115200
+    comset: 8N1
+  - name: capacity
+    default: 2.56
+    help:
+      de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
+      en: Base unit 2.56 kWh, each extension plus 2.56 kWh
+  - name: maxacpower
+    default: 800 # W
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3 # PV1 power
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6 # PV2 power
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9 # PV3 power
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 12 # PV4 power
+        type: holding
+        decode: uint16
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 16 # Battery SOC
+      type: holding
+      decode: uint16
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 13 # AC output power
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3 # PV1 power
+        type: holding
+        decode: uint16
+      scale: -1 # Substract PV power to calc battery charge
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6 # PV2 power
+        type: holding
+        decode: uint16
+      scale: -1 # Substract PV power to calc battery charge
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9 # PV3 power
+        type: holding
+        decode: uint16
+      scale: -1 # Substract PV power to calc battery charge
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 12 # PV4 power
+        type: holding
+        decode: uint16
+      scale: -1 # Substract PV power to calc battery charge
+  capacity: {{ .capacity }} # kWh
+  {{- end }}

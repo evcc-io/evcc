@@ -66,6 +66,12 @@ params:
       en: Network interface
     advanced: true
     example: eth0
+  - name: schema
+    description:
+      generic: Schema
+    type: choice
+    choice: ["https", "http"]
+    default: https
   - name: user
     description:
       de: Benutzerkonto
@@ -127,8 +133,8 @@ params:
       de: Cache
       en: Cache
     help:
-      de: Zeitintervall nach dem Daten erneut vom Fahrzeug abgefragt werden
-      en: Time interval with when data should be reloaded from the vehicle
+      de: Zeitintervall für erneute Datenabfrage
+      en: Time interval for data refresh
     advanced: true
     type: duration
     example: 5m
@@ -331,18 +337,13 @@ params:
       en: For forced charging of the battery.
       de: Für erzwungenes Laden des Speichers.
     advanced: true
-  - name: chargepower
-    description:
-      en: Maximum charge power
-      de: Maximale Ladeleistung
-    deprecated: true
   - name: maxchargerate
     unit: "%"
     type: int
     usages: ["battery"]
     description:
-      en: Maximum charge power
-      de: Maximale Ladeleistung
+      en: Maximum charge rate
+      de: Maximale prozentuale Ladeleistung
     help:
       en: For forced charging of the battery in percent in relation to the maximum charge power of the battery inverter.
       de: Für erzwungenes Laden des Speichers in Prozent in Relation zur maximalen Ladeleistung des Batteriewechselrichters.
@@ -440,6 +441,18 @@ params:
     description:
       de: Temperaturquelle
       en: Temperature source
+  - name: lat
+    description:
+      en: Latitude
+      de: Breitengrad
+    type: float
+    example: 55.7351
+  - name: lon
+    description:
+      en: Longitude
+      de: Längengrad
+    type: float
+    example: 9.1275
 
 presets:
   vehicle-base:
@@ -530,18 +543,8 @@ presets:
   forecast-base:
     params:
       - name: lat
-        description:
-          en: Latitude
-          de: Breitengrad
-        type: float
-        example: 55.7351
         required: true
       - name: lon
-        description:
-          en: Longitude
-          de: Längengrad
-        type: float
-        example: 9.1275
         required: true
       - name: dec
         description:

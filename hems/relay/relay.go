@@ -8,9 +8,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 )
 
 type Relay struct {
@@ -19,13 +19,17 @@ type Relay struct {
 	root     api.Circuit
 	limit    func() (bool, error)
 	maxPower float64
+	interval time.Duration
 }
 
-// New creates an Relay HEMS from generic config
-func New(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
-	var cc struct {
+// NewFromConfig creates an Relay HEMS from generic config
+func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*Relay, error) {
+	cc := struct {
 		MaxPower float64
 		Limit    plugin.Config
+		Interval time.Duration
+	}{
+		Interval: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -38,15 +42,10 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 		return nil, errors.New("hems requires load management- please configure root circuit")
 	}
 
-	// create new root circuit for LPC
-	lpc, err := circuit.New(util.NewLogger("lpc"), "relay", 0, 0, nil, time.Minute)
+	// register LPC circuit if not already registered
+	lpc, err := shared.GetOrCreateCircuit("lpc", "relay")
 	if err != nil {
 		return nil, err
-	}
-
-	// register LPC-Circuit for use in config, if not already registered
-	if _, err := config.Circuits().ByName("lpc"); err != nil {
-		_ = config.Circuits().Add(config.NewStaticDevice(config.Named{Name: "lpc"}, api.Circuit(lpc)))
 	}
 
 	// wrap old root with new pc parent
@@ -61,23 +60,24 @@ func New(ctx context.Context, other map[string]interface{}, site site.API) (*Rel
 		return nil, err
 	}
 
-	return NewRelay(lpc, limitG, cc.MaxPower)
+	return NewRelay(lpc, limitG, cc.MaxPower, cc.Interval)
 }
 
 // NewRelay creates Relay HEMS
-func NewRelay(root api.Circuit, limit func() (bool, error), maxPower float64) (*Relay, error) {
+func NewRelay(root api.Circuit, limit func() (bool, error), maxPower float64, interval time.Duration) (*Relay, error) {
 	c := &Relay{
 		log:      util.NewLogger("relay"),
 		root:     root,
 		maxPower: maxPower,
 		limit:    limit,
+		interval: interval,
 	}
 
 	return c, nil
 }
 
 func (c *Relay) Run() {
-	for range time.Tick(10 * time.Second) {
+	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -95,6 +95,7 @@ func (c *Relay) run() error {
 		power = c.maxPower
 	}
 
+	c.root.Dim(limit)
 	c.root.SetMaxPower(power)
 
 	return nil

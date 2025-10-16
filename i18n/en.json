@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
-      "title": "Load Management"
+      "title": "Load Management",
+      "usableMeters": "Usable meter references"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Active limit",
+      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "no": "no",
       "odometer": "Odometer",
@@ -116,7 +118,7 @@
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
-      "vehicleLimitSoc": "Vehicle limit",
+      "vehicleLimitSoc": "Charge limit",
       "yes": "yes"
     },
     "deviceValueChargeStatus": {
@@ -124,9 +126,14 @@
       "B": "B (connected)",
       "C": "C (charging)"
     },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
+    },
     "devices": {
       "auxMeter": "Smart consumer",
       "batteryStorage": "Battery storage",
+      "consumer": "Consumer",
       "solarSystem": "Solar system"
     },
     "editor": {
@@ -137,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Can be used for load management or statistics purposes.",
-      "titleAdd": "Add External Meter",
-      "titleEdit": "Edit External Meter"
+      "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
+      "titleAdd": "Add Consumer Meter",
+      "titleEdit": "Edit Consumer Meter"
     },
     "form": {
       "danger": "Danger",
@@ -148,12 +155,18 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Apply & close",
       "cancel": "Cancel",
+      "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
+      "dragHandle": "Drag handle",
+      "dragItem": "Draggable: {title}",
+      "dragList": "Reorderable list",
       "experimental": "Experimental",
+      "forceSave": "Save anyway",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
       "noFileSelected": "No file selected.",
@@ -162,7 +175,11 @@
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
+      "required": "required",
+      "reset": "Reset",
       "save": "Save",
+      "saved": "Saved.",
+      "saving": "Saving…",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
@@ -176,11 +193,12 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
-      "description": "Connect evcc to another home energy management system.",
+      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
       "title": "HEMS"
     },
     "icon": {
-      "change": "change"
+      "change": "change",
+      "label": "Icon"
     },
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
@@ -315,7 +333,7 @@
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
-      "yaml": "Device from evcc.yaml are not editable."
+      "yaml": "Devices from evcc.yaml are not editable."
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
@@ -328,13 +346,22 @@
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "ext": "Add external meter",
+        "ext": "Add regular consumer",
         "pv": "Add solar meter"
       },
       "save": "Save",
       "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
+      "titleLabel": "Title",
+      "usage": {
+        "aux": "Self-regulating consumer meter",
+        "battery": "Battery meter",
+        "charge": "Charger meter",
+        "grid": "Grid meter",
+        "label": "Usage",
+        "pv": "Solar meter"
+      },
       "validateSave": "Validate & save"
     },
     "modbus": {
@@ -425,18 +452,34 @@
       "system": "System",
       "vehicles": "Vehicles"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc is equipped with integration for the SMA Sunny Home Manager (SHM) via SEMP protocol. If it is running on the same network, after logging into your Sunny Portal account, you should automatically be offered to add all chargers configured in evcc as newly discovered consumers. Everything should be ready to use immediately, without any adjustments required below.",
+      "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
+      "descriptionIdPattern": "Identifier pattern",
+      "descriptionIds": "In Sunny Portal every consumer device needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL (/semp) to check your current identifiers.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
-      "descriptionToken": "You get the token from {url}. We also offer a trial token for testing.",
+      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a {trialToken}.",
+      "enterYourToken": "Enter your token",
       "error": "The sponsor token is not valid.",
+      "invalid": "invalid",
       "labelToken": "Sponsor token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredLearnMore": "Learn more.",
       "tokenRequiredShort": "No sponsor token configured.",
-      "trialToken": "Trial token"
+      "trialToken": "trial token",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Your token"
     },
     "system": {
       "backupRestore": {
@@ -482,6 +525,10 @@
       "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
       "title": "Tariffs"
     },
+    "telemetry": {
+      "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
+      "title": "Telemetry"
+    },
     "title": {
       "description": "Displayed on main screen and browser tab.",
       "label": "Title",
@@ -490,7 +537,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "validating…",
+      "running": "Validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"
@@ -620,10 +667,14 @@
   },
   "header": {
     "about": "About",
+    "authProviders": {
+      "confirmLogout": "Are you sure you want to disconnect {title}?",
+      "loggedOut": "Successfully logged out",
+      "title": "Authorization Status"
+    },
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",
-    "login": "Vehicle Logins",
     "logout": "Logout",
     "nativeSettings": "Change Server",
     "needHelp": "Need Help?",
@@ -632,7 +683,7 @@
   "help": {
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
-    "issueButton": "Report a bug",
+    "issueButton": "Report a problem",
     "issueDescription": "Found a strange or wrong behavior?",
     "logsButton": "View logs",
     "logsDescription": "Check the logs for errors.",
@@ -648,6 +699,57 @@
     "restartButton": "Restart",
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
+  },
+  "issue": {
+    "additional": {
+      "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
+      "include": "include",
+      "lines": "lines",
+      "logs": "Logs",
+      "logsDescription": "Recent log entries that may help identify the issue.",
+      "showDetails": "show details",
+      "source": "Source",
+      "state": "State",
+      "stateDescription": "Complete runtime state including charging point, device, and energy information. Include only if requested.",
+      "title": "Additional Information",
+      "uiConfig": "Configuration (UI)",
+      "uiConfigDescription": "Configuration settings made through the web interface.",
+      "yamlConfig": "Configuration (YAML)",
+      "yamlConfigDescription": "Your complete configuration file."
+    },
+    "additionalContext": "Additional context",
+    "additionalContextPlaceholder": "Any additional information that might be helpful...\n- Configuration details\n- What you tried\n- Environment details",
+    "createButtonDiscussion": "Start GitHub Discussion...",
+    "createButtonIssue": "Create GitHub Issue...",
+    "description": "Your installation is not working as expected? Use this page to get help or report issues. Provide enough detail to help us understand and reproduce the problem, while keeping your description concise, clear and easy to follow.",
+    "helpType": {
+      "discussion": "Need help with my setup",
+      "discussionDescription": "Community discussions provide answers.",
+      "issue": "Found a bug",
+      "issueDescription": "I'm certain something is broken and needs to be fixed.",
+      "title": "What problem are we talking about?"
+    },
+    "issueDescription": "Description",
+    "issueTitle": "Title",
+    "stepsToReproduce": "Steps to reproduce",
+    "subTitleDiscussion": "Describe your problem",
+    "subTitleIssue": "Describe the issue",
+    "summary": {
+      "confirmationButtonDiscussion": "Start GitHub Discussion",
+      "confirmationButtonIssue": "Create GitHub Issue",
+      "copied": "Copied!",
+      "copyButton": "Copy additional information",
+      "instructions": "Due to GitHub's URL size limitations, this is a two-step process:",
+      "singleStepDescription": "Click the button below to open GitHub with a pre-filled form containing your problem details. Sensitive data has been automatically redacted, but please double-check before sharing.",
+      "step1Description": "Click the button below to create a basic GitHub entry with your title, description, and details.",
+      "step2Description": "After creating the entry, return here to copy the additional information below and paste it into your GitHub form. Sensitive data has been redacted, but please double-check before sharing.",
+      "stepOneDiscussion": "Step 1: Create basic discussion",
+      "stepOneIssue": "Step 1: Create basic issue",
+      "stepTwo": "Step 2: Copy additional information",
+      "title": "GitHub Problem Summary"
+    },
+    "title": "Report a problem",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filter by area",
@@ -713,6 +815,7 @@
       "gridImport": "Grid use",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",
       "pvExport": "Grid export",
@@ -724,6 +827,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready. Waiting for heater…"
+    },
+    "hemsWarning": {
+      "description": "Reduced charging to not exceed {limit}.",
+      "title": "External limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1001,6 +1108,7 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
       "exit": "Exit fullscreen",
@@ -1013,6 +1121,12 @@
     "language": {
       "auto": "Automatic",
       "label": "Language"
+    },
+    "loadpoints": {
+      "help": "Change order and visibility for the UI.",
+      "hide": "Hide {title}",
+      "label": "Charging points",
+      "show": "Show {title}"
     },
     "sponsorToken": {
       "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",
@@ -1042,7 +1156,7 @@
   },
   "smartCost": {
     "activeHours": "{active} of {total}",
-    "activeHoursLabel": "Active hours",
+    "activeHoursLabel": "Active time",
     "applyToAll": "Apply everywhere?",
     "batteryDescription": "Charges the home battery with energy from the grid.",
     "cheapTitle": "Cheap Grid Charging",
@@ -1059,7 +1173,7 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused hours",
+    "activeHoursLabel": "Paused time",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
     "priceLimit": "Feed-in limit",

@@ -15,6 +15,7 @@ maxcurrent: # set maximum charge current in A
 
 ## optional attributes (read-only)
 
+#icon: generic # icon for UI purpose only
 #power: # charge power in W
 #  source: const
 #  value: 11000

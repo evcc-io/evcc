@@ -48,7 +48,7 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: (route) => {
           const { lp } = route.query;
           return {
-            selectedLoadpointIndex: lp ? parseInt(lp as string, 10) - 1 : undefined,
+            selectedLoadpointId: lp as string | undefined,
           };
         },
       },
@@ -78,6 +78,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: true,
       },
       {
+        path: "/optimize",
+        component: () => import("./views/Optimize.vue"),
+        props: true,
+      },
+      {
         path: "/log",
         component: () => import("./views/Log.vue"),
         beforeEnter: ensureAuth,
@@ -89,14 +94,23 @@ export default function setupRouter(i18n: VueI18nInstance) {
           };
         },
       },
+      {
+        path: "/issue",
+        component: () => import("./views/Issue.vue"),
+        beforeEnter: ensureAuth,
+        props: true,
+      },
     ],
   });
   router.beforeEach(async () => {
     await ensureCurrentLocaleMessages(i18n);
     return true;
   });
-  router.afterEach(() => {
-    hideAllModals();
+  router.afterEach((to, from) => {
+    // Only hide modals when the actual route path changes, not query parameters
+    if (to.path !== from.path) {
+      hideAllModals();
+    }
   });
   return router;
 }

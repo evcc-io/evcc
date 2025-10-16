@@ -72,7 +72,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=GMT&timeformat=unixtime
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=GMT&timeformat=unixtime
     jq: |
       def alphatemp: {{ .alphatemp }}; # temperature coefficient
       def rossmodel: {{ .rossmodel }}; # cooling type
@@ -94,15 +94,15 @@ render: |
         else
           e
         end;
-      .hourly as $h
+      .minutely_15 as $h
       | .daily as $d
       | [ range(0; ($h.time | length))
           | . as $i
           | $h.time[$i] as $time
-          | ($i / 24 | floor) as $day
+          | ($i / 96 | floor) as $day
           | {
               start: ($time | todateiso8601),
-              end: (($time + 3600) | todateiso8601),
+              end: (($time + 900) | todateiso8601),
               value: (
                 kwp
                 * ($h.global_tilted_irradiance_instant[$i] / 1000)
