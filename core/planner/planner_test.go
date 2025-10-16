@@ -17,7 +17,7 @@ func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Ra
 	res := make(api.Rates, 0, len(prices))
 
 	for i, v := range prices {
-		slotStart := start.Add(time.Duration(i) * time.Hour)
+		slotStart := start.Add(time.Duration(i) * slotDuration)
 		ar := api.Rate{
 			Start: slotStart,
 			End:   slotStart.Add(slotDuration),
