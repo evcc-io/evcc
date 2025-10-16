@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/fatih/structs"
 )
 
@@ -70,6 +71,12 @@ func (s *sharderImpl) Shards() []Shard {
 	}
 
 	return res
+}
+
+var _ api.StructMarshaler = (*sharderImpl)(nil)
+
+func (s *sharderImpl) MarshalStruct() (any, error) {
+	return s.struc, nil
 }
 
 var _ Sharder = (*sharderImpl)(nil)
