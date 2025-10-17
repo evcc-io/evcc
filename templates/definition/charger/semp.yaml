@@ -6,7 +6,7 @@ products:
 group: generic
 capabilities: ["mA", "1p3p"]
 requirements:
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
   description:
     en: |
       SEMP (Smart Energy Management Protocol) compatible wallbox or device that can be controlled directly via HTTP/XML API.
