@@ -31,6 +31,9 @@ params:
       en: Instance ID
     advanced: true
   - preset: vehicle-features
+  - name: streaming
+    value: true
+    hidden: true
 render: |
   type: custom
   {{ include "vehicle-common" . }}
