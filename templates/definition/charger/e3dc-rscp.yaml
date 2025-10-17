@@ -1,0 +1,52 @@
+template: e3dc-wallbox
+products:
+  - brand: E3/DC
+    description:
+      de: Wallbox classic
+      en: Wallbox classic
+  - brand: E3/DC
+    description:
+      de: Easy Connect über E3/DC Hauskraftwerk verbunden
+      en: Easy Connect via E3/DC system connected
+#capabilities: ["1p3p"]
+requirements:
+  description:
+    de: Die Wallbox muss im E3/DC Hauskraftwerk als Ladestation hinterlegt sein.
+    en: The wallbox must be registered in the E3/DC system as a charging station.
+params:
+  - name: host
+  - name: port
+    default: 5033
+  - name: user
+    required: true
+    help:
+      en: Identical with Web Portal or E3/DC App.
+      de: Identisch mit Web-Portal bzw. E3/DC App.
+  - name: password
+    help:
+      en: Identical with Web Portal or E3/DC App.
+      de: Identisch mit Web-Portal bzw. E3/DC App.
+    required: true
+  - name: key
+    description:
+      en: RSCP password
+      de: RSCP-Passwort
+    help:
+      en: Must be set on the screen of your E3/DC system at 'Personalize' > 'User Profile'.
+      de: Muss auf dem Bildschirm des Hauskraftwerks unter 'Personalisieren' > 'Benutzerprofil' angelegt werden.
+    mask: true
+    required: true
+  - name: deviceindex
+    required: true
+    default: 0
+    type: int
+    description:
+      de: Index der Wallbox im E3/DC System.
+      en: Index of the wallbox device in the E3/DC system.
+render: |
+  type: e3dc-wallbox
+  uri: {{ .host }}:{{ .port }}
+  user: {{ .user }}
+  password: {{ .password }}
+  key: {{ .key }}
+  deviceindex: {{ .deviceindex }}
