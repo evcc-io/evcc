@@ -398,10 +398,17 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
 	lp.Lock()
 	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
+
 	lp.planStrategy = strategy
 	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
 	lp.publish(keys.PlanContinuous, strategy.Continuous)
 	lp.settings.SetJson(keys.PlanStrategy, strategy)
+
+	// Request update to recalculate plan with new strategy
+	lp.requestUpdate()
+
 	return nil
 }
 

@@ -198,6 +198,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"staticPlanPreview":         {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
 			"planenergy":                {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},
 			"planenergy2":               {"DELETE", "/plan/energy", planRemoveHandler(lp)},
+			"planStrategy":              {"POST", "/plan/strategy", planStrategyHandler(lp)},
 			"vehicle":                   {"POST", "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
 			"vehicle2":                  {"DELETE", "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect":             {"PATCH", "/vehicle", vehicleDetectHandler(lp)},

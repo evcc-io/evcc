@@ -85,6 +85,9 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 		return nil
 	}
 
+	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
+		continuous, precondition, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
+
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }
 

@@ -141,6 +141,7 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
 	now := t.clock.Now()
 	if len(rates) == 0 || effectiveDuration <= 0 {
+		t.log.TRACE.Printf("findOptimalContinuousWindow: no rates or invalid duration (rates=%d, duration=%v)", len(rates), effectiveDuration)
 		return nil, 0
 	}
 
@@ -155,8 +156,12 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 	slices.SortFunc(points, func(a, b time.Time) int { return int(a.Sub(b)) })
 	points = slices.Compact(points)
 
+	t.log.TRACE.Printf("findOptimalContinuousWindow: now=%v, targetTime=%v, effectiveDuration=%v, points=%d",
+		now.Round(time.Second), targetTime.Round(time.Second), effectiveDuration, len(points))
+
 	var bestPlan api.Rates
 	minCost := math.Inf(1)
+	windowsChecked := 0
 
 	// Try each possible window start position
 	for _, windowStart := range points {
@@ -171,6 +176,8 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 		if windowEnd.After(targetTime) {
 			break
 		}
+
+		windowsChecked++
 
 		// Calculate cost for this window by examining all rates
 		totalCost := 0.0
@@ -213,6 +220,8 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 		}
 	}
 
+	t.log.TRACE.Printf("findOptimalContinuousWindow: checked %d windows, bestPlan has %d slots", windowsChecked, len(bestPlan))
+
 	// Merge individual slots into a single continuous slot with weighted average price
 	if len(bestPlan) > 0 {
 		mergedSlot := api.Rate{
@@ -232,6 +241,9 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 		if totalDuration > 0 {
 			mergedSlot.Value = totalCost / totalDuration
 		}
+
+		t.log.TRACE.Printf("findOptimalContinuousWindow: merged plan start=%v, end=%v, value=%.3f",
+			mergedSlot.Start.Round(time.Second), mergedSlot.End.Round(time.Second), mergedSlot.Value)
 
 		bestPlan = api.Rates{mergedSlot}
 	}
@@ -305,22 +317,30 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// use continuous window mode if selected
 	if useContinuous {
+		t.log.TRACE.Printf("using continuous mode: requiredDuration=%v, precondition=%v", requiredDuration, precondition)
+
 		effectiveDuration := requiredDuration
 		if precondition > 0 {
 			effectiveDuration -= precondition
 		}
 
 		preCondWindow := targetTime.Add(-precondition)
-		plan, _ := t.findOptimalContinuousWindow(rates, effectiveDuration, preCondWindow)
+		t.log.TRACE.Printf("searching optimal window: effectiveDuration=%v, preCondWindow=%v", effectiveDuration, preCondWindow)
+
+		plan, cost := t.findOptimalContinuousWindow(rates, effectiveDuration, preCondWindow)
 
 		if plan == nil {
+			t.log.TRACE.Printf("no optimal window found, falling back to continuous plan")
 			return t.continuousPlan(rates, latestStart, targetTime)
 		}
+
+		t.log.TRACE.Printf("found optimal window: start=%v, end=%v, cost=%.3f", plan[0].Start, plan[0].End, cost)
 
 		// add preconditioning at the end
 		if precondition > 0 {
 			preCondStart := targetTime.Add(-precondition)
 			preCondPlan := t.continuousPlan(rates, preCondStart, targetTime)
+			t.log.TRACE.Printf("adding preconditioning: start=%v, end=%v", preCondStart, targetTime)
 			plan = append(plan, preCondPlan...)
 		}
 
