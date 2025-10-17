@@ -181,12 +181,6 @@ export default defineComponent({
 				this.updatePlanDebounced();
 			}
 		},
-		effectivePlanPrecondition() {
-			this.updatePlanDebounced();
-		},
-		effectivePlanContinuous() {
-			this.updatePlanDebounced();
-		},
 		staticPlan: {
 			deep: true,
 			handler(vNew: StaticPlan, vOld: StaticPlan) {
@@ -317,6 +311,12 @@ export default defineComponent({
 		},
 		updatePlanStrategy(strategy: PlanStrategy): void {
 			this.$emit("plan-strategy-updated", strategy);
+			// Immediately update plan with new strategy (without debounce)
+			if (this.noActivePlan) {
+				this.updatePreviewPlan();
+			} else {
+				this.updateActivePlan();
+			}
 		},
 	},
 });

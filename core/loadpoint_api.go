@@ -406,9 +406,6 @@ func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
 	lp.publish(keys.PlanContinuous, strategy.Continuous)
 	lp.settings.SetJson(keys.PlanStrategy, strategy)
 
-	// Request update to recalculate plan with new strategy
-	lp.requestUpdate()
-
 	return nil
 }
 
