@@ -20,6 +20,18 @@ params:
     choice: [1, 2]
   - name: capacity
     advanced: true
+  - name: dischargemode
+    default: 2
+    type: choice
+    advanced: true
+    description:
+      en: Discharge hold mode (2=Charge-PV, 8=Standby)
+      de: Entladesperre-Modus (2=Charge-PV, 8=Standby)
+    help:
+      en: "Mode 2 (Charge-PV): Uses PV power to charge battery, uses grid power for AC loads. Mode 8 (Standby): Battery neither charges nor discharges."
+      de: "Modus 2 (Charge-PV): Nutzt PV-Strom für Batterieladung, Netzstrom für AC-Lasten. Modus 8 (Standby): Batterie lädt oder entlädt nicht."
+    choice: [2, 8]
+    usages: ["battery"]
   - name: maxacpower
 render: |
   type: custom
@@ -182,7 +194,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2 # EMSPowerMode 2 "Charge-PV"-Mode. If EMSPowerSet=0 only PV is used to charge. Value 6 "Conserve"-Mode can be alternatively used.
+            value: {{ .dischargemode }} # EMSPowerMode: 2="Charge-PV" (uses PV to charge, grid for AC loads) or 8="Standby" (battery standby, no charge/discharge)
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
