@@ -399,7 +399,8 @@ func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.planStrategy = strategy
-	lp.publish(keys.PlanStrategy, strategy)
+	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
+	lp.publish(keys.PlanContinuous, strategy.Continuous)
 	lp.settings.SetJson(keys.PlanStrategy, strategy)
 	return nil
 }

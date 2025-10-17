@@ -69,6 +69,7 @@
 							@static-plan-updated="updateStaticPlan"
 							@static-plan-removed="removeStaticPlan"
 							@repeating-plans-updated="updateRepeatingPlans"
+							@plan-strategy-updated="updatePlanStrategy"
 						/>
 						<ChargingPlanArrival
 							v-if="arrivalTabActive"
@@ -95,7 +96,13 @@ import api from "@/api";
 import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Timeout, Vehicle } from "@/types/evcc";
-import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types";
+import type {
+	StaticPlan,
+	StaticSocPlan,
+	StaticEnergyPlan,
+	RepeatingPlan,
+	PlanStrategy,
+} from "./types";
 import type { Forecast } from "@/types/evcc.ts";
 const ONE_MINUTE = 60 * 1000;
 
@@ -114,6 +121,8 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
+		effectivePlanPrecondition: Number,
+		effectivePlanContinuous: Boolean,
 		id: [String, Number],
 		limitEnergy: Number,
 		mode: String,
@@ -121,8 +130,6 @@ export default defineComponent({
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
-		planPrecondition: { type: Number, default: 0 },
-		planContinuous: { type: Boolean, default: false },
 		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostType: String,
@@ -167,8 +174,6 @@ export default defineComponent({
 					return {
 						soc: plan.soc,
 						time: new Date(plan.time),
-						precondition: plan.precondition,
-						continuous: plan.continuous,
 					};
 				}
 				return null;
@@ -177,8 +182,6 @@ export default defineComponent({
 				return {
 					energy: this.planEnergy,
 					time: new Date(this.planTime),
-					precondition: this.planPrecondition,
-					continuous: this.planContinuous,
 				};
 			}
 			return null;
@@ -285,21 +288,12 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
-			const params: any = {};
-			if (plan.precondition) {
-				params.precondition = plan.precondition;
-			}
-			if (plan.continuous !== undefined) {
-				params.continuous = plan.continuous;
-			}
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
-				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });
+				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null);
 			} else {
 				const p = plan as StaticEnergyPlan;
-				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null, {
-					params,
-				});
+				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null);
 			}
 		},
 		removeStaticPlan(): void {
@@ -311,6 +305,13 @@ export default defineComponent({
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			api.post(`${this.apiVehicle}plan/repeating`, { plans });
+		},
+		updatePlanStrategy(strategy: PlanStrategy): void {
+			if (this.socBasedPlanning) {
+				api.post(`${this.apiVehicle}plan/strategy`, strategy);
+			} else {
+				api.post(`${this.apiLoadpoint}plan/strategy`, strategy);
+			}
 		},
 		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

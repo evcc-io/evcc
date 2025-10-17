@@ -6,8 +6,6 @@ export interface RepeatingPlan {
   tz: string; // timezone like "Europe/Berlin"
   soc: number;
   active: boolean;
-  precondition: number;
-  continuous?: boolean;
 }
 
 export interface PlanWrapper {
@@ -28,13 +26,14 @@ export type StaticPlan = StaticSocPlan | StaticEnergyPlan;
 export interface StaticSocPlan {
   soc: number;
   time: Date;
-  precondition: number;
-  continuous?: boolean;
 }
 
 export interface StaticEnergyPlan {
   energy: number;
   time: Date;
+}
+
+export interface PlanStrategy {
+  continuous: boolean;
   precondition: number;
-  continuous?: boolean;
 }

@@ -11,7 +11,6 @@
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
 					:multiple-plans="multiplePlans"
-					:show-precondition="showPrecondition"
 					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
 					@static-plan-removed="() => removeStaticPlan(0)"
 					@plan-preview="previewStaticPlan"
@@ -30,7 +29,6 @@
 						:id="id"
 						:rangePerSoc="rangePerSoc"
 						:plans="repeatingPlans"
-						:show-precondition="showPrecondition"
 						@updated="updateRepeatingPlans"
 					/>
 				</div>
@@ -38,15 +36,31 @@
 		</div>
 		<hr />
 		<h5>
-			<div class="inner" data-testid="plan-preview-title">
+			<div class="inner d-flex align-items-center gap-1" data-testid="plan-preview-title">
 				<span v-if="!multiplePlans">
 					{{ $t(`main.targetCharge.${noActivePlan ? "preview" : "currentPlan"}`) }}
 				</span>
 				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }} #1</span>
 				<span v-else-if="alreadyReached">{{ $t("main.targetCharge.goalReached") }}</span>
 				<span v-else>{{ nextPlanTitle }}</span>
+				<button
+					v-if="showStrategy"
+					type="button"
+					class="btn btn-sm"
+					:class="strategyOpen ? 'btn-secondary border-1' : 'evcc-gray'"
+					tabindex="0"
+					@click="strategyOpen = !strategyOpen"
+				>
+					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
+				</button>
 			</div>
 		</h5>
+		<ChargingPlanStrategy
+			v-if="showStrategy"
+			v-bind="chargingPlanStrategyProps"
+			:show="strategyOpen"
+			@update="updatePlanStrategy"
+		/>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 	</div>
@@ -56,6 +70,7 @@
 import "@h2d2/shopicons/es/regular/plus";
 import Preview from "./Preview.vue";
 import PlanStaticSettings from "./PlanStaticSettings.vue";
+import ChargingPlanStrategy from "./PlanStrategy.vue";
 import RepeatingSettings from "./PlansRepeatingSettings.vue";
 import Warnings from "./Warnings.vue";
 import formatter from "@/mixins/formatter";
@@ -72,6 +87,7 @@ import type {
 	StaticSocPlan,
 	StaticEnergyPlan,
 	PlanResponse,
+	PlanStrategy,
 } from "./types";
 
 export default defineComponent({
@@ -79,6 +95,7 @@ export default defineComponent({
 	components: {
 		ChargingPlanPreview: Preview,
 		ChargingPlanStaticSettings: PlanStaticSettings,
+		ChargingPlanStrategy,
 		ChargingPlansRepeatingSettings: RepeatingSettings,
 		ChargingPlanWarnings: Warnings,
 	},
@@ -90,6 +107,8 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
+		effectivePlanPrecondition: Number,
+		effectivePlanContinuous: Boolean,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
@@ -104,7 +123,12 @@ export default defineComponent({
 		planOverrun: Number,
 		forecast: Object as PropType<Forecast>,
 	},
-	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
+	emits: [
+		"static-plan-removed",
+		"static-plan-updated",
+		"repeating-plans-updated",
+		"plan-strategy-updated",
+	],
 	data() {
 		return {
 			staticPlanPreview: {} as StaticPlan,
@@ -112,6 +136,7 @@ export default defineComponent({
 			activeTab: "time",
 			debounceTimer: null as Timeout,
 			nextPlanId: 0,
+			strategyOpen: false,
 		};
 	},
 	computed: {
@@ -134,13 +159,16 @@ export default defineComponent({
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
 		},
+		chargingPlanStrategyProps(): any {
+			return this.collectProps(ChargingPlanStrategy);
+		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;
 		},
 		nextPlanTitle(): string {
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
 		},
-		showPrecondition(): boolean {
+		showStrategy(): boolean {
 			// only show option if planner forecast has different values
 			const slots = this.forecast?.planner || [];
 			const values = new Set(slots.map(({ value }) => value));
@@ -152,6 +180,12 @@ export default defineComponent({
 			if (null !== newValue) {
 				this.updatePlanDebounced();
 			}
+		},
+		effectivePlanPrecondition() {
+			this.updatePlanDebounced();
+		},
+		effectivePlanContinuous() {
+			this.updatePlanDebounced();
 		},
 		staticPlan: {
 			deep: true,
@@ -193,12 +227,6 @@ export default defineComponent({
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
 			const params: Record<string, unknown> = {};
-			if (plan.precondition) {
-				params["precondition"] = plan.precondition;
-			}
-			if (plan.continuous) {
-				params["continuous"] = plan.continuous;
-			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
 				params
@@ -207,12 +235,6 @@ export default defineComponent({
 		async fetchStaticPreviewEnergy(plan: StaticEnergyPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
 			const params: Record<string, unknown> = {};
-			if (plan.precondition) {
-				params["precondition"] = plan.precondition;
-			}
-			if (plan.continuous) {
-				params["continuous"] = plan.continuous;
-			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`,
 				params
@@ -250,16 +272,12 @@ export default defineComponent({
 						planRes = await this.fetchStaticPreviewSoc({
 							soc: plan.soc,
 							time: plan.time,
-							precondition: plan.precondition,
-							continuous: plan.continuous,
 						});
 					} else {
 						plan = plan as StaticEnergyPlan;
 						planRes = await this.fetchStaticPreviewEnergy({
 							energy: plan.energy,
 							time: plan.time,
-							precondition: plan.precondition,
-							continuous: plan.continuous,
 						});
 					}
 				}
@@ -297,6 +315,9 @@ export default defineComponent({
 			this.staticPlanPreview = plan;
 			this.updatePlanPreviewDebounced();
 		},
+		updatePlanStrategy(strategy: PlanStrategy): void {
+			this.$emit("plan-strategy-updated", strategy);
+		},
 	},
 });
 </script>
@@ -305,13 +326,13 @@ export default defineComponent({
 h5 {
 	position: relative;
 	display: flex;
-	top: -25px;
+	top: -33px;
 	margin-bottom: -0.5rem;
 	padding: 0 0.5rem;
 	justify-content: center;
 }
 h5 .inner {
-	padding: 0 0.5rem;
+	padding: 0 1rem;
 	background-color: var(--evcc-box);
 	font-weight: normal;
 	color: var(--evcc-gray);

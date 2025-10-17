@@ -87,7 +87,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		strategy := lp.GetPlanStrategy()
+		strategy := lp.EffectivePlanStrategy()
 
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 

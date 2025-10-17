@@ -83,6 +83,8 @@ const baseState = {
       capacity: 8,
       features: ["Offline"],
       repeatingPlans: [],
+      planPrecondition: 0,
+      planContinuous: false,
     },
     {
       name: "vehicle_4",
@@ -91,6 +93,8 @@ const baseState = {
       capacity: 80,
       features: ["Offline"],
       repeatingPlans: [],
+      planPrecondition: 0,
+      planContinuous: false,
     },
   ],
   smartCostType: SMART_COST_TYPE.PRICE_FORECAST,
