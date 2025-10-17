@@ -51,16 +51,16 @@ const (
 	SmartFeedInPriorityNextStart = "smartFeedInPriorityNextStart" // smart feed-in priority next start, time of next pause
 
 	// effective values
-	EffectivePriority          = "effectivePriority"          // effective priority
-	EffectivePlanId            = "effectivePlanId"            // effective plan id
-	EffectivePlanTime          = "effectivePlanTime"          // effective plan time
-	EffectivePlanSoc           = "effectivePlanSoc"           // effective plan soc
-	EffectivePlanPrecondition  = "effectivePlanPrecondition"  // effective plan precondition duration
-	EffectivePlanContinuous    = "effectivePlanContinuous"    // effective plan continuous planning
-	EffectiveMinCurrent        = "effectiveMinCurrent"        // effective min current
-	EffectiveMaxCurrent        = "effectiveMaxCurrent"        // effective max current
-	EffectiveLimitSoc          = "effectiveLimitSoc"          // effective limit soc
-	EffectivePlanStrategy      = "effectivePlanStrategy"      // effective plan strategy (deprecated, use individual fields)
+	EffectivePriority         = "effectivePriority"         // effective priority
+	EffectivePlanId           = "effectivePlanId"           // effective plan id
+	EffectivePlanTime         = "effectivePlanTime"         // effective plan time
+	EffectivePlanSoc          = "effectivePlanSoc"          // effective plan soc
+	EffectiveMinCurrent       = "effectiveMinCurrent"       // effective min current
+	EffectiveMaxCurrent       = "effectiveMaxCurrent"       // effective max current
+	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
+	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
+	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
+	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power

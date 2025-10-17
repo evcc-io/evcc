@@ -417,13 +417,11 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) {
 func (lp *Loadpoint) GetPlanStrategy() api.PlanStrategy {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.planStrategy
+	return lp.getPlanStrategy()
 }
 
 // getPlanStrategy returns the plan strategy (no mutex)
 func (lp *Loadpoint) getPlanStrategy() api.PlanStrategy {
-	lp.RLock()
-	defer lp.RUnlock()
 	return lp.planStrategy
 }
 
