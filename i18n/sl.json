@@ -78,6 +78,7 @@
     },
     "deviceValue": {
       "amount": "Znesek",
+      "broker": "Broker",
       "bucket": "Vedro",
       "capacity": "Kapaciteta",
       "chargeStatus": "Status",
