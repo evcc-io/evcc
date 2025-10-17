@@ -517,8 +517,6 @@ presets:
         advanced: true
       - name: welcomecharge
         advanced: true
-      - name: streaming
-        advanced: true
   vehicle-language:
     params:
       - name: language
