@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -39,7 +40,9 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 		subscriptions: make(map[string]chan StreamingMessage),
 	}
 
-	go v.run(ctx, ts)
+	if !testing.Testing() {
+		go v.run(ctx, ts)
+	}
 
 	mqttConnections[clientID] = v
 

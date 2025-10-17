@@ -10,20 +10,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type ts struct{}
-
-func (ts *ts) Token() (*oauth2.Token, error) {
-	t := &oauth2.Token{
-		AccessToken:  "at",
-		RefreshToken: "rt",
-		Expiry:       time.Now().Add(time.Hour),
-	}
-	return t, nil
-}
-
 func TestMqtt(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
-	p := NewProvider(ctx, util.NewLogger("foo"), nil, new(ts), "client", "vin")
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "at"}), "client", "vin")
 	defer cancel()
 
 	keySoc := "vehicle.drivetrain.batteryManagement.header"
