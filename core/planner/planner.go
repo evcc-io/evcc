@@ -160,6 +160,11 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 
 	// Try each possible window start position
 	for _, windowStart := range points {
+		// Skip window starts in the past
+		if windowStart.Before(now) {
+			continue
+		}
+
 		windowEnd := windowStart.Add(effectiveDuration)
 
 		// Allow windowEnd == targetTime
