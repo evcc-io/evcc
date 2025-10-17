@@ -250,5 +250,5 @@ func (lp *Loadpoint) getEffectivePlanStrategy() api.PlanStrategy {
 		}
 	}
 
-	return lp.GetPlanStrategy()
+	return lp.getPlanStrategy()
 }
