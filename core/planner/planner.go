@@ -138,8 +138,19 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	return res
 }
 
+// findOptimalContinuousWindow finds the cheapest continuous time window of the given duration
+// within the available rates, ending no later than targetTime.
+//
+// The algorithm:
+// 1. Generates all possible window start points from rate boundaries
+// 2. For each valid window, calculates the total cost based on overlapping rate slots
+// 3. Returns the window with minimal cost as a single merged slot with weighted average price
+//
+// Returns: best plan as a single rate slot with weighted average price, and the total cost
 func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
 	now := t.clock.Now()
+
+	// Validate inputs
 	if len(rates) == 0 || effectiveDuration <= 0 {
 		t.log.TRACE.Printf("findOptimalContinuousWindow: no rates or invalid duration (rates=%d, duration=%v)", len(rates), effectiveDuration)
 		return nil, 0
@@ -147,13 +158,17 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 
 	rates.Sort() // sort slots by start time
 
-	// prepare all relevant points (start/end of all slots)
-	points := make([]time.Time, 0, 2*len(rates))
+	// Collect all relevant time points (rate boundaries + now + target)
+	points := make([]time.Time, 0, 2*len(rates)+2)
 	for _, r := range rates {
 		points = append(points, r.Start, r.End)
 	}
 	points = append(points, now, targetTime)
-	slices.SortFunc(points, func(a, b time.Time) int { return int(a.Sub(b)) })
+
+	// Sort and remove duplicates
+	slices.SortFunc(points, func(a, b time.Time) int {
+		return a.Compare(b)
+	})
 	points = slices.Compact(points)
 
 	t.log.TRACE.Printf("findOptimalContinuousWindow: now=%v, targetTime=%v, effectiveDuration=%v, points=%d",
@@ -165,21 +180,21 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 
 	// Try each possible window start position
 	for _, windowStart := range points {
-		// Skip window starts in the past
+		// Skip windows starting in the past
 		if windowStart.Before(now) {
 			continue
 		}
 
 		windowEnd := windowStart.Add(effectiveDuration)
 
-		// Allow windowEnd == targetTime
+		// Window must end at or before target time
 		if windowEnd.After(targetTime) {
 			break
 		}
 
 		windowsChecked++
 
-		// Calculate cost for this window by examining all rates
+		// Calculate cost for this window by examining overlapping rates
 		totalCost := 0.0
 		windowPlan := make(api.Rates, 0)
 
@@ -220,30 +235,22 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 		}
 	}
 
-	t.log.TRACE.Printf("findOptimalContinuousWindow: checked %d windows, bestPlan has %d slots", windowsChecked, len(bestPlan))
+	t.log.TRACE.Printf("findOptimalContinuousWindow: checked %d windows, bestPlan has %d slots, minCost=%.3f",
+		windowsChecked, len(bestPlan), minCost)
 
 	// Merge individual slots into a single continuous slot with weighted average price
 	if len(bestPlan) > 0 {
+		// Calculate weighted average price per kWh using the already computed minCost
+		avgPrice := minCost / effectiveDuration.Hours()
+
 		mergedSlot := api.Rate{
 			Start: bestPlan[0].Start,
 			End:   bestPlan[len(bestPlan)-1].End,
+			Value: avgPrice,
 		}
 
-		// Calculate weighted average price per kWh
-		totalCost := 0.0
-		totalDuration := 0.0
-		for _, slot := range bestPlan {
-			duration := slot.End.Sub(slot.Start).Hours()
-			totalCost += slot.Value * duration
-			totalDuration += duration
-		}
-
-		if totalDuration > 0 {
-			mergedSlot.Value = totalCost / totalDuration
-		}
-
-		t.log.TRACE.Printf("findOptimalContinuousWindow: merged plan start=%v, end=%v, value=%.3f",
-			mergedSlot.Start.Round(time.Second), mergedSlot.End.Round(time.Second), mergedSlot.Value)
+		t.log.TRACE.Printf("findOptimalContinuousWindow: merged plan start=%v, end=%v, avgPrice=%.3f/kWh, totalCost=%.3f",
+			mergedSlot.Start.Round(time.Second), mergedSlot.End.Round(time.Second), avgPrice, minCost)
 
 		bestPlan = api.Rates{mergedSlot}
 	}
