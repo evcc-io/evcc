@@ -163,7 +163,7 @@ func TestContinuousWindowRatesSpanningPastAndFuture(t *testing.T) {
 	rates := api.Rates{
 		{Start: now.Add(-3 * time.Hour), End: now.Add(-2 * time.Hour), Value: 0.05}, // cheapest, but past
 		{Start: now.Add(-2 * time.Hour), End: now.Add(-1 * time.Hour), Value: 0.06}, // cheap, but past
-		{Start: now.Add(-1 * time.Hour), End: now, Value: 0.12},                      // partially past
+		{Start: now.Add(-1 * time.Hour), End: now, Value: 0.12},                     // partially past
 		{Start: now, End: now.Add(1 * time.Hour), Value: 0.15},
 		{Start: now.Add(1 * time.Hour), End: now.Add(2 * time.Hour), Value: 0.08}, // cheapest future
 		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.09}, // second cheapest future
