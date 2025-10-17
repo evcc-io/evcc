@@ -12,43 +12,44 @@ params:
     choice: ["grid"]
   - name: host
     required: true
-  - name: timeout
-    default: 2s
+  - name: cache
+    advanced: true
+    default: 5s
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/meter/data
+    cache: {{ .cache }}
     jq: (.pi[0] - .pe[0])
-    timeout: {{ .timeout }}
   energy:
     source: http
     uri: http://{{ .host }}/meter/data
+    cache: {{ .cache }}
     jq:  (.ic | tonumber)
-    timeout: {{ .timeout }}
   currents:
     - source: http
       uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
       jq: .i[0]
-      timeout: {{ .timeout }}
     - source: http
       uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
       jq: .i[1]
-      timeout: {{ .timeout }}
     - source: http
       uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
       jq: .i[2]
-      timeout: {{ .timeout }}
   voltages:
     - source: http
       uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
       jq: .u[0]
-      timeout: {{ .timeout }}
     - source: http
       uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
       jq: .u[1]
-      timeout: {{ .timeout }}
     - source: http
       uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
       jq: .u[2]
-      timeout: {{ .timeout }}
