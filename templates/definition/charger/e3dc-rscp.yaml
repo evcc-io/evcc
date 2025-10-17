@@ -2,9 +2,13 @@ template: e3dc-wallbox
 products:
   - brand: E3/DC
     description:
-      de: Wallbox über E3/DC Hauskraftwerk verbunden
-      en: Wallbox connected via E3/DC system
-capabilities: ["1p3p"]
+      de: Wallbox classic
+      en: Wallbox classic
+  - brand: E3/DC
+    description:
+      de: Easy Connect über E3/DC Hauskraftwerk verbunden
+      en: Easy Connect via E3/DC system connected
+#capabilities: ["1p3p"]
 requirements:
   description:
     de: Die Wallbox muss im E3/DC Hauskraftwerk als Ladestation hinterlegt sein.
