@@ -1,6 +1,6 @@
 package meter
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 import (
 	"errors"
@@ -30,6 +30,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		Energy   string
 		Currents []string
 		Voltages []string
+		Soc      string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -54,6 +55,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 	// decorators for optional interfaces
 	var energy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
+	var soc func() (float64, error)
 
 	if cc.Energy != "" {
 		energy = func() (float64, error) { return conn.GetFloatState(cc.Energy) }
@@ -76,7 +78,11 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		voltages = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
 	}
 
-	return decorateHomeAssistant(m, energy, currents, voltages), nil
+	if cc.Soc != "" {
+		soc = func() (float64, error) { return conn.GetFloatState(cc.Soc) }
+	}
+
+	return decorateHomeAssistant(m, energy, currents, voltages, soc), nil
 }
 
 var _ api.Meter = (*HomeAssistant)(nil)

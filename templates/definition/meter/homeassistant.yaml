@@ -94,6 +94,15 @@ params:
     help:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
+  - name: soc
+    description:
+      de: Batterieladestand
+      en: Battery State of Charge
+    example: "sensor.battery_soc"
+    advanced: true
+    help:
+      en: Entity ID for battery state of charge in percent
+      de: Entitäts-ID für Batterieladestand in Prozent
 render: |
   type: homeassistant
   uri: {{ .uri }}
@@ -108,3 +117,4 @@ render: |
     - {{ .voltageL1 }}
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
+  soc: {{ .soc }}
