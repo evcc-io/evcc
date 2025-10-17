@@ -188,6 +188,15 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
+        - source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Charge/discharge power
+              type: writesingle
+              decode: uint16
         # Reset max battery discharge power
         - source: const
           {{- if .maxchargepower }}
@@ -222,6 +231,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13051 # Charge/discharge power
               type: writesingle
               decode: uint16
         # Set max battery discharge power, effectively stops discharging
@@ -263,7 +281,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 13051 # Charge power
+              address: 13051 # Charge/discharge power
               type: writesingle
               decode: uint16
         {{- else }}
