@@ -6,7 +6,7 @@ products:
   - { brand: Shelly, description: { generic: PM mini } }
   - { brand: Shelly, description: { generic: EM } }
   - { brand: Shelly, description: { generic: Pro EM } }
-  - { brand: Shelly, description: { generic: Pro 3EM monophase (needs device profile: monophase) } }
+  - { brand: Shelly, description: { generic: Pro 3EM monophase (needs device profile "monophase") } }
   - { brand: Shelly, description: { generic: Plug S } }
 group: switchsockets
 params:
