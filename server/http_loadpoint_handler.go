@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
 
@@ -91,52 +89,6 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		strategy := lp.GetPlanStrategy()
 
-		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
-
-		res := PlanPreviewResponse{
-			PlanTime: planTime,
-			Duration: int64(requiredDuration.Seconds()),
-			Plan:     plan,
-			Power:    maxPower,
-		}
-
-		jsonWrite(w, res)
-	}
-}
-
-func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		hourMinute := vars["time"]
-		tz := vars["tz"]
-
-		var weekdays []int
-		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
-			weekday, err := strconv.Atoi(weekdayStr)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
-				return
-			}
-			weekdays = append(weekdays, weekday)
-		}
-
-		soc, err := strconv.ParseFloat(vars["soc"], 64)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		maxPower := lp.EffectiveMaxPower()
-		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-
-		strategy := lp.EffectivePlanStrategy()
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
 		res := PlanPreviewResponse{

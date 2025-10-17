@@ -42,23 +42,9 @@
 				<span v-if="!multiplePlans">
 					{{ $t(`main.targetCharge.${noActivePlan ? "preview" : "currentPlan"}`) }}
 				</span>
-				<CustomSelect
-					v-else-if="noActivePlan"
-					:options="previewPlanOptions"
-					:selected="selectedPreviewId"
-					data-testid="preview-plan-select"
-					@change="selectPreviewPlan($event.target.value)"
-				>
-					<span class="text-decoration-underline">
-						{{ selectedPreviewPlanTitle }}
-					</span>
-				</CustomSelect>
-				<span v-else-if="alreadyReached">
-					{{ $t("main.targetCharge.goalReached") }}
-				</span>
-				<span v-else>
-					{{ nextPlanTitle }}
-				</span>
+				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }} #1</span>
+				<span v-else-if="alreadyReached">{{ $t("main.targetCharge.goalReached") }}</span>
+				<span v-else>{{ nextPlanTitle }}</span>
 			</div>
 		</h5>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
@@ -75,11 +61,10 @@ import Warnings from "./Warnings.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import api from "@/api";
-import CustomSelect from "../Helper/CustomSelect.vue";
 import deepEqual from "@/utils/deepEqual";
 import convertRates from "@/utils/convertRates";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, PartialBy, Timeout, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
+import type { Vehicle, Timeout, CURRENCY, Forecast } from "@/types/evcc";
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -96,7 +81,6 @@ export default defineComponent({
 		ChargingPlanStaticSettings: PlanStaticSettings,
 		ChargingPlansRepeatingSettings: RepeatingSettings,
 		ChargingPlanWarnings: Warnings,
-		CustomSelect,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -127,7 +111,6 @@ export default defineComponent({
 			plan: {} as PlanWrapper,
 			activeTab: "time",
 			debounceTimer: null as Timeout,
-			selectedPreviewId: 1,
 			nextPlanId: 0,
 		};
 	},
@@ -137,9 +120,6 @@ export default defineComponent({
 		},
 		multiplePlans(): boolean {
 			return this.repeatingPlans.length !== 0;
-		},
-		selectedPreviewPlanTitle(): string {
-			return this.previewPlanOptions[this.selectedPreviewId - 1]?.name || "";
 		},
 		chargingPlanWarningsProps(): any {
 			return this.collectProps(Warnings);
@@ -153,24 +133,6 @@ export default defineComponent({
 			return rates
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
-		},
-		previewPlanOptions(): SelectOption<number>[] {
-			const name = (n: number) => `${this.$t("main.targetCharge.preview")} #${n}`;
-
-			// static plan
-			const options = [{ value: 1, name: name(1) }] as SelectOption<number>[];
-
-			// repeating plans
-			this.repeatingPlans.forEach((plan, index) => {
-				const number = index + 2;
-				options.push({
-					value: number,
-					name: name(number),
-					disabled: !plan.weekdays.length,
-				});
-			});
-
-			return options;
 		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;
@@ -203,7 +165,6 @@ export default defineComponent({
 			deep: true,
 			handler(vNew: RepeatingPlan[], vOld: RepeatingPlan[]) {
 				if (!deepEqual(vNew, vOld)) {
-					this.adjustPreviewId();
 					this.updatePlanDebounced();
 				}
 			},
@@ -213,20 +174,11 @@ export default defineComponent({
 		this.updatePlanDebounced();
 	},
 	methods: {
-		selectPreviewPlan(id: number): void {
-			this.selectedPreviewId = id;
-			this.updatePlanDebounced();
-		},
 		async updatePlanDebounced() {
 			if (this.noActivePlan) {
 				await this.updatePlanPreviewDebounced();
 			} else {
 				await this.updateActivePlanDebounced();
-			}
-		},
-		adjustPreviewId(): void {
-			if (this.selectedPreviewId > this.previewPlanOptions.length) {
-				this.selectedPreviewId = this.previewPlanOptions.length;
 			}
 		},
 		async updateActivePlan(): Promise<void> {
@@ -249,21 +201,6 @@ export default defineComponent({
 			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
-				params
-			);
-		},
-		async fetchRepeatingPreview(
-			plan: PartialBy<RepeatingPlan, "active">
-		): Promise<PlanResponse | undefined> {
-			const params: Record<string, unknown> = {};
-			if (plan.precondition) {
-				params["precondition"] = plan.precondition;
-			}
-			if (plan.continuous) {
-				params["continuous"] = plan.continuous;
-			}
-			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/repeating/preview/${plan.soc}/${plan.weekdays}/${plan.time}/${encodeURIComponent(plan.tz)}`,
 				params
 			);
 		},
@@ -305,8 +242,7 @@ export default defineComponent({
 
 			try {
 				let planRes: PlanResponse | undefined = undefined;
-
-				if (this.selectedPreviewId < 2 && this.staticPlanPreview) {
+				if (this.staticPlanPreview) {
 					// static plan
 					let plan = this.staticPlanPreview;
 					if (this.socBasedPlanning) {
@@ -326,24 +262,6 @@ export default defineComponent({
 							continuous: plan.continuous,
 						});
 					}
-				} else {
-					// repeating plan
-					const plan = this.repeatingPlans[this.selectedPreviewId - 2];
-					if (!plan) {
-						return;
-					}
-					const { weekdays, soc, time, tz, precondition, continuous } = plan;
-					if (weekdays.length === 0) {
-						return;
-					}
-					planRes = await this.fetchRepeatingPreview({
-						weekdays,
-						soc,
-						time,
-						tz,
-						precondition,
-						continuous,
-					});
 				}
 				this.plan = planRes?.data ?? ({} as PlanWrapper);
 			} catch (e) {
