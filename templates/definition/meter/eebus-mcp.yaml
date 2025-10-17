@@ -1,0 +1,30 @@
+template: eebus-mcp
+products:
+  - description:
+      de: "EEBus: Verbraucher"
+      en: "EEBus: consumer"
+group: generic
+requirements:
+  description:
+    de: EEBus-Verbraucher im Hausnetz mit den Use Cases MPC (Monitoring & Power Consumption) und LPC (Limitation of Power Consumption). Kompatbibel mit steuerbaren Verbrauchseinrichtungen (SteuVE) gemäß §14a EnWG.
+    en: EEBus consumer in the home network using use cases MPC (Monitoring & Power Consumption) and LPC (Limitation of Power Consumption).
+  evcc: ["eebus"]
+params:
+  - name: usage
+    choice: ["charge"]
+  - name: ski
+    description:
+      en: SKI (Subject Key Identifier)
+      de: SKI (Subject Key Identifier)
+  - name: host
+    required: false
+    help:
+      en: If not specified, the device will be discovered automatically via mDNS.
+      de: Falls nicht angegeben, wird das Gerät automatisch über mDNS gefunden.
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  {{- if .host }}
+  ip: {{ .host }}
+  {{- end }}
+  usage: {{ .usage }}
