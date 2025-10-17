@@ -515,12 +515,6 @@ presets:
         advanced: true
       - name: streaming
         advanced: true
-      - name: streaming
-  vehicleSupports streaming
-  Unterstützt Streaming
-    params:
-      - nameStreaming data is received asynchronously
-Streadming Datenempfang erfolgt asynchron
       - name: welcomecharge
         advanced: true
       - name: streaming
