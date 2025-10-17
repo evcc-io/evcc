@@ -67,6 +67,9 @@ const (
 	solaxModeStop = 0
 	solaxModeFast = 1
 	solaxModeECO  = 2
+
+	// firmware threshold for phase switching support
+	solaxFirmwarePhaseSwitching = 611
 )
 
 func init() {
@@ -131,12 +134,8 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	var soc func() (float64, error)
 
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
-		if err != nil {
-			return nil, err
-		}
-
 		v := encoding.Uint16(b)
-		if !wb.isLegacyHw && v >= 200 {
+		if !wb.isLegacyHw && v > solaxFirmwarePhaseSwitching {
 			phases1p3p = wb.phases1p3p
 			phasesG = wb.getPhases
 			soc = wb.soc
@@ -351,13 +350,13 @@ func (wb *Solax) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1); err == nil {
 		switch state := encoding.Uint16(b); state {
 		case solaxModeStop:
-			fmt.Printf("\tLock State:\tStop (%d)\n", state)
+			fmt.Printf("\tDevice Mode:\tStop (%d)\n", state)
 		case solaxModeFast:
-			fmt.Printf("\tLock State:\tFast (%d)\n", state)
+			fmt.Printf("\tDevice Mode:\tFast (%d)\n", state)
 		case solaxModeECO:
-			fmt.Printf("\tLock State:\tECO (%d)\n", state)
+			fmt.Printf("\tDevice Mode:\tECO (%d)\n", state)
 		default:
-			fmt.Printf("\tLock State:\tUnknown (%d)\n", state)
+			fmt.Printf("\tDevice Mode:\tUnknown (%d)\n", state)
 		}
 	}
 }
