@@ -108,4 +108,3 @@ render: |
     - {{ .voltageL1 }}
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
-
