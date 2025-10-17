@@ -71,28 +71,20 @@ func (v *adapter) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int, bool) {
+func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
-	}
-	var precondition time.Duration
-	if v, err := settings.Int(v.key() + keys.PlanPrecondition); err == nil {
-		precondition = time.Duration(v) * time.Second
-	}
-	var continuous bool
-	if v, err := settings.Bool(v.key() + keys.PlanContinuous); err == nil {
-		continuous = v
 	}
 	var soc int
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
-	return ts, precondition, soc, continuous
+	return ts, soc
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int, continuous bool) error {
+func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -102,12 +94,10 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int, 
 		ts = time.Time{}
 		v.log.DEBUG.Printf("delete %s plan", v.name)
 	} else {
-		v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v, continuous: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition, continuous)
+		v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 	}
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
-	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))
-	settings.SetBool(v.key()+keys.PlanContinuous, continuous)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
 	v.publish()
@@ -148,4 +138,21 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
 	}
 
 	return []api.RepeatingPlanStruct{}
+}
+
+func (v *adapter) GetPlanStrategy() api.PlanStrategy {
+	var strategy api.PlanStrategy
+	err := settings.Json(v.key()+keys.PlanStrategy, &strategy)
+	if err == nil {
+		return strategy
+	}
+	return api.PlanStrategy{}
+}
+
+func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
+	v.log.DEBUG.Printf("update plan strategy for vehicle %s (precondition: %vs, continuous: %v)", v.name, planStrategy.Continuous, planStrategy.Precondition)
+
+	settings.SetJson(v.key()+keys.PlanStrategy, planStrategy)
+	v.publish()
+	return nil
 }

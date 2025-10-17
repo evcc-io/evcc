@@ -16,22 +16,18 @@ import (
 )
 
 type PlanResponse struct {
-	PlanId       int       `json:"planId"`
-	PlanTime     time.Time `json:"planTime"`
-	Duration     int64     `json:"duration"`
-	Precondition int64     `json:"precondition"`
-	Continuous   bool      `json:"continuous"`
-	Plan         api.Rates `json:"plan"`
-	Power        float64   `json:"power"`
+	PlanId   int       `json:"planId"`
+	PlanTime time.Time `json:"planTime"`
+	Duration int64     `json:"duration"`
+	Plan     api.Rates `json:"plan"`
+	Power    float64   `json:"power"`
 }
 
 type PlanPreviewResponse struct {
-	PlanTime     time.Time `json:"planTime"`
-	Duration     int64     `json:"duration"`
-	Precondition int64     `json:"precondition"`
-	Continuous   bool      `json:"continuous"`
-	Plan         api.Rates `json:"plan"`
-	Power        float64   `json:"power"`
+	PlanTime time.Time `json:"planTime"`
+	Duration int64     `json:"duration"`
+	Plan     api.Rates `json:"plan"`
+	Power    float64   `json:"power"`
 }
 
 // planHandler returns the current plan
@@ -42,19 +38,16 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		id := lp.EffectivePlanId()
 
 		goal, _ := lp.GetPlanGoal()
-		precondition := lp.GetPlanPreCondDuration()
-		continuous := lp.GetPlanContinuous()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration, precondition, continuous)
+		strategy := lp.EffectivePlanStrategy()
+		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
 		res := PlanResponse{
-			PlanId:       id,
-			PlanTime:     planTime,
-			Duration:     int64(requiredDuration.Seconds()),
-			Precondition: int64(precondition.Seconds()),
-			Continuous:   continuous,
-			Plan:         plan,
-			Power:        maxPower,
+			PlanId:   id,
+			PlanTime: planTime,
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    maxPower,
 		}
 
 		jsonWrite(w, res)
@@ -65,7 +58,6 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		query := r.URL.Query()
 
 		planTime, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
@@ -74,12 +66,6 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		goal, err := strconv.ParseFloat(vars["value"], 64)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		precondition, err := parseDuration(query.Get("precondition"))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -103,24 +89,15 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+		strategy := lp.GetPlanStrategy()
 
-		continuous := false
-		if contStr := query.Get("continuous"); contStr != "" {
-			continuous, err = strconv.ParseBool(contStr)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid continuous flag: %w", err))
-				return
-			}
-		}
-		plan := lp.GetPlan(planTime, requiredDuration, precondition, continuous)
+		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
 		res := PlanPreviewResponse{
-			PlanTime:     planTime,
-			Duration:     int64(requiredDuration.Seconds()),
-			Precondition: int64(precondition.Seconds()),
-			Continuous:   continuous,
-			Plan:         plan,
-			Power:        maxPower,
+			PlanTime: planTime,
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    maxPower,
 		}
 
 		jsonWrite(w, res)
@@ -130,7 +107,6 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		query := r.URL.Query()
 
 		hourMinute := vars["time"]
 		tz := vars["tz"]
@@ -157,32 +133,17 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(query.Get("precondition"))
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 
-		continuous := false
-		if contStr := query.Get("continuous"); contStr != "" {
-			continuous, err = strconv.ParseBool(contStr)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid continuous flag: %w", err))
-				return
-			}
-		}
-		plan := lp.GetPlan(planTime, requiredDuration, precondition, continuous)
+		strategy := lp.EffectivePlanStrategy()
+		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
 		res := PlanPreviewResponse{
-			PlanTime:     planTime,
-			Duration:     int64(requiredDuration.Seconds()),
-			Precondition: int64(precondition.Seconds()),
-			Continuous:   continuous,
-			Plan:         plan,
-			Power:        maxPower,
+			PlanTime: planTime,
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    maxPower,
 		}
 
 		jsonWrite(w, res)
@@ -193,7 +154,6 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		query := r.URL.Query()
 
 		ts, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
 		if err != nil {
@@ -207,38 +167,19 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(query.Get("precondition"))
-		if err != nil {
+		if err := lp.SetPlanEnergy(ts, val); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		continuous := false
-		if contStr := query.Get("continuous"); contStr != "" {
-			continuous, err = strconv.ParseBool(contStr)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid continuous flag: %w", err))
-				return
-			}
-		}
-
-		if err := lp.SetPlanEnergy(ts, precondition, val, continuous); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		ts, precondition, energy, continuous := lp.GetPlanEnergy()
+		ts, energy := lp.GetPlanEnergy()
 
 		res := struct {
-			Energy       float64   `json:"energy"`
-			Precondition int64     `json:"precondition"`
-			Continuous   bool      `json:"continuous"`
-			Time         time.Time `json:"time"`
+			Energy float64   `json:"energy"`
+			Time   time.Time `json:"time"`
 		}{
-			Energy:       energy,
-			Precondition: int64(precondition.Seconds()),
-			Continuous:   continuous,
-			Time:         ts,
+			Energy: energy,
+			Time:   ts,
 		}
 
 		jsonWrite(w, res)
@@ -248,7 +189,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 // planRemoveHandler removes plan time
 func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := lp.SetPlanEnergy(time.Time{}, 0, 0, false); err != nil {
+		if err := lp.SetPlanEnergy(time.Time{}, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

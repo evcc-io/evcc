@@ -51,13 +51,14 @@ const (
 	SmartFeedInPriorityNextStart = "smartFeedInPriorityNextStart" // smart feed-in priority next start, time of next pause
 
 	// effective values
-	EffectivePriority   = "effectivePriority"   // effective priority
-	EffectivePlanId     = "effectivePlanId"     // effective plan id
-	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
-	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
-	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
-	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
-	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
+	EffectivePriority     = "effectivePriority"     // effective priority
+	EffectivePlanId       = "effectivePlanId"       // effective plan id
+	EffectivePlanTime     = "effectivePlanTime"     // effective plan time
+	EffectivePlanSoc      = "effectivePlanSoc"      // effective plan soc
+	EffectiveMinCurrent   = "effectiveMinCurrent"   // effective min current
+	EffectiveMaxCurrent   = "effectiveMaxCurrent"   // effective max current
+	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
+	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power
@@ -76,12 +77,13 @@ const (
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
-	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
-	PlanContinuous     = "planContinuous"     // charge plan force continuous
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
+	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
+	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
+	PlanContinuous     = "planContinuous"     // charge plan continuous planning
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db

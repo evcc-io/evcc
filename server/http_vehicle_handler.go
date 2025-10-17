@@ -73,7 +73,6 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		query := r.URL.Query()
 
 		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
@@ -93,40 +92,58 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(query.Get("precondition"))
+		if err := v.SetPlanSoc(ts, soc); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts, soc = v.GetPlanSoc()
+
+		res := struct {
+			Soc  int       `json:"soc"`
+			Time time.Time `json:"time"`
+		}{
+			Soc:  soc,
+			Time: ts,
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
+// updatePlanStrategyHandler updates plan strategy
+func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-
-		continuous := false
-		if contStr := query.Get("continuous"); contStr != "" {
-			continuous, err = strconv.ParseBool(contStr)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
+		var planStrategy = struct {
+			Continuous   bool  `json:"continuous"`
+			Precondition int64 `json:"precondition"`
+		}{}
+		if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
 		}
-
-		if err := v.SetPlanSoc(ts, precondition, soc, continuous); err != nil {
+		if err := v.SetPlanStrategy(api.PlanStrategy{
+			Continuous:   planStrategy.Continuous,
+			Precondition: time.Duration(planStrategy.Precondition) * time.Second,
+		}); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, precondition, soc, continuous = v.GetPlanSoc()
-
+		s := v.GetPlanStrategy()
 		res := struct {
-			Soc          int       `json:"soc"`
-			Precondition int64     `json:"precondition"`
-			Continuous   bool      `json:"continuous"`
-			Time         time.Time `json:"time"`
+			Continuous   bool  `json:"continuous"`
+			Precondition int64 `json:"precondition"`
 		}{
-			Soc:          soc,
-			Precondition: int64(precondition.Seconds()),
-			Continuous:   continuous,
-			Time:         ts,
+			Continuous:   s.Continuous,
+			Precondition: int64(s.Precondition.Seconds()),
 		}
-
 		jsonWrite(w, res)
 	}
 }
@@ -172,7 +189,7 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0, 0, false); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

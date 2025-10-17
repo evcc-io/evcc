@@ -33,9 +33,9 @@ func (lp *Loadpoint) finishPlan() {
 	if lp.repeatingPlanning() {
 		return // noting to do
 	} else if !lp.socBasedPlanning() {
-		lp.setPlanEnergy(time.Time{}, 0, 0, false)
+		lp.setPlanEnergy(time.Time{}, 0)
 	} else if v := lp.GetVehicle(); v != nil {
-		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0, 0, false)
+		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
 	}
 }
 
@@ -70,40 +70,12 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, _, soc, _, _ := lp.nextVehiclePlan()
+		_, soc, _ := lp.nextVehiclePlan()
 		return float64(soc), true
 	}
 
-	_, _, limit, _ := lp.getPlanEnergy()
+	_, limit := lp.getPlanEnergy()
 	return limit, false
-}
-
-// GetPlanPreCondDuration returns the plan precondition duration
-func (lp *Loadpoint) GetPlanPreCondDuration() time.Duration {
-	lp.RLock()
-	defer lp.RUnlock()
-
-	if lp.socBasedPlanning() {
-		_, precondition, _, _, _ := lp.nextVehiclePlan()
-		return precondition
-	}
-
-	_, precondition, _, _ := lp.getPlanEnergy()
-	return precondition
-}
-
-// GetPlanContinuous returns the plan continuous planning state
-func (lp *Loadpoint) GetPlanContinuous() bool {
-	lp.RLock()
-	defer lp.RUnlock()
-
-	if lp.socBasedPlanning() {
-		_, _, _, _, continuous := lp.nextVehiclePlan()
-		return continuous
-	}
-
-	_, _, _, continuous := lp.getPlanEnergy()
-	return continuous
 }
 
 // GetPlan creates a charging plan for given time and duration
@@ -161,7 +133,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration(), lp.GetPlanContinuous())
+	strategy := lp.getEffectivePlanStrategy()
+
+	plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 	if plan == nil {
 		return false
 	}

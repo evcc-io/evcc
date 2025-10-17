@@ -39,12 +39,12 @@ func (v *dummy) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *dummy) GetPlanSoc() (time.Time, time.Duration, int, bool) {
-	return time.Time{}, 0, 0, false
+func (v *dummy) GetPlanSoc() (time.Time, int) {
+	return time.Time{}, 0
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *dummy) SetPlanSoc(ts time.Time, precondition time.Duration, soc int, continuous bool) error {
+func (v *dummy) SetPlanSoc(ts time.Time, soc int) error {
 	return nil
 }
 
@@ -55,4 +55,12 @@ func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 
 func (v *dummy) GetRepeatingPlans() []api.RepeatingPlanStruct {
 	return []api.RepeatingPlanStruct{}
+}
+
+func (v *dummy) GetPlanStrategy() api.PlanStrategy {
+	return api.PlanStrategy{}
+}
+
+func (v *dummy) SetPlanStrategy(strategy api.PlanStrategy) error {
+	return nil
 }

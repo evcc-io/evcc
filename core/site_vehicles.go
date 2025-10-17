@@ -32,6 +32,7 @@ type vehicleStruct struct {
 	Features       []string                  `json:"features,omitempty"`
 	Plan           *planStruct               `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
+	PlanStrategy   api.PlanStrategy          `json:"planStrategy,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -42,8 +43,8 @@ func (site *Site) publishVehicles() {
 	for _, v := range vv {
 		var plan *planStruct
 
-		if time, precondition, soc, continuous := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Continuous: continuous, Time: time}
+		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+			plan = &planStruct{Soc: soc, Time: time}
 		}
 
 		instance := v.Instance()
@@ -62,6 +63,7 @@ func (site *Site) publishVehicles() {
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
+			PlanStrategy:   v.GetPlanStrategy(),
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {

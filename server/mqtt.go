@@ -252,16 +252,28 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
+		{"planStrategy", func(payload string) error {
+			var strategy struct {
+				Continuous   bool  `json:"continuous"`
+				Precondition int64 `json:"precondition"`
+			}
+			err := json.Unmarshal([]byte(payload), &strategy)
+			if err == nil {
+				err = lp.SetPlanStrategy(api.PlanStrategy{
+					Continuous:   strategy.Continuous,
+					Precondition: time.Duration(strategy.Precondition) * time.Second,
+				})
+			}
+			return err
+		}},
 		{"planEnergy", func(payload string) error {
 			var plan struct {
-				Time         time.Time `json:"time"`
-				Precondition int64     `json:"precondition"`
-				Continuous   bool      `json:"continuous"`
-				Value        float64   `json:"value"`
+				Time  time.Time `json:"time"`
+				Value float64   `json:"value"`
 			}
 			err := json.Unmarshal([]byte(payload), &plan)
 			if err == nil {
-				err = lp.SetPlanEnergy(plan.Time, time.Duration(plan.Precondition)*time.Second, plan.Value, plan.Continuous)
+				err = lp.SetPlanEnergy(plan.Time, plan.Value)
 			}
 			return err
 		}},
@@ -290,16 +302,28 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
 		{"limitSoc", intSetter(pass(v.SetLimitSoc))},
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
+		{"planStrategy", func(payload string) error {
+			var strategy struct {
+				Precondition int64 `json:"precondition"`
+				Continuous   bool  `json:"continuous"`
+			}
+			err := json.Unmarshal([]byte(payload), &strategy)
+			if err == nil {
+				err = v.SetPlanStrategy(api.PlanStrategy{
+					Continuous:   strategy.Continuous,
+					Precondition: time.Duration(strategy.Precondition) * time.Second,
+				})
+			}
+			return err
+		}},
 		{"planSoc", func(payload string) error {
 			var plan struct {
-				Time         time.Time `json:"time"`
-				Precondition int64     `json:"precondition"`
-				Continuous   bool      `json:"continuous"`
-				Value        int       `json:"value"`
+				Time  time.Time `json:"time"`
+				Value int       `json:"value"`
 			}
 			err := json.Unmarshal([]byte(payload), &plan)
 			if err == nil {
-				err = v.SetPlanSoc(plan.Time, time.Duration(plan.Precondition)*time.Second, plan.Value, plan.Continuous)
+				err = v.SetPlanSoc(plan.Time, plan.Value)
 			}
 			return err
 		}},

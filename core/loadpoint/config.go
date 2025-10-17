@@ -17,20 +17,19 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title                    string    `json:"title"`
-	DefaultMode              string    `json:"defaultMode"`
-	Priority                 int       `json:"priority"`
-	PhasesConfigured         int       `json:"phasesConfigured"`
-	MinCurrent               float64   `json:"minCurrent"`
-	MaxCurrent               float64   `json:"maxCurrent"`
-	SmartCostLimit           *float64  `json:"smartCostLimit"`
-	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
-	PlanEnergy               float64   `json:"planEnergy"`
-	PlanTime                 time.Time `json:"planTime"`
-	PlanPrecondition         int64     `json:"planPrecondition"`
-	PlanContinuous           bool      `json:"planContinuous"`
-	LimitEnergy              float64   `json:"limitEnergy"`
-	LimitSoc                 int       `json:"limitSoc"`
+	Title                    string           `json:"title"`
+	DefaultMode              string           `json:"defaultMode"`
+	Priority                 int              `json:"priority"`
+	PhasesConfigured         int              `json:"phasesConfigured"`
+	MinCurrent               float64          `json:"minCurrent"`
+	MaxCurrent               float64          `json:"maxCurrent"`
+	SmartCostLimit           *float64         `json:"smartCostLimit"`
+	SmartFeedInPriorityLimit *float64         `json:"smartFeedInPriorityLimit"`
+	PlanEnergy               float64          `json:"planEnergy"`
+	PlanTime                 time.Time        `json:"planTime"`
+	PlanStrategy             api.PlanStrategy `json:"planStrategy"`
+	LimitEnergy              float64          `json:"limitEnergy"`
+	LimitSoc                 int              `json:"limitSoc"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
@@ -60,9 +59,10 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
 	lp.SetThresholds(payload.Thresholds)
-	lp.SetPlanEnergy(payload.PlanTime, time.Duration(payload.PlanPrecondition)*time.Second, payload.PlanEnergy, payload.PlanContinuous)
+	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
+	lp.SetPlanStrategy(payload.PlanStrategy)
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
