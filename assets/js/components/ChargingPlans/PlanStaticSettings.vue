@@ -137,13 +137,13 @@
 			<div class="col-7 col-lg-2 mb-2 mb-lg-0 d-flex align-items-center">
 				<div class="form-check form-switch">
 					<input
-					    :id="formId('continuous')"
-					    class="form-check-input"
-					    type="checkbox"
-					    role="switch"
-					    data-testid="static-plan-continuous"
-					    v-model="continuousPlanning"
-					    @change="preview(true)"
+						:id="formId('continuous')"
+						v-model="continuousPlanning"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						data-testid="static-plan-continuous"
+						@change="preview(true)"
 					/>
 				</div>
 			</div>

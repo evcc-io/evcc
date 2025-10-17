@@ -242,10 +242,10 @@ export default defineComponent({
 			const timeISO = plan.time.toISOString();
 			const params: Record<string, unknown> = {};
 			if (plan.precondition) {
-				params['precondition'] = plan.precondition;
+				params["precondition"] = plan.precondition;
 			}
 			if (plan.continuous) {
-				params['continuous'] = plan.continuous;
+				params["continuous"] = plan.continuous;
 			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
@@ -257,10 +257,10 @@ export default defineComponent({
 		): Promise<PlanResponse | undefined> {
 			const params: Record<string, unknown> = {};
 			if (plan.precondition) {
-				params['precondition'] = plan.precondition;
+				params["precondition"] = plan.precondition;
 			}
 			if (plan.continuous) {
-				params['continuous'] = plan.continuous;
+				params["continuous"] = plan.continuous;
 			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/repeating/preview/${plan.soc}/${plan.weekdays}/${plan.time}/${encodeURIComponent(plan.tz)}`,
@@ -271,10 +271,10 @@ export default defineComponent({
 			const timeISO = plan.time.toISOString();
 			const params: Record<string, unknown> = {};
 			if (plan.precondition) {
-				params['precondition'] = plan.precondition;
+				params["precondition"] = plan.precondition;
 			}
 			if (plan.continuous) {
-				params['continuous'] = plan.continuous;
+				params["continuous"] = plan.continuous;
 			}
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`,

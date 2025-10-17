@@ -123,11 +123,11 @@
 				<div class="form-check form-switch">
 					<input
 						:id="formId('continuous')"
+						v-model="selectedContinuous"
 						class="form-check-input"
 						type="checkbox"
 						role="switch"
 						data-testid="repeating-plan-continuous"
-						v-model="selectedContinuous"
 						tabindex="0"
 						@change="update()"
 					/>

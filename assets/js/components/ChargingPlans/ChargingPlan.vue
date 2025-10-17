@@ -287,10 +287,10 @@ export default defineComponent({
 			const timeISO = plan.time.toISOString();
 			const params: any = {};
 			if (plan.precondition) {
-			    params.precondition = plan.precondition;
+				params.precondition = plan.precondition;
 			}
 			if (plan.continuous !== undefined) {
-			    params.continuous = plan.continuous;
+				params.continuous = plan.continuous;
 			}
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
