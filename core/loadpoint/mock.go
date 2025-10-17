@@ -442,9 +442,23 @@ func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration, precondition t
 }
 
 // GetPlan indicates an expected call of GetPlan.
-func (mr *MockAPIMockRecorder) GetPlan(targetTime, requiredDuration, precondition any) *gomock.Call {
+func (mr *MockAPIMockRecorder) GetPlan(targetTime, requiredDuration, precondition, continuous any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), targetTime, requiredDuration, precondition)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), targetTime, requiredDuration, precondition, continuous)
+}
+
+// GetPlanContinuous mocks base method.
+func (m *MockAPI) GetPlanContinuous() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanContinuous")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetPlanContinuous indicates an expected call of GetPlanContinuous.
+func (mr *MockAPIMockRecorder) GetPlanContinuous() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanContinuous", reflect.TypeOf((*MockAPI)(nil).GetPlanContinuous))
 }
 
 // GetPlanEnergy mocks base method.
@@ -484,14 +498,6 @@ func (m *MockAPI) GetPlanPreCondDuration() time.Duration {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanPreCondDuration")
 	ret0, _ := ret[0].(time.Duration)
-	return ret0
-}
-
-// GetPlanContinuous mocks base method.
-func (m *MockAPI) GetPlanContinuous() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlanContinuous")
-	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
