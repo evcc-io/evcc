@@ -3,6 +3,7 @@ products:
   - brand: Sigenergy
     description:
       generic: Sigen Hybrid/Sigen PV Max/SigenStore EC
+capabilities: ["battery-control"]
 requirements:
   description:
     de: Der Elektriker muss die Funktion Modbus via TCP/IP in seiner Version der Sigen App aktivieren bevor diese Konfiguration funktional ist. Diese Option ist in der mySigen App für Kunden nicht verfügbar.
@@ -17,6 +18,12 @@ params:
   - name: id
     default: 1
   - name: capacity
+    advanced: true
+  - name: minsoc
+    type: int
+    advanced: true
+  - name: maxsoc
+    type: int
     advanced: true
 render: |
   type: custom
@@ -102,5 +109,19 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 247
+      register:
+        address: 40048 # Discharge Cut-Off SoC
+        type: writeholding
+        decode: uint16
+      scale: 10
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
