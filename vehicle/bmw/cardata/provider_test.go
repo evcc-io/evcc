@@ -3,7 +3,6 @@ package cardata
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
@@ -38,7 +37,9 @@ func TestCardataStreaming(t *testing.T) {
 		},
 	}
 
-	time.Sleep(100 * time.Millisecond)
+	// process first message
+	dataC <- StreamingMessage{}
+	dataC <- StreamingMessage{}
 
 	soc, err = p.Soc()
 	require.NoError(t, err)
