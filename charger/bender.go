@@ -97,12 +97,12 @@ func init() {
 func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		SempCache          time.Duration
+		Cache          time.Duration
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255, // default
 		},
-		SempCache: 5 * time.Second,
+		Cache: 5 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
