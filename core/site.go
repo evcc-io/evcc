@@ -345,7 +345,7 @@ func (site *Site) restoreSettings() error {
 		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Pos = fcst.Pos
+				site.pvEnergy[name].Import = fcst.Import
 			} else {
 				nok = true
 				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
@@ -353,7 +353,7 @@ func (site *Site) restoreSettings() error {
 		}
 
 		if !nok {
-			site.fcstEnergy.Pos = fcstEnergy
+			site.fcstEnergy.Import = fcstEnergy
 			site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
 		} else {
 			// reset metrics
@@ -363,7 +363,7 @@ func (site *Site) restoreSettings() error {
 			settings.Delete(keys.SolarAccYield)
 
 			for _, pe := range site.pvEnergy {
-				pe.Pos = 0
+				pe.Import = 0
 			}
 		}
 	}

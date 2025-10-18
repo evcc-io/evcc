@@ -67,8 +67,8 @@ func (c *Collector) process(fun func()) error {
 		}
 
 		c.started = slotStart
-		c.accu.Pos = 0
-		c.accu.Neg = 0
+		c.accu.Import = 0
+		c.accu.Export = 0
 	}
 
 	return nil
