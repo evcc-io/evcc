@@ -227,7 +227,8 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 		}
 
 		// Check if this window has the minimal cost
-		if len(windowPlan) > 0 && totalCost < minCost {
+		// Use <= to prefer the latest window when costs are equal (late charging)
+		if len(windowPlan) > 0 && totalCost <= minCost {
 			minCost = totalCost
 			bestPlan = make(api.Rates, len(windowPlan))
 			copy(bestPlan, windowPlan)

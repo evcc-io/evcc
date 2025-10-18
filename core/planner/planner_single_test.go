@@ -247,3 +247,53 @@ func TestContinuousWindowRatesStartInFuture(t *testing.T) {
 	expectedAvgPrice := (0.08 + 0.09) / 2
 	assert.InDelta(t, expectedAvgPrice, plan[0].Value, delta, "plan value should be weighted average")
 }
+
+// TestContinuousWindowLateChargingPreference tests that when multiple windows
+// have equal cost, the latest (closest to target time) window is selected
+func TestContinuousWindowLateChargingPreference(t *testing.T) {
+	now := time.Date(2025, 10, 15, 12, 0, 0, 0, time.UTC)
+	c := clock.NewMock()
+	c.Set(now)
+
+	log := util.NewLogger("test")
+
+	// Create rates with multiple 2-hour windows having equal total cost
+	// Window 1: 0h-2h = 0.10 + 0.10 = 0.20 total
+	// Window 2: 1h-3h = 0.10 + 0.10 = 0.20 total (same cost)
+	// Window 3: 2h-4h = 0.10 + 0.10 = 0.20 total (same cost)
+	// Window 4: 3h-5h = 0.10 + 0.10 = 0.20 total (same cost, latest before price increase)
+	// Window 5: 4h-6h = 0.10 + 0.15 = 0.25 total (more expensive)
+	rates := api.Rates{
+		{Start: now, End: now.Add(1 * time.Hour), Value: 0.10},
+		{Start: now.Add(1 * time.Hour), End: now.Add(2 * time.Hour), Value: 0.10},
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.10},
+		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.10},
+		{Start: now.Add(4 * time.Hour), End: now.Add(5 * time.Hour), Value: 0.10},
+		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.15},
+	}
+
+	tariff := &MockTariff{rates: rates}
+	planner := &Planner{
+		log:    log,
+		clock:  c,
+		tariff: tariff,
+	}
+
+	targetTime := now.Add(6 * time.Hour)
+	requiredDuration := 2 * time.Hour
+
+	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+
+	require.NotEmpty(t, plan, "plan should not be empty")
+	require.Len(t, plan, 1, "should create a single continuous slot")
+
+	// Should select the latest window with equal cost (3h-5h)
+	// All windows from 0h-2h, 1h-3h, 2h-4h, and 3h-5h have the same total cost
+	// But we prefer late charging, so 3h-5h should be selected
+	assert.Equal(t, now.Add(3*time.Hour), plan[0].Start, "should select latest window with equal cost")
+	assert.Equal(t, now.Add(5*time.Hour), plan[0].End, "end should be 2 hours after start")
+
+	const delta = 0.01
+	expectedAvgPrice := 0.10
+	assert.InDelta(t, expectedAvgPrice, plan[0].Value, delta, "plan value should be 0.10")
+}
