@@ -146,7 +146,7 @@ func (t *Stekker) run(done chan error) {
 
 				duration := time.Hour
 				if t.region == "BE" || t.region == "NL" {
-					duration = 15 * time.Minute
+					duration = SlotDuration
 				}
 
 				res = append(res, api.Rate{
