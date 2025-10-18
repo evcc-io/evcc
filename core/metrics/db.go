@@ -65,7 +65,19 @@ func Init() error {
 
 	// meter: split energy direction
 	if old := "val"; m.HasColumn(new(meter), old) {
-		if err := m.RenameColumn(new(meter), old, "pos"); err != nil {
+		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
+			return err
+		}
+	}
+
+	// meter: split energy direction #2
+	if old := "pos"; m.HasColumn(new(meter), old) {
+		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
+			return err
+		}
+	}
+	if old := "neg"; m.HasColumn(new(meter), old) {
+		if err := m.RenameColumn(new(meter), old, "export"); err != nil {
 			return err
 		}
 	}
