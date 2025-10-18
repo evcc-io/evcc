@@ -10,6 +10,8 @@ const baseState = {
     features: [],
     name: "",
     repeatingPlans: [],
+    effectivePlanPrecondition: 0,
+    effectivePlanContinuous: false,
   },
   enabled: false,
   connected: true,

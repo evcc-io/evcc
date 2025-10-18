@@ -15,22 +15,25 @@ import (
 type planStruct struct {
 	Soc          int       `json:"soc"`
 	Precondition int64     `json:"precondition"`
+	Continuous   bool      `json:"continuous"`
 	Time         time.Time `json:"time"`
 }
 
 type vehicleStruct struct {
-	Title          string                    `json:"title"`
-	Icon           string                    `json:"icon,omitempty"`
-	Capacity       float64                   `json:"capacity,omitempty"`
-	Phases         int                       `json:"phases,omitempty"`
-	MinSoc         int                       `json:"minSoc,omitempty"`
-	LimitSoc       int                       `json:"limitSoc,omitempty"`
-	MinCurrent     float64                   `json:"minCurrent,omitempty"`
-	MaxCurrent     float64                   `json:"maxCurrent,omitempty"`
-	Priority       int                       `json:"priority,omitempty"`
-	Features       []string                  `json:"features,omitempty"`
-	Plan           *planStruct               `json:"plan,omitempty"`
-	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
+	Title                     string                    `json:"title"`
+	Icon                      string                    `json:"icon,omitempty"`
+	Capacity                  float64                   `json:"capacity,omitempty"`
+	Phases                    int                       `json:"phases,omitempty"`
+	MinSoc                    int                       `json:"minSoc,omitempty"`
+	LimitSoc                  int                       `json:"limitSoc,omitempty"`
+	MinCurrent                float64                   `json:"minCurrent,omitempty"`
+	MaxCurrent                float64                   `json:"maxCurrent,omitempty"`
+	Priority                  int                       `json:"priority,omitempty"`
+	Features                  []string                  `json:"features,omitempty"`
+	Plan                      *planStruct               `json:"plan,omitempty"`
+	RepeatingPlans            []api.RepeatingPlanStruct `json:"repeatingPlans"`
+	EffectivePlanPrecondition int64                     `json:"effectivePlanPrecondition"`
+	EffectivePlanContinuous   bool                      `json:"effectivePlanContinuous"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -41,26 +44,29 @@ func (site *Site) publishVehicles() {
 	for _, v := range vv {
 		var plan *planStruct
 
-		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
+		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+			plan = &planStruct{Soc: soc, Time: time}
 		}
 
 		instance := v.Instance()
 		ac := instance.OnIdentified()
 
+		strategy := v.GetPlanStrategy()
 		res[v.Name()] = vehicleStruct{
-			Title:          instance.GetTitle(),
-			Icon:           instance.Icon(),
-			Capacity:       instance.Capacity(),
-			Phases:         instance.Phases(),
-			MinSoc:         v.GetMinSoc(),
-			LimitSoc:       v.GetLimitSoc(),
-			MinCurrent:     ac.MinCurrent,
-			MaxCurrent:     ac.MaxCurrent,
-			Priority:       ac.Priority,
-			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
-			Plan:           plan,
-			RepeatingPlans: v.GetRepeatingPlans(),
+			Title:                     instance.GetTitle(),
+			Icon:                      instance.Icon(),
+			Capacity:                  instance.Capacity(),
+			Phases:                    instance.Phases(),
+			MinSoc:                    v.GetMinSoc(),
+			LimitSoc:                  v.GetLimitSoc(),
+			MinCurrent:                ac.MinCurrent,
+			MaxCurrent:                ac.MaxCurrent,
+			Priority:                  ac.Priority,
+			Features:                  lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
+			Plan:                      plan,
+			RepeatingPlans:            v.GetRepeatingPlans(),
+			EffectivePlanPrecondition: int64(strategy.Precondition.Seconds()),
+			EffectivePlanContinuous:   strategy.Continuous,
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
