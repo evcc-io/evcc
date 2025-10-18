@@ -198,8 +198,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 			getPhases = wb.getPhasesSEMP
 
 			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
-			err = wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff)
-			if err != nil {
+			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err != nil {
 				log.WARN.Println("SEMP phase switching: could set initial SEMP power limit:", err)
 			}
 
