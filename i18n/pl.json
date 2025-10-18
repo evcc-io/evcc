@@ -1,6 +1,6 @@
 {
   "batterySettings": {
-    "batteryLevel": "Stan naładowania akumulatora",
+    "batteryLevel": "Stan naładowania magazynu energii",
     "bufferStart": {
       "above": "kiedy powyżej {soc}.",
       "full": "kiedy na {soc}.",
@@ -152,7 +152,7 @@
       "optional": "opcjonalnie"
     },
     "general": {
-      "cancel": "Anulować",
+      "cancel": "Anuluj",
       "customHelp": "Utwórz urządzenie zdefiniowane przez użytkownika korzystając z systemu wtyczek evcc.",
       "customOption": "Urządzenie zdefiniowane przez użytkownika",
       "delete": "Usuń",
@@ -536,13 +536,13 @@
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecastTooltip": "prognoza: pozostała dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
-      "homePower": "Pobór",
+      "homePower": "Konsumpcja",
       "loadpoints": "Odbiornik energii| Odbiornik energii | {count} odbiorniki energii",
       "noEnergy": "Brak danych licznika energii",
       "pv": "Instalacja PV",
       "pvExport": "Eksport do sieci",
       "pvProduction": "Produkcja",
-      "selfConsumption": "Autokonsumpcja"
+      "selfConsumption": "Zasilanie własne"
     },
     "heatingStatus": {
       "charging": "Grzeje…",
@@ -826,6 +826,7 @@
     "vehicle": "Pojazd"
   },
   "settings": {
+    "deviceInfo": "Ustawienia wprowadzone w tym oknie dialogowym dotyczą tylko tego urządzenia.",
     "fullscreen": {
       "enter": "Wejdź w tryb pełnoekranowy",
       "exit": "Wyjdź z trybu pełnoekranowego",
@@ -839,6 +840,12 @@
       "auto": "Automatyczny",
       "label": "Język"
     },
+    "loadpoints": {
+      "help": "Zmień kolejność i widoczność dla interfejsu użytkownika.",
+      "hide": "Ukryj {title}",
+      "label": "Punkty obciążenia",
+      "show": "Pokaż {title}"
+    },
     "sponsorToken": {
       "expires": "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj tutaj.",
       "getNew": "Weź świeżego",
@@ -848,7 +855,7 @@
       "label": "Telemetria"
     },
     "theme": {
-      "auto": "systemowy",
+      "auto": "systemu",
       "dark": "ciemny",
       "label": "Wygląd",
       "light": "jasny"
