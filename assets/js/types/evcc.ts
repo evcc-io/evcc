@@ -379,8 +379,8 @@ export interface Vehicle {
   limitSoc?: number;
   plan?: StaticPlan;
   repeatingPlans: RepeatingPlan[];
-  effectivePlanPrecondition: number;
-  effectivePlanContinuous: boolean;
+  planPrecondition: number;
+  planContinuous: boolean;
   title: string;
   features?: string[];
   capacity?: number;

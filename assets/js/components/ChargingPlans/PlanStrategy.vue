@@ -64,14 +64,14 @@ export default defineComponent({
 	props: {
 		id: [String, Number],
 		show: Boolean,
-		effectivePlanPrecondition: { type: Number, default: 0 },
-		effectivePlanContinuous: { type: Boolean, default: false },
+		precondition: { type: Number, default: 0 },
+		continuous: { type: Boolean, default: false },
 	},
 	emits: ["update"],
 	data() {
 		return {
-			selectedPrecondition: this.effectivePlanPrecondition,
-			selectedContinuous: this.effectivePlanContinuous,
+			selectedPrecondition: this.precondition,
+			selectedContinuous: this.continuous,
 		};
 	},
 	computed: {
@@ -100,10 +100,10 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		effectivePlanPrecondition(newValue: number) {
+		precondition(newValue: number) {
 			this.selectedPrecondition = newValue;
 		},
-		effectivePlanContinuous(newValue: boolean) {
+		continuous(newValue: boolean) {
 			this.selectedContinuous = newValue;
 		},
 	},

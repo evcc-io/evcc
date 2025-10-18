@@ -20,20 +20,20 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title                     string                    `json:"title"`
-	Icon                      string                    `json:"icon,omitempty"`
-	Capacity                  float64                   `json:"capacity,omitempty"`
-	Phases                    int                       `json:"phases,omitempty"`
-	MinSoc                    int                       `json:"minSoc,omitempty"`
-	LimitSoc                  int                       `json:"limitSoc,omitempty"`
-	MinCurrent                float64                   `json:"minCurrent,omitempty"`
-	MaxCurrent                float64                   `json:"maxCurrent,omitempty"`
-	Priority                  int                       `json:"priority,omitempty"`
-	Features                  []string                  `json:"features,omitempty"`
-	Plan                      *planStruct               `json:"plan,omitempty"`
-	RepeatingPlans            []api.RepeatingPlanStruct `json:"repeatingPlans"`
-	EffectivePlanPrecondition int64                     `json:"effectivePlanPrecondition"`
-	EffectivePlanContinuous   bool                      `json:"effectivePlanContinuous"`
+	Title            string                    `json:"title"`
+	Icon             string                    `json:"icon,omitempty"`
+	Capacity         float64                   `json:"capacity,omitempty"`
+	Phases           int                       `json:"phases,omitempty"`
+	MinSoc           int                       `json:"minSoc,omitempty"`
+	LimitSoc         int                       `json:"limitSoc,omitempty"`
+	MinCurrent       float64                   `json:"minCurrent,omitempty"`
+	MaxCurrent       float64                   `json:"maxCurrent,omitempty"`
+	Priority         int                       `json:"priority,omitempty"`
+	Features         []string                  `json:"features,omitempty"`
+	Plan             *planStruct               `json:"plan,omitempty"`
+	RepeatingPlans   []api.RepeatingPlanStruct `json:"repeatingPlans"`
+	PlanPrecondition int64                     `json:"planPrecondition"`
+	PlanContinuous   bool                      `json:"planContinuous"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -53,20 +53,20 @@ func (site *Site) publishVehicles() {
 
 		strategy := v.GetPlanStrategy()
 		res[v.Name()] = vehicleStruct{
-			Title:                     instance.GetTitle(),
-			Icon:                      instance.Icon(),
-			Capacity:                  instance.Capacity(),
-			Phases:                    instance.Phases(),
-			MinSoc:                    v.GetMinSoc(),
-			LimitSoc:                  v.GetLimitSoc(),
-			MinCurrent:                ac.MinCurrent,
-			MaxCurrent:                ac.MaxCurrent,
-			Priority:                  ac.Priority,
-			Features:                  lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
-			Plan:                      plan,
-			RepeatingPlans:            v.GetRepeatingPlans(),
-			EffectivePlanPrecondition: int64(strategy.Precondition.Seconds()),
-			EffectivePlanContinuous:   strategy.Continuous,
+			Title:            instance.GetTitle(),
+			Icon:             instance.Icon(),
+			Capacity:         instance.Capacity(),
+			Phases:           instance.Phases(),
+			MinSoc:           v.GetMinSoc(),
+			LimitSoc:         v.GetLimitSoc(),
+			MinCurrent:       ac.MinCurrent,
+			MaxCurrent:       ac.MaxCurrent,
+			Priority:         ac.Priority,
+			Features:         lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
+			Plan:             plan,
+			RepeatingPlans:   v.GetRepeatingPlans(),
+			PlanPrecondition: int64(strategy.Precondition.Seconds()),
+			PlanContinuous:   strategy.Continuous,
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
