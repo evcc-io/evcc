@@ -103,7 +103,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, _, soc := lp.NextVehiclePlan()
+	_, soc, _ := lp.NextVehiclePlan()
 	return soc
 }
 
