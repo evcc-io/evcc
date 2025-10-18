@@ -105,10 +105,10 @@ func TestLoadpointProfile(t *testing.T) {
 	lp := loadpoint.NewMockAPI(ctrl)
 	lp.EXPECT().GetMode().Return(api.ModeMinPV).AnyTimes()
 	lp.EXPECT().GetStatus().Return(api.StatusC).AnyTimes()
-	lp.EXPECT().GetChargePower().Return(10000.0).AnyTimes()   // 1 0kW
-	lp.EXPECT().EffectiveMinPower().Return(1000.0).AnyTimes() // 1 kW
-	lp.EXPECT().GetRemainingEnergy().Return(2.0).AnyTimes()   // 2 kWh
+	lp.EXPECT().GetChargePower().Return(10000.0).AnyTimes()   // 10 kW
+	lp.EXPECT().EffectiveMinPower().Return(1000.0).AnyTimes() //  1 kW
+	lp.EXPECT().GetRemainingEnergy().Return(2.0).AnyTimes()   //  2 kWh
 
-	// expected slots: 0.25/ 1.0 / 0.75 kWh
-	require.Equal(t, []float64{250, 1000, 750}, loadpointProfile(lp, 3))
+	// expected slots: 0.25 kWh...
+	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 250}, loadpointProfile(lp, 8))
 }
