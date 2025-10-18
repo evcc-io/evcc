@@ -22,68 +22,72 @@
 							<div class="inner mb-3">Modbus Proxy Connection #{{ index + 1 }}</div>
 						</h5>
 					</div>
-					<div class="row align-items-center">
-						<div class="col-4 border rounded">
-							<div class="d-none d-lg-block">
-								<hr class="mt-4" />
-								<h5>
-									<div class="inner">Client</div>
-								</h5>
+					<div class="row mb-3">
+						<div class="col-4">
+							<div class="border rounded px-3">
+								<div class="d-none d-lg-block">
+									<hr class="mt-4" />
+									<h5>
+										<div class="inner">Client</div>
+									</h5>
+								</div>
+								<FormRow id="modbusPort" :label="$t('config.modbus.port')">
+									<PropertyField
+										id="modbusPort"
+										v-model="connection.Port"
+										property="port"
+										type="Int"
+										class="w-50"
+										required
+									/>
+								</FormRow>
 							</div>
-							<FormRow id="modbusPort" :label="$t('config.modbus.port')">
-								<PropertyField
-									id="modbusPort"
-									v-model="connection.Port"
-									property="port"
-									type="Int"
-									class="w-50"
-									required
-								/>
-							</FormRow>
 						</div>
-						<div class="col m-auto d-flex justify-content-center">
+						<div class="col d-flex justify-content-center" style="padding-top: 9.5%">
 							<shopicon-regular-arrowright
 								size="l"
 								class="flex-shrink-0"
 							></shopicon-regular-arrowright>
 						</div>
-						<div class="col-6 border rounded">
-							<div class="d-none d-lg-block">
-								<hr class="mt-4" />
-								<h5>
-									<div class="inner">Device</div>
-								</h5>
+						<div class="col-6">
+							<div class="border rounded px-3">
+								<div class="d-none d-lg-block">
+									<hr class="mt-4" />
+									<h5>
+										<div class="inner">Device</div>
+									</h5>
+								</div>
+								<Modbus
+									:id="index"
+									v-model:baudrate="connection.Settings.Baudrate"
+									v-model:comset="connection.Settings.Comset"
+									v-model:device="connection.Settings.Device"
+									v-model:readonly="connection.ReadOnly"
+									:host="getHost(connection.Settings.URI)"
+									:port="getPort(connection.Settings.URI)"
+									:capabilities="['rs485', 'tcpip']"
+									:is-proxy="true"
+									@update:host="updateHost(connection, $event)"
+									@update:port="updatePort(connection, $event)"
+								/>
 							</div>
-							<Modbus
-								:id="index"
-								v-model:baudrate="connection.Settings.Baudrate"
-								v-model:comset="connection.Settings.Comset"
-								v-model:device="connection.Settings.Device"
-								v-model:readonly="connection.ReadOnly"
-								:host="getHost(connection.Settings.URI)"
-								:port="getPort(connection.Settings.URI)"
-								:capabilities="['rs485', 'tcpip']"
-								:is-proxy="true"
-								@update:host="updateHost(connection, $event)"
-								@update:port="updatePort(connection, $event)"
-							/>
 						</div>
 					</div>
-					<div class="align-items-center d-flex mb-4">
-						<button
-							type="button"
-							class="btn btn-sm btn-outline-secondary border-0 ms-auto"
-							aria-label="Remove"
-							tabindex="0"
-							@click="values.splice(index, 1)"
-						>
-							<shopicon-regular-trash
-								size="s"
-								class="flex-shrink-0"
-							></shopicon-regular-trash>
-						</button>
-					</div>
+					<button
+						type="button"
+						class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray ms-auto"
+						aria-label="Remove"
+						tabindex="0"
+						@click="values.splice(index, 1)"
+					>
+						<shopicon-regular-trash
+							size="s"
+							class="flex-shrink-0"
+						></shopicon-regular-trash>
+						Remove connection
+					</button>
 				</div>
+				<hr />
 				<button
 					type="button"
 					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
