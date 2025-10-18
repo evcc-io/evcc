@@ -22,10 +22,10 @@
 							<div class="inner mb-3">Modbus Proxy Connection #{{ index + 1 }}</div>
 						</h5>
 					</div>
-					<div class="row mb-3">
-						<div class="col-4">
+					<div class="row d-inline d-lg-flex mb-3">
+						<div class="col-lg-4">
 							<div class="border rounded px-3">
-								<div class="d-none d-lg-block">
+								<div class="d-lg-block">
 									<hr class="mt-4" />
 									<h5>
 										<div class="inner">Client</div>
@@ -43,15 +43,24 @@
 								</FormRow>
 							</div>
 						</div>
-						<div class="col d-flex justify-content-center" style="padding-top: 9.5%">
+						<div
+							class="col d-none d-lg-flex justify-content-center evcc-gray"
+							style="padding-top: 9.5%"
+						>
 							<shopicon-regular-arrowright
 								size="l"
 								class="flex-shrink-0"
 							></shopicon-regular-arrowright>
 						</div>
-						<div class="col-6">
+						<div class="col d-flex d-lg-none justify-content-center evcc-gray">
+							<shopicon-regular-arrowdown
+								size="l"
+								class="flex-shrink-0"
+							></shopicon-regular-arrowdown>
+						</div>
+						<div class="col-lg-6">
 							<div class="border rounded px-3">
-								<div class="d-none d-lg-block">
+								<div class="d-lg-block">
 									<hr class="mt-4" />
 									<h5>
 										<div class="inner">Device</div>
@@ -105,6 +114,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowright";
+import "@h2d2/shopicons/es/regular/arrowdown";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
