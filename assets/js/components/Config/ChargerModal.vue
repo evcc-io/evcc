@@ -15,20 +15,61 @@
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
 		:get-product-name="getProductName"
+		:hide-template-fields="hideTemplateFields"
 		@added="$emit('added', $event)"
 		@updated="$emit('updated')"
 		@removed="$emit('removed')"
 		@close="$emit('close')"
 	>
-		<template #after-template-info>
+		<template v-if="isOcpp" #template-description>
+			<p>Configuring an OCPP charger is a multi-step process.</p>
+			<ol class="mb-4">
+				<li>evcc has a built-in OCPP server</li>
+				<li>configure this server in your charger</li>
+				<li>evcc detects your chargers identifier (station id)</li>
+				<li>validate and save your configuration</li>
+			</ol>
+		</template>
+
+		<template v-if="isOcpp" #after-template-info="{ values }">
 			<FormRow
-				v-if="ocppUrl"
 				id="chargerOcppUrl"
 				:label="$t('config.charger.ocppLabel')"
-				:help="$t('config.charger.ocppHelp')"
+				:help="$t('config.charger.ocppHelp', { url: ocppUrlWithStationId })"
 			>
 				<input type="text" class="form-control border" :value="ocppUrl" readonly />
 			</FormRow>
+
+			<div
+				v-if="!ocppNextStepConfirmed && !values.stationid"
+				class="my-4 d-flex justify-content-end gap-2 align-items-center"
+			>
+				<span v-if="ocppStationIdDetected">{{ $t("config.charger.ocppConnected") }}</span>
+				<button
+					v-if="ocppStationIdDetected"
+					type="button"
+					class="btn btn-primary text-nowrap ms-2"
+					@click="
+						values.stationid = ocppStationIdDetected;
+						ocppNextStepConfirmed = true;
+					"
+				>
+					{{ $t("config.charger.ocppNextStep") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-outline-primary text-nowrap"
+					@click="confirmOcppNextStep"
+				>
+					<span
+						class="spinner-border spinner-border-sm me-2"
+						role="status"
+						aria-hidden="true"
+					></span>
+					{{ $t("config.charger.ocppWaiting") }}
+				</button>
+			</div>
 		</template>
 	</DeviceModalBase>
 </template>
@@ -55,7 +96,7 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyBoostYaml from "./defaultYaml/sgreadyBoost.yaml?raw";
-import { LOADPOINT_TYPE, type LoadpointType } from "@/types/evcc";
+import { LOADPOINT_TYPE, type LoadpointType, type OcppConfig } from "@/types/evcc";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -77,6 +118,7 @@ export default defineComponent({
 		id: Number,
 		loadpointType: { type: String as PropType<LoadpointType>, default: null },
 		fade: String as PropType<ModalFade>,
+		ocpp: { type: Object as PropType<OcppConfig>, default: () => ({ stations: [] }) },
 		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
@@ -84,6 +126,7 @@ export default defineComponent({
 		return {
 			initialValues,
 			customFields: CUSTOM_FIELDS,
+			ocppNextStepConfirmed: false,
 			currentTemplate: null as Template | null,
 			currentValues: {} as DeviceValues,
 		};
@@ -101,14 +144,30 @@ export default defineComponent({
 		isHeating(): boolean {
 			return this.loadpointType === LOADPOINT_TYPE.HEATING;
 		},
-		ocppUrl(): string | null {
-			const isOcpp =
+		isOcpp(): boolean {
+			return (
+				this.currentTemplate !== null &&
 				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "connector") &&
-				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid");
-			if (isOcpp && this.currentValues) {
-				return `ws://${window.location.hostname}:8887/${this.currentValues.stationid || ""}`;
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid")
+			);
+		},
+		ocppUrl(): string | null {
+			if (this.isOcpp) {
+				return `ws://${window.location.hostname}:8887/`;
 			}
 			return null;
+		},
+		ocppUrlWithStationId(): string | null {
+			if (this.ocppUrl) {
+				return `${this.ocppUrl}<station-id>`;
+			}
+			return null;
+		},
+		ocppStationIdDetected(): string | undefined {
+			return this.ocpp.stations.find((station) => station.status === "unknown")?.id;
+		},
+		hideTemplateFields(): boolean {
+			return this.isOcpp && !this.ocppNextStepConfirmed;
 		},
 	},
 	methods: {
@@ -238,6 +297,15 @@ export default defineComponent({
 			}
 			// For template types, use the standard logic (deviceProduct or templateName)
 			return values.deviceProduct || templateName || "";
+		},
+		confirmOcppNextStep() {
+			if (
+				window.confirm(
+					"Your charger has not connected to evcc yet. Are you sure you want to continue?"
+				)
+			) {
+				this.ocppNextStepConfirmed = true;
+			}
 		},
 	},
 });
