@@ -11,6 +11,9 @@ params:
   - name: region
     example: BE
     type: choice
+    required: true
+    description:
+      generic: Market region code
     choice:
       [
         "DE-LU",
