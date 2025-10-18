@@ -87,9 +87,11 @@ params:
       en: Set charging current [A]
     example: "number.vehicle_charging_current"
     type: string
+  - preset: vehicle-features
 render: |
   type: homeassistant
   {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}
   uri: {{ .uri }}
   token: {{ .token }}
   sensors:
