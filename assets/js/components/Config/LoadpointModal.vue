@@ -562,7 +562,7 @@ import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
-import GenericModal from "../Helper/GenericModal.vue";
+import GenericModal, { type ModalFade } from "../Helper/GenericModal.vue";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -617,7 +617,7 @@ export default {
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 		loadpointCount: { type: Number, default: 0 },
-		fade: String,
+		fade: String as PropType<ModalFade>,
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
@@ -706,9 +706,9 @@ export default {
 				key?: number;
 				name: string;
 			}[];
-			result[0].name = "0 (default)";
-			result[0].key = undefined;
-			result[10].name = "10 (highest)";
+			result[0]!.name = "0 (default)";
+			result[0]!.key = undefined;
+			result[10]!.name = "10 (highest)";
 			return result;
 		},
 		phasesOptions() {

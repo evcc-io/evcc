@@ -14,7 +14,7 @@ type cached struct {
 }
 
 func cacheKey(typ string, other map[string]any) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%s-%v", typ, other))))
+	return fmt.Sprintf("%x", sha256.Sum256(fmt.Appendf(nil, "%s-%v", typ, other)))
 }
 
 func cachePut(key string, typ api.TariffType, rates api.Rates) error {

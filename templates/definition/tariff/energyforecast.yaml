@@ -1,0 +1,23 @@
+template: energyforecast
+products:
+  - brand: Energy Forecast
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["DE"]
+params:
+  - name: token
+    required: true
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://www.energyforecast.de/api/v1/predictions/next_48_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}
+    jq: |
+      map({
+        "start": .start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "end":   .end   | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "value": .price
+      }) | tostring

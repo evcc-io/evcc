@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
@@ -252,9 +253,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureMDNS(conf.Network)
 	}
 
+	// start SHM server
+	if err == nil {
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+	}
+
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
 	}
 
 	// setup MCP
@@ -277,6 +283,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
 	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
@@ -284,6 +291,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
+
+	// publish system infos
+	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
+	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -331,11 +343,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	})
+	}, viper.ConfigFileUsed())
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {
-		valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 		go updater.Run(log, httpd, valueChan)
 	}
 

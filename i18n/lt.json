@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
-      "title": "Apkrovos valdymas"
+      "title": "Apkrovos valdymas",
+      "usableMeters": "Galimi skaitikliai"
     },
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Tiekimo į tinklą kaina",
       "gridPrice": "Energijos pirkimo kaina",
       "heaterTempLimit": "Šildymo limitas",
-      "hemsType": "Sistema",
+      "hemsActiveLimit": "Aktyvus limitas",
+      "hemsType": "Komunikacija",
       "identifier": "RFID-Identifikatorius",
       "no": "ne",
       "odometer": "Odometras",
@@ -124,9 +126,14 @@
       "B": "B (prijungtas)",
       "C": "C (įkrauna)"
     },
+    "deviceValueHemsType": {
+      "eebus": "naudoja EEBus",
+      "relay": "naudoja Relė"
+    },
     "devices": {
       "auxMeter": "Išmanusis vartotojas",
       "batteryStorage": "Energijos kaupiklis",
+      "consumer": "Vartojantis įrenginys",
       "solarSystem": "Saulės elektrinė"
     },
     "editor": {
@@ -137,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Gali būti naudojamas apkrovos valdymo ar statistikos tikslais.",
-      "titleAdd": "Pridėti Išorinį skaitiklį",
-      "titleEdit": "Redaguoti Išorinį skaitiklį"
+      "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
+      "titleAdd": "Pridėti vartojančio įrenginio skaitiklį",
+      "titleEdit": "Redaguoti vartojančio įrenginio skaitiklį"
     },
     "form": {
       "danger": "Pavojus",
@@ -148,12 +155,18 @@
       "optional": "pasirinktinai"
     },
     "general": {
+      "applyAndClose": "Pritaikyti ir uždaryti",
       "cancel": "Atšaukti",
+      "close": "Uždaryti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
       "docsLink": "Žiūrėkite dokumentaciją.",
+      "dragHandle": "Vilkti",
+      "dragItem": "Galima vilkti: {title}",
+      "dragList": "Galima sukeisti vietomis",
       "experimental": "Eksperimentinis",
+      "forceSave": "Vistiek įrašyti",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
       "noFileSelected": "Nepasirinktas failas.",
@@ -162,7 +175,11 @@
       "password": "Slaptažodis",
       "readFromFile": "Skaityti iš failo",
       "remove": "Pašalinti",
+      "required": "privaloma",
+      "reset": "Grąžinti į pirminę būseną",
       "save": "Išsaugoti",
+      "saved": "Išsaugota.",
+      "saving": "Įrašoma…",
       "selectFile": "Naršyti",
       "showAdvancedSettings": "Rodyti išplėstinius nustatymus",
       "telemetry": "Telemetrija",
@@ -176,17 +193,18 @@
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
-      "description": "Prijunkite evcc prie kitos namų energijos valdymo sistemos.",
+      "description": "Galios ribojimas naudojant išorinę sistemą (pvz. “EnWG 14a” valdiklį). Reikia apkrovos valdymo konfigūracijos.",
       "title": "HEMS"
     },
     "icon": {
-      "change": "pakeisti"
+      "change": "pakeisti",
+      "label": "Piktograma"
     },
     "influx": {
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
       "labelBucket": "Bucket",
-      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
+      "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
       "labelOrg": "Organizacija",
@@ -328,13 +346,22 @@
       "option": {
         "aux": "Pridėti savireguliuojantį vartotoją",
         "battery": "Pridėti kaupiklio skaitiklį",
-        "ext": "Pridėti išorinį skaitiklį",
+        "ext": "Pridėti paprastą vartojantį įrenginį",
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
       "save": "Išsaugoti",
       "specific": "Specifinės integracijos",
       "template": "Gamintojas",
       "titleChoice": "Ką norite pridėti?",
+      "titleLabel": "Pavadinimas",
+      "usage": {
+        "aux": "Savireguliuojančio įrenginio skaitiklis",
+        "battery": "Kaupiklio skaitiklis",
+        "charge": "Įkroviklio skaitiklis",
+        "grid": "Tinklo įvado skaitiklis",
+        "label": "Naudojimas",
+        "pv": "Saulės jėgainės skaitiklis"
+      },
       "validateSave": "Patikrinti ir išsaugoti"
     },
     "modbus": {
@@ -358,7 +385,7 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Leisti keliems klientams pasiekti vieną „Modbus“ įrenginį.",
+      "description": "Leidžia keliems klientams pasiekti vieną Modbus įrenginį.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -368,7 +395,7 @@
       "descriptionTopic": "Palikite tuščią, kad išjungtumėte publikavimą.",
       "labelBroker": "Broker",
       "labelCaCert": "Serverio sertifikatas (CA)",
-      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
+      "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelClientCert": "Kliento sertifikatas",
       "labelClientId": "Kliento ID",
       "labelClientKey": "Kliento raktas",
@@ -425,11 +452,23 @@
       "system": "Sistema",
       "vehicles": "Automobiliai"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc turi per SEMP protokolą integruotą SMA Sunny Home Manager (SHM) sistemą . Jei ji veikia tame pačiame tinkle, prisijungus prie Sunny Portal paskyros, automatiškai turėtų būti pasiūlyta pridėti visus evcc sukonfigūruotus įkroviklius kaip naujai atrastus vartotojus. Viskas turėtų būti paruošta naudoti iš karto, be jokių toliau nurodytų pakeitimų.",
+      "descriptionDeviceId": "12 simbolių HEX eilutė. Visų įrenginių prefiksas (įkroviklis, ..).",
+      "descriptionIdPattern": "Identifikatoriaus šablonas",
+      "descriptionIds": "Sunny Portal sistemoje kiekvienam vartotojo įrenginiui reikalingas unikalus identifikatorius. evcc generuoja unikalų identifikatorių pagal jūsų aparatinę įrangą. Jei migruosite evcc į kitą aparatinę įrangą, šie identifikatoriai gali pasikeisti. Jei norite išsaugoti istoriją, čia galite pakeisti sugeneruotus identifikatorius. Atidarykite SEMP URL (/semp), kad patikrintumėte dabartinius identifikatorius.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 simbolių HEX eilutė. Bendras visų objektų prefiksas. Pagal numatytuosius nustatymus evcc naudos savo vidinį tiekėjo ID.",
+      "labelDeviceId": "Įrenginio ID",
+      "labelVendorId": "Gamintojo ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
-      "descriptionToken": "Rėmėjai žetoną (token) gauna iš {url}. Taip pat siūlome laikiną žetoną pabandymui.  {trialToken}.",
+      "descriptionToken": "Rėmėjai ras savo žetoną (token) {url}. Pradžiai siūlome {trialToken}.",
       "enterYourToken": "Įrašykite savo žetoną",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
@@ -438,7 +477,7 @@
       "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo žetoną.",
       "tokenRequiredLearnMore": "Sužinoti daugiau.",
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
-      "trialToken": "Bandomasis žetonas",
+      "trialToken": "bandomasis žetonas (token)",
       "viaYaml": "per evcc.yaml",
       "yourToken": "Jūsų žetonas"
     },
@@ -487,6 +526,10 @@
       "description": "Nustatykite savo energijos tarifus, kad apskaičiuotumėte įkrovimo sesijų išlaidas.",
       "title": "Tarifai"
     },
+    "telemetry": {
+      "description": "Konfigūruokite duomenų bendrinimą, kuris padeda tobulinti evcc. Jūsų privatumas mums yra svarbus, todėl dalyvavimas yra laisvai pasirenkamas.",
+      "title": "Duomenų perdavimas"
+    },
     "title": {
       "description": "Rodoma pagrindiniame ekrane ir naršyklės kortelėje.",
       "label": "Pavadinimas",
@@ -495,7 +538,7 @@
     "validation": {
       "failed": "nepavyko",
       "label": "Statusas",
-      "running": "tikrinama…",
+      "running": "Tikrinama…",
       "success": "sėkmingai",
       "unknown": "nežinomas",
       "validate": "tikrinti"
@@ -627,6 +670,7 @@
     "about": "Apie",
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
+      "loggedOut": "Sėkmingai atsijungta",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
@@ -641,7 +685,7 @@
   "help": {
     "discussionsButton": "GitHub diskusijos",
     "documentationButton": "Dokumentacija",
-    "issueButton": "Pranešti apie klaidą",
+    "issueButton": "Pranešti apie problemą",
     "issueDescription": "Pastebėjote keistą ar netinkamą veikimą?",
     "logsButton": "Peržiūrėti žurnalus",
     "logsDescription": "Patikrinkite ar žurnaluose nėra klaidų.",
@@ -657,6 +701,57 @@
     "restartButton": "Restartuoti",
     "restartDescription": "Ar pabandėte išjungti ir vėl įjungti?",
     "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+  },
+  "issue": {
+    "additional": {
+      "description": "Įtraukite konfigūraciją ir žurnalus, kad galėtume greitai atkartoti problemą. Raginame kuo daugiau dalytis. Paprastai nereikia nurodyti būsenos.",
+      "include": "įtraukti",
+      "lines": "eilutės",
+      "logs": "Žurnalai",
+      "logsDescription": "Naujausi žurnalo įrašai, kurie gali padėti nustatyti problemą.",
+      "showDetails": "rodyti išsamiai",
+      "source": "Šaltinis",
+      "state": "Būsena",
+      "stateDescription": "Išsami veikimo būsenos informacija, įskaitant įkroviklį, įrenginį ir informaciją apie energiją. Pateikite tik tuo atveju, jei prašoma.",
+      "title": "Papildoma informacija",
+      "uiConfig": "Konfigūracija (UI)",
+      "uiConfigDescription": "Konfigūracijos nustatymai, atlikti per žiniatinklio sąsają.",
+      "yamlConfig": "Konfigūracija (YAML)",
+      "yamlConfigDescription": "Pilnas jūsų konfigūracijos failas."
+    },
+    "additionalContext": "Papildomas kontekstas",
+    "additionalContextPlaceholder": "Bet kokia papildoma informacija, kuri galėtų būti naudinga...\n- Konfigūracijos informacija\n- Ką bandėte\n- Sistemos informacija",
+    "createButtonDiscussion": "Pradėti GitHub diskusiją...",
+    "createButtonIssue": "Sukurti GitHub pranešimą apie problemą...",
+    "description": "Jūsų diegimas neveikia taip, kaip tikėtasi? Šiame puslapyje galite gauti pagalbos arba pranešti apie problemas. Pateikite pakankamai informacijos, kad galėtume suprasti ir atkartoti problemą, o aprašymas turi būti glaustas, aiškus ir lengvai suprantamas.",
+    "helpType": {
+      "discussion": "Reikia pagalbos",
+      "discussionDescription": "Bendruomenės diskusijose randami atsakymai.",
+      "issue": "Radau klaidą",
+      "issueDescription": "Esu tikras, kad sistemoje kažkas yra ne taip ir reikia ištaisyti.",
+      "title": "Apie kokią problemą kalbame?"
+    },
+    "issueDescription": "Aprašymas",
+    "issueTitle": "Pavadinimas",
+    "stepsToReproduce": "Žingsniai atkartojimui",
+    "subTitleDiscussion": "Aprašykite savo problemą",
+    "subTitleIssue": "Aprašykite nesklandumus",
+    "summary": {
+      "confirmationButtonDiscussion": "Pradėti diskusiją GitHub",
+      "confirmationButtonIssue": "Sukurti pranešimą apie problemą GitHub",
+      "copied": "Nukopijuota!",
+      "copyButton": "Kopijuoti papildomą informaciją",
+      "instructions": "Dėl GitHub URL dydžio apribojimų tai yra dviejų etapų procesas:",
+      "singleStepDescription": "Spustelėkite žemiau esantį mygtuką, kad atidarytumėte „GitHub“ su iš anksto užpildyta forma, kurioje yra jūsų problemos informacija. Neskelbtini duomenys buvo automatiškai pašalinti, tačiau prieš bendrindami dar kartą patikrinkite.",
+      "step1Description": "Spustelėkite žemiau esantį mygtuką, kad sukurtumėte paprastą GitHub įrašą su savo pavadinimu, aprašymu ir išsamia informacija.",
+      "step2Description": "Sukūrę įrašą, grįžkite čia, kad nukopijuotumėte toliau pateiktą papildomą informaciją ir įklijuotumėte ją į savo GitHub formą. Neskelbtini duomenys buvo redaguoti, bet prieš bendrindami dar kartą patikrinkite.",
+      "stepOneDiscussion": "1 žingsnis: sukurti diskusiją",
+      "stepOneIssue": "1 žingsnis: Sukurti problemos užklausą",
+      "stepTwo": "2 žingsnis: nukopijuoti papildomą informaciją",
+      "title": "GitHub pranešimo apie problemą santrauka"
+    },
+    "title": "Pranešti apie problemą",
+    "version": "Versija"
   },
   "log": {
     "areaLabel": "Filtruoti pagal sritis",
@@ -723,6 +818,7 @@
       "gridImport": "Iš tinklo",
       "homePower": "Namo suvartojimas",
       "loadpoints": "Įkroviklis | Įkroviklis | {count} įkrovikliai",
+      "loadpointsLimit": "{limit} limitas",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
       "pvExport": "Tinklo eksportas",
@@ -734,6 +830,10 @@
       "connected": "Budėjimo režimas.",
       "vehicleLimit": "Šildymo limitas",
       "waitForVehicle": "Paruošta. Laukiame šildytuvo…"
+    },
+    "hemsWarning": {
+      "description": "Įkrovimas apribotas, kad neviršyti {limit}.",
+      "title": "Išorinis limitas:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Kaina",
@@ -1011,6 +1111,7 @@
     "vehicle": "Automobilis"
   },
   "settings": {
+    "deviceInfo": "Šiame dialoge atlikti nustatymai taikomi tik šiam įrenginiui.",
     "fullscreen": {
       "enter": "Įjungti visą ekraną",
       "exit": "Išjungti visą ekraną",
@@ -1023,6 +1124,12 @@
     "language": {
       "auto": "Automatiškai",
       "label": "Kalba"
+    },
+    "loadpoints": {
+      "help": "Pakeiskite vartotojo sąsajos išdėstymą ir matomumą.",
+      "hide": "Paslėpti {title}",
+      "label": "Įkrovikliai",
+      "show": "Rodyti {title}"
     },
     "sponsorToken": {
       "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",
@@ -1052,7 +1159,7 @@
   },
   "smartCost": {
     "activeHours": "{active} iš {total}",
-    "activeHoursLabel": "Aktyvumo valandos",
+    "activeHoursLabel": "Aktyvumo laikas",
     "applyToAll": "Pritaikyti visur?",
     "batteryDescription": "Įkrauna kaupiklį energija iš tinklo.",
     "cheapTitle": "Pigus įkrovimas iš tinklo",
@@ -1069,7 +1176,7 @@
     "saved": "Išsaugota."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pristabdyta valandomis",
+    "activeHoursLabel": "Pristabdymo laikas",
     "description": "Pristabdo įkrovimą aukštos energijos kainos periodu, prioritetas - pelningam energijos pardavimui.",
     "priceLabel": "Pardavimo kaina",
     "priceLimit": "Pardavimo limitas",

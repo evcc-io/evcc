@@ -26,17 +26,15 @@ func init() {
 func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
-		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
+		BasicToken:        "KUy49XxPzLpLuoK0xhBC77W6VXhmtQR9iQhmIFjjoY4IpxsV",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: bluelink.HyundaiAppID,
 		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
-		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 		PushType:          "GCM",
 		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
-		// for oauth2??
-		// LoginFormHost:     "https://idpconnect-eu.hyundai.com",
-		// AuthClientID:      "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		// BrandAuthUrl:  "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
+		Brand:             "hyundai",
+		LoginFormHost:     "https://idpconnect-eu.hyundai.com",
+		BrandAuthUrl:      "%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect&lang=%s&state=ccsp",
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
@@ -54,6 +52,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		PushType:          "APNS",
 		Cfb:               "wLTVxwidmH8CfJYBWSnHD6E0huk0ozdiuygB4hLkM5XCgzAL1Dk5sE36d/bx5PFMbZs=",
 		LoginFormHost:     "https://idpconnect-eu.kia.com",
+		Brand:             "kia",
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)

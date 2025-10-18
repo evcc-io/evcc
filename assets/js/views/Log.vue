@@ -87,7 +87,7 @@
 					</div>
 					<code
 						v-if="filteredLines.length"
-						class="d-block evcc-default-text flex-grow-1"
+						class="d-block evcc-default-text flex-grow-1 textarea--tiny"
 						data-testid="log-content"
 						@copy="onCopy"
 					>
@@ -116,12 +116,10 @@ import api from "../api";
 import store from "../store";
 import { defineComponent, type PropType } from "vue";
 import type { Timeout } from "@/types/evcc";
-
-const LEVELS = ["fatal", "error", "warn", "info", "debug", "trace"];
-const DEFAULT_LEVEL = "debug";
+import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 const DEFAULT_COUNT = 1000;
 
-const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.map((l) => l.toUpperCase()).join("|")})`);
+const levelMatcher = new RegExp(`\\[.*?\\] (${LOG_LEVELS.map((l) => l.toUpperCase()).join("|")})`);
 
 export default defineComponent({
 	name: "Log",
@@ -133,7 +131,7 @@ export default defineComponent({
 	},
 	props: {
 		areas: { type: Array as PropType<string[]>, default: () => [] },
-		level: { type: String, default: DEFAULT_LEVEL },
+		level: { type: String, default: DEFAULT_LOG_LEVEL },
 	},
 	data() {
 		return {
@@ -141,7 +139,7 @@ export default defineComponent({
 			availableAreas: [] as string[],
 			search: "",
 			timeout: null as Timeout,
-			levels: LEVELS,
+			levels: LOG_LEVELS,
 			busy: false,
 		};
 	},
@@ -164,7 +162,8 @@ export default defineComponent({
 				occurrences.set(key, count + 1);
 				key = `${key}-${count + 1}`;
 
-				const className = `log log-${levelMatcher.exec(line)?.[1].toLowerCase() || "none"}`;
+				const match = levelMatcher.exec(line)?.[1];
+				const className = `log log-${match?.toLowerCase() || "none"}`;
 
 				return { key, className, line };
 			});
@@ -293,7 +292,7 @@ export default defineComponent({
 			const newAreas = a || this.areas;
 
 			// reset to default level
-			const level = newLevel === DEFAULT_LEVEL ? undefined : newLevel;
+			const level = newLevel === DEFAULT_LOG_LEVEL ? undefined : newLevel;
 			const areas = newAreas.length ? newAreas.join(",") : undefined;
 
 			this.$router.push({ query: { level, areas } });
@@ -355,14 +354,6 @@ export default defineComponent({
 	animation-fill-mode: forwards;
 	animation-timing-function: ease-out;
 	text-indent: 1rem hanging;
-	/* smaller exception for mobile */
-	font-size: 8px;
-}
-@media (min-width: 576px) {
-	.log {
-		/* default code size */
-		font-size: 0.875em;
-	}
 }
 
 .log-warn {

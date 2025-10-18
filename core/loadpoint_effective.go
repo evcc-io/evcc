@@ -217,10 +217,16 @@ func (lp *Loadpoint) EffectiveMinPower() float64 {
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
-// EffectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
+// EffectiveMaxPower returns the effective max power taking vehicle capabilities,
+// phase scaling and load management power limits into account
 func (lp *Loadpoint) EffectiveMaxPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+
+	if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 {
+		return min(lp.effectiveMaxPower(), circuitMaxPower)
+	}
+
 	return lp.effectiveMaxPower()
 }
 

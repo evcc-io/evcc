@@ -84,19 +84,6 @@
 						<h3 class="fw-normal mb-4">Raw Data</h3>
 
 						<div class="mb-4">
-							<p class="mb-2">Curl Command:</p>
-							<div class="position-relative">
-								<div
-									class="p-3 rounded border overflow-auto"
-									style="background-color: var(--evcc-box)"
-								>
-									<code class="text-nowrap d-block">{{ evopt.curl }}</code>
-								</div>
-								<CopyButton :content="evopt.curl" />
-							</div>
-						</div>
-
-						<div class="mb-4">
 							<p class="mb-2">Request:</p>
 							<div class="position-relative">
 								<pre
@@ -184,11 +171,11 @@ export default defineComponent({
 			if (!this.evopt?.res.batteries) return [];
 
 			return this.evopt.res.batteries.map(
-				(_, index) => colors.palette[index % colors.palette.length]
+				(_, index) => colors.palette[index % colors.palette.length] || ""
 			);
 		},
 		dimmedBatteryColors() {
-			return this.batteryColors.map((color) => this.dimColorBy25Percent(color));
+			return (this.batteryColors || []).map((color) => this.dimColorBy25Percent(color));
 		},
 		formattedRequest() {
 			return this.evopt?.req ? formatCompactJson(this.evopt.req) : "";

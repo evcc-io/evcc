@@ -1,0 +1,13 @@
+template: v2c
+covers: ["trydan"]
+products:
+  - brand: V2C
+    description:
+      generic: Trydan
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: host
+render: |
+  type: trydan
+  uri: http://{{ .host }}

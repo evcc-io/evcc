@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -18,10 +18,12 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -399,20 +401,46 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*Kathrein)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Kathrein) StatusReason() (api.Reason, error) {
+	res := api.ReasonUnknown
+
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
+	if err == nil && binary.BigEndian.Uint16(b) == 2 {
+		res = api.ReasonWaitingForAuthorization
+	}
+
+	return res, err
+}
+
 var _ api.Identifier = (*Kathrein)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Kathrein) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 16)
+	s, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
 	if err != nil {
 		return "", err
 	}
 
-	if string(b) == "VOID" {
+	state := binary.BigEndian.Uint16(s)
+	if state < 3 || state > 6 {
 		return "", nil
 	}
 
-	return string(b), nil
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 24)
+	if err != nil {
+		return "", err
+	}
+
+	rfid := string(bytes.TrimRight(b, "\x00"))
+
+	if strings.HasPrefix(rfid, "RFID:") {
+		return rfid[5:], nil
+	}
+
+	return rfid, nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)

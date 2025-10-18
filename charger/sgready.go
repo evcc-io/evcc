@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -47,7 +47,7 @@ func init() {
 
 const (
 	_      int64 = iota
-	Dimm         // 1
+	Dim          // 1
 	Normal       // 2
 	Boost        // 3
 )
@@ -134,8 +134,8 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Dimm {
-		return api.StatusNone, errors.New("dimm mode")
+	if mode == Dim {
+		return api.StatusNone, errors.New("dim mode")
 	}
 
 	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
@@ -159,6 +159,30 @@ func (wb *SgReady) Enable(enable bool) error {
 	wb.mode = mode
 
 	return wb.setMaxPower(wb.power)
+}
+
+var _ api.Dimmer = (*SgReady)(nil)
+
+// Dimmed implements the api.Dimmer interface
+func (wb *SgReady) Dimmed() (bool, error) {
+	mode, err := wb.getMode()
+	return mode == Dim, err
+}
+
+// Dimm implements the api.Dimmer interface
+func (wb *SgReady) Dim(dim bool) error {
+	mode := Normal
+	if dim {
+		mode = Dim
+	}
+
+	if err := wb.modeS(mode); err != nil {
+		return err
+	}
+
+	wb.mode = Dim
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface

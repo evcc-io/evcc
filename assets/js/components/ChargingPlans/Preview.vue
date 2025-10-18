@@ -14,7 +14,7 @@
 					</div>
 				</div>
 			</div>
-			<div v-if="hasTariff" class="text-end">
+			<div v-if="hasTariff" class="text-end" data-testid="tariff-value">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else-if="isCo2">{{ $t("main.targetChargePlan.co2Label") }}</span>
@@ -26,9 +26,10 @@
 			</div>
 		</div>
 		<TariffChart
+			class="mb-3"
 			:slots="slots"
 			:target-text="targetText"
-			:target-offset="targetHourOffset"
+			:target-offset="targetOffset"
 			@slot-hovered="slotHovered"
 		/>
 	</div>
@@ -61,7 +62,7 @@ export default defineComponent({
 			if (!this.plan?.length) {
 				return null;
 			}
-			const end = this.plan[this.plan.length - 1].end;
+			const end = this.plan[this.plan.length - 1]?.end;
 			return end ? new Date(end) : null;
 		},
 		timeWarning(): boolean {
@@ -110,20 +111,20 @@ export default defineComponent({
 				: this.fmtPricePerKWh(value, this.currency);
 		},
 		activeSlot(): Slot | null {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
+			return this.activeIndex !== null ? (this.slots[this.activeIndex] ?? null) : null;
 		},
 		activeSlotName(): string | null {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
 		},
-		targetHourOffset(): number | undefined {
+		targetOffset(): number | undefined {
 			if (!this.targetTime) return;
 			const start = new Date(this.startTime);
-			start.setMinutes(0);
+			start.setMinutes(start.getMinutes() - (start.getMinutes() % 15));
 			start.setSeconds(0);
 			start.setMilliseconds(0);
 			return (this.targetTime.getTime() - start.getTime()) / (60 * 60 * 1000);
@@ -135,44 +136,36 @@ export default defineComponent({
 			return this.fmtWeekdayTime(this.targetTime);
 		},
 		slots(): Slot[] {
-			const result = [];
 			const rates = this.convertDates(this.rates);
 			const plan = this.convertDates(this.plan);
-			const oneHour = 60 * 60 * 1000;
-			for (let i = 0; i < 39; i++) {
-				const start = new Date(this.startTime.getTime() + oneHour * i);
-				const startHour = start.getHours();
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
-				const toLate = this.targetTime && this.targetTime <= start;
-				// TODO: handle multiple matching time slots
-				const value = this.findSlotInRange(start, end, rates)?.value;
-				const isTarget =
-					this.targetTime && start <= this.targetTime && end > this.targetTime;
-				const charging = this.findSlotInRange(start, end, plan) != null;
+			const quarterHour = 15 * 60 * 1000;
+
+			const base = new Date(this.startTime);
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
+
+			return Array.from({ length: 48 * 4 }, (_, i) => {
+				const start = new Date(base.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
+				const charging = !!this.findSlotInRange(start, end, plan);
 				const warning =
 					charging &&
 					this.targetTime &&
 					this.endTime &&
 					end > this.targetTime &&
 					this.targetTime < this.endTime;
-				result.push({
-					day,
-					value,
-					startHour,
-					endHour,
+
+				return {
+					day: this.weekdayShort(start),
+					value: this.findSlotInRange(start, end, rates)?.value,
+					start,
+					end,
 					charging,
-					toLate,
+					toLate: this.targetTime && this.targetTime <= start,
 					warning,
-					isTarget,
-				});
-			}
-			return result;
+					isTarget: this.targetTime && start <= this.targetTime && end > this.targetTime,
+				};
+			});
 		},
 	},
 	watch: {

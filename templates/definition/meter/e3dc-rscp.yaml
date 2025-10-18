@@ -5,11 +5,11 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key (=RSCP-Passwort) muss im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt werden. Die IP-Adressen von evcc und des Hauskraftwerks müssen sich im selben Subnetz befinden.
+      Die Kommunikation erfolgt lokal. evcc muss im selben Netzwerk wie das Hauskraftwerk sein.
 
       **Achtung**: Die aktive Batteriesteuerung überschreibt Einstellungen im Smart-Power/Betriebsbereich.
     en: |
-      Username and password are identical to Web Portal or My E3/DC App access. Key (=RSCP-Password) must be set in the E3/DC system at Personalize/User Profile. The IP adresses of evcc and E3/DC system must be in the same subnet.
+      The communication is done locally. evcc must be in the same network as the E3/DC system.
 
       **Note**: Active battery control will override Smart-Power/Operating Range settings.
 params:
@@ -21,11 +21,22 @@ params:
     default: 5033
   - name: user
     required: true
+    help:
+      en: Identical with Web Portal or E3/DC App.
+      de: Identisch mit Web-Portal bzw. E3/DC App.
   - name: password
+    help:
+      en: Identical with Web Portal or E3/DC App.
+      de: Identisch mit Web-Portal bzw. E3/DC App.
     required: true
   - name: key
     description:
-      generic: RSCP-Password
+      en: RSCP password
+      de: RSCP-Passwort
+    help:
+      en: Must be set on the screen of your E3/DC system at 'Personalize' > 'User Profile'.
+      de: Muss auf dem Bildschirm des Hauskraftwerks unter 'Personalisieren' > 'Benutzerprofil' angelegt werden.
+    mask: true
     required: true
   - name: battery
     description:
@@ -40,9 +51,21 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: int
     advanced: true
+    usages: ["battery"]
   - name: maxacpower
   - name: capacity
     advanced: true
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Quelle einschließen
+      en: Include external power
+    help:
+      de: Bezieht alle angeschlossenen externen Quellen in die PV-Berechnung ein (Standard).
+      en: Includes all connected external sources into the PV calculation (default).
+    advanced: true
+    usages: ["pv"]
+    default: "true"
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -53,4 +76,8 @@ render: |
   {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
   capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
+  externalpower: {{ .externalpower }}
   {{- end }}

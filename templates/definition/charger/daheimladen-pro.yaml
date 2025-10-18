@@ -5,14 +5,14 @@ products:
       generic: Smart/Touch Pro
 requirements:
   description:
-    de: Für die Phasenumschaltung ist eine aktualisierte Firmware notwendig. Dazu bitte DaheimLaden Support kontaktieren.
-    en: Phase switching requires updated firmware. Please contact DaheimLaden Support for this.
+    de: Die Phasenumschaltung benötigt mindestens die Firmware-Version "M3W_3.11".  Während der Umschaltung pausiert die Ladung für zwei Minuten.
+    en: Phase switching requires at least firmware version "M3W_3.11." Charging pauses for two minutes during the phase switching.
 capabilities: ["1p3p", "mA"]
 params:
   - name: host
   - name: port
     default: 502
 render: |
-  type: daheimladen-mb
+  type: daheimladen
   uri: {{ .host }}:{{ .port }}
   phases1p3p: true

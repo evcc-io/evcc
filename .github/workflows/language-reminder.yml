@@ -1,0 +1,118 @@
+name: Language Reminder
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+  models: read
+
+jobs:
+  check-language:
+    name: Check Comment Language
+    runs-on: ubuntu-latest
+    # temporary disable to due high false-positive rate
+    if: false && (github.event.issue.pull_request || github.event.pull_request)
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check language
+        id: language_check
+        uses: actions/github-script@v8
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          script: |
+            // Use environment variable for security (prevents injection)
+            const commentBody = process.env.COMMENT_BODY;
+
+            const response = await fetch('https://models.github.ai/inference/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'openai/gpt-4o-mini',
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'This project requires English communication to ensure everyone can participate. Determine if a user comment requires a language reminder. The comment is markdown formatted. When analyzing: ignore text inside markdown code blocks (```), code suggestions, and quotes (>) as these may contain translations/i18n content (e.g. "de: Text"). Only analyze the regular text content. Short comments (one sentence) should not be flagged. Return `true` if you think a reminder to switch to English is needed, `false` otherwise. When unsure, return `false`.'
+                  },
+                  {
+                    role: 'user',
+                    content: commentBody
+                  }
+                ],
+                response_format: {
+                  type: 'json_schema',
+                  json_schema: {
+                    name: 'language_check',
+                    strict: true,
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        requires_reminder: { type: 'boolean' }
+                      },
+                      required: ['requires_reminder'],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                max_tokens: 200
+              })
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Inference failed: ${response.statusText} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            const analysis = JSON.parse(result.choices[0].message.content);
+            core.setOutput('analysis', JSON.stringify(analysis));
+            return analysis;
+
+      - name: Post reminder if non-English
+        if: steps.language_check.outputs.analysis != ''
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const analysis = JSON.parse('${{ steps.language_check.outputs.analysis }}');
+            console.log('Analysis:', analysis);
+
+            if (analysis.requires_reminder) {
+              const comment = context.payload.comment;
+              const reminderMessage = `@${comment.user.login} 🇬🇧 Please use English so everyone can participate. See [Contributing Guidelines](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/master/CONTRIBUTING.md#communication-language).`;
+
+              // Handle different event types
+              if (context.eventName === 'pull_request_review_comment') {
+                // Review comment on PR - reply in thread
+                await github.rest.pulls.createReviewComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  body: reminderMessage,
+                  commit_id: comment.commit_id,
+                  path: comment.path,
+                  in_reply_to: comment.id
+                });
+              } else if (context.eventName === 'issue_comment' && context.payload.issue.pull_request) {
+                // Comment on PR issue - post as issue comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.issue.number,
+                  body: reminderMessage
+                });
+              }
+            }

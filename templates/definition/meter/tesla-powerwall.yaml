@@ -43,6 +43,8 @@ params:
   - name: maxsoc
     type: int
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
 render: |
   type: powerwall
   uri: {{ .host }}
@@ -53,3 +55,5 @@ render: |
   siteId: {{ .siteId }}
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
+  maxchargepower: {{ .maxchargepower }}
+  maxdischargepower: {{ .maxdischargepower }}

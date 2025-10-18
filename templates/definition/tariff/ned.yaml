@@ -1,0 +1,33 @@
+template: ned
+products:
+  - brand: Nationaal Energie Dashboard
+requirements:
+  description:
+    en: "Dutch Energy Production CO₂ data from [ned.nl](https://www.ned.nl). Provides forecasts for 12 hours ahead and is free of charge after registration."
+    de: "CO₂-Daten zur niederländischen Energieproduktion von [ned.nl](https://www.ned.nl). Bietet Prognosen für 12 Stunden im Voraus und ist nach der Registrierung kostenlos."
+  evcc: ["skiptest"]
+group: co2
+countries: ["NL"]
+params:
+  - name: apiKey
+    type: string
+    required: true
+    help:
+      de: "Erstelle eine App in https://ned.nl/nl/user/register und kopiere den Key"
+      en: "Create an app in https://ned.nl/nl/user/register and copy the key"
+render: |
+  type: custom
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://api.ned.nl/v1/utilizations?point=0&type=27&granularity=4&granularitytimezone=0&classification=1&activity=1&validfrom[strictly_before]={{ `{{ addDate now 0 0 2 | date "2006-01-02" }}` }}&validfrom[after]={{ `{{ now | date "2006-01-02" }}` }}
+    headers:
+      - content-type: application/json
+      - X-AUTH-TOKEN: {{ .apiKey }}
+    jq: |
+      ."hydra:member" | map({ 
+        start: .validfrom,
+        end:   .validto,
+        value: .emissionfactor * 100000  | round/100
+      }) | tostring
+    cache: 1h

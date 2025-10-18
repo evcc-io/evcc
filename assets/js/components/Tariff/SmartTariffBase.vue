@@ -191,21 +191,16 @@ export default defineComponent({
 				return [];
 			}
 
-			const result = [] as Slot[];
 			const rates = this.rates;
-			const startTime = new Date();
-			const oneHour = 3600000;
+			const quarterHour = 15 * 60 * 1000;
 
-			for (let i = 0; i < 42; i++) {
-				const start = new Date(startTime.getTime() + oneHour * i);
-				const startHour = start.getHours();
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
+			const base = new Date();
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
+
+			return Array.from({ length: 48 * 4 }, (_, i) => {
+				const start = new Date(base.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const active =
 					this.limitDirection === "below" &&
@@ -217,19 +212,17 @@ export default defineComponent({
 					this.selectedLimit !== null &&
 					value !== undefined &&
 					value >= this.selectedLimit;
-				const selectable = value !== undefined;
-				result.push({
-					day,
-					value,
-					startHour,
-					endHour,
-					charging: active,
-					selectable,
-					warning,
-				});
-			}
 
-			return result;
+				return {
+					day: this.weekdayShort(start),
+					value,
+					start,
+					end,
+					charging: active,
+					selectable: value !== undefined,
+					warning,
+				};
+			});
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -247,7 +240,7 @@ export default defineComponent({
 			return this.fmtCostRange(this.costRange(this.activeSlots));
 		},
 		activeSlot(): Slot | null {
-			return this.activeIndex !== null ? this.slots[this.activeIndex] : null;
+			return this.activeIndex !== null ? this.slots[this.activeIndex] || null : null;
 		},
 		activeSlotCost() {
 			const value = this.activeSlot?.value;
@@ -258,8 +251,8 @@ export default defineComponent({
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
@@ -271,14 +264,11 @@ export default defineComponent({
 			return this.warningSlots.length ? "text-warning" : "value-inactive";
 		},
 		activeHoursText() {
-			const params = {
-				active:
-					this.limitDirection === "below"
-						? this.activeSlots.length
-						: this.warningSlots.length,
-				total: this.totalSlots.length,
-			};
-			return this.$t("smartCost.activeHours", params);
+			const active =
+				this.limitDirection === "below"
+					? this.activeSlots.length
+					: this.warningSlots.length;
+			return this.fmtDurationLong(active * 15 * 60, "short");
 		},
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";
@@ -343,7 +333,7 @@ export default defineComponent({
 			this.activeIndex = index;
 		},
 		slotSelected(index: number) {
-			const value = this.slots[index].value;
+			const value = this.slots[index]?.value;
 			if (value !== undefined) {
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;

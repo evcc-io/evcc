@@ -42,8 +42,8 @@ type Limits struct {
 	FailsafeDurationMinimum             time.Duration
 }
 
-// New creates an EEBus HEMS from generic config
-func New(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
+// NewFromConfig creates an EEBus HEMS from generic config
+func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
 	cc := struct {
 		Ski      string
 		Limits   `mapstructure:",squash"`
@@ -222,5 +222,6 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 }
 
 func (c *EEBus) setLimit(limit float64) {
+	c.root.Dim(limit > 0)
 	c.root.SetMaxPower(limit)
 }

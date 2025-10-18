@@ -19,7 +19,7 @@
 			test-id="generalconfig-telemetry"
 			:label="$t('config.general.telemetry')"
 			:text="$t(`config.general.${telemetryEnabled ? 'on' : 'off'}`)"
-			modal-id="globalSettingsModal"
+			modal-id="telemetryModal"
 		/>
 
 		<GeneralConfigEntry

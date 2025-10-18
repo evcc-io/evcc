@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -246,10 +246,11 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 		u = 1
 	}
 
-	// Switch phases
-	_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
-
-	return err
+	return whenDisabled(wb, func() error {
+		// Switch phases
+		_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
+		return err
+	})
 }
 
 var _ api.PhaseGetter = (*Sungrow)(nil)

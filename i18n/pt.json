@@ -65,7 +65,8 @@
     },
     "circuits": {
       "description": "Assegura que a soma de todos os Postos de Carregamento conectados a um circuito não excede os limites de potência e corrente configurados. Os circuitos podem ser combinados para construir uma hierarquia.",
-      "title": "Gestão de Cargas"
+      "title": "Gestão de Cargas",
+      "usableMeters": "Referências dos contadores utilizáveis"
     },
     "control": {
       "description": "Normalmente funciona com os valores padrão. Mude-os apenas se sabe o que está a fazer.",
@@ -98,7 +99,8 @@
       "feedinPrice": "Preço de injeção na rede",
       "gridPrice": "Preço da Rede",
       "heaterTempLimit": "Limite do aquecimento",
-      "hemsType": "Sistema",
+      "hemsActiveLimit": "Limite ativo",
+      "hemsType": "Comunicação",
       "identifier": "Identificador RFID",
       "no": "não",
       "odometer": "Totalizador Km",
@@ -124,6 +126,10 @@
       "B": "B (ligado)",
       "C": "C (a carregar)"
     },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
+    },
     "devices": {
       "auxMeter": "“Consumidor inteligente”",
       "batteryStorage": "“Bateria”",
@@ -148,11 +154,16 @@
       "optional": "opcional"
     },
     "general": {
+      "applyAndClose": "Aplicar e fechar",
       "cancel": "Cancelar",
+      "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
       "docsLink": "Ver documentação.",
+      "dragHandle": "Arrastar",
+      "dragItem": "Arrastável: {title}",
+      "dragList": "Lista reordenável",
       "experimental": "Experimental",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
@@ -162,6 +173,8 @@
       "password": "Palavra-passe",
       "readFromFile": "Ler ficheiro",
       "remove": "Apagar",
+      "required": "obrigatório",
+      "reset": "Reiniciar",
       "save": "Guardar",
       "selectFile": "Explorar",
       "showAdvancedSettings": "Mostrar definições avançadas",
@@ -176,7 +189,7 @@
       "titleEdit": "Editar Contator de Rede"
     },
     "hems": {
-      "description": "Conectar evcc a outro sistema de gestão de energia doméstica.",
+      "description": "Limitação da potência por sistemas externos (por exemplo, controladores EnWG 14a). Requer configuração de gestão de carga.",
       "title": "HEMS"
     },
     "icon": {
@@ -425,18 +438,34 @@
       "system": "Sistema",
       "vehicles": "Veículos"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc tem integração com SMA Sunny Manager (SHM) via protocolo SEMP. Se estiver a ser executado na mesma rede, depois de aceder à sua conta no Sunny Portal, deverá aparecer automaticamente a opção de adicionar todos os Carregadores configurados no evcc como novos clientes. Tudo deverá ficar pronto a usar imediatamente sem necessidade de quaisquer ajustes.",
+      "descriptionDeviceId": "String 12 caracteres HEX. Prefixo para todos os dispositivos (ponto de carregamento, ..).",
+      "descriptionIdPattern": "Padrão de identidade",
+      "descriptionIds": "No Sunny Portal cada dispositivo necessita duma identidade única. O evcc gera uma identidade única com base no seu hardware. Se migrar o evcc para outro hardware estas identidades podem mudar. Se quiser manter o histórico pode substituir as identidades geradas aqui. Abra o SEMP URL(/semp) para ver as identidade atuais.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "string 8 caratecteres HEX. Prefixo geral de todas as entidades. O evcc usa o seu próprio vendor ID interno Por defeito.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Insira token",
       "changeToken": "Alterar token",
       "description": "O modelo de apoio (sponsoring) ajuda-nos a manter o projeto e a desenvolver, de forma sustentável, novas funcionalidades. Como apoiante (sponsor), terá acesso às integrações de todos os Carregadores.",
       "descriptionToken": "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste {trialToken}.",
+      "enterYourToken": "Introduzir o seu token",
       "error": "O token de Apoiante (Sponsor) não é válido.",
+      "invalid": "inválido",
       "labelToken": "Token de Apoiante (Sponsor)",
       "title": "Patrocínio",
       "tokenRequired": "Tem de configurar um token de Patrocínio (Sponsor) antes de poder criar este dispositivo.",
       "tokenRequiredLearnMore": "Mais informações.",
       "tokenRequiredShort": "Nenhum token de patrocínio configurado.",
-      "trialToken": "Token de teste"
+      "trialToken": "token de teste",
+      "viaYaml": "através de evcc.yaml",
+      "yourToken": "O seu token"
     },
     "system": {
       "backupRestore": {
@@ -481,6 +510,10 @@
     "tariffs": {
       "description": "Defina as suas tarifas de energia para calcular os custos das suas sessões de carregamento.",
       "title": "Tarifas"
+    },
+    "telemetry": {
+      "description": "Configure a partilha de dados para ajudar a melhorar o evcc. A sua privacidade é importante para nós e a participação é totalmente opcional.",
+      "title": "Telemetria"
     },
     "title": {
       "description": "Exibido no menu principal e na barra do navegador.",
@@ -636,7 +669,7 @@
   "help": {
     "discussionsButton": "Discussões no GitHub",
     "documentationButton": "Documentação",
-    "issueButton": "Reportar um erro",
+    "issueButton": "Reportar um problema",
     "issueDescription": "Encontrou um comportamento estranho ou errado?",
     "logsButton": "Ver registos",
     "logsDescription": "Verifique os registos para erros.",
@@ -652,6 +685,57 @@
     "restartButton": "Reiniciar",
     "restartDescription": "Tentou desligar e ligar de novo?",
     "secondaryActions": "Ainda não conseguiu resolver o seu problema? Aqui estão algumas sugestões mais complexas."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inclua definições e registos para nos ajudar a reproduzir o problema rapidamente. Recomendamos que partilhe o máximo possível. Geralmente, o estado não é necessário.",
+      "include": "incluir",
+      "lines": "linhas",
+      "logs": "Jornais",
+      "logsDescription": "Entradas de registo recentes que podem ajudar a identificar o problema.",
+      "showDetails": "mostrar detalhes",
+      "source": "Fonte",
+      "state": "Estado",
+      "stateDescription": "Estado completo do tempo de execução, incluindo o ponto de carregamento, o dispositivo e a informação sobre a energia. Inclua apenas se solicitado.",
+      "title": "Informações adicionais",
+      "uiConfig": "Configuração (IU)",
+      "uiConfigDescription": "Definições de configuração efetuadas através da interface web.",
+      "yamlConfig": "Configuração (YAML)",
+      "yamlConfigDescription": "O seu ficheiro de configuração completo."
+    },
+    "additionalContext": "Contexto adicional",
+    "additionalContextPlaceholder": "Alguma informação adicional que possa ser útil...\n- Detalhes da configuração\n- O que tentou\n- Detalhes do ambiente",
+    "createButtonDiscussion": "Iniciar discussão no GitHub...",
+    "createButtonIssue": "Criar problema no GitHub...",
+    "description": "A sua instalação não está a funcionar conforme o esperado? Utilize esta página para obter ajuda ou para comunicar problemas. Forneça detalhes suficientes para nos ajudar a compreender e reproduzir o problema, mantendo a sua descrição concisa, clara e fácil de compreender.",
+    "helpType": {
+      "discussion": "Preciso de ajuda com a minha configuração",
+      "discussionDescription": "As discussões comunitárias fornecem respostas.",
+      "issue": "Encontrou um bug",
+      "issueDescription": "Tenho a certeza de que algo está avariado e precisa de ser reparado.",
+      "title": "De que problema estamos a falar?"
+    },
+    "issueDescription": "Descrição",
+    "issueTitle": "Título",
+    "stepsToReproduce": "Passos para reproduzir",
+    "subTitleDiscussion": "Descreva o seu problema",
+    "subTitleIssue": "Descreva o problema",
+    "summary": {
+      "confirmationButtonDiscussion": "Iniciar discussão no GitHub",
+      "confirmationButtonIssue": "Criar problema no GitHub",
+      "copied": "Copiado!",
+      "copyButton": "Copiar informações adicionais",
+      "instructions": "Devido às limitações de tamanho de URL do GitHub, este é um processo de duas etapas:",
+      "singleStepDescription": "Clique no botão abaixo para abrir o GitHub com um formulário pré-preenchido contendo os detalhes do seu problema. Os dados confidenciais foram automaticamente eliminados, mas verifique novamente antes de partilhar.",
+      "step1Description": "Clique no botão abaixo para criar uma entrada básica no GitHub com o seu título, descrição e detalhes.",
+      "step2Description": "Após criar a entrada, volte aqui para copiar as informações adicionais abaixo e colá-las no seu formulário GitHub. Os dados confidenciais foram censurados, mas verifique novamente antes de partilhar.",
+      "stepOneDiscussion": "Passo 1: Crie uma discussão básica",
+      "stepOneIssue": "Passo 1: Criar problema básico",
+      "stepTwo": "Passo 2: Copie informações adicionais",
+      "title": "Resumo do problema do GitHub"
+    },
+    "title": "Reportar um problema",
+    "version": "Versão"
   },
   "log": {
     "areaLabel": "Filtrar por área",
@@ -688,7 +772,7 @@
       "goal": "Carga pretendida",
       "modalTitle": "Plano de carga",
       "none": "nenhum",
-      "planNumber": "Plano {número}",
+      "planNumber": "Plano {number}",
       "preconditionDescription": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
       "preconditionLong": "Carga tardia",
       "preconditionOptionAll": "tudo",
@@ -718,6 +802,7 @@
       "gridImport": "Consumo da Rede",
       "homePower": "Consumo",
       "loadpoints": "Carregador | Carregador | {count} Carregadores",
+      "loadpointsLimit": "limite {limit}",
       "noEnergy": "Sem dados",
       "pv": "Sistema fotovoltaico",
       "pvExport": "Injeção na Rede",
@@ -729,6 +814,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Limite do aquecedor",
       "waitForVehicle": "Pronto. À espera do aquecedor…"
+    },
+    "hemsWarning": {
+      "description": "Reduzir a carga de modo a não exceder {limit}.",
+      "title": "Limite externo:"
     },
     "loadpoint": {
       "avgPrice": "Preço",
@@ -813,7 +902,7 @@
       "planPeriodValue": "{start} até {end}",
       "planUnknown": "desconhecido",
       "preview": "pré-visualizar",
-      "priceLimit": "limite de preço {preço}",
+      "priceLimit": "limite de preço {price}",
       "remove": "Apagar",
       "setTargetTime": "nenhum",
       "targetIsAboveLimit": "O limite de carregamento configurado de {limit} será ignorado durante este período.",
@@ -866,7 +955,7 @@
       "connected": "Ligado.",
       "disconnectRequired": "Sessão terminada. Por favor, volte a ligar-se.",
       "disconnected": "Desligado.",
-      "feedinPriorityNextStart": "As taxas de alimentação elevadas começam em {duração}.",
+      "feedinPriorityNextStart": "As taxas de alimentação elevadas começam em {duration}.",
       "feedinPriorityPausing": "Carregamento solar pausado para maximizar a alimentação.",
       "finished": "Concluído.",
       "minCharge": "Recarga mínima até {soc}.",
@@ -1006,6 +1095,7 @@
     "vehicle": "Veículo"
   },
   "settings": {
+    "deviceInfo": "As definições efetuadas nesta caixa de diálogo afetam apenas este dispositivo.",
     "fullscreen": {
       "enter": "Entrar em tela cheia",
       "exit": "Sair da tela cheia",
@@ -1018,6 +1108,12 @@
     "language": {
       "auto": "Automático",
       "label": "Idioma"
+    },
+    "loadpoints": {
+      "help": "Alterar a ordem e visibilidade da interface do utilizador.",
+      "hide": "Ocultar {title}",
+      "label": "Pontos de carregamento",
+      "show": "Mostrar {title}"
     },
     "sponsorToken": {
       "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}. {getNewToken} e atualize-o aqui.",
@@ -1047,7 +1143,7 @@
   },
   "smartCost": {
     "activeHours": "{active} de {total}",
-    "activeHoursLabel": "Horas ativas",
+    "activeHoursLabel": "Tempo ativo",
     "applyToAll": "Aplicar em todo o lado?",
     "batteryDescription": "Carrega a bateria doméstica com energia da Rede.",
     "cheapTitle": "Carregamento da Rede mais económico",
@@ -1060,11 +1156,11 @@
     "priceLabel": "Preço da energia",
     "priceLimit": "Preço limite",
     "resetAction": "Remover limite",
-    "resetWarning": "Não estão configurados o preço dinâmico da rede ou a fonte de CO₂. No entanto, ainda existe um limite de {limite}. Limpar a sua configuração?",
+    "resetWarning": "Não estão configurados o preço dinâmico da rede ou a fonte de CO₂. No entanto, ainda existe um limite de {limit}. Limpar a sua configuração?",
     "saved": "Guardado."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Horas de pausa",
+    "activeHoursLabel": "Tempo de pausa",
     "description": "Faz uma pausa no carregamento quando os preços são elevados para dar prioridade à alimentação rentável da rede.",
     "priceLabel": "Taxa de alimentação",
     "priceLimit": "Limite de alimentação",
