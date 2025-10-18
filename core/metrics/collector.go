@@ -78,8 +78,8 @@ func (c *Collector) persist() error {
 	return persist(c.entity, c.started, c.accu.PosEnergy(), c.accu.NegEnergy())
 }
 
-func (c *Collector) Profile(from time.Time) (*[96]float64, error) {
-	return profile(c.entity, from)
+func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {
+	return importProfile(c.entity, from)
 }
 
 func (c *Collector) AddImportEnergy(v float64) error {

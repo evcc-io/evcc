@@ -30,11 +30,11 @@ func TestSqliteTimestamp(t *testing.T) {
 	)
 
 	for _, sql := range []string{
-		`SELECT ts, val FROM meters`,
-		`SELECT min(ts), val FROM meters`,
-		`SELECT unixepoch(ts), val FROM meters`,
-		`SELECT unixepoch(min(ts)), val FROM meters`,
-		`SELECT min(ts) AS ts, avg(val) AS val
+		`SELECT ts, import FROM meters`,
+		`SELECT min(ts), import FROM meters`,
+		`SELECT unixepoch(ts), import FROM meters`,
+		`SELECT unixepoch(min(ts)), import FROM meters`,
+		`SELECT min(ts) AS ts, avg(import) AS import
 			FROM meters
 			GROUP BY strftime("%H:%M", ts)
 			ORDER BY ts`,
@@ -43,7 +43,7 @@ func TestSqliteTimestamp(t *testing.T) {
 		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 	}
 
-	require.NoError(t, db.QueryRow(`SELECT ts, val FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
+	require.NoError(t, db.QueryRow(`SELECT ts, import FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 }
 
@@ -67,7 +67,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
-		prof, err := profile(entity, from)
+		prof, err := importProfile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -85,7 +85,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
 
-		prof, err := profile(entity, from)
+		prof, err := importProfile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64

@@ -83,16 +83,16 @@ func persist(entity entity, ts time.Time, imprt, export float64) error {
 	}).Error
 }
 
-// profile returns a 15min average meter profile in Wh.
-// profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
-func profile(entity entity, from time.Time) (*[96]float64, error) {
+// importProfile returns a 15min average meter profile in Wh. The profile
+// is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
+func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
 	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
+	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, 'localtime')
