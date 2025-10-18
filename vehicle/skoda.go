@@ -12,18 +12,18 @@ import (
 
 // https://gitlab.com/prior99/skoda
 
-// Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
-type Enyaq struct {
+// Skoda is an api.Vehicle implementation for Skoda cars
+type Skoda struct {
 	*embed
 	*skoda.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("enyaq", NewEnyaqFromConfig)
+	registry.Add("skoda", NewSkodaFromConfig)
 }
 
-// NewEnyaqFromConfig creates a new vehicle
-func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewSkodaFromConfig creates a new vehicle
+func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -42,12 +42,12 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	v := &Enyaq{
+	v := &Skoda{
 		embed: &cc.embed,
 	}
 
 	var err error
-	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda api to resolve list of vehicles
 	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)

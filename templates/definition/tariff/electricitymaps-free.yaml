@@ -24,8 +24,8 @@ render: |
   type: custom
   price:
     source: http
-    uri:  https://api.electricitymap.org/v3/carbon-intensity/latest?zone={{ .zone }}
+    uri:  https://api.electricitymap.org/v3/home-assistant?zone={{ .zone }}
     headers:
     - auth-token: {{ .token }}
-    jq: .carbonIntensity
+    jq: .data.carbonIntensity
   tariff: co2
