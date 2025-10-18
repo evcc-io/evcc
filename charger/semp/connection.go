@@ -85,9 +85,9 @@ func (c *Connection) SendDeviceControl(deviceId string, power int) error {
 	return err
 }
 
-// TimeSinceLastUpdate returns the duration since the last successful device control update
-func (c *Connection) TimeSinceLastUpdate() time.Duration {
+// Updated returns the last successful device control update time
+func (c *Connection) Updated() time.Time {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return time.Since(c.updated)
+	return c.updated
 }
