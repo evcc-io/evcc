@@ -48,6 +48,7 @@
 					type="button"
 					class="btn btn-sm"
 					:class="strategyOpen ? 'btn-secondary border-1' : 'evcc-gray'"
+					data-testid="plan-strategy-toggle"
 					tabindex="0"
 					@click="strategyOpen = !strategyOpen"
 				>

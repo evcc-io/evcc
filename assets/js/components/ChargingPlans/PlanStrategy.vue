@@ -12,6 +12,7 @@
 								:id="formId('continuous')"
 								v-model="selectedContinuous"
 								class="form-select"
+								data-testid="plan-strategy-continuous"
 								@change="updateStrategy"
 							>
 								<option :value="false">günstig</option>
@@ -30,6 +31,7 @@
 								:id="formId('precondition')"
 								v-model="selectedPrecondition"
 								class="form-select"
+								data-testid="plan-strategy-precondition"
 								@change="updateStrategy"
 							>
 								<option :value="0">
