@@ -10,10 +10,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func TestMqtt(t *testing.T) {
+func TestCardataStreaming(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
-	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "at"}), "client", "vin")
 	defer cancel()
+
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: "at",
+	}), "client", "vin")
 
 	keySoc := "vehicle.drivetrain.batteryManagement.header"
 	p.initial = map[string]TelematicDataPoint{
@@ -26,6 +29,8 @@ func TestMqtt(t *testing.T) {
 
 	mqtt := mqttConnections["client"]
 	dataC := mqtt.subscriptions["vin"]
+	require.NotNil(t, dataC, "streaming channel")
+
 	dataC <- StreamingMessage{
 		Vin: "vin",
 		Data: map[string]StreamingData{
@@ -33,7 +38,7 @@ func TestMqtt(t *testing.T) {
 		},
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(100 * time.Millisecond)
 
 	soc, err = p.Soc()
 	require.NoError(t, err)
