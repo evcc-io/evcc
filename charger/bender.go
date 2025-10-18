@@ -488,7 +488,6 @@ func (wb *BenderCC) heartbeat(ctx context.Context) {
 				}
 			}
 		case <-ctx.Done():
-			wb.log.DEBUG.Println("heartbeat: stopped")
 			return
 		}
 	}
