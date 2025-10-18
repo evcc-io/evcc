@@ -15,6 +15,7 @@ requirements:
       Modbus Register sind im Installationshandbuch zu finden (Adresse jeweils ohne die führende Ziffer und -1).
       Informationen zu den Energiezuständen finden sich auch im Installationshandbuch.
       Die Energiezustände 6 und 7 können an der Inneneinheit in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Definition der Energiezustände" angepasst werden.
+      Wenn die interne Energiemessung nicht funktioniert (nicht jedes Model unterstützt das Register), dann setze die Energiemessung auf "Nein".
     en: |
       Modbus connection to LG Therma V heat pump.
       Uses SG Ready energy states for intelligent control.
@@ -24,6 +25,7 @@ requirements:
       Modbus registers can be found within the installation manual (address without the leading number and -1).
       Information on the energy state can be found within the installation manual. 
       Energy states 6 and 7 can be adapted at the indoor unit in the installer settings > "Connectivity" > "Energy state" >"Energy state definition".
+      If the internal power measurement does not work (not all models support this register), please set energy metering to "false".
 params:
   - name: modbus
     choice: ["rs485"]
@@ -44,6 +46,13 @@ params:
     description:
       de: SGReady oder anpassbare Energiezustände 6 und 7
       en: SGReady states or modifyable energy state 6 and 7
+  - name: haspower
+    required: true
+    type: bool
+    default: true
+    description:
+      de: Interne Energiemessung
+      en: Internal energy metering
 render: |
   type: sgready
   setmode:
@@ -86,6 +95,7 @@ render: |
       address:  {{ if eq .tempsource "water_inlet" -}} 2 {{ else }} 5 {{- end }} # 5 DHW Tank Temperatur, 2 Wassereinlasstemperatur
       type: input
       encoding: uint16
+  {{- if eq .haspower "true" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -93,3 +103,4 @@ render: |
       address: 35
       type: input
       encoding: uint16
+  {{- end }}
