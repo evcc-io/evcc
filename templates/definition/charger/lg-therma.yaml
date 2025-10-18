@@ -95,7 +95,7 @@ render: |
       address:  {{ if eq .tempsource "water_inlet" -}} 2 {{ else }} 5 {{- end }} # 5 DHW Tank Temperatur, 2 Wassereinlasstemperatur
       type: input
       encoding: uint16
-  {{ if eq .haspower "true" -}}
+  {{- if eq .haspower "true" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
