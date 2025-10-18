@@ -56,4 +56,4 @@ render: |
   vin: {{ .vin }}
   clientid: {{ .clientid }}
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "vehicle-features" (set . "streaming" "true") }}

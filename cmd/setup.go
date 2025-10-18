@@ -1139,6 +1139,9 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
+	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
+	router.PathPrefix("/oauth").Handler(auth)
+
 	// wire the handler
 	providerauth.Setup(auth, paramC)
 }

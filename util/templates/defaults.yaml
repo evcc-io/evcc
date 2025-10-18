@@ -309,6 +309,14 @@ params:
     help:
       en: Vehicle supports 1A current steps only
       de: Fahrzeug unterstützt nur 1A Schritte der Ladestromvorgabe
+  - name: streaming
+    type: bool
+    description:
+      en: Supports streaming
+      de: Unterstützt Streaming
+    help:
+      en: Streaming data is received asynchronously
+      de: Streaming Datenempfang erfolgt asynchron
   - name: welcomecharge
     type: bool
     description:
@@ -504,6 +512,8 @@ presets:
   vehicle-features:
     params:
       - name: coarsecurrent
+        advanced: true
+      - name: streaming
         advanced: true
       - name: welcomecharge
         advanced: true

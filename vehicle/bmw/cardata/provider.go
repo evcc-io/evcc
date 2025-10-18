@@ -40,6 +40,7 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 	}
 
 	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
+	recvC := mqtt.Subscribe(vin)
 
 	go func() {
 		<-ctx.Done()
@@ -47,7 +48,7 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 	}()
 
 	go func() {
-		for msg := range mqtt.Subscribe(vin) {
+		for msg := range recvC {
 			v.mu.Lock()
 			maps.Copy(v.streaming, msg.Data)
 			v.mu.Unlock()
