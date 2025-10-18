@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"time"
 
 	evopt "github.com/andig/evopt/client"
@@ -94,7 +95,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		firstSlotDuration,
 	)
 
-	gt, err := site.homeProfile(minLen, firstSlotDuration)
+	gt, err := site.homeProfile(minLen)
 	if err != nil {
 		return err
 	}
@@ -113,10 +114,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		EtaD: eta,
 		TimeSeries: evopt.TimeSeries{
 			Dt: dt,
-			Gt: asFloat32(gt),
+			Gt: prorate(asFloat32(gt), firstSlotDuration),
+			Ft: prorate(maxValues(solarEnergy, 1, minLen), firstSlotDuration),
 			PN: maxValues(grid, 1e3, minLen),
 			PE: maxValues(feedIn, 1e3, minLen),
-			Ft: maxValues(solarEnergy, 1, minLen),
 		},
 	}
 
@@ -147,8 +148,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			PA:             pa,
 		}
 
-		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
-			bat.PDemand = asFloat32(profile)
+		if profile := loadpointProfile(lp, minLen); profile != nil {
+			bat.PDemand = prorate(asFloat32(profile), firstSlotDuration)
 		}
 
 		detail := batteryDetail{
@@ -191,7 +192,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			bat.PDemand = continuousDemand(lp, minLen)
+			bat.PDemand = prorate(continuousDemand(lp, minLen), firstSlotDuration)
 
 		case api.ModePV:
 			// add plan goal
@@ -315,14 +316,14 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 		pwr = lp.EffectiveMinPower()
 	}
 
-	return lo.RepeatBy(minLen, func(_ int) float32 {
+	return lo.RepeatBy(minLen, func(i int) float32 {
 		return float32(pwr)
 	})
 }
 
 // loadpointProfile returns the loadpoint's charging profile in Wh
 // TODO consider charging efficiency
-func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen int) []float64 {
+func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	mode := lp.GetMode()
 	status := lp.GetStatus()
 
@@ -339,13 +340,8 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 	energyKnown := energy > 0
 
 	res := make([]float64, 0, minLen)
-	for i := range minLen {
-		d := 1.0 // hours
-		if i == 0 {
-			d = firstSlotDuration.Hours()
-		}
-
-		deltaEnergy := power * d // Wh
+	for range minLen {
+		deltaEnergy := power * float64(tariff.SlotDuration) / float64(time.Hour) // Wh
 		if energyKnown && deltaEnergy >= energy {
 			deltaEnergy = energy
 		}
@@ -358,7 +354,7 @@ func loadpointProfile(lp loadpoint.API, firstSlotDuration time.Duration, minLen 
 }
 
 // homeProfile returns the home base load in Wh
-func (site *Site) homeProfile(minLen int, firstSlotDuration time.Duration) ([]float64, error) {
+func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	// kWh over last 30 days
 	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
@@ -371,7 +367,7 @@ func (site *Site) homeProfile(minLen int, firstSlotDuration time.Duration) ([]fl
 		slots = append(slots, profile[:]...)
 	}
 
-	res := prorateFirstSlot(slots, firstSlotDuration)
+	res := profileSlotsFromNow(slots)
 	if len(res) < minLen {
 		return nil, fmt.Errorf("minimum home profile length %d is less than required %d", len(res), minLen)
 	}
@@ -385,26 +381,28 @@ func (site *Site) homeProfile(minLen int, firstSlotDuration time.Duration) ([]fl
 	}), nil
 }
 
-// prorateFirstSlot strips away any slots before "now" and prorates the first slot based on remaining time in current slot.
+// profileSlotsFromNow strips away any slots before "now".
 // The profile contains 48 15min slots (00:00-23:45) that repeat for multiple days.
-func prorateFirstSlot(profile []float64, firstSlotDuration time.Duration) []float64 {
+func profileSlotsFromNow(profile []float64) []float64 {
 	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
+	return profile[firstSlot:]
+}
 
-	// Take only slots from current hour onwards
-	res := profile[firstSlot:]
-	res[0] *= float64(firstSlotDuration) / float64(tariff.SlotDuration)
-
+// prorate adjusts the first slot's energy amount according to remaining duration
+func prorate(slots []float32, firstSlotDuration time.Duration) []float32 {
+	res := slices.Clone(slots)
+	res[0] = res[0] * float32(firstSlotDuration) / float32(tariff.SlotDuration)
 	return res
 }
 
-func ratesToEnergy(rr api.Rates, firstSlot time.Duration) (api.Rates, error) {
+func ratesToEnergy(rr api.Rates, firstSlotDuration time.Duration) (api.Rates, error) {
 	res := make(api.Rates, 0, len(rr))
 
 	for _, r := range rr {
 		from := r.Start
 
 		if len(res) == 0 {
-			from = r.End.Add(-firstSlot)
+			from = r.End.Add(-firstSlotDuration)
 		}
 
 		if _, err := rr.At(from); err != nil {
