@@ -7,7 +7,6 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: storageunit
     type: int
     default: 1

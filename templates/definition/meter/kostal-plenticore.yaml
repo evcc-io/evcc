@@ -4,12 +4,6 @@ products:
     description:
       generic: Plenticore Hybrid
 capabilities: ["battery-control"]
-linked:
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
 requirements:
   description:
     de: |
@@ -21,7 +15,6 @@ requirements:
 params:
   - name: usage
     choice: ["pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 71
