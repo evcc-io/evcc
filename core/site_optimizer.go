@@ -48,7 +48,7 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
-	if time.Since(updated) < 5*time.Minute {
+	if time.Since(updated) < 2*time.Minute {
 		return
 	}
 
