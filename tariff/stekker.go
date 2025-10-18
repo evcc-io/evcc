@@ -59,7 +59,6 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
-	// NL and BE to 15 min
 	switch cc.Region {
 	case "BE":
 		cc.Region = "BE-900"
