@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
+	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -100,7 +101,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
-	solarEnergy, err := ratesToEnergy(solar, firstSlotDuration)
+	solarEnergy, err := solarRatesToEnergy(solar)
 	if err != nil {
 		return err
 	}
@@ -114,10 +115,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		EtaD: eta,
 		TimeSeries: evopt.TimeSeries{
 			Dt: dt,
-			Gt: prorate(asFloat32(gt), firstSlotDuration),
-			Ft: prorate(maxValues(solarEnergy, 1, minLen), firstSlotDuration),
-			PN: maxValues(grid, 1e3, minLen),
-			PE: maxValues(feedIn, 1e3, minLen),
+			Gt: prorate(gt, firstSlotDuration),
+			Ft: prorate(scaleAndPrune(solarEnergy, 1, minLen), firstSlotDuration),
+			PN: scaleAndPrune(grid, 1e3, minLen),
+			PE: scaleAndPrune(feedIn, 1e3, minLen),
 		},
 	}
 
@@ -149,7 +150,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if profile := loadpointProfile(lp, minLen); profile != nil {
-			bat.PDemand = prorate(asFloat32(profile), firstSlotDuration)
+			bat.PDemand = prorate(profile, firstSlotDuration)
 		}
 
 		detail := batteryDetail{
@@ -389,45 +390,31 @@ func profileSlotsFromNow(profile []float64) []float64 {
 }
 
 // prorate adjusts the first slot's energy amount according to remaining duration
-func prorate(slots []float32, firstSlotDuration time.Duration) []float32 {
+func prorate[T constraints.Float](slots []T, firstSlotDuration time.Duration) []float32 {
 	res := slices.Clone(slots)
-	res[0] = res[0] * float32(firstSlotDuration) / float32(tariff.SlotDuration)
-	return res
+	res[0] = res[0] * T(firstSlotDuration) / T(tariff.SlotDuration)
+	return lo.Map(res, func(f T, _ int) float32 {
+		return float32(f)
+	})
 }
 
-func ratesToEnergy(rr api.Rates, firstSlotDuration time.Duration) (api.Rates, error) {
+func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
 	res := make(api.Rates, 0, len(rr))
 
 	for _, r := range rr {
-		from := r.Start
-
-		if len(res) == 0 {
-			from = r.End.Add(-firstSlotDuration)
-		}
-
-		if _, err := rr.At(from); err != nil {
-			return nil, fmt.Errorf("missing solar data for: %v", from)
-		}
-
-		energy := solarEnergy(rr, from, r.End)
+		energy := solarEnergy(rr, r.Start, r.End)
 		if energy < 0 {
-			return nil, fmt.Errorf("negative solar energy from %v to %v: %.3f", from, r.End, energy)
+			return nil, fmt.Errorf("negative solar energy from %v to %v: %.3f", r.Start, r.End, energy)
 		}
 
 		res = append(res, api.Rate{
-			Start: from,
+			Start: r.Start,
 			End:   r.End,
 			Value: energy,
 		})
 	}
 
 	return res, nil
-}
-
-func asFloat32(gt []float64) []float32 {
-	return lo.Map(gt, func(v float64, i int) float32 {
-		return float32(v)
-	})
 }
 
 func endOfHour(ts time.Time) time.Time {
@@ -477,7 +464,7 @@ func asTimestamps(dt []int) []time.Time {
 	return res
 }
 
-func maxValues(rates []api.Rate, div float64, maxLen int) []float32 {
+func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 	res := make([]float32, 0, maxLen)
 
 	for _, slot := range rates {
