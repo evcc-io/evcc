@@ -243,8 +243,8 @@ func (c *EEBus) Dim(dim bool) error {
 	// Sets or removes the consumption power limit
 
 	// TODO: change api.Dimmer to make limit configurable
-	// For now, we use a fixed limit of 4200W
-	limit := 4200.0
+	// For now, we use a fixed safe limit of 0W
+	limit := 0.0
 
 	var value float64
 	if dim {
