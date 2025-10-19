@@ -16,7 +16,10 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-var ErrBatteryNotConfigured = errors.New("battery not configured")
+var (
+	ErrBatteryNotConfigured       = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+)
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -296,6 +299,10 @@ func (site *Site) GetBatteryDischargeControl() bool {
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
 	site.Lock()
 	defer site.Unlock()
 
@@ -316,6 +323,11 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+
+	// TODO
+	// if !site.hasBatteryControl() {
+	// 	return ErrBatteryControlNotAvailable
+	// }
 
 	site.Lock()
 	defer site.Unlock()
@@ -349,10 +361,15 @@ func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 
 // SetBatteryModeExternal sets the external battery mode
 func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
+	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
+
+	// TODO
+	// if !site.hasBatteryControl() {
+	// 	return ErrBatteryControlNotAvailable
+	// }
+
 	site.Lock()
 	defer site.Unlock()
-
-	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
 	disable := mode == api.BatteryUnknown
 
