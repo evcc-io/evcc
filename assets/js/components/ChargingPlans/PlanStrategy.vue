@@ -10,7 +10,7 @@
 						<div class="col-7 col-sm-12">
 							<select
 								:id="formId('continuous')"
-								v-model="selectedContinuous"
+								v-model="localContinuous"
 								class="form-select"
 								data-testid="plan-strategy-continuous"
 								@change="updateStrategy"
@@ -29,7 +29,7 @@
 						<div class="col-7 col-sm-12">
 							<select
 								:id="formId('precondition')"
-								v-model="selectedPrecondition"
+								v-model="localPrecondition"
 								class="form-select"
 								data-testid="plan-strategy-precondition"
 								@change="updateStrategy"
@@ -70,8 +70,8 @@ export default defineComponent({
 	emits: ["update"],
 	data() {
 		return {
-			selectedPrecondition: this.precondition,
-			selectedContinuous: this.continuous,
+			localPrecondition: this.precondition,
+			localContinuous: this.continuous,
 		};
 	},
 	computed: {
@@ -86,8 +86,8 @@ export default defineComponent({
 			const options = [QUARTER_HOUR, HALF_HOUR, ONE_HOUR, TWO_HOURS, EVERYTHING];
 
 			// support custom values (via API)
-			if (this.selectedPrecondition && !options.includes(this.selectedPrecondition)) {
-				options.push(this.selectedPrecondition);
+			if (this.localPrecondition && !options.includes(this.localPrecondition)) {
+				options.push(this.localPrecondition);
 			}
 
 			return options.map((s) => ({
@@ -100,11 +100,23 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		precondition(newValue: number) {
-			this.selectedPrecondition = newValue;
+		precondition: {
+			handler(newValue: number, oldValue: number) {
+				// Only update if value actually changed from external source
+				if (newValue !== this.localPrecondition) {
+					this.localPrecondition = newValue;
+				}
+			},
+			immediate: true,
 		},
-		continuous(newValue: boolean) {
-			this.selectedContinuous = newValue;
+		continuous: {
+			handler(newValue: boolean, oldValue: boolean) {
+				// Only update if value actually changed from external source
+				if (newValue !== this.localContinuous) {
+					this.localContinuous = newValue;
+				}
+			},
+			immediate: true,
 		},
 	},
 	methods: {
@@ -113,8 +125,8 @@ export default defineComponent({
 		},
 		updateStrategy(): void {
 			const strategy: PlanStrategy = {
-				continuous: this.selectedContinuous,
-				precondition: this.selectedPrecondition,
+				continuous: this.localContinuous,
+				precondition: this.localPrecondition,
 			};
 			this.$emit("update", strategy);
 		},

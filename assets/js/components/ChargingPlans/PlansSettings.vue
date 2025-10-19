@@ -161,7 +161,11 @@ export default defineComponent({
 				: null;
 		},
 		chargingPlanStrategyProps(): any {
-			return this.collectProps(ChargingPlanStrategy);
+			return {
+			    id: this.id,
+			    precondition: this.effectivePlanPrecondition,
+			    continuous: this.effectivePlanContinuous,
+			};
 		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;
