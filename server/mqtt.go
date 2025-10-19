@@ -18,12 +18,6 @@ import (
 	"github.com/samber/lo"
 )
 
-// MQTTMarshaler is the interface implemented by types that
-// can marshal themselves into valid an MQTT string representation.
-type MQTTMarshaler interface {
-	MarshalMQTT() ([]byte, error)
-}
-
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
 	log       *util.Logger
@@ -91,13 +85,23 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		return
 	}
 
-	if mm, ok := payload.(MQTTMarshaler); ok {
-		if b, err := mm.MarshalMQTT(); err == nil {
+	if mm, ok := payload.(api.BytesMarshaler); ok {
+		if b, err := mm.MarshalBytes(); err == nil {
 			m.publishSingleValue(topic, retained, string(b))
 		} else {
-			m.log.ERROR.Printf("marshal mqtt: %v", err)
+			m.log.ERROR.Printf("marshal bytes: %v", err)
 		}
 		return
+	}
+
+	if mm, ok := payload.(api.StructMarshaler); ok {
+		if d, err := mm.MarshalStruct(); err != nil {
+			m.log.ERROR.Printf("marshal struct: %v", err)
+			return
+		} else {
+			payload = d
+			// fallthrough
+		}
 	}
 
 	switch typ := reflect.TypeOf(payload); typ.Kind() {
@@ -216,13 +220,13 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 				lp.SetSmartFeedInPriorityLimit(limit)
 			}
 		}))},
-		{"batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
-		{"batteryMode", ptrSetter(api.BatteryModeString, pass(func(m *api.BatteryMode) {
+		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
+		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
 			if m == nil {
 				m = lo.ToPtr(api.BatteryUnknown)
 			}
-			site.SetBatteryModeExternal(*m)
-		}))},
+			return site.SetBatteryModeExternal(*m)
+		})},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err

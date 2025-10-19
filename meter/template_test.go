@@ -35,6 +35,7 @@ var acceptable = []string{
 	"no such network interface",                                            // SMA
 	"missing config values: username, password, key",                       // E3DC
 	"eebus not configured",                                                 // EEBus
+	"missing token",                                                        // HomeAssistant
 }
 
 func TestTemplates(t *testing.T) {

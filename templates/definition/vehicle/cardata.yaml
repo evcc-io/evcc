@@ -16,9 +16,11 @@ requirements:
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
+      vehicle.drivetrain.electricEngine.charging.status
       vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.vehicle.preConditioning.activity
       vehicle.vehicle.travelledDistance
       ```
 
@@ -32,9 +34,11 @@ requirements:
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
+      vehicle.drivetrain.electricEngine.charging.status
       vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.vehicle.preConditioning.activity
       vehicle.vehicle.travelledDistance
       ```
 
@@ -52,4 +56,4 @@ render: |
   vin: {{ .vin }}
   clientid: {{ .clientid }}
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "vehicle-features" (set . "streaming" "true") }}
