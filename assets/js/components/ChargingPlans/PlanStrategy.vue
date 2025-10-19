@@ -4,9 +4,9 @@
 			<div class="row">
 				<div class="col-12 col-sm-6 col-lg-3 offset-lg-3 mb-3">
 					<div class="row">
-						<label :for="formId('continuous')" class="col-form-label col-5 col-sm-12"
-							>Optimierung</label
-						>
+						<label :for="formId('continuous')" class="col-form-label col-5 col-sm-12">
+							{{ $t("main.chargingPlan.optimizationLong") }}
+						</label>
 						<div class="col-7 col-sm-12">
 							<select
 								:id="formId('continuous')"
@@ -15,17 +15,21 @@
 								data-testid="plan-strategy-continuous"
 								@change="updateStrategy"
 							>
-								<option :value="false">günstig</option>
-								<option :value="true">durchgehend</option>
+								<option :value="false">
+									{{ $t("main.chargingPlan.cheap") }}
+								</option>
+								<option :value="true">
+									{{ $t("main.chargingPlan.continuous") }}
+								</option>
 							</select>
 						</div>
 					</div>
 				</div>
 				<div class="col-sm-6 col-lg-3 mb-3">
 					<div class="row">
-						<label :for="formId('precondition')" class="col-form-label col-5 col-sm-12"
-							>Spätes Laden</label
-						>
+						<label :for="formId('precondition')" class="col-form-label col-5 col-sm-12">
+							{{ $t("main.chargingPlan.preconditionLong") }}
+						</label>
 						<div class="col-7 col-sm-12">
 							<select
 								:id="formId('precondition')"
