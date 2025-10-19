@@ -44,7 +44,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39149 # Cumulative Generation
+      address: 39617 # Total power taken (grid import)
       type: input
       decode: uint32
     scale: 0.01 # Convert to kWh (raw / 100 = kWh)
