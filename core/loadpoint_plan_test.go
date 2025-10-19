@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -74,11 +75,19 @@ func TestPlanActive(t *testing.T) {
 
 	require.NotZero(t, lp.EffectiveMaxPower())
 
-	testActive := func(name string, wantActive bool) {
+	testActive := func(name string, wantActive bool, foo ...any) {
 		t.Run(name, func(t *testing.T) {
+			if len(foo) > 0 {
+				fmt.Println("foo")
+			}
+
 			t.Log("lp.EffectivePlanTime", lp.EffectivePlanTime())
 			require.Equal(t, wantActive, lp.plannerActive())
 			require.Equal(t, wantActive, lp.planActive)
+
+			if len(foo) > 0 {
+				t.Fail()
+			}
 		})
 	}
 
@@ -107,7 +116,7 @@ func TestPlanActive(t *testing.T) {
 	require.NoError(t, vv.SetRepeatingPlans([]api.RepeatingPlanStruct{
 		{
 			Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
-			Time:     "02:00",
+			Time:     "20:00",
 			Tz:       clock.Now().Location().String(),
 			Soc:      100,
 			Active:   true,
@@ -115,5 +124,5 @@ func TestPlanActive(t *testing.T) {
 	}))
 
 	// 1 hour after plan time plus repeating plan
-	testActive("1 hour after plan time plus repeating plan", true)
+	testActive("1 hour after plan time plus repeating plan", true, "X")
 }

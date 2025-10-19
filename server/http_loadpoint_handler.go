@@ -137,7 +137,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
+		planTime, err := util.GetNextOccurrence(time.Now(), weekdays, hourMinute, tz)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

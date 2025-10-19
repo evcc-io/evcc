@@ -2,11 +2,12 @@ package util
 
 import (
 	"fmt"
+	"slices"
 	"time"
 )
 
 // GetNextOccurrence returns the next occurrence of the given time on the specified weekdays.
-func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, error) {
+func GetNextOccurrence(now time.Time, weekdays []int, timeStr string, tz string) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid timezone: %w", err)
@@ -19,12 +20,14 @@ func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, er
 
 	hour, minute := parsedTime.Hour(), parsedTime.Minute()
 
-	now := time.Now().In(loc)
+	now = now.In(loc)
 
 	target := time.Date(
 		now.Year(), now.Month(), now.Day(),
 		hour, minute, 0, 0, loc,
 	)
+
+	fmt.Println("GetNextOccurrence", "target 1", target)
 
 	// If the target time has passed today, start from tomorrow
 	if target.Before(now) {
@@ -34,21 +37,12 @@ func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, er
 	// Check the next 7 days for a valid match
 	for range 7 {
 		weekday := int(target.Weekday())
-		if contains(weekdays, weekday) {
+		if slices.Contains(weekdays, weekday) {
+			fmt.Println("GetNextOccurrence", "target 2", target)
 			return target, nil
 		}
 		target = target.AddDate(0, 0, 1)
 	}
 
 	return time.Time{}, fmt.Errorf("no valid weekday found")
-}
-
-// helper function to check if a slice contains a value
-func contains(slice []int, val int) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
 }
