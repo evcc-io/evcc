@@ -138,7 +138,7 @@ render: |
             value: 0 # Disable remote control (system manages itself)
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46001 # Remote Control Mode
                 type: writesingle
@@ -147,7 +147,7 @@ render: |
             value: {{ .minsoc }}
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46609 # Minimum SOC OnGrid
                 type: writesingle
@@ -156,7 +156,7 @@ render: |
             value: {{ .minsoc }}
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46610 # Maximum SOC (set to minsoc to prevent charging)
                 type: writesingle
@@ -169,7 +169,7 @@ render: |
             value: 7 # Battery Charge mode
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46001 # Remote Control Mode
                 type: writesingle
@@ -178,7 +178,7 @@ render: |
             value: 60 # Remote timeout 60 seconds
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46002 # Remote Timeout Set
                 type: writesingle
@@ -188,7 +188,7 @@ render: |
             scale: -1 # Make negative for charging
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46003 # Remote Active Power (negative for charging)
                 type: writemultiple
@@ -197,7 +197,7 @@ render: |
             value: {{ .maxsoc }}
             set:
               source: modbus
-              {{- include "modbus" . | indent 10 }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 46610 # Maximum SOC
                 type: writesingle
