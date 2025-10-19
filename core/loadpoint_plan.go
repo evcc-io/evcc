@@ -104,14 +104,11 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 
 // plannerActive checks if the charging plan has a currently active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
-	defer func() {
-		lp.setPlanActive(active)
-	}()
-
-	var planStart, planEnd time.Time
+	var planTime, planStart, planEnd time.Time
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.setPlanActive(active)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -122,9 +119,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	planTime := lp.EffectivePlanTime()
-	if planTime.IsZero() {
+	if planTime = lp.EffectivePlanTime(); planTime.IsZero() {
 		return false
+	}
+
+	if !lp.planTime.IsZero() && lp.planTime.Before(planTime) {
+		// existing
 	}
 
 	// keep overrunning plans as long as a vehicle is connected
