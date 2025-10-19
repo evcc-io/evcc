@@ -321,13 +321,12 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	return site.batteryGridChargeLimit
 }
 
-func (site *Site) SetBatteryGridChargeLimit(val *float64) {
+func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
 
-	// TODO
-	// if !site.hasBatteryControl() {
-	// 	return ErrBatteryControlNotAvailable
-	// }
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
 
 	site.Lock()
 	defer site.Unlock()
@@ -343,6 +342,8 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
+
+	return nil
 }
 
 // GetBatteryMode returns the battery mode
@@ -360,13 +361,12 @@ func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 }
 
 // SetBatteryModeExternal sets the external battery mode
-func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
+func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) error {
 	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
-	// TODO
-	// if !site.hasBatteryControl() {
-	// 	return ErrBatteryControlNotAvailable
-	// }
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
 
 	site.Lock()
 	defer site.Unlock()
@@ -393,6 +393,8 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	if !disable {
 		site.batteryModeExternalTimer = time.Now()
 	}
+
+	return nil
 }
 
 func (site *Site) batteryModeWatchdogExpired() bool {
