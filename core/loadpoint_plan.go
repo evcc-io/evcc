@@ -155,7 +155,6 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	fmt.Println(requiredDuration)
 	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
 	if plan == nil {
 		return false
