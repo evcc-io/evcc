@@ -175,11 +175,15 @@ export default defineComponent({
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
 		// Optional: handle template change (receives event and values, allows setting values.yaml)
-		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => Promise<void>>,
+		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => void>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
+		// Optional: callback after configuration is loaded (receives values)
+		onConfigurationLoaded: Function as PropType<(values: DeviceValues) => void>,
+		// Optional: external template selection control (for parent to reset template)
+		externalTemplate: String as PropType<string | null>,
 	},
-	emits: ["added", "updated", "removed", "close", "template-changed"],
+	emits: ["added", "updated", "removed", "close", "template-changed", "update:externalTemplate"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -289,10 +293,7 @@ export default defineComponent({
 			return this.templateName || this.showYamlInput;
 		},
 		showYamlInput() {
-			if (this.isYamlInputType) {
-				return this.isYamlInputType(this.values.type);
-			}
-			return this.values.type === ConfigType.Custom;
+			return this.isYamlInputTypeByValue(this.values.type);
 		},
 		showTemplateSelector() {
 			return this.computedTemplateOptions.length > 0;
@@ -309,15 +310,22 @@ export default defineComponent({
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
+				} else {
+					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
+					this.applyDefaults();
 				}
 			}
 		},
 		templateName(newValue, oldValue) {
+			// Sync back to parent if using externalTemplate
+			if (this.externalTemplate !== undefined && newValue !== this.externalTemplate) {
+				this.$emit("update:externalTemplate", newValue);
+			}
+
+			console.log("templateName changed", { newValue, oldValue });
 			// Reset values when template changes (except on initial load or when switching to YAML input)
 			// YAML input types set values.type and values.yaml in handleTemplateChange callback
-			const isYamlInput =
-				this.isYamlInputType && newValue && this.isYamlInputType(newValue as any);
-			if (oldValue != null && !isYamlInput) {
+			if (oldValue != null) {
 				if (this.preserveOnTemplateChange) {
 					const preserved: Record<string, any> = {};
 					this.preserveOnTemplateChange.forEach((field) => {
@@ -331,13 +339,30 @@ export default defineComponent({
 					this.reset();
 				}
 			}
-			this.loadTemplate();
+
+			const isYamlInput = this.isYamlInputTypeByValue(newValue as ConfigType);
+			if (!isYamlInput) {
+				this.loadTemplate();
+			}
 		},
 		usage() {
 			// Reload products when usage changes (e.g., meter type selection)
 			this.loadProducts();
 			// Apply defaults when usage changes (e.g., set default icon for meter type)
 			this.applyDefaults();
+		},
+		externalTemplate(newValue) {
+			// Allow parent to control template selection
+			if (newValue !== this.templateName) {
+				this.templateName = newValue;
+			}
+		},
+		showMainContent(visible) {
+			// When main content becomes visible (e.g., meter type selected in MeterModal),
+			// apply defaults like icon based on type
+			if (visible) {
+				this.applyDefaults();
+			}
 		},
 		values: {
 			handler() {
@@ -360,13 +385,18 @@ export default defineComponent({
 				this.values.type = device.type;
 				this.values.deviceProduct = device.deviceProduct;
 				if (device.deviceTitle !== undefined) {
-					this.values["deviceTitle"] = device.deviceTitle;
+					this.values.deviceTitle = device.deviceTitle;
 				}
 				if (device.deviceIcon !== undefined) {
-					this.values["deviceIcon"] = device.deviceIcon;
+					this.values.deviceIcon = device.deviceIcon;
 				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
+
+				// Allow parent to handle post-load logic
+				if (this.onConfigurationLoaded) {
+					this.onConfigurationLoaded(this.values);
+				}
 			} catch (e) {
 				console.error(e);
 			}
@@ -485,13 +515,13 @@ export default defineComponent({
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		async handleTemplateChange(e: Event) {
-			// Allow parent to handle custom logic (e.g., loading default YAML)
-			if (this.onTemplateChange) {
-				await this.onTemplateChange(e, this.values);
-			}
-			// Emit to parent for notification
-			this.$emit("template-changed", e);
+		handleTemplateChange(e: Event) {
+			// ensure this triggers after tempateName watcher
+			this.$nextTick(() => {
+				if (this.onTemplateChange) {
+					this.onTemplateChange(e, this.values);
+				}
+			});
 		},
 		handleSave(force: boolean) {
 			if (this.isNew) {
@@ -502,6 +532,12 @@ export default defineComponent({
 		},
 		handleRemove() {
 			this.remove();
+		},
+		isYamlInputTypeByValue(value: ConfigType): boolean {
+			if (this.isYamlInputType) {
+				return this.isYamlInputType(value);
+			}
+			return value === ConfigType.Custom;
 		},
 	},
 });

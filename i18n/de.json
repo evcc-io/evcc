@@ -118,7 +118,7 @@
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
-      "vehicleLimitSoc": "Fahrzeuglimit",
+      "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Smarter Verbraucher",
       "batteryStorage": "Batterie",
+      "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kann für Lastmanagement oder Statistikzwecke verwendet werden.",
-      "titleAdd": "Zusätzlichen Zähler hinzufügen",
-      "titleEdit": "Zusätzlichen Zähler bearbeiten"
+      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
@@ -196,7 +197,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ändern"
+      "change": "ändern",
+      "label": "Symbol"
     },
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
@@ -344,13 +346,22 @@
       "option": {
         "aux": "Intelligenten Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Zusätzlichen Zähler hinzufügen",
+        "ext": "Regulären Verbraucher hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Intelligenter Verbraucher",
+        "battery": "Batteriezähler",
+        "charge": "Ladegerätzähler",
+        "grid": "Netzzähler",
+        "label": "Verwendung",
+        "pv": "PV-Zähler"
+      },
       "validateSave": "Überprüfen & speichern"
     },
     "modbus": {
@@ -658,6 +669,7 @@
     "about": "Über",
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+      "loggedOut": "Erfolgreich abgemeldet",
       "title": "Autorisierungsstatus"
     },
     "blog": "Blog",

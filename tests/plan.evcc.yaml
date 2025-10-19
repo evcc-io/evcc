@@ -1,4 +1,4 @@
-interval: 0.25s
+interval: 0.1s
 
 site:
   title: Plan

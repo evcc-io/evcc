@@ -29,6 +29,11 @@ func runToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	// setup environment
+	if err := configureEnvironment(cmd, &conf); err != nil {
+		fatal(err)
+	}
+
 	var vehicleConf config.Named
 	if len(conf.Vehicles) == 1 {
 		vehicleConf = conf.Vehicles[0]

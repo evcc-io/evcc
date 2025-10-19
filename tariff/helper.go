@@ -48,6 +48,8 @@ func mergeRates(data *util.Monitor[api.Rates], new api.Rates) {
 
 // mergeRatesAfter blends new and existing rates, keeping existing rates after timestamp
 func mergeRatesAfter(data *util.Monitor[api.Rates], new api.Rates, now time.Time) {
+	new.Sort()
+
 	var newStart time.Time
 	if len(new) > 0 {
 		new.Sort()

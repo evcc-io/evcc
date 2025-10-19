@@ -29,13 +29,15 @@ var requiredKeys = []string{
 	"vehicle.cabin.hvac.preconditioning.status.comfortState",
 	"vehicle.drivetrain.batteryManagement.header",
 	"vehicle.drivetrain.electricEngine.charging.hvStatus",
+	"vehicle.drivetrain.electricEngine.charging.status",
 	"vehicle.drivetrain.electricEngine.charging.timeRemaining",
 	"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
 	"vehicle.powertrain.electric.battery.stateOfCharge.target",
+	"vehicle.vehicle.preConditioning.activity",
 	"vehicle.vehicle.travelledDistance",
 }
 
-const requiredVersion = "v2"
+const requiredVersion = "v3"
 
 type API struct {
 	*request.Helper

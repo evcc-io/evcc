@@ -54,11 +54,15 @@
 
 				<form v-if="helpType" @submit.prevent="handleFormSubmit">
 					<!-- Essential Form Section -->
-					<div class="d-flex justify-content-between align-items-center mb-4">
+					<div class="d-flex justify-content-between align-items-center mb-3">
 						<h4>
 							{{ $tt("issue.subTitle") }}
 						</h4>
 					</div>
+
+					<p class="text-muted mb-4">
+						🇬🇧 Please write your issue in English so everyone can participate.
+					</p>
 
 					<!-- Two Column Layout -->
 					<div class="row mb-5 g-5">

@@ -781,7 +781,7 @@ func (lp *Loadpoint) syncCharger() error {
 		if !isCg || errors.Is(err, api.ErrNotAvailable) {
 			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
 			if current := lp.GetMaxPhaseCurrent(); current > lp.offeredCurrent+1.0 {
-				if shouldBeConsistent {
+				if shouldBeConsistent && !lp.chargerHasFeature(api.Heating) {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s", current, lp.offeredCurrent)
 				}
 				lp.offeredCurrent = current
@@ -1092,7 +1092,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
-					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge)
+					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
 
 					// Enable charging on connect if any available vehicle requires it.
 					// We're using the PV timer to disable after the welcome
@@ -1701,7 +1701,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
-	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
+	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleHasFeature(api.Streaming) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())

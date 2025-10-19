@@ -143,9 +143,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Lahko se uporablja za upravljanje obremenitve ali statistične namene.",
-      "titleAdd": "Dodaj zunanji merilnik",
-      "titleEdit": "Uredi zunanji merilnik"
+      "description": "Za statistične namene beleži energijske vrednosti nenadzorovanih porabnikov (npr. hladilnik, pralni stroj itd.). Te števce je mogoče uporabiti tudi za upravljanje obremenitve (npr. poddistribucija).",
+      "titleAdd": "Dodaj števec porabe",
+      "titleEdit": "Urejanje števca porabe"
     },
     "form": {
       "danger": "Nevarnost",
@@ -161,7 +161,11 @@
       "customOption": "Uporabniško definirana naprava",
       "delete": "Izbriši",
       "docsLink": "Oglejte si dokumentacijo.",
+      "dragHandle": "Ročaj za vlečenje",
+      "dragItem": "Možnost vlečenja: {title}",
+      "dragList": "Seznam, ki ga je mogoče prerazporediti",
       "experimental": "Eksperimentalno",
+      "forceSave": "Vseeno shrani",
       "hideAdvancedSettings": "Skrij napredne nastavitve",
       "invalidFileSelected": "Izbrana neveljavna datoteka",
       "noFileSelected": "Izbrana ni nobena datoteka.",
@@ -171,7 +175,10 @@
       "readFromFile": "Preberi iz datoteke",
       "remove": "Odstrani",
       "required": "zahtevano",
+      "reset": "Ponastavi",
       "save": "Shrani",
+      "saved": "Shranjeno.",
+      "saving": "Shranjevanje …",
       "selectFile": "Brskaj",
       "showAdvancedSettings": "Prikaži napredne nastavitve",
       "telemetry": "Telemetrija",
@@ -189,7 +196,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "sprememba"
+      "change": "sprememba",
+      "label": "Ikona"
     },
     "influx": {
       "description": "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja.",
@@ -324,7 +332,7 @@
       "title": "Konfiguracija",
       "unconfigured": "ni konfigurirano",
       "vehicles": "Moja vozila",
-      "yaml": "Naprav iz evcc.yaml ni mogoče urejati."
+      "yaml": "Naprav iz datoteke evcc.yaml ni mogoče urejati."
     },
     "messaging": {
       "description": "Prejemanje sporočil o vaših sejah polnjenja.",
@@ -337,17 +345,35 @@
       "option": {
         "aux": "Dodajte samoreguliranega odjemalca",
         "battery": "Dodajte merilnik baterije",
-        "ext": "Dodaj zunanji merilnik",
+        "ext": "Dodajte rednega potrošnika",
         "pv": "Dodaj merilnik sončne energije"
       },
       "save": "Shrani",
       "specific": "Specifične integracije",
       "template": "Proizvajalec",
       "titleChoice": "Kaj želite dodati?",
+      "titleLabel": "Ime",
+      "usage": {
+        "aux": "Samoregulacijski števec porabe",
+        "battery": "Merilnik baterije",
+        "charge": "Merilnik polnilnika",
+        "grid": "Omrežni meter",
+        "label": "Uporaba",
+        "pv": "Solarni števec"
+      },
       "validateSave": "Preveri in shrani"
     },
     "modbus": {
-      "baudrate": "Hitrost prenosa podatkov (Baud rate)"
+      "baudrate": "Hitrost prenosa podatkov (Baud rate)",
+      "comset": "ComSet",
+      "connection": "Modbus povezava",
+      "connectionHintSerial": "Naprava je neposredno povezana z evcc prek vmesnika RS485.",
+      "connectionHintTcpip": "Napravo je mogoče nasloviti iz evcc prek LAN/Wi-Fi.",
+      "connectionValueSerial": "Serial / USB",
+      "connectionValueTcpip": "Mreža",
+      "device": "Ime naprave",
+      "deviceHint": "Primer: /dev/ttyUSB0",
+      "host": "IP-naslov ali ime gostitelja"
     },
     "modbusproxy": {
       "description": "Dovoli več odjemalcem dostop do ene naprave Modbus.",

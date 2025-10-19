@@ -7,7 +7,6 @@
 		:modal-title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
-		:is-yaml-input-type="isYamlInput"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
 		:on-template-change="handleTemplateChange"
@@ -141,6 +140,7 @@ import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ConfigType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, ApiData, DeviceValues, TemplateParam } from "./DeviceModal";
+import defaultVehicleYaml from "./defaultYaml/vehicle.yaml?raw";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -229,23 +229,19 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData, values: DeviceValues): ApiData {
 			if (values.type === ConfigType.Custom) {
-				delete data["icon"];
-				delete data["title"];
+				delete data.icon;
+				delete data.title;
 			}
-			if (Array.isArray(data["identifiers"])) {
-				data["identifiers"] = data["identifiers"].map((i) => i.trim()).filter((i) => i);
+			if (Array.isArray(data.identifiers)) {
+				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);
 			}
 			return data;
 		},
-		isYamlInput(type: ConfigType) {
-			return type === ConfigType.Custom;
-		},
-		async handleTemplateChange(e: Event, values: DeviceValues) {
+		handleTemplateChange(e: Event, values: DeviceValues) {
 			const value = (e.target as HTMLSelectElement).value;
 			if (value === ConfigType.Custom) {
-				const defaultYaml = await import("./defaultYaml/vehicle.yaml?raw");
 				values.type = ConfigType.Custom;
-				values.yaml = defaultYaml.default;
+				values.yaml = defaultVehicleYaml;
 			}
 		},
 	},
