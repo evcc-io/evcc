@@ -1,10 +1,13 @@
 package vehicle
 
 import (
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
+
+var Clock = clock.New()
 
 func device(vehicle api.Vehicle) config.Device[api.Vehicle] {
 	for _, dev := range config.Vehicles().Devices() {

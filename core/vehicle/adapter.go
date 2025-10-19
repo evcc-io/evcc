@@ -89,7 +89,7 @@ func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int) {
 
 // SetPlanSoc sets the charge plan soc
 func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
-	if !ts.IsZero() && ts.Before(time.Now()) {
+	if !ts.IsZero() && ts.Before(Clock.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 

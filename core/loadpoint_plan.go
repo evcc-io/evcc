@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 )
 
@@ -55,8 +56,15 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	if lp.socBasedPlanning() {
 		if lp.socEstimator == nil {
-			return 0
+			if goal <= lp.vehicleSoc {
+				return 0
+			}
+
+			// simple linear interpolation
+			Wh := lp.GetVehicle().Capacity() * 1e3 * (goal - lp.vehicleSoc) / 100 / maxPower
+			return time.Duration(Wh / soc.ChargeEfficiency * float64(time.Hour))
 		}
+
 		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
 	}
 
@@ -123,9 +131,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	if !lp.planTime.IsZero() && lp.planTime.Before(planTime) {
-		// existing
-	}
+	// if !lp.planTime.IsZero() && lp.planTime.Before(planTime) {
+	// 	// existing
+	// }
 
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
@@ -147,6 +155,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
+	fmt.Println(requiredDuration)
 	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
 	if plan == nil {
 		return false
