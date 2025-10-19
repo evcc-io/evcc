@@ -59,27 +59,31 @@ func TestPlanActive(t *testing.T) {
 	tariff, err := tariff.NewFixedFromConfig(map[string]any{"price": 1})
 	require.NoError(t, err)
 
-	siteVehicles := &vehicles{log: util.NewLogger("foo")}
+	log := util.NewLogger("foo")
+	log.SetLogOutput(t.Output())
 
-	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	siteVehicles := &vehicles{log: log}
+
+	lp := NewLoadpoint(log, nil)
 	lp.clock = clock
 	lp.charger = api.NewMockCharger(ctrl)
-	lp.planner = planner.New(lp.log, tariff)
+	lp.planner = planner.New(lp.log, tariff, planner.WithClock(clock))
 	lp.status = api.StatusC // charging
 	lp.phases = 3           // fix maxEffectiveCurrent
 	lp.vehicle = v
 
 	require.NotZero(t, lp.EffectiveMaxPower())
 
-	validateActive := func(wantActive bool) {
-		require.Equal(t, wantActive, lp.plannerActive())
-		require.Equal(t, wantActive, lp.planActive)
-		require.Zero(t, lp.planTime)
+	testActive := func(name string, wantActive bool) {
+		t.Run(name, func(t *testing.T) {
+			t.Log("lp.EffectivePlanTime", lp.EffectivePlanTime())
+			require.Equal(t, wantActive, lp.plannerActive())
+			require.Equal(t, wantActive, lp.planActive)
+		})
 	}
-	// active := lp.plannerActive()
-	// require.False(t, active)
-	// require.Equal(t, active, lp.planActive)
-	// require.Zero(t, lp.planTime)
+
+	// no plan
+	testActive("no plan", false)
 
 	vv, err := siteVehicles.ByName("test")
 	require.NoError(t, err)
@@ -93,15 +97,23 @@ func TestPlanActive(t *testing.T) {
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	require.LessOrEqual(t, 10*time.Hour, requiredDuration, "requiredDuration")
 
-	// active := lp.plannerActive()
-	// require.True(t, active)
-	// require.Equal(t, active, lp.planActive)
-	// require.Zero(t, lp.planTime)
-
 	// 1 hour before plan time
-	validateActive(true)
+	testActive("1 hour before plan time", true)
 
 	// 1 hour after plan time
 	clock.Add(2 * time.Hour)
-	validateActive(true)
+	testActive("1 hour after plan time", true)
+
+	require.NoError(t, vv.SetRepeatingPlans([]api.RepeatingPlanStruct{
+		{
+			Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
+			Time:     "02:00",
+			Tz:       clock.Now().Location().String(),
+			Soc:      100,
+			Active:   true,
+		},
+	}))
+
+	// 1 hour after plan time plus repeating plan
+	testActive("1 hour after plan time plus repeating plan", true)
 }

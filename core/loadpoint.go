@@ -145,9 +145,9 @@ type Loadpoint struct {
 
 	// charge planning
 	planner          *planner.Planner
-	planTime         time.Time     // Plan time goal
-	planPrecondition time.Duration // Plan precondition duration
-	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
+	planTime         time.Time     // Energy-based plan time goal
+	planPrecondition time.Duration // Energy-based plan precondition duration
+	planEnergy       float64       // Energy-based plan charge energy in kWh
 	planSlotEnd      time.Time     // Current plan slot end time
 	planActiveTime   time.Time     // Current plan time
 	planActive       bool          // Current plan exists and has a currently active slot

@@ -69,7 +69,7 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 	}
 
 	energy := lp.remainingPlanEnergy(goal)
-	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+	return time.Duration(energy * 1e3 / maxPower / soc.ChargeEfficiency * float64(time.Hour))
 }
 
 // GetPlanGoal returns the plan goal in %, true or kWh, false
