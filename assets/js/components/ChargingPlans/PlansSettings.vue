@@ -162,9 +162,9 @@ export default defineComponent({
 		},
 		chargingPlanStrategyProps(): any {
 			return {
-			    id: this.id,
-			    precondition: this.effectivePlanPrecondition,
-			    continuous: this.effectivePlanContinuous,
+				id: this.id,
+				precondition: this.effectivePlanPrecondition,
+				continuous: this.effectivePlanContinuous,
 			};
 		},
 		alreadyReached(): boolean {

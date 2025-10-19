@@ -101,7 +101,7 @@ export default defineComponent({
 	},
 	watch: {
 		precondition: {
-			handler(newValue: number, oldValue: number) {
+			handler(newValue: number) {
 				// Only update if value actually changed from external source
 				if (newValue !== this.localPrecondition) {
 					this.localPrecondition = newValue;
@@ -110,7 +110,7 @@ export default defineComponent({
 			immediate: true,
 		},
 		continuous: {
-			handler(newValue: boolean, oldValue: boolean) {
+			handler(newValue: boolean) {
 				// Only update if value actually changed from external source
 				if (newValue !== this.localContinuous) {
 					this.localContinuous = newValue;
