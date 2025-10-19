@@ -1,0 +1,208 @@
+template: solakon-one
+products:
+  - brand: Solakon
+    description:
+      generic: ONE Hybrid Inverter
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    default: 10
+    advanced: true
+  - name: maxsoc
+    type: int
+    default: 100
+    advanced: true
+  - name: maxchargepower
+    type: int
+    default: 5000
+    advanced: true
+    help:
+      en: Maximum charge power in Watts
+      de: Maximale Ladeleistung in Watt
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39134 # Active Power (kW → W by not applying scale)
+      type: input
+      decode: int32
+    scale: -1 # Invert sign: negative = import, positive = export
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39149 # Cumulative Generation
+      type: input
+      decode: uint32
+    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39118 # Total PV Power (kW → W by not applying scale)
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39149 # Cumulative Generation
+      type: input
+      decode: uint32
+    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39237 # Battery Combined Power (W)
+      type: input
+      decode: int32
+    scale: -1 # Invert sign: negative = charging, positive = discharging
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39424 # Battery SOC (%)
+      type: input
+      decode: int16
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 46609 # Minimum SOC
+        type: writesingle
+        encoding: uint16
+  batterymode:
+    source: watchdog
+    timeout: 5m
+    reset: 1 # reset to normal mode
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal - disable remote control
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0 # Disable remote control
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46001 # Remote Control Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ .minsoc }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46609 # Minimum SOC
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ .maxsoc }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46610 # Maximum SOC
+                type: writesingle
+                encoding: uint16
+      - case: 2 # hold - stop battery charge/discharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0 # Disable remote control (system manages itself)
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46001 # Remote Control Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ .minsoc }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46609 # Minimum SOC OnGrid
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ .minsoc }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46610 # Maximum SOC (set to minsoc to prevent charging)
+                type: writesingle
+                encoding: uint16
+      - case: 3 # charge - force battery charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 7 # Battery Charge mode
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46001 # Remote Control Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 60 # Remote timeout 60 seconds
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46002 # Remote Timeout Set
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: {{ .maxchargepower }}
+            scale: -1 # Make negative for charging
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46003 # Remote Active Power (negative for charging)
+                type: writemultiple
+                encoding: int32
+          - source: const
+            value: {{ .maxsoc }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 46610 # Maximum SOC
+                type: writesingle
+                encoding: uint16
+  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  {{- end }}
