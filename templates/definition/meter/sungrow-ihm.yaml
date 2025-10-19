@@ -3,7 +3,6 @@ products:
   - brand: Sungrow
     description:
       generic: iHomeManager (iHM)
-capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
