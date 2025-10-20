@@ -324,7 +324,9 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
-		site.SetBatteryGridChargeLimit(&v)
+		if err := site.SetBatteryGridChargeLimit(&v); err != nil {
+			return err
+		}
 	}
 
 	// restore accumulated energy

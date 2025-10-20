@@ -10,7 +10,8 @@ on:
 
 jobs:
   check-label-and-create-issue:
-    runs-on: depot-ubuntu-24.04-arm
+    # runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     if: github.event.pull_request.merged == true && github.event.pull_request.base.repo.full_name == github.event.pull_request.head.repo.full_name
     steps:
       - name: Check for 'needs documentation' label

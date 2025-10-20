@@ -23,6 +23,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	"github.com/enbility/eebus-go/usecases/cs/lpp"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
+	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
 	"github.com/enbility/ship-go/mdns"
 	shiputil "github.com/enbility/ship-go/util"
@@ -50,6 +51,7 @@ type UseCasesCS struct {
 	LPC  ucapi.CsLPCInterface
 	LPP  ucapi.CsLPPInterface
 	MGCP ucapi.MaMGCPInterface
+	MPC  ucapi.MaMPCInterface
 }
 
 type EEBus struct {
@@ -61,7 +63,7 @@ type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
-	SKI string
+	ski string
 
 	clients map[string][]Device
 }
@@ -127,7 +129,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		SKI:     ski,
+		ski:     ski,
 		clients: make(map[string][]Device),
 	}
 
@@ -154,6 +156,7 @@ func NewServer(other Config) (*EEBus, error) {
 		LPC:  lpc.NewLPC(localEntity, c.ucCallback),
 		LPP:  lpp.NewLPP(localEntity, c.ucCallback),
 		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
+		MPC:  mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
@@ -161,7 +164,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.evseUC.EvseCC, c.evseUC.EvCC,
 		c.evseUC.EvCem, c.evseUC.OpEV,
 		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.LPP, c.csUC.MGCP,
+		c.csUC.LPC, c.csUC.LPP, c.csUC.MGCP, c.csUC.MPC,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -173,7 +176,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
-	if ski == c.SKI {
+	if ski == c.ski {
 		return errors.New("device ski can not be identical to host ski")
 	}
 

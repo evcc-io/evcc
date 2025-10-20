@@ -34,6 +34,8 @@ var acceptable = []string{
 	"no Speedwire ping response for 127.0.0.1",                             // SMA
 	"no such network interface",                                            // SMA
 	"missing config values: username, password, key",                       // E3DC
+	"eebus not configured",                                                 // EEBus
+	"missing token",                                                        // HomeAssistant
 }
 
 func TestTemplates(t *testing.T) {
