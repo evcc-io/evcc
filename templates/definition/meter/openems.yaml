@@ -6,9 +6,9 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (REST-API).
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (REST-API oder Modbus-API).
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control (REST-API).
+      A commercial license is required for FEMS FENECON systems for active battery control (REST-API oder Modbus-API).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -41,7 +41,29 @@ params:
     default: 4200
   - name: maxdischargepower
   - name: maxacpower
+  - name: protocol
+    choice: ["rest", "modbus"]
+    default: rest
+    description:
+      de: Verwendung von REST-/JSON-API oder Modbus/TCP API
+      en: Use of REST-/JSON-API or Modbus/TCP API
+  - name: modbus_id
+    default: 1
+    advanced: true
+    description:
+      de: Modbus TCP Geräte-ID
+      en: Modbus TCP device ID
+  - name: modbus_port
+    default: 502
+    advanced: true
+    description:
+      de: Modbus TCP Port
+      en: Modbus TCP port
 render: |
+  {{- if eq .protocol "rest" }}
+  ########################################################################
+  # REST/JSON
+  ########################################################################
   type: custom
   {{- if eq .usage "grid" }} 
   power:
@@ -147,4 +169,114 @@ render: |
   maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
   capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- else }}
+  ########################################################################
+  # Modbus/TCP
+  ########################################################################
+  type: custom
+  {{- if eq .usage "grid" }} 
+  power:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: 315             # GridActivePower (W)
+      type: input
+      decode: float32
+  energy:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: 359             # GridBuyActiveEnergy (Wh)
+      type: holding
+      decode: float64
+    scale: 0.001               # Wh -> kWh
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: 327             # ProductionActivePower (W)
+      type: input
+      decode: float32
+  energy:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: 367             # ProductionActiveEnergy (Wh)
+      type: holding
+      decode: float64
+    scale: 0.001               # Wh -> kWh
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: 415             # EssDischargePower (W)
+      type: input
+      decode: float32
+  soc:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: 302             # EssSoc (%)
+      type: input
+      decode: uint16
+  {{- if .battery }}
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }}   # re-write at timeout/2
+    reset: 1
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        source: const
+        value: 0
+        set:
+          source: modbus
+          id: {{ .modbus_id }}
+          uri: {{ .host }}:{{ .modbus_port }}
+          register:
+            address: 710       # ess0/SetActivePowerLessOrEquals (W)
+            type: writemultiple
+            encoding: float32
+      - case: 2 # hold
+        source: const
+        value: 0
+        set:
+          source: modbus
+          id: {{ .modbus_id }}
+          uri: {{ .host }}:{{ .modbus_port }}
+          register:
+            address: 710
+            type: writemultiple
+            encoding: float32
+      - case: 3 # charge
+        source: const
+        value: {{ mul .maxchargepower -1 }}  # charge power is negative
+        set:
+          source: modbus
+          id: {{ .modbus_id }}
+          uri: {{ .host }}:{{ .modbus_port }}
+          register:
+            address: 710
+            type: writemultiple
+            encoding: float32
+  {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}
