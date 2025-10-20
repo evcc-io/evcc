@@ -31,10 +31,8 @@ params:
   - name: capacity
     advanced: true
   - name: minsoc
-    type: int
     advanced: true
   - name: maxsoc
-    type: int
     advanced: true
 render: |
   type: custom
