@@ -3,13 +3,16 @@ package meter
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -32,6 +35,12 @@ type EEBus struct {
 	energy   *util.Value[float64]
 	currents *util.Value[[]float64]
 	voltages *util.Value[[]float64]
+
+	// TODO use util.Value
+	mu               sync.Mutex
+	consumptionLimit *ucapi.LoadLimit
+	// failsafeLimit    float64
+	// failsafeDuration time.Duration
 }
 
 // maAPI provides a unified interface for monitoring appliance MGCP and MPC use cases
@@ -133,6 +142,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	c.log.TRACE.Printf("recv: %s", event)
 
 	switch event {
+	// Monitoring Appliance
 	case c.api.powerEvent:
 		c.dataUpdatePower(entity)
 	case c.api.energyEvent:
@@ -141,8 +151,16 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 		c.dataUpdateCurrentPerPhase(entity)
 	case c.api.voltageEvent:
 		c.dataUpdateVoltagePerPhase(entity)
+
+	// Energy Guard
+	case lpc.DataUpdateLimit:
+		c.dataUpdateLimit(entity)
 	}
 }
+
+//
+// Monitoring Appliance
+//
 
 func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 	data, err := c.api.Power(entity)
@@ -226,18 +244,32 @@ func (c *EEBus) Voltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
+//
+// Energy Guard
+//
+
+func (c *EEBus) dataUpdateLimit(entity spineapi.EntityRemoteInterface) {
+	limit, err := c.eg.LPC.ConsumptionLimit(entity)
+	if err != nil {
+		c.log.ERROR.Println("EG LPC ConsumptionLimit:", err)
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.consumptionLimit = &limit
+}
+
 var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.eg.LPC.ConsumptionLimit()
-	if err != nil {
-		// No limit available means not dimmed
-		return false, nil
-	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	return c.consumptionLimit != nil && c.consumptionLimit.IsActive && c.consumptionLimit.Value > 0, nil
 }
 
 // Dim implements the api.Dimmer interface
@@ -253,8 +285,18 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	return c.eg.LPC.SetConsumptionLimit(ucapi.LoadLimit{
+	// TODO this will panic
+	_, err := c.eg.LPC.WriteConsumptionLimit(nil, ucapi.LoadLimit{
 		Value:    value,
 		IsActive: dim,
+	}, func(result model.ResultDataType) {
+		if result.ErrorNumber != nil {
+			c.log.ERROR.Println("ErrorNumber", *result.ErrorNumber)
+		}
+		if result.Description != nil {
+			c.log.ERROR.Println("Description", *result.Description)
+		}
 	})
+
+	return err
 }
