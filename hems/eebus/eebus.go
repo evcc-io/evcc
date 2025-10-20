@@ -120,28 +120,28 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 	}
 
 	// scenarios
-	for _, s := range c.uc.LPC.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("LPC RemoteEntitiesScenarios:", s.Scenarios)
+	for _, s := range c.uc.CsLPC.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("CS LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.uc.LPP.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("LPP RemoteEntitiesScenarios:", s.Scenarios)
+	for _, s := range c.uc.CsLPP.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("CS LPP RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
+	for _, s := range c.uc.MaMGCP.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
 	// set initial values
-	if err := c.uc.LPC.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("LPC SetConsumptionNominalMax:", err)
+	if err := c.uc.CsLPC.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
 	}
-	if err := c.uc.LPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
-		c.log.ERROR.Println("LPC SetConsumptionLimit:", err)
+	if err := c.uc.CsLPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
+		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
-		c.log.ERROR.Println("LPC SetFailsafeConsumptionActivePowerLimit:", err)
+	if err := c.uc.CsLPC.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
+		c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
-		c.log.ERROR.Println("LPC SetFailsafeDurationMinimum:", err)
+	if err := c.uc.CsLPC.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
 	}
 
 	return c, nil

@@ -83,7 +83,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
 	api := monitoringAPI{
-		measurements: cs.MPC,
+		measurements: cs.MaMPC,
 		powerEvent:   mpc.DataUpdatePower,
 		energyEvent:  mpc.DataUpdateEnergyConsumed,
 		currentEvent: mpc.DataUpdateCurrentsPerPhase,
@@ -93,7 +93,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	if usage != nil && *usage == templates.UsageGrid {
 		useCase = "mgcp"
 		api = monitoringAPI{
-			measurements: cs.MGCP,
+			measurements: cs.MaMGCP,
 			powerEvent:   mgcp.DataUpdatePower,
 			energyEvent:  mgcp.DataUpdateEnergyConsumed,
 			currentEvent: mgcp.DataUpdateCurrentPerPhase,

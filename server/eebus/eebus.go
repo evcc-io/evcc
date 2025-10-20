@@ -48,10 +48,10 @@ type UseCasesEVSE struct {
 	OscEV  ucapi.CemOSCEVInterface
 }
 type UseCasesCS struct {
-	LPC  ucapi.CsLPCInterface
-	LPP  ucapi.CsLPPInterface
-	MGCP ucapi.MaMGCPInterface
-	MPC  ucapi.MaMPCInterface
+	CsLPC  ucapi.CsLPCInterface
+	CsLPP  ucapi.CsLPPInterface
+	MaMGCP ucapi.MaMGCPInterface
+	MaMPC  ucapi.MaMPCInterface
 }
 
 type EEBus struct {
@@ -153,10 +153,10 @@ func NewServer(other Config) (*EEBus, error) {
 
 	// controllable system
 	c.csUC = UseCasesCS{
-		LPC:  lpc.NewLPC(localEntity, c.ucCallback),
-		LPP:  lpp.NewLPP(localEntity, c.ucCallback),
-		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MPC:  mpc.NewMPC(localEntity, c.ucCallback),
+		CsLPC:  lpc.NewLPC(localEntity, c.ucCallback),
+		CsLPP:  lpp.NewLPP(localEntity, c.ucCallback),
+		MaMGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
+		MaMPC:  mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
@@ -164,7 +164,8 @@ func NewServer(other Config) (*EEBus, error) {
 		c.evseUC.EvseCC, c.evseUC.EvCC,
 		c.evseUC.EvCem, c.evseUC.OpEV,
 		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.LPP, c.csUC.MGCP, c.csUC.MPC,
+		c.csUC.CsLPC, c.csUC.CsLPP,
+		c.csUC.MaMGCP, c.csUC.MaMPC,
 	} {
 		c.service.AddUseCase(uc)
 	}
