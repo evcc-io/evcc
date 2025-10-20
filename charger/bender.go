@@ -97,7 +97,7 @@ func init() {
 func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		Cache          time.Duration
+		Cache              time.Duration
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255, // default
@@ -109,13 +109,13 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	return NewBenderCC(ctx, cc.URI, cc.ID, cc.SempCache)
+	return NewBenderCC(ctx, cc.URI, cc.ID, cc.Cache)
 }
 
 // NewBenderCC creates BenderCC charger
 //
 //go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
-func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Duration) (api.Charger, error) {
+func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 		regCurr: bendRegHemsCurrentLimit,
 		semp: bSEMP{
 			Helper: request.NewHelper(log),
-			cache:  sempCache,
+			cache:  cache,
 		},
 		log: log,
 	}
@@ -193,7 +193,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, sempCache time.Durat
 
 	// check feature semp phase switching
 	if phases1p3p == nil {
-		if supportsSEMPPhaseSwitching(wb, log, uri, sempCache) {
+		if supportsSEMPPhaseSwitching(wb, log, uri, cache) {
 			phases1p3p = wb.phases1p3pSEMP
 			getPhases = wb.getPhasesSEMP
 
