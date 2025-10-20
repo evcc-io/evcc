@@ -302,7 +302,6 @@ func (c *EEBus) Dim(dim bool) error {
 		return errors.New("not connected")
 	}
 
-	// TODO this will panic
 	_, err := c.eg.LPC.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
 		Value:    value,
 		IsActive: dim,
