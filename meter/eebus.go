@@ -22,7 +22,7 @@ type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	uc  *eebus.UseCasesCS
+	ma  *eebus.MonitoringAppliance
 	api monitoringAPI
 
 	power    *util.Value[float64]
@@ -76,12 +76,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 		return nil, errors.New("eebus not configured")
 	}
 
-	cs := eebus.Instance.ControllableSystem()
+	ma := eebus.Instance.MonitoringAppliance()
 
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
 	api := monitoringAPI{
-		measurements: cs.MaMPC,
+		measurements: ma.MPC,
 		powerEvent:   mpc.DataUpdatePower,
 		energyEvent:  mpc.DataUpdateEnergyConsumed,
 		currentEvent: mpc.DataUpdateCurrentsPerPhase,
@@ -91,7 +91,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	if usage != nil && *usage == templates.UsageGrid {
 		useCase = "mgcp"
 		api = monitoringAPI{
-			measurements: cs.MaMGCP,
+			measurements: ma.MGCP,
 			powerEvent:   mgcp.DataUpdatePower,
 			energyEvent:  mgcp.DataUpdateEnergyConsumed,
 			currentEvent: mgcp.DataUpdateCurrentPerPhase,
@@ -101,7 +101,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
-		uc:        cs,
+		ma:        ma,
 		api:       api,
 		Connector: eebus.NewConnector(),
 		power:     util.NewValue[float64](timeout),
