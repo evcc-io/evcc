@@ -63,7 +63,7 @@ type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
-	SKI string
+	ski string
 
 	clients map[string][]Device
 }
@@ -129,7 +129,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		SKI:     ski,
+		ski:     ski,
 		clients: make(map[string][]Device),
 	}
 
@@ -176,7 +176,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
-	if ski == c.SKI {
+	if ski == c.ski {
 		return errors.New("device ski can not be identical to host ski")
 	}
 
