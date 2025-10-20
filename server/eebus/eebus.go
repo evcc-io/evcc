@@ -50,14 +50,14 @@ type CustomerEnergyManagement struct {
 
 // Controllable System
 type ControllableSystem struct {
-	LPC ucapi.CsLPCInterface
-	LPP ucapi.CsLPPInterface
+	ucapi.CsLPCInterface
+	ucapi.CsLPPInterface
 }
 
 // Monitoring Appliance
 type MonitoringAppliance struct {
-	MGCP ucapi.MaMGCPInterface
-	MPC  ucapi.MaMPCInterface
+	ucapi.MaMGCPInterface
+	ucapi.MaMPCInterface
 }
 
 type EEBus struct {
@@ -160,14 +160,14 @@ func NewServer(other Config) (*EEBus, error) {
 
 	// controllable system
 	c.cs = ControllableSystem{
-		LPC: lpc.NewLPC(localEntity, c.ucCallback),
-		LPP: lpp.NewLPP(localEntity, c.ucCallback),
+		CsLPCInterface: lpc.NewLPC(localEntity, c.ucCallback),
+		CsLPPInterface: lpp.NewLPP(localEntity, c.ucCallback),
 	}
 
 	// monitoring appliance
 	c.ma = MonitoringAppliance{
-		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MPC:  mpc.NewMPC(localEntity, c.ucCallback),
+		MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+		MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
@@ -175,8 +175,8 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.EvseCC, c.cem.EvCC,
 		c.cem.EvCem, c.cem.OpEV,
 		c.cem.OscEV, c.cem.EvSoc,
-		c.cs.LPC, c.cs.LPP,
-		c.ma.MGCP, c.ma.MPC,
+		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
+		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
