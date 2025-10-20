@@ -75,7 +75,7 @@ func TestPlanActive(t *testing.T) {
 
 	require.NotZero(t, lp.EffectiveMaxPower())
 
-	testActive := func(name string, wantActive bool, foo ...any) {
+	testActive := func(t *testing.T, name string, wantActive bool, foo ...any) {
 		t.Run(name, func(t *testing.T) {
 			if len(foo) > 0 {
 				fmt.Println("foo")
@@ -91,38 +91,53 @@ func TestPlanActive(t *testing.T) {
 		})
 	}
 
-	// no plan
-	testActive("no plan", false)
-
 	vv, err := siteVehicles.ByName("test")
 	require.NoError(t, err)
-	require.NoError(t, vv.SetPlanSoc(lp.clock.Now().Add(time.Hour), 0, 100))
 
-	goal, isSocBased := lp.GetPlanGoal()
-	require.Equal(t, 100.0, goal, "goal")
-	require.Equal(t, true, isSocBased, "isSocBased")
+	// no plan
+	testActive(t, "no plan", false)
 
-	maxPower := lp.EffectiveMaxPower()
-	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-	require.LessOrEqual(t, 10*time.Hour, requiredDuration, "requiredDuration")
+	t.Run("static plan", func(t *testing.T) {
+		// set plan
+		require.NoError(t, vv.SetPlanSoc(lp.clock.Now().Add(time.Hour), 0, 100))
 
-	// 1 hour before plan time
-	testActive("1 hour before plan time", true)
+		goal, isSocBased := lp.GetPlanGoal()
+		require.Equal(t, 100.0, goal, "goal")
+		require.Equal(t, true, isSocBased, "isSocBased")
 
-	// 1 hour after plan time
-	clock.Add(2 * time.Hour)
-	testActive("1 hour after plan time", true)
+		maxPower := lp.EffectiveMaxPower()
+		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+		require.LessOrEqual(t, 10*time.Hour, requiredDuration, "requiredDuration")
 
-	require.NoError(t, vv.SetRepeatingPlans([]api.RepeatingPlanStruct{
-		{
-			Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
-			Time:     "20:00",
-			Tz:       clock.Now().Location().String(),
-			Soc:      100,
-			Active:   true,
-		},
-	}))
+		// 1 hour before plan time
+		testActive(t, "1 hour before plan time", true)
 
-	// 1 hour after plan time plus repeating plan
-	testActive("1 hour after plan time plus repeating plan", true, "X")
+		// 1 hour after plan time
+		clock.Add(2 * time.Hour)
+		testActive(t, "1 hour after plan time", true)
+	})
+
+	// delete plan, reset time
+	clock.Add(-2 * time.Hour)
+	require.NoError(t, vv.SetPlanSoc(time.Time{}, 0, 0))
+
+	t.Run("repeating plan", func(t *testing.T) {
+		// set plan
+		require.NoError(t, vv.SetRepeatingPlans([]api.RepeatingPlanStruct{
+			{
+				Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
+				Time:     "01:00",
+				Tz:       clock.Now().Location().String(),
+				Soc:      100,
+				Active:   true,
+			},
+		}))
+
+		// 1 hour before plan time
+		testActive(t, "1 hour before plan time", true)
+
+		// 1 hour after plan time
+		clock.Add(2 * time.Hour)
+		testActive(t, "1 hour after plan time", true)
+	})
 }
