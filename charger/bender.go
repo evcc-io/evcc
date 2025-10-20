@@ -68,9 +68,9 @@ const (
 	bendRegUserID             = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
 	bendRegEVBatteryState     = 730  // EV Battery State (% 0-100)
 	bendRegEVCCID             = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
-	bendRegHemsCurrentLimit   = 1000 // HEMS Current Limit (A). Only avalable on Mennekes Amtron 4You / 4Business chargers.
-	bendRegHemsCurrentLimit10 = 1001 // HEMS Current Limit 1/10 (0.1 A). Only avalable on Mennekes Amtron 4You / 4Business chargers.
-	bendRegHemsPowerLimit     = 1002 // HEMS Power Limit (W). Only avalable on Mennekes Amtron 4You / 4Business chargers.
+	bendRegHemsCurrentLimit   = 1000 // HEMS Current Limit (A). Only available on Mennekes Amtron 4You / 4Business chargers.
+	bendRegHemsCurrentLimit10 = 1001 // HEMS Current Limit 1/10 (0.1 A). Only available on Mennekes Amtron 4You / 4Business chargers.
+	bendRegHemsPowerLimit     = 1002 // HEMS Power Limit (W). Only available on Mennekes Amtron 4You / 4Business chargers.
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
