@@ -10,8 +10,9 @@ import (
 
 const (
 	OAuthURI    = "https://iam.viessmann-climatesolutions.com/idp/v3"
-	RedirectURI = "http://localhost:4200/"
+	RedirectURI = "vicare://oauth-callback/everest"
 	// ^ the value of RedirectURI doesn't matter, but it must be the same between requests
+	// updating redirectURI to vicare://oauth-callback/everest from http://localhost:4200/ due to authentication issues
 )
 
 func oauth2Config(clientID string) *oauth2.Config {
