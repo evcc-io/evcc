@@ -3,6 +3,7 @@ package meter
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
@@ -300,6 +301,10 @@ func (c *EEBus) Dim(dim bool) error {
 
 	if c.egLpcEntity == nil {
 		return errors.New("not connected")
+	}
+
+	if !slices.Contains(c.eg.LPC.AvailableScenariosForEntity(c.egLpcEntity), 1) {
+		return errors.New("scenario 1 not supported")
 	}
 
 	_, err := c.eg.LPC.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
