@@ -117,6 +117,13 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	defer func() {
 		lp.setPlanActive(active)
+
+		if active {
+			lp.planActiveTime = planTime
+		} else {
+			lp.planActiveTime = time.Time{}
+		}
+
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -131,15 +138,15 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	// if !lp.planTime.IsZero() && lp.planTime.Before(planTime) {
-	// 	// existing
-	// }
-
 	// keep overrunning plans as long as a vehicle is connected
-	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
+	if lp.clock.Until(planTime) < 0 && !lp.planActive {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
+	}
+
+	if lp.planActive && !lp.planActiveTime.IsZero() {
+		// TODO remember plan goal
 	}
 
 	goal, isSocBased := lp.GetPlanGoal()
