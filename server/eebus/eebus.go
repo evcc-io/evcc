@@ -20,8 +20,9 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/cs/lpp"
+	cslpc "github.com/enbility/eebus-go/usecases/cs/lpc"
+	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
+	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
@@ -48,10 +49,17 @@ type UseCasesEVSE struct {
 	OscEV  ucapi.CemOSCEVInterface
 }
 type UseCasesCS struct {
-	CsLPC  ucapi.CsLPCInterface
-	CsLPP  ucapi.CsLPPInterface
-	MaMGCP ucapi.MaMGCPInterface
-	MaMPC  ucapi.MaMPCInterface
+	LPC ucapi.CsLPCInterface
+	LPP ucapi.CsLPPInterface
+}
+
+type UseCasesMA struct {
+	MGCP ucapi.MaMGCPInterface
+	MPC  ucapi.MaMPCInterface
+}
+
+type UseCasesEG struct {
+	LPC ucapi.EgLPCInterface
 }
 
 type EEBus struct {
@@ -59,6 +67,8 @@ type EEBus struct {
 
 	evseUC UseCasesEVSE
 	csUC   UseCasesCS
+	egUC   UseCasesEG
+	maUC   UseCasesMA
 
 	mux sync.Mutex
 	log *util.Logger
@@ -153,10 +163,19 @@ func NewServer(other Config) (*EEBus, error) {
 
 	// controllable system
 	c.csUC = UseCasesCS{
-		CsLPC:  lpc.NewLPC(localEntity, c.ucCallback),
-		CsLPP:  lpp.NewLPP(localEntity, c.ucCallback),
-		MaMGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MaMPC:  mpc.NewMPC(localEntity, c.ucCallback),
+		LPC: cslpc.NewLPC(localEntity, c.ucCallback),
+		LPP: cslpp.NewLPP(localEntity, c.ucCallback),
+	}
+
+	// monitoring appliance
+	c.maUC = UseCasesMA{
+		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
+		MPC:  mpc.NewMPC(localEntity, c.ucCallback),
+	}
+
+	// energy guard
+	c.egUC = UseCasesEG{
+		LPC: eglpc.NewLPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
@@ -164,8 +183,9 @@ func NewServer(other Config) (*EEBus, error) {
 		c.evseUC.EvseCC, c.evseUC.EvCC,
 		c.evseUC.EvCem, c.evseUC.OpEV,
 		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.CsLPC, c.csUC.CsLPP,
-		c.csUC.MaMGCP, c.csUC.MaMPC,
+		c.csUC.LPC, c.csUC.LPP,
+		c.maUC.MGCP, c.maUC.MPC,
+		c.egUC.LPC,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -213,6 +233,14 @@ func (c *EEBus) Evse() *UseCasesEVSE {
 
 func (c *EEBus) ControllableSystem() *UseCasesCS {
 	return &c.csUC
+}
+
+func (c *EEBus) MonitoringAppliance() *UseCasesMA {
+	return &c.maUC
+}
+
+func (c *EEBus) EnergyGuard() *UseCasesEG {
+	return &c.egUC
 }
 
 func (c *EEBus) Run() {

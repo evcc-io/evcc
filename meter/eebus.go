@@ -24,8 +24,9 @@ type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	uc  *eebus.UseCasesCS
-	api monitoringAPI
+	ma  *eebus.UseCasesMA
+	eg  *eebus.UseCasesEG
+	api maAPI
 
 	power    *util.Value[float64]
 	energy   *util.Value[float64]
@@ -33,8 +34,8 @@ type EEBus struct {
 	voltages *util.Value[[]float64]
 }
 
-// monitoringAPI provides a unified interface for MGCP and MPC use cases
-type monitoringAPI struct {
+// maAPI provides a unified interface for monitoring appliance MGCP and MPC use cases
+type maAPI struct {
 	measurements
 	powerEvent   eebusapi.EventType
 	energyEvent  eebusapi.EventType
@@ -78,12 +79,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 		return nil, errors.New("eebus not configured")
 	}
 
-	cs := eebus.Instance.ControllableSystem()
+	ma := eebus.Instance.MonitoringAppliance()
 
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
-	api := monitoringAPI{
-		measurements: cs.MaMPC,
+	api := maAPI{
+		measurements: ma.MPC,
 		powerEvent:   mpc.DataUpdatePower,
 		energyEvent:  mpc.DataUpdateEnergyConsumed,
 		currentEvent: mpc.DataUpdateCurrentsPerPhase,
@@ -92,8 +93,8 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 
 	if usage != nil && *usage == templates.UsageGrid {
 		useCase = "mgcp"
-		api = monitoringAPI{
-			measurements: cs.MaMGCP,
+		api = maAPI{
+			measurements: ma.MGCP,
 			powerEvent:   mgcp.DataUpdatePower,
 			energyEvent:  mgcp.DataUpdateEnergyConsumed,
 			currentEvent: mgcp.DataUpdateCurrentPerPhase,
@@ -103,7 +104,8 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
-		uc:        cs,
+		ma:        ma,
+		eg:        eebus.Instance.EnergyGuard(),
 		api:       api,
 		Connector: eebus.NewConnector(),
 		power:     util.NewValue[float64](timeout),
@@ -228,7 +230,7 @@ var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.uc.LPC.ConsumptionLimit()
+	limit, err := c.eg.LPC.ConsumptionLimit()
 	if err != nil {
 		// No limit available means not dimmed
 		return false, nil
@@ -251,7 +253,7 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	return c.uc.LPC.SetConsumptionLimit(ucapi.LoadLimit{
+	return c.eg.LPC.SetConsumptionLimit(ucapi.LoadLimit{
 		Value:    value,
 		IsActive: dim,
 	})
