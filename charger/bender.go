@@ -193,7 +193,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 
 	// check feature semp phase switching
 	if phases1p3p == nil {
-		if supportsSEMPPhaseSwitching(wb, log, uri, cache) {
+		if wb.supportsSEMPPhaseSwitching(log, uri, cache) {
 			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
 				phases1p3p = wb.phases1p3pSEMP
@@ -237,12 +237,12 @@ func (wb *BenderCC) heartbeatSEMP(ctx context.Context) {
 }
 
 // supportsSEMPPhaseSwitching checks if SEMP phase switching is supported by querying device info
-func supportsSEMPPhaseSwitching(wb *BenderCC, log *util.Logger, uri string, sempCache time.Duration) bool {
+func (wb *BenderCC) supportsSEMPPhaseSwitching(log *util.Logger, uri string, cache time.Duration) bool {
 	wb.semp.Client.Timeout = request.Timeout
 	wb.semp.conn = semp.NewConnection(log, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
 	wb.semp.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 		return wb.semp.conn.GetDeviceXML()
-	}, sempCache)
+	}, cache)
 
 	doc, err := wb.semp.deviceG.Get()
 	if err != nil {
