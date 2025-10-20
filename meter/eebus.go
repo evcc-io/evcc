@@ -39,6 +39,7 @@ type EEBus struct {
 	// TODO use util.Value
 	mu               sync.Mutex
 	consumptionLimit *ucapi.LoadLimit
+	egLpcEntity      spineapi.EntityRemoteInterface
 	// failsafeLimit    float64
 	// failsafeDuration time.Duration
 }
@@ -144,17 +145,19 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	switch event {
 	// Monitoring Appliance
 	case c.api.powerEvent:
-		c.dataUpdatePower(entity)
+		c.maDataUpdatePower(entity)
 	case c.api.energyEvent:
-		c.dataUpdateEnergyConsumed(entity)
+		c.maDataUpdateEnergyConsumed(entity)
 	case c.api.currentEvent:
-		c.dataUpdateCurrentPerPhase(entity)
+		c.maDataUpdateCurrentPerPhase(entity)
 	case c.api.voltageEvent:
-		c.dataUpdateVoltagePerPhase(entity)
+		c.maDataUpdateVoltagePerPhase(entity)
 
 	// Energy Guard
+	case lpc.UseCaseSupportUpdate:
+		c.egLpcUseCaseSupportUpdate(entity)
 	case lpc.DataUpdateLimit:
-		c.dataUpdateLimit(entity)
+		c.egLpcDataUpdateLimit(entity)
 	}
 }
 
@@ -162,7 +165,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 // Monitoring Appliance
 //
 
-func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdatePower(entity spineapi.EntityRemoteInterface) {
 	data, err := c.api.Power(entity)
 	if err != nil {
 		c.log.ERROR.Println("Power:", err)
@@ -172,7 +175,7 @@ func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 	c.power.Set(data)
 }
 
-func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
 	data, err := c.api.EnergyConsumed(entity)
 	if err != nil {
 		c.log.ERROR.Println("EnergyConsumed:", err)
@@ -183,7 +186,7 @@ func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) 
 	c.energy.Set(data / 1000)
 }
 
-func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
 	data, err := c.api.CurrentPerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("CurrentPerPhase:", err)
@@ -192,7 +195,7 @@ func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface)
 	c.currents.Set(data)
 }
 
-func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
 	data, err := c.api.VoltagePerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("VoltagePerPhase:", err)
@@ -248,7 +251,14 @@ func (c *EEBus) Voltages() (float64, float64, float64, error) {
 // Energy Guard
 //
 
-func (c *EEBus) dataUpdateLimit(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.egLpcEntity = entity
+}
+
+func (c *EEBus) egLpcDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
 	limit, err := c.eg.LPC.ConsumptionLimit(entity)
 	if err != nil {
 		c.log.ERROR.Println("EG LPC ConsumptionLimit:", err)
@@ -285,8 +295,15 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.egLpcEntity == nil {
+		return errors.New("not connected")
+	}
+
 	// TODO this will panic
-	_, err := c.eg.LPC.WriteConsumptionLimit(nil, ucapi.LoadLimit{
+	_, err := c.eg.LPC.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
 		Value:    value,
 		IsActive: dim,
 	}, func(result model.ResultDataType) {
