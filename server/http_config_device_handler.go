@@ -105,10 +105,6 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			if err != nil {
 				return nil, err
 			}
-			params, err = filterValidTemplateParams(class, params)
-			if err != nil {
-				return nil, err
-			}
 			dc["config"] = params
 		} else {
 			// custom device, no masking
