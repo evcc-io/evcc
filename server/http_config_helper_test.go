@@ -177,4 +177,3 @@ func TestFilterValidTemplateParams(t *testing.T) {
 	assert.Equal(t, "grid", result["usage"])
 	assert.NotContains(t, result, "outdatedField")
 }
-
