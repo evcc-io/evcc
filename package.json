@@ -91,7 +91,7 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint-language-service": "^5.0.5",
-    "vite": "^7.1.5",
+    "vite": "^7.1.11",
     "vitest": "^3.2.4",
     "vue-eslint-parser": "^10.2.0",
     "vue-hot-reload-api": "^2.3.4",

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -39,7 +40,9 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 		subscriptions: make(map[string]chan StreamingMessage),
 	}
 
-	go v.run(ctx, ts)
+	if !testing.Testing() {
+		go v.run(ctx, ts)
+	}
 
 	mqttConnections[clientID] = v
 
@@ -133,7 +136,7 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 	return nil
 }
 
-func (v *MqttConnector) handler(c mqtt.Client, m mqtt.Message) {
+func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 	var res StreamingMessage
 	if err := json.Unmarshal(m.Payload(), &res); err != nil {
 		v.log.ERROR.Println(m.Topic(), string(m.Payload()), err)

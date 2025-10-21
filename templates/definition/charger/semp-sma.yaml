@@ -8,7 +8,7 @@ products:
       generic: eCharger (SEMP)
 capabilities: ["mA", "1p3p"]
 requirements:
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
   description:
     en: |
       Configure the SEMP base URL (e.g. http://192.168.178.100/SEMP) and the device ID of the charger.

@@ -7,5 +7,8 @@ features:
 {{- if eq .welcomecharge "true" }}
 - welcomecharge
 {{- end }}
+{{- if eq .streaming "true" }}
+- streaming
+{{- end }}
 {{- end }}
 {{- end }}

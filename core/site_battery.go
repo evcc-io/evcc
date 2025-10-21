@@ -18,6 +18,18 @@ func (site *Site) batteryConfigured() bool {
 	return len(site.batteryMeters) > 0
 }
 
+func (site *Site) hasBatteryControl() bool {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+
+		if _, ok := meter.(api.BatteryController); ok {
+			return true
+		}
+	}
+
+	return false
+}
+
 // setBatteryMode sets the battery mode
 func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.batteryMode = batMode
