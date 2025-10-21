@@ -1,0 +1,30 @@
+template: eebus-mgcp
+products:
+  - description:
+      de: "EEBus: Netzanschlusspunkt"
+      en: "EEBus: grid connection point"
+group: generic
+requirements:
+  description:
+    de: EEBus-Messstelle am Netzanschlusspunkt mit dem Use Case MGCP (Monitoring of Grid Connection Point).
+    en: EEBus metering device at the grid connection point using use case MGCP (Monitoring of Grid Connection Point).
+  evcc: ["eebus"]
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: ski
+    description:
+      en: SKI (Subject Key Identifier)
+      de: SKI (Subject Key Identifier)
+  - name: host
+    required: false
+    help:
+      en: If not specified, the device will be discovered automatically via mDNS.
+      de: Falls keine Angabe, wird das Gerät automatisch über mDNS gefunden.
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  {{- if .host }}
+  ip: {{ .host }}
+  {{- end }}
+  usage: {{ .usage }}

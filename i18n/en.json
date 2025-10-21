@@ -355,12 +355,12 @@
       "titleChoice": "What Do You Want To Add?",
       "titleLabel": "Title",
       "usage": {
-        "aux": "Self-regulating consumer meter",
-        "battery": "Battery meter",
-        "charge": "Charger meter",
-        "grid": "Grid meter",
+        "aux": "Self-regulating consumer",
+        "battery": "Battery",
+        "charge": "Consumer / Charger",
+        "grid": "Grid",
         "label": "Usage",
-        "pv": "Solar meter"
+        "pv": "Production"
       },
       "validateSave": "Validate & save"
     },

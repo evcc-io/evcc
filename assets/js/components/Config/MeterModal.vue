@@ -191,7 +191,7 @@ export default defineComponent({
 			return this.id === undefined;
 		},
 		extMeterUsageOptions() {
-			return ["grid", "pv", "battery", "charge", "aux"].map((key) => ({
+			return ["charge", "aux", "grid", "pv", "battery"].map((key) => ({
 				name: this.$t(`config.meter.usage.${key}`),
 				key,
 			}));
@@ -249,12 +249,10 @@ export default defineComponent({
 			return data;
 		},
 		handleTemplateChange(e: Event, values: DeviceValues) {
-			console.log("[MeterModal] handleTemplateChange", { e, values });
 			const value = (e.target as HTMLSelectElement).value;
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				values.yaml = defaultMeterYaml;
-				console.log("[MeterModal] set type/yaml", { type: values.type, yaml: values.yaml });
 			}
 		},
 		applyCustomDefaults(_template: Template | null, values: DeviceValues) {
