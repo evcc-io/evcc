@@ -28,9 +28,9 @@ type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	ma  *eebus.UseCasesMA
-	eg  *eebus.UseCasesEG
-	api maAPI
+	ma *eebus.MonitoringAppliance
+	eg *eebus.EnergyGuard
+	mm measurements
 
 	power    *util.Value[float64]
 	energy   *util.Value[float64]
@@ -43,15 +43,6 @@ type EEBus struct {
 	egLpcEntity      spineapi.EntityRemoteInterface
 	// failsafeLimit    float64
 	// failsafeDuration time.Duration
-}
-
-// maAPI provides a unified interface for monitoring appliance MGCP and MPC use cases
-type maAPI struct {
-	measurements
-	powerEvent   eebusapi.EventType
-	energyEvent  eebusapi.EventType
-	currentEvent eebusapi.EventType
-	voltageEvent eebusapi.EventType
 }
 
 type measurements interface {
@@ -94,30 +85,18 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
-	api := maAPI{
-		measurements: ma.MPC,
-		powerEvent:   mpc.DataUpdatePower,
-		energyEvent:  mpc.DataUpdateEnergyConsumed,
-		currentEvent: mpc.DataUpdateCurrentsPerPhase,
-		voltageEvent: mpc.DataUpdateVoltagePerPhase,
-	}
+	mm := measurements(ma.MaMPCInterface)
 
 	if usage != nil && *usage == templates.UsageGrid {
 		useCase = "mgcp"
-		api = maAPI{
-			measurements: ma.MGCP,
-			powerEvent:   mgcp.DataUpdatePower,
-			energyEvent:  mgcp.DataUpdateEnergyConsumed,
-			currentEvent: mgcp.DataUpdateCurrentPerPhase,
-			voltageEvent: mgcp.DataUpdateVoltagePerPhase,
-		}
+		mm = ma.MaMGCPInterface
 	}
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
 		ma:        ma,
 		eg:        eebus.Instance.EnergyGuard(),
-		api:       api,
+		mm:        mm,
 		Connector: eebus.NewConnector(),
 		power:     util.NewValue[float64](timeout),
 		energy:    util.NewValue[float64](timeout),
@@ -145,13 +124,13 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 
 	switch event {
 	// Monitoring Appliance
-	case c.api.powerEvent:
+	case mpc.DataUpdatePower, mgcp.DataUpdatePower:
 		c.maDataUpdatePower(entity)
-	case c.api.energyEvent:
+	case mpc.DataUpdateEnergyConsumed, mgcp.DataUpdateEnergyConsumed:
 		c.maDataUpdateEnergyConsumed(entity)
-	case c.api.currentEvent:
+	case mpc.DataUpdateCurrentsPerPhase, mgcp.DataUpdateCurrentPerPhase:
 		c.maDataUpdateCurrentPerPhase(entity)
-	case c.api.voltageEvent:
+	case mpc.DataUpdateVoltagePerPhase, mgcp.DataUpdateVoltagePerPhase:
 		c.maDataUpdateVoltagePerPhase(entity)
 
 	// Energy Guard
@@ -162,12 +141,8 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	}
 }
 
-//
-// Monitoring Appliance
-//
-
 func (c *EEBus) maDataUpdatePower(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.Power(entity)
+	data, err := c.mm.Power(entity)
 	if err != nil {
 		c.log.ERROR.Println("Power:", err)
 		return
@@ -177,7 +152,7 @@ func (c *EEBus) maDataUpdatePower(entity spineapi.EntityRemoteInterface) {
 }
 
 func (c *EEBus) maDataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.EnergyConsumed(entity)
+	data, err := c.mm.EnergyConsumed(entity)
 	if err != nil {
 		c.log.ERROR.Println("EnergyConsumed:", err)
 		return
@@ -188,7 +163,7 @@ func (c *EEBus) maDataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface
 }
 
 func (c *EEBus) maDataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.CurrentPerPhase(entity)
+	data, err := c.mm.CurrentPerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("CurrentPerPhase:", err)
 		return
@@ -197,7 +172,7 @@ func (c *EEBus) maDataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterfac
 }
 
 func (c *EEBus) maDataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.VoltagePerPhase(entity)
+	data, err := c.mm.VoltagePerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("VoltagePerPhase:", err)
 		return
@@ -260,7 +235,7 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 }
 
 func (c *EEBus) egLpcDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
-	limit, err := c.eg.LPC.ConsumptionLimit(entity)
+	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
 	if err != nil {
 		c.log.ERROR.Println("EG LPC ConsumptionLimit:", err)
 		return
@@ -303,11 +278,11 @@ func (c *EEBus) Dim(dim bool) error {
 		return errors.New("not connected")
 	}
 
-	if !slices.Contains(c.eg.LPC.AvailableScenariosForEntity(c.egLpcEntity), 1) {
+	if !slices.Contains(c.eg.EgLPCInterface.AvailableScenariosForEntity(c.egLpcEntity), 1) {
 		return errors.New("scenario 1 not supported")
 	}
 
-	_, err := c.eg.LPC.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
+	_, err := c.eg.EgLPCInterface.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
 		Value:    value,
 		IsActive: dim,
 	}, func(result model.ResultDataType) {

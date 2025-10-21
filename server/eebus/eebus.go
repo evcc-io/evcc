@@ -20,8 +20,8 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	cslpc "github.com/enbility/eebus-go/usecases/cs/lpc"
-	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
+	"github.com/enbility/eebus-go/usecases/cs/lpc"
+	"github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
@@ -39,8 +39,8 @@ type Device interface {
 	UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
 }
 
-// EVSE UseCases
-type UseCasesEVSE struct {
+// Customer Energy Management
+type CustomerEnergyManagement struct {
 	EvseCC ucapi.CemEVSECCInterface
 	EvCC   ucapi.CemEVCCInterface
 	EvCem  ucapi.CemEVCEMInterface
@@ -48,27 +48,31 @@ type UseCasesEVSE struct {
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
 }
-type UseCasesCS struct {
-	LPC ucapi.CsLPCInterface
-	LPP ucapi.CsLPPInterface
+
+// Controllable System
+type ControllableSystem struct {
+	ucapi.CsLPCInterface
+	ucapi.CsLPPInterface
 }
 
-type UseCasesMA struct {
-	MGCP ucapi.MaMGCPInterface
-	MPC  ucapi.MaMPCInterface
+// Monitoring Appliance
+type MonitoringAppliance struct {
+	ucapi.MaMGCPInterface
+	ucapi.MaMPCInterface
 }
 
-type UseCasesEG struct {
-	LPC ucapi.EgLPCInterface
+// Energy Guard
+type EnergyGuard struct {
+	ucapi.EgLPCInterface
 }
 
 type EEBus struct {
 	service eebusapi.ServiceInterface
 
-	evseUC UseCasesEVSE
-	csUC   UseCasesCS
-	egUC   UseCasesEG
-	maUC   UseCasesMA
+	cem CustomerEnergyManagement
+	cs  ControllableSystem
+	ma  MonitoringAppliance
+	eg  EnergyGuard
 
 	mux sync.Mutex
 	log *util.Logger
@@ -152,7 +156,7 @@ func NewServer(other Config) (*EEBus, error) {
 	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
 
 	// evse
-	c.evseUC = UseCasesEVSE{
+	c.cem = CustomerEnergyManagement{
 		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
 		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
 		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
@@ -162,30 +166,30 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	// controllable system
-	c.csUC = UseCasesCS{
-		LPC: cslpc.NewLPC(localEntity, c.ucCallback),
-		LPP: cslpp.NewLPP(localEntity, c.ucCallback),
+	c.cs = ControllableSystem{
+		CsLPCInterface: lpc.NewLPC(localEntity, c.ucCallback),
+		CsLPPInterface: lpp.NewLPP(localEntity, c.ucCallback),
 	}
 
 	// monitoring appliance
-	c.maUC = UseCasesMA{
-		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MPC:  mpc.NewMPC(localEntity, c.ucCallback),
+	c.ma = MonitoringAppliance{
+		MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+		MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
 	// energy guard
-	c.egUC = UseCasesEG{
-		LPC: eglpc.NewLPC(localEntity, c.ucCallback),
+	c.eg = EnergyGuard{
+		EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
 	for _, uc := range []eebusapi.UseCaseInterface{
-		c.evseUC.EvseCC, c.evseUC.EvCC,
-		c.evseUC.EvCem, c.evseUC.OpEV,
-		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.LPP,
-		c.maUC.MGCP, c.maUC.MPC,
-		c.egUC.LPC,
+		c.cem.EvseCC, c.cem.EvCC,
+		c.cem.EvCem, c.cem.OpEV,
+		c.cem.OscEV, c.cem.EvSoc,
+		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
+		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
+		c.eg.EgLPCInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -227,20 +231,20 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	}
 }
 
-func (c *EEBus) Evse() *UseCasesEVSE {
-	return &c.evseUC
+func (c *EEBus) CustomerEnergyManagement() *CustomerEnergyManagement {
+	return &c.cem
 }
 
-func (c *EEBus) ControllableSystem() *UseCasesCS {
-	return &c.csUC
+func (c *EEBus) ControllableSystem() *ControllableSystem {
+	return &c.cs
 }
 
-func (c *EEBus) MonitoringAppliance() *UseCasesMA {
-	return &c.maUC
+func (c *EEBus) MonitoringAppliance() *MonitoringAppliance {
+	return &c.ma
 }
 
-func (c *EEBus) EnergyGuard() *UseCasesEG {
-	return &c.egUC
+func (c *EEBus) EnergyGuard() *EnergyGuard {
+	return &c.eg
 }
 
 func (c *EEBus) Run() {

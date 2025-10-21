@@ -20,9 +20,9 @@ type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	cs *eebus.UseCasesCS
-	ma *eebus.UseCasesMA
-	eg *eebus.UseCasesEG
+	cs *eebus.ControllableSystem
+	ma *eebus.MonitoringAppliance
+	eg *eebus.EnergyGuard
 
 	root api.Circuit
 
@@ -123,38 +123,38 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 		return nil, err
 	}
 
-	// cs scenarios
-	for _, s := range c.cs.LPC.RemoteEntitiesScenarios() {
+	// controllable system
+	for _, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("CS LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.cs.LPP.RemoteEntitiesScenarios() {
+	for _, s := range c.cs.CsLPPInterface.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("CS LPP RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
-	// ma scenarios
-	for _, s := range c.ma.MPC.RemoteEntitiesScenarios() {
+	// monitoring appliance
+	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("MA MPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.ma.MGCP.RemoteEntitiesScenarios() {
+	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
-	// eg scenarios
-	for _, s := range c.eg.LPC.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MA MPC RemoteEntitiesScenarios:", s.Scenarios)
+	// energy guard
+	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
 	// set initial values
-	if err := c.cs.LPC.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
 		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
 	}
-	if err := c.cs.LPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
+	if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
 		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
 	}
-	if err := c.cs.LPC.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
+	if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
 		c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
 	}
-	if err := c.cs.LPC.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+	if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
 		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
 	}
 
