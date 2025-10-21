@@ -1,6 +1,7 @@
 name: openapi-validate
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:
@@ -25,4 +26,4 @@ jobs:
         with:
           go-version: stable
       - name: Validate OpenAPI spec
-        run: go run github.com/getkin/kin-openapi/cmd/validate@latest -- server/openapi.yaml
+        run: go run github.com/getkin/kin-openapi/cmd/validate@v0.133.0 -- server/openapi.yaml
