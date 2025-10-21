@@ -17,7 +17,6 @@ params:
       en: SKI (Subject Key Identifier)
       de: SKI (Subject Key Identifier)
   - name: host
-    required: false
     help:
       en: If not specified, the device will be discovered automatically via mDNS.
       de: Falls nicht angegeben, wird das Gerät automatisch über mDNS gefunden.
