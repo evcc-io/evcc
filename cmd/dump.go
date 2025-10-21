@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"time"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
@@ -33,6 +34,7 @@ func init() {
 	rootCmd.AddCommand(dumpCmd)
 
 	dumpConfig = dumpCmd.Flags().Bool("cfg", false, "Dump config file")
+	dumpCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func handle[T any](name string, h config.Handler[T]) config.Device[T] {
@@ -90,7 +92,8 @@ func runDump(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	d := dumper{len: 2}
+	timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+	d := dumper{len: 2, timeout: timeout}
 
 	d.Header("config", "=")
 	fmt.Println("")

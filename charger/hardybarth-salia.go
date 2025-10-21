@@ -45,7 +45,7 @@ type Salia struct {
 	log     *util.Logger
 	uri     string
 	current int64
-	fw      int // 2 if fw 2.0
+	fw      int // 2 if fw 2.0 3 if fw >= 2.3.0
 	apiG    util.Cacheable[salia.Api]
 }
 
@@ -116,6 +116,10 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 		wb.fw = 2
 	}
 
+	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.3.0"))) {
+		wb.fw = 3
+	}
+
 	if res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		if err = wb.post(salia.ChargeMode, echarge.ModeManual); err == nil {
 			res, err = wb.apiG.Get()
@@ -178,9 +182,16 @@ func (wb *Salia) heartbeat(ctx context.Context) {
 
 func (wb *Salia) post(key, val string) error {
 	data := map[string]string{key: val}
+	httpmethod := http.MethodPut
 	uri := fmt.Sprintf("%s/secc", wb.uri)
 
-	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+	// for fw >= 2.3. use /save_mqtt.php instead of /api/secc
+	if wb.fw >= 3 {
+		httpmethod = http.MethodPost
+		uri = strings.TrimSuffix(wb.uri, "/api") + "/save_mqtt.php"
+	}
+
+	req, err := request.New(httpmethod, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		var res struct {
 			Result string
