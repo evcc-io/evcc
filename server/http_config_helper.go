@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/fatih/structs"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
 	"go.yaml.in/yaml/v4"
@@ -29,14 +30,20 @@ const (
 var (
 	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
 
-	// generalTemplateFields are preserved for all templates independent of their params
-	generalTemplateFields = []string{"template", "type", "name", "id", "title", "icon"}
+	// configPropertiesFields are preserved for all templates independent of their params
+	configPropertiesFields = []string{"id", "name"}
 )
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
+}
+
+func init() {
+	for _, f := range structs.Fields(config.Properties{}) {
+		configPropertiesFields = append(configPropertiesFields, strings.ToLower(f.Name()))
+	}
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -114,7 +121,7 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 	res := make(map[string]any)
 
 	for k, v := range conf {
-		if slices.Contains(generalTemplateFields, k) {
+		if slices.Contains(configPropertiesFields, k) {
 			res[k] = v
 			continue
 		}
