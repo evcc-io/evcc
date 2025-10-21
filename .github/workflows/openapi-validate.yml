@@ -9,10 +9,6 @@ on:
     paths:
       - "server/openapi.yaml"
       - ".github/workflows/openapi-validate.yml"
-  push:
-    paths:
-      - "server/openapi.yaml"
-      - ".github/workflows/openapi-validate.yml"
 
 jobs:
   validate-openapi:
