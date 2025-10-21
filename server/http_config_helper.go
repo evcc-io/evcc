@@ -16,7 +16,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/fatih/structs"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
 	"go.yaml.in/yaml/v4"
@@ -29,28 +28,12 @@ const (
 
 var (
 	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
-
-	// defaultTemplateProperties are general template configuration properties (id, name, templates) and
-	// config.Properties members and preserved for all templates independent of their params
-	defaultTemplateProperties = []string{"id", "name", "template"}
 )
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
-}
-
-func init() {
-	for _, f := range structs.Fields(config.Properties{}) {
-		prop := f.Name()
-		if tag := f.Tag("json"); tag != "" {
-			if name := strings.Split(tag, ",")[0]; name != "" {
-				prop = name
-			}
-		}
-		defaultTemplateProperties = append(defaultTemplateProperties, prop)
-	}
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -128,7 +111,7 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 	res := make(map[string]any)
 
 	for k, v := range conf {
-		if slices.Contains(defaultTemplateProperties, k) {
+		if k == "template" {
 			res[k] = v
 			continue
 		}

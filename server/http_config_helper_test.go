@@ -138,15 +138,13 @@ func TestSquashedMergeMaskedAny(t *testing.T) {
 
 func TestMergeMaskedFiltersBehavior(t *testing.T) {
 	conf := map[string]any{
-		"template":    "demo-meter",
-		"power":       200.0,
-		"deviceTitle": "Demo!",
+		"template": "demo-meter",
+		"power":    200.0,
 	}
 
 	old := map[string]any{
 		"template":      "demo-meter",
 		"power":         100.0,
-		"deviceTitle":   "Old Title",
 		"outdatedField": "old-value",
 	}
 
@@ -154,7 +152,6 @@ func TestMergeMaskedFiltersBehavior(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 200.0, result["power"])
-	assert.Equal(t, "Demo!", result["deviceTitle"])
 	assert.Equal(t, "demo-meter", result["template"])
 	assert.NotContains(t, result, "outdatedField")
 }
