@@ -29,8 +29,8 @@ const (
 var (
 	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
 
-	// specialConfigFields are always preserved during template param filtering
-	specialConfigFields = []string{"template", "type", "name", "id", "usage", "modbus", "title", "icon"}
+	// generalTemplateFields are preserved for all templates independent of their params
+	generalTemplateFields = []string{"template", "type", "name", "id", "title", "icon"}
 )
 
 type configReq struct {
@@ -138,7 +138,7 @@ func filterValidTemplateParams(class templates.Class, conf map[string]any) (map[
 	res := make(map[string]any)
 
 	for k, v := range conf {
-		if slices.Contains(specialConfigFields, k) {
+		if slices.Contains(generalTemplateFields, k) {
 			res[k] = v
 			continue
 		}
@@ -167,19 +167,7 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 		res[k] = v
 	}
 
-	filtered := make(map[string]any)
-	for k, v := range res {
-		if slices.Contains(specialConfigFields, k) {
-			filtered[k] = v
-			continue
-		}
-
-		if i, _ := tmpl.ParamByName(k); i >= 0 {
-			filtered[k] = v
-		}
-	}
-
-	return filtered, nil
+	return filterValidTemplateParams(class, res)
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
