@@ -1,0 +1,28 @@
+name: openapi-validate
+
+permissions: {}
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "server/openapi.yaml"
+      - ".github/workflows/openapi-validate.yml"
+  push:
+    paths:
+      - "server/openapi.yaml"
+      - ".github/workflows/openapi-validate.yml"
+
+jobs:
+  validate-openapi:
+    name: Validate OpenAPI spec
+    runs-on: depot-ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Validate OpenAPI spec
+        run: go run github.com/getkin/kin-openapi/cmd/validate@latest -- server/openapi.yaml
