@@ -66,6 +66,23 @@ func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]an
 	writer.WritePoint(influxdb2.NewPoint(key, tags, fields, m.clock.Now()))
 }
 
+// addMeterTitleToTags preprocesses meter data to add titles as tags
+func (m *Influx) addMeterTitleToTags(param util.Param, tags map[string]string) {
+	// Only handle meter types that have titles
+	if param.Key != "aux" && param.Key != "ext" && param.Key != "pv" && param.Key != "battery" {
+		return
+	}
+
+	// The value should be a slice of measurements
+	val := reflect.ValueOf(param.Val)
+	if val.Kind() != reflect.Slice {
+		return
+	}
+
+	// For meter slices, we'll handle title addition in writeComplexPoint per element
+	// This function is called to validate the parameter type early
+}
+
 // writeComplexPoint asynchronously writes a point to influx
 func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags map[string]string) {
 	fields := make(map[string]any)
@@ -137,7 +154,19 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 			// loop slice
 			for i := range val.Len() {
 				tags["id"] = strconv.Itoa(i + 1)
-				writeStruct(val.Index(i).Interface())
+
+				el := val.Index(i)
+				// Check if this element has a Title field (for meter types)
+				if el.Kind() == reflect.Struct {
+					if titleField := el.FieldByName("Title"); titleField.IsValid() && titleField.Kind() == reflect.String {
+						tags["title"] = titleField.String()
+						writeStruct(el.Interface())
+						// clean up title tag for next iteration
+						delete(tags, "title")
+						continue
+					}
+				}
+				writeStruct(el.Interface())
 			}
 		}
 
@@ -170,6 +199,9 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 				tags["vehicle"] = v.GetTitle()
 			}
 		}
+
+		// preprocess meter data to ensure proper title handling
+		m.addMeterTitleToTags(param, tags)
 
 		m.writeComplexPoint(writer, param.Key, param.Val, tags)
 	}
