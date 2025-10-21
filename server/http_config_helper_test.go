@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -167,13 +168,17 @@ func TestFilterValidTemplateParams(t *testing.T) {
 		"outdatedField": "should-be-removed",
 	}
 
-	result, err := filterValidTemplateParams(0, conf)
+	result := filterValidTemplateParams(&templates.Template{
+		TemplateDefinition: templates.TemplateDefinition{
+			Params: []templates.Param{
+				{Name: "usage"},
+				{Name: "power"},
+				{Name: "capacity"},
+			},
+		},
+	}, conf)
 
-	if err != nil {
-		t.Skip("template not available in test, integration test covers full scenario")
-	}
-
-	assert.Equal(t, "generic", result["template"])
-	assert.Equal(t, "grid", result["usage"])
+	assert.Equal(t, "generic", result["template"], "template")
+	assert.Equal(t, "grid", result["usage"], "usage")
 	assert.NotContains(t, result, "outdatedField")
 }

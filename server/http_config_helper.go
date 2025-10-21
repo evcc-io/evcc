@@ -30,8 +30,9 @@ const (
 var (
 	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
 
-	// configPropertiesFields are preserved for all templates independent of their params
-	configPropertiesFields = []string{"id", "name"}
+	// defaultTemplateProperties are general template configuration properties (id, name, templates) and
+	// config.Properties members and preserved for all templates independent of their params
+	defaultTemplateProperties = []string{"id", "name", "template"}
 )
 
 type configReq struct {
@@ -42,7 +43,7 @@ type configReq struct {
 
 func init() {
 	for _, f := range structs.Fields(config.Properties{}) {
-		configPropertiesFields = append(configPropertiesFields, strings.ToLower(f.Name()))
+		defaultTemplateProperties = append(defaultTemplateProperties, strings.ToLower(f.Name()))
 	}
 }
 
@@ -121,7 +122,7 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 	res := make(map[string]any)
 
 	for k, v := range conf {
-		if slices.Contains(configPropertiesFields, k) {
+		if slices.Contains(defaultTemplateProperties, k) {
 			res[k] = v
 			continue
 		}
