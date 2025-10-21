@@ -26,7 +26,12 @@ const (
 	masked       = "***"      // masked indicates a masked config parameter value
 )
 
-var customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+var (
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+
+	// specialConfigFields are always preserved during template param filtering
+	specialConfigFields = []string{"template", "type", "name", "id", "usage", "modbus", "title", "icon"}
+)
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
@@ -124,6 +129,28 @@ func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any,
 	return res, nil
 }
 
+func filterValidTemplateParams(class templates.Class, conf map[string]any) (map[string]any, error) {
+	tmpl, err := templateForConfig(class, conf)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]any)
+
+	for k, v := range conf {
+		if slices.Contains(specialConfigFields, k) {
+			res[k] = v
+			continue
+		}
+
+		if i, _ := tmpl.ParamByName(k); i >= 0 {
+			res[k] = v
+		}
+	}
+
+	return res, nil
+}
+
 func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
@@ -140,7 +167,19 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 		res[k] = v
 	}
 
-	return res, nil
+	filtered := make(map[string]any)
+	for k, v := range res {
+		if slices.Contains(specialConfigFields, k) {
+			filtered[k] = v
+			continue
+		}
+
+		if i, _ := tmpl.ParamByName(k); i >= 0 {
+			filtered[k] = v
+		}
+	}
+
+	return filtered, nil
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
