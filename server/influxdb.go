@@ -12,10 +12,25 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/templates"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
+
+// meterTypesWithTitles defines which meter types support title tagging
+// Using a map for O(1) lookup performance
+var meterTypesWithTitles = map[string]bool{
+	templates.UsagePV.String():      true, // "pv"
+	templates.UsageBattery.String(): true, // "battery"
+	templates.UsageAux.String():     true, // "aux"
+	"ext":                           true, // external meters (not in Usage enum)
+}
+
+// isMeterTypeWithTitles checks if a meter type supports title tagging
+func isMeterTypeWithTitles(meterType string) bool {
+	return meterTypesWithTitles[meterType]
+}
 
 // Influx is a influx publisher
 type Influx struct {
@@ -69,7 +84,7 @@ func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]an
 // addMeterTitleToTags preprocesses meter data to add titles as tags
 func (m *Influx) addMeterTitleToTags(param util.Param, tags map[string]string) {
 	// Only handle meter types that have titles
-	if param.Key != "aux" && param.Key != "ext" && param.Key != "pv" && param.Key != "battery" {
+	if !isMeterTypeWithTitles(param.Key) {
 		return
 	}
 
