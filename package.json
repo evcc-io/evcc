@@ -51,7 +51,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.13.0",
     "@jest/types": "^30.2.0",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.56.1",
     "@storybook/vue3": "^10.0.0-beta.2",
     "@storybook/vue3-vite": "^10.0.0-beta.2",
     "@types/body-parser": "^1.19.6",
