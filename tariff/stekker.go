@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -66,14 +65,10 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	switch cc.Region {
 	case "BE":
 		cc.Region = "BE-900"
+		interval = 15 * time.Minute
 	case "NL":
 		cc.Region = "NL-900"
-	}
-
-	if idx := strings.LastIndex(cc.Region, "-"); idx != -1 {
-		if secs, err := strconv.Atoi(cc.Region[idx+1:]); err == nil && secs > 0 {
-			interval = time.Duration(secs) * time.Second
-		}
+		interval = 15 * time.Minute
 	}
 
 	t := &Stekker{
