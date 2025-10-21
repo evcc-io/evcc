@@ -43,7 +43,15 @@ type configReq struct {
 
 func init() {
 	for _, f := range structs.Fields(config.Properties{}) {
-		defaultTemplateProperties = append(defaultTemplateProperties, strings.ToLower(f.Name()))
+		if tag := f.Tag("json"); tag != "" {
+			// Use JSON tag name (before comma)
+			if name, _, _ := strings.Cut(tag, ","); name != "" {
+				defaultTemplateProperties = append(defaultTemplateProperties, name)
+			}
+		} else {
+			// No JSON tag, use lowercase field name
+			defaultTemplateProperties = append(defaultTemplateProperties, strings.ToLower(f.Name()))
+		}
 	}
 }
 

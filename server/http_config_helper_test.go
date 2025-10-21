@@ -138,24 +138,24 @@ func TestSquashedMergeMaskedAny(t *testing.T) {
 
 func TestMergeMaskedFiltersBehavior(t *testing.T) {
 	conf := map[string]any{
-		"template": "generic",
-		"power":    200.0,
+		"template":    "demo-meter",
+		"power":       200.0,
+		"deviceTitle": "Demo!",
 	}
 
 	old := map[string]any{
-		"template":      "generic",
+		"template":      "demo-meter",
 		"power":         100.0,
+		"deviceTitle":   "Old Title",
 		"outdatedField": "old-value",
 	}
 
-	result, err := mergeMasked(0, conf, old)
-
-	if err != nil {
-		t.Skip("template not available in test, integration test covers full scenario")
-	}
+	result, err := mergeMasked(templates.Meter, conf, old)
+	require.NoError(t, err)
 
 	assert.Equal(t, 200.0, result["power"])
-	assert.Equal(t, "generic", result["template"])
+	assert.Equal(t, "Demo!", result["deviceTitle"])
+	assert.Equal(t, "demo-meter", result["template"])
 	assert.NotContains(t, result, "outdatedField")
 }
 
