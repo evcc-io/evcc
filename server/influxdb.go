@@ -10,27 +10,13 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/templates"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
-
-// meterTypesWithTitles defines which meter types support title tagging
-// Using a map for O(1) lookup performance
-var meterTypesWithTitles = map[string]bool{
-	templates.UsagePV.String():      true, // "pv"
-	templates.UsageBattery.String(): true, // "battery"
-	templates.UsageAux.String():     true, // "aux"
-	"ext":                           true, // external meters (not in Usage enum)
-}
-
-// isMeterTypeWithTitles checks if a meter type supports title tagging
-func isMeterTypeWithTitles(meterType string) bool {
-	return meterTypesWithTitles[meterType]
-}
 
 // Influx is a influx publisher
 type Influx struct {
@@ -79,23 +65,6 @@ type pointWriter interface {
 func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]any, tags map[string]string) {
 	m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
 	writer.WritePoint(influxdb2.NewPoint(key, tags, fields, m.clock.Now()))
-}
-
-// addMeterTitleToTags preprocesses meter data to add titles as tags
-func (m *Influx) addMeterTitleToTags(param util.Param, tags map[string]string) {
-	// Only handle meter types that have titles
-	if !isMeterTypeWithTitles(param.Key) {
-		return
-	}
-
-	// The value should be a slice of measurements
-	val := reflect.ValueOf(param.Val)
-	if val.Kind() != reflect.Slice {
-		return
-	}
-
-	// For meter slices, we'll handle title addition in writeComplexPoint per element
-	// This function is called to validate the parameter type early
 }
 
 // writeComplexPoint asynchronously writes a point to influx
@@ -168,21 +137,23 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 
 			// loop slice
 			for i := range val.Len() {
-				tags["id"] = strconv.Itoa(i + 1)
+				// clone tags to prevent leakage between elements
+				elementTags := make(map[string]string, len(tags)+2)
+				for k, v := range tags {
+					elementTags[k] = v
+				}
+				elementTags["id"] = strconv.Itoa(i + 1)
 
-				el := val.Index(i)
-				// Check if this element has a Title field (for meter types)
-				if el.Kind() == reflect.Struct {
-					if titleField := el.FieldByName("Title"); titleField.IsValid() && titleField.Kind() == reflect.String {
-						tags["title"] = titleField.String()
-						writeStruct(el.Interface())
-						// clean up title tag for next iteration
-						delete(tags, "title")
-						continue
+				el := val.Index(i).Interface()
+				// Check if element provides a title
+				if tp, ok := el.(api.TitleDescriber); ok {
+					if title := tp.GetTitle(); title != "" {
+						elementTags["title"] = title
 					}
 				}
-				writeStruct(el.Interface())
+				m.writeComplexPoint(writer, key, el, elementTags)
 			}
+			return
 		}
 
 		return
@@ -214,9 +185,6 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 				tags["vehicle"] = v.GetTitle()
 			}
 		}
-
-		// preprocess meter data to ensure proper title handling
-		m.addMeterTitleToTags(param, tags)
 
 		m.writeComplexPoint(writer, param.Key, param.Val, tags)
 	}
