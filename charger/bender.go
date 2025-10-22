@@ -35,16 +35,13 @@ import (
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-type bSEMP struct {
-	*request.Helper
+type sempHandler struct {
 	deviceID string
 	conn     *semp.Connection
 	deviceG  util.Cacheable[semp.Device2EM]
-	cache    time.Duration
 }
 
 // BenderCC charger implementation
@@ -54,7 +51,7 @@ type BenderCC struct {
 	regCurr uint16
 	legacy  bool
 	log     *util.Logger
-	semp    bSEMP
+	semp    sempHandler
 }
 
 const (
@@ -132,11 +129,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		conn:    conn,
 		current: 6, // assume min current
 		regCurr: bendRegHemsCurrentLimit,
-		semp: bSEMP{
-			Helper: request.NewHelper(log),
-			cache:  cache,
-		},
-		log: log,
+		log:     log,
 	}
 
 	// check legacy register set
@@ -193,13 +186,13 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 
 	// check feature semp phase switching
 	if phases1p3p == nil {
-		if wb.supportsSEMPPhaseSwitching(uri) {
+		if wb.supportsSEMPPhaseSwitching(uri, cache) {
 			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
 				phases1p3p = wb.phases1p3pSEMP
 				getPhases = wb.getPhases
 				// start heartbeat to keep connection alive
-				go wb.heartbeatSEMP(ctx)
+				go wb.heartbeat(ctx)
 			} else {
 				log.ERROR.Println("SEMP phase switching: could not set initial SEMP power limit:", err)
 			}
@@ -214,35 +207,30 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
 }
 
-// heartbeatSEMP ensures that device control updates are sent at least once per minute
-func (wb *BenderCC) heartbeatSEMP(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
+// heartbeat ensures that SEMP device control updates are sent about once per minute
+func (wb *BenderCC) heartbeat(ctx context.Context) {
+	for tick := time.Tick(5 * time.Second); ; {
 		select {
-		case <-ticker.C:
-			// Check if we need to send an update
-			if time.Since(wb.semp.conn.Updated()) >= time.Minute {
-				// Always send a very high power value to allow full control between 6 and 16A via modbus
-				// Note: This will not trigger a phase switch, as the value is above the max. power consumption
-				if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err != nil {
-					wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
-				}
-			}
+		case <-tick:
 		case <-ctx.Done():
 			return
+		}
+		if time.Since(wb.semp.conn.Updated()) >= time.Minute {
+			// Always send a very high power value to allow full control between 6 and 16A via modbus
+			// Note: This will not trigger a phase switch, as the value is above the max. power consumption
+			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err != nil {
+				wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
+			}
 		}
 	}
 }
 
 // supportsSEMPPhaseSwitching checks if SEMP phase switching is supported by querying device info
-func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string) bool {
-	wb.semp.Client.Timeout = request.Timeout
+func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string, cache time.Duration) bool {
 	wb.semp.conn = semp.NewConnection(wb.log, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
 	wb.semp.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 		return wb.semp.conn.GetDeviceXML()
-	}, wb.semp.cache)
+	}, cache)
 
 	doc, err := wb.semp.deviceG.Get()
 	if err != nil {
@@ -269,10 +257,10 @@ func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string) bool {
 	if info.Characteristics.MinPowerConsumption > 0 && info.Characteristics.MinPowerConsumption < 4140 &&
 		info.Characteristics.MaxPowerConsumption > 4600 {
 		return true
-	} else {
-		wb.log.DEBUG.Println("SEMP phase switching: not supported")
-		return false
 	}
+
+	wb.log.DEBUG.Println("SEMP phase switching: not supported")
+	return false
 }
 
 // getDeviceInfo retrieves device info from cached document
