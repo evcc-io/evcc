@@ -101,15 +101,9 @@ async function _start(config?: string, flags: string | string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   const ocpp = ocppPort();
-
-  // Kill any processes that might be using our ports
-  try {
-    await killPort(port);
-    await killPort(ocpp);
-  } catch {
-    // Ports were not in use, which is fine
-  }
-
+  log(`wait until port ${port} is available`);
+  // wait for port to be available
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
   log(`starting evcc on ports ${port} (HTTP) and ${ocpp} (OCPP)`);
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
@@ -150,7 +144,7 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
     log("evcc is down", { port });
     return;
   }
@@ -178,7 +172,7 @@ async function _stop(instance?: ChildProcess) {
     }
   }
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
   log("evcc is down", { port });
 }
 
