@@ -1,8 +1,8 @@
 template: eebus-mcp
 products:
   - description:
-      de: "EEBus: Verbraucher"
-      en: "EEBus: consumer"
+      de: "EEBus Verbraucher"
+      en: "EEBus Consumer"
 group: generic
 requirements:
   description:
@@ -12,19 +12,7 @@ requirements:
 params:
   - name: usage
     choice: ["charge"]
-  - name: ski
-    description:
-      en: SKI (Subject Key Identifier)
-      de: SKI (Subject Key Identifier)
-  - name: host
-    required: false
-    help:
-      en: If not specified, the device will be discovered automatically via mDNS.
-      de: Falls nicht angegeben, wird das Gerät automatisch über mDNS gefunden.
+  - preset: eebus
 render: |
-  type: eebus
-  ski: {{ .ski }}
-  {{- if .host }}
-  ip: {{ .host }}
-  {{- end }}
+  {{ include "eebus" . }}
   usage: {{ .usage }}
