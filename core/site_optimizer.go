@@ -44,6 +44,12 @@ type batteryDetail struct {
 	Capacity float64     `json:"capacity,omitempty"`
 }
 
+type batteryResult struct {
+	batteryDetail
+	Full  time.Time `json:"full"`
+	Empty time.Time `json:"empty"`
+}
+
 type responseDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
@@ -303,7 +309,35 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		Details: details,
 	})
 
+	var batteries []batteryResult
+	for i, batReq := range req.Batteries {
+		batResp := resp.JSON200.Batteries[i]
+
+		batteries = append(batteries, batteryResult{
+			batteryDetail: details.BatteryDetails[i],
+			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
+				return soc >= batReq.SMax
+			}),
+			Empty: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
+				return soc <= batReq.SMin
+			}),
+		})
+	}
+
+	site.publish("evopt-batteries", batteries)
+
 	return nil
+}
+
+func matchSoc(ts []float32, fun func(float32) bool) time.Time {
+	for i, soc := range ts {
+		if fun(soc) {
+			// TODO first slot
+			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+		}
+	}
+
+	return time.Time{}
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
