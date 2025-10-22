@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
@@ -17,7 +18,7 @@ import (
 
 type All struct {
 	Network      Network
-	Ocpp         Ocpp
+	Ocpp         ocpp.Config
 	Log          string
 	SponsorToken string
 	Plant        string // telemetry plant id
@@ -156,10 +157,6 @@ type Network struct {
 	Schema string `json:"schema"`
 	Host   string `json:"host"`
 	Port   int    `json:"port"`
-}
-
-type Ocpp struct {
-	Port int `json:"port"`
 }
 
 func (c Network) HostPort() string {

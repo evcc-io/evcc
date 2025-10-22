@@ -37,7 +37,9 @@ type stationStatus struct {
 }
 
 type status struct {
-	Stations []stationStatus `json:"stations"`
+	Port        int             `json:"port"`
+	ExternalUri string          `json:"externalUri,omitempty"`
+	Stations    []stationStatus `json:"stations"`
 }
 
 // status returns the OCPP status
@@ -68,7 +70,9 @@ func (cs *CS) status() status {
 	}
 
 	return status{
-		Stations: stations,
+		Port:        port,
+		ExternalUri: externalUri,
+		Stations:    stations,
 	}
 }
 

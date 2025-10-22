@@ -16,14 +16,16 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
-const (
-	DefaultPort = 8887
-)
+type Config struct {
+	Port        int    `json:"port"`
+	ExternalUri string `json:"externalUri,omitempty" yaml:",omitempty"`
+}
 
 var (
-	once     sync.Once
-	instance *CS
-	port     = DefaultPort
+	once        sync.Once
+	instance    *CS
+	port        = 8887
+	externalUri string
 )
 
 // Status returns the OCPP status
@@ -40,8 +42,9 @@ func Port() int {
 }
 
 // Init initializes the OCPP server
-func Init(ocppPort int) {
-	port = ocppPort
+func Init(cfg Config) {
+	port = cfg.Port
+	externalUri = cfg.ExternalUri
 }
 
 func Instance() *CS {

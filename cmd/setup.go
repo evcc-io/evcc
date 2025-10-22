@@ -68,7 +68,7 @@ var conf = globalconfig.All{
 		Host:   "evcc.local",
 		Port:   7070,
 	},
-	Ocpp: globalconfig.Ocpp{
+	Ocpp: ocpp.Config{
 		Port: 8887,
 	},
 	Mqtt: globalconfig.Mqtt{
@@ -772,8 +772,8 @@ func configureMDNS(conf globalconfig.Network) error {
 }
 
 // setup OCPP
-func configureOCPP(conf *globalconfig.Ocpp) {
-	ocpp.Init(conf.Port)
+func configureOCPP(cfg *ocpp.Config) {
+	ocpp.Init(*cfg)
 }
 
 // setup EEBus

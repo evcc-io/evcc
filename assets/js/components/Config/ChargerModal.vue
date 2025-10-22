@@ -22,12 +22,11 @@
 		@close="$emit('close')"
 	>
 		<template v-if="isOcpp" #template-description>
-			<p>Configuring an OCPP charger is a multi-step process.</p>
+			<p>evcc has a built-in OCPP server. Follow these steps:</p>
 			<ol class="mb-4">
-				<li>evcc has a built-in OCPP server</li>
-				<li>configure this server in your charger</li>
-				<li>evcc detects your chargers identifier (station id)</li>
-				<li>validate and save your configuration</li>
+				<li>Configure your charger to use evcc as OCPP server.</li>
+				<li>Wait for your charger to connect to evcc.</li>
+				<li>Proceed and complete the configuration.</li>
 			</ol>
 		</template>
 
@@ -153,7 +152,12 @@ export default defineComponent({
 		},
 		ocppUrl(): string | null {
 			if (this.isOcpp) {
-				return `ws://${window.location.hostname}:8887/`;
+				// user specified url. e.g. for reverse proxy setups
+				if (this.ocpp.externalUri) {
+					return this.ocpp.externalUri;
+				}
+				const port = this.ocpp.port;
+				return `ws://${window.location.hostname}:${port}/`;
 			}
 			return null;
 		},
