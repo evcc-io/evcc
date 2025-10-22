@@ -201,7 +201,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 				// start heartbeat to keep connection alive
 				go wb.heartbeatSEMP(ctx)
 			} else {
-				log.DEBUG.Println("SEMP phase switching: could set initial SEMP power limit:", err)
+				log.ERROR.Println("SEMP phase switching: could not set initial SEMP power limit:", err)
 			}
 		}
 	}
