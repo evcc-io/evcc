@@ -17,9 +17,7 @@ params:
       en: Homematic device id like shown in the CCU web user interface.
       de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
   - name: user
-    required: false
   - name: password
-    required: false
     mask: true
   - name: meterchannel
     default: 6
