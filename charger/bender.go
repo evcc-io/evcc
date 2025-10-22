@@ -193,7 +193,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 
 	// check feature semp phase switching
 	if phases1p3p == nil {
-		if wb.supportsSEMPPhaseSwitching(log, uri, cache) {
+		if wb.supportsSEMPPhaseSwitching(uri) {
 			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
 				phases1p3p = wb.phases1p3pSEMP
@@ -237,31 +237,31 @@ func (wb *BenderCC) heartbeatSEMP(ctx context.Context) {
 }
 
 // supportsSEMPPhaseSwitching checks if SEMP phase switching is supported by querying device info
-func (wb *BenderCC) supportsSEMPPhaseSwitching(log *util.Logger, uri string, cache time.Duration) bool {
+func (wb *BenderCC) supportsSEMPPhaseSwitching(uri string) bool {
 	wb.semp.Client.Timeout = request.Timeout
-	wb.semp.conn = semp.NewConnection(log, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
+	wb.semp.conn = semp.NewConnection(wb.log, "http://"+strings.Split(uri, ":")[0]+":8888/SimpleEnergyManagementProtocol")
 	wb.semp.deviceG = util.ResettableCached(func() (semp.Device2EM, error) {
 		return wb.semp.conn.GetDeviceXML()
-	}, cache)
+	}, wb.semp.cache)
 
 	doc, err := wb.semp.deviceG.Get()
 	if err != nil {
-		log.DEBUG.Println("SEMP phase switching: cannot get XML", err)
+		wb.log.DEBUG.Println("SEMP phase switching: cannot get XML", err)
 		return false
 	}
 	if len(doc.DeviceInfo) == 0 {
-		log.DEBUG.Println("SEMP phase switching: no devices found")
+		wb.log.DEBUG.Println("SEMP phase switching: no devices found")
 		return false
 	}
 
 	// Use first device ID found
 	wb.semp.deviceID = doc.DeviceInfo[0].Identification.DeviceID
-	log.DEBUG.Printf("SEMP phase switching: found device ID: %s", wb.semp.deviceID)
+	wb.log.DEBUG.Printf("SEMP phase switching: found device ID: %s", wb.semp.deviceID)
 
 	// Check if device supports phase switching by checking power characteristics
 	info, err := wb.getDeviceInfo()
 	if err != nil {
-		log.DEBUG.Println("SEMP phase switching: cannot get device info:", err)
+		wb.log.DEBUG.Println("SEMP phase switching: cannot get device info:", err)
 		return false
 	}
 
@@ -270,7 +270,7 @@ func (wb *BenderCC) supportsSEMPPhaseSwitching(log *util.Logger, uri string, cac
 		info.Characteristics.MaxPowerConsumption > 4600 {
 		return true
 	} else {
-		log.DEBUG.Println("SEMP phase switching: not supported")
+		wb.log.DEBUG.Println("SEMP phase switching: not supported")
 		return false
 	}
 }
