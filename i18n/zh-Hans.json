@@ -610,11 +610,12 @@
       "modalTitle": "充电计划",
       "none": "无",
       "planNumber": "计划 {number}",
-      "preconditionDescription": "出发前充电 {duration} 以进行电池预处理。",
-      "preconditionLong": "延迟充电",
-      "preconditionOptionAll": "全部",
-      "preconditionOptionNo": "否",
-      "preconditionShort": "延迟",
+      "precondition": {
+        "description": "出发前充电 {duration} 以进行电池预处理。",
+        "label": "延迟充电",
+        "optionAll": "全部",
+        "optionNo": "否"
+      },
       "remove": "移除",
       "repeating": "重复",
       "repeatingPlans": "重复计划",

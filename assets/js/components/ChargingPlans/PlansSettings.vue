@@ -47,8 +47,8 @@
 					v-if="showStrategy"
 					type="button"
 					class="btn btn-sm"
-					:class="strategyOpen ? 'btn-secondary border-1' : 'evcc-gray'"
-					data-testid="plan-strategy-toggle"
+					:class="strategyOpen ? 'btn-secondary' : 'evcc-gray'"
+					:aria-label="$t('main.chargingPlan.strategySettings')"
 					tabindex="0"
 					@click="strategyOpen = !strategyOpen"
 				>

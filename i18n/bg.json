@@ -636,11 +636,12 @@
       "modalTitle": "План за зареждане",
       "none": "няма",
       "planNumber": "План {number}",
-      "preconditionDescription": "Зареди за {duration} преди тръгване, за да бъде кондиционирана батерията на автомобила.",
-      "preconditionLong": "Късно зареждане",
-      "preconditionOptionAll": "всичко",
-      "preconditionOptionNo": "не",
-      "preconditionShort": "Късно",
+      "precondition": {
+        "description": "Зареди за {duration} преди тръгване, за да бъде кондиционирана батерията на автомобила.",
+        "label": "Късно зареждане",
+        "optionAll": "всичко",
+        "optionNo": "не"
+      },
       "remove": "Премахване",
       "repeating": "повтарящ се",
       "repeatingPlans": "Повтарящи се планове",

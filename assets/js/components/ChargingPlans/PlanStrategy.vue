@@ -5,21 +5,20 @@
 				<div class="col-12 col-sm-6 col-lg-3 offset-lg-3 mb-3">
 					<div class="row">
 						<label :for="formId('continuous')" class="col-form-label col-5 col-sm-12">
-							{{ $t("main.chargingPlan.optimizationLong") }}
+							{{ $t("main.chargingPlan.optimization.label") }}
 						</label>
 						<div class="col-7 col-sm-12">
 							<select
 								:id="formId('continuous')"
 								v-model="localContinuous"
 								class="form-select"
-								data-testid="plan-strategy-continuous"
 								@change="updateStrategy"
 							>
 								<option :value="false">
-									{{ $t("main.chargingPlan.cheap") }}
+									{{ $t("main.chargingPlan.optimization.cheapest") }}
 								</option>
 								<option :value="true">
-									{{ $t("main.chargingPlan.continuous") }}
+									{{ $t("main.chargingPlan.optimization.continuous") }}
 								</option>
 							</select>
 						</div>
@@ -28,18 +27,17 @@
 				<div class="col-sm-6 col-lg-3 mb-3">
 					<div class="row">
 						<label :for="formId('precondition')" class="col-form-label col-5 col-sm-12">
-							{{ $t("main.chargingPlan.preconditionLong") }}
+							{{ $t("main.chargingPlan.precondition.label") }}
 						</label>
 						<div class="col-7 col-sm-12">
 							<select
 								:id="formId('precondition')"
 								v-model="localPrecondition"
 								class="form-select"
-								data-testid="plan-strategy-precondition"
 								@change="updateStrategy"
 							>
 								<option :value="0">
-									{{ $t("main.chargingPlan.preconditionOptionNo") }}
+									{{ $t("main.chargingPlan.precondition.optionNo") }}
 								</option>
 								<option
 									v-for="opt in preconditionOptions"
@@ -98,7 +96,7 @@ export default defineComponent({
 				value: s,
 				name:
 					s === EVERYTHING
-						? this.$t("main.chargingPlan.preconditionOptionAll")
+						? this.$t("main.chargingPlan.precondition.optionAll")
 						: this.fmtDurationLong(s),
 			}));
 		},

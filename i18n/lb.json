@@ -773,11 +773,12 @@
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
       "planNumber": "Planifkatioun {number}",
-      "preconditionDescription": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
-      "preconditionLong": "Verspéit Lueden",
-      "preconditionOptionAll": "Alles",
-      "preconditionOptionNo": "Nee",
-      "preconditionShort": "Spéit",
+      "precondition": {
+        "description": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
+        "label": "Verspéit Lueden",
+        "optionAll": "Alles",
+        "optionNo": "Nee"
+      },
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
