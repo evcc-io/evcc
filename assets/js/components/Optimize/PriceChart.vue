@@ -133,7 +133,7 @@ export default defineComponent({
 							},
 							label: (context) => {
 								const label = context.dataset.label || "";
-								const value = context.parsed.y;
+								const value = context.parsed.y ?? 0;
 								// Price axis (currency/kWh)
 								return `${label}: ${this.formatPrice(value)}`;
 							},

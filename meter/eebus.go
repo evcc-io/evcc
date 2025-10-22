@@ -6,7 +6,6 @@ import (
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
-	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
@@ -16,30 +15,20 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 )
 
-// EEBus is an EEBus meter implementation supporting MGCP, MPC, and LPC use cases
+// EEBus is an EEBus meter implementation supporting MGCP and MPC use cases
 // Uses MGCP (Monitoring of Grid Connection Point) only when usage="grid"
 // Uses MPC (Monitoring & Power Consumption) for all other cases (default)
-// Additionally supports LPC (Limitation of Power Consumption)
 type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	uc  *eebus.UseCasesCS
-	api monitoringAPI
+	ma *eebus.MonitoringAppliance
+	mm measurements
 
 	power    *util.Value[float64]
 	energy   *util.Value[float64]
 	currents *util.Value[[]float64]
 	voltages *util.Value[[]float64]
-}
-
-// monitoringAPI provides a unified interface for MGCP and MPC use cases
-type monitoringAPI struct {
-	measurements
-	powerEvent   eebusapi.EventType
-	energyEvent  eebusapi.EventType
-	currentEvent eebusapi.EventType
-	voltageEvent eebusapi.EventType
 }
 
 type measurements interface {
@@ -78,33 +67,21 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 		return nil, errors.New("eebus not configured")
 	}
 
-	cs := eebus.Instance.ControllableSystem()
+	ma := eebus.Instance.MonitoringAppliance()
 
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
-	api := monitoringAPI{
-		measurements: cs.MPC,
-		powerEvent:   mpc.DataUpdatePower,
-		energyEvent:  mpc.DataUpdateEnergyConsumed,
-		currentEvent: mpc.DataUpdateCurrentsPerPhase,
-		voltageEvent: mpc.DataUpdateVoltagePerPhase,
-	}
+	mm := measurements(ma.MaMPCInterface)
 
 	if usage != nil && *usage == templates.UsageGrid {
 		useCase = "mgcp"
-		api = monitoringAPI{
-			measurements: cs.MGCP,
-			powerEvent:   mgcp.DataUpdatePower,
-			energyEvent:  mgcp.DataUpdateEnergyConsumed,
-			currentEvent: mgcp.DataUpdateCurrentPerPhase,
-			voltageEvent: mgcp.DataUpdateVoltagePerPhase,
-		}
+		mm = ma.MaMGCPInterface
 	}
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
-		uc:        cs,
-		api:       api,
+		ma:        ma,
+		mm:        mm,
 		Connector: eebus.NewConnector(),
 		power:     util.NewValue[float64](timeout),
 		energy:    util.NewValue[float64](timeout),
@@ -131,19 +108,19 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	c.log.TRACE.Printf("recv: %s", event)
 
 	switch event {
-	case c.api.powerEvent:
+	case mpc.DataUpdatePower, mgcp.DataUpdatePower:
 		c.dataUpdatePower(entity)
-	case c.api.energyEvent:
+	case mpc.DataUpdateEnergyConsumed, mgcp.DataUpdateEnergyConsumed:
 		c.dataUpdateEnergyConsumed(entity)
-	case c.api.currentEvent:
+	case mpc.DataUpdateCurrentsPerPhase, mgcp.DataUpdateCurrentPerPhase:
 		c.dataUpdateCurrentPerPhase(entity)
-	case c.api.voltageEvent:
+	case mpc.DataUpdateVoltagePerPhase, mgcp.DataUpdateVoltagePerPhase:
 		c.dataUpdateVoltagePerPhase(entity)
 	}
 }
 
 func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.Power(entity)
+	data, err := c.mm.Power(entity)
 	if err != nil {
 		c.log.ERROR.Println("Power:", err)
 		return
@@ -153,7 +130,7 @@ func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 }
 
 func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.EnergyConsumed(entity)
+	data, err := c.mm.EnergyConsumed(entity)
 	if err != nil {
 		c.log.ERROR.Println("EnergyConsumed:", err)
 		return
@@ -164,7 +141,7 @@ func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) 
 }
 
 func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.CurrentPerPhase(entity)
+	data, err := c.mm.CurrentPerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("CurrentPerPhase:", err)
 		return
@@ -173,7 +150,7 @@ func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface)
 }
 
 func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
-	data, err := c.api.VoltagePerPhase(entity)
+	data, err := c.mm.VoltagePerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("VoltagePerPhase:", err)
 		return
@@ -222,37 +199,4 @@ func (c *EEBus) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, errors.New("invalid phase voltages")
 	}
 	return res[0], res[1], res[2], nil
-}
-
-var _ api.Dimmer = (*EEBus)(nil)
-
-// Dimmed implements the api.Dimmer interface
-func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.uc.LPC.ConsumptionLimit()
-	if err != nil {
-		// No limit available means not dimmed
-		return false, nil
-	}
-
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
-}
-
-// Dim implements the api.Dimmer interface
-func (c *EEBus) Dim(dim bool) error {
-	// Sets or removes the consumption power limit
-
-	// TODO: change api.Dimmer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
-
-	var value float64
-	if dim {
-		value = limit
-	}
-
-	return c.uc.LPC.SetConsumptionLimit(ucapi.LoadLimit{
-		Value:    value,
-		IsActive: dim,
-	})
 }
