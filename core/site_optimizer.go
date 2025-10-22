@@ -215,7 +215,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 
 			// add demand for smartcost limit
-			if smartLimit := lp.GetSmartCostLimit(); smartLimit != nil {				
+			if smartLimit := lp.GetSmartCostLimit(); smartLimit != nil {
 				isLimitHit := slices.ContainsFunc(grid[:min(minLen, len(grid))], func(r api.Rate) bool { return r.Value <= *smartLimit })
 				if isLimitHit {
 					pwr := lp.EffectiveMaxPower()
