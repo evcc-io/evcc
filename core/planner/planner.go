@@ -172,6 +172,14 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		return t.continuousPlan(rates, latestStart, targetTime)
 	}
 
+	// cut off all rates after target time
+	for i := range len(rates) {
+		if !rates[i].Start.Before(targetTime) {
+			rates = rates[:i]
+			break
+		}
+	}
+
 	// rates are by default sorted by date, oldest to newest
 	last := rates[len(rates)-1].End
 
@@ -202,45 +210,41 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	plan := t.plan(rates, requiredDuration, targetTime)
 
-	// correct plan slots to show original, non-adjusted prices
-	for i, r := range plan {
-		if rr, err := adjusted.At(r.Start); err == nil {
-			plan[i].Value = rr.Value
-		}
-	}
-
 	// sort plan by time
 	plan.Sort()
+
+	// correct plan slots to show original, non-adjusted prices
+	if len(adjusted) > 0 {
+		adjusted.Sort()
+		length := len(plan) - 1
+
+		// range back to front to start with late slots that might be affected by preconditioning
+		for i := range plan {
+			if rr, err := adjusted.At(plan[length-i].Start); err == nil {
+				plan[length-i].Value = rr.Value
+			} else {
+				// stop once we've found a non-preconditioning slot
+				break
+			}
+		}
+	}
 
 	return plan
 }
 
 func splitPreconditionSlots(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+	if precondition == 0 {
+		// no precondition slots
+		return rates, nil
+	}
+
 	var res, adjusted api.Rates
+	preCondStart := targetTime.Add(-precondition)
 
 	for _, r := range slices.Clone(rates) {
-		preCondStart := targetTime.Add(-precondition)
-
 		if !r.End.After(preCondStart) {
 			res = append(res, r)
 			continue
-		}
-
-		// split slot
-		if !r.Start.After(preCondStart) {
-			// keep the first part of the slot
-			res = append(res, api.Rate{
-				Start: r.Start,
-				End:   preCondStart,
-				Value: r.Value,
-			})
-
-			// adjust the second part of the slot
-			r = api.Rate{
-				Start: preCondStart,
-				End:   r.End,
-				Value: r.Value,
-			}
 		}
 
 		// set the value to 0 to include slot in the plan
