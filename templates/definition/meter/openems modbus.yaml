@@ -1,0 +1,243 @@
+template: openems-modbus
+products:
+  - brand: OpenEMS
+  - brand: FENECON
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (Modbus-API).
+    en: |
+      A commercial license is required for FEMS FENECON systems for active battery control (Modbus-API).
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+    description:
+      de: Hostname oder IP-Adresse des FEMS/OpenEMS
+      en: Hostname or IP address of the FEMS/OpenEMS
+  - name: modbus_id
+    type: int
+    description:
+      de: Modbus TCP Geräte-ID
+      en: Modbus TCP device ID
+    default: 1
+    advanced: true
+  - name: modbus_port
+    type: int
+    description:
+      de: Modbus TCP Port
+      en: Modbus TCP port
+    default: 502
+    advanced: true
+  - name: grid_power_register
+    type: int
+    default: 315
+    description:
+      de: Modbus-Register für Netzleistung (GridActivePower)
+      en: Modbus register for grid power (GridActivePower)
+    usages: ["grid"]
+    advanced: true
+  - name: grid_energy_register
+    type: int
+    default: 359
+    description:
+      de: Modbus-Register für Netzbezug Energie (GridBuyActiveEnergy)
+      en: Modbus register for grid import energy (GridBuyActiveEnergy)
+    usages: ["grid"]
+    advanced: true
+  - name: pv_power_register
+    type: int
+    default: 327
+    description:
+      de: Modbus-Register für PV-Leistung (ProductionActivePower)
+      en: Modbus register for PV power (ProductionActivePower)
+    usages: ["pv"]
+    advanced: true
+  - name: pv_energy_register
+    type: int
+    default: 367
+    description:
+      de: Modbus-Register für PV-Energie (ProductionActiveEnergy)
+      en: Modbus register for PV energy (ProductionActiveEnergy)
+    usages: ["pv"]
+    advanced: true
+  - name: battery_power_register
+    type: int
+    default: 415
+    description:
+      de: Modbus-Register für Batterie-Leistung (z. B. EssDischargePower)
+      en: Modbus register for battery power (e.g., EssDischargePower)
+    usages: ["battery"]
+    advanced: true
+  - name: battery_soc_register
+    type: int
+    default: 302
+    description:
+      de: Modbus-Register für Batteriestand (SoC)
+      en: Modbus register for state of charge (SoC)
+    usages: ["battery"]
+    advanced: true
+  - name: battery_set_register
+    type: int
+    default: 710
+    description:
+      de: Modbus-Register für SetActivePowerLessOrEquals (Schreibbefehl)
+      en: Modbus register for SetActivePowerLessOrEquals (write)
+    usages: ["battery"]
+    advanced: true
+  - name: battery
+    type: bool
+    default: false
+    description:
+      de: Aktiviert Schreibzugriffe (Batteriesteuerung) via Modbus
+      en: Enables write access (battery control) via Modbus
+    usages: ["battery"]
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    help:
+      de: abgestimmt auf das API-Timeout
+      en: adjusted to the API timeout
+    usages: ["battery"]
+    advanced: true
+  - name: minsoc
+    description:
+      de: Untere SoC-Grenze in Prozent
+      en: Lower SoC limit in percent
+  - name: maxsoc
+    description:
+      de: Obere SoC-Grenze in Prozent
+      en: Upper SoC limit in percent
+  - name: capacity
+    advanced: true
+    description:
+      de: Batteriekapazität in kWh
+      en: Battery capacity in kWh
+  - name: maxchargepower
+    type: int
+    default: 4200
+    description:
+      de: Maximale Ladeleistung der Batterie in Watt
+      en: Maximum battery charge power in watts
+  - name: maxdischargepower
+    type: int
+    description:
+      de: Maximale Entladeleistung der Batterie in Watt
+      en: Maximum battery discharge power in watts
+  - name: maxacpower
+    type: int
+    description:
+      de: Maximal zulässige AC-Leistung
+      en: Maximum allowed AC power
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: {{ .grid_power_register }} # GridActivePower (W)
+      type: input
+      encoding: float32
+  energy:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: {{ .grid_energy_register }} # GridBuyActiveEnergy (Wh)
+      type: holding
+      encoding: float64
+    scale: 0.001 # Wh -> kWh
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: {{ .pv_power_register }} # ProductionActivePower (W)
+      type: input
+      encoding: float32
+  energy:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: {{ .pv_energy_register }} # ProductionActiveEnergy (Wh)
+      type: holding
+      encoding: float64
+    scale: 0.001 # Wh -> kWh
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: {{ .battery_power_register }} # EssDischargePower (W)
+      type: input
+      encoding: float32
+  soc:
+    source: modbus
+    id: {{ .modbus_id }}
+    uri: {{ .host }}:{{ .modbus_port }}
+    register:
+      address: {{ .battery_soc_register }} # EssSoc (%)
+      type: input
+      encoding: uint16
+  {{- if .battery }}
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    reset: 1
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 0
+          set:
+            source: modbus
+            id: {{ .modbus_id }}
+            uri: {{ .host }}:{{ .modbus_port }}
+            register:
+              address: {{ .battery_set_register }} # SetActivePowerLessOrEquals (W)
+              type: writemultiple
+              encoding: float32
+      - case: 2 # hold
+        set:
+          source: const
+          value: 0
+        set:
+          source: modbus
+          id: {{ .modbus_id }}
+          uri: {{ .host }}:{{ .modbus_port }}
+          register:
+            address: {{ .battery_set_register }}
+            type: writemultiple
+            encoding: float32
+      - case: 3 # charge
+        set:
+          source: const
+          value: {{ mul .maxchargepower -1 }} # charge power is negative
+          set:
+            source: modbus
+            id: {{ .modbus_id }}
+            uri: {{ .host }}:{{ .modbus_port }}
+            register:
+              address: {{ .battery_set_register }}
+              type: writemultiple
+              encoding: float32
+  {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
