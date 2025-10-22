@@ -1,7 +1,7 @@
 template: openems
 products:
-  - brand: OpenEMS
-  - brand: FENECON
+  - brand: OpenEMS (Rest API)
+  - brand: FENECON (Rest API)
 capabilities: ["battery-control"]
 requirements:
   description:
