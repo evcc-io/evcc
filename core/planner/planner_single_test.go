@@ -54,12 +54,11 @@ func TestSinglePlanContinuousWindow(t *testing.T) {
 
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // single continuous mode
 
-	require.Len(t, plan, 1, "should create a single continuous slot")
-	assert.Equal(t, rates[2].Start, plan[0].Start, "start of the plan should match cheapest slot")
-	assert.Equal(t, rates[3].End, plan[0].End, "end of the plan should match cheapest slot")
-
-	const delta = 0.01
-	assert.InDelta(t, 0.105, plan[0].Value, delta, "plan value should be the cheapest")
+	require.Len(t, plan, 2, "should create slots with actual prices")
+	assert.Equal(t, rates[2].Start, plan[0].Start, "start of the plan should match cheapest window")
+	assert.Equal(t, rates[3].End, plan[len(plan)-1].End, "end of the plan should match cheapest window")
+	assert.Equal(t, rates[2].Value, plan[0].Value, "first slot should have actual price")
+	assert.Equal(t, rates[3].Value, plan[1].Value, "second slot should have actual price")
 }
 
 // TestContinuousWindowWithPastRates tests that plans in continuous mode
@@ -99,20 +98,18 @@ func TestContinuousWindowWithPastRates(t *testing.T) {
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
-	require.Len(t, plan, 1, "should create a single continuous slot")
+	require.Len(t, plan, 2, "should create slots with actual prices")
 
 	// Critical assertion: plan must not start in the past
 	assert.False(t, plan[0].Start.Before(now), "plan must not start in the past")
 	assert.GreaterOrEqual(t, plan[0].Start.Unix(), now.Unix(), "plan start must be >= now")
 
 	// Plan should find the cheapest 2-hour window in the future
-	// Expected: 1h-3h (avg price = (0.09 + 0.10) / 2 = 0.095)
+	// Expected: 1h-3h (two slots with prices 0.09 and 0.10)
 	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "start should be at the cheapest future window")
-	assert.Equal(t, now.Add(3*time.Hour), plan[0].End, "end should match 2-hour window")
-
-	const delta = 0.01
-	expectedAvgPrice := (0.09 + 0.10) / 2
-	assert.InDelta(t, expectedAvgPrice, plan[0].Value, delta, "plan value should be weighted average of cheapest window")
+	assert.Equal(t, now.Add(3*time.Hour), plan[len(plan)-1].End, "end should match 2-hour window")
+	assert.Equal(t, 0.09, plan[0].Value, "first slot should have actual price")
+	assert.Equal(t, 0.10, plan[1].Value, "second slot should have actual price")
 }
 
 // TestContinuousWindowAllRatesInPast tests the edge case where all rates are in the past
@@ -185,20 +182,18 @@ func TestContinuousWindowRatesSpanningPastAndFuture(t *testing.T) {
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
-	require.Len(t, plan, 1, "should create a single continuous slot")
+	require.Len(t, plan, 2, "should create slots with actual prices")
 
 	// Critical: plan must start at or after now, even if cheaper rates existed in the past
 	assert.False(t, plan[0].Start.Before(now), "plan must not start in the past")
 	assert.GreaterOrEqual(t, plan[0].Start.Unix(), now.Unix(), "plan start must be >= now")
 
 	// Should find cheapest 2-hour window starting from now or later
-	// Expected: 1h-3h window (0.08 + 0.09) / 2 = 0.085
+	// Expected: 1h-3h window (two slots with prices 0.08 and 0.09)
 	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "start should be at cheapest future window")
-	assert.Equal(t, now.Add(3*time.Hour), plan[0].End, "end should match 2-hour window")
-
-	const delta = 0.01
-	expectedAvgPrice := (0.08 + 0.09) / 2
-	assert.InDelta(t, expectedAvgPrice, plan[0].Value, delta, "plan value should be weighted average")
+	assert.Equal(t, now.Add(3*time.Hour), plan[len(plan)-1].End, "end should match 2-hour window")
+	assert.Equal(t, 0.08, plan[0].Value, "first slot should have actual price")
+	assert.Equal(t, 0.09, plan[1].Value, "second slot should have actual price")
 }
 
 // TestContinuousWindowRatesStartInFuture tests continuous mode when tariff data
@@ -232,20 +227,18 @@ func TestContinuousWindowRatesStartInFuture(t *testing.T) {
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
-	require.Len(t, plan, 1, "should create a single continuous slot")
+	require.Len(t, plan, 2, "should create slots with actual prices")
 
 	// Plan must not start in the past
 	assert.False(t, plan[0].Start.Before(now), "plan must not start in the past")
 	assert.GreaterOrEqual(t, plan[0].Start.Unix(), now.Unix(), "plan start must be >= now")
 
 	// Should find cheapest 2-hour window within available rates
-	// Expected: 2h-4h window (0.08 + 0.09) / 2 = 0.085
+	// Expected: 2h-4h window (two slots with prices 0.08 and 0.09)
 	assert.Equal(t, now.Add(2*time.Hour), plan[0].Start, "start should be at cheapest window in future rates")
-	assert.Equal(t, now.Add(4*time.Hour), plan[0].End, "end should match 2-hour window")
-
-	const delta = 0.01
-	expectedAvgPrice := (0.08 + 0.09) / 2
-	assert.InDelta(t, expectedAvgPrice, plan[0].Value, delta, "plan value should be weighted average")
+	assert.Equal(t, now.Add(4*time.Hour), plan[len(plan)-1].End, "end should match 2-hour window")
+	assert.Equal(t, 0.08, plan[0].Value, "first slot should have actual price")
+	assert.Equal(t, 0.09, plan[1].Value, "second slot should have actual price")
 }
 
 // TestContinuousWindowLateChargingPreference tests that when multiple windows
@@ -285,15 +278,13 @@ func TestContinuousWindowLateChargingPreference(t *testing.T) {
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
-	require.Len(t, plan, 1, "should create a single continuous slot")
+	require.Len(t, plan, 2, "should create slots with actual prices")
 
 	// Should select the latest window with equal cost (3h-5h)
 	// All windows from 0h-2h, 1h-3h, 2h-4h, and 3h-5h have the same total cost
 	// But we prefer late charging, so 3h-5h should be selected
 	assert.Equal(t, now.Add(3*time.Hour), plan[0].Start, "should select latest window with equal cost")
-	assert.Equal(t, now.Add(5*time.Hour), plan[0].End, "end should be 2 hours after start")
-
-	const delta = 0.01
-	expectedAvgPrice := 0.10
-	assert.InDelta(t, expectedAvgPrice, plan[0].Value, delta, "plan value should be 0.10")
+	assert.Equal(t, now.Add(5*time.Hour), plan[len(plan)-1].End, "end should be 2 hours after start")
+	assert.Equal(t, 0.10, plan[0].Value, "first slot should have actual price")
+	assert.Equal(t, 0.10, plan[1].Value, "second slot should have actual price")
 }

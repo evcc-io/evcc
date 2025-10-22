@@ -144,9 +144,9 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 // The algorithm:
 // 1. Generates all possible window start points from rate boundaries
 // 2. For each valid window, calculates the total cost based on overlapping rate slots
-// 3. Returns the window with minimal cost as a single merged slot with weighted average price
+// 3. Returns the window with minimal cost
 //
-// Returns: best plan as a single rate slot with weighted average price, and the total cost
+// Returns: best plan and the total cost
 func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
 	now := t.clock.Now()
 
@@ -239,24 +239,78 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 	t.log.TRACE.Printf("findOptimalContinuousWindow: checked %d windows, bestPlan has %d slots, minCost=%.3f",
 		windowsChecked, len(bestPlan), minCost)
 
-	// Merge individual slots into a single continuous slot with weighted average price
+	// Return plan with actual prices per slot
 	if len(bestPlan) > 0 {
-		// Calculate weighted average price per kWh using the already computed minCost
-		avgPrice := minCost / effectiveDuration.Hours()
-
-		mergedSlot := api.Rate{
-			Start: bestPlan[0].Start,
-			End:   bestPlan[len(bestPlan)-1].End,
-			Value: avgPrice,
-		}
-
-		t.log.TRACE.Printf("findOptimalContinuousWindow: merged plan start=%v, end=%v, avgPrice=%.3f/kWh, totalCost=%.3f",
-			mergedSlot.Start.Round(time.Second), mergedSlot.End.Round(time.Second), avgPrice, minCost)
-
-		bestPlan = api.Rates{mergedSlot}
+		t.log.TRACE.Printf("findOptimalContinuousWindow: plan start=%v, end=%v, slots=%d, totalCost=%.3f",
+			bestPlan[0].Start.Round(time.Second), bestPlan[len(bestPlan)-1].End.Round(time.Second), len(bestPlan), minCost)
 	}
 
 	return bestPlan, minCost
+}
+
+// applyPreconditionToPlan adds preconditioning to an existing plan and adjusts timing.
+// This is used by both continuous and cost-minimized planning modes.
+func (t *Planner) applyPreconditionToPlan(plan api.Rates, rates api.Rates, effectiveDuration, precondition time.Duration, targetTime time.Time, useContinuous bool) api.Rates {
+	// Apply "start as late as possible" logic by shifting individual slots
+	// Each slot is only shifted within its own rate window
+	if len(plan) > 0 && precondition > 0 && useContinuous {
+		// Process each slot individually
+		for i := range plan {
+			slot := &plan[i]
+			
+			// Find the rate(s) that contain this slot
+			for _, rate := range rates {
+				// Check if this rate contains the start of the slot
+				if rate.Start.After(slot.Start) {
+					continue
+				}
+				if rate.End.Before(slot.Start) || rate.End.Equal(slot.Start) {
+					continue
+				}
+				
+				// This rate contains the start of our slot
+				// Calculate how much space is available within this rate
+				availableSpace := rate.End.Sub(slot.End)
+				
+				if availableSpace > 0 {
+					// We can shift this slot later within its rate window
+					shift := availableSpace
+					
+					// But we need to ensure the slot doesn't overlap with the next slot
+					if i+1 < len(plan) {
+						nextSlot := plan[i+1]
+						maxShiftUntilNextSlot := nextSlot.Start.Sub(slot.End)
+						if maxShiftUntilNextSlot < shift {
+							shift = maxShiftUntilNextSlot
+						}
+					}
+					
+					// Apply the shift to this slot
+					if shift > 0 {
+						slot.Start = slot.Start.Add(shift)
+						slot.End = slot.End.Add(shift)
+						t.log.TRACE.Printf("shifted slot %d: shift=%v, new start=%v, new end=%v", 
+							i, shift, slot.Start, slot.End)
+					}
+				}
+				
+				break // Found the containing rate, no need to continue
+			}
+		}
+	}
+
+	// Add preconditioning at the end
+	if precondition > 0 {
+		preCondStart := targetTime.Add(-precondition)
+		preCondPlan := t.continuousPlan(rates, preCondStart, targetTime)
+		t.log.TRACE.Printf("adding preconditioning: start=%v, end=%v", preCondStart, targetTime)
+		plan = append(plan, preCondPlan...)
+	}
+
+	// Sort plan by time
+	plan.Sort()
+
+	return plan
 }
 
 // Plan creates a charging plan based on the configured or passed-in mode
@@ -328,11 +382,17 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		t.log.TRACE.Printf("using continuous mode: requiredDuration=%v, precondition=%v", requiredDuration, precondition)
 
 		effectiveDuration := requiredDuration
+		preCondWindow := targetTime
 		if precondition > 0 {
 			effectiveDuration -= precondition
+			preCondWindow = targetTime.Add(-precondition)
 		}
 
-		preCondWindow := targetTime.Add(-precondition)
+		// if entire duration is preconditioning, skip planning
+		if effectiveDuration <= 0 {
+			return t.continuousPlan(rates, targetTime.Add(-precondition), targetTime)
+		}
+
 		t.log.TRACE.Printf("searching optimal window: effectiveDuration=%v, preCondWindow=%v", effectiveDuration, preCondWindow)
 
 		plan, cost := t.findOptimalContinuousWindow(rates, effectiveDuration, preCondWindow)
@@ -342,83 +402,30 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 			return t.continuousPlan(rates, latestStart, targetTime)
 		}
 
-		t.log.TRACE.Printf("found optimal window: start=%v, end=%v, cost=%.3f", plan[0].Start, plan[0].End, cost)
+		t.log.TRACE.Printf("found optimal window: start=%v, end=%v, slots=%d, cost=%.3f",
+			plan[0].Start, plan[len(plan)-1].End, len(plan), cost)
 
-		// add preconditioning at the end
-		if precondition > 0 {
-			preCondStart := targetTime.Add(-precondition)
-			preCondPlan := t.continuousPlan(rates, preCondStart, targetTime)
-			t.log.TRACE.Printf("adding preconditioning: start=%v, end=%v", preCondStart, targetTime)
-			plan = append(plan, preCondPlan...)
-		}
-
-		// sort plan by time
-		plan.Sort()
-
-		return plan
+		// add preconditioning and adjust timing
+		return t.applyPreconditionToPlan(plan, rates, effectiveDuration, precondition, targetTime, useContinuous)
 	}
 
 	// default mode: cheapest combination of slots
-	slices.SortStableFunc(rates, sortByCost)
-
-	rates, adjusted := splitPreconditionSlots(rates, precondition, targetTime)
-
-	// sort rates by price and time
-	slices.SortStableFunc(rates, sortByCost)
-
-	plan := t.plan(rates, requiredDuration, targetTime)
-
-	// correct plan slots to show original, non-adjusted prices
-	for i, r := range plan {
-		if rr, err := adjusted.At(r.Start); err == nil {
-			plan[i].Value = rr.Value
-		}
+	effectiveDuration := requiredDuration
+	preCondWindow := targetTime
+	if precondition > 0 {
+		effectiveDuration -= precondition
+		preCondWindow = targetTime.Add(-precondition)
 	}
 
-	// sort plan by time
-	plan.Sort()
-
-	return plan
-}
-
-func splitPreconditionSlots(rates api.Rates, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
-	var res, adjusted api.Rates
-
-	for _, r := range slices.Clone(rates) {
-		preCondStart := targetTime.Add(-precondition)
-
-		if !r.End.After(preCondStart) {
-			res = append(res, r)
-			continue
-		}
-
-		// split slot
-		if !r.Start.After(preCondStart) {
-			// keep the first part of the slot
-			res = append(res, api.Rate{
-				Start: r.Start,
-				End:   preCondStart,
-				Value: r.Value,
-			})
-
-			// adjust the second part of the slot
-			r = api.Rate{
-				Start: preCondStart,
-				End:   r.End,
-				Value: r.Value,
-			}
-		}
-
-		// set the value to 0 to include slot in the plan
-		res = append(res, api.Rate{
-			Start: r.Start,
-			End:   r.End,
-			Value: 0,
-		})
-
-		// keep a copy of the adjusted slot
-		adjusted = append(adjusted, r)
+	// if entire duration is preconditioning, skip planning
+	if effectiveDuration <= 0 {
+		return t.continuousPlan(rates, targetTime.Add(-precondition), targetTime)
 	}
 
-	return res, adjusted
+	slices.SortStableFunc(rates, sortByCost)
+
+	plan := t.plan(rates, effectiveDuration, preCondWindow)
+
+	// add preconditioning and adjust timing
+	return t.applyPreconditionToPlan(plan, rates, effectiveDuration, precondition, targetTime, useContinuous)
 }
