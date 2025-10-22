@@ -40,7 +40,7 @@
       "chargers": "Chargeurs VE",
       "generic": "Intégrations génériques",
       "heatingdevices": "Dispositif de chauffage",
-      "ocppHelp": "Copier cette adresse dans votre configuration de chargeurs.",
+      "ocppHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur ajoutera automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier l'identifiant manuellement. Exemple : `{url}`",
       "ocppLabel": "URL du serveur OCPP",
       "switchsockets": "Prises commutables",
       "template": "Fabricant",

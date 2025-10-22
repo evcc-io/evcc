@@ -40,7 +40,7 @@
       "chargers": "EV opladere",
       "generic": "Generisk integration",
       "heatingdevices": "Varmeenheder",
-      "ocppHelp": "Kopier denne adresse til opladerens konfiguration.",
+      "ocppHelp": "Kopier denne URL til konfigurationen af din oplader. Se producentens manual for detaljer. Opladeren vil automatisk tilføje sin unikke identifikator (stations-ID) til URL'en. I sjældne tilfælde skal du muligvis angive identifikatoren manuelt. Eksempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",

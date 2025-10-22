@@ -40,7 +40,7 @@
       "chargers": "EV punjači",
       "generic": "Standardne integracije",
       "heatingdevices": "Uređaji za grijanje",
-      "ocppHelp": "Unesite ovu adresu u konfiguraciju punjača.",
+      "ocppHelp": "Kopirajte ovaj URL u konfiguraciju svog punjača. Provjerite upute proizvođača za detalje. Punjač će automatski dodati svoj jedinstveni identifikator (ID stanice) na URL. U rijetkim slučajevima možda ćete morati ručno odrediti identifikator. Primjer: `{url}`",
       "ocppLabel": "URL OCPP poslužitelja",
       "switchsockets": "Upravljive utičnice",
       "template": "Proizvođač",
