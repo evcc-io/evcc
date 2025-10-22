@@ -17,12 +17,13 @@ import (
 )
 
 const (
-	Port = 8887
+	DefaultPort = 8887
 )
 
 var (
 	once     sync.Once
 	instance *CS
+	port     = DefaultPort
 )
 
 // Status returns the OCPP status
@@ -31,6 +32,16 @@ func Status() status {
 		return status{}
 	}
 	return instance.status()
+}
+
+// Port returns the configured OCPP port
+func Port() int {
+	return port
+}
+
+// Init initializes the OCPP server
+func Init(ocppPort int) {
+	port = ocppPort
 }
 
 func Instance() *CS {
@@ -67,7 +78,7 @@ func Instance() *CS {
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 
 		go instance.errorHandler(cs.Errors())
-		go cs.Start(Port, "/{ws}")
+		go cs.Start(port, "/{ws}")
 
 		// wait for server to start
 		for range time.Tick(10 * time.Millisecond) {

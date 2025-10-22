@@ -20,6 +20,11 @@ function workerPort() {
   return 11000 + index;
 }
 
+function ocppPort() {
+  const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
+  return 12000 + index;
+}
+
 function logPrefix() {
   return `[worker:${process.env["TEST_WORKER_INDEX"]}]`;
 }
@@ -95,14 +100,26 @@ async function _restoreDatabase(sqlDumps: string) {
 async function _start(config?: string, flags: string | string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
-  log(`wait until port ${port} is available`);
-  // wait for port to be available
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  const ocpp = ocppPort();
+
+  // Kill any processes that might be using our ports
+  try {
+    await killPort(port);
+    await killPort(ocpp);
+  } catch {
+    // Ports were not in use, which is fine
+  }
+
+  log(`starting evcc on ports ${port} (HTTP) and ${ocpp} (OCPP)`);
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
-  log("starting evcc", { config, port, additionalFlags });
+  log("starting evcc", { config, port, ocpp, additionalFlags });
   const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
-    env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
+    env: {
+      EVCC_NETWORK_PORT: port.toString(),
+      EVCC_OCPP_PORT: ocpp.toString(),
+      EVCC_DATABASE_DSN: dbPath(),
+    },
     stdio: ["pipe", "pipe", "pipe"],
   });
   const steamLog = createSteamLog();

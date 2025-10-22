@@ -17,6 +17,7 @@ import (
 
 type All struct {
 	Network      Network
+	Ocpp         Ocpp
 	Log          string
 	SponsorToken string
 	Plant        string // telemetry plant id
@@ -155,6 +156,10 @@ type Network struct {
 	Schema string `json:"schema"`
 	Host   string `json:"host"`
 	Port   int    `json:"port"`
+}
+
+type Ocpp struct {
+	Port int `json:"port"`
 }
 
 func (c Network) HostPort() string {

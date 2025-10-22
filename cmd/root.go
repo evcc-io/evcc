@@ -170,7 +170,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS.SetUpdated(func() {
 		valueChan <- util.Param{Key: keys.Ocpp, Val: ocpp.Status()}
 	})
-	log.INFO.Printf("OCPP listening at ws://127.0.0.1:%d/<stationId>", ocpp.Port)
+	log.INFO.Printf("OCPP listening at ws://127.0.0.1:%d/<stationId>", ocpp.Port())
 
 	// value cache
 	cache := util.NewParamCache()
