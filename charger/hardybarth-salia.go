@@ -45,7 +45,7 @@ type Salia struct {
 	log     *util.Logger
 	uri     string
 	current int64
-	fw      int // 2 if fw 2.0 3 if fw >= 2.3.0
+	fw      int // 2 if fw 2.0 3 if fw >= 2.3.64 (oldest firmware we seen with the new behavior)
 	apiG    util.Cacheable[salia.Api]
 }
 
@@ -116,7 +116,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 		wb.fw = 2
 	}
 
-	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.3.0"))) {
+	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.3.64"))) {
 		wb.fw = 3
 	}
 
