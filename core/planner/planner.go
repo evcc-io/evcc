@@ -173,9 +173,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	}
 
 	// cut off all rates after target time
-	for i := range len(rates) {
+	for i := range rates {
 		if !rates[i].Start.Before(targetTime) {
-			rates = rates[:i]
+			if i > 0 {
+				rates = rates[:i]
+			}
 			break
 		}
 	}
