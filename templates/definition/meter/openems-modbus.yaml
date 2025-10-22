@@ -35,64 +35,78 @@ params:
     type: int
     default: 315
     description:
-      de: Modbus-Register für Netzleistung (GridActivePower)
-      en: Modbus register for grid power (GridActivePower)
+      de: Modbus-Register für Netzleistung
+      en: Modbus register for grid power
+    help:
+      generic: GridActivePower (W)
     usages: ["grid"]
     advanced: true
   - name: grid_energy_register
     type: int
     default: 359
     description:
-      de: Modbus-Register für Netzbezug Energie (GridBuyActiveEnergy)
-      en: Modbus register for grid import energy (GridBuyActiveEnergy)
+      de: Modbus-Register für Netzbezug Energie
+      en: Modbus register for grid import energy
+    help:
+      generic: GridBuyActiveEnergy (Wh)
     usages: ["grid"]
     advanced: true
   - name: pv_power_register
     type: int
     default: 327
     description:
-      de: Modbus-Register für PV-Leistung (ProductionActivePower)
-      en: Modbus register for PV power (ProductionActivePower)
+      de: Modbus-Register für PV-Leistung
+      en: Modbus register for PV power
+    help:
+      generic: ProductionActivePower (W)
     usages: ["pv"]
     advanced: true
   - name: pv_energy_register
     type: int
     default: 367
     description:
-      de: Modbus-Register für PV-Energie (ProductionActiveEnergy)
-      en: Modbus register for PV energy (ProductionActiveEnergy)
+      de: Modbus-Register für PV-Energie
+      en: Modbus register for PV energy
+    help:
+      generic: ProductionActiveEnergy (Wh)
     usages: ["pv"]
     advanced: true
   - name: battery_power_register
     type: int
     default: 415
     description:
-      de: Modbus-Register für Batterie-Leistung (z. B. EssDischargePower)
-      en: Modbus register for battery power (e.g., EssDischargePower)
+      de: Modbus-Register für Batterie-Leistung
+      en: Modbus register for battery power
+    help:
+      generic: EssDischargePower (W)
     usages: ["battery"]
     advanced: true
   - name: battery_soc_register
     type: int
     default: 302
     description:
-      de: Modbus-Register für Batteriestand (SoC)
-      en: Modbus register for state of charge (SoC)
+      de: Modbus-Register für Batteriestand
+      en: Modbus register for state of charge
+    help:
+      generic: SoC (%)
     usages: ["battery"]
     advanced: true
   - name: battery_set_register
     type: int
     default: 710
     description:
-      de: Modbus-Register für SetActivePowerLessOrEquals (Schreibbefehl)
-      en: Modbus register for SetActivePowerLessOrEquals (write)
+      de: Modbus-Register für Ladeleistung
+      en: Modbus register for charge power
+    help:
+      generic: SetActivePowerLessOrEquals (W)
     usages: ["battery"]
     advanced: true
   - name: battery
     type: bool
     default: false
     description:
-      de: Aktiviert Schreibzugriffe (Batteriesteuerung) via Modbus
-      en: Enables write access (battery control) via Modbus
+      de: Aktiviert Schreibzugriffe (Batteriesteuerung)
+      en: Enables write access (battery control)
     usages: ["battery"]
     advanced: true
   - name: watchdog
@@ -134,7 +148,7 @@ params:
       en: Maximum allowed AC power
 render: |
   type: custom
-  {{- if eq .usage "grid" }}
+  {{- if eq .usage "grid" }} 
   power:
     source: modbus
     id: {{ .modbus_id }}
