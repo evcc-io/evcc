@@ -228,14 +228,14 @@ render: |
         set:
           source: const
           value: 0
-        set:
-          source: modbus
-          id: {{ .modbus_id }}
-          uri: {{ .host }}:{{ .modbus_port }}
-          register:
-            address: {{ .battery_set_register }}
-            type: writemultiple
-            encoding: float32
+          set:
+            source: modbus
+            id: {{ .modbus_id }}
+            uri: {{ .host }}:{{ .modbus_port }}
+            register:
+              address: {{ .battery_set_register }}
+              type: writemultiple
+              encoding: float32
       - case: 3 # charge
         set:
           source: const
