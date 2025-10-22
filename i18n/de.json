@@ -356,11 +356,11 @@
       "titleLabel": "Titel",
       "usage": {
         "aux": "Intelligenter Verbraucher",
-        "battery": "Batteriezähler",
-        "charge": "Ladegerätzähler",
-        "grid": "Netzzähler",
+        "battery": "Batterie",
+        "charge": "Verbraucher / Ladegerät",
+        "grid": "Netzanschluss",
         "label": "Verwendung",
-        "pv": "PV-Zähler"
+        "pv": "Erzeugung"
       },
       "validateSave": "Überprüfen & speichern"
     },

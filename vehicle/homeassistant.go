@@ -83,13 +83,19 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	)
 
 	if cc.Sensors.LimitSoc != "" {
-		limitSoc = func() (int64, error) { return conn.GetIntState(cc.Sensors.LimitSoc) }
+		limitSoc = func() (int64, error) {
+			f, err := conn.GetFloatState(cc.Sensors.LimitSoc)
+			return int64(f), err
+		}
 	}
 	if cc.Sensors.Status != "" {
 		status = func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }
 	}
 	if cc.Sensors.Range != "" {
-		rng = func() (int64, error) { return conn.GetIntState(cc.Sensors.Range) }
+		rng = func() (int64, error) {
+			f, err := conn.GetFloatState(cc.Sensors.Range)
+			return int64(f), err
+		}
 	}
 	if cc.Sensors.Odometer != "" {
 		odo = func() (float64, error) { return conn.GetFloatState(cc.Sensors.Odometer) }

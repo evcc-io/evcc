@@ -16,7 +16,10 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-var ErrBatteryNotConfigured = errors.New("battery not configured")
+var (
+	ErrBatteryNotConfigured       = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+)
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -296,6 +299,10 @@ func (site *Site) GetBatteryDischargeControl() bool {
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
 	site.Lock()
 	defer site.Unlock()
 
@@ -314,8 +321,12 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	return site.batteryGridChargeLimit
 }
 
-func (site *Site) SetBatteryGridChargeLimit(val *float64) {
+func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
 
 	site.Lock()
 	defer site.Unlock()
@@ -331,6 +342,8 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
+
+	return nil
 }
 
 // GetBatteryMode returns the battery mode
@@ -348,11 +361,15 @@ func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 }
 
 // SetBatteryModeExternal sets the external battery mode
-func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
+func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) error {
+	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
 	site.Lock()
 	defer site.Unlock()
-
-	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
 	disable := mode == api.BatteryUnknown
 
@@ -376,6 +393,8 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) {
 	if !disable {
 		site.batteryModeExternalTimer = time.Now()
 	}
+
+	return nil
 }
 
 func (site *Site) batteryModeWatchdogExpired() bool {

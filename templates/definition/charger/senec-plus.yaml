@@ -1,6 +1,6 @@
 template: senec-plus
 products:
-  - brand: Senec
+  - brand: SENEC
     description:
       generic: Plus
 capabilities: ["mA", "1p3p"]

@@ -30,6 +30,10 @@ params:
     advanced: true
   - name: capacity
     advanced: true
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -245,4 +249,6 @@ render: |
             id: 1
             value: 124:0:OutWRte
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
