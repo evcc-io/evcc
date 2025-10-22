@@ -213,6 +213,22 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
 				}
 			}
+
+			// add demand for smartcost limit
+			if smartLimit := lp.GetSmartCostLimit(); smartLimit != nil {				
+				isLimitHit := slices.ContainsFunc(grid[:min(minLen, len(grid))], func(r api.Rate) bool {
+					return r.Value <= *smartLimit
+				})
+				if isLimitHit {
+					pwr := lp.EffectiveMaxPower()
+					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 { return float32(pwr) }), firstSlotDuration)
+					for i := 0; i < minLen && i < len(grid); i++ {
+						if grid[i].Value > *smartLimit {
+							bat.PDemand[i] = float32(0.0)
+						}
+					}
+				}
+			}
 		}
 
 		req.Batteries = append(req.Batteries, bat)
