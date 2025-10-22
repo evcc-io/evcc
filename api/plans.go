@@ -7,7 +7,7 @@ type RepeatingPlanStruct struct {
 	Time          string `json:"time"`                   // HH:MM
 	Tz            string `json:"tz"`                     // timezone in IANA format
 	Soc           int    `json:"soc"`                    // target soc
-	Precondition_ int64  `json:"precondition,omitempty"` // deprecated
+	Precondition_ *int64 `json:"precondition,omitempty"` // deprecated
 	Active        bool   `json:"active"`                 // active flag
 }
 
