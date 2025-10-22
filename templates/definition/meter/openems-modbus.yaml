@@ -1,7 +1,7 @@
 template: openems-modbus
 products:
-  - brand: OpenEMS
-  - brand: FENECON
+  - brand: OpenEMS (Modbus)
+  - brand: FENECON (Modbus)
 capabilities: ["battery-control"]
 requirements:
   description:
