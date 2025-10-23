@@ -269,6 +269,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	}
 
 	// reduce target time by precondition duration
+	originalTargetTime := targetTime
 	targetTime = targetTime.Add(-precondition)
 	requiredDuration = max(requiredDuration-precondition, 0)
 
@@ -276,6 +277,17 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	var precond api.Rates
 	if precondition > 0 {
 		rates, precond = splitPreconditionSlots(rates, targetTime)
+
+		// Trim precondition slots to exactly match precondition duration and add excess to required
+		if len(precond) > 0 {
+			if excess := originalTargetTime.Add(-precondition).Sub(precond[0].Start); excess > 0 {
+				precond[0].Start, requiredDuration = precond[0].Start.Add(excess), requiredDuration+excess
+			}
+			if lastIdx := len(precond) - 1; precond[lastIdx].End.After(originalTargetTime) {
+				requiredDuration += precond[lastIdx].End.Sub(originalTargetTime)
+				precond[lastIdx].End = originalTargetTime
+			}
+		}
 	}
 
 	// check if available rates span is sufficient for sliding window
