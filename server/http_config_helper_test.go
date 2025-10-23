@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -133,4 +134,48 @@ func TestSquashedMergeMaskedAny(t *testing.T) {
 		require.NoError(t, mergeMaskedAny(old, &new))
 		assert.Equal(t, "new", new.User)
 	}
+}
+
+func TestMergeMaskedFiltersBehavior(t *testing.T) {
+	conf := map[string]any{
+		"template": "demo-meter",
+		"power":    200.0,
+	}
+
+	old := map[string]any{
+		"template":      "demo-meter",
+		"power":         100.0,
+		"outdatedField": "old-value",
+	}
+
+	result, err := mergeMasked(templates.Meter, conf, old)
+	require.NoError(t, err)
+
+	assert.Equal(t, 200.0, result["power"])
+	assert.Equal(t, "demo-meter", result["template"])
+	assert.NotContains(t, result, "outdatedField")
+}
+
+func TestFilterValidTemplateParams(t *testing.T) {
+	conf := map[string]any{
+		"template":      "generic",
+		"usage":         "grid",
+		"capacity":      50.0,
+		"power":         100.0,
+		"outdatedField": "should-be-removed",
+	}
+
+	result := filterValidTemplateParams(&templates.Template{
+		TemplateDefinition: templates.TemplateDefinition{
+			Params: []templates.Param{
+				{Name: "usage"},
+				{Name: "power"},
+				{Name: "capacity"},
+			},
+		},
+	}, conf)
+
+	assert.Equal(t, "generic", result["template"], "template")
+	assert.Equal(t, "grid", result["usage"], "usage")
+	assert.NotContains(t, result, "outdatedField")
 }

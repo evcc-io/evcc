@@ -101,7 +101,6 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		}
 
 		if conf.Type == typeTemplate {
-			// template device, mask config
 			params, err := sanitizeMasked(class, conf.Other)
 			if err != nil {
 				return nil, err

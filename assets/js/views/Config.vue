@@ -83,6 +83,7 @@
 						<MeterCard
 							v-if="gridMeter"
 							:meter="gridMeter"
+							:title="$t('config.grid.title')"
 							meter-type="grid"
 							:has-error="hasDeviceError('meter', gridMeter.name)"
 							:tags="deviceTags('meter', gridMeter.name)"
