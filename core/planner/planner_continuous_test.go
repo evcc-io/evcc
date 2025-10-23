@@ -13,23 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Rates {
-	res := make(api.Rates, 0, len(prices))
-
-	for i, v := range prices {
-		slotStart := start.Add(time.Duration(i) * slotDuration)
-		ar := api.Rate{
-			Start: slotStart,
-			End:   slotStart.Add(slotDuration),
-			Value: v,
-		}
-		res = append(res, ar)
-	}
-
-	return res
-}
-
-func TestPlan(t *testing.T) {
+func TestContinuous_Plan(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -123,7 +107,7 @@ func TestPlan(t *testing.T) {
 	}
 }
 
-func TestNilTariff(t *testing.T) {
+func TestContinuous_NilTariff(t *testing.T) {
 	clock := clock.NewMock()
 
 	p := &Planner{
@@ -131,7 +115,7 @@ func TestNilTariff(t *testing.T) {
 		clock: clock,
 	}
 
-	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute), false)
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -140,7 +124,7 @@ func TestNilTariff(t *testing.T) {
 	}, plan, "expected simple plan")
 }
 
-func TestRatesError(t *testing.T) {
+func TestContinuous_RatesError(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -153,7 +137,7 @@ func TestRatesError(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute), false)
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -162,7 +146,7 @@ func TestRatesError(t *testing.T) {
 	}, plan, "expected simple plan")
 }
 
-func TestFlatTariffTargetInThePast(t *testing.T) {
+func TestContinuous_FlatTariffTargetInThePast(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -182,14 +166,14 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 		},
 	}
 
-	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute), false)
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(30*time.Minute), true)
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
-	plan = p.Plan(time.Hour, 0, clock.Now().Add(-30*time.Minute), false)
+	plan = p.Plan(time.Hour, 0, clock.Now().Add(-30*time.Minute), true)
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
-func TestFlatTariffLongSlots(t *testing.T) {
+func TestContinuous_FlatTariffLongSlots(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -206,16 +190,16 @@ func TestFlatTariffLongSlots(t *testing.T) {
 	// that slots are not longer than 1 hour and with that context this is not a problem
 
 	// expect 00:00-01:00 UTC
-	plan := p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour), false)
+	plan := p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour), true)
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 	assert.Equal(t, api.Rate{}, SlotAt(clock.Now().Add(time.Hour), plan))
 
 	// expect 00:00-01:00 UTC
-	plan = p.Plan(time.Hour, 0, clock.Now().Add(time.Hour), false)
+	plan = p.Plan(time.Hour, 0, clock.Now().Add(time.Hour), true)
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 }
 
-func TestTargetAfterKnownPrices(t *testing.T) {
+func TestContinuous_TargetAfterKnownPrices(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -228,14 +212,14 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(40*time.Minute, 0, clock.Now().Add(2*time.Hour), false) // charge efficiency does not allow to test with 1h
+	plan := p.Plan(40*time.Minute, 0, clock.Now().Add(2*time.Hour), true) // charge efficiency does not allow to test with 1h
 	assert.False(t, !SlotAt(clock.Now(), plan).IsZero(), "should not start if car can be charged completely after known prices ")
 
-	plan = p.Plan(2*time.Hour, 0, clock.Now().Add(2*time.Hour), false)
+	plan = p.Plan(2*time.Hour, 0, clock.Now().Add(2*time.Hour), true)
 	assert.True(t, !SlotAt(clock.Now(), plan).IsZero(), "should start if car can not be charged completely after known prices ")
 }
 
-func TestChargeAfterTargetTime(t *testing.T) {
+func TestContinuous_ChargeAfterTargetTime(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -255,14 +239,14 @@ func TestChargeAfterTargetTime(t *testing.T) {
 		},
 	}
 
-	plan := p.Plan(time.Hour, 0, clock.Now(), false)
+	plan := p.Plan(time.Hour, 0, clock.Now(), true)
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
-	plan = p.Plan(time.Hour, 0, clock.Now().Add(-time.Hour), false)
+	plan = p.Plan(time.Hour, 0, clock.Now().Add(-time.Hour), true)
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
-func TestPrecondition(t *testing.T) {
+func TestContinuous_Precondition(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -275,7 +259,7 @@ func TestPrecondition(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(time.Hour, time.Hour, clock.Now().Add(4*time.Hour), false)
+	plan := p.Plan(time.Hour, time.Hour, clock.Now().Add(4*time.Hour), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now().Add(3 * time.Hour),
@@ -284,7 +268,7 @@ func TestPrecondition(t *testing.T) {
 		},
 	}, plan, "expected last slot")
 
-	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour), false)
+	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -298,7 +282,7 @@ func TestPrecondition(t *testing.T) {
 		},
 	}, plan, "expected two slots")
 
-	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour), false)
+	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now().Add(30 * time.Minute),
@@ -313,7 +297,7 @@ func TestPrecondition(t *testing.T) {
 	}, plan, "expected short early and split late slot")
 }
 
-func TestContinuousPlanNoTariff(t *testing.T) {
+func TestContinuous_ContinuousPlanNoTariff(t *testing.T) {
 	clock := clock.NewMock()
 
 	p := &Planner{
@@ -321,7 +305,7 @@ func TestContinuousPlanNoTariff(t *testing.T) {
 		clock: clock,
 	}
 
-	plan := p.Plan(time.Hour, 0, clock.Now(), false)
+	plan := p.Plan(time.Hour, 0, clock.Now(), true)
 
 	// single-slot plan
 	assert.Len(t, plan, 1)
@@ -329,7 +313,7 @@ func TestContinuousPlanNoTariff(t *testing.T) {
 	assert.Equal(t, clock.Now().Add(time.Hour), SlotAt(clock.Now(), plan).End)
 }
 
-func TestContinuousPlan(t *testing.T) {
+func TestContinuous_ContinuousPlan(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -342,13 +326,13 @@ func TestContinuousPlan(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(150*time.Minute, 0, clock.Now(), false)
+	plan := p.Plan(150*time.Minute, 0, clock.Now(), true)
 
 	// 3-slot plan
 	assert.Len(t, plan, 3)
 }
 
-func TestContinuousPlanOutsideRates(t *testing.T) {
+func TestContinuous_ContinuousPlanOutsideRates(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
@@ -361,16 +345,16 @@ func TestContinuousPlanOutsideRates(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(30*time.Minute, 0, clock.Now(), false)
+	plan := p.Plan(30*time.Minute, 0, clock.Now(), true)
 
 	// 3-slot plan
 	assert.Len(t, plan, 1)
 }
 
-// TestStartBeforeRates tests that when current time is before
+// TestContinuous_StartBeforeRates tests that when current time is before
 // the first available rate, the planner waits and starts charging when
 // rates become available, as long as there's enough time to reach the target
-func TestStartBeforeRates(t *testing.T) {
+func TestContinuous_StartBeforeRates(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
@@ -412,11 +396,11 @@ func TestStartBeforeRates(t *testing.T) {
 	assert.False(t, plan[0].Start.Before(rates[0].Start), "plan must not start before first available rate")
 }
 
-// TestStartBeforeRatesInsufficientTime tests that when current time
+// TestContinuous_StartBeforeRatesInsufficientTime tests that when current time
 // is before the first available rate AND there's not enough time after rates
 // start to complete charging before target, the planner starts charging as soon
 // as rates become available (best effort approach)
-func TestStartBeforeRatesInsufficientTime(t *testing.T) {
+func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)

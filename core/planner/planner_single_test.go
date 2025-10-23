@@ -9,28 +9,16 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
-// MockTariff implements api.Tariff for testing single-plan mode
-type MockTariff struct {
-	rates api.Rates
-}
-
-func (m *MockTariff) Rates() (api.Rates, error) {
-	return m.rates, nil
-}
-
-// Return a valid api.TariffType for compilation (dummy value for tests)
-func (m *MockTariff) Type() api.TariffType {
-	return 0
-}
-
 // TestSinglePlanContinuousWindow tests the single continuous cheapest window mode
-func TestSinglePlanContinuousWindow(t *testing.T) {
-	now := time.Date(2025, 10, 15, 0, 0, 0, 0, time.UTC)
+func TestContinuous_SinglePlanWindow(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
 
+	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
 
 	rates := api.Rates{
@@ -42,11 +30,13 @@ func TestSinglePlanContinuousWindow(t *testing.T) {
 		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.25},
 	}
 
-	tariff := &MockTariff{rates: rates}
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
 	planner := &Planner{
 		log:    log,
 		clock:  c,
-		tariff: tariff,
+		tariff: trf,
 	}
 
 	targetTime := now.Add(6 * time.Hour)
@@ -61,13 +51,14 @@ func TestSinglePlanContinuousWindow(t *testing.T) {
 	assert.Equal(t, rates[3].Value, plan[1].Value, "second slot should have actual price")
 }
 
-// TestContinuousWindowWithPastRates tests that plans in continuous mode
+// TestContinuous_WindowWithPastRates tests that plans in continuous mode
 // do not start in the past when some tariff data is already outdated
-func TestContinuousWindowWithPastRates(t *testing.T) {
-	now := time.Date(2025, 10, 15, 12, 0, 0, 0, time.UTC)
+func TestContinuous_WindowWithPastRates(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
 
+	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
 
 	// Create rates that include past data (3h before now, 6h after now)
@@ -85,11 +76,13 @@ func TestContinuousWindowWithPastRates(t *testing.T) {
 		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.25},
 	}
 
-	tariff := &MockTariff{rates: rates}
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
 	planner := &Planner{
 		log:    log,
 		clock:  c,
-		tariff: tariff,
+		tariff: trf,
 	}
 
 	targetTime := now.Add(6 * time.Hour)
@@ -112,12 +105,13 @@ func TestContinuousWindowWithPastRates(t *testing.T) {
 	assert.Equal(t, 0.10, plan[1].Value, "second slot should have actual price")
 }
 
-// TestContinuousWindowAllRatesInPast tests the edge case where all rates are in the past
-func TestContinuousWindowAllRatesInPast(t *testing.T) {
-	now := time.Date(2025, 10, 15, 12, 0, 0, 0, time.UTC)
+// TestContinuous_WindowAllRatesInPast tests the edge case where all rates are in the past
+func TestContinuous_WindowAllRatesInPast(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
 
+	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
 
 	// All rates are in the past
@@ -130,11 +124,13 @@ func TestContinuousWindowAllRatesInPast(t *testing.T) {
 		{Start: now.Add(-1 * time.Hour), End: now, Value: 0.11},
 	}
 
-	tariff := &MockTariff{rates: rates}
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
 	planner := &Planner{
 		log:    log,
 		clock:  c,
-		tariff: tariff,
+		tariff: trf,
 	}
 
 	targetTime := now.Add(3 * time.Hour)
@@ -146,13 +142,14 @@ func TestContinuousWindowAllRatesInPast(t *testing.T) {
 	assert.Empty(t, plan, "plan should be nil when all rates are in the past")
 }
 
-// TestContinuousWindowRatesSpanningPastAndFuture tests continuous mode with rates
+// TestContinuous_WindowRatesSpanningPastAndFuture tests continuous mode with rates
 // spanning from past to future, where the optimal window would start in the past
-func TestContinuousWindowRatesSpanningPastAndFuture(t *testing.T) {
-	now := time.Date(2025, 10, 15, 12, 0, 0, 0, time.UTC)
+func TestContinuous_WindowRatesSpanningPastAndFuture(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
 
+	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
 
 	// Rates spanning from 3h before now to 6h after now
@@ -169,11 +166,13 @@ func TestContinuousWindowRatesSpanningPastAndFuture(t *testing.T) {
 		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.20},
 	}
 
-	tariff := &MockTariff{rates: rates}
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
 	planner := &Planner{
 		log:    log,
 		clock:  c,
-		tariff: tariff,
+		tariff: trf,
 	}
 
 	targetTime := now.Add(6 * time.Hour)
@@ -196,13 +195,14 @@ func TestContinuousWindowRatesSpanningPastAndFuture(t *testing.T) {
 	assert.Equal(t, 0.09, plan[1].Value, "second slot should have actual price")
 }
 
-// TestContinuousWindowRatesStartInFuture tests continuous mode when tariff data
+// TestContinuous_WindowRatesStartInFuture tests continuous mode when tariff data
 // starts in the future, but target time is within the tariff data range
-func TestContinuousWindowRatesStartInFuture(t *testing.T) {
-	now := time.Date(2025, 10, 15, 12, 0, 0, 0, time.UTC)
+func TestContinuous_WindowRatesStartInFuture(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
 
+	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
 
 	// Rates start 1 hour in the future, no rates available for now
@@ -214,11 +214,13 @@ func TestContinuousWindowRatesStartInFuture(t *testing.T) {
 		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.18},
 	}
 
-	tariff := &MockTariff{rates: rates}
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
 	planner := &Planner{
 		log:    log,
 		clock:  c,
-		tariff: tariff,
+		tariff: trf,
 	}
 
 	targetTime := now.Add(5 * time.Hour)
@@ -241,13 +243,14 @@ func TestContinuousWindowRatesStartInFuture(t *testing.T) {
 	assert.Equal(t, 0.09, plan[1].Value, "second slot should have actual price")
 }
 
-// TestContinuousWindowLateChargingPreference tests that when multiple windows
+// TestContinuous_WindowLateChargingPreference tests that when multiple windows
 // have equal cost, the latest (closest to target time) window is selected
-func TestContinuousWindowLateChargingPreference(t *testing.T) {
-	now := time.Date(2025, 10, 15, 12, 0, 0, 0, time.UTC)
+func TestContinuous_WindowLateChargingPreference(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
 
+	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
 
 	// Create rates with multiple 2-hour windows having equal total cost
@@ -265,11 +268,13 @@ func TestContinuousWindowLateChargingPreference(t *testing.T) {
 		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.15},
 	}
 
-	tariff := &MockTariff{rates: rates}
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
 	planner := &Planner{
 		log:    log,
 		clock:  c,
-		tariff: tariff,
+		tariff: trf,
 	}
 
 	targetTime := now.Add(6 * time.Hour)
