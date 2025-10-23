@@ -250,52 +250,40 @@ func (t *Planner) findOptimalContinuousWindow(rates api.Rates, effectiveDuration
 
 // applyPreconditionToPlan adds preconditioning to an existing plan and adjusts timing.
 // This is used by both continuous and cost-minimized planning modes.
-func (t *Planner) applyPreconditionToPlan(plan api.Rates, rates api.Rates, effectiveDuration, precondition time.Duration, targetTime time.Time, useContinuous bool) api.Rates {
-	// Apply "start as late as possible" logic by shifting individual slots
-	// Each slot is only shifted within its own rate window
-	if len(plan) > 0 && precondition > 0 && useContinuous {
-		// Process each slot individually
-		for i := range plan {
-			slot := &plan[i]
-			
-			// Find the rate(s) that contain this slot
-			for _, rate := range rates {
-				// Check if this rate contains the start of the slot
-				if rate.Start.After(slot.Start) {
-					continue
-				}
-				if rate.End.Before(slot.Start) || rate.End.Equal(slot.Start) {
-					continue
-				}
-				
-				// This rate contains the start of our slot
-				// Calculate how much space is available within this rate
-				availableSpace := rate.End.Sub(slot.End)
-				
-				if availableSpace > 0 {
-					// We can shift this slot later within its rate window
-					shift := availableSpace
-					
-					// But we need to ensure the slot doesn't overlap with the next slot
-					if i+1 < len(plan) {
-						nextSlot := plan[i+1]
-						maxShiftUntilNextSlot := nextSlot.Start.Sub(slot.End)
-						if maxShiftUntilNextSlot < shift {
-							shift = maxShiftUntilNextSlot
-						}
-					}
-					
-					// Apply the shift to this slot
-					if shift > 0 {
-						slot.Start = slot.Start.Add(shift)
-						slot.End = slot.End.Add(shift)
-						t.log.TRACE.Printf("shifted slot %d: shift=%v, new start=%v, new end=%v", 
-							i, shift, slot.Start, slot.End)
-					}
-				}
-				
-				break // Found the containing rate, no need to continue
+func (t *Planner) applyPreconditionToPlan(plan api.Rates, rates api.Rates, effectiveDuration, precondition time.Duration, targetTime time.Time) api.Rates {
+	// Apply "start as late as possible" logic by shifting the entire plan
+	// This preserves the behavior where charging starts as late as possible before preconditioning
+	if len(plan) > 0 && precondition > 0 {
+		firstSlot := plan[0]
+
+		// Find the original rate slot containing the first slot to see if we can shift later
+		for _, rate := range rates {
+			// Skip rates that don't overlap with the first slot's start
+			if rate.End.Before(firstSlot.Start) || rate.End.Equal(firstSlot.Start) {
+				continue
 			}
+			if rate.Start.After(firstSlot.Start) {
+				continue
+			}
+
+			// This rate contains (at least the start of) our first slot
+			// Check if we can push the entire plan later within this rate's boundaries
+			availableWindow := rate.End.Sub(firstSlot.Start)
+			slotDuration := firstSlot.End.Sub(firstSlot.Start)
+
+			if availableWindow > slotDuration {
+				// Calculate shift amount to make first slot start as late as possible
+				shift := availableWindow - slotDuration
+
+				// Apply shift to ALL slots in the plan (shift entire window)
+				for i := range plan {
+					plan[i].Start = plan[i].Start.Add(shift)
+					plan[i].End = plan[i].End.Add(shift)
+				}
+
+				t.log.TRACE.Printf("adjusted plan to start late: shift=%v, new start=%v", shift, plan[0].Start)
+			}
+			break
 		}
 	}
 
@@ -406,7 +394,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 			plan[0].Start, plan[len(plan)-1].End, len(plan), cost)
 
 		// add preconditioning and adjust timing
-		return t.applyPreconditionToPlan(plan, rates, effectiveDuration, precondition, targetTime, useContinuous)
+		return t.applyPreconditionToPlan(plan, rates, effectiveDuration, precondition, targetTime)
 	}
 
 	// default mode: cheapest combination of slots
@@ -427,5 +415,5 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	plan := t.plan(rates, effectiveDuration, preCondWindow)
 
 	// add preconditioning and adjust timing
-	return t.applyPreconditionToPlan(plan, rates, effectiveDuration, precondition, targetTime, useContinuous)
+	return t.applyPreconditionToPlan(plan, rates, effectiveDuration, precondition, targetTime)
 }
