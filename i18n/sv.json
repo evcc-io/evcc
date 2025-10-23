@@ -118,7 +118,7 @@
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
-      "vehicleLimitSoc": "Fordonsbegränsning",
+      "vehicleLimitSoc": "Laddgräns",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -346,7 +346,7 @@
       "option": {
         "aux": "Lägg till enhet som själv anpassar förbrukning",
         "battery": "Lägg till batterimätare",
-        "ext": "Lägg till ytterligare mätare",
+        "ext": "Lägg till vanlig förbrukare",
         "pv": "Lägg till solenergimätare"
       },
       "save": "Spara",
