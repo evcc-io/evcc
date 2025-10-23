@@ -222,7 +222,6 @@ func (wb *BenderCC) heartbeat(ctx context.Context) {
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err != nil {
 				wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
 			}
-
 		}
 	}
 }
