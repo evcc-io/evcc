@@ -7,6 +7,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -249,9 +250,9 @@ func TestContinuous_ChargeAfterTargetTime(t *testing.T) {
 func TestContinuous_Precondition(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
-
 	trf := api.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 1, 2, 3}, clock.Now(), time.Hour), nil)
+
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{1, 2, 3, 4}, clock.Now(), tariff.SlotDuration), nil)
 
 	p := &Planner{
 		log:    util.NewLogger("foo"),
@@ -259,42 +260,42 @@ func TestContinuous_Precondition(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(time.Hour, time.Hour, clock.Now().Add(4*time.Hour), true)
+	plan := p.Plan(tariff.SlotDuration, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(3 * time.Hour),
-			End:   clock.Now().Add(4 * time.Hour),
-			Value: 3,
+			Start: clock.Now().Add(3 * tariff.SlotDuration),
+			End:   clock.Now().Add(4 * tariff.SlotDuration),
+			Value: 4,
 		},
 	}, plan, "expected last slot")
 
-	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour), true)
+	plan = p.Plan(2*tariff.SlotDuration, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
-			End:   clock.Now().Add(1 * time.Hour),
-			Value: 0,
+			End:   clock.Now().Add(1 * tariff.SlotDuration),
+			Value: 1,
 		},
 		{
-			Start: clock.Now().Add(3 * time.Hour),
-			End:   clock.Now().Add(4 * time.Hour),
-			Value: 3,
+			Start: clock.Now().Add(3 * tariff.SlotDuration),
+			End:   clock.Now().Add(4 * tariff.SlotDuration),
+			Value: 4,
 		},
 	}, plan, "expected two slots")
 
-	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour), true)
+	plan = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(30 * time.Minute),
-			End:   clock.Now().Add(time.Hour),
-			Value: 0,
+			Start: clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
+			End:   clock.Now().Add(tariff.SlotDuration),
+			Value: 1,
 		},
 		{
-			Start: clock.Now().Add(210 * time.Minute),
-			End:   clock.Now().Add(4 * time.Hour),
-			Value: 3,
+			Start: clock.Now().Add(3 * tariff.SlotDuration),
+			End:   clock.Now().Add(4 * tariff.SlotDuration),
+			Value: 4,
 		},
-	}, plan, "expected short early and split late slot")
+	}, plan, "expected short early and late slot")
 }
 
 func TestContinuous_ContinuousPlanNoTariff(t *testing.T) {
@@ -391,7 +392,7 @@ func TestContinuous_StartBeforeRates(t *testing.T) {
 	assert.Equal(t, now.Add(4*time.Hour), plan[0].Start, "should start at cheapest available rate")
 	assert.Equal(t, now.Add(5*time.Hour), plan[0].End, "should end after required duration")
 	assert.Equal(t, 0.08, plan[0].Value, "should have actual price from cheapest slot")
-	
+
 	// Plan must not start before rates are available
 	assert.False(t, plan[0].Start.Before(rates[0].Start), "plan must not start before first available rate")
 }
@@ -430,7 +431,7 @@ func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty - starts when rates become available")
-	
+
 	// Best effort: start as soon as rates are available
 	assert.Equal(t, now.Add(2*time.Hour), plan[0].Start, "should start at first available rate")
 	assert.Equal(t, 0.10, plan[0].Value, "should use first available rate price")
