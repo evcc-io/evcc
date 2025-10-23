@@ -217,7 +217,6 @@ func (wb *BenderCC) heartbeat(ctx context.Context) {
 			return
 		}
 		if time.Since(wb.semp.conn.Updated()) >= time.Minute {
-
 			// Send a very high power value to allow full control between 6 and 16A via modbus
 			// Note: This will not trigger a phase switch, as the value is above the max. power consumption
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err != nil {
