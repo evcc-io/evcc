@@ -1,6 +1,6 @@
 package meter
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 import (
 	"errors"
@@ -13,11 +13,8 @@ import (
 
 // HomeAssistant meter implementation
 type HomeAssistant struct {
-	conn            *homeassistant.Connection
-	power           string
-	energy          string
-	currentEntities []string
-	voltageEntities []string
+	conn  *homeassistant.Connection
+	power string
 }
 
 func init() {
@@ -33,6 +30,7 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		Energy   string
 		Currents []string
 		Voltages []string
+		Soc      string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,44 +48,41 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 	}
 
 	m := &HomeAssistant{
-		conn:   conn,
-		power:  cc.Power,
-		energy: cc.Energy,
-	}
-
-	// Set up phase currents (optional)
-	if len(cc.Currents) > 0 {
-		currents, err := homeassistant.ValidatePhaseEntities(cc.Currents)
-		if err != nil {
-			return nil, fmt.Errorf("currents: %w", err)
-		}
-		m.currentEntities = currents
-	}
-
-	// Set up phase voltages (optional)
-	if len(cc.Voltages) > 0 {
-		voltages, err := homeassistant.ValidatePhaseEntities(cc.Voltages)
-		if err != nil {
-			return nil, fmt.Errorf("voltages: %w", err)
-		}
-		m.voltageEntities = voltages
+		conn:  conn,
+		power: cc.Power,
 	}
 
 	// decorators for optional interfaces
 	var energy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
+	var soc func() (float64, error)
 
-	if m.energy != "" {
-		energy = m.totalEnergy
-	}
-	if m.currentEntities[0] != "" {
-		currents = m.currents
-	}
-	if m.voltageEntities[0] != "" {
-		voltages = m.voltages
+	if cc.Energy != "" {
+		energy = func() (float64, error) { return conn.GetFloatState(cc.Energy) }
 	}
 
-	return decorateHomeAssistant(m, energy, currents, voltages), nil
+	if len(cc.Currents) > 0 {
+		phases, err := homeassistant.ValidatePhaseEntities(cc.Currents)
+		if err != nil {
+			return nil, fmt.Errorf("currents: %w", err)
+		}
+		currents = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
+	}
+
+	// Set up phase voltages (optional)
+	if len(cc.Voltages) > 0 {
+		phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages)
+		if err != nil {
+			return nil, fmt.Errorf("voltages: %w", err)
+		}
+		voltages = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
+	}
+
+	if cc.Soc != "" {
+		soc = func() (float64, error) { return conn.GetFloatState(cc.Soc) }
+	}
+
+	return decorateHomeAssistant(m, energy, currents, voltages, soc), nil
 }
 
 var _ api.Meter = (*HomeAssistant)(nil)
@@ -95,19 +90,4 @@ var _ api.Meter = (*HomeAssistant)(nil)
 // CurrentPower implements the api.Meter interface
 func (m *HomeAssistant) CurrentPower() (float64, error) {
 	return m.conn.GetFloatState(m.power)
-}
-
-// totalEnergy implements the api.MeterEnergy interface
-func (m *HomeAssistant) totalEnergy() (float64, error) {
-	return m.conn.GetFloatState(m.energy)
-}
-
-// currents implements the api.PhaseCurrents interface
-func (m *HomeAssistant) currents() (float64, float64, float64, error) {
-	return m.conn.GetPhaseFloatStates(m.currentEntities)
-}
-
-// voltages implements the api.PhaseVoltages interface
-func (m *HomeAssistant) voltages() (float64, float64, float64, error) {
-	return m.conn.GetPhaseFloatStates(m.voltageEntities)
 }

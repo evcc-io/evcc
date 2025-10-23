@@ -29,6 +29,7 @@ func init() {
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
 	chargerCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
+	chargerCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
@@ -125,7 +126,8 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
-		d := dumper{len: len(chargers)}
+		timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+		d := dumper{len: len(chargers), timeout: timeout}
 		flag := cmd.Flag(flagDiagnose).Changed
 
 		for _, dev := range chargers {

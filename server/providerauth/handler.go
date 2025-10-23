@@ -61,8 +61,6 @@ func (a *Handler) run(paramC chan<- util.Param) {
 
 		a.mu.Unlock()
 
-		a.log.TRACE.Printf("publishing %d auth providers", len(res))
-
 		// publish the updated auth providers
 		paramC <- util.Param{Key: keys.AuthProviders, Val: res}
 	}
