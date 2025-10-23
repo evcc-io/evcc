@@ -61,8 +61,8 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 			}
 
 			// simple linear interpolation
-			Wh := lp.GetVehicle().Capacity() * 1e3 * (goal - lp.vehicleSoc) / 100 / maxPower
-			return time.Duration(Wh / soc.ChargeEfficiency * float64(time.Hour))
+			hrs := lp.GetVehicle().Capacity() * 1e3 * (goal - lp.vehicleSoc) / 100 / maxPower
+			return time.Duration(hrs / soc.ChargeEfficiency * float64(time.Hour))
 		}
 
 		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
