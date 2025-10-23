@@ -215,14 +215,22 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 
 			// TODO remove once (using) smartcost limit becomes obsolete
-			if smartLimit := lp.GetSmartCostLimit(); smartLimit != nil {
-				isLimitHit := slices.ContainsFunc(grid[:min(minLen, len(grid))], func(r api.Rate) bool { return r.Value <= *smartLimit })
-				if isLimitHit {
-					pwr := lp.EffectiveMaxPower()
-					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 { return float32(pwr) }), firstSlotDuration)
-					for i := 0; i < minLen && i < len(grid); i++ {
-						if grid[i].Value > *smartLimit {
-							bat.PDemand[i] = float32(0.0)
+			if costLimit := lp.GetSmartCostLimit(); costLimit != nil {
+				maxLen := min(minLen, len(grid))
+
+				// limit hit?
+				if slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+					return r.Value <= *costLimit
+				}) {
+					maxPower := lp.EffectiveMaxPower()
+
+					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
+						return float32(maxPower)
+					}), firstSlotDuration)
+
+					for i := range maxLen {
+						if grid[i].Value > *costLimit {
+							bat.PDemand[i] = 0
 						}
 					}
 				}
