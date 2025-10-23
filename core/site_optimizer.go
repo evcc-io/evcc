@@ -214,7 +214,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 				}
 			}
 
-			// TODO remove once smartcost limit becomes obsolete
+			// TODO remove once (using) smartcost limit becomes obsolete
 			if smartLimit := lp.GetSmartCostLimit(); smartLimit != nil {
 				isLimitHit := slices.ContainsFunc(grid[:min(minLen, len(grid))], func(r api.Rate) bool { return r.Value <= *smartLimit })
 				if isLimitHit {
