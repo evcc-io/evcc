@@ -56,7 +56,7 @@ template: {{ .Template }}
 product:
   identifier: {{ .ProductIdentifier }}
 {{- if .ProductBrand }}
-  brand: "{{ .ProductBrand }}"
+  brand: {{ quote .ProductBrand }}
 {{- end }}
 {{- if .ProductDescription }}
   description: "{{ .ProductDescription }}"
