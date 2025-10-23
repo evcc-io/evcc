@@ -303,12 +303,10 @@ func (t *Planner) applyPreconditionToPlan(plan api.Rates, rates api.Rates, effec
 
 // Plan creates a charging plan based on the configured or passed-in mode
 // supports a continuous boolean flag to use single cheapest window mode
-func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous ...bool) api.Rates {
+func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
-
-	useContinuous := len(continuous) > 0 && continuous[0]
 
 	latestStart := targetTime.Add(-requiredDuration)
 	if latestStart.Before(t.clock.Now()) {
@@ -366,7 +364,8 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	}
 
 	// use continuous window mode if selected
-	if useContinuous {
+	if continuous {
+		// TODO remove
 		t.log.TRACE.Printf("using continuous mode: requiredDuration=%v, precondition=%v", requiredDuration, precondition)
 
 		effectiveDuration := requiredDuration
@@ -381,6 +380,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 			return t.continuousPlan(rates, targetTime.Add(-precondition), targetTime)
 		}
 
+		// TODO remove
 		t.log.TRACE.Printf("searching optimal window: effectiveDuration=%v, preCondWindow=%v", effectiveDuration, preCondWindow)
 
 		plan, cost := t.findOptimalContinuousWindow(rates, effectiveDuration, preCondWindow)
@@ -390,6 +390,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 			return t.continuousPlan(rates, latestStart, targetTime)
 		}
 
+		// TODO remove
 		t.log.TRACE.Printf("found optimal window: start=%v, end=%v, slots=%d, cost=%.3f",
 			plan[0].Start, plan[len(plan)-1].End, len(plan), cost)
 
