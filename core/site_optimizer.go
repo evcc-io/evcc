@@ -50,13 +50,11 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
-	if time.Since(updated) < 2*time.Minute {
-		return
-	}
-
 	var err error
 
 	defer func() {
+		updated = time.Now()
+
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
 		}
@@ -66,9 +64,11 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 		}
 	}()
 
-	err = site.optimizerUpdate(battery)
+	if time.Since(updated) < 2*time.Minute {
+		return
+	}
 
-	updated = time.Now()
+	err = site.optimizerUpdate(battery)
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
