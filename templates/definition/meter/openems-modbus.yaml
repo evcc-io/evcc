@@ -14,21 +14,9 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-    description:
-      de: Hostname oder IP-Adresse des FEMS/OpenEMS
-      en: Hostname or IP address of the FEMS/OpenEMS
-  - name: modbus_id
-    type: int
-    description:
-      de: Modbus TCP Geräte-ID
-      en: Modbus TCP device ID
-    default: 1
+  - name: modbusid
     advanced: true
-  - name: modbus_port
-    type: int
-    description:
-      de: Modbus TCP Port
-      en: Modbus TCP port
+  - name: port
     default: 502
     advanced: true
   - name: grid_power_register
@@ -118,49 +106,29 @@ params:
     usages: ["battery"]
     advanced: true
   - name: minsoc
-    description:
-      de: Untere SoC-Grenze in Prozent
-      en: Lower SoC limit in percent
+    advanced: true
   - name: maxsoc
-    description:
-      de: Obere SoC-Grenze in Prozent
-      en: Upper SoC limit in percent
+    advanced: true
   - name: capacity
     advanced: true
-    description:
-      de: Batteriekapazität in kWh
-      en: Battery capacity in kWh
   - name: maxchargepower
-    type: int
-    default: 4200
-    description:
-      de: Maximale Ladeleistung der Batterie in Watt
-      en: Maximum battery charge power in watts
   - name: maxdischargepower
-    type: int
-    description:
-      de: Maximale Entladeleistung der Batterie in Watt
-      en: Maximum battery discharge power in watts
   - name: maxacpower
-    type: int
-    description:
-      de: Maximal zulässige AC-Leistung
-      en: Maximum allowed AC power
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
   power:
     source: modbus
-    id: {{ .modbus_id }}
-    uri: {{ .host }}:{{ .modbus_port }}
+    id: {{ .modbusid }}
+    uri: {{ .host }}:{{ .port }}
     register:
       address: {{ .grid_power_register }} # GridActivePower (W)
       type: input
       encoding: float32
   energy:
     source: modbus
-    id: {{ .modbus_id }}
-    uri: {{ .host }}:{{ .modbus_port }}
+    id: {{ .modbusid }}
+    uri: {{ .host }}:{{ .port }}
     register:
       address: {{ .grid_energy_register }} # GridBuyActiveEnergy (Wh)
       type: holding
@@ -170,16 +138,16 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    id: {{ .modbus_id }}
-    uri: {{ .host }}:{{ .modbus_port }}
+    id: {{ .modbusid }}
+    uri: {{ .host }}:{{ .port }}
     register:
       address: {{ .pv_power_register }} # ProductionActivePower (W)
       type: input
       encoding: float32
   energy:
     source: modbus
-    id: {{ .modbus_id }}
-    uri: {{ .host }}:{{ .modbus_port }}
+    id: {{ .modbusid }}
+    uri: {{ .host }}:{{ .port }}
     register:
       address: {{ .pv_energy_register }} # ProductionActiveEnergy (Wh)
       type: holding
@@ -190,16 +158,16 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    id: {{ .modbus_id }}
-    uri: {{ .host }}:{{ .modbus_port }}
+    id: {{ .modbusid }}
+    uri: {{ .host }}:{{ .port }}
     register:
       address: {{ .battery_power_register }} # EssDischargePower (W)
       type: input
       encoding: float32
   soc:
     source: modbus
-    id: {{ .modbus_id }}
-    uri: {{ .host }}:{{ .modbus_port }}
+    id: {{ .modbusid }}
+    uri: {{ .host }}:{{ .port }}
     register:
       address: {{ .battery_soc_register }} # EssSoc (%)
       type: input
@@ -218,8 +186,8 @@ render: |
           value: 0
           set:
             source: modbus
-            id: {{ .modbus_id }}
-            uri: {{ .host }}:{{ .modbus_port }}
+            id: {{ .modbusid }}
+            uri: {{ .host }}:{{ .port }}
             register:
               address: {{ .battery_set_register }} # SetActivePowerLessOrEquals (W)
               type: writemultiple
@@ -230,8 +198,8 @@ render: |
           value: 0
           set:
             source: modbus
-            id: {{ .modbus_id }}
-            uri: {{ .host }}:{{ .modbus_port }}
+            id: {{ .modbusid }}
+            uri: {{ .host }}:{{ .port }}
             register:
               address: {{ .battery_set_register }}
               type: writemultiple
@@ -242,8 +210,8 @@ render: |
           value: {{ mul .maxchargepower -1 }} # charge power is negative
           set:
             source: modbus
-            id: {{ .modbus_id }}
-            uri: {{ .host }}:{{ .modbus_port }}
+            id: {{ .modbusid }}
+            uri: {{ .host }}:{{ .port }}
             register:
               address: {{ .battery_set_register }}
               type: writemultiple
