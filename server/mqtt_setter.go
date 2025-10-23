@@ -1,10 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"slices"
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cast"
 )
@@ -62,4 +64,18 @@ func boolSetter(set func(bool) error) func(string) error {
 
 func durationSetter(set func(time.Duration) error) func(string) error {
 	return setterFunc(util.ParseDuration, set)
+}
+
+func planStrategySetter(set func(api.PlanStrategy) error) func(string) error {
+	return setterFunc(func(v string) (planStrategyPayload, error) {
+		var planStrategy planStrategyPayload
+		err := json.Unmarshal([]byte(v), &planStrategy)
+		return planStrategy, err
+
+	}, func(v planStrategyPayload) error {
+		return set(api.PlanStrategy{
+			Continuous:   v.Continuous,
+			Precondition: time.Duration(v.Precondition) * time.Second,
+		})
+	})
 }

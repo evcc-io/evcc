@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -197,27 +196,13 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 // planStrategyHandler updates plan strategy for loadpoint
 func planStrategyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var planStrategy = struct {
-			Continuous   bool  `json:"continuous"`
-			Precondition int64 `json:"precondition"`
-		}{}
-		if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		if err := lp.SetPlanStrategy(api.PlanStrategy{
-			Continuous:   planStrategy.Continuous,
-			Precondition: time.Duration(planStrategy.Precondition) * time.Second,
-		}); err != nil {
+		if err := planStrategyHandlerSetter(w, r, lp.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		s := lp.GetPlanStrategy()
-		res := struct {
-			Continuous   bool  `json:"continuous"`
-			Precondition int64 `json:"precondition"`
-		}{
+		res := planStrategyPayload{
 			Continuous:   s.Continuous,
 			Precondition: int64(s.Precondition.Seconds()),
 		}

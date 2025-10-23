@@ -252,20 +252,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
-		{"planStrategy", func(payload string) error {
-			var strategy struct {
-				Continuous   bool  `json:"continuous"`
-				Precondition int64 `json:"precondition"`
-			}
-			err := json.Unmarshal([]byte(payload), &strategy)
-			if err == nil {
-				err = lp.SetPlanStrategy(api.PlanStrategy{
-					Continuous:   strategy.Continuous,
-					Precondition: time.Duration(strategy.Precondition) * time.Second,
-				})
-			}
-			return err
-		}},
+		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
 		{"planEnergy", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
@@ -302,20 +289,7 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
 		{"limitSoc", intSetter(pass(v.SetLimitSoc))},
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
-		{"planStrategy", func(payload string) error {
-			var strategy struct {
-				Precondition int64 `json:"precondition"`
-				Continuous   bool  `json:"continuous"`
-			}
-			err := json.Unmarshal([]byte(payload), &strategy)
-			if err == nil {
-				err = v.SetPlanStrategy(api.PlanStrategy{
-					Continuous:   strategy.Continuous,
-					Precondition: time.Duration(strategy.Precondition) * time.Second,
-				})
-			}
-			return err
-		}},
+		{"planStrategy", planStrategySetter(v.SetPlanStrategy)},
 		{"planSoc", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`

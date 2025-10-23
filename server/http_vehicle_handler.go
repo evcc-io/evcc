@@ -111,6 +111,17 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+func planStrategyHandlerSetter(w http.ResponseWriter, r *http.Request, set func(api.PlanStrategy) error) error {
+	var planStrategy planStrategyPayload
+	if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
+		return err
+	}
+	return set(api.PlanStrategy{
+		Continuous:   planStrategy.Continuous,
+		Precondition: time.Duration(planStrategy.Precondition) * time.Second,
+	})
+}
+
 // updatePlanStrategyHandler updates plan strategy
 func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -120,27 +131,14 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-		var planStrategy = struct {
-			Continuous   bool  `json:"continuous"`
-			Precondition int64 `json:"precondition"`
-		}{}
-		if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		if err := v.SetPlanStrategy(api.PlanStrategy{
-			Continuous:   planStrategy.Continuous,
-			Precondition: time.Duration(planStrategy.Precondition) * time.Second,
-		}); err != nil {
+
+		if err := planStrategyHandlerSetter(w, r, v.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		s := v.GetPlanStrategy()
-		res := struct {
-			Continuous   bool  `json:"continuous"`
-			Precondition int64 `json:"precondition"`
-		}{
+		res := planStrategyPayload{
 			Continuous:   s.Continuous,
 			Precondition: int64(s.Precondition.Seconds()),
 		}

@@ -14,8 +14,8 @@ import (
 
 type planStruct struct {
 	Soc          int       `json:"soc"`
-	Precondition int64     `json:"precondition"`
 	Continuous   bool      `json:"continuous"`
+	Precondition int64     `json:"precondition"`
 	Time         time.Time `json:"time"`
 }
 
