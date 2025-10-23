@@ -41,19 +41,19 @@ func (t *Template) UpdateParamsWithDefaults() error {
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {
 		if !slices.Contains(ValidCapabilities, c) {
-			return fmt.Errorf("invalid capability '%s' in template %s", c, t.Template)
+			return fmt.Errorf("invalid capability '%s'", c)
 		}
 	}
 
 	for _, c := range t.Countries {
 		if !c.IsValid() {
-			return fmt.Errorf("invalid country code '%s' in template %s", c, t.Template)
+			return fmt.Errorf("invalid country code '%s'", c)
 		}
 	}
 
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
-			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)
+			return fmt.Errorf("invalid requirement '%s'", r)
 		}
 	}
 
@@ -63,26 +63,26 @@ func (t *Template) Validate() error {
 		}
 
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
-			return fmt.Errorf("description for param %s cant be empty in template %s", p.Name, t.Template)
+			return fmt.Errorf("param %s description can't be empty", p.Name)
 		}
 
 		maxLength := 50
 		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
 		if actualLength > maxLength {
-			return fmt.Errorf("description for param %s is too long in template %s. allowed: %d. actual length: %d. use help field for details instead.", p.Name, t.Template, maxLength, actualLength)
+			return fmt.Errorf("param %s description too long (allowed: %d, actual: %d)- use 'help' for details", p.Name, maxLength, actualLength)
 		}
 
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
 				if !slices.Contains(UsageStrings(), c) {
-					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
+					return fmt.Errorf("invalid usage choice '%s'", c)
 				}
 			}
 		case ParamModbus:
 			for _, c := range p.Choice {
 				if !slices.Contains(ValidModbusChoices, c) {
-					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
+					return fmt.Errorf("invalid modbus choice '%s'", c)
 				}
 			}
 		}

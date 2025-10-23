@@ -62,7 +62,7 @@ func generateDocs(lang string) error {
 func generateClass(class templates.Class, lang string) error {
 	for _, tmpl := range templates.ByClass(class) {
 		if err := tmpl.Validate(); err != nil {
-			return err
+			return fmt.Errorf("template %s: %w", tmpl.Template, err)
 		}
 
 		for _, product := range tmpl.Products {
