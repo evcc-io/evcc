@@ -167,6 +167,7 @@ func (o *calcPlugin) floatGetter() (float64, error) {
 				break
 			}
 		}
+
 	case len(o.min) > 0:
 		for idx, p := range o.min {
 			v, err := p()
@@ -179,6 +180,7 @@ func (o *calcPlugin) floatGetter() (float64, error) {
 				res = math.Min(res, v)
 			}
 		}
+
 	case len(o.max) > 0:
 		for idx, p := range o.max {
 			v, err := p()
@@ -191,6 +193,7 @@ func (o *calcPlugin) floatGetter() (float64, error) {
 				res = math.Max(res, v)
 			}
 		}
+
 	case o.abs != nil:
 		v, err := o.abs()
 		if err != nil {
