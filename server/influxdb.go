@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	"maps"
 	"reflect"
 	"strconv"
 	"strings"
@@ -139,19 +140,17 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 			for i := range val.Len() {
 				// clone tags to prevent leakage between elements
 				elementTags := make(map[string]string, len(tags)+2)
-				for k, v := range tags {
-					elementTags[k] = v
-				}
+				maps.Copy(elementTags, tags)
 				elementTags["id"] = strconv.Itoa(i + 1)
 
-				el := val.Index(i).Interface()
+				elemValue := val.Index(i)
 				// Check if element provides a title
-				if tp, ok := el.(api.TitleDescriber); ok {
+				if tp, ok := reflect.TypeAssert[api.TitleDescriber](elemValue); ok {
 					if title := tp.GetTitle(); title != "" {
 						elementTags["title"] = title
 					}
 				}
-				m.writeComplexPoint(writer, key, el, elementTags)
+				m.writeComplexPoint(writer, key, elemValue.Interface(), elementTags)
 			}
 			return
 		}
