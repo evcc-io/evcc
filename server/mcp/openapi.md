@@ -368,34 +368,6 @@ call previewLoadpointEnergyPlan {
 }
 ```
 
-## previewLoadpointRepeatingPlan
-
-Simulate repeating charging plan and return the result. Does not alter the actual charging plan.
-
-**Tags:** loadpoints
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| hourMinuteTime | string | Time in `HOURS:MINUTES` format |
-| id | integer | Loadpoint index starting at 1 |
-| soc | number | SOC in % |
-| timezone | string | Timezone in IANA format |
-| weekdays | array | The Weekdays |
-
-**Example call:**
-
-```json
-call previewLoadpointRepeatingPlan {
-  "hourMinuteTime": "example",
-  "id": 123,
-  "soc": 123.45,
-  "timezone": "example",
-  "weekdays": "..."
-}
-```
-
 ## previewLoadpointSocPlan
 
 Simulate charging plan based on SoC goal. Does not alter the actual charging plan.
@@ -684,6 +656,28 @@ call setLoadpointPhases {
 }
 ```
 
+## setLoadpointPlanStrategy
+
+Updates the charging plan strategy for the loadpoint.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call setLoadpointPlanStrategy {
+  "id": 123,
+  "requestBody": "..."
+}
+```
+
 ## setLoadpointPriority
 
 Set loadpoint priority.
@@ -964,6 +958,28 @@ call setVehicleMinSoc {
 }
 ```
 
+## setVehiclePlanStrategy
+
+Updates the charging plan strategy for the vehicle.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Vehicle name |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call setVehiclePlanStrategy {
+  "name": "example",
+  "requestBody": "..."
+}
+```
+
 ## setVehicleSocLimit
 
 Charging will stop when this SoC is reached.
@@ -997,7 +1013,6 @@ Create charging plan with fixed time and SoC target.
 | Name | Type | Description |
 |------|------|-------------|
 | name | string | Vehicle name |
-| precondition | integer | Late charging duration in seconds. |
 | soc | number | SOC in % |
 | timestamp | string | Timestamp in RFC3339 format |
 
@@ -1006,7 +1021,6 @@ Create charging plan with fixed time and SoC target.
 ```json
 call setVehicleSocPlan {
   "name": "example",
-  "precondition": 123,
   "soc": 123.45,
   "timestamp": "example"
 }

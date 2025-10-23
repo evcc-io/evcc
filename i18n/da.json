@@ -788,11 +788,12 @@
       "modalTitle": "Lade plan",
       "none": "ingen",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Oplad {duration} før afgang til batterikonditionering.",
-      "preconditionLong": "Sen opladning",
-      "preconditionOptionAll": "alt",
-      "preconditionOptionNo": "nej",
-      "preconditionShort": "Sen",
+      "precondition": {
+        "description": "Oplad {duration} før afgang til batterikonditionering.",
+        "label": "Sen opladning",
+        "optionAll": "alt",
+        "optionNo": "nej"
+      },
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
