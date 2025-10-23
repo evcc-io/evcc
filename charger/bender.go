@@ -42,6 +42,7 @@ type sempHandler struct {
 	deviceID string
 	conn     *semp.Connection
 	deviceG  util.Cacheable[semp.Device2EM]
+	phases   int
 }
 
 // BenderCC charger implementation
@@ -216,11 +217,13 @@ func (wb *BenderCC) heartbeat(ctx context.Context) {
 			return
 		}
 		if time.Since(wb.semp.conn.Updated()) >= time.Minute {
-			// Always send a very high power value to allow full control between 6 and 16A via modbus
+
+			// Send a very high power value to allow full control between 6 and 16A via modbus
 			// Note: This will not trigger a phase switch, as the value is above the max. power consumption
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err != nil {
 				wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
 			}
+
 		}
 	}
 }
@@ -473,6 +476,8 @@ func (wb *BenderCC) phases1p3pSEMP(phases int) error {
 		return err
 	}
 
+	wb.semp.phases = phases
+
 	wb.semp.deviceG.Reset()
 
 	return nil
@@ -488,9 +493,11 @@ func (wb *BenderCC) getPhases() (int, error) {
 
 	if binary.BigEndian.Uint16(b) == 5 {
 		return 1, nil
+	} else if binary.BigEndian.Uint16(b) == 1 {
+		return 3, nil
 	}
 
-	return 3, nil
+	return wb.semp.phases, nil
 }
 
 // identify implements the api.Identifier interface
