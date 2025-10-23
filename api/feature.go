@@ -11,5 +11,6 @@ const (
 	Cacheable                // tariff
 	Offline                  // vehicle
 	Retryable                // vehicle
+	Streaming                // vehicle
 	WelcomeCharge            // vehicle
 )
