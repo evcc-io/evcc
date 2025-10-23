@@ -56,10 +56,10 @@ template: {{ .Template }}
 product:
   identifier: {{ .ProductIdentifier }}
 {{- if .ProductBrand }}
-  brand: {{ .ProductBrand }}
+  brand: "{{ .ProductBrand }}"
 {{- end }}
 {{- if .ProductDescription }}
-  description: {{ .ProductDescription }}
+  description: "{{ .ProductDescription }}"
 {{- end }}
 {{- if .ProductGroup }}
   group: {{ .ProductGroup }}
