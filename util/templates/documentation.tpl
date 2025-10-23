@@ -59,7 +59,7 @@ product:
   brand: {{ quote .ProductBrand }}
 {{- end }}
 {{- if .ProductDescription }}
-  description: "{{ .ProductDescription }}"
+  description: {{ quote .ProductDescription }}
 {{- end }}
 {{- if .ProductGroup }}
   group: {{ .ProductGroup }}
