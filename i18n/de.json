@@ -40,7 +40,7 @@
       "chargers": "Wallboxen",
       "generic": "Generische Integrationen",
       "heatingdevices": "Wärmeerzeuger",
-      "ocppHelp": "Kopiere diese Adresse in die Konfiguration der Wallbox.",
+      "ocppHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox hängt automatisch ihre eindeutige Kennung (Station-ID) an die URL an. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Schaltbare Steckdosen",
       "template": "Hersteller",
