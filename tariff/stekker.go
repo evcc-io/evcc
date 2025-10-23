@@ -27,9 +27,10 @@ var supportedRegions = []string{
 // Stekker provider
 type Stekker struct {
 	*embed
-	region string
-	log    *util.Logger
-	data   *util.Monitor[api.Rates]
+	region   string
+	interval time.Duration
+	log      *util.Logger
+	data     *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Stekker)(nil)
@@ -59,18 +60,23 @@ func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	interval := time.Hour
+
 	switch cc.Region {
 	case "BE":
 		cc.Region = "BE-900"
+		interval = 15 * time.Minute
 	case "NL":
 		cc.Region = "NL-900"
+		interval = 15 * time.Minute
 	}
 
 	t := &Stekker{
-		embed:  &cc.embed,
-		region: cc.Region,
-		log:    util.NewLogger("stekker"),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		embed:    &cc.embed,
+		region:   cc.Region,
+		interval: interval,
+		log:      util.NewLogger("stekker"),
+		data:     util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	return runOrError(t)
@@ -143,14 +149,9 @@ func (t *Stekker) run(done chan error) {
 					continue
 				}
 
-				duration := time.Hour
-				if t.region == "BE" || t.region == "NL" {
-					duration = SlotDuration
-				}
-
 				res = append(res, api.Rate{
 					Start: start,
-					End:   start.Add(duration),
+					End:   start.Add(t.interval),
 					Value: t.totalPrice(yt/1000.0, start), // €/MWh → €/kWh
 				})
 			}

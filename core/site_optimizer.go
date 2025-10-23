@@ -213,6 +213,28 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
 				}
 			}
+
+			// TODO remove once (using) smartcost limit becomes obsolete
+			if costLimit := lp.GetSmartCostLimit(); costLimit != nil {
+				maxLen := min(minLen, len(grid))
+
+				// limit hit?
+				if slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+					return r.Value <= *costLimit
+				}) {
+					maxPower := lp.EffectiveMaxPower()
+
+					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
+						return float32(maxPower)
+					}), firstSlotDuration)
+
+					for i := range maxLen {
+						if grid[i].Value > *costLimit {
+							bat.PDemand[i] = 0
+						}
+					}
+				}
+			}
 		}
 
 		req.Batteries = append(req.Batteries, bat)

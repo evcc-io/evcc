@@ -38,8 +38,8 @@ type Device interface {
 	UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
 }
 
-// EVSE UseCases
-type UseCasesEVSE struct {
+// Customer Energy Management
+type CustomerEnergyManagement struct {
 	EvseCC ucapi.CemEVSECCInterface
 	EvCC   ucapi.CemEVCCInterface
 	EvCem  ucapi.CemEVCEMInterface
@@ -47,18 +47,25 @@ type UseCasesEVSE struct {
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
 }
-type UseCasesCS struct {
-	LPC  ucapi.CsLPCInterface
-	LPP  ucapi.CsLPPInterface
-	MGCP ucapi.MaMGCPInterface
-	MPC  ucapi.MaMPCInterface
+
+// Controllable System
+type ControllableSystem struct {
+	ucapi.CsLPCInterface
+	ucapi.CsLPPInterface
+}
+
+// Monitoring Appliance
+type MonitoringAppliance struct {
+	ucapi.MaMGCPInterface
+	ucapi.MaMPCInterface
 }
 
 type EEBus struct {
 	service eebusapi.ServiceInterface
 
-	evseUC UseCasesEVSE
-	csUC   UseCasesCS
+	cem CustomerEnergyManagement
+	cs  ControllableSystem
+	ma  MonitoringAppliance
 
 	mux sync.Mutex
 	log *util.Logger
@@ -142,7 +149,7 @@ func NewServer(other Config) (*EEBus, error) {
 	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
 
 	// evse
-	c.evseUC = UseCasesEVSE{
+	c.cem = CustomerEnergyManagement{
 		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
 		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
 		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
@@ -152,19 +159,24 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	// controllable system
-	c.csUC = UseCasesCS{
-		LPC:  lpc.NewLPC(localEntity, c.ucCallback),
-		LPP:  lpp.NewLPP(localEntity, c.ucCallback),
-		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MPC:  mpc.NewMPC(localEntity, c.ucCallback),
+	c.cs = ControllableSystem{
+		CsLPCInterface: lpc.NewLPC(localEntity, c.ucCallback),
+		CsLPPInterface: lpp.NewLPP(localEntity, c.ucCallback),
+	}
+
+	// monitoring appliance
+	c.ma = MonitoringAppliance{
+		MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+		MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
 	for _, uc := range []eebusapi.UseCaseInterface{
-		c.evseUC.EvseCC, c.evseUC.EvCC,
-		c.evseUC.EvCem, c.evseUC.OpEV,
-		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.LPP, c.csUC.MGCP, c.csUC.MPC,
+		c.cem.EvseCC, c.cem.EvCC,
+		c.cem.EvCem, c.cem.OpEV,
+		c.cem.OscEV, c.cem.EvSoc,
+		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
+		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -206,12 +218,16 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	}
 }
 
-func (c *EEBus) Evse() *UseCasesEVSE {
-	return &c.evseUC
+func (c *EEBus) CustomerEnergyManagement() *CustomerEnergyManagement {
+	return &c.cem
 }
 
-func (c *EEBus) ControllableSystem() *UseCasesCS {
-	return &c.csUC
+func (c *EEBus) ControllableSystem() *ControllableSystem {
+	return &c.cs
+}
+
+func (c *EEBus) MonitoringAppliance() *MonitoringAppliance {
+	return &c.ma
 }
 
 func (c *EEBus) Run() {
