@@ -45,15 +45,15 @@ func Persist() error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if dirty := lo.Filter(settings, func(s setting, _ int) bool {
-		return s.dirty
+	if dirty := lo.FilterMap(settings, func(s setting, _ int) (*setting, bool) {
+		return &s, s.dirty
 	}); len(dirty) > 0 {
 		if err := db.Instance.Save(dirty).Error; err != nil {
 			return err
 		}
 
-		for i := range settings {
-			settings[i].dirty = false
+		for _, s := range dirty {
+			s.dirty = false
 		}
 	}
 
