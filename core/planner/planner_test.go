@@ -302,8 +302,8 @@ func TestPrecondition(t *testing.T) {
 	plan = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), false)
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
-			End:   clock.Now().Add(tariff.SlotDuration),
+			Start: clock.Now(),
+			End:   clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
 			Value: 1,
 		},
 		{
@@ -311,7 +311,7 @@ func TestPrecondition(t *testing.T) {
 			End:   clock.Now().Add(4 * tariff.SlotDuration),
 			Value: 4,
 		},
-	}, plan, "expected short early and late slot")
+	}, plan, "expected trimmed slot at beginning and precondition slot")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
@@ -444,7 +444,7 @@ func TestStartBeforeRatesInsufficientTime(t *testing.T) {
 	targetTime := now.Add(4 * time.Hour)
 	requiredDuration := 3 * time.Hour // Need 3h but only 2h available after rates start
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan := planner.Plan(requiredDuration, 0, targetTime, false) // dispersed mode
 
 	require.NotEmpty(t, plan, "plan should not be empty - starts when rates become available")
 

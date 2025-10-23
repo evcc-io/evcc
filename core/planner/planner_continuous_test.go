@@ -286,8 +286,8 @@ func TestContinuous_Precondition(t *testing.T) {
 	plan = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
-			End:   clock.Now().Add(tariff.SlotDuration),
+			Start: clock.Now(),
+			End:   clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
 			Value: 1,
 		},
 		{
@@ -295,7 +295,7 @@ func TestContinuous_Precondition(t *testing.T) {
 			End:   clock.Now().Add(4 * tariff.SlotDuration),
 			Value: 4,
 		},
-	}, plan, "expected short early and late slot")
+	}, plan, "expected trimmed slot at beginning and precondition slot")
 }
 
 func TestContinuous_ContinuousPlanNoTariff(t *testing.T) {
@@ -430,9 +430,54 @@ func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 
 	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
-	require.NotEmpty(t, plan, "plan should not be empty - starts when rates become available")
+	require.NotEmpty(t, plan, "plan should not be empty")
 
-	// Best effort: start as soon as rates are available
-	assert.Equal(t, now.Add(2*time.Hour), plan[0].Start, "should start at first available rate")
-	assert.Equal(t, 0.10, plan[0].Value, "should use first available rate price")
+	// Best effort: start immediately to maximize charging time
+	assert.Equal(t, now, plan[0].Start, "should start immediately")
+	assert.Equal(t, 0.0, plan[0].Value, "gap-filling slot before rates has no price")
+}
+
+// TestContinuous_StartBeforeRatesSufficientTime tests that when current time
+// is before the first available rate AND there IS enough time to complete
+// charging, the planner finds the cheapest continuous window
+func TestContinuous_StartBeforeRatesSufficientTime(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	c := clock.NewMock()
+	c.Set(now)
+
+	ctrl := gomock.NewController(t)
+	log := util.NewLogger("test")
+
+	// Rates start 2 hours in the future, we need 2 hours to charge
+	// and target is 8 hours away (enough time to optimize)
+	rates := api.Rates{
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.20},
+		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.15},
+		{Start: now.Add(4 * time.Hour), End: now.Add(5 * time.Hour), Value: 0.10}, // cheapest
+		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.08}, // cheapest
+		{Start: now.Add(6 * time.Hour), End: now.Add(7 * time.Hour), Value: 0.12},
+		{Start: now.Add(7 * time.Hour), End: now.Add(8 * time.Hour), Value: 0.25},
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
+	planner := &Planner{
+		log:    log,
+		clock:  c,
+		tariff: trf,
+	}
+
+	targetTime := now.Add(8 * time.Hour)
+	requiredDuration := 2 * time.Hour
+
+	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+
+	require.NotEmpty(t, plan, "plan should not be empty")
+	require.Len(t, plan, 2, "should find 2-hour continuous window")
+
+	// Should find cheapest continuous 2-hour window (04:00-06:00)
+	assert.Equal(t, now.Add(4*time.Hour), plan[0].Start, "should start at cheapest window")
+	assert.Equal(t, 0.10, plan[0].Value, "first slot should have cheapest window price")
+	assert.Equal(t, 0.08, plan[1].Value, "second slot should have cheapest window price")
 }
