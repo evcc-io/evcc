@@ -43,6 +43,9 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+		title: {
+			type: String,
+		},
 		tags: {
 			type: Object,
 			default: () => ({}),
@@ -51,6 +54,9 @@ export default {
 	emits: ["edit"],
 	computed: {
 		cardTitle() {
+			if (this.title) {
+				return this.title;
+			}
 			if (this.meter.deviceTitle) {
 				return this.meter.deviceTitle;
 			}
