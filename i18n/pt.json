@@ -118,7 +118,7 @@
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
-      "vehicleLimitSoc": "Limite do veículo",
+      "vehicleLimitSoc": "Limite da carga",
       "yes": "sim"
     },
     "deviceValueChargeStatus": {
