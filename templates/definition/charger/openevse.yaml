@@ -9,7 +9,6 @@ params:
   - name: host
   - name: user
   - name: password
-    mask: true
 render: |
   type: openevse
   uri: http://{{ .host }}

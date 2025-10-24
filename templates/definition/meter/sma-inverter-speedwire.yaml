@@ -12,7 +12,6 @@ params:
     choice: ["pv", "battery"]
   - name: host
   - name: password
-    mask: true
     help:
       en: Password for user group Standard
       de: Passwort für Benutzergruppe Benutzer

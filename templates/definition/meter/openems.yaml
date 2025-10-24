@@ -15,7 +15,6 @@ params:
     allinone: true
   - name: host
   - name: password
-    mask: true
     default: user
     advanced: true
   - name: battery

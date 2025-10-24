@@ -12,7 +12,6 @@ params:
       de: Standard-User ist admin
       en: admin is default
   - name: password
-    mask: true
   - name: channel
     default: 1
     required: true
@@ -26,11 +25,7 @@ params:
 render: |
   type: tasmota
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   channel: [{{ .channel }}]  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}

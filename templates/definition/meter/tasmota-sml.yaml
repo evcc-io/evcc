@@ -63,7 +63,6 @@ params:
       de: Standard-User ist admin
       en: admin is default
   - name: password
-    mask: true
 render: |
   type: tasmota
   uri: http://{{ .host }}

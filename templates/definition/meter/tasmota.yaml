@@ -13,7 +13,6 @@ params:
       de: Standard-User ist admin
       en: admin is default
   - name: password
-    mask: true
   - name: channel
     default: 1
     required: true
