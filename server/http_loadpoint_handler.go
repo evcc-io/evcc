@@ -154,8 +154,7 @@ func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := struct{}{}
-		jsonWrite(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }
 
@@ -187,8 +186,7 @@ func vehicleSelectHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.SetVehicle(nil)
-		res := struct{}{}
-		jsonWrite(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }
 
@@ -196,8 +194,7 @@ func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.StartVehicleDetection()
-		res := struct{}{}
-		jsonWrite(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }
 
@@ -209,11 +206,8 @@ func planStrategyHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		s := lp.GetPlanStrategy()
-		res := planStrategyPayload{
-			Continuous:   s.Continuous,
-			Precondition: int64(s.Precondition.Seconds()),
-		}
+		res := planStrategyPayloadFromApi(lp.GetPlanStrategy())
+
 		jsonWrite(w, res)
 	}
 }

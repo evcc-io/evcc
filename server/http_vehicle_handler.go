@@ -137,11 +137,7 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		s := v.GetPlanStrategy()
-		res := planStrategyPayload{
-			Continuous:   s.Continuous,
-			Precondition: int64(s.Precondition.Seconds()),
-		}
+		res := planStrategyPayloadFromApi(v.GetPlanStrategy())
 
 		jsonWrite(w, res)
 	}
@@ -192,7 +188,6 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		res := struct{}{}
-		jsonWrite(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }
