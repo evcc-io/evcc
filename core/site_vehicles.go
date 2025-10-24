@@ -70,7 +70,7 @@ func (site *Site) publishVehicles() {
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
-			lp.PublishEffectiveValues()
+			go lp.PublishEffectiveValues()
 		}
 	}
 
