@@ -401,20 +401,20 @@ func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
 
 	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
 
-	lp.planStrategy = strategy
-	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
-	lp.publish(keys.PlanContinuous, strategy.Continuous)
-	lp.settings.SetJson(keys.PlanStrategy, strategy)
-
-	return nil
+	return lp.setPlanStrategy(strategy)
 }
 
 // setPlanStrategy sets the plan strategy (no mutex)
-func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) {
+func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
+	if err := lp.settings.SetJson(keys.PlanStrategy, strategy); err != nil {
+		return err
+	}
+
 	lp.planStrategy = strategy
 	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
 	lp.publish(keys.PlanContinuous, strategy.Continuous)
-	lp.settings.SetJson(keys.PlanStrategy, strategy)
+
+	return nil
 }
 
 // GetPlanStrategy returns the plan strategy

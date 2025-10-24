@@ -142,6 +142,7 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 			Continuous:   s.Continuous,
 			Precondition: int64(s.Precondition.Seconds()),
 		}
+
 		jsonWrite(w, res)
 	}
 }
@@ -161,8 +162,7 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
 		}
 
-		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
-		if err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&plansWrapper); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
