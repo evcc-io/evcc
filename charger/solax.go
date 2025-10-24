@@ -21,6 +21,8 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -38,30 +40,44 @@ type Solax struct {
 
 const (
 	// holding (FC 0x03, 0x06, 0x10)
-	solaxRegDeviceMode      = 0x060D // uint16
-	solaxRegStartChargeMode = 0x0610 // uint16
-	solaxRegPhases          = 0x0625 // uint16
-	solaxRegCommandControl  = 0x0627 // uint16
-	solaxRegMaxCurrent      = 0x0628 // uint16 0.01A
+	solaxRegSerialNumber   = 0x0600 // 7x string
+	solaxRegDeviceMode     = 0x060D // uint16
+	solaxRegCommandControl = 0x0627 // uint16
+	solaxRegMaxCurrent     = 0x0628 // uint16 0.01A
+	solaxRegPhaseSwitch    = 0xA105 // uint16
 
 	// input (FC 0x04)
-	solaxRegVoltages    = 0x0000 // 3x uint16 0.01V
-	solaxRegCurrents    = 0x0004 // 3x uint16 0.01A
-	solaxRegActivePower = 0x000B // uint16 1W
-	solaxRegTotalEnergy = 0x0010 // uint32s 0.1kWh
-	solaxRegState       = 0x001D // uint16
+	solaxRegVoltages           = 0x0000 // 3x uint16 0.01V
+	solaxRegCurrents           = 0x0004 // 3x uint16 0.01A
+	solaxRegActivePower        = 0x000B // uint16 1W
+	solaxRegTotalEnergy        = 0x0010 // uint32 0.1kWh
+	solaxRegState              = 0x001D // uint16
+	solaxRegFaultCode          = 0x001E // 2x uint32
+	solaxRegFirmwareVersion    = 0x0025 // uint16 Vx.xx
+	solaxRegConnectionStrength = 0x0027 // uint16 1%
+	solaxRegPhases             = 0x0028 // uint16
+	solaxRegLockState          = 0x002D // uint16
+	solaxRegBatterySoC         = 0x0A24 // uint16 0.1kWh
 
+	// commands
 	solaxCmdStop  = 3
 	solaxCmdStart = 4
 
+	// modes
 	solaxModeStop = 0
 	solaxModeFast = 1
+	solaxModeECO  = 2
+
+	// firmware threshold for phase switching support
+	solaxFirmwarePhaseSwitching = 611
 )
 
 func init() {
 	registry.AddCtx("solax", NewSolaxG1FromConfig)
 	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
+
+//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 func NewSolaxG1FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
@@ -73,22 +89,31 @@ func NewSolaxG2FromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 // NewSolaxFromConfig creates a Solax charger from generic config
 func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}, isLegacyHw bool) (api.Charger, error) {
-	cc := modbus.Settings{
-		ID: 1,
+	cc := struct {
+		modbus.Settings `mapstructure:",squash"`
+		Timeout         time.Duration
+	}{
+		Settings: modbus.Settings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, isLegacyHw)
+	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Timeout, isLegacyHw)
 }
 
 // NewSolax creates Solax charger
-func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, isLegacyHw bool) (api.Charger, error) {
+func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, timeout time.Duration, isLegacyHw bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if timeout > 0 {
+		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {
@@ -104,7 +129,20 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 		isLegacyHw: isLegacyHw,
 	}
 
-	return wb, err
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
+	var soc func() (float64, error)
+
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
+		v := encoding.Uint16(b)
+		if !wb.isLegacyHw && v > solaxFirmwarePhaseSwitching {
+			phases1p3p = wb.phases1p3p
+			phasesG = wb.getPhases
+			soc = wb.soc
+		}
+	}
+
+	return decorateSolax(wb, phases1p3p, phasesG, soc), nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -135,10 +173,13 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		5: // "Unavailable"
 		return api.StatusA, nil
 	case
-		1, // "Preparing"
-		8, // "SuspendedEVSE"
-		7, // "SuspendedEV"
-		3: // "Finishing"
+		1,  // "Preparing"
+		3,  // "Finishing"
+		7,  // "SuspendedEV"
+		8,  // "SuspendedEVSE"
+		11, // "StartDelay"
+		12, // "ChargPause"
+		17: // "PhaseSwitching"
 		return api.StatusB, nil
 	case 2: // "Charging"
 		return api.StatusC, nil
@@ -228,19 +269,94 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
-/* https://github.com/evcc-io/evcc/pull/14108
-var _ api.PhaseSwitcher = (*Solax)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *Solax) Phases1p3p(phases int) error {
+func (wb *Solax) phases1p3p(phases int) error {
 	var u uint16
 
-	if phases == 1 {
-		u = 1
+	if phases == 3 {
+		u = 2
 	}
 
-	_, err := wb.conn.WriteSingleRegister(solaxRegPhases, u)
+	_, err := wb.conn.WriteSingleRegister(solaxRegPhaseSwitch, u)
 
 	return err
 }
-*/
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Solax) getPhases() (int, error) {
+	b, err := wb.conn.ReadInputRegisters(solaxRegPhases, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// 0=three-phase, 1/2/3=single-phase
+	if binary.BigEndian.Uint16(b) == 0 {
+		return 0, nil
+	}
+
+	return 1, nil
+}
+
+// soc implements the api.Battery interface
+func (wb *Solax) soc() (float64, error) {
+	soc, err := wb.conn.ReadInputRegisters(solaxRegBatterySoC, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(soc)) / 10, nil
+}
+
+var _ api.Diagnosis = (*Delta)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Solax) Diagnose() {
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegSerialNumber, 7); err == nil {
+		fmt.Printf("\tSerial Number:\t%s\n", bytesAsString(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
+		v := encoding.Uint16(b)
+		fmt.Printf("\tFirmware Version:\tV%d.%02d\n", v/100, v%100)
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxRegConnectionStrength, 1); err == nil {
+		fmt.Printf("\tConnection Strength (RSSI):\t%d%%\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxRegFaultCode, 2); err == nil {
+		code := binary.BigEndian.Uint32(b)
+		fmt.Printf("\tFault Code:\t0x%08X", code)
+
+		// Collect all set bits
+		var setBits []string
+		for bitIndex := 0; bitIndex < 32; bitIndex++ {
+			if (code & (1 << bitIndex)) != 0 { // Check if the bit is set
+				setBits = append(setBits, fmt.Sprintf("%d", bitIndex+1)) // Add the 1-based bit number
+			}
+		}
+		if len(setBits) > 0 {
+			fmt.Printf(", Set Bits: %s\n", strings.Join(setBits, ","))
+		} else {
+			fmt.Printf(", Set Bits: None\n")
+		}
+	}
+	if b, err := wb.conn.ReadInputRegisters(solaxRegLockState, 1); err == nil {
+		switch state := encoding.Uint16(b); state {
+		case 0:
+			fmt.Printf("\tLock State:\tUnlocked (%d)\n", state)
+		case 1:
+			fmt.Printf("\tLock State:\tLocked (%d)\n", state)
+		default:
+			fmt.Printf("\tLock State:\tUnknown (%d)\n", state)
+		}
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1); err == nil {
+		switch state := encoding.Uint16(b); state {
+		case solaxModeStop:
+			fmt.Printf("\tDevice Mode:\tStop (%d)\n", state)
+		case solaxModeFast:
+			fmt.Printf("\tDevice Mode:\tFast (%d)\n", state)
+		case solaxModeECO:
+			fmt.Printf("\tDevice Mode:\tECO (%d)\n", state)
+		default:
+			fmt.Printf("\tDevice Mode:\tUnknown (%d)\n", state)
+		}
+	}
+}
