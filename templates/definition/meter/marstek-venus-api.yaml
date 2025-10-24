@@ -1,0 +1,37 @@
+template: marstek-venus-api
+products:
+  - brand: Marstek
+    description:
+      generic: Venus Battery Storage (OpenAPI)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Die Kommunikation erfolgt lokal. evcc muss im selben Netzwerk wie die Batterie sein.
+    en: |
+      The communication is done locally. evcc must be in the same network as the battery system.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+  - name: port
+    default: 30000
+  - name: capacity
+    default: 5.12
+    help:
+      de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
+      en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
+  - name: work_mode_normal
+    default: 1
+    advanced: true
+    description:
+      en: Work mode for Normal state
+      de: Work mode für Normal-Modus
+    help:
+      en: 0=manual, 1=anti-feed, 2=trade mode.
+      de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
+render: |
+  type: marstek-venus-api
+  usage: {{ .usage }}
+  uri: {{ .host }}:{{ .port }}
+  capacity: {{ .capacity }} # kWh
