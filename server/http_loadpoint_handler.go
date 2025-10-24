@@ -42,6 +42,18 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		strategy := lp.EffectivePlanStrategy()
+
+		// Override strategy with query parameters if provided (for preview)
+		if r.URL.Query().Has("continuous") {
+			continuous := r.URL.Query().Get("continuous") == "true"
+			strategy.Continuous = continuous
+		}
+		if precondStr := r.URL.Query().Get("precondition"); precondStr != "" {
+			if precond, err := strconv.ParseInt(precondStr, 10, 64); err == nil {
+				strategy.Precondition = time.Duration(precond) * time.Second
+			}
+		}
+
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
 		res := PlanResponse{
@@ -92,6 +104,17 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		strategy := lp.EffectivePlanStrategy()
+
+		// Override strategy with query parameters if provided
+		if r.URL.Query().Has("continuous") {
+			continuous := r.URL.Query().Get("continuous") == "true"
+			strategy.Continuous = continuous
+		}
+		if precondStr := r.URL.Query().Get("precondition"); precondStr != "" {
+			if precond, err := strconv.ParseInt(precondStr, 10, 64); err == nil {
+				strategy.Precondition = time.Duration(precond) * time.Second
+			}
+		}
 
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
