@@ -1,4 +1,3 @@
-
 package planner
 
 import (
@@ -275,19 +274,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
+	var chargingRates api.Rates
 	if precondition > 0 {
-		rates, precond = splitPreconditionSlots(rates, targetTime)
-
-		// Trim precondition slots to exactly match precondition duration and add excess to required
-		if len(precond) > 0 {
-			if excess := originalTargetTime.Add(-precondition).Sub(precond[0].Start); excess > 0 {
-				precond[0].Start, requiredDuration = precond[0].Start.Add(excess), requiredDuration+excess
-			}
-			if lastIdx := len(precond) - 1; precond[lastIdx].End.After(originalTargetTime) {
-				requiredDuration += precond[lastIdx].End.Sub(originalTargetTime)
-				precond[lastIdx].End = originalTargetTime
-			}
-		}
+		chargingRates, precond = splitPreconditionSlots(rates, targetTime)
+		precond = adjustPrecondition(precond, rates, precondition, originalTargetTime)
+		rates = chargingRates
 	}
 
 	// check if available rates span is sufficient for sliding window
@@ -346,3 +337,45 @@ func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates,
 	return res, precond
 }
 
+func adjustPrecondition(precond, allRates api.Rates, precondition time.Duration, targetTime time.Time) api.Rates {
+	if len(precond) == 0 {
+		return precond
+	}
+
+	// Trim last slot to end exactly at target
+	if precond[len(precond)-1].End.After(targetTime) {
+		precond[len(precond)-1].End = targetTime
+	}
+
+	// Calculate total duration
+	var total time.Duration
+	for _, p := range precond {
+		total += p.End.Sub(p.Start)
+	}
+
+	// If deficit, prepend slots from original rates to fill the gap
+	if deficit := precondition - total; deficit > 0 {
+		extendStart := precond[0].Start.Add(-deficit)
+		var extension api.Rates
+		for _, r := range allRates {
+			if r.End.Before(extendStart) || r.End.Equal(extendStart) {
+				continue
+			}
+			if r.Start.After(precond[0].Start) || r.Start.Equal(precond[0].Start) {
+				break
+			}
+			// Trim to fit the extension period
+			slot := r
+			if slot.Start.Before(extendStart) {
+				slot.Start = extendStart
+			}
+			if slot.End.After(precond[0].Start) {
+				slot.End = precond[0].Start
+			}
+			extension = append(extension, slot)
+		}
+		precond = append(extension, precond...)
+	}
+
+	return precond
+}
