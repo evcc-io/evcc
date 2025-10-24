@@ -54,7 +54,6 @@ func NewOpenWBProFromConfig(ctx context.Context, other map[string]interface{}) (
 	var wakeup func() error
 	if status.Version >= 9 {
 		wakeup = wb.wakeup
-
 	}
 
 	return decorateOpenWBPro(wb, wakeup), nil
