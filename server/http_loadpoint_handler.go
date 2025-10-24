@@ -26,6 +26,10 @@ type PlanPreviewResponse struct {
 	Duration int64     `json:"duration"`
 	Plan     api.Rates `json:"plan"`
 	Power    float64   `json:"power"`
+
+	// TODO remove
+	Continuous   bool  `json:"continuous"`
+	Precondition int64 `json:"precondition"`
 }
 
 // planHandler returns the current plan
@@ -96,6 +100,10 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
 			Power:    maxPower,
+
+			// TODO remove
+			Continuous:   strategy.Continuous,
+			Precondition: int64(strategy.Precondition.Seconds()),
 		}
 
 		jsonWrite(w, res)
