@@ -111,7 +111,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-func planStrategyHandlerSetter(w http.ResponseWriter, r *http.Request, set func(api.PlanStrategy) error) error {
+func planStrategyHandlerSetter(r *http.Request, set func(api.PlanStrategy) error) error {
 	var planStrategy planStrategyPayload
 	if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
 		return err
@@ -132,7 +132,7 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := planStrategyHandlerSetter(w, r, v.SetPlanStrategy); err != nil {
+		if err := planStrategyHandlerSetter(r, v.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

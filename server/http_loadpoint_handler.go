@@ -201,7 +201,7 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 // planStrategyHandler updates plan strategy for loadpoint
 func planStrategyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := planStrategyHandlerSetter(w, r, lp.SetPlanStrategy); err != nil {
+		if err := planStrategyHandlerSetter(r, lp.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
