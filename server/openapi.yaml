@@ -707,18 +707,6 @@ paths:
                 description: Download csv-file
                 type: string
                 format: binary
-  /settings/telemetry:
-    get:
-      operationId: getTelemetryStatus
-      summary: Telemetry status
-      description: "Returns the current telemetry status."
-      externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/telemetry
-      tags:
-        - system
-      responses:
-        200:
-          $ref: "#/components/responses/BooleanResult"
   /settings/telemetry/{enable}:
     post:
       operationId: setTelemetryStatus

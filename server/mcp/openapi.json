@@ -1863,24 +1863,6 @@
         ]
       }
     },
-    "/settings/telemetry": {
-      "get": {
-        "description": "Returns the current telemetry status.",
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
-        },
-        "operationId": "getTelemetryStatus",
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/BooleanResult"
-          }
-        },
-        "summary": "Telemetry status",
-        "tags": [
-          "system"
-        ]
-      }
-    },
     "/settings/telemetry/{enable}": {
       "post": {
         "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
