@@ -139,18 +139,17 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 			// loop slice
 			for i := range val.Len() {
 				// clone tags to prevent leakage between elements
-				elementTags := make(map[string]string, len(tags)+2)
-				maps.Copy(elementTags, tags)
-				elementTags["id"] = strconv.Itoa(i + 1)
+				tags := maps.Clone(tags)
+				tags["id"] = strconv.Itoa(i + 1)
 
-				elemValue := val.Index(i)
+				ival := val.Index(i)
 				// Check if element provides a title
-				if tp, ok := reflect.TypeAssert[api.TitleDescriber](elemValue); ok {
+				if tp, ok := reflect.TypeAssert[api.TitleDescriber](ival); ok {
 					if title := tp.GetTitle(); title != "" {
-						elementTags["title"] = title
+						tags["title"] = title
 					}
 				}
-				m.writeComplexPoint(writer, key, elemValue.Interface(), elementTags)
+				m.writeComplexPoint(writer, key, ival.Interface(), tags)
 			}
 			return
 		}

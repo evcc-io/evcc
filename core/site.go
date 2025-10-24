@@ -62,6 +62,8 @@ type measurement struct {
 	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
+var _ api.TitleDescriber = (*measurement)(nil)
+
 // GetTitle implements api.TitleDescriber interface for InfluxDB tagging
 func (m measurement) GetTitle() string {
 	return m.Title
