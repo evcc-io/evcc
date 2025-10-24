@@ -223,7 +223,7 @@ func (p *Param) validateOverride(withParam Param) error {
 	pmf := (pm["Required"]).(*bool)
 	wmf := (wm["Required"]).(*bool)
 
-	if pmf != nil && !*pmf {
+	if pmf != nil && wmf != nil && *pmf != *wmf {
 		_ = pmf
 		_ = wmf
 	}

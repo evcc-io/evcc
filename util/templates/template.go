@@ -131,13 +131,13 @@ func (t *Template) resolveTitles(lang string) {
 
 // add the referenced base Params and overwrite existing ones
 func (t *Template) ResolvePresets() error {
-	groups := lo.GroupBy(t.Params, func(p Param) bool {
+	hasPreset := lo.GroupBy(t.Params, func(p Param) bool {
 		return p.Preset != ""
 	})
 
-	t.Params = groups[false]
+	t.Params = hasPreset[false]
 
-	for _, pre := range groups[true] {
+	for _, pre := range hasPreset[true] {
 		preset, ok := ConfigDefaults.Presets[pre.Preset]
 		if !ok {
 			return fmt.Errorf("could not find preset definition: %s", pre.Preset)
