@@ -491,7 +491,9 @@ func (wb *BenderCC) getPhases() (int, error) {
 
 	if binary.BigEndian.Uint16(b) == 5 {
 		return 1, nil
-	} else if binary.BigEndian.Uint16(b) == 1 {
+	}
+
+	if binary.BigEndian.Uint16(b) == 1 {
 		return 3, nil
 	}
 
