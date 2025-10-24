@@ -32,6 +32,17 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 	return p
 }
 
+// trimSlot trims excess duration from a slot
+// Single slot: trim end (start early)
+// Multiple slots (first slot): trim start (start late)
+func trimSlot(slot *api.Rate, excess time.Duration, isSingle bool) {
+	if isSingle {
+		slot.End = slot.End.Add(-excess)
+	} else {
+		slot.Start = slot.Start.Add(excess)
+	}
+}
+
 // plan creates a lowest-cost plan or required duration.
 // It MUST already established that
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
@@ -59,12 +70,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 
 		// slot covers more than we need, so shorten it
 		if requiredDuration < 0 {
-			// the first (if not single) slot should start as late as possible
-			if IsFirst(slot, plan) && len(plan) > 0 {
-				slot.Start = slot.Start.Add(-requiredDuration)
-			} else {
-				slot.End = slot.End.Add(requiredDuration)
-			}
+			trimSlot(&slot, -requiredDuration, !(IsFirst(slot, plan) && len(plan) > 0))
 			requiredDuration = 0
 
 			if slot.End.Before(slot.Start) {
@@ -135,15 +141,7 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 	// Trim if allocated duration exceeds required duration
 	totalDuration := time.Duration(slots) * slotDuration
 	if totalDuration > effectiveDuration {
-		excess := totalDuration - effectiveDuration
-
-		// Single slot: trim end (start early)
-		// Multiple slots: trim first slot start (start late)
-		if len(result) == 1 {
-			result[0].End = result[0].End.Add(-excess)
-		} else {
-			result[0].Start = result[0].Start.Add(excess)
-		}
+		trimSlot(&result[0], totalDuration-effectiveDuration, len(result) == 1)
 	}
 
 	return result, bestCost
@@ -274,11 +272,8 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
-	var chargingRates api.Rates
 	if precondition > 0 {
-		chargingRates, precond = splitPreconditionSlots(rates, targetTime)
-		precond = adjustPrecondition(precond, rates, precondition, originalTargetTime)
-		rates = chargingRates
+		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition, originalTargetTime)
 	}
 
 	// check if available rates span is sufficient for sliding window
@@ -303,43 +298,37 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	var plan api.Rates
 	if requiredDuration > 0 {
 		if continuous {
-			// continuous mode: find cheapest continuous window
+			// find cheapest continuous window
 			plan, _ = t.findContinuousWindow(rates, requiredDuration, targetTime)
 		} else {
-			// dispersed mode: find cheapest combination of slots
-			// sort rates by price and time
+			// find cheapest combination of slots
 			slices.SortStableFunc(rates, sortByCost)
 			plan = t.plan(rates, requiredDuration, targetTime)
 
-			// sort plan by time
 			plan.Sort()
 		}
 	}
 
-	// re-append precondition slots
+	// re-append adjusted precondition slots
 	plan = append(plan, precond...)
 
 	return plan
 }
 
-func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates, api.Rates) {
-	var res, precond api.Rates
+func splitAndAdjustPrecondition(rates api.Rates, preCondStart time.Time, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+	var chargingRates, precond api.Rates
 
+	// Split rates into charging and precondition periods
 	for _, r := range slices.Clone(rates) {
 		if !r.End.After(preCondStart) {
-			res = append(res, r)
+			chargingRates = append(chargingRates, r)
 			continue
 		}
-
 		precond = append(precond, r)
 	}
 
-	return res, precond
-}
-
-func adjustPrecondition(precond, allRates api.Rates, precondition time.Duration, targetTime time.Time) api.Rates {
 	if len(precond) == 0 {
-		return precond
+		return chargingRates, precond
 	}
 
 	// Trim last slot to end exactly at target
@@ -357,7 +346,7 @@ func adjustPrecondition(precond, allRates api.Rates, precondition time.Duration,
 	if deficit := precondition - total; deficit > 0 {
 		extendStart := precond[0].Start.Add(-deficit)
 		var extension api.Rates
-		for _, r := range allRates {
+		for _, r := range rates {
 			if r.End.Before(extendStart) || r.End.Equal(extendStart) {
 				continue
 			}
@@ -377,5 +366,5 @@ func adjustPrecondition(precond, allRates api.Rates, precondition time.Duration,
 		precond = append(extension, precond...)
 	}
 
-	return precond
+	return chargingRates, precond
 }
