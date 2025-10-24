@@ -298,6 +298,68 @@ func TestContinuous_Precondition(t *testing.T) {
 	}, plan, "expected trimmed slot at beginning and precondition slot")
 }
 
+func TestContinuous_Precondition_NonSlotBoundary(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	trf := api.NewMockTariff(ctrl)
+
+	slotDuration := 15 * time.Minute
+
+	// Create rates with 15-minute slots covering 8 hours (32 slots)
+	prices := make([]float64, 32)
+	for i := range prices {
+		prices[i] = float64(i + 1)
+	}
+	trf.EXPECT().Rates().AnyTimes().Return(rates(prices, clock.Now(), slotDuration), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	// Target time at 7:20 (non-slot boundary, between 7:15 and 7:30)
+	// 7:20 is 29 slots + 5 minutes from now
+	targetTime := clock.Now().Add(29*slotDuration + 5*time.Minute)
+
+	// 30 minutes preconditioning, 1 hour charging
+	precondition := 30 * time.Minute
+	requiredDuration := 1 * time.Hour
+
+	plan := p.Plan(requiredDuration, precondition, targetTime, true)
+
+	// Verify precondition ends exactly at target time
+	require.NotEmpty(t, plan)
+	lastSlot := plan[len(plan)-1]
+	assert.Equal(t, targetTime, lastSlot.End, "precondition should end exactly at target time")
+
+	// Calculate total precondition duration
+	var precondDuration time.Duration
+	// Precondition starts at targetTime - 30min = 6:50
+	precondStart := targetTime.Add(-precondition)
+	for _, slot := range plan {
+		if !slot.Start.Before(precondStart) {
+			precondDuration += slot.End.Sub(slot.Start)
+		}
+	}
+	assert.Equal(t, precondition, precondDuration, "total precondition duration should be exactly 30 minutes")
+
+	// In continuous mode, find cheapest continuous 30min window (after precondition reduction)
+	// Cheapest window: 01:00-01:30 (slots 0-1, prices 1+2)
+	// Precondition: 07:50-08:20 (exactly 30min before target at 08:20)
+	expectedPlan := api.Rates{
+		// Charging slots (cheapest continuous 30 minutes)
+		{Start: clock.Now(), End: clock.Now().Add(slotDuration), Value: 1},
+		{Start: clock.Now().Add(slotDuration), End: clock.Now().Add(2 * slotDuration), Value: 2},
+		// Precondition slots (exactly 30min before target, trimmed at both ends)
+		{Start: targetTime.Add(-precondition), End: clock.Now().Add(28 * slotDuration), Value: 28},
+		{Start: clock.Now().Add(28 * slotDuration), End: clock.Now().Add(29 * slotDuration), Value: 29},
+		{Start: clock.Now().Add(29 * slotDuration), End: targetTime, Value: 30},
+	}
+
+	assert.Equal(t, expectedPlan, plan, "expected continuous charging slots and trimmed precondition slots")
+}
+
 func TestContinuous_ContinuousPlanNoTariff(t *testing.T) {
 	clock := clock.NewMock()
 

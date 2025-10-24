@@ -342,28 +342,34 @@ func splitAndAdjustPrecondition(rates api.Rates, preCondStart time.Time, precond
 		total += p.End.Sub(p.Start)
 	}
 
-	// If deficit, prepend slots from original rates to fill the gap
-	if deficit := precondition - total; deficit > 0 {
-		extendStart := precond[0].Start.Add(-deficit)
-		var extension api.Rates
-		for _, r := range rates {
-			if r.End.Before(extendStart) || r.End.Equal(extendStart) {
-				continue
+	// Adjust duration to match precondition exactly
+	if diff := precondition - total; diff != 0 {
+		if diff > 0 {
+			// Deficit: prepend slots from original rates to fill the gap
+			extendStart := precond[0].Start.Add(-diff)
+			var extension api.Rates
+			for _, r := range rates {
+				if r.End.Before(extendStart) || r.End.Equal(extendStart) {
+					continue
+				}
+				if r.Start.After(precond[0].Start) || r.Start.Equal(precond[0].Start) {
+					break
+				}
+				// Trim to fit the extension period
+				slot := r
+				if slot.Start.Before(extendStart) {
+					slot.Start = extendStart
+				}
+				if slot.End.After(precond[0].Start) {
+					slot.End = precond[0].Start
+				}
+				extension = append(extension, slot)
 			}
-			if r.Start.After(precond[0].Start) || r.Start.Equal(precond[0].Start) {
-				break
-			}
-			// Trim to fit the extension period
-			slot := r
-			if slot.Start.Before(extendStart) {
-				slot.Start = extendStart
-			}
-			if slot.End.After(precond[0].Start) {
-				slot.End = precond[0].Start
-			}
-			extension = append(extension, slot)
+			precond = append(extension, precond...)
+		} else {
+			// Excess: trim first slot to start later
+			precond[0].Start = precond[0].Start.Add(-diff)
 		}
-		precond = append(extension, precond...)
 	}
 
 	return chargingRates, precond
