@@ -123,10 +123,10 @@ func (c *CmdConfigure) askBoolValue(label string) string {
 func (c *CmdConfigure) askParam(p templates.Param) string {
 	var mask, required bool
 	if p.IsMasked() {
-		mask = p.Mask
+		mask = *p.Mask
 	}
 	if p.IsRequired() {
-		required = p.Required
+		required = *p.Required
 	}
 
 	label := p.Description.String(c.lang)

@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/samber/lo"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -29,8 +30,10 @@ func (t *Template) GuidedSetupEnabled() bool {
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
-		if index, resultMapItem := ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
-			t.Params[i].OverwriteProperties(resultMapItem)
+		if index, defaultParam := ConfigDefaults.ParamByName(strings.ToLower(p.Name)); index > -1 {
+			if err := t.Params[i].OverwriteProperties(defaultParam); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -128,26 +131,29 @@ func (t *Template) resolveTitles(lang string) {
 
 // add the referenced base Params and overwrite existing ones
 func (t *Template) ResolvePresets() error {
-	currentParams := make([]Param, len(t.Params))
-	copy(currentParams, t.Params)
-	t.Params = []Param{}
-	for _, p := range currentParams {
-		if p.Preset != "" {
-			base, ok := ConfigDefaults.Presets[p.Preset]
-			if !ok {
-				return fmt.Errorf("could not find preset definition: %s", p.Preset)
-			}
+	groups := lo.GroupBy(t.Params, func(p Param) bool {
+		return p.Preset != ""
+	})
 
-			t.Params = append(t.Params, base.Params...)
-			continue
+	t.Params = groups[false]
+
+	for _, pre := range groups[true] {
+		preset, ok := ConfigDefaults.Presets[pre.Preset]
+		if !ok {
+			return fmt.Errorf("could not find preset definition: %s", pre.Preset)
 		}
 
-		if i, _ := t.ParamByName(p.Name); i > -1 {
-			// take the preset values as a base and overwrite it with param values
-			p.OverwriteProperties(t.Params[i])
-			t.Params[i] = p
-		} else {
-			t.Params = append(t.Params, p)
+		for _, p := range preset.Params {
+			if i, _ := t.ParamByName(p.Name); i > -1 {
+				// take the preset values as a base and overwrite it with param values
+				if err := p.OverwriteProperties(t.Params[i]); err != nil {
+					return err
+				}
+
+				t.Params[i] = p
+			} else {
+				t.Params = append(t.Params, p)
+			}
 		}
 	}
 

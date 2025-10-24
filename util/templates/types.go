@@ -3,11 +3,13 @@ package templates
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"dario.cat/mergo"
+	"github.com/fatih/structs"
 	"github.com/gosimple/slug"
 )
 
@@ -179,10 +181,10 @@ type Param struct {
 	Reference     bool         `json:",omitempty"` // if this is references another param definition
 	ReferenceName string       `json:",omitempty"` // name of the referenced param if it is not identical to the defined name
 	Preset        string       `json:"-"`          // Reference a predefined set of params
-	Required      bool         `json:",omitempty"` // cli if the user has to provide a non empty value
-	Mask          bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
-	Advanced      bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Deprecated    bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
+	Required      *bool        `json:",omitempty"` // cli if the user has to provide a non empty value
+	Mask          *bool        `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
+	Advanced      *bool        `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Deprecated    *bool        `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
@@ -214,11 +216,34 @@ func (p *Param) DefaultValue(renderMode int) interface{} {
 	return p.Default
 }
 
-// OverwriteProperties merges properties from parameter definition
-func (p *Param) OverwriteProperties(withParam Param) {
-	if err := mergo.Merge(p, &withParam); err != nil {
-		panic(err)
+func (p *Param) validateOverride(withParam Param) error {
+	pm := structs.Map(p)
+	wm := structs.Map(withParam)
+
+	pmf := (pm["Required"]).(*bool)
+	wmf := (wm["Required"]).(*bool)
+
+	if pmf != nil && !*pmf {
+		_ = pmf
+		_ = wmf
 	}
+
+	for _, f := range []string{"Required", "Mask", "Advanced", "Deprecated"} {
+		if (pm[f]).(*bool) != nil && (*(pm[f]).(*bool)) && (wm[f]).(*bool) != nil && !(*(wm[f]).(*bool)) {
+			return errors.New(f + ": cannot override default bool value with false")
+		}
+	}
+
+	return nil
+}
+
+// OverwriteProperties merges properties from parameter definition
+func (p *Param) OverwriteProperties(withParam Param) error {
+	if err := p.validateOverride(withParam); err != nil {
+		return err
+	}
+
+	return mergo.Merge(p, &withParam)
 }
 
 func (p *Param) IsReference() bool {
@@ -226,19 +251,19 @@ func (p *Param) IsReference() bool {
 }
 
 func (p *Param) IsAdvanced() bool {
-	return p.Advanced
+	return p.Advanced != nil && *p.Advanced
 }
 
 func (p *Param) IsMasked() bool {
-	return p.Mask
+	return p.Mask != nil && *p.Mask
 }
 
 func (p *Param) IsRequired() bool {
-	return p.Required
+	return p.Required != nil && *p.Required
 }
 
 func (p *Param) IsDeprecated() bool {
-	return p.Deprecated
+	return p.Deprecated != nil && *p.Deprecated
 }
 
 func (p *Param) IsAllInOne() bool {
