@@ -120,10 +120,11 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 		}
 	}
 
+	if err := settings.SetJson(v.key()+keys.RepeatingPlans, plans); err != nil {
+		return err
+	}
+
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
-
-	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
-
 	v.publish()
 
 	return nil
@@ -131,28 +132,27 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 
 func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
 	var plans []api.RepeatingPlanStruct
-
-	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
-	if err == nil {
-		return plans
+	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
+		return nil
 	}
-
-	return []api.RepeatingPlanStruct{}
+	return plans
 }
 
 func (v *adapter) GetPlanStrategy() api.PlanStrategy {
 	var strategy api.PlanStrategy
-	err := settings.Json(v.key()+keys.PlanStrategy, &strategy)
-	if err == nil {
-		return strategy
+	if err := settings.Json(v.key()+keys.PlanStrategy, &strategy); err != nil {
+		return api.PlanStrategy{}
 	}
-	return api.PlanStrategy{}
+	return strategy
 }
 
 func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
-	v.log.DEBUG.Printf("update plan strategy for vehicle %s (precondition: %vs, continuous: %v)", v.name, planStrategy.Continuous, planStrategy.Precondition)
+	if err := settings.SetJson(v.key()+keys.PlanStrategy, planStrategy); err != nil {
+		return err
+	}
 
-	settings.SetJson(v.key()+keys.PlanStrategy, planStrategy)
+	v.log.DEBUG.Printf("update plan strategy for vehicle %s (precondition: %vs, continuous: %v)", v.name, planStrategy.Continuous, planStrategy.Precondition)
 	v.publish()
+
 	return nil
 }
