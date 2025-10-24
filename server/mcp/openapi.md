@@ -870,12 +870,6 @@ call getSystemLogs {
 }
 ```
 
-## getTelemetryStatus
-
-Returns the current telemetry status.
-
-**Tags:** system
-
 ## setTelemetryStatus
 
 Enable or disable telemetry. Note: Telemetry requires sponsorship.
