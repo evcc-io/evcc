@@ -276,28 +276,27 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition, originalTargetTime)
 	}
 
-	// check if available rates span is sufficient for sliding window
-	if continuous && requiredDuration > 0 && len(rates) > 0 {
-		now := t.clock.Now()
-		start := rates[0].Start
-		if start.Before(now) {
-			start = now
-		}
-		end := rates[len(rates)-1].End
-		if end.After(targetTime) {
-			end = targetTime
-		}
-
-		// available window too small for sliding window - use continuous plan without preconditioning
-		if end.Sub(start) < requiredDuration {
-			return t.continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
-		}
-	}
-
 	// create plan unless only precond slots remaining
 	var plan api.Rates
 	if requiredDuration > 0 {
 		if continuous {
+			// check if available rates span is sufficient for sliding window
+			if len(rates) > 0 {
+				now := t.clock.Now()
+				start := rates[0].Start
+				if start.Before(now) {
+					start = now
+				}
+				end := rates[len(rates)-1].End
+				if end.After(targetTime) {
+					end = targetTime
+				}
+
+				// available window too small for sliding window - use continuous plan without preconditioning
+				if end.Sub(start) < requiredDuration {
+					return t.continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
+				}
+			}
 			// find cheapest continuous window
 			plan, _ = t.findContinuousWindow(rates, requiredDuration, targetTime)
 		} else {

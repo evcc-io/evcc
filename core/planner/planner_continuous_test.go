@@ -543,3 +543,61 @@ func TestContinuous_StartBeforeRatesSufficientTime(t *testing.T) {
 	assert.Equal(t, 0.10, plan[0].Value, "first slot should have cheapest window price")
 	assert.Equal(t, 0.08, plan[1].Value, "second slot should have cheapest window price")
 }
+
+// TestContinuous_ExcessTimeFinishesAtTarget tests that with continuous mode,
+// no precondition, and excess time available, the plan finishes exactly at
+// the target time (even at non-slot boundaries) by starting early and using excess time
+func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	c := clock.NewMock()
+	c.Set(now)
+
+	ctrl := gomock.NewController(t)
+	log := util.NewLogger("test")
+
+	slotDuration := 15 * time.Minute
+
+	// Create 20 slots of 15 minutes each (5 hours total)
+	// Prices: cheaper in the middle slots
+	prices := []float64{
+		0.30, 0.30, 0.30, 0.30, // 00:00-01:00 expensive
+		0.15, 0.10, 0.10, 0.10, // 01:00-02:00 medium+cheap
+		0.08, 0.08, 0.08, 0.08, // 02:00-03:00 cheapest
+		0.12, 0.12, 0.12, 0.12, // 03:00-04:00 medium
+		0.20, 0.20, 0.20, 0.20, // 04:00-05:00 expensive
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates(prices, now, slotDuration), nil)
+
+	planner := &Planner{
+		log:    log,
+		clock:  c,
+		tariff: trf,
+	}
+
+	// Target at 03:10 (non-slot boundary - 10 minutes into the 03:00-03:15 slot)
+	targetTime := now.Add(3*time.Hour + 10*time.Minute)
+	requiredDuration := 2 * time.Hour // need 2h, have 3h10m available
+
+	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous, no precondition
+
+	require.NotEmpty(t, plan)
+
+	// Debug: print plan slots
+	for i, slot := range plan {
+		t.Logf("slot %d: %v - %v (duration: %v, price: %.2f)", i, slot.Start.Format("15:04"), slot.End.Format("15:04"), slot.End.Sub(slot.Start), slot.Value)
+	}
+	t.Logf("total plan duration: %v", Duration(plan))
+
+	// CRITICAL: Plan must finish EXACTLY at target time (03:10)
+	lastSlot := plan[len(plan)-1]
+	assert.Equal(t, targetTime, lastSlot.End, "plan must finish exactly at target time 03:10")
+
+	// Total duration must equal required duration
+	assert.Equal(t, requiredDuration, Duration(plan), "plan duration must match required")
+
+	// Should pick cheapest continuous 2h window ending at target: 01:10-03:10 (using cheapest slots)
+	// First slot should start at 01:10 (using excess time to start early)
+	assert.Equal(t, now.Add(time.Hour+10*time.Minute), plan[0].Start, "should start at 01:10 to finish at target")
+}
