@@ -133,6 +133,7 @@ type Loadpoint struct {
 
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
+	connectionTimer  api.ConnectionTimer
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
@@ -163,6 +164,7 @@ type Loadpoint struct {
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
 	chargeDuration          time.Duration // Charge duration
+	connectedDuration       time.Duration // Connection duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in kWh
@@ -427,6 +429,11 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		_ = lp.bus.Subscribe(evChargeStart, func() { ct.StartCharge(true) })
 		_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
 		lp.chargeTimer = ct
+	}
+
+	// ensure connection timer exists
+	if ct, ok := charger.(api.ConnectionTimer); ok {
+		lp.connectionTimer = ct
 	}
 
 	// add wakeup timer
@@ -1082,42 +1089,72 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 
 	lp.log.DEBUG.Printf("charger status: %s", status)
 
+	// detect status changes
 	if prevStatus := lp.GetStatus(); status != prevStatus {
-		lp.setStatus(status)
-
-		for _, ev := range statusEvents(prevStatus, status) {
-			lp.bus.Publish(ev)
-
-			// send connect/disconnect events except during startup
-			if prevStatus != api.StatusNone {
-				switch ev {
-				case evVehicleConnect:
-					welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
-
-					// Enable charging on connect if any available vehicle requires it.
-					// We're using the PV timer to disable after the welcome
-					if !welcomeCharge && !lp.chargerHasFeature(api.IntegratedDevice) {
-						for _, v := range lp.availableVehicles() {
-							if slices.Contains(v.Features(), api.WelcomeCharge) {
-								welcomeCharge = true
-								lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
-								break
-							}
-						}
-					}
-
-					lp.pushEvent(evVehicleConnect)
-				case evVehicleDisconnect:
-					lp.pushEvent(evVehicleDisconnect)
-				}
-			}
-		}
+		welcomeCharge = lp.processChargerStatusChange(prevStatus, status)
 
 		// update whenever there is a state change
 		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+	} else if lp.connectionTimer != nil {
+		if d, err := lp.connectionTimer.ConnectionDuration(); err == nil {
+
+			// detect drops in connection duration
+			if d < lp.connectedDuration {
+				lp.log.INFO.Printf("connection duration drop detected (was %s, now %s)", lp.connectedDuration, d)
+
+				lp.processChargerStatusChange(prevStatus, api.StatusA)
+				welcomeCharge = lp.processChargerStatusChange(api.StatusA, status)
+
+				lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+			}
+			lp.connectedDuration = d.Round(time.Second)
+		} else {
+			lp.log.ERROR.Printf("connection timer: %v", err)
+		}
 	}
 
 	return welcomeCharge, nil
+}
+
+// processChargerStatusChange handles charger status changes and detects car connected/disconnected events
+func (lp *Loadpoint) processChargerStatusChange(prevStatus, status api.ChargeStatus) bool {
+	if status == prevStatus {
+		return false
+	}
+
+	var welcomeCharge bool
+
+	lp.setStatus(status)
+
+	for _, ev := range statusEvents(prevStatus, status) {
+		lp.bus.Publish(ev)
+
+		// send connect/disconnect events except during startup
+		if prevStatus != api.StatusNone {
+			switch ev {
+			case evVehicleConnect:
+				welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
+
+				// Enable charging on connect if any available vehicle requires it.
+				// We're using the PV timer to disable after the welcome
+				if !welcomeCharge && !lp.chargerHasFeature(api.IntegratedDevice) {
+					for _, v := range lp.availableVehicles() {
+						if slices.Contains(v.Features(), api.WelcomeCharge) {
+							welcomeCharge = true
+							lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
+							break
+						}
+					}
+				}
+
+				lp.pushEvent(evVehicleConnect)
+			case evVehicleDisconnect:
+				lp.pushEvent(evVehicleDisconnect)
+			}
+		}
+	}
+
+	return welcomeCharge
 }
 
 // effectiveCurrent returns the currently effective charging current

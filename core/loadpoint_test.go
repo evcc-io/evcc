@@ -764,3 +764,42 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+func TestConnectionDurationDropDetection(t *testing.T) {
+	clock := clock.NewMock()
+	bus := evbus.New()
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	timer := api.NewMockConnectionTimer(ctrl)
+
+	lp := &Loadpoint{
+		log:             util.NewLogger("foo"),
+		bus:             bus,
+		clock:           clock,
+		charger:         charger,
+		connectionTimer: timer,
+		minCurrent:      minA,
+		maxCurrent:      maxA,
+		chargeMeter:     &Null{},    // silence nil panics
+		chargeRater:     &Null{},    // silence nil panics
+		chargeTimer:     &Null{},    // silence nil panics
+		wakeUpTimer:     NewTimer(), // silence nil panics
+	}
+
+	attachListeners(t, lp)
+
+	connectedTime := clock.Now().Add(-10 * time.Minute)
+
+	lp.enabled = true
+	lp.status = api.StatusC
+	lp.connectedDuration = 10 * time.Minute
+	lp.connectedTime = connectedTime
+
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	timer.EXPECT().ConnectionDuration().Return(0*time.Second, nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+	ctrl.Finish()
+
+	assert.NotEqual(t, connectedTime, lp.connectedTime)
+}
