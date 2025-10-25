@@ -606,17 +606,6 @@
         },
         "type": "object"
       },
-      "RepeatingPlans": {
-        "properties": {
-          "plans": {
-            "items": {
-              "$ref": "#/components/schemas/RepeatingPlan"
-            },
-            "type": "array"
-          }
-        },
-        "type": "object"
-      },
       "Soc": {
         "description": "SOC in %",
         "example": 60,
@@ -2232,7 +2221,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RepeatingPlans"
+                "items": {
+                  "$ref": "#/components/schemas/RepeatingPlan"
+                },
+                "type": "array"
               }
             }
           },
@@ -2245,7 +2237,10 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/RepeatingPlans"
+                      "items": {
+                        "$ref": "#/components/schemas/RepeatingPlan"
+                      },
+                      "type": "array"
                     }
                   },
                   "type": "object"
