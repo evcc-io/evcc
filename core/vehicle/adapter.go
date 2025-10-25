@@ -136,7 +136,7 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
 	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
 		return nil
 	}
-  
+
 	return plans
 }
 
