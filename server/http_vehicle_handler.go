@@ -131,7 +131,7 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		var res []api.RepeatingPlanStruct
+		var res []api.RepeatingPlan
 		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
