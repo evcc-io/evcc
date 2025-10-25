@@ -13,7 +13,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv"]
-    allinone: true
   - name: host
   - name: port
     default: 502
