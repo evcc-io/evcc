@@ -265,6 +265,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		precondition = max(precondition-durationAfterRates, 0)
 	}
 
+	// if precondition >= requiredDuration, charge in latest possible window (everything)
+	if precondition >= requiredDuration {
+		return t.continuousPlan(rates, latestStart, targetTime)
+	}
+
 	// reduce target time by precondition duration
 	originalTargetTime := targetTime
 	targetTime = targetTime.Add(-precondition)
