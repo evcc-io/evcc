@@ -988,7 +988,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RepeatingPlans"
+              type: array
+              items:
+                $ref: "#/components/schemas/RepeatingPlan"
       responses:
         200:
           description: Success
@@ -998,7 +1000,9 @@ paths:
                 type: object
                 properties:
                   result:
-                    $ref: "#/components/schemas/RepeatingPlans"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RepeatingPlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
@@ -1244,13 +1248,6 @@ components:
           $ref: "#/components/schemas/IANATimeZone"
         weekdays:
           $ref: "#/components/schemas/Weekdays"
-    RepeatingPlans:
-      type: object
-      properties:
-        plans:
-          type: array
-          items:
-            $ref: "#/components/schemas/RepeatingPlan"
     Soc:
       description: SOC in %
       type: number
