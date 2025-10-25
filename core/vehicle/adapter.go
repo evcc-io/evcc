@@ -137,10 +137,9 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
 	var plans []api.RepeatingPlan
 
-	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
-	if err == nil {
-		return plans
+	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
+		return nil
 	}
 
-	return nil
+	return plans
 }
