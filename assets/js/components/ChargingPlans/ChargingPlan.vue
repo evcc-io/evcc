@@ -301,7 +301,7 @@ export default defineComponent({
 			}
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
-			api.post(`${this.apiVehicle}plan/repeating`, { plans });
+			api.post(`${this.apiVehicle}plan/repeating`, plans);
 		},
 		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);
