@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/tariff"
 )
@@ -51,13 +52,20 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	if lp.socBasedPlanning() {
 		if lp.socEstimator == nil {
-			return 0
+			if goal <= lp.vehicleSoc {
+				return 0
+			}
+
+			// simple linear interpolation
+			hrs := lp.GetVehicle().Capacity() * 1e3 * (goal - lp.vehicleSoc) / 100 / maxPower
+			return time.Duration(hrs / soc.ChargeEfficiency * float64(time.Hour))
 		}
+
 		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
 	}
 
 	energy := lp.remainingPlanEnergy(goal)
-	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+	return time.Duration(energy * 1e3 / maxPower / soc.ChargeEfficiency * float64(time.Hour))
 }
 
 // GetPlanGoal returns the plan goal in %, true or kWh, false
@@ -100,14 +108,18 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 
 // plannerActive checks if the charging plan has a currently active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
-	defer func() {
-		lp.setPlanActive(active)
-	}()
-
-	var planStart, planEnd time.Time
+	var planTime, planStart, planEnd time.Time
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.setPlanActive(active)
+
+		if active {
+			lp.planActiveTime = planTime
+		} else {
+			lp.planActiveTime = time.Time{}
+		}
+
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -118,16 +130,19 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	planTime := lp.EffectivePlanTime()
-	if planTime.IsZero() {
+	if planTime = lp.EffectivePlanTime(); planTime.IsZero() {
 		return false
 	}
 
 	// keep overrunning plans as long as a vehicle is connected
-	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
+	if lp.clock.Until(planTime) < 0 && !lp.planActive {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
+	}
+
+	if lp.planActive && !lp.planActiveTime.IsZero() {
+		// TODO remember plan goal
 	}
 
 	goal, isSocBased := lp.GetPlanGoal()

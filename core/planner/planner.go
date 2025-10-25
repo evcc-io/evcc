@@ -31,6 +31,13 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 	return p
 }
 
+// WithClock sets the planners clock option
+func WithClock(clock clock.Clock) func(t *Planner) {
+	return func(t *Planner) {
+		t.clock = clock
+	}
+}
+
 // plan creates a lowest-cost plan or required duration.
 // It MUST already established that
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
