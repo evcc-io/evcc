@@ -1085,7 +1085,7 @@ Updates the repeating charging plan.
 | Name | Type | Description |
 |------|------|-------------|
 | name | string | Vehicle name |
-| requestBody | object | The JSON request body. |
+| requestBody | array | The JSON request body. |
 
 **Example call:**
 

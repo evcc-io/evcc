@@ -19,18 +19,18 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title          string                    `json:"title"`
-	Icon           string                    `json:"icon,omitempty"`
-	Capacity       float64                   `json:"capacity,omitempty"`
-	Phases         int                       `json:"phases,omitempty"`
-	MinSoc         int                       `json:"minSoc,omitempty"`
-	LimitSoc       int                       `json:"limitSoc,omitempty"`
-	MinCurrent     float64                   `json:"minCurrent,omitempty"`
-	MaxCurrent     float64                   `json:"maxCurrent,omitempty"`
-	Priority       int                       `json:"priority,omitempty"`
-	Features       []string                  `json:"features,omitempty"`
-	Plan           *planStruct               `json:"plan,omitempty"`
-	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
+	Title          string              `json:"title"`
+	Icon           string              `json:"icon,omitempty"`
+	Capacity       float64             `json:"capacity,omitempty"`
+	Phases         int                 `json:"phases,omitempty"`
+	MinSoc         int                 `json:"minSoc,omitempty"`
+	LimitSoc       int                 `json:"limitSoc,omitempty"`
+	MinCurrent     float64             `json:"minCurrent,omitempty"`
+	MaxCurrent     float64             `json:"maxCurrent,omitempty"`
+	Priority       int                 `json:"priority,omitempty"`
+	Features       []string            `json:"features,omitempty"`
+	Plan           *planStruct         `json:"plan,omitempty"`
+	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
 }
 
 // publishVehicles returns a list of vehicle titles
