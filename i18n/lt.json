@@ -118,7 +118,7 @@
       "temp": "Temperatūra",
       "topic": "Tema",
       "url": "URL",
-      "vehicleLimitSoc": "Automobilio limitas",
+      "vehicleLimitSoc": "Įkrovimo limitas",
       "yes": "taip"
     },
     "deviceValueChargeStatus": {
@@ -355,12 +355,12 @@
       "titleChoice": "Ką norite pridėti?",
       "titleLabel": "Pavadinimas",
       "usage": {
-        "aux": "Savireguliuojančio įrenginio skaitiklis",
-        "battery": "Kaupiklio skaitiklis",
-        "charge": "Įkroviklio skaitiklis",
-        "grid": "Tinklo įvado skaitiklis",
+        "aux": "Savireguliuojantis įrenginys",
+        "battery": "Kaupiklis",
+        "charge": "Vartotojas / Įkroviklis",
+        "grid": "Įvadas",
         "label": "Naudojimas",
-        "pv": "Saulės jėgainės skaitiklis"
+        "pv": "Gamyba"
       },
       "validateSave": "Patikrinti ir išsaugoti"
     },

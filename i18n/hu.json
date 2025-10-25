@@ -118,7 +118,7 @@
       "temp": "Hőmérséklet",
       "topic": "Téma",
       "url": "URL",
-      "vehicleLimitSoc": "Jármű limit",
+      "vehicleLimitSoc": "Töltési limit",
       "yes": "igen"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Okos fogyasztó",
       "batteryStorage": "Akkumulátoros tároló",
+      "consumer": "Fogyasztó",
       "solarSystem": "Naperőmű"
     },
     "editor": {
@@ -194,7 +195,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "változtatás"
+      "change": "változtatás",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Lementi a töltési adatokat és egyéb metrikákat az InfluxDB-be. Használd a Grafana-t vagy egyéb eszközöket az adatok vizualizálásához.",
