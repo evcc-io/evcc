@@ -199,7 +199,7 @@ func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint16(b)) * time.Second, nil
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
 }
 
 // currentPower implements the api.Meter interface
