@@ -142,5 +142,5 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
 		return plans
 	}
 
-	return []api.RepeatingPlan{}
+	return nil
 }

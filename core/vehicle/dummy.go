@@ -54,5 +54,5 @@ func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 }
 
 func (v *dummy) GetRepeatingPlans() []api.RepeatingPlan {
-	return []api.RepeatingPlan{}
+	return nil
 }
