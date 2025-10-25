@@ -539,6 +539,31 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/smartfeedinprioritylimit:
+    delete:
+      operationId: deleteLoadpointSmartFeedInPriorityLimit
+      summary: Delete smart feed-in priority limit
+      description: "Delete limit for feed-in priority optimization."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+      responses:
+        200:
+          $ref: "#/components/responses/NullResult"
+  /loadpoints/{id}/smartfeedinprioritylimit/{cost}:
+    post:
+      operationId: setLoadpointSmartFeedInPriorityLimit
+      summary: Set smart feed-in priority limit
+      description: "Set limit for feed-in priority optimization."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/costLimit"
+      responses:
+        200:
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/vehicle:
     delete:
       operationId: removeLoadpointVehicle
@@ -616,6 +641,28 @@ paths:
         - battery
       parameters:
         - $ref: "#/components/parameters/power"
+      responses:
+        200:
+          $ref: "#/components/responses/NumberResult"
+  /smartfeedinprioritylimit:
+    delete:
+      operationId: removeGlobalSmartFeedInPriorityLimit
+      summary: Remove smart feed-in priority limit for all loadpoints.
+      description: "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint."
+      tags:
+        - general
+      responses:
+        200:
+          $ref: "#/components/responses/NullResult"
+  /smartfeedinprioritylimit/{cost}:
+    post:
+      operationId: setGlobalSmartFeedInPriorityLimit
+      summary: Set smart feed-in priority limit for all loadpoints
+      description: "Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint."
+      tags:
+        - general
+      parameters:
+        - $ref: "#/components/parameters/costLimit"
       responses:
         200:
           $ref: "#/components/responses/NumberResult"

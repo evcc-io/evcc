@@ -1594,6 +1594,49 @@
         ]
       }
     },
+    "/loadpoints/{id}/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Delete limit for feed-in priority optimization.",
+        "operationId": "deleteLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Delete smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Set limit for feed-in priority optimization.",
+        "operationId": "setLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
     "/loadpoints/{id}/vehicle": {
       "delete": {
         "description": "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.",
@@ -1919,6 +1962,41 @@
           }
         },
         "summary": "Set smart charging cost limit for all loadpoints",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "removeGlobalSmartFeedInPriorityLimit",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Remove smart feed-in priority limit for all loadpoints.",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "setGlobalSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit for all loadpoints",
         "tags": [
           "general"
         ]
