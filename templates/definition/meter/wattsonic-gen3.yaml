@@ -108,4 +108,6 @@ render: |
       encoding: uint16
     scale: 10
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
