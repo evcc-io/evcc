@@ -225,6 +225,21 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 		})
 	}
 
+	// prepend missing slot
+	if res[0].Start.After(start) {
+		res = slices.Insert(res, 0, api.Rate{
+			Start: start,
+			End:   res[0].Start,
+		})
+	}
+	// append missing slot
+	if last := res[len(res)-1]; last.End.Before(end) {
+		res = append(res, api.Rate{
+			Start: last.End,
+			End:   end,
+		})
+	}
+
 	return res
 }
 
@@ -262,6 +277,14 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// consume remaining time
 	if t.clock.Until(targetTime) <= requiredDuration {
 		return t.continuousPlan(rates, latestStart, targetTime)
+	}
+
+	// cut off all rates after target time
+	for i := 1; i < len(rates); i++ {
+		if !rates[i].Start.Before(targetTime) {
+			rates = rates[:i]
+			break
+		}
 	}
 
 	// cut off all rates after target time

@@ -99,10 +99,10 @@ func (mr *MockAPIMockRecorder) GetPlanStrategy() *gomock.Call {
 }
 
 // GetRepeatingPlans mocks base method.
-func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlanStruct {
+func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlan {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepeatingPlans")
-	ret0, _ := ret[0].([]api.RepeatingPlanStruct)
+	ret0, _ := ret[0].([]api.RepeatingPlan)
 	return ret0
 }
 
@@ -193,7 +193,7 @@ func (mr *MockAPIMockRecorder) SetPlanStrategy(arg0 any) *gomock.Call {
 }
 
 // SetRepeatingPlans mocks base method.
-func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlanStruct) error {
+func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlan) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetRepeatingPlans", arg0)
 	ret0, _ := ret[0].(error)

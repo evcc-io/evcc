@@ -154,16 +154,13 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		var res struct {
-			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
-		}
-
+		var res []api.RepeatingPlan
 		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetRepeatingPlans(res.RepeatingPlans); err != nil {
+		if err := v.SetRepeatingPlans(res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

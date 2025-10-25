@@ -105,7 +105,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	return nil
 }
 
-func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	for _, plan := range plans {
 		for _, day := range plan.Weekdays {
 			if day < 0 || day > 6 {
@@ -130,8 +130,9 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 	return nil
 }
 
-func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
-	var plans []api.RepeatingPlanStruct
+func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
+	var plans []api.RepeatingPlan
+
 	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
 		return nil
 	}

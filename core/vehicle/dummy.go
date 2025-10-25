@@ -49,12 +49,12 @@ func (v *dummy) SetPlanSoc(ts time.Time, soc int) error {
 }
 
 // SetRepeatingPlans stores every repeating plan
-func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	return nil
 }
 
-func (v *dummy) GetRepeatingPlans() []api.RepeatingPlanStruct {
-	return []api.RepeatingPlanStruct{}
+func (v *dummy) GetRepeatingPlans() []api.RepeatingPlan {
+	return nil
 }
 
 func (v *dummy) GetPlanStrategy() api.PlanStrategy {

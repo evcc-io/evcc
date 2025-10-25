@@ -44,9 +44,9 @@ type API interface {
 	SetPlanSoc(time.Time, int) error
 
 	// GetRepeatingPlans returns every repeating plan
-	GetRepeatingPlans() []api.RepeatingPlanStruct
+	GetRepeatingPlans() []api.RepeatingPlan
 	// SetRepeatingPlans stores every repeating plan
-	SetRepeatingPlans([]api.RepeatingPlanStruct) error
+	SetRepeatingPlans([]api.RepeatingPlan) error
 
 	// GetPlanStrategy returns the plan strategy
 	GetPlanStrategy() api.PlanStrategy

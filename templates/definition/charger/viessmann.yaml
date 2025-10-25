@@ -138,7 +138,6 @@ params:
     help:
       de: Parameter existiert nur aus historischen Gründen. Zieltemperatur kann in der ViCare App eingestellt werden (wird nicht von allen Anlagen unterstützt)
       en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
-    required: false
     default: 45
     type: int
 render: |

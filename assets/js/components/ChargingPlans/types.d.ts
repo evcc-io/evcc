@@ -12,7 +12,7 @@ export interface PlanWrapper {
   planId: number;
   planTime: Date;
   duration: number;
-  plan: Rate[];
+  plan: Rate[] | null;
   power: number;
 }
 
