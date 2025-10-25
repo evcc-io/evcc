@@ -51,6 +51,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		embed           `mapstructure:",squash"`
 		User, Password  string
 		Realm           string
+		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
 		Cache           time.Duration
@@ -90,7 +91,41 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	systemId := homes[0].SystemID
+	if len(homes) == 0 {
+		return nil, fmt.Errorf("no systems found in account")
+	}
+
+	var systemId string
+	if cc.System != "" {
+		// Find system by name
+		found := false
+		for _, home := range homes {
+			if home.HomeName == cc.System {
+				systemId = home.SystemID
+				found = true
+				break
+			}
+		}
+		if !found {
+			var availableSystems []string
+			for _, home := range homes {
+				availableSystems = append(availableSystems, home.HomeName)
+			}
+			return nil, fmt.Errorf("system %s not found, available systems: %v", cc.System, availableSystems)
+		}
+	} else {
+		// Use first system for backwards compatibility
+		systemId = homes[0].SystemID
+		if len(homes) > 1 {
+			var availableSystems []string
+			for _, home := range homes {
+				availableSystems = append(availableSystems, home.HomeName)
+			}
+			log.WARN.Printf("multiple systems found in account, using first one: %s. To select a different system, configure the 'system' parameter with one of: %v",
+				homes[0].HomeName, availableSystems)
+		}
+	}
+
 	heating := cc.HeatingSetpoint > 0
 
 	wwCancel := func() {}
