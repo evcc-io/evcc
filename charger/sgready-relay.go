@@ -97,26 +97,26 @@ func NewSgReadyRelay(ctx context.Context, embed *embed, boost, dim api.Charger) 
 	}
 
 	modeG := func() (int64, error) {
+		if dim != nil {
+			dimmed, err = dim.Enabled()
+			if err != nil {
+				return 0, err
+			}
+			if dimmed {
+				return Dim,nil
+			}
+		}
+
 		boosted, err := boost.Enabled()
 		if err != nil {
 			return 0, err
 		}
 
-		var dimmed bool
-		if dim != nil {
-			if dimmed, err = dim.Enabled(); err != nil {
-				return 0, err
-			}
+		if boosted {
+			return Boost,nil
 		}
 
-		switch {
-		case dimmed:
-			return Dim, nil
-		case boosted:
-			return Boost, nil
-		default:
-			return Normal, nil
-		}
+		return Normal, nil
 	}
 
 	return NewSgReady(ctx, embed, modeS, modeG, nil)
