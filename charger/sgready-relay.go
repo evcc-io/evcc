@@ -98,7 +98,7 @@ func NewSgReadyRelay(ctx context.Context, embed *embed, boost, dim api.Charger) 
 
 	modeG := func() (int64, error) {
 		if dim != nil {
-			dimmed, err = dim.Enabled()
+			dimmed, err := dim.Enabled()
 			if err != nil {
 				return 0, err
 			}
