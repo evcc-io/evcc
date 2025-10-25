@@ -34,6 +34,7 @@
 								:id="formId('precondition')"
 								v-model="localPrecondition"
 								class="form-select"
+								data-testid="plan-strategy-precondition"
 								@change="previewStrategy"
 							>
 								<option :value="0">

@@ -30,6 +30,7 @@
 						:id="id"
 						:rangePerSoc="rangePerSoc"
 						:plans="repeatingPlans"
+						:strategy-changed="strategyChanged"
 						@updated="updateRepeatingPlans"
 					/>
 				</div>
@@ -312,6 +313,12 @@ export default defineComponent({
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			this.$emit("repeating-plans-updated", plans);
+
+			const hasActivePlan = plans.some((p) => p.active);
+			if (hasActivePlan && this.strategyChanged && this.strategyPreview) {
+				this.$emit("plan-strategy-updated", this.strategyPreview);
+				this.strategyChanged = false;
+			}
 		},
 		previewStaticPlan(plan: StaticPlan): void {
 			this.staticPlanPreview = plan;
