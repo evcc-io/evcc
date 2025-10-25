@@ -115,6 +115,11 @@ type ChargeTimer interface {
 	ChargeDuration() (time.Duration, error)
 }
 
+// ConnectionTimer provides current connection duration
+type ConnectionTimer interface {
+	ConnectionDuration() (time.Duration, error)
+}
+
 // ChargeRater provides charged energy amount in kWh
 type ChargeRater interface {
 	ChargedEnergy() (float64, error)
