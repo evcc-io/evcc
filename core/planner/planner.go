@@ -136,15 +136,42 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 		return nil, 0
 	}
 
-	result := validRates[bestSlot : bestSlot+slots]
-
-	// Trim if allocated duration exceeds required duration
-	totalDuration := time.Duration(slots) * slotDuration
-	if totalDuration > effectiveDuration {
-		trimSlot(&result[0], totalDuration-effectiveDuration, len(result) == 1)
-	}
+	// edge case: target at non-slot boundary coinciding with optimal window
+	result := trimAndAlignWindow(validRates[bestSlot:bestSlot+slots], effectiveDuration, targetTime, slotDuration)
 
 	return result, bestCost
+}
+
+// trimAndAlignWindow adjusts a continuous window to match the target time and required duration.
+// It trims and shifts as needed to ensure the plan aligns exactly with targetTime.
+func trimAndAlignWindow(window api.Rates, effectiveDuration time.Duration, targetTime time.Time, slotDuration time.Duration) api.Rates {
+	n := len(window)
+	if n == 0 {
+		return window
+	}
+
+	last := n - 1
+
+	// trim the end to targetTime if needed
+	if window[last].End.After(targetTime) {
+		window[last].End = targetTime
+	}
+
+	// trim excess from the start if window is too long
+	current := window[last].End.Sub(window[0].Start)
+	if excess := current - effectiveDuration; excess > 0 {
+		trimSlot(&window[0], excess, n == 1)
+	}
+
+	// shift forward if window ends slightly before targetTime (mid-slot alignment)
+	if gap := targetTime.Sub(window[last].End); gap > 0 && gap < slotDuration {
+		for i := range window {
+			window[i].Start = window[i].Start.Add(gap)
+			window[i].End = window[i].End.Add(gap)
+		}
+	}
+
+	return window
 }
 
 // Plan creates a continuous emergency charging plan
@@ -283,34 +310,32 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// create plan unless only precond slots remaining
 	var plan api.Rates
-	if requiredDuration > 0 {
-		if continuous {
-			// check if available rates span is sufficient for sliding window
-			if len(rates) > 0 {
-				now := t.clock.Now()
-				start := rates[0].Start
-				if start.Before(now) {
-					start = now
-				}
-				end := rates[len(rates)-1].End
-				if end.After(targetTime) {
-					end = targetTime
-				}
-
-				// available window too small for sliding window - use continuous plan without preconditioning
-				if end.Sub(start) < requiredDuration {
-					return t.continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
-				}
+	if continuous {
+		// check if available rates span is sufficient for sliding window
+		if len(rates) > 0 {
+			now := t.clock.Now()
+			start := rates[0].Start
+			if start.Before(now) {
+				start = now
 			}
-			// find cheapest continuous window
-			plan, _ = t.findContinuousWindow(rates, requiredDuration, targetTime)
-		} else {
-			// find cheapest combination of slots
-			slices.SortStableFunc(rates, sortByCost)
-			plan = t.plan(rates, requiredDuration, targetTime)
+			end := rates[len(rates)-1].End
+			if end.After(targetTime) {
+				end = targetTime
+			}
 
-			plan.Sort()
+			// available window too small for sliding window - use continuous plan without preconditioning
+			if end.Sub(start) < requiredDuration {
+				return t.continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
+			}
 		}
+		// find cheapest continuous window
+		plan, _ = t.findContinuousWindow(rates, requiredDuration, targetTime)
+	} else {
+		// find cheapest combination of slots
+		slices.SortStableFunc(rates, sortByCost)
+		plan = t.plan(rates, requiredDuration, targetTime)
+
+		plan.Sort()
 	}
 
 	// re-append adjusted precondition slots
