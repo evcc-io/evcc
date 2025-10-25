@@ -769,21 +769,31 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 	clock := clock.NewMock()
 	bus := evbus.New()
 	ctrl := gomock.NewController(t)
-	charger := api.NewMockCharger(ctrl)
-	timer := api.NewMockConnectionTimer(ctrl)
+	ch := api.NewMockCharger(ctrl)
+	ct := api.NewMockConnectionTimer(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.ConnectionTimer
+	}{
+		ch, ct,
+	}
+
+	ch.EXPECT().Status().Return(api.StatusC, nil)
+	ch.EXPECT().Enabled().AnyTimes().Return(true, nil)
+	ch.EXPECT().MaxCurrent(int64(minA)).Return(nil)
 
 	lp := &Loadpoint{
-		log:             util.NewLogger("foo"),
-		bus:             bus,
-		clock:           clock,
-		charger:         charger,
-		connectionTimer: timer,
-		minCurrent:      minA,
-		maxCurrent:      maxA,
-		chargeMeter:     &Null{},    // silence nil panics
-		chargeRater:     &Null{},    // silence nil panics
-		chargeTimer:     &Null{},    // silence nil panics
-		wakeUpTimer:     NewTimer(), // silence nil panics
+		log:         util.NewLogger("foo"),
+		bus:         bus,
+		clock:       clock,
+		charger:     charger,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		chargeMeter: &Null{},    // silence nil panics
+		chargeRater: &Null{},    // silence nil panics
+		chargeTimer: &Null{},    // silence nil panics
+		wakeUpTimer: NewTimer(), // silence nil panics
 	}
 
 	attachListeners(t, lp)
@@ -795,9 +805,7 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 	lp.connectedDuration = 10 * time.Minute
 	lp.connectedTime = connectedTime
 
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	timer.EXPECT().ConnectionDuration().Return(0*time.Second, nil)
+	ct.EXPECT().ConnectionDuration().Return(0*time.Second, nil)
 	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 

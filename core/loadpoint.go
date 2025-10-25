@@ -133,7 +133,6 @@ type Loadpoint struct {
 
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
-	connectionTimer  api.ConnectionTimer
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
@@ -429,11 +428,6 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		_ = lp.bus.Subscribe(evChargeStart, func() { ct.StartCharge(true) })
 		_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
 		lp.chargeTimer = ct
-	}
-
-	// ensure connection timer exists
-	if ct, ok := charger.(api.ConnectionTimer); ok {
-		lp.connectionTimer = ct
 	}
 
 	// add wakeup timer
@@ -1095,9 +1089,8 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 
 		// update whenever there is a state change
 		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	} else if lp.connectionTimer != nil {
-		if d, err := lp.connectionTimer.ConnectionDuration(); err == nil {
-
+	} else if ct, ok := lp.charger.(api.ConnectionTimer); ok {
+		if d, err := ct.ConnectionDuration(); err == nil {
 			// detect drops in connection duration
 			if d < lp.connectedDuration {
 				lp.log.INFO.Printf("connection duration drop detected (was %s, now %s)", lp.connectedDuration, d)
