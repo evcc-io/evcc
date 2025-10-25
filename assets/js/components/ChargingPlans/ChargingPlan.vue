@@ -310,13 +310,6 @@ export default defineComponent({
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			api.post(`${this.apiVehicle}plan/repeating`, plans);
 		},
-		updatePlanStrategy(strategy: PlanStrategy): void {
-			if (this.socBasedPlanning) {
-				api.post(`${this.apiVehicle}plan/strategy`, strategy);
-			} else {
-				api.post(`${this.apiLoadpoint}plan/strategy`, strategy);
-			}
-		},
 		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);
 		},

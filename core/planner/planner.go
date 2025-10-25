@@ -237,6 +237,21 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 		res = append(res, api.Rate{
 			Start: last.End,
 			End:   end,
+		}}
+	}
+
+	// prepend missing slot
+	if res[0].Start.After(start) {
+		res = slices.Insert(res, 0, api.Rate{
+			Start: start,
+			End:   res[0].Start,
+		})
+	}
+	// append missing slot
+	if last := res[len(res)-1]; last.End.Before(end) {
+		res = append(res, api.Rate{
+			Start: last.End,
+			End:   end,
 		})
 	}
 
