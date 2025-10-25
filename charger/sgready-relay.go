@@ -113,7 +113,7 @@ func NewSgReadyRelay(ctx context.Context, embed *embed, boost, dim api.Charger) 
 		}
 
 		if boosted {
-			return Boost,nil
+			return Boost, nil
 		}
 
 		return Normal, nil
