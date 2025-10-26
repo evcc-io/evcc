@@ -77,7 +77,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	api := cardata.NewAPI(log, ts)
 
-	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN)
+	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN, cc.Cache)
 
 	return v, nil
 }
