@@ -7,8 +7,8 @@ capabilities: ["1p3p", "rfid", "mA"]
 requirements:
   description:
     de: |
-      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2. mA Regelung wird
-      automatisch benutzt wenn die EVCC Firmware es unterstützt.
+      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2.
+      mA Regelung wird automatisch benutzt wenn die EVSE-Firmware es unterstützt.
 
       Installation ohne Display:
       - Raspberry Pi OS Lite (64bit) Image installieren und konfigurieren.
@@ -45,8 +45,8 @@ requirements:
       - Kiosk Modus Autostart aktivieren: `systemctl --user enable kiosk`
       - Als root: Starten von systemd user units ohne login des Users aktivieren: `loginctl enable-linger pi`
     en: |
-      Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2. mA control is usermod
-      automatically if the EVCC firmware supports it.
+      Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2.
+      mA control is used automatically if the EVSE firmware supports it.
 
       Installation without display:
       - Install and configure Raspberry Pi OS Lite (64bit) image.
