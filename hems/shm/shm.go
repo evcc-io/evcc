@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -334,7 +335,7 @@ func (s *SEMP) deviceID(id int) string {
 	// build stable device id of unique id plus charger ref
 	lp := s.site.Loadpoints()[id]
 
-	did := s.did
+	did := slices.Clone(s.did)
 	for i, b := range sha256.Sum256([]byte(lp.GetChargerRef())) {
 		did[i%len(did)] ^= b
 	}
