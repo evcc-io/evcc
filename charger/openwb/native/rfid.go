@@ -40,8 +40,9 @@ func NewRFIDHandler(ctx context.Context, log *util.Logger) (chan string, func(),
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
 	for _, p := range keyboardPaths {
-		wg.Add(1)
-		go monitorKeyboardRFID(ctx, p, log, rfIdChannel, &wg)
+		wg.Go(func() {
+			monitorKeyboardRFID(ctx, p, log, rfIdChannel)
+		})
 	}
 	cleanup := func() {
 		cancel()
