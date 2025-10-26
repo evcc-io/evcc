@@ -2,7 +2,6 @@ package meter
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -16,7 +15,7 @@ import (
 )
 
 const (
-	udpTimeout = time.Second * 40
+	udpTimeout = time.Second * 20
 )
 
 // MarstekVenusApi meter implementation
@@ -105,65 +104,36 @@ func NewMarstekVenusApi(uri string, timeout time.Duration, capacity func() float
 	return decorateMarstekVenusApi(m, batterySoc, batteryCapacity, batteryMode), nil
 }
 
-func (m *MarstekVenusApi) receive(resC chan<- marstekvenusapi.UDPMsg, errC chan<- error, closeC <-chan struct{}) {
-	t := time.NewTimer(m.timeout)
-	defer close(resC)
-	defer close(errC)
-	for {
-		select {
-		case msg := <-m.recv:
-			// forward the UDPMesg message to the channel, where roundtrip is reading from
-			resC <- msg
-			return
-		case <-t.C:
-			errC <- errors.New("recv timeout")
-			return
-		case <-closeC: // terminates this method, when the roundtrip() finishes
-			return
-		}
-	}
-}
-
 func (m *MarstekVenusApi) roundtrip(rtype marstekvenusapi.RequestType, req interface{}, res interface{}) error {
-	resC := make(chan marstekvenusapi.UDPMsg)
-	errC := make(chan error)
-	closeC := make(chan struct{})
-
-	defer close(closeC)
-
-	// sollte ich hier mit reingeben, auf welchen response ich warte?
-	go m.receive(resC, errC, closeC)
-
+	// 1) send
+	time.Sleep(time.Second * 3)
 	id, err := m.sender.SendMtekReq(rtype, req)
-
 	if err != nil {
 		return err
 	}
-
+	// 2) wait on m.recv or timeout
+	timer := time.NewTimer(m.timeout)
+	defer timer.Stop()
 	for {
 		select {
-		case udpResp := <-resC:
-			var genResp marstekvenusapi.Response
-
-			// unpack the payload from the UDPMsg into a Response Wrapper
-			json.Unmarshal(udpResp.Message, &genResp)
-			if genResp.Error != nil {
-				return errors.New(genResp.Error.Message)
+		case udpMsg := <-m.recv:
+			// unpack wrapper
+			var wrapper marstekvenusapi.Response
+			if err := json.Unmarshal(udpMsg.Message, &wrapper); err != nil {
+				return err
 			}
-			// in case no error, return the unwrapped Result part only
-			json.Unmarshal(udpResp.Response.Result, &res)
-			id := genResp.ID
-			_, idFound := m.tracker.RetrieveRequestType(id)
-			if !idFound {
-				return fmt.Errorf("unexpected ID received %d", id)
+			// skip not-my-ID
+			if wrapper.ID != id {
+				continue
 			}
-			return nil
-		case err := <-errC:
-			// TODO
-			// 1. handle timeout and retry here?! -
-			// 2. remove ID from tracker
-			m.tracker.RetrieveRequestType(id)
-			return err
+			// RPC error?
+			if wrapper.Error != nil {
+				return fmt.Errorf("rpc error: %s", wrapper.Error.Message)
+			}
+			// return the unwrapped result
+			return json.Unmarshal(wrapper.Result, res)
+		case <-timer.C:
+			return fmt.Errorf("rpc timeout after %s", m.timeout)
 		}
 	}
 }
