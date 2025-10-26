@@ -33,6 +33,7 @@ const (
 	ModbusParamNameHost     = "host"
 	ModbusParamNamePort     = "port"
 	ModbusParamNameRTU      = "rtu"
+	ModbusParamNameDelay    = "delay"
 )
 
 const (
@@ -66,7 +67,7 @@ var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementS
 var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
-	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
+	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU, ModbusParamNameDelay,
 	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
@@ -198,6 +199,7 @@ type Param struct {
 	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
 	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
 	ID       int    `json:",omitempty"` // device specific default for modbus ID
+	Delay    string `json:",omitempty"` // device specific default for modbus communication delay
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
