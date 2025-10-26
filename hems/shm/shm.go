@@ -1,6 +1,7 @@
 package shm
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/xml"
@@ -40,6 +41,7 @@ type SEMP struct {
 	log     *util.Logger
 	vid     string
 	did     []byte
+	legacy  bool
 	uid     string
 	hostURI string
 	port    int
@@ -50,6 +52,7 @@ type Config struct {
 	AllowControl_ bool   `json:"allowControl,omitempty"` // deprecated
 	VendorId      string `json:"vendorId"`
 	DeviceId      string `json:"deviceId"`
+	LegacyId      bool   `json:"legacyId"`
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
@@ -82,11 +85,12 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	}
 
 	s := &SEMP{
-		log:  util.NewLogger("semp"),
-		site: site,
-		uid:  uid.String(),
-		vid:  vendorId,
-		did:  did,
+		log:    util.NewLogger("semp"),
+		site:   site,
+		uid:    uid.String(),
+		vid:    vendorId,
+		did:    did,
+		legacy: cfg.LegacyId,
 	}
 
 	// find external port
@@ -321,9 +325,21 @@ func UniqueDeviceID() ([]byte, error) {
 
 // deviceID combines base device id with device number
 func (s *SEMP) deviceID(id int) string {
-	// numerically add device number
-	did := append([]byte{0, 0}, s.did...)
-	return fmt.Sprintf(sempDeviceId, s.vid, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
+	// build device id from unique id plus loadpoint id (unstable!)
+	if s.legacy {
+		did := append([]byte{0, 0}, s.did...)
+		return fmt.Sprintf(sempDeviceId, s.vid, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
+	}
+
+	// build stable device id of unique id plus charger ref
+	lp := s.site.Loadpoints()[id]
+
+	did := s.did
+	for i, b := range sha256.Sum256([]byte(lp.GetChargerRef())) {
+		did[i%len(did)] ^= b
+	}
+
+	return fmt.Sprintf(sempDeviceId, s.vid, did)
 }
 
 func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
