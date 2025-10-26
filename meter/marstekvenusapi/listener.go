@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	udpBufferSize = 2048
+	udpBufferSize = 1024
 
 	// Port is the standard marstek UDP port
 	Port = DEFAULT_PORT
@@ -21,7 +21,6 @@ const (
 )
 
 // instance is the marstek listener instance
-// This is needed since KEBAs ignore the sender port and always UDP back to port 7090
 var (
 	mu       sync.Mutex
 	instance *Listener
@@ -39,24 +38,25 @@ type Listener struct {
 	mux     sync.Mutex
 	log     *util.Logger
 	conn    *net.UDPConn
+	tracker *RequestTracker
 	clients map[string]chan<- UDPMsg
 	cache   map[string]string
 }
 
-func Instance(log *util.Logger) (*Listener, error) {
+func Instance(log *util.Logger, tracker *RequestTracker) (*Listener, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	var err error
 	if instance == nil {
-		instance, err = New(log)
+		instance, err = New(log, tracker)
 	}
 
 	return instance, err
 }
 
 // New creates a UDP listener that clients can subscribe to
-func New(log *util.Logger) (*Listener, error) {
+func New(log *util.Logger, tracker *RequestTracker) (*Listener, error) {
 	laddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", Port))
 	if err != nil {
 		return nil, err
@@ -72,6 +72,7 @@ func New(log *util.Logger) (*Listener, error) {
 		conn:    conn,
 		clients: make(map[string]chan<- UDPMsg),
 		cache:   make(map[string]string),
+		tracker: tracker,
 	}
 
 	go l.listen()
@@ -105,6 +106,7 @@ func (l *Listener) listen() {
 			Message: []byte(body),
 		}
 
+		// TODO: Proper handling
 		if body != "" { //ok
 			var response Response
 			if err := json.Unmarshal([]byte(body), &response); err != nil {
