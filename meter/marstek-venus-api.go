@@ -146,7 +146,7 @@ func (m *MarstekVenusApi) roundtrip(rtype marstekvenusapi.RequestType, req inter
 			var genResp marstekvenusapi.Response
 
 			// unpack the payload from the UDPMsg into a Response Wrapper
-			json.Unmarshal([]byte(udpResp.Message), &genResp)
+			json.Unmarshal(udpResp.Message, &genResp)
 			if genResp.Error != nil {
 				return errors.New(genResp.Error.Message)
 			}

@@ -9,7 +9,6 @@ import (
 )
 
 func TestUnmarshalErrorResp(t *testing.T) {
-
 	var resp Response
 
 	jsonstr := `{
@@ -30,7 +29,6 @@ func TestUnmarshalErrorResp(t *testing.T) {
 
 // Test Marstek device info
 func TestUnmarshalDeviceInfoResp(t *testing.T) {
-
 	var resp Response
 	var reslt DeviceResult
 
@@ -74,5 +72,5 @@ func TestUnmarshalBatStatusResp(t *testing.T) {
 }`
 	require.NoError(t, json.Unmarshal([]byte(jsonstr), &resp))
 	require.NoError(t, json.Unmarshal([]byte(resp.Result), &reslt))
-	assert.Equal(t, 12, reslt.StateOfCharge)
+	assert.Equal(t, 12, reslt.BatSoc)
 }
