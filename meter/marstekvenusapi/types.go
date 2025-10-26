@@ -76,7 +76,7 @@ type BatStatusResult struct {
 	DischargingAllowed bool    `json:"dischrg_flag"`
 	BatTemp            float64 `json:"bat_temp"`
 	BatteryCapacity    float64 `json:"bat_capacity"`
-	RatedCapacity      float64 `json:"rated:capacity"`
+	RatedCapacity      float64 `json:"rated_capacity"`
 }
 
 // ---------------------------------------------------
