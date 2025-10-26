@@ -78,7 +78,6 @@
     },
     "deviceValue": {
       "amount": "Znesek",
-      "broker": "",
       "bucket": "Vedro",
       "capacity": "Kapaciteta",
       "chargeStatus": "Status",
@@ -116,7 +115,6 @@
       "soc": "Polnjenje",
       "solarForecast": "Napoved sončne energije",
       "temp": "Temperatura",
-      "topic": "",
       "url": "URL",
       "vehicleLimitSoc": "Omejitev polnjenja",
       "yes": "da"
@@ -140,8 +138,7 @@
       "loading": "Nalaganje urejevalnika YAML …"
     },
     "eebus": {
-      "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus.",
-      "title": ""
+      "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
     },
     "ext": {
       "description": "Za statistične namene beleži energijske vrednosti nenadzorovanih porabnikov (npr. hladilnik, pralni stroj itd.). Te števce je mogoče uporabiti tudi za upravljanje obremenitve (npr. poddistribucija).",
@@ -203,16 +200,13 @@
     "influx": {
       "description": "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja.",
       "descriptionToken": "Preverite dokumentacijo InfluxDB, če želite izvedeti, kako ga ustvariti. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "",
       "labelCheckInsecure": "Dovoli samopodpisane certifikate",
       "labelDatabase": "Baza podatkov",
       "labelInsecure": "Preverjanje certifikata",
-      "labelOrg": "",
       "labelPassword": "Geslo",
       "labelToken": "API Žeton",
       "labelUrl": "URL",
       "labelUser": "Uporabniško ime",
-      "title": "",
       "v1Support": "Potrebujete podporo za InfluxDB 1.x?",
       "v2Support": "Nazaj na InfluxDB 2.x"
     },
