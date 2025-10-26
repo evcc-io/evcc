@@ -787,7 +787,7 @@
       "modalTitle": "Načrt polnjenja",
       "none": "brez",
       "planNumber": "Načrt {number}",
-      "preconditionDescription": "Pred odhodom napolnite {trajanje} za predhodno ogrevanje baterije.",
+      "preconditionDescription": "Pred odhodom napolnite {duration} za predhodno ogrevanje baterije.",
       "preconditionLong": "Pozno polnjenje",
       "preconditionOptionAll": "vse",
       "preconditionOptionNo": "ne",
