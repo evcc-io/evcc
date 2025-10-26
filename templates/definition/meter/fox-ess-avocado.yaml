@@ -15,11 +15,11 @@ params:
     baudrate: 9600
     id: 1
   - name: capacity
-    advanced: true
+    default: 2.11 # kWh
   - name: minsoc
-    advanced: true
+    default: 10
   - name: maxsoc
-    advanced: true
+    default: 100
   - name: maxacpower
     default: 800
   - name: maxchargepower
