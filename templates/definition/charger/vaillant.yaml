@@ -31,8 +31,11 @@ params:
       en: Boost temperature
   - name: system
     description:
-      de: Name der Anlage (optional, falls mehrere Anlagen im Account vorhanden sind)
-      en: Name of the system (optional, if multiple systems are present in the account)
+      de: Name der Anlage
+      en: Name of the system
+    help:
+      de: Notwendig falls mehrere Anlagen im Account vorhanden sind
+      en: Required if multiple systems are present in the account
   - name: phases
     deprecated: true
 render: |
