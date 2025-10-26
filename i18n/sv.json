@@ -118,7 +118,7 @@
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
-      "vehicleLimitSoc": "Fordonsbegränsning",
+      "vehicleLimitSoc": "Laddgräns",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Smart förbrukare",
       "batteryStorage": "Batterilager",
+      "consumer": "Brukare",
       "solarSystem": "Solanläggning"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan användas för belastningsstyrning eller statistik.",
-      "titleAdd": "Lägg till extern mätare",
-      "titleEdit": "Ändra extern mätare"
+      "description": "Registrerar energivärden för brukare som inte hanteras av evcc (t.ex. kylskåp, tvättmaskin etc.) för statistiska ändamål. Mätarna kan också användas för lastreglering (t.ex. underdistribution).",
+      "titleAdd": "Lägg till extern förbrukares mätare",
+      "titleEdit": "Ändra extern förbrukares mätare"
     },
     "form": {
       "danger": "Fara",
@@ -165,6 +166,7 @@
       "dragItem": "Går att senarelägga: {title}",
       "dragList": "Sorterbar lista",
       "experimental": "Experimentell",
+      "forceSave": "Spara ändå",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "noFileSelected": "Ingen fil vald.",
@@ -176,6 +178,8 @@
       "required": "nödvändig",
       "reset": "Nollställ",
       "save": "Spara",
+      "saved": "Sparad.",
+      "saving": "Sparar…",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
       "telemetry": "Telemetri",
@@ -193,7 +197,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ändra"
+      "change": "ändra",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Skriver laddata och andra mätningar till InfluxDB. Använd Grafana eller andra verktyg för att visualisera data.",
@@ -341,13 +346,22 @@
       "option": {
         "aux": "Lägg till enhet som själv anpassar förbrukning",
         "battery": "Lägg till batterimätare",
-        "ext": "Lägg till ytterligare mätare",
+        "ext": "Lägg till vanlig förbrukare",
         "pv": "Lägg till solenergimätare"
       },
       "save": "Spara",
       "specific": "Specifik integration",
       "template": "Tillverkare",
       "titleChoice": "Vad vill du lägga till?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Själv-reglerande förbrukare",
+        "battery": "Batteri",
+        "charge": "Förbrukare / Laddare",
+        "grid": "Elnät",
+        "label": "Användning",
+        "pv": "Produktion"
+      },
       "validateSave": "Validera & spara"
     },
     "modbus": {
@@ -524,7 +538,7 @@
     "validation": {
       "failed": "misslyckades",
       "label": "Status",
-      "running": "validerar…",
+      "running": "Validerar…",
       "success": "lyckades",
       "unknown": "okänd",
       "validate": "validerar"
@@ -656,6 +670,7 @@
     "about": "Om",
     "authProviders": {
       "confirmLogout": "Är du säker på att du vill bryta anslutningen {title}?",
+      "loggedOut": "Du har loggats ut",
       "title": "Auktoriseringsstatus"
     },
     "blog": "Blogg",
@@ -731,7 +746,7 @@
       "step1Description": "Klicka på knappen nedan för att skapa en GitHub-post med titel, beskrivning och detaljer.",
       "step2Description": "När posten skapats, återvänd hit för att kopiera ytterligare information nedan och klistra in i ditt GitHub-formulär. Känsliga data har automatiskt tagits bort men dubbelkolla innan du delar.",
       "stepOneDiscussion": "Steg 1: Skapa en grund-diskussion",
-      "stepOneIssue": "Steg 1: Skapa grundläggande issue",
+      "stepOneIssue": "Steg 1: Skapa en grundläggande problemrapport",
       "stepTwo": "Steg 2: Kopiera ytterligare information",
       "title": "GitHub problemöversikt"
     },

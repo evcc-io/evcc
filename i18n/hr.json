@@ -74,7 +74,7 @@
       "descriptionResidualPower": "Pomiče operacijsku točku kontrolne petlje. Ukoliko imate kućnu bateriju, savjetuje se vrijednost od 100W. Na taj način će upotreba baterije dobiti prioritet nad energetskom mrežom.",
       "labelInterval": "Interval ažuriranja",
       "labelResidualPower": "Preostala snaga",
-      "title": "Ponašanje upravljanja"
+      "title": "Učestalost upravljanja"
     },
     "deviceValue": {
       "amount": "Iznos",
