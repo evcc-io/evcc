@@ -30,7 +30,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		ClientID, VIN string
 		Cache         time.Duration
 	}{
-		Cache: 30 * time.Minute, // 50 requests per day
+		Cache: 15 * time.Minute, // 50 requests per day
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
