@@ -62,7 +62,6 @@ func monitorKeyboardRFID(ctx context.Context, p string, log *util.Logger, rfIdCh
 		log.ERROR.Printf("Cannot read %s: %v\n", p, err)
 		return
 	}
-	var read string
 	for {
 		select {
 		case <-ctx.Done():
@@ -74,16 +73,18 @@ func monitorKeyboardRFID(ctx context.Context, p string, log *util.Logger, rfIdCh
 				continue
 			}
 
+			var builder strings.Builder
+
 			switch e.Type {
 			case evdev.EV_KEY:
 				if e.Value == 1 {
 					log.DEBUG.Printf("Received keystroke \"%s\"", e.CodeName())
 					if e.Code == evdev.KEY_ENTER || e.Code == evdev.KEY_KPENTER {
-						rfIdChannel <- read
-						read = ""
+						rfIdChannel <- builder.String()
+						builder.Reset()
 					} else {
 						if val, ok := convertKeyCodeNameToCharacter(e.CodeName()); ok {
-							read += val
+							builder.WriteString(val)
 						} else {
 							log.WARN.Printf("Unknown key code: %v", e.Code)
 						}
