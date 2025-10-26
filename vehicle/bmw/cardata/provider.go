@@ -123,7 +123,7 @@ func (v *Provider) any(key string) (any, error) {
 		}
 		v.updated = time.Now()
 
-	case tokenErr == nil && time.Since(v.updated) > v.cache && v.container != "" && v.isProbablyCharging():
+	case tokenErr == nil && time.Since(v.updated) > v.cache && v.container != "":
 		if err := v.updateContainerData(); err != nil {
 			v.log.WARN.Println(err)
 		}
@@ -139,31 +139,6 @@ func (v *Provider) any(key string) (any, error) {
 	}
 
 	return nil, api.ErrNotAvailable
-}
-
-// isProbablyCharging mimics Status() using cached values only
-func (v *Provider) isProbablyCharging() bool {
-	cached := func(key string) string {
-		if el, ok := v.streaming[key]; ok {
-			if s, ok := (el.Value).(string); ok {
-				return s
-			}
-		}
-
-		if el, ok := v.rest[key]; ok {
-			return el.Value
-		}
-
-		return ""
-	}
-
-	return len(lo.Intersect([]string{
-		cached("vehicle.drivetrain.electricEngine.charging.hvStatus"),
-		cached("vehicle.drivetrain.electricEngine.charging.status"),
-	}, []string{
-		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
-		"CHARGINGACTIVE", // vehicle.drivetrain.electricEngine.charging.status
-	})) > 0
 }
 
 func (v *Provider) String(key string) (string, error) {
