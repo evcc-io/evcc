@@ -461,6 +461,7 @@
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
       "labelDeviceId": "Geräte-ID",
+      "labelLegacyId": "Verwende alte ID-Generierung",
       "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
     },

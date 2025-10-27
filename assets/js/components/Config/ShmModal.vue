@@ -10,7 +10,7 @@
 		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }">
+		<template #default="{ values }: { values: ShmConfig }">
 			<PropertyCollapsible>
 				<template #advanced>
 					<p>{{ $t("config.shm.descriptionIds") }}</p>
@@ -52,14 +52,27 @@
 							minlength="12"
 							maxlength="12"
 							pattern="[A-Fa-f0-9]{12}"
-						/> </FormRow
-				></template>
+						/>
+					</FormRow>
+					<div class="d-flex mb-4">
+						<input
+							id="shmLegacyid"
+							v-model="values.legacyId"
+							class="form-check-input"
+							type="checkbox"
+						/>
+						<label class="form-check-label ms-2" for="shmLegacyid">
+							{{ $t("config.shm.labelLegacyId") }}
+						</label>
+					</div>
+				</template>
 			</PropertyCollapsible>
 		</template>
 	</JsonModal>
 </template>
 
 <script lang="ts">
+import type { ShmConfig } from "@/types/evcc";
 import FormRow from "./FormRow.vue";
 import JsonModal from "./JsonModal.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";

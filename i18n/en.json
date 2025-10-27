@@ -461,6 +461,7 @@
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
       "labelDeviceId": "Device ID",
+      "labelLegacyId": "Use legacy ID generation",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
