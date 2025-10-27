@@ -10,7 +10,7 @@
 		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }: { values: ShmConfig }">
+		<template #default="{ values }">
 			<PropertyCollapsible>
 				<template #advanced>
 					<p>{{ $t("config.shm.descriptionIds") }}</p>
@@ -72,7 +72,6 @@
 </template>
 
 <script lang="ts">
-import type { ShmConfig } from "@/types/evcc";
 import FormRow from "./FormRow.vue";
 import JsonModal from "./JsonModal.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
