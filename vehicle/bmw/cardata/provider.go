@@ -94,7 +94,7 @@ func (v *Provider) setupContainer() error {
 
 	v.container = container
 
-	return v.updateContainerData()
+	return nil
 }
 
 func (v *Provider) updateContainerData() error {
@@ -121,7 +121,7 @@ func (v *Provider) any(key string) (any, error) {
 		if err := v.setupContainer(); err != nil {
 			v.log.WARN.Println(err)
 		}
-		v.updated = time.Now()
+		fallthrough
 
 	case tokenErr == nil && time.Since(v.updated) > v.cache && v.container != "":
 		if err := v.updateContainerData(); err != nil {
