@@ -47,6 +47,11 @@ test.describe("SHM", () => {
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
+    // check legacy ID
+    const legacy = modal.getByTestId("shmLegacyid");
+    await legacy.check();
+    await expect(legacy).toBeChecked();
+
     // verify persistence after restart
     await restart(CONFIG);
     await page.goto("/#/config");

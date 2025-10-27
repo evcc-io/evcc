@@ -57,6 +57,7 @@
 					<div class="d-flex mb-4">
 						<input
 							id="shmLegacyid"
+							data-testid="shmLegacyid"
 							v-model="values.legacyId"
 							class="form-check-input"
 							type="checkbox"
