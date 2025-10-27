@@ -1,0 +1,13 @@
+template: weidmüller
+products:
+  - brand: Weidmüller
+    description:
+      generic: AC Smart
+capabilities: ["1p3p", "rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: host
+render: |
+  type: weidmüller
+  uri: {{ .host }}:502
