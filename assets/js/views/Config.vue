@@ -345,6 +345,7 @@
 					:loadpointType="selectedLoadpointType"
 					:fade="loadpointSubModalOpen ? 'right' : undefined"
 					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
 					@added="chargerAdded"
 					@updated="chargerChanged"
 					@removed="chargerRemoved"
@@ -634,6 +635,9 @@ export default defineComponent({
 		isSponsor() {
 			const { name } = store.state?.sponsor || {};
 			return !!name;
+		},
+		ocpp() {
+			return store.state?.ocpp;
 		},
 		sponsor() {
 			return store.state?.sponsor;

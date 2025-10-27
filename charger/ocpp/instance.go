@@ -16,10 +16,36 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
+type Config struct {
+	Port        int    `json:"port"`
+	ExternalUri string `json:"externalUri,omitempty" yaml:",omitempty"`
+}
+
 var (
-	once     sync.Once
-	instance *CS
+	once        sync.Once
+	instance    *CS
+	port        = 8887
+	externalUri string
 )
+
+// Status returns the OCPP status
+func Status() status {
+	if instance == nil {
+		return status{}
+	}
+	return instance.status()
+}
+
+// Port returns the configured OCPP port
+func Port() int {
+	return port
+}
+
+// Init initializes the OCPP server
+func Init(cfg Config) {
+	port = cfg.Port
+	externalUri = cfg.ExternalUri
+}
 
 func Instance() *CS {
 	once.Do(func() {
@@ -55,7 +81,7 @@ func Instance() *CS {
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 
 		go instance.errorHandler(cs.Errors())
-		go cs.Start(8887, "/{ws}")
+		go cs.Start(port, "/{ws}")
 
 		// wait for server to start
 		for range time.Tick(10 * time.Millisecond) {
