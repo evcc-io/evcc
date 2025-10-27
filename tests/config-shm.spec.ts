@@ -44,13 +44,13 @@ test.describe("SHM", () => {
     await device.fill(VALID_DEVICE_ID);
     expect(await device.evaluate((el: HTMLInputElement) => el.validity.valid)).toBe(true);
 
-    await modal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(modal);
-
     // check legacy ID
     const legacy = modal.getByTestId("shmLegacyid");
     await legacy.check();
     await expect(legacy).toBeChecked();
+
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
 
     // verify persistence after restart
     await restart(CONFIG);
