@@ -17,12 +17,12 @@
 							<small class="d-block no-wrap text-truncate">
 								{{ evopt.res.status }} ・
 								{{
-										fmtMoney(
-											(evopt.res.objective_value || 0) * -1,
-											currency,
-											true,
-											true
-										)
+									fmtMoney(
+										(evopt.res.objective_value || 0) * -1,
+										currency,
+										true,
+										true
+									)
 								}}
 								saved
 							</small>
