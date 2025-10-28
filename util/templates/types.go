@@ -179,11 +179,12 @@ type Param struct {
 	Reference     bool         `json:",omitempty"` // if this is references another param definition
 	ReferenceName string       `json:",omitempty"` // name of the referenced param if it is not identical to the defined name
 	Preset        string       `json:"-"`          // Reference a predefined set of params
-	Required      bool         `json:",omitempty"` // cli if the user has to provide a non empty value
-	Mask          bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
-	Advanced      bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Deprecated    bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
-	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
+	Required      bool         `json:",omitempty"` // parameter requires non-empty value
+	Mask          bool         `json:",omitempty"` // parameter value should be masked, e.g. for passwords
+	Advanced      bool         `json:",omitempty"` // parameter is part of advanced configuration and hidden by default
+	Hidden        bool         `json:",omitempty"` // parameter exists but is hidden in UI/docs
+	Deprecated    bool         `json:",omitempty"` // parameter is deprecated and thus should not be present in UI/docs
+	Default       string       `json:",omitempty"` // parameter default value
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
 	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
