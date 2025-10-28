@@ -54,18 +54,24 @@
 							pattern="[A-Fa-f0-9]{12}"
 						/>
 					</FormRow>
-					<div class="d-flex mb-4">
-						<input
-							id="shmLegacyid"
-							v-model="values.legacyId"
-							data-testid="shmLegacyid"
-							class="form-check-input"
-							type="checkbox"
-						/>
-						<label class="form-check-label ms-2" for="shmLegacyid">
-							{{ $t("config.shm.labelLegacyId") }}
-						</label>
-					</div>
+					<FormRow
+						id="shmLegacyid"
+						:label="$t('config.shm.labelLegacyId')"
+						:help="$t('config.shm.descriptionLegacyId')"
+					>
+						<div class="d-flex">
+							<input
+								id="shmLegacyid"
+								v-model="values.legacyId"
+								data-testid="shmLegacyid"
+								class="form-check-input"
+								type="checkbox"
+							/>
+							<label class="form-check-label ms-2" for="shmLegacyid">
+								{{ $t("config.shm.legacyIdLabel") }}
+							</label>
+						</div>
+					</FormRow>
 				</template>
 			</PropertyCollapsible>
 		</template>

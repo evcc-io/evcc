@@ -458,11 +458,13 @@
       "descriptionDeviceId": "12-stelliger HEX-String. Präfix für alle Geräte (Ladepunkt, ..).",
       "descriptionIdPattern": "Kennungsmuster",
       "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
+      "descriptionLegacyId": "Die Generierung von Legacy-IDs hängt von der Reihenfolge der Ladepunkte ab und ist möglicherweise nicht stabil. Sie wird im Allgemeinen nicht empfohlen.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
       "labelDeviceId": "Geräte-ID",
-      "labelLegacyId": "Verwende alte ID-Generierung",
+      "labelLegacyId": "Legacy-ID",
       "labelVendorId": "Hersteller-ID",
+      "legacyIdLabel": "Verwende alte ID-Generierung",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
