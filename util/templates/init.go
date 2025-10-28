@@ -64,7 +64,7 @@ func register(class Class, tmpl Template) error {
 }
 
 func fromBytes(b []byte) (Template, error) {
-	// panic if template definition contains unknown fields
+	// error on unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
 
