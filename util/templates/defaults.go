@@ -12,10 +12,8 @@ var defaults []byte
 
 type configDefaults struct {
 	Params  []Param // Default values for common parameters
-	Presets map[string]struct {
-		Params []Param
-	}
-	Modbus struct { // Details about possible ModbusInterfaces and ModbusConnectionTypes
+	Presets map[string][]Param
+	Modbus  struct { // Details about possible ModbusInterfaces and ModbusConnectionTypes
 		Interfaces map[string][]string // Information about physical modbus interface types (rs485, tcpip)
 		Types      map[string]struct { // Details about different ways to connect to a ModbusInterface and its defaults
 			Description TextLanguage

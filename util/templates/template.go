@@ -133,12 +133,12 @@ func (t *Template) ResolvePresets() error {
 	t.Params = []Param{}
 	for _, p := range currentParams {
 		if p.Preset != "" {
-			base, ok := ConfigDefaults.Presets[p.Preset]
+			preset, ok := ConfigDefaults.Presets[p.Preset]
 			if !ok {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
 			}
 
-			t.Params = append(t.Params, base.Params...)
+			t.Params = append(t.Params, preset...)
 			continue
 		}
 
