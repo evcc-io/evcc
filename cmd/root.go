@@ -17,10 +17,12 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -278,6 +280,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err == nil {
 		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
+	}
+
+	// publish SHM legacy setting
+	if err == nil {
+		legacy, err := settings.Bool(keys.SHMLegacyScheme)
+		if err != nil {
+			legacy = len(config.Loadpoints().Devices()) > 0
+			settings.SetBool(keys.SHMLegacyScheme, legacy)
+		}
+		valueChan <- util.Param{Key: keys.SHMLegacyScheme, Val: legacy}
 	}
 
 	// publish initial settings
