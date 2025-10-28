@@ -90,3 +90,21 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 
 	return t, nil
 }
+
+func convert15MinToHourPrices(rates api.Rates) api.Rates {
+	var res api.Rates
+	now := time.Now().Truncate(time.Hour)
+	numSlots := len(rates) / 4
+
+	for i := range numSlots {
+		start := now.Add(time.Duration(i) * time.Hour)
+		end := start.Add(time.Hour)
+		res = append(res, api.Rate{
+			Start: start,
+			End:   end,
+			Value: (rates[i*4].Value + rates[i*4+1].Value + rates[i*4+2].Value + rates[i*4+3].Value) / 4,
+		})
+	}
+
+	return res
+}

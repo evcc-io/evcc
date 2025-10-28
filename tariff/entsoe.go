@@ -20,10 +20,11 @@ import (
 type Entsoe struct {
 	*request.Helper
 	*embed
-	log    *util.Logger
-	token  string
-	domain string
-	data   *util.Monitor[api.Rates]
+	log         *util.Logger
+	token       string
+	domain      string
+	averageHour bool
+	data        *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Entsoe)(nil)
@@ -166,6 +167,11 @@ func (t *Entsoe) Rates() (api.Rates, error) {
 	err := t.data.GetFunc(func(val api.Rates) {
 		res = slices.Clone(val)
 	})
+
+	if t.averageHour {
+		res = convert15MinToHourPrices(res)
+	}
+
 	return res, err
 }
 

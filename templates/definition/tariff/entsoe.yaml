@@ -23,6 +23,7 @@ params:
     help:
       de: "siehe https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
       en: "see https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
+  - name: averagehour
   - preset: tariff-base
 render: |
   type: entsoe

@@ -461,6 +461,16 @@ params:
       de: Längengrad
     type: float
     example: 9.1275
+  - name: averagehour
+    description:
+      en: Convert to hours
+      de: Konvertiere zu Stunden
+    help:
+      en: Convert the 15-minute slots into an average value per hour
+      de: Rechne die 15-Minuten-Slots in einen Durchschnittswert pro Stunde um
+    type: bool
+    default: false
+    advanced: true
 
 presets:
   vehicle-base:
