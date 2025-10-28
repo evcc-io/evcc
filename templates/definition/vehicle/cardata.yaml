@@ -51,9 +51,11 @@ params:
   - name: clientid
     required: true
   - preset: vehicle-features
+  - name: streaming
+    default: true
 render: |
   type: cardata
   vin: {{ .vin }}
   clientid: {{ .clientid }}
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" (set . "streaming" "true") }}
+  {{ include "vehicle-features" . }}
