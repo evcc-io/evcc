@@ -11,5 +11,4 @@ const (
 	TypeDuration
 	TypeFloat
 	TypeInt
-	TypeList
 )

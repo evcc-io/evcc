@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/samber/lo"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -240,40 +241,18 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 			continue
 		}
 
-		switch p.Type {
-		case TypeList:
-			for _, e := range v.([]string) {
-				t.Params[index].Values = append(p.Values, p.yamlQuote(e))
-			}
-		default:
-			switch v := v.(type) {
-			case string:
-				t.Params[index].Value = p.yamlQuote(v)
-			case int:
-				t.Params[index].Value = strconv.Itoa(v)
-			}
+		switch v := v.(type) {
+		case string:
+			t.Params[index].Value = p.yamlQuote(v)
+		case int:
+			t.Params[index].Value = strconv.Itoa(v)
 		}
 	}
 
 	// remove params with no values
-	var newParams []Param
-	for _, param := range t.Params {
-		if !param.IsRequired() {
-			switch param.Type {
-			case TypeList:
-				if len(param.Values) == 0 {
-					continue
-				}
-			default:
-				if param.Value == "" {
-					continue
-				}
-			}
-		}
-		newParams = append(newParams, param)
-	}
-
-	t.Params = newParams
+	t.Params = lo.Filter(t.Params, func(p Param, _ int) bool {
+		return p.IsRequired() || p.Value != ""
+	})
 
 	out := new(bytes.Buffer)
 	data := map[string]interface{}{

@@ -187,7 +187,6 @@ type Param struct {
 	Default       string       `json:",omitempty"` // parameter default value
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
-	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
 	Unit          string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
 	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type          ParamType    // string representation of the value type, "string" is default
@@ -202,12 +201,7 @@ type Param struct {
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
-func (p *Param) DefaultValue(renderMode int) interface{} {
-	// return empty list to allow iterating over in template
-	if p.Type == TypeList {
-		return []string{}
-	}
-
+func (p *Param) DefaultValue(renderMode int) string {
 	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {
 		return p.Example
 	}

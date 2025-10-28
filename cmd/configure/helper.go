@@ -386,48 +386,14 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 				continue
 			}
 
-			switch param.Type {
-			case templates.TypeList:
-				values := c.processListInputConfig(param)
-				var nonEmptyValues []string
-				for _, value := range values {
-					if value != "" {
-						nonEmptyValues = append(nonEmptyValues, value)
-					}
-				}
-				additionalConfig[param.Name] = nonEmptyValues
-
-			default:
-				// TODO make processInputConfig aware of default values added by template
-				if value := c.processInputConfig(param); value != "" {
-					additionalConfig[param.Name] = value
-				}
+			// TODO make processInputConfig aware of default values added by template
+			if value := c.processInputConfig(param); value != "" {
+				additionalConfig[param.Name] = value
 			}
 		}
 	}
 
 	return additionalConfig
-}
-
-// handle user input of multiple items in a list
-func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
-	var values []string
-
-	// ask for values until the user decides to stop
-	for {
-		newValue := c.processInputConfig(param)
-		values = append(values, newValue)
-
-		if newValue == "" {
-			break
-		}
-
-		if !c.askYesNo("  " + c.localizedString("Config_AddAnotherValue")) {
-			break
-		}
-	}
-
-	return values
 }
 
 // handle user input for a simple one value input
