@@ -52,7 +52,6 @@ params:
     required: true
   - preset: vehicle-features
   - name: streaming
-    hidden: true
     default: true
 render: |
   type: cardata
