@@ -3,7 +3,6 @@ package templates
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"slices"
 
 	"go.yaml.in/yaml/v4"
@@ -38,17 +37,17 @@ func (c *configDefaults) Load() {
 	dec.KnownFields(true)
 
 	if err := dec.Decode(&c); err != nil {
-		panic(fmt.Errorf("failed to parse deviceGroupListDefinition: %v", err))
+		panic("failed to parse config defaults: " + err.Error())
 	}
 
 	// resolve modbus param references
-	for k := range c.Modbus.Types {
-		for i, p := range c.Modbus.Types[k].Params {
+	for typ := range c.Modbus.Types {
+		for i, p := range c.Modbus.Types[typ].Params {
 			if idx := slices.IndexFunc(c.Modbus.Definitions, func(pd Param) bool {
 				return pd.Name == p.Name
 			}); idx >= 0 {
 				p.OverwriteProperties(c.Modbus.Definitions[idx])
-				c.Modbus.Types[k].Params[i] = p
+				c.Modbus.Types[typ].Params[i] = p
 			}
 		}
 	}
