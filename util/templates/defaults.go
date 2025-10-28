@@ -1,8 +1,10 @@
 package templates
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
+	"slices"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -14,8 +16,9 @@ type configDefaults struct {
 	Params  []Param // Default values for common parameters
 	Presets map[string][]Param
 	Modbus  struct { // Details about possible ModbusInterfaces and ModbusConnectionTypes
-		Interfaces map[string][]string // Information about physical modbus interface types (rs485, tcpip)
-		Types      map[string]struct { // Details about different ways to connect to a ModbusInterface and its defaults
+		Definitions []Param
+		Interfaces  map[string][]string // Information about physical modbus interface types (rs485, tcpip)
+		Types       map[string]struct { // Details about different ways to connect to a ModbusInterface and its defaults
 			Description TextLanguage
 			Params      []Param
 		}
@@ -30,24 +33,21 @@ func (c *configDefaults) Load() {
 		return
 	}
 
-	if err := yaml.Unmarshal(defaults, &c); err != nil {
+	// panic on unknown fields
+	dec := yaml.NewDecoder(bytes.NewReader(defaults))
+	dec.KnownFields(true)
+
+	if err := dec.Decode(&c); err != nil {
 		panic(fmt.Errorf("failed to parse deviceGroupListDefinition: %v", err))
 	}
 
 	// resolve modbus param references
 	for k := range c.Modbus.Types {
 		for i, p := range c.Modbus.Types[k].Params {
-			// if this is a reference, get the referenced values and then overwrite it with the values defined here
-			if p.IsReference() {
-				finalName := p.Name
-				referencedItemName := p.Name
-				if p.ReferenceName != "" {
-					referencedItemName = p.ReferenceName
-				}
-				_, referencedParam := c.ParamByName(referencedItemName)
-				referencedParam.OverwriteProperties(p)
-				referencedParam.Name = finalName
-				p = referencedParam
+			if idx := slices.IndexFunc(c.Modbus.Definitions, func(pd Param) bool {
+				return pd.Name == p.Name
+			}); idx >= 0 {
+				p.OverwriteProperties(c.Modbus.Definitions[idx])
 				c.Modbus.Types[k].Params[i] = p
 			}
 		}

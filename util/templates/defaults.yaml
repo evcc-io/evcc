@@ -14,36 +14,6 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
-  - name: modbusid
-    description:
-      generic: Modbus ID
-    default: 1
-    type: int
-  - name: modbusdevice
-    description:
-      de: Gerätename
-      en: Device name
-    help:
-      de: USB-RS485 Gerätename
-      en: USB-RS485 device name
-    example: /dev/ttyUSB0
-  - name: modbusbaudrate
-    description:
-      de: Baudrate
-      en: Baudrate
-    help:
-      de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-      en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
-    default: 9600
-    type: int
-  - name: modbuscomset
-    description:
-      de: ComSet
-      en: ComSet
-    help:
-      de: Kommunikationsparameter des Adapters
-      en: Communication parameter for the adapter
-    default: 8N1
   - name: host
     required: true
     description:
@@ -697,58 +667,69 @@ modbus:
     rs485: ["rs485serial", "rs485tcpip"]
     tcpip: ["tcpip"]
     udp: ["udp"]
+  definitions:
+    - name: id
+      description:
+        generic: Modbus ID
+      default: 1
+      type: int
+    - name: device
+      description:
+        de: Gerätename
+        en: Device name
+      help:
+        de: USB-RS485 Gerätename
+        en: USB-RS485 device name
+      example: /dev/ttyUSB0
+    - name: baudrate
+      description:
+        de: Baudrate
+        en: Baudrate
+      help:
+        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+      default: 9600
+      type: int
+    - name: comset
+      description:
+        de: ComSet
+        en: ComSet
+      help:
+        de: Kommunikationsparameter des Adapters
+        en: Communication parameter for the adapter
+      default: 8N1
   types:
     rs485serial:
       description:
         generic: Serial (USB-RS485 Adapter)
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          referencename: modbusdevice
-          name: device
-        - reference: true
-          referencename: modbusbaudrate
-          name: baudrate
-        - reference: true
-          referencename: modbuscomset
-          name: comset
+        - name: id
+        - name: device
+        - name: baudrate
+        - name: comset
     rs485tcpip:
       description:
         generic: Serial (Ethernet-RS485 Adapter)
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
+        - name: id
+        - name: host
+        - name: port
           default: 502
     tcpip:
       description:
         generic: TCP/IP
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
+        - name: id
+        - name: host
+        - name: port
           default: 502
     udp:
       description:
         generic: UDP
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
+        - name: id
+        - name: host
+        - name: port
           default: 502
 
 devicegroups:
