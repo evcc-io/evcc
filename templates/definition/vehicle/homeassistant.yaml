@@ -91,7 +91,7 @@ params:
 render: |
   type: homeassistant
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "vehicle-features" (set . "streaming" "true") }}
   uri: {{ .uri }}
   token: {{ .token }}
   sensors:
