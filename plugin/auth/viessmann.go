@@ -8,23 +8,15 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	OAuthURI    = "https://iam.viessmann-climatesolutions.com/idp/v3"
-	RedirectURI = "http://localhost:4200/"
-	// ^ the value of RedirectURI doesn't matter, but it must be the same between requests
-)
+const OAuthURI = "https://iam.viessmann-climatesolutions.com/idp/v3"
 
-func oauth2Config(clientID string) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID: clientID,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   OAuthURI + "/authorize",
-			TokenURL:  OAuthURI + "/token",
-			AuthStyle: oauth2.AuthStyleInHeader,
-		},
-		RedirectURL: RedirectURI,
-		Scopes:      []string{"IoT User", "offline_access"},
-	}
+var oc = oauth2.Config{
+	Endpoint: oauth2.Endpoint{
+		AuthURL:   OAuthURI + "/authorize",
+		TokenURL:  OAuthURI + "/token",
+		AuthStyle: oauth2.AuthStyleInHeader,
+	},
+	Scopes: []string{"IoT User", "offline_access"},
 }
 
 func init() {
@@ -33,8 +25,9 @@ func init() {
 
 func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		ClientID string
-		Gateway  string
+		ClientID    string
+		RedirectURI string
+		Gateway     string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -44,5 +37,13 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.T
 	log := util.NewLogger("viessmann").Redact(cc.ClientID)
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
-	return NewOauth(ctx, "Viessmann", cc.Gateway, oauth2Config(cc.ClientID))
+	oc, err := util.Merge(oc, oauth2.Config{
+		ClientID:    cc.ClientID,
+		RedirectURL: cc.RedirectURI,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return NewOauth(ctx, "Viessmann", cc.Gateway, &oc)
 }
