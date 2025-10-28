@@ -458,10 +458,13 @@
       "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
       "descriptionIdPattern": "Identifier pattern",
       "descriptionIds": "In Sunny Portal every consumer device needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL (/semp) to check your current identifiers.",
+      "descriptionLegacyId": "Legacy ID generation depends on the order of loadpoints and may not be stable. It is generally not recommended.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
       "labelDeviceId": "Device ID",
+      "labelLegacyId": "Legacy ID",
       "labelVendorId": "Vendor ID",
+      "legacyIdLabel": "Use legacy ID generation",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
