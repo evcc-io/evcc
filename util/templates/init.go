@@ -88,6 +88,10 @@ func fromBytes(b []byte) (Template, error) {
 		err = tmpl.Validate()
 	}
 
+	if err != nil {
+		err = fmt.Errorf("template '%s': %w", tmpl.Template, err)
+	}
+
 	return tmpl, err
 }
 
