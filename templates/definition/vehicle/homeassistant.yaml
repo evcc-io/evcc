@@ -93,7 +93,7 @@ params:
 render: |
   type: homeassistant
   {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" }}
+  {{ include "vehicle-features" . }}
   uri: {{ .uri }}
   token: {{ .token }}
   sensors:
