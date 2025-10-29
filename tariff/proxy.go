@@ -35,3 +35,9 @@ func NewProxyFromConfig(ctx context.Context, typ string, other map[string]any) (
 
 	return NewFromConfig(ctx, typ, other)
 }
+
+func sliceMinusElement[T comparable](s []T, el T) []T {
+	return slices.DeleteFunc(s, func(f T) bool {
+		return el == f
+	})
+}

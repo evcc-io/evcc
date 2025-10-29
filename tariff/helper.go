@@ -2,7 +2,6 @@ package tariff
 
 import (
 	"errors"
-	"slices"
 	"strings"
 	"time"
 
@@ -90,10 +89,4 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	}
 
 	return t, nil
-}
-
-func sliceMinusElement[T comparable](s []T, el T) []T {
-	return slices.DeleteFunc(s, func(f T) bool {
-		return el == f
-	})
 }

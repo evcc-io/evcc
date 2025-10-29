@@ -166,7 +166,6 @@ func (t *Entsoe) Rates() (api.Rates, error) {
 	err := t.data.GetFunc(func(val api.Rates) {
 		res = slices.Clone(val)
 	})
-
 	return res, err
 }
 
