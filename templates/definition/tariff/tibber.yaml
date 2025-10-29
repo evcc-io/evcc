@@ -22,10 +22,8 @@ params:
       de: Nur erforderlich, wenn du mehrere Häuser in deinem Tibber-Konto hast.
       en: Only required if you have multiple homes in your Tibber account.
   - preset: tariff-base
-  - preset: tariff-features
 render: |
   type: tibber
   token: {{ .token }}
   homeid: {{ .homeid }}
   {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
