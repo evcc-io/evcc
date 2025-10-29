@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"sort"
 	"strings"
 	"time"
 
@@ -91,18 +92,36 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	return t, nil
 }
 
+// convert15MinToHourPrices groups 15-minute rates by hour
 func convert15MinToHourPrices(rates api.Rates) api.Rates {
-	var res api.Rates
-	now := time.Now().Truncate(time.Hour)
-	numSlots := len(rates) / 4
+	if len(rates) == 0 {
+		return nil
+	}
 
-	for i := range numSlots {
-		start := now.Add(time.Duration(i) * time.Hour)
-		end := start.Add(time.Hour)
+	// accumulate sums and counts per hour-key
+	sums := make(map[time.Time]float64)
+	counts := make(map[time.Time]int)
+
+	for _, r := range rates {
+		// use hour as grouping key
+		h := r.Start.Truncate(time.Hour)
+		sums[h] += r.Value
+		counts[h]++
+	}
+
+	// create a sorted slice of hour keys for deterministic output order
+	hours := make([]time.Time, 0, len(sums))
+	for h := range sums {
+		hours = append(hours, h)
+	}
+	sort.Slice(hours, func(i, j int) bool { return hours[i].Before(hours[j]) })
+
+	res := make(api.Rates, 0, len(hours))
+	for _, h := range hours {
 		res = append(res, api.Rate{
-			Start: start,
-			End:   end,
-			Value: (rates[i*4].Value + rates[i*4+1].Value + rates[i*4+2].Value + rates[i*4+3].Value) / 4,
+			Start: h,
+			End:   h.Add(time.Hour),
+			Value: sums[h] / float64(counts[h]),
 		})
 	}
 
