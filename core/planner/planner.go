@@ -175,7 +175,7 @@ func trimAndAlignWindow(window api.Rates, effectiveDuration time.Duration, targe
 }
 
 // Plan creates a continuous emergency charging plan
-func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
+func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	rates.Sort()
 
 	res := make(api.Rates, 0, len(rates)+2)
@@ -262,23 +262,12 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	}
 
 	// consume remaining time
-	if t.clock.Until(targetTime) <= requiredDuration {
-		return t.continuousPlan(rates, latestStart, targetTime)
+	if t.clock.Until(targetTime) <= requiredDuration || precondition >= requiredDuration {
+		return continuousPlan(rates, latestStart, targetTime)
 	}
-
-	// cut off all rates after target time
-	for i := 1; i < len(rates); i++ {
-		if !rates[i].Start.Before(targetTime) {
-			rates = rates[:i]
-			break
-		}
-	}
-
-	// rates are by default sorted by date, oldest to newest
-	last := rates[len(rates)-1].End
 
 	// reduce planning horizon to available rates
-	if targetTime.After(last) {
+	if last := rates[len(rates)-1].End; targetTime.After(last) {
 		// there is enough time for charging after end of current rates
 		durationAfterRates := targetTime.Sub(last)
 		if durationAfterRates >= requiredDuration {
@@ -286,17 +275,20 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		}
 
 		// need to use some of the available slots
-		t.log.DEBUG.Printf("target time beyond available slots- reducing plan horizon from %v to %v",
+		t.log.DEBUG.Printf("planner: target time beyond available slots- reducing plan horizon from %v to %v",
 			requiredDuration.Round(time.Second), durationAfterRates.Round(time.Second))
 
 		targetTime = last
 		requiredDuration -= durationAfterRates
 		precondition = max(precondition-durationAfterRates, 0)
-	}
-
-	// if precondition >= requiredDuration, charge in latest possible window (everything)
-	if precondition >= requiredDuration {
-		return t.continuousPlan(rates, latestStart, targetTime)
+	} else {
+		// performance: cut off all rates after target time
+		for i := 1; i < len(rates); i++ {
+			if !rates[i].Start.Before(targetTime) {
+				rates = rates[:i]
+				break
+			}
+		}
 	}
 
 	// reduce target time by precondition duration
@@ -327,7 +319,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 			// available window too small for sliding window - use continuous plan without preconditioning
 			if end.Sub(start) < requiredDuration {
-				return t.continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
+				return continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
 			}
 		}
 		// find cheapest continuous window
