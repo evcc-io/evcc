@@ -77,6 +77,10 @@ func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (ap
 
 	api := cardata.NewAPI(log, ts)
 
+	if _, err := api.Capabilities(cc.VIN); err != nil {
+		panic(err)
+	}
+
 	v.Provider = cardata.NewProvider(ctx, log, api, ts, cc.ClientID, cc.VIN)
 
 	return v, nil

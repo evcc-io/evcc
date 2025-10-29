@@ -74,6 +74,17 @@ func (v *API) Vehicles() ([]string, error) {
 	), err
 }
 
+func (v *API) Capabilities(vin string) ([]Capability, error) {
+	var res Capabilities
+	uri := fmt.Sprintf("%s/exve/vehicles/%s/capabilities", ApiURL, vin)
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"accept": "application/x.exve.vehicle-capability.1.0+json; charset=utf-8",
+	})
+	err := v.DoJSON(req, &res)
+
+	return res.Capabilities, err
+}
+
 func (v *API) GetContainers() ([]Container, error) {
 	var res struct {
 		Containers []Container

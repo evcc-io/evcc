@@ -8,6 +8,16 @@ type VehicleMapping struct {
 	MappingType string
 }
 
+type Capabilities struct {
+	Capabilities []Capability
+}
+
+type Capability struct {
+	Version string
+	Name    string
+	Value   bool
+}
+
 type Container struct {
 	Name        string    `json:"name"`
 	Purpose     string    `json:"purpose"`
