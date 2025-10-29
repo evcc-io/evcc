@@ -948,23 +948,6 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	rate, err := consumption.At(time.Now())
-	if consumption != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(consumption) > 0 {
-			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
-				consumption[0].Start.Local().Format(time.RFC3339),
-				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
-	}
-
-	batteryGridChargeActive := site.batteryGridChargeActive(rate)
-	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-	site.updateBatteryMode(batteryGridChargeActive, rate)
-
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
@@ -997,6 +980,25 @@ func (site *Site) update(lp updater) {
 	} else {
 		site.log.ERROR.Println(err)
 	}
+
+	// smart grid charging
+	rate, err := consumption.At(time.Now())
+	if consumption != nil && err != nil {
+		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
+		if len(consumption) > 0 {
+			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
+				consumption[0].Start.Local().Format(time.RFC3339),
+				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
+			)
+		}
+
+		site.log.WARN.Println("planner:", msg)
+	}
+
+	// update battery after reading meters to ensure connection is open
+	batteryGridChargeActive := site.batteryGridChargeActive(rate)
+	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
+	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	site.stats.Update(site)
 }
