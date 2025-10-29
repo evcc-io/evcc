@@ -439,7 +439,6 @@ params:
       en: Convert the 15-minute slots into an average value per hour
       de: Rechne die 15-Minuten-Slots in einen Durchschnittswert pro Stunde um
     type: bool
-    default: false
     advanced: true
 
 presets:
