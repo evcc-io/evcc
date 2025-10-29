@@ -82,6 +82,7 @@ export interface State {
   authDisabled?: boolean;
   config?: string;
   database?: string;
+  shmLegacy?: boolean;
 }
 
 export interface Config {

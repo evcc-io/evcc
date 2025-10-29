@@ -55,6 +55,7 @@
 						/>
 					</FormRow>
 					<FormRow
+						v-if="shmLegacy"
 						id="shmLegacyid"
 						:label="$t('config.shm.labelLegacyId')"
 						:help="$t('config.shm.descriptionLegacyId')"
@@ -86,6 +87,7 @@ import PropertyCollapsible from "./PropertyCollapsible.vue";
 export default {
 	name: "ShmModal",
 	components: { JsonModal, FormRow, PropertyCollapsible },
+	props: { shmLegacy: Boolean },
 	emits: ["changed"],
 	computed: {
 		sempUrl() {

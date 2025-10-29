@@ -356,7 +356,7 @@
 				<ControlModal @changed="loadDirty" />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 				<HemsModal @changed="yamlChanged" />
-				<ShmModal @changed="loadDirty" />
+				<ShmModal v-bind="shmProps" @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
@@ -658,6 +658,11 @@ export default defineComponent({
 		backupRestoreProps() {
 			return {
 				authDisabled: store.state?.authDisabled || false,
+			};
+		},
+		shmProps() {
+			return {
+				shmLegacy: store.state?.shmLegacy,
 			};
 		},
 		circuitsSorted() {

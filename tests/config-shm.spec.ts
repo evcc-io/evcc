@@ -11,6 +11,7 @@ test.afterEach(async () => {
 const CONFIG = "basics.evcc.yaml";
 const VALID_VENDOR_ID = "ABCD1234";
 const VALID_DEVICE_ID = "1234567890AB";
+const VALID_DEVICE_ID_STABLE = "0425a16ada4b";
 const INVALID_VENDOR_ID = "INVALID";
 const INVALID_DEVICE_ID = "NOTVALID";
 
@@ -44,10 +45,9 @@ test.describe("SHM", () => {
     await device.fill(VALID_DEVICE_ID);
     expect(await device.evaluate((el: HTMLInputElement) => el.validity.valid)).toBe(true);
 
-    // check legacy ID
+    // verify legacy ID is not shown
     const legacy = modal.getByTestId("shmLegacyid");
-    await legacy.check();
-    await expect(legacy).toBeChecked();
+    await expect(legacy).not.toBeVisible();
 
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
@@ -67,9 +67,7 @@ test.describe("SHM", () => {
       modal.getByTestId("semp-url").click(),
     ]);
     const xml = await sempPage.content();
-    expect(xml).toContain(
-      `<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID.toLowerCase()}-00</DeviceId>`
-    );
+    expect(xml).toContain(`<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID_STABLE}-00</DeviceId>`);
     await sempPage.close();
   });
 });
