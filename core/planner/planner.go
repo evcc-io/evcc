@@ -175,15 +175,18 @@ func trimAndAlignWindow(window api.Rates, effectiveDuration time.Duration, targe
 }
 
 // Plan creates a continuous emergency charging plan
+// ratest must be sorted by time
 func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
-	rates.Sort()
-
 	res := make(api.Rates, 0, len(rates)+2)
 	for _, r := range rates {
+		// TODO do this outside, too?
+
 		// slot before continuous plan
 		if !r.End.After(start) {
 			continue
 		}
+
+		// TODO this has already been done outside
 
 		// slot after continuous plan
 		if !r.Start.Before(end) {
@@ -212,6 +215,9 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 		}
 	}
 
+	// TODO do we want to care for missing slots in the beginning?
+	// if yes- do here or outside?
+
 	// prepend missing slot
 	if res[0].Start.After(start) {
 		res = slices.Insert(res, 0, api.Rate{
@@ -219,6 +225,9 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 			End:   res[0].Start,
 		})
 	}
+
+	// TODO isn't this already handled outside?
+
 	// append missing slot
 	if last := res[len(res)-1]; last.End.Before(end) {
 		res = append(res, api.Rate{
