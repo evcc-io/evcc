@@ -371,9 +371,10 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setPlanEnergy(t, v)
 	}
 
-	var strategy api.PlanStrategy
-	if err := lp.settings.Json(keys.PlanStrategy, &strategy); err == nil {
-		lp.setPlanStrategy(strategy)
+	// load plan strategy (continuous mode and precondition duration)
+	var planStrategy api.PlanStrategy
+	if err := lp.settings.Json(keys.PlanStrategy, &planStrategy); err == nil {
+		lp.setPlanStrategy(planStrategy)
 	}
 }
 

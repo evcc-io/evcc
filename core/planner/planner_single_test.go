@@ -42,7 +42,7 @@ func TestContinuous_SinglePlanWindow(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // single continuous mode
+	plan := planner.Plan(requiredDuration, targetTime, 0, true) // single continuous mode
 
 	require.Len(t, plan, 2, "should create slots with actual prices")
 	assert.Equal(t, rates[2].Start, plan[0].Start, "start of the plan should match cheapest window")
@@ -88,7 +88,7 @@ func TestContinuous_WindowWithPastRates(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan := planner.Plan(requiredDuration, targetTime, 0, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 	require.Len(t, plan, 2, "should create slots with actual prices")
@@ -136,7 +136,7 @@ func TestContinuous_WindowAllRatesInPast(t *testing.T) {
 	targetTime := now.Add(3 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan := planner.Plan(requiredDuration, targetTime, 0, true) // continuous mode
 
 	// When all rates are in the past and target is in future, expect nil plan
 	assert.Empty(t, plan, "plan should be nil when all rates are in the past")
@@ -178,7 +178,7 @@ func TestContinuous_WindowRatesSpanningPastAndFuture(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan := planner.Plan(requiredDuration, targetTime, 0, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 	require.Len(t, plan, 2, "should create slots with actual prices")
@@ -226,7 +226,7 @@ func TestContinuous_WindowRatesStartInFuture(t *testing.T) {
 	targetTime := now.Add(5 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan := planner.Plan(requiredDuration, targetTime, 0, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 	require.Len(t, plan, 2, "should create slots with actual prices")
@@ -280,7 +280,7 @@ func TestContinuous_WindowLateChargingPreference(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan := planner.Plan(requiredDuration, targetTime, 0, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 	require.Len(t, plan, 2, "should create slots with actual prices")

@@ -32,39 +32,39 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 	return p
 }
 
-// trimSlot trims excess duration from a slot
-// Single slot: trim end (start early)
-// Multiple slots (first slot): trim start (start late)
-func trimSlot(slot *api.Rate, excess time.Duration, isSingle bool) {
-	if isSingle {
-		slot.End = slot.End.Add(-excess)
-	} else {
-		slot.Start = slot.Start.Add(excess)
+// filterRates filters rates to the given time window and optionally adjusts boundary slots
+func filterRates(rates api.Rates, start, end time.Time) api.Rates {
+	if len(rates) == 0 {
+		return nil
 	}
-}
 
-// plan creates a lowest-cost plan or required duration.
-// It MUST already established that
-// - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
-// - target time and required duration are before end of rates
-func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
-	var plan api.Rates
-
-	for _, source := range rates {
-		// slot not relevant
-		if !(source.End.After(t.clock.Now()) && source.Start.Before(targetTime)) {
+	var result api.Rates
+	for _, r := range rates {
+		// skip slots completely outside window
+		if !r.End.After(start) || !r.Start.Before(end) {
 			continue
 		}
 
-		// adjust slot start and end
-		slot := source
-		if slot.Start.Before(t.clock.Now()) {
-			slot.Start = t.clock.Now()
-		}
-		if slot.End.After(targetTime) {
-			slot.End = targetTime
-		}
+		slot := r
+		adjustSlotStart(&slot, start)
+		adjustSlotEnd(&slot, end)
 
+		result = append(result, slot)
+	}
+
+	return result
+}
+
+// plan creates a lowest-cost plan or required duration.
+// It MUST already be established that:
+// - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
+// - rates are filtered to [now, targetTime] window by caller
+func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
+	var plan api.Rates
+
+	// rates are already filtered by caller, so slots are guaranteed to be relevant
+
+	for _, slot := range rates {
 		slotDuration := slot.End.Sub(slot.Start)
 		requiredDuration -= slotDuration
 
@@ -90,21 +90,14 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 }
 
 // findContinuousWindow finds the cheapest continuous window of slots for the given duration.
+// - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates and the total cost.
-func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
-	now := t.clock.Now()
-
-	// Filter rates that end after now and start before targetTime
-	var validRates api.Rates
-	for _, r := range rates {
-		if r.End.After(now) && r.Start.Before(targetTime) {
-			validRates = append(validRates, r)
-		}
-	}
-
+func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
 	if len(validRates) == 0 {
 		return nil, 0
 	}
+
+	// rates are already filtered by caller, so slots are guaranteed to be relevant
 
 	// Detect slot duration from first valid rate (make tests compatible)
 	slotDuration := validRates[0].End.Sub(validRates[0].Start)
@@ -113,17 +106,22 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 	bestSlot := -1
 	bestCost := math.MaxFloat64
 
+	// build prefix sum for fastest window cost calculation
+	prefix := make([]float64, len(validRates)+1)
+	for i := range validRates {
+		prefix[i+1] = prefix[i] + validRates[i].Value
+	}
+
 	for i := range validRates {
 		lastSlot := i + slots - 1
 		windowEnd := validRates[i].Start.Add(effectiveDuration)
+
 		if lastSlot >= len(validRates) || windowEnd.After(targetTime) {
 			break
 		}
 
-		var sum float64
-		for j := i; j <= lastSlot; j++ {
-			sum += validRates[j].Value
-		}
+		// use prefix sum to get total cost of this window
+		sum := prefix[lastSlot+1] - prefix[i]
 
 		// prefer later start if equal cost
 		if sum <= bestCost {
@@ -136,75 +134,16 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 		return nil, 0
 	}
 
-	// edge case: target at non-slot boundary coinciding with optimal window
-	result := trimAndAlignWindow(validRates[bestSlot:bestSlot+slots], effectiveDuration, targetTime, slotDuration)
+	result := trimWindow(validRates[bestSlot:bestSlot+slots], effectiveDuration, targetTime)
 
 	return result, bestCost
-}
-
-// trimAndAlignWindow adjusts a continuous window to match the target time and required duration.
-// It trims and shifts as needed to ensure the plan aligns exactly with targetTime.
-func trimAndAlignWindow(window api.Rates, effectiveDuration time.Duration, targetTime time.Time, slotDuration time.Duration) api.Rates {
-	n := len(window)
-	if n == 0 {
-		return window
-	}
-
-	last := n - 1
-
-	// trim the end to targetTime if needed
-	if window[last].End.After(targetTime) {
-		window[last].End = targetTime
-	}
-
-	// trim excess from the start if window is too long
-	current := window[last].End.Sub(window[0].Start)
-	if excess := current - effectiveDuration; excess > 0 {
-		trimSlot(&window[0], excess, n == 1)
-	}
-
-	// shift forward if window ends slightly before targetTime (mid-slot alignment)
-	if gap := targetTime.Sub(window[last].End); gap > 0 && gap < slotDuration {
-		for i := range window {
-			window[i].Start = window[i].Start.Add(gap)
-			window[i].End = window[i].End.Add(gap)
-		}
-	}
-
-	return window
 }
 
 // Plan creates a continuous emergency charging plan
 // ratest must be sorted by time
 func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
-	res := make(api.Rates, 0, len(rates)+2)
-	for _, r := range rates {
-		// TODO do this outside, too?
-
-		// slot before continuous plan
-		if !r.End.After(start) {
-			continue
-		}
-
-		// TODO this has already been done outside
-
-		// slot after continuous plan
-		if !r.Start.Before(end) {
-			continue
-		}
-
-		// adjust first slot
-		if r.Start.Before(start) && r.End.After(start) {
-			r.Start = start
-		}
-
-		// adjust last slot
-		if r.Start.Before(end) && r.End.After(end) {
-			r.End = end
-		}
-
-		res = append(res, r)
-	}
+	// filter and adjust rates to time window
+	res := filterRates(rates, start, end)
 
 	if len(res) == 0 {
 		return api.Rates{
@@ -215,10 +154,8 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 		}
 	}
 
-	// TODO do we want to care for missing slots in the beginning?
-	// if yes- do here or outside?
-
-	// prepend missing slot
+	// prepend missing slot if rates don't start at plan start
+	// required for scenarios where current time is before first available rate
 	if res[0].Start.After(start) {
 		res = slices.Insert(res, 0, api.Rate{
 			Start: start,
@@ -226,9 +163,8 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 		})
 	}
 
-	// TODO isn't this already handled outside?
-
-	// append missing slot
+	// append missing slot if rates don't extend to plan end
+	// required for scenarios where target time is after last available rate
 	if last := res[len(res)-1]; last.End.Before(end) {
 		res = append(res, api.Rate{
 			Start: last.End,
@@ -239,7 +175,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
+func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, precondition time.Duration, continuous bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
@@ -290,26 +226,22 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		targetTime = last
 		requiredDuration -= durationAfterRates
 		precondition = max(precondition-durationAfterRates, 0)
-	} else {
-		// performance: cut off all rates after target time
-		for i := 1; i < len(rates); i++ {
-			if !rates[i].Start.Before(targetTime) {
-				rates = rates[:i]
-				break
-			}
-		}
 	}
 
-	// reduce target time by precondition duration
-	originalTargetTime := targetTime
-	targetTime = targetTime.Add(-precondition)
-	requiredDuration = max(requiredDuration-precondition, 0)
+	// filter rates to planning window early for performance
+	rates = filterRates(rates, t.clock.Now(), targetTime)
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
+
 	if precondition > 0 {
-		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition, originalTargetTime)
+		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition)
+		targetTime = targetTime.Add(-precondition)
+		// chargingRates filtered by split (End <= preCondStart = new targetTime)
 	}
+
+	// reduce required duration by precondition
+	requiredDuration = max(requiredDuration-precondition, 0)
 
 	// create plan unless only precond slots remaining
 	var plan api.Rates
@@ -347,11 +279,13 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	return plan
 }
 
-func splitAndAdjustPrecondition(rates api.Rates, preCondStart time.Time, precondition time.Duration, targetTime time.Time) (api.Rates, api.Rates) {
+func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondition time.Duration) (api.Rates, api.Rates) {
+	preCondStart := targetTime.Add(-precondition)
+
 	var chargingRates, precond api.Rates
 
 	// Split rates into charging and precondition periods
-	for _, r := range slices.Clone(rates) {
+	for _, r := range rates {
 		if !r.End.After(preCondStart) {
 			chargingRates = append(chargingRates, r)
 			continue
@@ -364,9 +298,7 @@ func splitAndAdjustPrecondition(rates api.Rates, preCondStart time.Time, precond
 	}
 
 	// Trim last slot to end exactly at target
-	if precond[len(precond)-1].End.After(targetTime) {
-		precond[len(precond)-1].End = targetTime
-	}
+	adjustSlotEnd(&precond[len(precond)-1], targetTime)
 
 	// Calculate total duration
 	var total time.Duration
@@ -377,30 +309,13 @@ func splitAndAdjustPrecondition(rates api.Rates, preCondStart time.Time, precond
 	// Adjust duration to match precondition exactly
 	if diff := precondition - total; diff != 0 {
 		if diff > 0 {
-			// Deficit: prepend slots from original rates to fill the gap
+			// Deficit: prepend slots from chargingRates to fill the gap
 			extendStart := precond[0].Start.Add(-diff)
-			var extension api.Rates
-			for _, r := range rates {
-				if r.End.Before(extendStart) || r.End.Equal(extendStart) {
-					continue
-				}
-				if r.Start.After(precond[0].Start) || r.Start.Equal(precond[0].Start) {
-					break
-				}
-				// Trim to fit the extension period
-				slot := r
-				if slot.Start.Before(extendStart) {
-					slot.Start = extendStart
-				}
-				if slot.End.After(precond[0].Start) {
-					slot.End = precond[0].Start
-				}
-				extension = append(extension, slot)
-			}
+			extension := filterRates(chargingRates, extendStart, precond[0].Start)
 			precond = append(extension, precond...)
 		} else {
 			// Excess: trim first slot to start later
-			precond[0].Start = precond[0].Start.Add(-diff)
+			trimSlot(&precond[0], -diff, false)
 		}
 	}
 
