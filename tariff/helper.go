@@ -98,7 +98,7 @@ func averageSlots(rates api.Rates, average time.Duration) api.Rates {
 		return nil
 	}
 
-	// accumulate sums and counts per hour-key
+	// accumulate sums and counts per period
 	avgs := make(map[time.Time]*struct {
 		sum float64
 		cnt int
@@ -108,17 +108,16 @@ func averageSlots(rates api.Rates, average time.Duration) api.Rates {
 		ts := r.Start.Truncate(average)
 		avg, ok := avgs[ts]
 		if !ok {
-			avg = &struct {
+			avg = new(struct {
 				sum float64
 				cnt int
-			}{}
+			})
 			avgs[ts] = avg
 		}
 		avg.sum += r.Value
 		avg.cnt++
 	}
 
-	// create a sorted slice of hour keys for deterministic output order
 	res := slices.Clone(rates)
 	for i, r := range res {
 		avg := avgs[r.Start.Truncate(average)]
