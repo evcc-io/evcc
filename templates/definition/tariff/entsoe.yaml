@@ -23,13 +23,11 @@ params:
     help:
       de: "siehe https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
       en: "see https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
-  - name: averagehour
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: entsoe
   securitytoken: {{ .securitytoken }}
   domain: {{ .domain }}
   {{ include "tariff-base" . }}
-  {{- if (eq .averagehour "true") }}
-  average: 1h
-  {{- end }}
+  {{ include "tariff-features" . }}

@@ -92,37 +92,8 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	return t, nil
 }
 
-// averageSlots groups 15-minute rates by hour
-func averageSlots(rates api.Rates, average time.Duration) api.Rates {
-	if len(rates) == 0 {
-		return nil
-	}
-
-	// accumulate sums and counts per period
-	avgs := make(map[time.Time]*struct {
-		sum float64
-		cnt int
+func sliceMinusElement[T comparable](s []T, el T) []T {
+	return slices.DeleteFunc(s, func(f T) bool {
+		return el == f
 	})
-
-	for _, r := range rates {
-		ts := r.Start.Truncate(average)
-		avg, ok := avgs[ts]
-		if !ok {
-			avg = new(struct {
-				sum float64
-				cnt int
-			})
-			avgs[ts] = avg
-		}
-		avg.sum += r.Value
-		avg.cnt++
-	}
-
-	res := slices.Clone(rates)
-	for i, r := range res {
-		avg := avgs[r.Start.Truncate(average)]
-		res[i].Value = avg.sum / float64(avg.cnt)
-	}
-
-	return res
 }

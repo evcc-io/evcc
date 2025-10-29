@@ -524,6 +524,13 @@ presets:
         de: Individuelle Formel zur Berechnung des Preises
         en: Individual formula for calculating the price
       example: "math.Max((price + charges) * (1 + tax), 0.0)"
+  tariff-features:
+    - name: average
+      type: bool
+      description:
+        en: Average by hour
+        de: Stündliche Durchschnittskosten verwenden
+      advanced: true
   forecast-base:
     - name: lat
       required: true
@@ -574,6 +581,7 @@ presets:
         en: Shows °C instead of %
     - name: icon
       advanced: true
+
   ocpp:
     - name: stationid
       type: string
