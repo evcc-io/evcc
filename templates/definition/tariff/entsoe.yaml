@@ -30,3 +30,6 @@ render: |
   securitytoken: {{ .securitytoken }}
   domain: {{ .domain }}
   {{ include "tariff-base" . }}
+  {{- if (eq .averagehour "true") }}
+  average: 1h
+  {{- end }}

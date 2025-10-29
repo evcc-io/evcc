@@ -20,11 +20,11 @@ import (
 type Entsoe struct {
 	*request.Helper
 	*embed
-	log         *util.Logger
-	token       string
-	domain      string
-	averageHour bool
-	data        *util.Monitor[api.Rates]
+	log     *util.Logger
+	token   string
+	domain  string
+	average time.Duration
+	data    *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Entsoe)(nil)
@@ -38,6 +38,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed         `mapstructure:",squash"`
 		Securitytoken string
 		Domain        string
+		Average       time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -64,12 +65,13 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	log := util.NewLogger("entsoe").Redact(cc.Securitytoken)
 
 	t := &Entsoe{
-		log:    log,
-		Helper: request.NewHelper(log),
-		embed:  &cc.embed,
-		token:  cc.Securitytoken,
-		domain: domain,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		log:     log,
+		Helper:  request.NewHelper(log),
+		embed:   &cc.embed,
+		token:   cc.Securitytoken,
+		domain:  domain,
+		average: cc.Average,
+		data:    util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	// Wrap the client with a decorator that adds the security token to each request.
@@ -168,8 +170,8 @@ func (t *Entsoe) Rates() (api.Rates, error) {
 		res = slices.Clone(val)
 	})
 
-	if t.averageHour {
-		res = convert15MinToHourPrices(res)
+	if t.average > 0 {
+		res = averageSlots(res, t.average)
 	}
 
 	return res, err

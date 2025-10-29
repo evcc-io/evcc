@@ -2,7 +2,7 @@ package tariff
 
 import (
 	"errors"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -92,37 +92,37 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	return t, nil
 }
 
-// convert15MinToHourPrices groups 15-minute rates by hour
-func convert15MinToHourPrices(rates api.Rates) api.Rates {
+// averageSlots groups 15-minute rates by hour
+func averageSlots(rates api.Rates, average time.Duration) api.Rates {
 	if len(rates) == 0 {
 		return nil
 	}
 
 	// accumulate sums and counts per hour-key
-	sums := make(map[time.Time]float64)
-	counts := make(map[time.Time]int)
+	avgs := make(map[time.Time]*struct {
+		sum float64
+		cnt int
+	})
 
 	for _, r := range rates {
-		// use hour as grouping key
-		h := r.Start.Truncate(time.Hour)
-		sums[h] += r.Value
-		counts[h]++
+		ts := r.Start.Truncate(average)
+		avg, ok := avgs[ts]
+		if !ok {
+			avg = &struct {
+				sum float64
+				cnt int
+			}{}
+			avgs[ts] = avg
+		}
+		avg.sum += r.Value
+		avg.cnt++
 	}
 
 	// create a sorted slice of hour keys for deterministic output order
-	hours := make([]time.Time, 0, len(sums))
-	for h := range sums {
-		hours = append(hours, h)
-	}
-	sort.Slice(hours, func(i, j int) bool { return hours[i].Before(hours[j]) })
-
-	res := make(api.Rates, 0, len(hours))
-	for _, h := range hours {
-		res = append(res, api.Rate{
-			Start: h,
-			End:   h.Add(time.Hour),
-			Value: sums[h] / float64(counts[h]),
-		})
+	res := slices.Clone(rates)
+	for i, r := range res {
+		avg := avgs[r.Start.Truncate(average)]
+		res[i].Value = avg.sum / float64(avg.cnt)
 	}
 
 	return res
