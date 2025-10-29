@@ -539,6 +539,31 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/smartfeedinprioritylimit:
+    delete:
+      operationId: deleteLoadpointSmartFeedInPriorityLimit
+      summary: Delete smart feed-in priority limit
+      description: "Delete limit for feed-in priority optimization."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+      responses:
+        200:
+          $ref: "#/components/responses/NullResult"
+  /loadpoints/{id}/smartfeedinprioritylimit/{cost}:
+    post:
+      operationId: setLoadpointSmartFeedInPriorityLimit
+      summary: Set smart feed-in priority limit
+      description: "Set limit for feed-in priority optimization."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/costLimit"
+      responses:
+        200:
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/vehicle:
     delete:
       operationId: removeLoadpointVehicle
@@ -616,6 +641,28 @@ paths:
         - battery
       parameters:
         - $ref: "#/components/parameters/power"
+      responses:
+        200:
+          $ref: "#/components/responses/NumberResult"
+  /smartfeedinprioritylimit:
+    delete:
+      operationId: removeGlobalSmartFeedInPriorityLimit
+      summary: Remove smart feed-in priority limit for all loadpoints.
+      description: "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint."
+      tags:
+        - general
+      responses:
+        200:
+          $ref: "#/components/responses/NullResult"
+  /smartfeedinprioritylimit/{cost}:
+    post:
+      operationId: setGlobalSmartFeedInPriorityLimit
+      summary: Set smart feed-in priority limit for all loadpoints
+      description: "Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint."
+      tags:
+        - general
+      parameters:
+        - $ref: "#/components/parameters/costLimit"
       responses:
         200:
           $ref: "#/components/responses/NumberResult"
@@ -707,18 +754,6 @@ paths:
                 description: Download csv-file
                 type: string
                 format: binary
-  /settings/telemetry:
-    get:
-      operationId: getTelemetryStatus
-      summary: Telemetry status
-      description: "Returns the current telemetry status."
-      externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/telemetry
-      tags:
-        - system
-      responses:
-        200:
-          $ref: "#/components/responses/BooleanResult"
   /settings/telemetry/{enable}:
     post:
       operationId: setTelemetryStatus
@@ -953,7 +988,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RepeatingPlans"
+              type: array
+              items:
+                $ref: "#/components/schemas/RepeatingPlan"
       responses:
         200:
           description: Success
@@ -963,7 +1000,9 @@ paths:
                 type: object
                 properties:
                   result:
-                    $ref: "#/components/schemas/RepeatingPlans"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RepeatingPlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
@@ -1209,13 +1248,6 @@ components:
           $ref: "#/components/schemas/IANATimeZone"
         weekdays:
           $ref: "#/components/schemas/Weekdays"
-    RepeatingPlans:
-      type: object
-      properties:
-        plans:
-          type: array
-          items:
-            $ref: "#/components/schemas/RepeatingPlan"
     Soc:
       description: SOC in %
       type: number

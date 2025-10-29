@@ -88,6 +88,8 @@ params:
     example: "number.vehicle_charging_current"
     type: string
   - preset: vehicle-features
+  - name: streaming
+    default: true
 render: |
   type: homeassistant
   {{ include "vehicle-common" . }}

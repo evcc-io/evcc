@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"sync/atomic"
 	"time"
 
 	evopt "github.com/andig/evopt/client"
@@ -27,6 +28,7 @@ var (
 	batteryPower = float32(6000) // default power of the battery in W
 
 	updated time.Time
+	mu      atomic.Uint32
 )
 
 type batteryType string
@@ -50,13 +52,16 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
-	if time.Since(updated) < 2*time.Minute {
+	var err error
+
+	if !mu.CompareAndSwap(0, 1) {
 		return
 	}
 
-	var err error
-
 	defer func() {
+		updated = time.Now()
+		mu.Store(0)
+
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
 		}
@@ -66,9 +71,11 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 		}
 	}()
 
-	err = site.optimizerUpdate(battery)
+	if time.Since(updated) < 2*time.Minute {
+		return
+	}
 
-	updated = time.Now()
+	err = site.optimizerUpdate(battery)
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {

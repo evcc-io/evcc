@@ -118,7 +118,7 @@
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
-      "vehicleLimitSoc": "Køretøjets begrænsning",
+      "vehicleLimitSoc": "Ladegrænse",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
       "batteryStorage": "Batterilagring",
+      "consumer": "Forbrugsenhed",
       "solarSystem": "Solcelleanlæg"
     },
     "editor": {
@@ -325,7 +326,7 @@
       "addPvBattery": "Tilføj solpanel eller batteri",
       "addTariffs": "Tilføj tariffer",
       "addVehicle": "Tilføj køretøj",
-      "configured": "Konfigureret",
+      "configured": "konfigureret",
       "edit": "rediger",
       "loadpointRequired": "Der skal konfigureres mindst ét ladepunkt.",
       "name": "Navn",
@@ -354,12 +355,12 @@
       "titleChoice": "Hvad ønsker du at tilføje?",
       "titleLabel": "Titel",
       "usage": {
-        "aux": "Selvregulerende belastningsmåler",
-        "battery": "Batterimåler",
-        "charge": "Ladepunktmåler",
-        "grid": "Måler til elnettet",
+        "aux": "Selvregulerende forbrugsenhed",
+        "battery": "Batteri",
+        "charge": "Forbrugsenhed/Lader",
+        "grid": "Elnet",
         "label": "Brug",
-        "pv": "Solproduktionsmåler"
+        "pv": "Produktion"
       },
       "validateSave": "Valider og gem"
     },

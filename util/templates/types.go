@@ -173,25 +173,23 @@ type LinkedTemplate struct {
 // 3. defaults.yaml modbus section
 // 4. template
 type Param struct {
-	Name          string       // Param name which is used for assigning defaults properties and referencing in render
-	Description   TextLanguage // language specific titles (presented in UI instead of Name)
-	Help          TextLanguage // cli configuration help
-	Reference     bool         `json:",omitempty"` // if this is references another param definition
-	ReferenceName string       `json:",omitempty"` // name of the referenced param if it is not identical to the defined name
-	Preset        string       `json:"-"`          // Reference a predefined set of params
-	Required      bool         `json:",omitempty"` // cli if the user has to provide a non empty value
-	Mask          bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
-	Advanced      bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Deprecated    bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
-	Default       string       `json:",omitempty"` // default value if no user value is provided in the configuration
-	Example       string       `json:",omitempty"` // cli example value
-	Value         string       `json:"-"`          // user provided value via cli configuration
-	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
-	Unit          string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
-	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
-	Type          ParamType    // string representation of the value type, "string" is default
-	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	AllInOne      bool         `json:"-"`          // defines if the defined usages can all be present in a single device
+	Name        string       // Param name which is used for assigning defaults properties and referencing in render
+	Description TextLanguage // language specific titles (presented in UI instead of Name)
+	Help        TextLanguage // cli configuration help
+	Preset      string       `json:"-"`          // Reference a predefined set of params
+	Required    bool         `json:",omitempty"` // cli if the user has to provide a non empty value
+	Mask        bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
+	Advanced    bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Deprecated  bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
+	Default     string       `json:",omitempty"` // default value if no user value is provided in the configuration
+	Example     string       `json:",omitempty"` // cli example value
+	Value       string       `json:"-"`          // user provided value via cli configuration
+	Values      []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
+	Unit        string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
+	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
+	Type        ParamType    // string representation of the value type, "string" is default
+	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
@@ -219,10 +217,6 @@ func (p *Param) OverwriteProperties(withParam Param) {
 	if err := mergo.Merge(p, &withParam); err != nil {
 		panic(err)
 	}
-}
-
-func (p *Param) IsReference() bool {
-	return p.Reference
 }
 
 func (p *Param) IsAdvanced() bool {
