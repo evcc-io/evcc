@@ -995,7 +995,7 @@ func (site *Site) update(lp updater) {
 		site.log.WARN.Println("planner:", msg)
 	}
 
-	// update battery after reading meters to ensure connection is open
+	// update battery after reading meters to ensure that (modbus) connection is open
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
