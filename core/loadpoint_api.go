@@ -394,16 +394,6 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	return nil
 }
 
-// SetPlanStrategy sets the plan strategy
-func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
-
-	return lp.setPlanStrategy(strategy)
-}
-
 // setPlanStrategy sets the plan strategy (no mutex)
 func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 	if err := lp.settings.SetJson(keys.PlanStrategy, strategy); err != nil {
@@ -417,16 +407,31 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 	return nil
 }
 
-// GetPlanStrategy returns the plan strategy
-func (lp *Loadpoint) GetPlanStrategy() api.PlanStrategy {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.getPlanStrategy()
+// SetPlanStrategy sets the plan strategy
+func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
+
+	var err error
+	if strategy != lp.planStrategy {
+		err = lp.setPlanStrategy(strategy)
+	}
+
+	return err
 }
 
 // getPlanStrategy returns the plan strategy (no mutex)
 func (lp *Loadpoint) getPlanStrategy() api.PlanStrategy {
 	return lp.planStrategy
+}
+
+// GetPlanStrategy returns the plan strategy
+func (lp *Loadpoint) GetPlanStrategy() api.PlanStrategy {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.getPlanStrategy()
 }
 
 // GetSoc returns the PV mode threshold settings
