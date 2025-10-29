@@ -204,10 +204,12 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	}
 
 	if len(res) == 0 {
-		return []api.Rate{{
-			Start: start,
-			End:   end,
-		}}
+		return api.Rates{
+			api.Rate{
+				Start: start,
+				End:   end,
+			},
+		}
 	}
 
 	// prepend missing slot
