@@ -60,9 +60,9 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
+	lp.SetPlanStrategy(payload.PlanStrategy)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
-	lp.SetPlanStrategy(payload.PlanStrategy)
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
