@@ -58,8 +58,7 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 		return
 	}
 
-	defer func() {
-		updated = time.Now()
+	defer func() {		
 		mu.Store(0)
 
 		if r := recover(); r != nil {
@@ -76,6 +75,7 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	}
 
 	err = site.optimizerUpdate(battery)
+	updated = time.Now()
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
