@@ -57,7 +57,7 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	if time.Since(updated) < 2*time.Minute {
 		return
 	}
-	
+
 	if !mu.CompareAndSwap(0, 1) {
 		return
 	}
