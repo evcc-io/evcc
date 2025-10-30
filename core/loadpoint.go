@@ -1075,7 +1075,7 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 // updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	statusChanges, err := lp.getStatusChanges()
-	if statusChanges == nil || err != nil {
+	if err != nil || len(statusChanges) == 0 {
 		return false, err
 	}
 
@@ -1129,11 +1129,10 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 			return nil, fmt.Errorf("connection duration: %w", err)
 		}
 
-		wasDisconnected := d < lp.connectedDuration
-		lp.connectedDuration = d.Round(time.Second)
+		defer func() { lp.connectedDuration = d }()
 
-		if wasDisconnected {
-			lp.log.INFO.Printf("connection duration drop detected (was %s, now %s)", lp.connectedDuration, d)
+		if d < lp.connectedDuration {
+			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
 			return []api.ChargeStatus{api.StatusA, status}, nil
 		}
 	}
@@ -1143,21 +1142,22 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 // needsWelcomeCharge checks if either the charger or a vehicle requires a welcome charge
 func (lp *Loadpoint) needsWelcomeCharge() bool {
-	welcomeCharge := lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
+	if lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge) {
+		return true
+	}
 
 	// Enable charging on connect if any available vehicle requires it.
 	// We're using the PV timer to disable after the welcome
-	if !welcomeCharge && !lp.chargerHasFeature(api.IntegratedDevice) {
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		for _, v := range lp.availableVehicles() {
 			if slices.Contains(v.Features(), api.WelcomeCharge) {
-				welcomeCharge = true
 				lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
-				break
+				return true
 			}
 		}
 	}
 
-	return welcomeCharge
+	return false
 }
 
 // effectiveCurrent returns the currently effective charging current
