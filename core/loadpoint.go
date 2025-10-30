@@ -1074,75 +1074,85 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+	statusChanges, err := lp.getStatusChanges()
+	if statusChanges == nil || err != nil {
+		return false, err
+	}
+
 	var welcomeCharge bool
 
-	status, err := lp.charger.Status()
-	if err != nil {
-		return false, fmt.Errorf("charger status: %w", err)
-	}
+	for _, status := range statusChanges {
+		prevStatus := lp.GetStatus()
+		lp.setStatus(status)
 
-	lp.log.DEBUG.Printf("charger status: %s", status)
+		for _, ev := range statusEvents(prevStatus, status) {
+			lp.bus.Publish(ev)
 
-	// detect status changes
-	if prevStatus := lp.GetStatus(); status != prevStatus {
-		welcomeCharge = lp.processChargerStatusChange(prevStatus, status)
+			// send connect/disconnect events except during startup
+			if prevStatus != api.StatusNone {
+				switch ev {
+				case evVehicleConnect:
+					welcomeCharge = lp.needsWelcomeCharge()
 
-		// update whenever there is a state change
-		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	} else if ct, ok := lp.charger.(api.ConnectionTimer); ok {
-		if d, err := ct.ConnectionDuration(); err == nil {
-			// detect drops in connection duration
-			if d < lp.connectedDuration {
-				lp.log.INFO.Printf("connection duration drop detected (was %s, now %s)", lp.connectedDuration, d)
-
-				lp.processChargerStatusChange(prevStatus, api.StatusA)
-				welcomeCharge = lp.processChargerStatusChange(api.StatusA, status)
-
-				lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+					lp.pushEvent(evVehicleConnect)
+				case evVehicleDisconnect:
+					lp.pushEvent(evVehicleDisconnect)
+				}
 			}
-			lp.connectedDuration = d.Round(time.Second)
-		} else {
-			lp.log.ERROR.Printf("connection timer: %v", err)
 		}
 	}
+
+	// update whenever there is a state change
+	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 
 	return welcomeCharge, nil
 }
 
-// processChargerStatusChange handles charger status changes and detects car connected/disconnected events
-func (lp *Loadpoint) processChargerStatusChange(prevStatus, status api.ChargeStatus) bool {
-	if status == prevStatus {
-		return false
+// getStatusChanges checks charger status and returns a chronological list of status changes
+func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
+	status, err := lp.charger.Status()
+	if err != nil {
+		return nil, fmt.Errorf("charger status: %w", err)
 	}
 
-	var welcomeCharge bool
+	lp.log.DEBUG.Printf("charger status: %s", status)
 
-	lp.setStatus(status)
+	// detect if charger status changed
+	if prevStatus := lp.GetStatus(); status != prevStatus {
+		return []api.ChargeStatus{status}, nil
+	}
 
-	for _, ev := range statusEvents(prevStatus, status) {
-		lp.bus.Publish(ev)
+	// detect missed disconnects by checking charger connection duration
+	if ct, ok := lp.charger.(api.ConnectionTimer); ok {
+		d, err := ct.ConnectionDuration()
+		if err != nil {
+			return nil, fmt.Errorf("connection duration: %w", err)
+		}
 
-		// send connect/disconnect events except during startup
-		if prevStatus != api.StatusNone {
-			switch ev {
-			case evVehicleConnect:
-				welcomeCharge = lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
+		wasDisconnected := d < lp.connectedDuration
+		lp.connectedDuration = d.Round(time.Second)
 
-				// Enable charging on connect if any available vehicle requires it.
-				// We're using the PV timer to disable after the welcome
-				if !welcomeCharge && !lp.chargerHasFeature(api.IntegratedDevice) {
-					for _, v := range lp.availableVehicles() {
-						if slices.Contains(v.Features(), api.WelcomeCharge) {
-							welcomeCharge = true
-							lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
-							break
-						}
-					}
-				}
+		if wasDisconnected {
+			lp.log.INFO.Printf("connection duration drop detected (was %s, now %s)", lp.connectedDuration, d)
+			return []api.ChargeStatus{api.StatusA, status}, nil
+		}
+	}
 
-				lp.pushEvent(evVehicleConnect)
-			case evVehicleDisconnect:
-				lp.pushEvent(evVehicleDisconnect)
+	return nil, nil
+}
+
+// needsWelcomeCharge checks if either the charger or a vehicle requires a welcome charge
+func (lp *Loadpoint) needsWelcomeCharge() bool {
+	welcomeCharge := lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge)
+
+	// Enable charging on connect if any available vehicle requires it.
+	// We're using the PV timer to disable after the welcome
+	if !welcomeCharge && !lp.chargerHasFeature(api.IntegratedDevice) {
+		for _, v := range lp.availableVehicles() {
+			if slices.Contains(v.Features(), api.WelcomeCharge) {
+				welcomeCharge = true
+				lp.log.DEBUG.Printf("welcome charge: %s", v.GetTitle())
+				break
 			}
 		}
 	}
