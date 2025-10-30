@@ -19,8 +19,20 @@ func NewProxyFromConfig(ctx context.Context, typ string, other map[string]any) (
 		return nil, err
 	}
 
+	updateFeatures := func(f api.Feature) {
+		features := slices.DeleteFunc(embed.Features, func(feat api.Feature) bool {
+			return feat == f
+		})
+
+		if len(features) > 0 {
+			embed.Other["features"] = features
+		} else {
+			delete(embed.Other, "features")
+		}
+	}
+
 	if slices.Contains(embed.Features, api.Average) {
-		embed.Other["features"] = sliceMinusElement(embed.Features, api.Average)
+		updateFeatures(api.Average)
 		t, err := NewFromConfig(ctx, typ, embed.Other)
 		if err != nil {
 			return nil, err
@@ -29,15 +41,9 @@ func NewProxyFromConfig(ctx context.Context, typ string, other map[string]any) (
 	}
 
 	if slices.Contains(embed.Features, api.Cacheable) {
-		embed.Other["features"] = sliceMinusElement(embed.Features, api.Cacheable)
+		updateFeatures(api.Cacheable)
 		return NewCachedFromConfig(ctx, typ, embed.Other)
 	}
 
 	return NewFromConfig(ctx, typ, other)
-}
-
-func sliceMinusElement[T comparable](s []T, el T) []T {
-	return slices.DeleteFunc(s, func(f T) bool {
-		return el == f
-	})
 }
