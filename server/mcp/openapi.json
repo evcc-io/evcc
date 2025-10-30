@@ -261,8 +261,10 @@
               "properties": {
                 "result": {
                   "description": "Value is always null",
-                  "nullable": true,
-                  "type": "object"
+                  "type": [
+                    "object",
+                    ""
+                  ]
                 }
               },
               "type": "object"
@@ -388,18 +390,24 @@
             },
             "meterStart": {
               "description": "Meter reading at start of charging session",
-              "nullable": true,
-              "type": "number"
+              "type": [
+                "number",
+                ""
+              ]
             },
             "meterStop": {
               "description": "Meter reading at end of charging session",
-              "nullable": true,
-              "type": "number"
+              "type": [
+                "number",
+                ""
+              ]
             },
             "odometer": {
               "description": "Vehicle odometer reading in kilometers",
-              "nullable": true,
-              "type": "number"
+              "type": [
+                "number",
+                ""
+              ]
             },
             "price": {
               "description": "Total price of the session",
