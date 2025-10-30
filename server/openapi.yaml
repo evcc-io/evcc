@@ -1079,13 +1079,16 @@ components:
           vehicle:
             $ref: "#/components/schemas/VehicleName"
           odometer:
-            type: [number, null]
+            type: number
+            nullable: true
             description: Vehicle odometer reading in kilometers
           meterStart:
-            type: [number, null]
+            type: number
+            nullable: true
             description: Meter reading at start of charging session
           meterStop:
-            type: [number, null]
+            type: number
+            nullable: true
             description: Meter reading at end of charging session
           chargedEnergy:
             type: number
@@ -1510,7 +1513,8 @@ components:
             properties:
               result:
                 description: Value is always null
-                type: [object, null]
+                type: object
+                nullable: true
     BlankResponse:
       description: Success - Blank response
     EmptyResult:
