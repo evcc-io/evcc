@@ -1,8 +1,8 @@
 template: eebus-mgcp
 products:
   - description:
-      de: "EEBus: Netzanschlusspunkt"
-      en: "EEBus: grid connection point"
+      de: "EEBus Netzanschlusspunkt"
+      en: "EEBus Grid Connection Point"
 group: generic
 requirements:
   description:
@@ -12,19 +12,7 @@ requirements:
 params:
   - name: usage
     choice: ["grid"]
-  - name: ski
-    description:
-      en: SKI (Subject Key Identifier)
-      de: SKI (Subject Key Identifier)
-  - name: host
-    required: false
-    help:
-      en: If not specified, the device will be discovered automatically via mDNS.
-      de: Falls keine Angabe, wird das Gerät automatisch über mDNS gefunden.
+  - preset: eebus
 render: |
-  type: eebus
-  ski: {{ .ski }}
-  {{- if .host }}
-  ip: {{ .host }}
-  {{- end }}
+  {{ include "eebus" . }}
   usage: {{ .usage }}

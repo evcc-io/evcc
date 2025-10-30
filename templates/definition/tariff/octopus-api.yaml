@@ -15,7 +15,6 @@ params:
     required: true
   - name: accountNumber
     type: string
-    required: false
     description:
       en: Account Number
       de: Kundennummer
@@ -26,7 +25,6 @@ params:
   - name: tariffDirection
     type: choice
     choice: ["import", "export"]
-    required: false
     default: "import"
     description:
       generic: The tariff flow direction to query from Octopus.

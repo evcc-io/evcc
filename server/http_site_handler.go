@@ -370,7 +370,10 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		settings.Persist()
+		if err := settings.Persist(); err != nil {
+			http.Error(w, "Synching DB failed", http.StatusInternalServerError)
+			return
+		}
 
 		f, err := os.Open(db.FilePath)
 		if err != nil {

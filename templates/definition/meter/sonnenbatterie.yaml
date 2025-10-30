@@ -32,7 +32,6 @@ params:
   - name: maxsoc
     advanced: true
   - name: token
-    required: false
     help:
       de: API Token (benötigt für aktive Batteriesteuerung)
       en: API Token (required for active battery control)

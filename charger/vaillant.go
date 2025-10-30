@@ -51,6 +51,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		embed           `mapstructure:",squash"`
 		User, Password  string
 		Realm           string
+		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
 		Cache           time.Duration
@@ -85,12 +86,16 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	homes, err := conn.GetHomes()
+	home, err := ensureEx("home", cc.System, func() ([]sensonet.Home, error) {
+		return conn.GetHomes()
+	}, func(home sensonet.Home) (string, error) {
+		return home.SystemID, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	systemId := homes[0].SystemID
+	systemId := home.SystemID
 	heating := cc.HeatingSetpoint > 0
 
 	wwCancel := func() {}

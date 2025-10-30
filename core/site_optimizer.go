@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"sync/atomic"
 	"time"
 
 	evopt "github.com/andig/evopt/client"
@@ -27,6 +28,7 @@ var (
 	batteryPower = float32(6000) // default power of the battery in W
 
 	updated time.Time
+	mu      atomic.Uint32
 )
 
 type batteryType string
@@ -50,13 +52,20 @@ type responseDetails struct {
 }
 
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
+	var err error
+
 	if time.Since(updated) < 2*time.Minute {
 		return
 	}
 
-	var err error
+	if !mu.CompareAndSwap(0, 1) {
+		return
+	}
 
 	defer func() {
+		updated = time.Now()
+		mu.Store(0)
+
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
 		}
@@ -67,8 +76,6 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	}()
 
 	err = site.optimizerUpdate(battery)
-
-	updated = time.Now()
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
@@ -211,6 +218,28 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					bat.SGoal[slot] = float32(goal)
 				} else {
 					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+				}
+			}
+
+			// TODO remove once (using) smartcost limit becomes obsolete
+			if costLimit := lp.GetSmartCostLimit(); costLimit != nil {
+				maxLen := min(minLen, len(grid))
+
+				// limit hit?
+				if slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+					return r.Value <= *costLimit
+				}) {
+					maxPower := lp.EffectiveMaxPower()
+
+					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
+						return float32(maxPower)
+					}), firstSlotDuration)
+
+					for i := range maxLen {
+						if grid[i].Value > *costLimit {
+							bat.PDemand[i] = 0
+						}
+					}
 				}
 			}
 		}

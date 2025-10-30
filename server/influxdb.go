@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	"maps"
 	"reflect"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -136,9 +138,20 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 
 			// loop slice
 			for i := range val.Len() {
+				// clone tags to prevent leakage between elements
+				tags := maps.Clone(tags)
 				tags["id"] = strconv.Itoa(i + 1)
-				writeStruct(val.Index(i).Interface())
+
+				ival := val.Index(i)
+				// Check if element provides a title
+				if tp, ok := reflect.TypeAssert[api.TitleDescriber](ival); ok {
+					if title := tp.GetTitle(); title != "" {
+						tags["title"] = title
+					}
+				}
+				m.writeComplexPoint(writer, key, ival.Interface(), tags)
 			}
+			return
 		}
 
 		return

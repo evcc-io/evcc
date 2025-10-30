@@ -17,5 +17,5 @@ func NewTariffFromTemplateConfig(ctx context.Context, other map[string]interface
 		return nil, err
 	}
 
-	return NewCachedFromConfig(ctx, instance.Type, instance.Other)
+	return NewProxyFromConfig(ctx, instance.Type, instance.Other)
 }
