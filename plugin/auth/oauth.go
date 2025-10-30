@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -125,7 +126,7 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 		name:    name,
 	}
 
-	if device != "" {
+	if device != "" && !slices.Contains(o.devices, device) {
 		o.devices = append(o.devices, device)
 	}
 
