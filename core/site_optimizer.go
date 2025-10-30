@@ -54,6 +54,10 @@ type responseDetails struct {
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	var err error
 
+	if time.Since(updated) < 2*time.Minute {
+		return
+	}
+
 	if !mu.CompareAndSwap(0, 1) {
 		return
 	}
@@ -70,10 +74,6 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 			site.log.ERROR.Println("optimizer:", err)
 		}
 	}()
-
-	if time.Since(updated) < 2*time.Minute {
-		return
-	}
 
 	err = site.optimizerUpdate(battery)
 }
