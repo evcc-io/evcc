@@ -1079,8 +1079,6 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 		return false, err
 	}
 
-	var welcomeCharge bool
-
 	for _, status := range statusChanges {
 		prevStatus := lp.GetStatus()
 		lp.setStatus(status)
@@ -1089,15 +1087,8 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			lp.bus.Publish(ev)
 
 			// send connect/disconnect events except during startup
-			if prevStatus != api.StatusNone {
-				switch ev {
-				case evVehicleConnect:
-					welcomeCharge = lp.needsWelcomeCharge()
-
-					lp.pushEvent(evVehicleConnect)
-				case evVehicleDisconnect:
-					lp.pushEvent(evVehicleDisconnect)
-				}
+			if prevStatus != api.StatusNone && (ev == evVehicleConnect || ev == evVehicleDisconnect) {
+				lp.pushEvent(ev)
 			}
 		}
 	}
@@ -1105,7 +1096,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	// update whenever there is a state change
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 
-	return welcomeCharge, nil
+	return lp.needsWelcomeCharge(), nil
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
@@ -1145,6 +1136,10 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 // needsWelcomeCharge checks if either the charger or a vehicle requires a welcome charge
 func (lp *Loadpoint) needsWelcomeCharge() bool {
+	if !lp.connected() {
+		return false
+	}
+
 	if lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge) {
 		return true
 	}
