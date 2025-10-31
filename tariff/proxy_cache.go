@@ -95,7 +95,7 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 
 	if p.tariff == nil {
 		if res, err := p.cacheGet(for24hrs()); err == nil {
-			return res.Rates, nil
+			return slices.Clone(res.Rates), nil
 		}
 
 		p.createInstance()
