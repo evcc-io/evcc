@@ -150,7 +150,7 @@ export default defineComponent({
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
-		battery: { type: Object as PropType<Battery>, required: true },
+		battery: { type: Object as PropType<Battery> },
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
@@ -162,7 +162,7 @@ export default defineComponent({
 	},
 	computed: {
 		batteryConfigured() {
-			return this.battery.devices.length;
+			return this.battery && this.battery.devices.length;
 		},
 		providerLogins(): Provider[] {
 			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({

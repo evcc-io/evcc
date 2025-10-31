@@ -113,10 +113,10 @@
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
-								soc: battery.soc,
+								soc: battery?.soc,
 								gridCharge: batteryGridChargeActive,
 							}"
-							:details="battery.soc"
+							:details="battery?.soc"
 							:detailsFmt="batteryFmt"
 							:expanded="batteryExpanded"
 							detailsClickable
@@ -127,7 +127,7 @@
 							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
 							</template>
-							<template v-if="battery.devices.length > 1" #expanded>
+							<template v-if="battery && battery.devices.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery.devices"
 									:key="index"
@@ -231,10 +231,10 @@
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
-								soc: battery.soc,
+								soc: battery?.soc,
 								gridCharge: batteryGridChargeActive,
 							}"
-							:details="battery.soc"
+							:details="battery?.soc"
 							:detailsFmt="batteryFmt"
 							:expanded="batteryExpanded"
 							detailsClickable
@@ -262,7 +262,7 @@
 									</span>
 								</button>
 							</template>
-							<template v-if="battery.devices.length > 1" #expanded>
+							<template v-if="battery && battery.devices.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(b, index) in battery.devices"
 									:key="index"
@@ -330,7 +330,7 @@ export default defineComponent({
 		pvPower: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Object as PropType<Battery>, required: true },
+		battery: { type: Object as PropType<Battery> },
 		batteryDischargeControl: { type: Boolean },
 		batteryGridChargeLimit: { type: Number },
 		batteryGridChargeActive: { type: Boolean },
@@ -360,10 +360,10 @@ export default defineComponent({
 			return Math.abs(this.pvPower);
 		},
 		batteryDischarge() {
-			return this.dischargePower(this.battery.power);
+			return this.dischargePower(this.battery?.power ?? 0);
 		},
 		batteryCharge() {
-			return this.chargePower(this.battery.power);
+			return this.chargePower(this.battery?.power ?? 0);
 		},
 		batteryChargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
