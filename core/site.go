@@ -118,9 +118,7 @@ type Site struct {
 	pvPower                  float64         // PV power
 	excessDCPower            float64         // PV excess DC charge power (hybrid only)
 	auxPower                 float64         // Aux power
-	batteryPower             float64         // Battery power (charge negative, discharge positive)
-	batterySoc               float64         // Battery soc
-	batteryCapacity          float64         // Battery capacity
+	battery                  batteryState    // Battery cached and published state
 	batteryMode              api.BatteryMode // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time       // Battery mode timer for external control
@@ -670,26 +668,22 @@ func (site *Site) updateBatteryMeters() []measurement {
 	if totalCapacity == 0 {
 		totalCapacity = float64(len(site.batteryMeters))
 	}
-	site.batterySoc = batterySocAcc / totalCapacity
-	site.batteryCapacity = totalCapacity
+	site.battery.Soc = batterySocAcc / totalCapacity
+	site.battery.Capacity = totalCapacity
 
-	site.batteryPower = lo.SumBy(mm, func(m measurement) float64 {
+	site.battery.Power = lo.SumBy(mm, func(m measurement) float64 {
 		return m.Power
 	})
-	totalEnergy := lo.SumBy(mm, func(m measurement) float64 {
+	site.battery.Energy = lo.SumBy(mm, func(m measurement) float64 {
 		return m.Energy
 	})
 
 	if len(site.batteryMeters) > 1 {
-		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
-		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
+		site.log.DEBUG.Printf("battery power: %.0fW", site.battery.Power)
+		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.battery.Soc))
 	}
 
-	site.publish(keys.BatteryCapacity, site.batteryCapacity)
-	site.publish(keys.BatterySoc, site.batterySoc)
-
-	site.publish(keys.BatteryPower, site.batteryPower)
-	site.publish(keys.BatteryEnergy, totalEnergy)
+	site.battery.Devices = mm
 	site.publish(keys.Battery, mm)
 
 	return mm
@@ -843,7 +837,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	// ensure safe default for residual power
 	residualPower := site.GetResidualPower()
-	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower <= 0 {
+	if len(site.batteryMeters) > 0 && site.battery.Soc < site.prioritySoc && residualPower <= 0 {
 		residualPower = 100 // Wsite.publish(keys.PvPower,
 	}
 
@@ -858,7 +852,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	}
 
 	// honour battery priority
-	batteryPower := site.batteryPower
+	batteryPower := site.battery.Power
 	excessDCPower := site.excessDCPower
 
 	// handed to loadpoint
@@ -869,14 +863,14 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		defer site.RUnlock()
 
 		// if battery is charging below prioritySoc give it priority
-		if site.batterySoc < site.prioritySoc && batteryPower < 0 {
-			site.log.DEBUG.Printf("battery has priority at soc %.0f%% (< %.0f%%)", site.batterySoc, site.prioritySoc)
+		if site.battery.Soc < site.prioritySoc && batteryPower < 0 {
+			site.log.DEBUG.Printf("battery has priority at soc %.0f%% (< %.0f%%)", site.battery.Soc, site.prioritySoc)
 			batteryPower = 0
 			excessDCPower = 0
 		} else {
 			// if battery is above bufferSoc allow using it for charging
-			batteryBuffered = site.bufferSoc > 0 && site.batterySoc > site.bufferSoc
-			batteryStart = site.bufferStartSoc > 0 && site.batterySoc > site.bufferStartSoc
+			batteryBuffered = site.bufferSoc > 0 && site.battery.Soc > site.bufferSoc
+			batteryStart = site.bufferStartSoc > 0 && site.battery.Soc > site.bufferStartSoc
 		}
 	}
 
@@ -950,7 +944,7 @@ func (site *Site) update(lp updater) {
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
-		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
+		homePower := site.gridPower + max(0, site.pvPower) + site.battery.Power - totalChargePower
 		homePower = max(homePower, 0)
 		site.publish(keys.HomePower, homePower)
 
@@ -960,13 +954,13 @@ func (site *Site) update(lp updater) {
 
 		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 		// fix for: https://github.com/evcc-io/evcc/issues/11032
-		nonChargePower := homePower + max(0, -site.batteryPower)
+		nonChargePower := homePower + max(0, -site.battery.Power)
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		// TODO
 		lp.Update(
-			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
+			sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 		)
 
