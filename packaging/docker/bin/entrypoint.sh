@@ -32,27 +32,37 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 	fi
 
 	echo "Using config file: ${CONFIG}"
-	if [ ! -f "${CONFIG}" ]; then
-		echo "Config not found. Please create a config under ${CONFIG}."
-		echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
+	
+	# Determine evcc startup command based on available options
+	EVCC_CMD="evcc"
+	ENV_VARS=""
+	
+	# Add config if file exists
+	if [ -f "${CONFIG}" ]; then
+		EVCC_CMD="${EVCC_CMD} --config ${CONFIG}"
+		echo "Config file found: ${CONFIG}"
 	else
-		if [ "${SQLITE_FILE}" ]; then
-			if [ "${SEMP_BASE_URL}" ]; then
-				echo "starting evcc: 'SEMP_BASE_URL=${SEMP_BASE_URL} EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
-				exec env SEMP_BASE_URL="${SEMP_BASE_URL}" EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
-			else
-				echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
-				exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
-			fi
-		else
-			if [ "${SEMP_BASE_URL}" ]; then
-				echo "starting evcc: 'SEMP_BASE_URL=${SEMP_BASE_URL} evcc --config ${CONFIG}'"
-				exec env SEMP_BASE_URL="${SEMP_BASE_URL}" evcc --config "${CONFIG}"
-			else
-				echo "starting evcc: 'evcc --config ${CONFIG}'"
-				exec evcc --config "${CONFIG}"
-			fi
-		fi
+		echo "Config file not found at ${CONFIG}. Starting evcc without configuration file."
+		echo "Setup required via web interface. For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
+	fi
+	
+	# Add database if specified
+	if [ "${SQLITE_FILE}" ]; then
+		ENV_VARS="${ENV_VARS} EVCC_DATABASE_DSN=${SQLITE_FILE}"
+	fi
+	
+	# Add SEMP base URL if specified
+	if [ "${SEMP_BASE_URL}" ]; then
+		ENV_VARS="${ENV_VARS} SEMP_BASE_URL=${SEMP_BASE_URL}"
+	fi
+	
+	# Execute evcc with collected parameters
+	if [ "${ENV_VARS}" ]; then
+		echo "starting evcc: 'env${ENV_VARS} ${EVCC_CMD}'"
+		exec env${ENV_VARS} ${EVCC_CMD}
+	else
+		echo "starting evcc: '${EVCC_CMD}'"
+		exec ${EVCC_CMD}
 	fi
 else
 	if [ "$1" = 'evcc' ]; then
