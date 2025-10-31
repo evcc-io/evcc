@@ -664,7 +664,7 @@ func (site *Site) updateBatteryMeters() []types.Measurement {
 	}
 
 	site.battery.Devices = mm
-	site.publish(keys.Battery, mm)
+	site.publish(keys.Battery, site.battery)
 
 	return mm
 }
