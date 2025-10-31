@@ -1,7 +1,6 @@
 package cardata
 
 import (
-	"context"
 	"testing"
 	"time"
 

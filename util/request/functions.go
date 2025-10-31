@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 
 	"github.com/cenkalti/backoff/v4"
 )
@@ -65,12 +66,7 @@ func (e *StatusError) StatusCode() int {
 
 // HasStatus returns true if the response's status code matches any of the given codes
 func (e *StatusError) HasStatus(codes ...int) bool {
-	for _, code := range codes {
-		if e.resp.StatusCode == code {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(codes, e.resp.StatusCode)
 }
 
 // ResponseError turns an HTTP status code into an error
