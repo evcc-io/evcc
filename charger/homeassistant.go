@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
-func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI        string
 		Token      string

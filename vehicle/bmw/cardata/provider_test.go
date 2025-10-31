@@ -1,7 +1,6 @@
 package cardata
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -11,8 +10,7 @@ import (
 )
 
 func TestCardataStreaming(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
+	ctx := t.Context()
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",

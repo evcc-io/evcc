@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
-func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		Token    string

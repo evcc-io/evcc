@@ -32,7 +32,7 @@ func Instance() *CS {
 		dispatcher.SetTimeout(Timeout)
 
 		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile)
-		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []interface{}) *ocpp.Error {
+		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []any) *ocpp.Error {
 			log.ERROR.Printf("%v (%s)", err, rawMessage)
 			return nil
 		})

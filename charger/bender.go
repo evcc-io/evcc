@@ -92,7 +92,7 @@ func init() {
 }
 
 // NewBenderCCFromConfig creates a BenderCC charger from generic config
-func NewBenderCCFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewBenderCCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Cache              time.Duration

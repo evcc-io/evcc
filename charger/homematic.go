@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewCCUFromConfig creates a Homematic charger from generic config
-func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewCCUFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed         `mapstructure:",squash"`
 		URI           string
