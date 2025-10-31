@@ -12,7 +12,15 @@ import (
 
 func init() {
 	registry.AddCtx("sgready-relay", NewSgReadyRelayFromConfig)
-	registry.AddCtx("sgready-boost", NewSgReadyRelayFromConfig) // TODO deprecated
+
+	// TODO deprecated
+	registry.AddCtx("sgready-boost", func(ctx context.Context, other map[string]any) (api.Charger, error) {
+		if charger, ok := other["charger"]; ok {
+			other["boost"] = charger
+			delete(other, "charger")
+		}
+		return NewSgReadyRelayFromConfig(ctx, other)
+	})
 }
 
 // NewSgReadyRelayFromConfig creates an SG Ready charger with boost/dim relays from generic config
