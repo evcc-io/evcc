@@ -1368,10 +1368,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 		timer = lp.phaseTimer
 	}
 
-	remaining := delay - lp.clock.Since(timer)
-	if remaining < 0 {
-		remaining = 0
-	}
+	remaining := max(delay-lp.clock.Since(timer), 0)
 
 	lp.publish(name+"Action", action)
 	lp.publish(name+"Remaining", remaining)

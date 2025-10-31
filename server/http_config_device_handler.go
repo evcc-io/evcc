@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -108,10 +109,7 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			dc["config"] = params
 		} else {
 			// custom device, no masking
-			config := make(map[string]any)
-			for k, v := range conf.Other {
-				config[k] = v
-			}
+			config := maps.Clone(conf.Other)
 
 			// extract title & icon if possible (user-defined vehicle embeds)
 			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
