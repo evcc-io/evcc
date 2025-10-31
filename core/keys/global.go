@@ -24,4 +24,5 @@ const (
 	DemoMode           = "demoMode"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
+	SHMLegacyScheme    = "shmLegacy"
 )

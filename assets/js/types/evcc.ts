@@ -40,6 +40,7 @@ export interface HemsConfig {
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
+  legacyId: boolean;
 }
 
 export interface FatalError {
