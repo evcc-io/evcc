@@ -33,7 +33,7 @@ type OpenWB struct {
 //go:generate go tool decorate -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOpenWBFromConfig creates a new configurable charger
-func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewOpenWBFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		mqtt.Config    `mapstructure:",squash"`
 		Topic          string

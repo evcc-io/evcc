@@ -28,7 +28,7 @@ func (l *logger) WithLogger(logger modbus.Logger, fun func() ([]byte, error)) ([
 
 // Printf implements modbus.Logger interface.
 // Must always be called while being wrapped in WithLogger, hence the lock is held.
-func (l *logger) Printf(format string, v ...interface{}) {
+func (l *logger) Printf(format string, v ...any) {
 	if l.logger != nil {
 		l.logger.Printf(format, v...)
 	}

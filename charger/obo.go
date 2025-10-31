@@ -29,7 +29,7 @@ func init() {
 }
 
 // NewOboFromConfig creates a OBO Bettermann charger from generic config
-func NewOboFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOboFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 19200,
 		Comset:   "8E1",

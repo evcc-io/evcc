@@ -27,7 +27,7 @@ func init() {
 }
 
 // NewWatchDogFromConfig creates watchDog provider
-func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Reset   []string
 		Initial *string

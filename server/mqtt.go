@@ -53,7 +53,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	return m, err
 }
 
-func (m *MQTT) encode(v interface{}) string {
+func (m *MQTT) encode(v any) string {
 	// nil should erase the value
 	if v == nil {
 		return ""
@@ -79,7 +79,7 @@ func (m *MQTT) encode(v interface{}) string {
 	}
 }
 
-func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
 		return
@@ -157,11 +157,11 @@ func (m *MQTT) publishString(topic string, retained bool, payload string) {
 	m.Handler.Publish(topic, retained, m.encode(payload))
 }
 
-func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publishSingleValue(topic string, retained bool, payload any) {
 	m.publisher(topic, retained, m.encode(payload))
 }
 
-func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publish(topic string, retained bool, payload any) {
 	// publish phase values
 	if slice, ok := payload.([]float64); ok && len(slice) == 3 {
 		var total float64

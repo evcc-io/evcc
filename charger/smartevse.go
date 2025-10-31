@@ -70,7 +70,7 @@ func init() {
 }
 
 // NewsmartEVSEFromConfig creates a new smartEVSE ModbusTCP charger
-func NewsmartEVSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewsmartEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}

@@ -179,7 +179,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -440,7 +440,7 @@ func (lp *Loadpoint) pushEvent(event string) {
 }
 
 // publish sends values to UI and databases
-func (lp *Loadpoint) publish(key string, val interface{}) {
+func (lp *Loadpoint) publish(key string, val any) {
 	// test helper
 	if lp.uiChan == nil {
 		return

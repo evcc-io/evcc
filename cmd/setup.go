@@ -1056,7 +1056,7 @@ CONTINUE:
 	return nil
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
 		return site, err

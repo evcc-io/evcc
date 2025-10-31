@@ -39,7 +39,7 @@ func TestFixed(t *testing.T) {
 }
 
 func TestFixedSplitZones(t *testing.T) {
-	at, err := NewFixedFromConfig(map[string]interface{}{
+	at, err := NewFixedFromConfig(map[string]any{
 		"price": 0.5,
 		"zones": []struct {
 			Price float64
