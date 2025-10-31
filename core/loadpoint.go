@@ -1101,7 +1101,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
 func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
-	changes := []api.ChargeStatus{}
+	var res []api.ChargeStatus
 
 	status, err := lp.charger.Status()
 	if err != nil {
@@ -1112,7 +1112,7 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 	// detect if charger status changed
 	if prevStatus := lp.GetStatus(); status != prevStatus {
-		changes = append(changes, status)
+		res = append(res, status)
 	}
 
 	// check charger connection duration
@@ -1125,13 +1125,13 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 		defer func() { lp.connectedDuration = d }()
 
 		// connection duration dropped while status unchanged, indicates intermediate disconnect
-		if len(changes) == 0 && d < lp.connectedDuration {
+		if len(res) == 0 && d < lp.connectedDuration {
 			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
-			changes = append(changes, api.StatusA, status)
+			res = append(res, api.StatusA, status)
 		}
 	}
 
-	return changes, nil
+	return res, nil
 }
 
 // needsWelcomeCharge checks if either the charger or a vehicle requires a welcome charge
