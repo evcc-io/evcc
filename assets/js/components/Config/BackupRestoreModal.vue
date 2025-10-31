@@ -249,6 +249,7 @@ export default defineComponent({
 			);
 		},
 		openBackupRestoreConfirmModal(type: typeof this.confirmType) {
+			this.confirmType = type;
 			if (this.authDisabled && type === "backup") {
 				this.submit();
 				return;
@@ -257,7 +258,6 @@ export default defineComponent({
 			this.resetBackupRestoreConfirmModal();
 			this.backupRestoreConfirmModal().show();
 			this.backupRestoreModal().hide();
-			this.confirmType = type;
 		},
 		closeModal() {
 			this.backupRestoreModal().hide();
