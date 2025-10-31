@@ -97,7 +97,7 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
 }
 
-func (suite *mqttSuite) TestGrid() {
+func (suite *mqttSuite) TestMeasurement() {
 	topics := []string{"test/title", "test/icon", "test/power", "test/energy", "test/powers", "test/currents", "test/excessDCPower", "test/capacity", "test/soc", "test/controllable"}
 
 	suite.publish("test", false, types.Measurement{})
@@ -115,4 +115,23 @@ func (suite *mqttSuite) TestGrid() {
 	suite.publish("test", false, types.Measurement{Currents: []float64{1, 2, 3}})
 	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "topics")
 	suite.Equal([]string{"", "", "0", "", "", "3", "", "", "", "", "1", "2", "3"}, suite.payloads, "payloads")
+}
+
+func (suite *mqttSuite) TestBatteryState() {
+	topics := []string{
+		"test/power", "test/energy", "test/capacity", "test/soc", "test",
+		"test/1/title", "test/1/icon", "test/1/power", "test/1/energy", "test/1/powers", "test/1/currents", "test/1/excessDCPower", "test/1/capacity", "test/1/soc", "test/1/controllable",
+	}
+
+	suite.publish("test", false, types.BatteryState{
+		Power: 2,
+		Soc:   20.0,
+		Devices: []types.Measurement{{
+			Power: 1,
+			Soc:   lo.ToPtr(10.0),
+		}},
+	})
+
+	suite.Equal(topics, suite.topics, "topics")
+	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", ""}, suite.payloads, "payloads")
 }
