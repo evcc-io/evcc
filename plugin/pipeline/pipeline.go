@@ -195,13 +195,13 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 
 	if p.jq != nil {
 		if p.quote {
-			b = []byte(fmt.Sprintf("%q", string(b)))
+			b = fmt.Appendf(nil, "%q", string(b))
 		}
 		v, err := jq.Query(p.jq, b)
 		if err != nil {
 			return b, backoff.Permanent(err)
 		}
-		b = []byte(fmt.Sprintf("%v", v))
+		b = fmt.Appendf(nil, "%v", v)
 	}
 
 	if p.unpack != "" {
@@ -209,7 +209,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 		if err != nil {
 			return b, err
 		}
-		b = []byte(fmt.Sprintf("%v", v))
+		b = fmt.Appendf(nil, "%v", v)
 	}
 
 	if p.decode != "" {
