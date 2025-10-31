@@ -10,7 +10,7 @@
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
-					<BatteryIcon :soc="battery.soc" />
+					<BatteryIcon :soc="battery?.soc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -91,7 +91,7 @@
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="battery.soc" :gridCharge="batteryGridCharge" />
+					<BatteryIcon :soc="battery?.soc" :gridCharge="batteryGridCharge" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -128,7 +128,7 @@ export default defineComponent({
 		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
-		battery: { type: Object as PropType<Battery>, required: true },
+		battery: { type: Object as PropType<Battery> },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		batteryHold: { type: Boolean, default: false },

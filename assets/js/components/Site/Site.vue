@@ -16,11 +16,11 @@
 						:loadpointTitles="loadpointTitles"
 						class="me-2"
 					/>
-					<TopNavigation v-bind="topNavigation" :battery="battery" />
+					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
 			<HemsWarning :circuits="circuits" />
-			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" :battery="battery" />
+			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div
@@ -63,7 +63,7 @@
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
-				:batterySoc="battery.soc"
+				:batterySoc="battery?.soc"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
@@ -131,7 +131,7 @@ export default defineComponent({
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: { type: Object as PropType<Battery>, required: true },
+		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -172,7 +172,7 @@ export default defineComponent({
 			return this.loadpoints.filter((lp) => lp.visible);
 		},
 		batteryConfigured() {
-			return this.battery.devices.length > 0;
+			return this.battery && this.battery.devices.length > 0;
 		},
 		pvConfigured() {
 			return this.pv?.length > 0;

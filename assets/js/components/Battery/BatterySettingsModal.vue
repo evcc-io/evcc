@@ -33,7 +33,7 @@
 		<div v-show="usageTabActive" class="row">
 			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
 				{{ $t("batterySettings.batteryLevel") }}:
-				<strong>{{ fmtSoc(battery.soc) }}</strong>
+				<strong>{{ fmtSoc(battery?.soc ?? 0) }}</strong>
 				<small v-for="(line, index) in batteryDetails" :key="index" class="d-block">
 					{{ line }}
 				</small>
@@ -106,7 +106,7 @@
 					</div>
 					<div
 						class="batterySoc ps-0 bg-white pe-none"
-						:style="{ top: `${100 - battery.soc}%` }"
+						:style="{ top: `${100 - (battery?.soc ?? 100)}%` }"
 					></div>
 					<div
 						class="bufferStartIndicator pe-none"
@@ -276,7 +276,7 @@ export default defineComponent({
 		prioritySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
-		battery: { type: Object as PropType<Battery>, required: true },
+		battery: { type: Object as PropType<Battery> },
 		batteryGridChargeLimit: { type: Number, default: null },
 		smartCostAvailable: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
@@ -309,7 +309,7 @@ export default defineComponent({
 			return options;
 		},
 		controllable() {
-			return this.battery.devices.some(({ controllable }) => controllable);
+			return this.battery && this.battery.devices.some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
 			return this.controllable && this.isModalVisible && this.smartCostAvailable;
@@ -371,7 +371,7 @@ export default defineComponent({
 			return this.battery
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc = 0, capacity }) => {
-					const multipleBatteries = this.battery.devices.length > 1;
+					const multipleBatteries = this.battery && this.battery.devices.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
 						POWER_UNIT.KW,
