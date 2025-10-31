@@ -62,6 +62,13 @@ type pointWriter interface {
 	WritePoint(point *write.Point)
 }
 
+func tagValue(f reflect.StructField) string {
+	if tag := f.Tag.Get("influxdb"); tag != "" {
+		return strings.Split(tag, ",")[0]
+	}
+	return ""
+}
+
 // writePoint asynchronously writes a point to influx
 func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]any, tags map[string]string) {
 	m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
@@ -83,7 +90,12 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 					continue
 				}
 
-				key := key + strings.ToUpper(f.Name[:1]) + f.Name[1:]
+				key := key
+				if tag := tagValue(f); tag != "" {
+					key = tag
+				}
+
+				key += strings.ToUpper(f.Name[:1]) + f.Name[1:]
 				val := val.Field(i).Interface()
 
 				m.writeComplexPoint(writer, key, val, tags)
