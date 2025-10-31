@@ -140,7 +140,7 @@ import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, AuthProviders, EvOpt } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, EvOpt, Battery } from "@/types/evcc";
 import type { Provider as Provider } from "./types";
 
 export default defineComponent({
@@ -150,7 +150,7 @@ export default defineComponent({
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
-		battery: Array,
+		battery: { type: Object as PropType<Battery>, required: true },
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
@@ -162,7 +162,7 @@ export default defineComponent({
 	},
 	computed: {
 		batteryConfigured() {
-			return this.battery?.length;
+			return this.battery.devices.length;
 		},
 		providerLogins(): Provider[] {
 			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({

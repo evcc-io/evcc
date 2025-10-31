@@ -33,7 +33,7 @@
 		<div v-show="usageTabActive" class="row">
 			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
 				{{ $t("batterySettings.batteryLevel") }}:
-				<strong>{{ fmtSoc(batterySoc) }}</strong>
+				<strong>{{ fmtSoc(battery.soc) }}</strong>
 				<small v-for="(line, index) in batteryDetails" :key="index" class="d-block">
 					{{ line }}
 				</small>
@@ -106,7 +106,7 @@
 					</div>
 					<div
 						class="batterySoc ps-0 bg-white pe-none"
-						:style="{ top: `${100 - batterySoc}%` }"
+						:style="{ top: `${100 - battery.soc}%` }"
 					></div>
 					<div
 						class="bufferStartIndicator pe-none"
@@ -264,7 +264,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import collector from "@/mixins/collector.js";
 import api from "@/api";
 import { defineComponent, type PropType } from "vue";
-import type { BatteryMeter, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
+import type { Battery, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
 import { SMART_COST_TYPE } from "@/types/evcc";
 
 export default defineComponent({
@@ -274,10 +274,9 @@ export default defineComponent({
 	props: {
 		bufferSoc: { type: Number, default: 100 },
 		prioritySoc: { type: Number, default: 0 },
-		batterySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
-		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
+		battery: { type: Object as PropType<Battery>, required: true },
 		batteryGridChargeLimit: { type: Number, default: null },
 		smartCostAvailable: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
@@ -310,7 +309,7 @@ export default defineComponent({
 			return options;
 		},
 		controllable() {
-			return this.battery.some(({ controllable }) => controllable);
+			return this.battery.devices.some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
 			return this.controllable && this.isModalVisible && this.smartCostAvailable;
@@ -372,7 +371,7 @@ export default defineComponent({
 			return this.battery
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc = 0, capacity }) => {
-					const multipleBatteries = this.battery.length > 1;
+					const multipleBatteries = this.battery.devices.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
 						POWER_UNIT.KW,
