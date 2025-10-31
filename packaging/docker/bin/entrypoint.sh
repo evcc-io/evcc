@@ -58,8 +58,8 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 	
 	# Execute evcc with collected parameters
 	if [ "${ENV_VARS}" ]; then
-		echo "starting evcc: 'env${ENV_VARS} ${EVCC_CMD}'"
-		exec env${ENV_VARS} ${EVCC_CMD}
+		echo "starting evcc: 'env ${ENV_VARS} ${EVCC_CMD}'"
+		exec env ${ENV_VARS} ${EVCC_CMD}
 	else
 		echo "starting evcc: '${EVCC_CMD}'"
 		exec ${EVCC_CMD}
