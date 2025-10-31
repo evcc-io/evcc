@@ -82,7 +82,7 @@ func (h *handler) bytesToBoolResult(op string, qty uint16, b []byte, err error) 
 
 LOOP:
 	for _, bb := range b {
-		for bit := 0; bit < 8; bit++ {
+		for bit := range 8 {
 			if len(res) >= int(qty) {
 				break LOOP
 			}

@@ -75,7 +75,7 @@ func init() {
 //go:generate go tool decorate -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.StatusReasoner,StatusReason,func() (api.Reason, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
-func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`

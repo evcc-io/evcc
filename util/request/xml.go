@@ -7,7 +7,7 @@ import (
 )
 
 // MarshalXML marshals XML into an io.ReadSeeker
-func MarshalXML(data interface{}) io.ReadSeeker {
+func MarshalXML(data any) io.ReadSeeker {
 	if data == nil {
 		return nil
 	}

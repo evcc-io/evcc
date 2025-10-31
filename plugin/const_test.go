@@ -8,7 +8,7 @@ import (
 )
 
 func TestConst(t *testing.T) {
-	p, err := NewConstFromConfig(context.TODO(), map[string]interface{}{"value": nil})
+	p, err := NewConstFromConfig(context.TODO(), map[string]any{"value": nil})
 	assert.NoError(t, err)
 
 	{

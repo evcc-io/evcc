@@ -22,7 +22,7 @@ type loginResponse struct {
 }
 
 // jsonWrite writes a JSON response
-func jsonWrite(w http.ResponseWriter, data interface{}) {
+func jsonWrite(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }

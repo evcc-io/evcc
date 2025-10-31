@@ -24,7 +24,7 @@ func (d *dumper) Header(name, underline string) {
 	fmt.Println(strings.Repeat(underline, len(name)))
 }
 
-func (d *dumper) DumpWithHeader(name string, device interface{}) {
+func (d *dumper) DumpWithHeader(name string, device any) {
 	if d.len > 1 {
 		d.Header(name, "-")
 	}
@@ -62,7 +62,7 @@ func (d *dumper) measureTime(w *tabwriter.Writer, label string, fn func() (strin
 	}
 }
 
-func (d *dumper) Dump(name string, v interface{}) {
+func (d *dumper) Dump(name string, v any) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	var isHeating bool
@@ -303,7 +303,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	w.Flush()
 }
 
-func (d *dumper) DumpDiagnosis(v interface{}) {
+func (d *dumper) DumpDiagnosis(v any) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
 	if v, ok := v.(api.Diagnosis); ok {
