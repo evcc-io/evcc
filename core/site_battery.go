@@ -10,14 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 )
 
-type batteryState struct {
-	Power    float64       `json:"power"`
-	Energy   float64       `json:"energy,omitempty"`
-	Capacity float64       `json:"capacity,omitempty"`
-	Soc      float64       `json:"soc"`
-	Devices  []measurement `json:"devices,omitempty" influxdb:"battery"`
-}
-
 func batteryModeModified(mode api.BatteryMode) bool {
 	return mode != api.BatteryUnknown && mode != api.BatteryNormal
 }

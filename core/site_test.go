@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -108,7 +109,7 @@ func TestGreenShare(t *testing.T) {
 		s := &Site{
 			gridPower: tc.grid,
 			pvPower:   tc.pv,
-			battery: batteryState{
+			battery: types.BatteryState{
 				Power: tc.battery,
 			},
 		}

@@ -90,12 +90,11 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 					continue
 				}
 
-				key := key
+				key := key + strings.ToUpper(f.Name[:1]) + f.Name[1:]
 				if tag := tagValue(f); tag != "" {
 					key = tag
 				}
 
-				key += strings.ToUpper(f.Name[:1]) + f.Name[1:]
 				val := val.Field(i).Interface()
 
 				m.writeComplexPoint(writer, key, val, tags)

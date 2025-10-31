@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
@@ -46,27 +47,6 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 type updater interface {
 	loadpoint.API
 	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
-}
-
-// measurement is used as slice element for publishing structured data
-type measurement struct {
-	Title         string    `json:"title,omitempty"`
-	Icon          string    `json:"icon,omitempty"`
-	Power         float64   `json:"power"`
-	Energy        float64   `json:"energy,omitempty"`
-	Powers        []float64 `json:"powers,omitempty"`
-	Currents      []float64 `json:"currents,omitempty"`
-	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
-	Capacity      *float64  `json:"capacity,omitempty"`
-	Soc           *float64  `json:"soc,omitempty"`
-	Controllable  *bool     `json:"controllable,omitempty"`
-}
-
-var _ api.TitleDescriber = (*measurement)(nil)
-
-// GetTitle implements api.TitleDescriber interface for InfluxDB tagging
-func (m measurement) GetTitle() string {
-	return m.Title
 }
 
 var _ site.API = (*Site)(nil)
@@ -114,14 +94,14 @@ type Site struct {
 	householdSlotStart time.Time
 
 	// cached state
-	gridPower                float64         // Grid power
-	pvPower                  float64         // PV power
-	excessDCPower            float64         // PV excess DC charge power (hybrid only)
-	auxPower                 float64         // Aux power
-	battery                  batteryState    // Battery cached and published state
-	batteryMode              api.BatteryMode // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time       // Battery mode timer for external control
+	gridPower                float64            // Grid power
+	pvPower                  float64            // PV power
+	excessDCPower            float64            // PV excess DC charge power (hybrid only)
+	auxPower                 float64            // Aux power
+	battery                  types.BatteryState // Battery cached and published state
+	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time          // Battery mode timer for external control
 }
 
 // MetersConfig contains the site's meter configuration
@@ -490,8 +470,8 @@ func (site *Site) publish(key string, val interface{}) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
-func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
-	mm := make([]measurement, len(meters))
+func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
+	mm := make([]types.Measurement, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
 		meter := dev.Instance()
@@ -526,7 +506,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		}
 
 		props := deviceProperties(dev)
-		mm[i] = measurement{
+		mm[i] = types.Measurement{
 			Title:  props.Title,
 			Icon:   props.Icon,
 			Power:  power,
@@ -570,13 +550,13 @@ func (site *Site) updatePvMeters() {
 		}
 	}
 
-	site.pvPower = lo.SumBy(mm, func(m measurement) float64 {
+	site.pvPower = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return max(0, m.Power)
 	})
-	site.excessDCPower = lo.SumBy(mm, func(m measurement) float64 {
+	site.excessDCPower = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return math.Abs(m.ExcessDCPower)
 	})
-	totalEnergy := lo.SumBy(mm, func(m measurement) float64 {
+	totalEnergy := lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Energy
 	})
 
@@ -619,7 +599,7 @@ func (site *Site) updatePvMeters() {
 }
 
 // updateBatteryMeters updates battery meters
-func (site *Site) updateBatteryMeters() []measurement {
+func (site *Site) updateBatteryMeters() []types.Measurement {
 	if len(site.batteryMeters) == 0 {
 		return nil
 	}
@@ -653,14 +633,14 @@ func (site *Site) updateBatteryMeters() []measurement {
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
-	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {
+	batterySocAcc := lo.SumBy(mm, func(m types.Measurement) float64 {
 		// weigh soc by capacity
 		if *m.Capacity > 0 {
 			return *m.Soc * *m.Capacity
 		}
 		return *m.Soc
 	})
-	totalCapacity := lo.SumBy(mm, func(m measurement) float64 {
+	totalCapacity := lo.SumBy(mm, func(m types.Measurement) float64 {
 		return *m.Capacity
 	})
 
@@ -671,10 +651,10 @@ func (site *Site) updateBatteryMeters() []measurement {
 	site.battery.Soc = batterySocAcc / totalCapacity
 	site.battery.Capacity = totalCapacity
 
-	site.battery.Power = lo.SumBy(mm, func(m measurement) float64 {
+	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Power
 	})
-	site.battery.Energy = lo.SumBy(mm, func(m measurement) float64 {
+	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Energy
 	})
 
@@ -696,7 +676,7 @@ func (site *Site) updateAuxMeters() {
 	}
 
 	mm := site.collectMeters("aux", site.auxMeters)
-	site.auxPower = lo.SumBy(mm, func(m measurement) float64 {
+	site.auxPower = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Power
 	})
 
@@ -724,7 +704,7 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	var mm measurement
+	var mm types.Measurement
 
 	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res
@@ -773,7 +753,7 @@ func (site *Site) updateGridMeter() error {
 func (site *Site) updateMeters() error {
 	var eg errgroup.Group
 
-	var battery []measurement
+	var battery []types.Measurement
 
 	eg.Go(func() error { site.updatePvMeters(); return nil })
 	eg.Go(func() error { battery = site.updateBatteryMeters(); return nil })
@@ -832,7 +812,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
 		site.gridPower = totalChargePower - site.pvPower
-		site.publish(keys.Grid, measurement{Power: site.gridPower})
+		site.publish(keys.Grid, types.Measurement{Power: site.gridPower})
 	}
 
 	// ensure safe default for residual power
