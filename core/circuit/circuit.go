@@ -148,12 +148,12 @@ func (c *Circuit) GetParent() api.Circuit {
 
 // setParent set parent circuit
 func (c *Circuit) setParent(parent api.Circuit) error {
+	// prevent cyclical dependency
 	for p := parent.GetParent(); p != nil; p = p.GetParent() {
 		if c == p {
 			return fmt.Errorf("cycle detected: %s and %s cannot be mutual parents", c.GetTitle(), parent.GetTitle())
 		}
 	}
-
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
