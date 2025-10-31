@@ -249,15 +249,15 @@ export default defineComponent({
 			);
 		},
 		openBackupRestoreConfirmModal(type: typeof this.confirmType) {
-			if (this.authDisabled) {
-				this.downloadBackup();
-				return;
-			}
-
 			this.resetBackupRestoreConfirmModal();
-			this.backupRestoreConfirmModal().show();
-			this.backupRestoreModal().hide();
 			this.confirmType = type;
+
+			if (this.authDisabled) {
+				this.submit();
+			} else {
+				this.backupRestoreConfirmModal().show();
+				this.backupRestoreModal().hide();
+			}
 		},
 		closeModal() {
 			this.backupRestoreModal().hide();
