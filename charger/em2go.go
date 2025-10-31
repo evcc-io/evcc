@@ -371,7 +371,7 @@ func (wb *Em2Go) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	var serial []byte
-	for reg := 0; reg < 8; reg++ {
+	for reg := range 8 {
 		b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial+2*uint16(reg), 2)
 		if err != nil {
 			return

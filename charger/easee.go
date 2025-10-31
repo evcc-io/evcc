@@ -202,7 +202,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 }
 
 func (c *Easee) waitForOptionalState() {
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		if c.optionalStatePresent() {
 			return
 		}

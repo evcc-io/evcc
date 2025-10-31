@@ -173,7 +173,7 @@ func (c *Pulsatrix) connect() error {
 
 // sync attempts synchronization with retry mechanism
 func (c *Pulsatrix) sync() error {
-	for i := 0; i < syncRetries; i++ {
+	for i := range syncRetries {
 		if err := c.Enable(false); err == nil {
 			return nil
 		}

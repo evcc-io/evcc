@@ -36,9 +36,6 @@ all:: clean install install-ui ui assets lint test-ui lint-ui test build
 clean::
 	rm -rf dist/
 
-modernize:
-	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
-
 install::
 	go install tool
 
@@ -56,6 +53,7 @@ docs::
 
 lint::
 	golangci-lint run
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
 
 lint-ui::
 	npm run lint

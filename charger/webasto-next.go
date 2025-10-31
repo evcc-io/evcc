@@ -227,7 +227,7 @@ var _ api.PhaseCurrents = (*WebastoNext)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 	var res [3]float64
-	for l := uint16(0); l < 3; l++ {
+	for l := range uint16(3) {
 		b, err := wb.conn.ReadInputRegisters(tqRegCurrents+2*l, 1)
 		if err != nil {
 			return 0, 0, 0, err

@@ -21,10 +21,10 @@ func TestFixed(t *testing.T) {
 	}
 
 	var expect api.Rates
-	for dow := 0; dow < 7; dow++ {
+	for dow := range 7 {
 		dayStart := now.With(tf.clock.Now()).BeginningOfDay().AddDate(0, 0, dow)
 
-		for hour := 0; hour < 24; hour++ {
+		for hour := range 24 {
 			expect = append(expect, api.Rate{
 				Value: 0.3,
 				Start: dayStart.Add(time.Hour * time.Duration(hour)),
@@ -58,7 +58,7 @@ func TestFixedSplitZones(t *testing.T) {
 		dayStart := now.With(tf.clock.Now()).BeginningOfDay().AddDate(0, 0, i)
 
 		// 00:00-05:00 0.1
-		for hour := 0; hour < 5; hour++ {
+		for hour := range 5 {
 			expect = append(expect, api.Rate{
 				Value: 0.1,
 				Start: dayStart.Add(time.Hour * time.Duration(hour)),
