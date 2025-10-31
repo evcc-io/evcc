@@ -767,7 +767,6 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 
 func TestConnectionDurationDropDetection(t *testing.T) {
 	clock := clock.NewMock()
-	bus := evbus.New()
 	ctrl := gomock.NewController(t)
 	ch := api.NewMockCharger(ctrl)
 	ct := api.NewMockConnectionTimer(ctrl)
@@ -785,7 +784,7 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
-		bus:         bus,
+		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
 		minCurrent:  minA,
