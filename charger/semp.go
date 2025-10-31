@@ -51,7 +51,7 @@ func init() {
 }
 
 // NewSEMPFromConfig creates a SEMP charger from generic config
-func NewSEMPFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSEMPFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		DeviceID string

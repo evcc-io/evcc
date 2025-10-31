@@ -175,8 +175,8 @@ func (t *Template) GroupTitle(lang string) string {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(renderMode int) map[string]interface{} {
-	values := make(map[string]interface{})
+func (t *Template) Defaults(renderMode int) map[string]any {
+	values := make(map[string]any)
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -226,7 +226,7 @@ func (t *Template) ModbusChoices() []string {
 var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
-func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
+func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
@@ -276,7 +276,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	t.Params = newParams
 
 	out := new(bytes.Buffer)
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Template": t.Template,
 		"Params":   t.Params,
 	}
@@ -294,7 +294,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 	t.ModbusValues(renderMode, values)
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 
 	// TODO this is an utterly horrible hack
 	//
@@ -325,12 +325,12 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		// TODO move yamlQuote to explicit quoting in templates, see https://github.com/evcc-io/evcc/issues/10742
 
 		switch typed := val.(type) {
-		case []interface{}:
+		case []any:
 			var list []string
 			for _, v := range typed {
 				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+			if res[out] == nil || len(res[out].([]any)) == 0 {
 				res[out] = list
 			}
 

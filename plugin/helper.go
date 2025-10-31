@@ -11,12 +11,12 @@ import (
 )
 
 // setFormattedValue formats a message template or returns the value formatted as %v if the message template is empty
-func setFormattedValue(message, param string, v interface{}) (string, error) {
+func setFormattedValue(message, param string, v any) (string, error) {
 	if message == "" {
 		return fmt.Sprintf("%v", v), nil
 	}
 
-	return util.ReplaceFormatted(message, map[string]interface{}{
+	return util.ReplaceFormatted(message, map[string]any{
 		param: v,
 	})
 }

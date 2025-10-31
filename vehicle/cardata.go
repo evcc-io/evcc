@@ -25,7 +25,7 @@ func init() {
 }
 
 // NewCardataFromConfig creates a new BMW/Mini CarData vehicle
-func NewCardataFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		ClientID, VIN string

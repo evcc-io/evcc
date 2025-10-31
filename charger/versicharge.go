@@ -60,7 +60,7 @@ func init() {
 }
 
 // NewVersichargeFromConfig creates a Versicharge charger from generic config
-func NewVersichargeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVersichargeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 2,
 	}

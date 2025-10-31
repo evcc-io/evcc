@@ -23,7 +23,7 @@ func init() {
 }
 
 // NewHyundaiFromConfig creates a new vehicle
-func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
@@ -40,7 +40,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // NewKiaFromConfig creates a new vehicle
-func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
@@ -57,7 +57,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // newBluelinkFromConfig creates a new Vehicle
-func newBluelinkFromConfig(brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
+func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink.Config) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string

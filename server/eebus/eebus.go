@@ -306,34 +306,34 @@ func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.Connectio
 
 // EEBUS Logging interface
 
-func (c *EEBus) Trace(args ...interface{}) {
+func (c *EEBus) Trace(args ...any) {
 	c.log.TRACE.Println(args...)
 }
 
-func (c *EEBus) Tracef(format string, args ...interface{}) {
+func (c *EEBus) Tracef(format string, args ...any) {
 	c.log.TRACE.Printf(format, args...)
 }
 
-func (c *EEBus) Debug(args ...interface{}) {
+func (c *EEBus) Debug(args ...any) {
 	c.log.DEBUG.Println(args...)
 }
 
-func (c *EEBus) Debugf(format string, args ...interface{}) {
+func (c *EEBus) Debugf(format string, args ...any) {
 	c.log.DEBUG.Printf(format, args...)
 }
 
-func (c *EEBus) Info(args ...interface{}) {
+func (c *EEBus) Info(args ...any) {
 	c.log.INFO.Println(args...)
 }
 
-func (c *EEBus) Infof(format string, args ...interface{}) {
+func (c *EEBus) Infof(format string, args ...any) {
 	c.log.INFO.Printf(format, args...)
 }
 
-func (c *EEBus) Error(args ...interface{}) {
+func (c *EEBus) Error(args ...any) {
 	c.log.ERROR.Println(args...)
 }
 
-func (c *EEBus) Errorf(format string, args ...interface{}) {
+func (c *EEBus) Errorf(format string, args ...any) {
 	c.log.ERROR.Printf(format, args...)
 }
