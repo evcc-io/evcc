@@ -153,9 +153,7 @@ test.describe("backup and restore", async () => {
 
     // download backup confirm
     const backupConfirmModal = page.getByTestId("backup-restore-confirm-modal");
-    await expectModalVisible(backupConfirmModal);
-    await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
-    await expectModalHidden(backupConfirmModal);
+    await expect(backupConfirmModal.getByLabel("Administrator Password")).not.toBeVisible(); // disable auth mode
     const download = await downloadPromise;
     await expectModalVisible(backupModal);
     await backupModal.locator(".btn-close").click();
