@@ -27,13 +27,13 @@ render: |
   currents:
   - source: http
     uri: http://{{ .host }}/f
-    jq: .i1
+    jq: (.i1 * (if .l1 < 0 then -1 else 1 end)) # Invert the sign of i1 if l1 is negative to reflect direction
   - source: http
     uri: http://{{ .host }}/f
-    jq: .i2
+    jq: (.i2 * (if .l2 < 0 then -1 else 1 end))
   - source: http
     uri: http://{{ .host }}/f
-    jq: .i3
+    jq: (.i3 * (if .l3 < 0 then -1 else 1 end))
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
