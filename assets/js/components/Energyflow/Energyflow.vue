@@ -5,9 +5,9 @@
 		data-testid="energyflow"
 		@click="toggleDetails"
 	>
-		<div class="row">
+		<div class="visualization-wrapper">
 			<Visualization
-				class="col-12 mb-3 mb-md-4"
+				class="mb-3 mb-md-4"
 				:gridImport="gridImport"
 				:selfPv="selfPv"
 				:selfBattery="selfBattery"
@@ -16,7 +16,7 @@
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
 				:batteryGridCharge="batteryGridChargeActive"
-				:batteryHold="batteryHold"
+				:batteryHold="!showBatteryState && batteryHold"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
@@ -25,6 +25,10 @@
 				:inPower="inPower"
 				:outPower="outPower"
 			/>
+			<div v-if="showBatteryState" class="battery-state-display">
+				<BatteryIcon :soc="batterySoc" :hold="batteryHold" class="battery-icon" />
+				<div class="battery-soc-value">{{ batterySocFmt(batterySoc) }}</div>
+			</div>
 		</div>
 		<div
 			class="details"
@@ -296,6 +300,7 @@
 import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
+import BatteryIcon from "./BatteryIcon.vue";
 import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
@@ -303,6 +308,7 @@ import settings from "@/settings";
 import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
+	ICON_SIZE,
 	SMART_COST_TYPE,
 	type BatteryMeter,
 	type Meter,
@@ -315,6 +321,7 @@ export default defineComponent({
 	name: "Energyflow",
 	components: {
 		Visualization,
+		BatteryIcon,
 		EnergyflowEntry: Entry,
 		AnimatedNumber,
 	},
@@ -352,7 +359,12 @@ export default defineComponent({
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
+		return {
+			detailsOpen: false,
+			detailsCompleteHeight: null as number | null,
+			ready: false,
+			ICON_SIZE,
+		};
 	},
 	computed: {
 		gridImport() {
@@ -427,6 +439,9 @@ export default defineComponent({
 		batteryFmt() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
+		batterySocFmt() {
+			return (soc: number) => Math.round(soc).toString();
+		},
 		fmtLoadpointSoc() {
 			return (soc: number) => this.fmtPercentage(soc, 0);
 		},
@@ -497,6 +512,9 @@ export default defineComponent({
 			return this.$t("main.energyflow.loadpoints", this.activeLoadpointsCount, {
 				count: this.activeLoadpointsCount,
 			});
+		},
+		showBatteryState() {
+			return this.batteryConfigured;
 		},
 		consumers() {
 			return [...this.aux, ...this.ext];
@@ -658,5 +676,23 @@ export default defineComponent({
 }
 .legend-battery--mixed {
 	clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.visualization-wrapper {
+	position: relative;
+}
+.battery-state-display {
+	position: absolute;
+	top: 2.2rem;
+	right: -0.35rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	color: var(--evcc-gray);
+}
+.battery-soc-value {
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 0.9;
+	white-space: nowrap;
 }
 </style>
