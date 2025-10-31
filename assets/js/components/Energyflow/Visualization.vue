@@ -10,7 +10,7 @@
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
-					<BatteryIcon :soc="batterySoc" />
+					<BatteryIcon :soc="battery.soc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -91,7 +91,7 @@
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
+					<BatteryIcon :soc="battery.soc" :gridCharge="batteryGridCharge" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -116,7 +116,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint } from "@/types/evcc";
+import type { Battery, UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -128,13 +128,13 @@ export default defineComponent({
 		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
+		battery: { type: Object as PropType<Battery>, required: true },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		batteryHold: { type: Boolean, default: false },
 		batteryGridCharge: { type: Boolean, default: false },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
-		batterySoc: { type: Number, default: 0 },
 		powerUnit: { type: String as PropType<POWER_UNIT>, default: POWER_UNIT.KW },
 		inPower: { type: Number, default: 0 },
 		outPower: { type: Number, default: 0 },

@@ -32,6 +32,12 @@ const initialState: State = {
   loadpoints: [],
   vehicles: {},
   forecast: {},
+  battery: {
+    power: 0,
+    capacity: 0,
+    soc: 0,
+    devices: [],
+  },
 };
 
 const state = reactive(initialState);

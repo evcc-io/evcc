@@ -58,7 +58,7 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
-  battery?: BatteryMeter[];
+  battery: Battery;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -362,6 +362,13 @@ export interface Meter {
   title?: string;
   icon?: string;
   energy?: number;
+}
+
+export interface Battery {
+  power: number;
+  capacity: number;
+  soc: number;
+  devices: BatteryMeter[];
 }
 
 export interface BatteryMeter extends Meter {
