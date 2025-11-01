@@ -47,3 +47,4 @@ asset-stats.html
 /evcc.db
 /tsconfig.tsbuildinfo
 *storybook.log
+mock-ekz-api
