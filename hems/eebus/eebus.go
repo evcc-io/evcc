@@ -44,7 +44,7 @@ type Limits struct {
 }
 
 // NewFromConfig creates an EEBus HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
 		Ski      string
 		Limits   `mapstructure:",squash"`

@@ -63,7 +63,7 @@ func (h *Hub) Add(sender Messenger) {
 
 // apply applies the event template to the content to produce the actual message
 func (h *Hub) apply(ev Event, tmpl string) (string, error) {
-	attr := make(map[string]interface{})
+	attr := make(map[string]any)
 
 	// loadpoint id
 	if ev.Loadpoint != nil {

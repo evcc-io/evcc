@@ -34,7 +34,7 @@ paths:
                 password:
                   $ref: "#/components/schemas/Password"
       responses:
-        200:
+        "200":
           description: Success
           headers:
             Set-Cookie:
@@ -44,7 +44,7 @@ paths:
                 example: >-
                   auth=ey...qY; Path=/; Expires=Fri, 04 Apr 2025 14:35:37 GMT;
                   HttpOnly; SameSite=Strict
-        401:
+        "401":
           description: Invalid password provided
   /auth/logout:
     post:
@@ -54,7 +54,7 @@ paths:
       tags:
         - auth
       responses:
-        200:
+        "200":
           description: Success
           headers:
             Set-Cookie:
@@ -77,9 +77,9 @@ paths:
             schema:
               $ref: "#/components/schemas/ChangePassword"
       responses:
-        202:
+        "202":
           description: Success
-        400:
+        "400":
           description: Invalid password provided
   /auth/status:
     get:
@@ -89,7 +89,7 @@ paths:
       tags:
         - auth
       responses:
-        200:
+        "200":
           description: Success
           content:
             text/plain:
@@ -110,7 +110,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/enable"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/BooleanResult"
   /batterygridchargelimit:
     delete:
@@ -122,7 +122,7 @@ paths:
       tags:
         - battery
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NullResult"
   /batterygridchargelimit/{cost}:
     post:
@@ -136,7 +136,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/costLimit"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /batterymode:
     delete:
@@ -146,7 +146,7 @@ paths:
       tags:
         - battery
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/BatteryModeResult"
   /batterymode/{batteryMode}:
     post:
@@ -158,7 +158,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/batteryMode"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/BatteryModeResult"
   /buffersoc/{soc}:
     post:
@@ -172,7 +172,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/soc"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /bufferstartsoc/{soc}:
     post:
@@ -186,7 +186,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/soc"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /health:
     get:
@@ -196,7 +196,7 @@ paths:
       tags:
         - general
       responses:
-        200:
+        "200":
           description: Success
           content:
             text/plain:
@@ -216,7 +216,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/enable"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/BooleanResult"
   /loadpoints/{id}/disable/delay/{delay}:
     post:
@@ -231,7 +231,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/delay"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NanoSecondsResult"
   /loadpoints/{id}/disable/threshold/{threshold}:
     post:
@@ -246,7 +246,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/threshold"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/enable/delay/{delay}:
     post:
@@ -261,7 +261,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/delay"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NanoSecondsResult"
   /loadpoints/{id}/enable/threshold/{threshold}:
     post:
@@ -276,7 +276,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/threshold"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/limitenergy/{energy}:
     post:
@@ -291,7 +291,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/energy"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/limitsoc/{soc}:
     post:
@@ -306,7 +306,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/soc"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/maxcurrent/{current}:
     post:
@@ -319,7 +319,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/current"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mincurrent/{current}:
     post:
@@ -332,7 +332,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/current"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mode/{mode}:
     post:
@@ -347,7 +347,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/mode"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -369,9 +369,9 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/phases"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
-        400:
+        "400":
           description: "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
   /loadpoints/{id}/plan:
     get:
@@ -385,7 +385,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -411,7 +411,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/EmptyResult"
   /loadpoints/{id}/plan/energy/{energy}/{timestamp}:
     post:
@@ -427,7 +427,7 @@ paths:
         - $ref: "#/components/parameters/energy"
         - $ref: "#/components/parameters/timestamp"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -436,6 +436,24 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/StaticEnergyPlan"
+  /loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}:
+    get:
+      operationId: previewLoadpointRepeatingPlan
+      summary: Repeating plan preview
+      description: "Simulate repeating charging plan and return the result. Does not alter the actual charging plan."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/plans
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/soc"
+        - $ref: "#/components/parameters/weekdays"
+        - $ref: "#/components/parameters/hourMinuteTime"
+        - $ref: "#/components/parameters/timezone"
+      responses:
+        "200":
+          $ref: "#/components/responses/PlanRatesResult"
   /loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}:
     get:
       operationId: previewLoadpointSocPlan
@@ -450,7 +468,7 @@ paths:
         - $ref: "#/components/parameters/soc"
         - $ref: "#/components/parameters/timestamp"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/PlanRatesResult"
   /loadpoints/{id}/plan/static/preview/energy/{energy}/{timestamp}:
     get:
@@ -466,7 +484,7 @@ paths:
         - $ref: "#/components/parameters/energy"
         - $ref: "#/components/parameters/timestamp"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/PlanRatesResult"
   /loadpoints/{id}/plan/strategy:
     post:
@@ -515,7 +533,7 @@ paths:
             type: integer
             minimum: 0
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/IntegerResult"
   /loadpoints/{id}/smartcostlimit:
     delete:
@@ -529,7 +547,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NullResult"
   /loadpoints/{id}/smartcostlimit/{cost}:
     post:
@@ -544,7 +562,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/costLimit"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/smartfeedinprioritylimit:
     delete:
@@ -556,7 +574,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NullResult"
   /loadpoints/{id}/smartfeedinprioritylimit/{cost}:
     post:
@@ -569,7 +587,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/costLimit"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/vehicle:
     delete:
@@ -583,7 +601,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/EmptyResult"
     patch:
       operationId: startLoadpointVehicleDetection
@@ -596,7 +614,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/EmptyResult"
   /loadpoints/{id}/vehicle/{name}:
     post:
@@ -611,7 +629,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/vehicleName"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -635,7 +653,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/soc"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /residualpower/{power}:
     post:
@@ -649,7 +667,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/power"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /smartfeedinprioritylimit:
     delete:
@@ -659,7 +677,7 @@ paths:
       tags:
         - general
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NullResult"
   /smartfeedinprioritylimit/{cost}:
     post:
@@ -671,7 +689,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/costLimit"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /session/{id}:
     parameters:
@@ -696,7 +714,7 @@ paths:
                 loadpoint:
                   $ref: "#/components/schemas/LoadpointName"
       responses:
-        200:
+        "200":
           description: Success
     delete:
       operationId: deleteSession
@@ -707,7 +725,7 @@ paths:
       tags:
         - sessions
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NullResult"
   /sessions:
     get:
@@ -747,7 +765,7 @@ paths:
             type: integer
             example: 2025
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -773,9 +791,9 @@ paths:
       parameters:
         - $ref: "#/components/parameters/enable"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/BooleanResult"
-        400:
+        "400":
           description: Sponsorship required
   /smartcostlimit:
     delete:
@@ -785,7 +803,7 @@ paths:
       tags:
         - general
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NullResult"
   /smartcostlimit/{cost}:
     post:
@@ -797,7 +815,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/costLimit"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/NumberResult"
   /state:
     get:
@@ -822,7 +840,7 @@ paths:
               value: .loadpoints[0]
               summary: only first loadpoint
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -859,7 +877,7 @@ paths:
             enum:
               - txt
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -875,7 +893,7 @@ paths:
                 description: Download txt-file
                 type: string
                 format: binary
-        401:
+        "401":
           $ref: "#/components/responses/Unauthorized"
   /system/log/areas:
     get:
@@ -887,7 +905,7 @@ paths:
       tags:
         - system
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -896,7 +914,7 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/LogAreas"
-        401:
+        "401":
           $ref: "#/components/responses/Unauthorized"
   /system/shutdown:
     post:
@@ -908,9 +926,9 @@ paths:
       tags:
         - system
       responses:
-        204:
+        "204":
           $ref: "#/components/responses/BlankResponse"
-        401:
+        "401":
           $ref: "#/components/responses/Unauthorized"
   /tariff/{type}:
     get:
@@ -935,7 +953,7 @@ paths:
               - planner
               - solar
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -947,7 +965,7 @@ paths:
                     properties:
                       rates:
                         $ref: "#/components/schemas/Rates"
-        404:
+        "404":
           description: Tariff not defined
   /vehicles/{name}/limitsoc/{soc}:
     post:
@@ -962,7 +980,7 @@ paths:
         - $ref: "#/components/parameters/vehicleName"
         - $ref: "#/components/parameters/soc"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/SocResult"
   /vehicles/{name}/minsoc/{soc}:
     post:
@@ -977,7 +995,7 @@ paths:
         - $ref: "#/components/parameters/vehicleName"
         - $ref: "#/components/parameters/soc"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/SocResult"
   /vehicles/{name}/plan/repeating:
     post:
@@ -999,7 +1017,7 @@ paths:
               items:
                 $ref: "#/components/schemas/RepeatingPlan"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -1022,7 +1040,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/vehicleName"
       responses:
-        200:
+        "200":
           $ref: "#/components/responses/EmptyResult"
   /vehicles/{name}/plan/soc/{soc}/{timestamp}:
     post:
@@ -1038,7 +1056,7 @@ paths:
         - $ref: "#/components/parameters/soc"
         - $ref: "#/components/parameters/timestamp"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -1114,16 +1132,16 @@ components:
           vehicle:
             $ref: "#/components/schemas/VehicleName"
           odometer:
-            type: number
             nullable: true
+            type: "number"
             description: Vehicle odometer reading in kilometers
           meterStart:
-            type: number
             nullable: true
+            type: "number"
             description: Meter reading at start of charging session
           meterStop:
-            type: number
             nullable: true
+            type: "number"
             description: Meter reading at end of charging session
           chargedEnergy:
             type: number
@@ -1553,8 +1571,8 @@ components:
             properties:
               result:
                 description: Value is always null
-                type: object
                 nullable: true
+                type: "object"
     BlankResponse:
       description: Success - Blank response
     EmptyResult:

@@ -255,8 +255,7 @@ func TestSEMPCharger(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -323,8 +322,7 @@ func TestSEMPChargerOff(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -376,8 +374,7 @@ func TestSEMPChargerReady(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -405,8 +402,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -450,8 +446,7 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -496,8 +491,7 @@ func TestSEMPChargerAutoDetectDeviceID(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	// Create charger without deviceID - should auto-detect
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "", time.Second)

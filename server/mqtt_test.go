@@ -36,7 +36,7 @@ type mqttSuite struct {
 	topics, payloads []string
 }
 
-func (suite *mqttSuite) publish(topic string, retained bool, payload interface{}) {
+func (suite *mqttSuite) publish(topic string, retained bool, payload any) {
 	suite.MQTT.publish(topic, retained, payload)
 }
 

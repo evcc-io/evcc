@@ -31,16 +31,24 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 	fi
 
 	echo "Using config file: ${CONFIG}"
-	if [ ! -f "${CONFIG}" ]; then
-		echo "Config not found. Please create a config under ${CONFIG}."
-		echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
-	else
+	echo "Using database file: ${SQLITE_FILE}"
+
+	if [ -f "${CONFIG}" ]; then
 		if [ "${SQLITE_FILE}" ]; then
 			echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
 			exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
 		else
 			echo "starting evcc: 'evcc --config ${CONFIG}'"
 			exec evcc --config "${CONFIG}"
+		fi
+	else
+		if [ -f "${SQLITE_FILE}" ]; then
+			echo "No config file (evcc.yaml) configured. Starting with configuration from database: ${SQLITE_FILE}"
+			exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc
+		else
+			echo "No config file (evcc.yaml) and no database (evcc.db) file configured. Please copy your database to ${SQLITE_FILE} or migrate your settings to the database or create a config under ${CONFIG}."
+			echo "For details see evcc Home Assistant documentation at https://docs.evcc.io/docs/installation/home-assistant"
+			exit 1
 		fi
 	fi
 else

@@ -113,6 +113,25 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		if precondStr := r.URL.Query().Get("precondition"); precondStr != "" {
 			if precond, err := strconv.ParseInt(precondStr, 10, 64); err == nil {
 				strategy.Precondition = time.Duration(precond) * time.Second
+
+		jsonWrite(w, res)
+	}
+}
+
+func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		query := r.URL.Query()
+
+		hourMinute := vars["time"]
+		tz := vars["tz"]
+
+		var weekdays []int
+		for weekdayStr := range strings.SplitSeq(vars["weekdays"], ",") {
+			weekday, err := strconv.Atoi(weekdayStr)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
+				return
 			}
 		}
 

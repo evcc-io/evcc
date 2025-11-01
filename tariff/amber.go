@@ -31,7 +31,7 @@ func init() {
 	registry.Add("amber", NewAmberFromConfig)
 }
 
-func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed   `mapstructure:",squash"`
 		Token   string

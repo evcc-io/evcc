@@ -118,7 +118,7 @@
       "temp": "Lämpötila",
       "topic": "Aihe",
       "url": "URL",
-      "vehicleLimitSoc": "Ajoneuvonrajoitus",
+      "vehicleLimitSoc": "Latausrajoitus",
       "yes": "kyllä"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Älykkään virranhallinnan laite",
       "batteryStorage": "Akkujärjestelmä",
+      "consumer": "Virrankäyttäjä",
       "solarSystem": "Aurinkosähköjärjestelmä"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Voidaan käyttää kuormanhallintaan tai tilastointiin.",
-      "titleAdd": "Lisää ulkoinen mittari",
-      "titleEdit": "Muokkaa ulkoista mittaria"
+      "description": "Tallentaa ei-hallittujen virrankuluttajien (kuten jääkaapin, pesukoneen) käyttämää energiaa tilastointiin. Voidaan käyttää myös kuormanhallintaan (esim. osittaiskuormana).",
+      "titleAdd": "Lisää kulutusmittari",
+      "titleEdit": "Muokkaa kulutusmittaria"
     },
     "form": {
       "danger": "Vaara",
@@ -196,7 +197,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "vaihda"
+      "change": "vaihda",
+      "label": "Kuvake"
     },
     "influx": {
       "description": "Kirjoittaa kulutustiedot ja muut mittaukset InfluxDB:hen. Käytä Grafanaa tai muita työkaluja tietojen visualisointiin.",
@@ -344,13 +346,22 @@
       "option": {
         "aux": "Lisää kulutustaan itsesäätelevä laite",
         "battery": "Lisää akun tilan mittari",
-        "ext": "Lisää ulkopuolinen mittari",
+        "ext": "Lisää tavanomainen virrankäyttäjä",
         "pv": "Lisää aurinkovoimalan mittari"
       },
       "save": "Tallenna",
       "specific": "Erityisintegraatiot",
       "template": "Valmistaja",
       "titleChoice": "Mitä haluat lisätä?",
+      "titleLabel": "Otsikko",
+      "usage": {
+        "aux": "Kulutusta säätelevä käyttäjä",
+        "battery": "Akku",
+        "charge": "Virrankuluttaja / Laturi",
+        "grid": "Jakeluverkko",
+        "label": "Kulutus",
+        "pv": "Tuotanto"
+      },
       "validateSave": "Vahvista ja tallenna"
     },
     "modbus": {
@@ -658,6 +669,7 @@
     "about": "Tietoa",
     "authProviders": {
       "confirmLogout": "Oletko varma, että haluat poistaa yhteyden {title}?",
+      "loggedOut": "Kirjauduttu ulos onnistuneesti",
       "title": "Autentikointivaltuutuksen tila"
     },
     "blog": "Blogi",

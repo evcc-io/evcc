@@ -14,36 +14,6 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
-  - name: modbusid
-    description:
-      generic: Modbus ID
-    default: 1
-    type: int
-  - name: modbusdevice
-    description:
-      de: Gerätename
-      en: Device name
-    help:
-      de: USB-RS485 Gerätename
-      en: USB-RS485 device name
-    example: /dev/ttyUSB0
-  - name: modbusbaudrate
-    description:
-      de: Baudrate
-      en: Baudrate
-    help:
-      de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-      en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
-    default: 9600
-    type: int
-  - name: modbuscomset
-    description:
-      de: ComSet
-      en: ComSet
-    help:
-      de: Kommunikationsparameter des Adapters
-      en: Communication parameter for the adapter
-    default: 8N1
   - name: host
     required: true
     description:
@@ -464,301 +434,310 @@ params:
 
 presets:
   vehicle-base:
-    params:
-      - name: user
-        required: true
-      - name: password
-        required: true
-      - name: vin
-      - name: title
-      - name: icon
-        default: car
-        advanced: true
-      - name: capacity
-      - name: phases
-        advanced: true
-      - name: mode
-        advanced: true
-      - name: minCurrent
-        advanced: true
-      - name: maxCurrent
-        advanced: true
-      - name: identifiers
-        advanced: true
-      - name: priority
-        advanced: true
-      - name: cache
-        default: 15m
-        advanced: true
+    - name: user
+      required: true
+    - name: password
+      required: true
+    - name: vin
+    - name: title
+    - name: icon
+      default: car
+      advanced: true
+    - name: capacity
+    - name: phases
+      advanced: true
+    - name: mode
+      advanced: true
+    - name: minCurrent
+      advanced: true
+    - name: maxCurrent
+      advanced: true
+    - name: identifiers
+      advanced: true
+    - name: priority
+      advanced: true
+    - name: cache
+      default: 15m
+      advanced: true
   vehicle-common:
-    params:
-      - name: title
-      - name: icon
-        default: car
-        advanced: true
-      - name: capacity
-      - name: phases
-        advanced: true
-      - name: mode
-        advanced: true
-      - name: minCurrent
-        advanced: true
-      - name: maxCurrent
-        advanced: true
-      - name: identifiers
-        advanced: true
-      - name: priority
-        advanced: true
+    - name: title
+    - name: icon
+      default: car
+      advanced: true
+    - name: capacity
+    - name: phases
+      advanced: true
+    - name: mode
+      advanced: true
+    - name: minCurrent
+      advanced: true
+    - name: maxCurrent
+      advanced: true
+    - name: identifiers
+      advanced: true
+    - name: priority
+      advanced: true
   vehicle-features:
-    params:
-      - name: coarsecurrent
-        advanced: true
-      - name: streaming
-        advanced: true
-      - name: welcomecharge
-        advanced: true
+    - name: coarsecurrent
+      advanced: true
+    - name: streaming
+      advanced: true
+    - name: welcomecharge
+      advanced: true
   vehicle-language:
-    params:
-      - name: language
+    - name: language
   tariff-base:
-    params:
-      - name: charges
-        type: int
-        advanced: true
-        description:
-          en: Charge
-          de: Aufschlag
-        help:
-          de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
-          en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
-      - name: tax
-        type: int
-        advanced: true
-        description:
-          en: Tax
-          de: Steuer
-        help:
-          de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
-          en: Additional percentage charge (e.g. 0.2 for 20%)
-      - name: formula
-        type: string
-        description:
-          en: Formula
-          de: Formel
-        advanced: true
-        help:
-          de: Individuelle Formel zur Berechnung des Preises
-          en: Individual formula for calculating the price
-        example: "math.Max((price + charges) * (1 + tax), 0.0)"
+    - name: charges
+      type: int
+      advanced: true
+      description:
+        en: Charge
+        de: Aufschlag
+      help:
+        de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
+        en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
+    - name: tax
+      type: int
+      advanced: true
+      description:
+        en: Tax
+        de: Steuer
+      help:
+        de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
+        en: Additional percentage charge (e.g. 0.2 for 20%)
+    - name: formula
+      type: string
+      description:
+        en: Formula
+        de: Formel
+      advanced: true
+      help:
+        de: Individuelle Formel zur Berechnung des Preises
+        en: Individual formula for calculating the price
+      example: "math.Max((price + charges) * (1 + tax), 0.0)"
+  tariff-features:
+    - name: average
+      type: bool
+      description:
+        en: Average by hour
+        de: Stündliche Durchschnittskosten verwenden
+      advanced: true
   forecast-base:
-    params:
-      - name: lat
-        required: true
-      - name: lon
-        required: true
-      - name: dec
-        description:
-          en: Decline
-          de: Neigung
-        help:
-          en: 0 = horizontal, 90 = vertical
-          de: 0 = horizontal, 90 = vertikal
-        type: int
-        example: 25
-        required: true
-      - name: kwp
-        description:
-          en: Maximum generator power
-          de: Maximale Generatorleistung
-        unit: kWp
-        type: float
-        example: 9.8
-        required: true
+    - name: lat
+      required: true
+    - name: lon
+      required: true
+    - name: dec
+      description:
+        en: Decline
+        de: Neigung
+      help:
+        en: 0 = horizontal, 90 = vertical
+        de: 0 = horizontal, 90 = vertikal
+      type: int
+      example: 25
+      required: true
+    - name: kwp
+      description:
+        en: Maximum generator power
+        de: Maximale Generatorleistung
+      unit: kWp
+      type: float
+      example: 9.8
+      required: true
 
   eebus:
-    params:
-      - name: ski
-      - name: ip
+    - name: ski
+    - name: ip
   switchsocket:
-    params:
-      - name: standbypower
-        default: 15
-      - name: integrateddevice
-        type: bool
-        advanced: true
-        description:
-          en: Integrated device
-          de: Integriertes Gerät
-        help:
-          de: Fest angeschlossenes Gerät. Keine Ladevorgänge
-          en: Integrated device. No charging sessions
-      - name: heating
-        type: bool
-        advanced: true
-        description:
-          en: Heating device
-          de: Wärmeerzeuger
-        help:
-          de: Zeigt °C anstatt % an
-          en: Shows °C instead of %
-      - name: icon
-        advanced: true
+    - name: standbypower
+      default: 15
+    - name: integrateddevice
+      type: bool
+      advanced: true
+      description:
+        en: Integrated device
+        de: Integriertes Gerät
+      help:
+        de: Fest angeschlossenes Gerät. Keine Ladevorgänge
+        en: Integrated device. No charging sessions
+    - name: heating
+      type: bool
+      advanced: true
+      description:
+        en: Heating device
+        de: Wärmeerzeuger
+      help:
+        de: Zeigt °C anstatt % an
+        en: Shows °C instead of %
+    - name: icon
+      advanced: true
+
   ocpp:
-    params:
-      - name: stationid
-        type: string
-        description:
-          generic: Station ID
-        help:
-          en: "Station ID of the charging point. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form `ws://<evcc-address>:8887/<stationid>`. Most charging stations automatically add the ID internally."
-          de: "Station ID des Ladepunktes. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form `ws://<evcc-adresse>:8887/<stationid>` anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
-        example: EVB-P12354
-      - name: connector
-        description:
-          en: Connector number
-          de: Anschlussnummer
-        help:
-          de: Bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
-          en: For charging stations with multiple connectors. Counting starts at 1 for the first connector.
-        default: 1
-      - name: remotestart
-        advanced: true
-        type: bool
-        description:
-          de: Remote-Transaktion bei Fahrzeugverbindung starten
-          en: Start remote transaction on vehicle connection
-        help:
-          de: Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren! Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten. Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist. Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen! (Verwendet OCPP RemoteStartTransaction)
-          en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary! (Uses OCPP RemoteStartTransaction)
-      - name: idtag
-        advanced: true
-        type: string
-        description:
-          en: Authentication token
-          de: Authentifizierungs-Token
-        help:
-          de: "Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. (Verwendet OCPP RemoteStartTransaction)"
-          en: "This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. (Uses OCPP RemoteStartTransaction)"
-        example: evcc
-      - name: connecttimeout
-        advanced: true
-        type: duration
-        default: 5m
-        description:
-          de: Zeitlimit für die Registrierung
-          en: Timeout for registration
-        help:
-          de: "Zeitlimit für die Registrierung des Ladepunktes"
-          en: "Timeout for the registration of the charging point"
-      - name: timeout
-        advanced: true
-        type: duration
-        deprecated: true
-      - name: meterinterval
-        advanced: true
-        type: duration
-        default: 10s
-        description:
-          de: Übertragungsintervall der Zählerwerte
-          en: Transmission interval for meter values
-        help:
-          de: "Zeitintervall für die Übertragung der Zählerwerte (MeterValueSampleInterval)"
-          en: "Time interval for transmission of meter values (MeterValueSampleInterval)"
-      - name: metervalues
-        advanced: true
-        type: string
-        description:
-          de: Zählerwerte für die Übertragung
-          en: Meter values for transmission
-        help:
-          de: "Manuelle Vorgabe der zu konfigurierenden Zählerwerte (MeterValuesSampledData)"
-          en: "Manual specification of the meter values to be configured (MeterValuesSampledData)"
-        example: Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage
+    - name: stationid
+      type: string
+      description:
+        generic: Station ID
+      help:
+        en: "Station ID of the charging point. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form `ws://<evcc-address>:8887/<stationid>`. Most charging stations automatically add the ID internally."
+        de: "Station ID des Ladepunktes. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form `ws://<evcc-adresse>:8887/<stationid>` anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
+      example: EVB-P12354
+    - name: connector
+      description:
+        en: Connector number
+        de: Anschlussnummer
+      help:
+        de: Bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
+        en: For charging stations with multiple connectors. Counting starts at 1 for the first connector.
+      default: 1
+    - name: remotestart
+      advanced: true
+      type: bool
+      description:
+        de: Remote-Transaktion bei Fahrzeugverbindung starten
+        en: Start remote transaction on vehicle connection
+      help:
+        de: Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren! Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten. Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist. Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen! (Verwendet OCPP RemoteStartTransaction)
+        en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary! (Uses OCPP RemoteStartTransaction)
+    - name: idtag
+      advanced: true
+      type: string
+      description:
+        en: Authentication token
+        de: Authentifizierungs-Token
+      help:
+        de: "Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. (Verwendet OCPP RemoteStartTransaction)"
+        en: "This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. (Uses OCPP RemoteStartTransaction)"
+      example: evcc
+    - name: connecttimeout
+      advanced: true
+      type: duration
+      default: 5m
+      description:
+        de: Zeitlimit für die Registrierung
+        en: Timeout for registration
+      help:
+        de: "Zeitlimit für die Registrierung des Ladepunktes"
+        en: "Timeout for the registration of the charging point"
+    - name: timeout
+      advanced: true
+      type: duration
+      deprecated: true
+    - name: meterinterval
+      advanced: true
+      type: duration
+      default: 10s
+      description:
+        de: Übertragungsintervall der Zählerwerte
+        en: Transmission interval for meter values
+      help:
+        de: "Zeitintervall für die Übertragung der Zählerwerte (MeterValueSampleInterval)"
+        en: "Time interval for transmission of meter values (MeterValueSampleInterval)"
+    - name: metervalues
+      advanced: true
+      type: string
+      description:
+        de: Zählerwerte für die Übertragung
+        en: Meter values for transmission
+      help:
+        de: "Manuelle Vorgabe der zu konfigurierenden Zählerwerte (MeterValuesSampledData)"
+        en: "Manual specification of the meter values to be configured (MeterValuesSampledData)"
+      example: Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage
 
   mqtt:
-    params:
-      - name: host
-        help:
-          de: IP Adresse oder der Hostname des MQTT Brokers
-          en: IP address or hostname of the MQTT broker
-      - name: port
-        default: 1883
-        help:
-          de: MQTT Broker Port
-          en: MQTT broker port
-      - name: user
-        advanced: true
-      - name: password
-        advanced: true
-      - name: topic
-        description:
-          generic: Topic
-        help:
-          de: Topic (ohne / am Anfang)
-          en: Topic (omit leading /)
-      - name: timeout
-        default: 30s
-        help:
-          de: Akzeptiere keine Daten die älter sind als dieser Wert
-          en: Don't accept values older than this value
+    - name: host
+      help:
+        de: IP Adresse oder der Hostname des MQTT Brokers
+        en: IP address or hostname of the MQTT broker
+    - name: port
+      default: 1883
+      help:
+        de: MQTT Broker Port
+        en: MQTT broker port
+    - name: user
+      advanced: true
+    - name: password
+      advanced: true
+    - name: topic
+      description:
+        generic: Topic
+      help:
+        de: Topic (ohne / am Anfang)
+        en: Topic (omit leading /)
+    - name: timeout
+      default: 30s
+      help:
+        de: Akzeptiere keine Daten die älter sind als dieser Wert
+        en: Don't accept values older than this value
 
 modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]
     tcpip: ["tcpip"]
     udp: ["udp"]
+  definitions:
+    - name: id
+      description:
+        generic: Modbus ID
+      default: 1
+      type: int
+    - name: device
+      description:
+        de: Gerätename
+        en: Device name
+      help:
+        de: USB-RS485 Gerätename
+        en: USB-RS485 device name
+      example: /dev/ttyUSB0
+    - name: baudrate
+      description:
+        de: Baudrate
+        en: Baudrate
+      help:
+        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+      default: 9600
+      type: int
+    - name: comset
+      description:
+        de: ComSet
+        en: ComSet
+      help:
+        de: Kommunikationsparameter des Adapters
+        en: Communication parameter for the adapter
+      default: 8N1
   types:
     rs485serial:
       description:
         generic: Serial (USB-RS485 Adapter)
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          referencename: modbusdevice
-          name: device
-        - reference: true
-          referencename: modbusbaudrate
-          name: baudrate
-        - reference: true
-          referencename: modbuscomset
-          name: comset
+        - name: id
+        - name: device
+        - name: baudrate
+        - name: comset
     rs485tcpip:
       description:
         generic: Serial (Ethernet-RS485 Adapter)
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
+        - name: id
+        - name: host
+        - name: port
           default: 502
     tcpip:
       description:
         generic: TCP/IP
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
+        - name: id
+        - name: host
+        - name: port
           default: 502
     udp:
       description:
         generic: UDP
       params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
+        - name: id
+        - name: host
+        - name: port
           default: 502
 
 devicegroups:
