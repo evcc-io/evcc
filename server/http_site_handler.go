@@ -1,7 +1,7 @@
 package server
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -82,7 +82,7 @@ func jsonHandler(h http.Handler) http.Handler {
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
-	if err := json.NewEncoder(w).Encode(data); err != nil {
+	if err := json.MarshalWrite(w, data); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
 	}
 }
@@ -360,7 +360,7 @@ func adminPasswordValid(authObject auth.Auth, password string) bool {
 func getBackup(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.UnmarshalRead(r.Body, &req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -487,7 +487,7 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			Settings bool   `json:"settings"`
 		}
 
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.UnmarshalRead(r.Body, &req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

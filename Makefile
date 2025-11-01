@@ -80,7 +80,7 @@ test-ui::
 
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
+	GOEXPERIMENT=jsonv2 CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')
@@ -89,7 +89,7 @@ porcelain::
 
 build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
+	GOEXPERIMENT=jsonv2 CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot::
 	goreleaser --snapshot --skip publish --clean
