@@ -365,7 +365,7 @@ export default defineComponent({
 			return this.prioritySoc;
 		},
 		batteryDetails() {
-			if (!Array.isArray(this.battery)) {
+			if (!this.battery) {
 				return;
 			}
 			const multipleBatteries = this.battery.devices.length > 1;
