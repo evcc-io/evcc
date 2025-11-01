@@ -1,0 +1,111 @@
+template: sungrow-ihm
+products:
+  - brand: Sungrow
+    description:
+      generic: iHomeManager (iHM)
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+    baudrate: 9600
+    comset: "8N1"
+    id: 247
+    port: 502
+  - name: capacity
+    advanced: true
+render: |
+  {{- if eq .usage "grid" }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8156 # Register 8157 - 1 (Total active power)
+      type: holding
+      decode: int32s
+    scale: 10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8175 # Register 8176 - 1 (Import energy at the grid meter)
+      type: holding
+      decode: uint32s
+    scale: 0.1
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8554 # Register 8555 - 1 (A-phase voltage)
+      type: holding
+      decode: uint16
+    scale: 0.1 # Factor 0.1 V
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8555 # Register 8556 - 1 (B-phase voltage)
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8556 # Register 8557 - 1 (C-phase voltage)
+      type: holding
+      decode: uint16
+    scale: 0.1
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8558 # Register 8559 - 1 (Phase A active power, U32)
+      type: holding
+      decode: uint32s
+    scale: 1 # Factor 1 W
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8560 # Register 8561 - 1 (Phase B active power)
+      type: holding
+      decode: uint32s
+    scale: 1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8562 # Register 8563 - 1 (Phase C active power)
+      type: holding
+      decode: uint32s
+    scale: 1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8154 # Register 8155 - 1 (Total active power)
+      type: holding
+      decode: int32s
+    scale: 10
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8160 # Register 8161 - 1 (Battery power)
+      type: holding
+      decode: int32s
+    scale: 10
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8162 # Register 8163 - 1 (State of charge)
+      type: holding
+      decode: uint16
+    scale: 0.1
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
