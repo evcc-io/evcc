@@ -62,6 +62,10 @@ type pointWriter interface {
 	WritePoint(point *write.Point)
 }
 
+func influxTagValue(f reflect.StructField) string {
+	return tagValue("influxdb", f)
+}
+
 // writePoint asynchronously writes a point to influx
 func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]any, tags map[string]string) {
 	m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
@@ -79,11 +83,15 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 
 		for i := range typ.NumField() {
 			if f := typ.Field(i); f.IsExported() {
-				if val.Field(i).IsZero() && omitEmpty(f) {
+				if val.Field(i).IsZero() && jsonOmitEmpty(f) {
 					continue
 				}
 
 				key := key + strings.ToUpper(f.Name[:1]) + f.Name[1:]
+				if tag := influxTagValue(f); tag != "" {
+					key = tag
+				}
+
 				val := val.Field(i).Interface()
 
 				m.writeComplexPoint(writer, key, val, tags)

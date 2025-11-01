@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
@@ -51,7 +52,7 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
-func (site *Site) optimizerUpdateAsync(battery []measurement) {
+func (site *Site) optimizerUpdateAsync(battery []types.Measurement) {
 	var err error
 
 	if time.Since(updated) < 2*time.Minute {
@@ -78,7 +79,7 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	err = site.optimizerUpdate(battery)
 }
 
-func (site *Site) optimizerUpdate(battery []measurement) error {
+func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	uri := os.Getenv("EVOPT_URI")
 	if uri == "" {
 		return nil
