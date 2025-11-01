@@ -3,12 +3,13 @@
 set -e
 
 # started as hassio addon
+
 HASSIO_OPTIONSFILE=/data/options.json
 
 if [ -f "${HASSIO_OPTIONSFILE}" ]; then
 
-  CONFIG=$(grep -o '"config_file": "[^"]*' "${HASSIO_OPTIONSFILE}" | grep -o '[^"]*$')
-  SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' "${HASSIO_OPTIONSFILE}" | grep -o '[^"]*$')
+  CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
+  SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
 
   # Config File Migration
   # If there is no config file found in '/config', copy it from '/homeassistant'
@@ -18,7 +19,8 @@ if [ -f "${HASSIO_OPTIONSFILE}" ]; then
     if [ -f "${CONFIG_OLD}" ]; then
       mkdir -p "$(dirname "${CONFIG}")" && cp "${CONFIG_OLD}" "${CONFIG}"
       mv "${CONFIG_OLD}" "${CONFIG_OLD}.migrated"
-      echo "Moving old config file '${CONFIG_OLD}' to new location '${CONFIG}', appending '.migrated' to old config file! Old file can safely be deleted by user."
+      echo "Moving old config file '${CONFIG_OLD}' to new location '${CONFIG}'," \
+           "appending '.migrated' to old config file! Old file can safely be deleted by user."
     fi
   fi
 
@@ -30,7 +32,8 @@ if [ -f "${HASSIO_OPTIONSFILE}" ]; then
     if [ -f "${SQLITE_FILE_OLD}" ]; then
       mkdir -p "$(dirname "${SQLITE_FILE}")" && cp "${SQLITE_FILE_OLD}" "${SQLITE_FILE}"
       mv "${SQLITE_FILE_OLD}" "${SQLITE_FILE_OLD}.migrated"
-      echo "Moving old db file '${SQLITE_FILE_OLD}' to new location '${SQLITE_FILE}', appending '.migrated' to old db file! Old file can safely be deleted by user."
+      echo "Moving old db file '${SQLITE_FILE_OLD}' to new location '${SQLITE_FILE}'," \
+           "appending '.migrated' to old db file! Old file can safely be deleted by user."
     fi
   fi
 
@@ -40,7 +43,7 @@ if [ -f "${HASSIO_OPTIONSFILE}" ]; then
   # Start logic: evcc.yaml optional, config might be in database
   if [ -f "${CONFIG}" ]; then
     # YAML file present: start evcc with config and optionally database
-    if [ -n "${SQLITE_FILE}" ]; then
+    if [ "${SQLITE_FILE}" ]; then
       echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
       exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
     else
@@ -54,7 +57,9 @@ if [ -f "${HASSIO_OPTIONSFILE}" ]; then
       exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc
     else
       # neither YAML nor database present
-      echo "No config file (evcc.yaml) and no database (evcc.db) file configured. Please copy your database to ${SQLITE_FILE} or migrate your settings to the database or create a config under /config."
+      echo "No config file (evcc.yaml) and no database (evcc.db) file configured." \
+           "Please copy your database to ${SQLITE_FILE} or migrate your settings to the database" \
+           "or create a config under ${CONFIG}."
       echo "For details see evcc Home Assistant documentation at https://docs.evcc.io/docs/installation/home-assistant"
       exit 1
     fi
