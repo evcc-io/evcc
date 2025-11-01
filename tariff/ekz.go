@@ -1,14 +1,11 @@
 // Package tariff implements EKZ (Elektrizitätswerke des Kantons Zürich) tariff provider.
 //
 // This implementation fetches electricity pricing data from EKZ's API incl. fallback handling:
-// - Fetches the configured tariff (electricity_dynamic, electricity_standard, etc.) as primary data source
-// - Always fetches electricity_standard as fallback in case primary tariff is unavailable (as documented by EKZ)
+// - Fetches the configured tariff as primary data source
+// - Always fetches integrated_400ST as fallback in case primary tariff is unavailable (as documented by EKZ)
 // - Updates both tariffs hourly since dynamic tariffs are published day-ahead and don't change once announced
-// - Automatically falls back to electricity_standard rates during API outages or when dynamic rates aren't available
-// - Supports all EKZ tariff types: electricity_dynamic, electricity_standard, electricity_business, electricity_lighting
-// - Parses CHF/kWh rates from the API response and applies any configured embed charges
-//
-// Configuration requires only base URI and tariff name - tariff parameter is constructed internally.
+// - Automatically falls back to static rates during API outages or when dynamic rates aren't available
+// - Supports all EKZ tariff types that return "integrated" (EKZ term for all price components added up) prices
 
 package tariff
 
