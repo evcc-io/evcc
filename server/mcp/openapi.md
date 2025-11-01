@@ -414,6 +414,34 @@ call previewLoadpointEnergyPlan {
 }
 ```
 
+## previewLoadpointRepeatingPlan
+
+Simulate repeating charging plan and return the result. Does not alter the actual charging plan.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| hourMinuteTime | string | Time in `HOURS:MINUTES` format |
+| id | integer | Loadpoint index starting at 1 |
+| soc | number | SOC in % |
+| timezone | string | Timezone in IANA format |
+| weekdays | array | The Weekdays |
+
+**Example call:**
+
+```json
+call previewLoadpointRepeatingPlan {
+  "hourMinuteTime": "example",
+  "id": 123,
+  "soc": 123.45,
+  "timezone": "example",
+  "weekdays": "..."
+}
+```
+
 ## previewLoadpointSocPlan
 
 Simulate charging plan based on SoC goal. Does not alter the actual charging plan.

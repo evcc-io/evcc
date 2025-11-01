@@ -206,7 +206,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 		return simplePlan
 	}
 
-	// consume remaining time
+	// consume remaining time if total time until target is insufficient; regardless of tariff data availability
 	if t.clock.Until(targetTime) <= requiredDuration || precondition >= requiredDuration {
 		return continuousPlan(rates, latestStart, targetTime)
 	}
@@ -246,7 +246,8 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 	// create plan unless only precond slots remaining
 	var plan api.Rates
 	if continuous {
-		// check if available rates span is sufficient for sliding window
+		// check if available tariff slots span is sufficient for sliding window algorithm
+		// verify that actual tariff data covers enough duration (may have gaps or start late)
 		if len(rates) > 0 {
 			now := t.clock.Now()
 			start := rates[0].Start

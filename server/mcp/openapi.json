@@ -1410,6 +1410,41 @@
         ]
       }
     },
+    "/loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}": {
+      "get": {
+        "description": "Simulate repeating charging plan and return the result. Does not alter the actual charging plan.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "previewLoadpointRepeatingPlan",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          },
+          {
+            "$ref": "#/components/parameters/weekdays"
+          },
+          {
+            "$ref": "#/components/parameters/hourMinuteTime"
+          },
+          {
+            "$ref": "#/components/parameters/timezone"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PlanRatesResult"
+          }
+        },
+        "summary": "Repeating plan preview",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
     "/loadpoints/{id}/plan/static/preview/energy/{energy}/{timestamp}": {
       "get": {
         "description": "Simulate charging plan based on energy goal. Does not alter the actual charging plan.",
