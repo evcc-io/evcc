@@ -371,7 +371,6 @@ export default defineComponent({
 			return this.battery
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc = 0, capacity }) => {
-					const multipleBatteries = this.battery && this.battery.devices.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
 						POWER_UNIT.KW,
