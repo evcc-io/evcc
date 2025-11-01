@@ -283,40 +283,32 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
+
+  {{ $c := .capacity }}
+  {{ $p := 2500 }}
+  {{ if eq $c "5" }}
+    {{ $p = 2500 }}
+  {{ else if eq $c "6.9" }}
+    {{ $p = 3500 }}
+  {{ else if or (eq $c "10") (eq $c "15") }}
+    {{ $p = 5000 }}
+  {{ else if eq $c "13.8" }}
+    {{ $p = 7000 }}
+  {{ else if eq $c "20.7" }}
+    {{ $p = 10500 }}
+  {{ end }}
+
   maxchargepower: {{
     if .maxchargepower }}
       {{ .maxchargepower }}
-    {{ else if eq .capacity "5" }}
-      2500
-    {{ else if eq .capacity "10" }}
-      5000
-    {{ else if eq .capacity "15" }}
-      5000
-    {{ else if eq .capacity "6.9" }}
-      3500
-    {{ else if eq .capacity "13.8" }}
-      7000
-    {{ else if eq .capacity "20.7" }}
-      10500
     {{ else }}
-      2500
+      {{ $p }}
     {{ end }}
   maxdischargepower: {{
     if .maxdischargepower }}
       {{ .maxdischargepower }}
-    {{ else if eq .capacity "5" }}
-      2500
-    {{ else if eq .capacity "10" }}
-      5000
-    {{ else if eq .capacity "15" }}
-      5000
-    {{ else if eq .capacity "6.9" }}
-      3500
-    {{ else if eq .capacity "13.8" }}
-      7000
-    {{ else if eq .capacity "20.7" }}
-      10500
     {{ else }}
-      2500
+      {{ $p }}
     {{ end }}
+
   {{- end }}
