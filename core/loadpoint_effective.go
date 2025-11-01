@@ -223,7 +223,7 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 {
+	if circuitMaxPower := circuitChainMaxPower(lp.circuit); circuitMaxPower > 0 {
 		return min(lp.effectiveMaxPower(), circuitMaxPower)
 	}
 
