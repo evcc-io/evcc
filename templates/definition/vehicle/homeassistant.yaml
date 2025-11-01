@@ -1,8 +1,9 @@
 template: homeassistant
 products:
-  - description:
-      de: Home Assistant Fahrzeug
-      en: Home Assistant Vehicle
+  - brand: Home Assistant
+    description:
+      de: Fahrzeug
+      en: Vehicle
 group: generic
 requirements:
   description:
