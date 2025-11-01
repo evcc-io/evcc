@@ -11,6 +11,7 @@ package tariff
 
 import (
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"sync"
@@ -83,8 +84,18 @@ func (t *Ekz) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	// Build URLs for main tariff and fallback using base URI + tariff parameter
-	mainURL := fmt.Sprintf("%s?tariff_name=%s", t.uri, t.tariffName)
-	fallbackURL := fmt.Sprintf("%s?tariff_name=integrated_400ST", t.uri)
+	// Calculate time range: start from previous 15min slot, end at end of next day
+	now := time.Now()
+	startTime := now.Truncate(15 * time.Minute)
+	endTime := time.Date(now.Year(), now.Month(), now.Day()+1, 23, 59, 59, 0, now.Location())
+	
+	startTimestamp := url.QueryEscape(startTime.Format("2006-01-02T15:04:05-07:00"))
+	endTimestamp := url.QueryEscape(endTime.Format("2006-01-02T15:04:05-07:00"))
+	
+	mainURL := fmt.Sprintf("%s?tariff_name=%s&start_timestamp=%s&end_timestamp=%s", 
+		t.uri, t.tariffName, startTimestamp, endTimestamp)
+	fallbackURL := fmt.Sprintf("%s?tariff_name=integrated_400ST&start_timestamp=%s&end_timestamp=%s", 
+		t.uri, startTimestamp, endTimestamp)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		// First, try to fetch and update fallback rates (integrated_400ST)
