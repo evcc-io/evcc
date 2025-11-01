@@ -16,16 +16,6 @@ import (
 )
 
 type PlanResponse struct {
-	PlanId int `json:"planId"`
-	// PlanTime            time.Time     `json:"planTime"`
-	// Duration            time.Duration `json:"duration,format:sec"`
-	// Precondition        time.Duration `json:"precondition,format:sec"`
-	// Plan                api.Rates     `json:"plan"`
-	// Power               float64       `json:"power"`
-	PlanPreviewResponse `json:",inline"`
-}
-
-type PlanPreviewResponse struct {
 	PlanTime     time.Time     `json:"planTime"`
 	Duration     time.Duration `json:"duration,format:sec"`
 	Precondition time.Duration `json:"precondition,format:sec"`
@@ -45,9 +35,12 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanResponse{
+		res := struct {
+			PlanId       int `json:"planId"`
+			PlanResponse `json:",inline"`
+		}{
 			PlanId: id,
-			PlanPreviewResponse: PlanPreviewResponse{
+			PlanResponse: PlanResponse{
 				PlanTime:     planTime,
 				Duration:     requiredDuration,
 				Precondition: precondition,
@@ -103,7 +96,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanPreviewResponse{
+		res := PlanResponse{
 			PlanTime:     planTime,
 			Duration:     requiredDuration,
 			Precondition: precondition,
@@ -155,7 +148,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanPreviewResponse{
+		res := PlanResponse{
 			PlanTime:     planTime,
 			Duration:     requiredDuration,
 			Precondition: precondition,
