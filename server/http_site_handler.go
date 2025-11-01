@@ -81,8 +81,22 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
+func jsonMarshalers() *json.Marshalers {
+	return json.JoinMarshalers(
+		json.MarshalFunc(func(d time.Duration) ([]byte, error) {
+			return fmt.Append(nil, int(d.Seconds())), nil
+		}),
+		json.MarshalFunc(func(ts time.Time) ([]byte, error) {
+			if ts.IsZero() {
+				return []byte("null"), nil
+			}
+			return json.Marshal(ts)
+		}),
+	)
+}
+
 func jsonWrite(w http.ResponseWriter, data any) {
-	if err := json.MarshalWrite(w, data); err != nil {
+	if err := json.MarshalWrite(w, data, json.WithMarshalers(jsonMarshalers())); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
 	}
 }

@@ -27,7 +27,7 @@ type DynamicConfig struct {
 	SmartFeedInPriorityLimit *float64      `json:"smartFeedInPriorityLimit"`
 	PlanEnergy               float64       `json:"planEnergy"`
 	PlanTime                 time.Time     `json:"planTime"`
-	PlanPrecondition         time.Duration `json:"planPrecondition,format:sec"`
+	PlanPrecondition         time.Duration `json:"planPrecondition"`
 	LimitEnergy              float64       `json:"limitEnergy"`
 	LimitSoc                 int           `json:"limitSoc"`
 

@@ -17,8 +17,8 @@ import (
 
 type PlanResponse struct {
 	PlanTime     time.Time     `json:"planTime"`
-	Duration     time.Duration `json:"duration,format:sec"`
-	Precondition time.Duration `json:"precondition,format:sec"`
+	Duration     time.Duration `json:"duration"`
+	Precondition time.Duration `json:"precondition"`
 	Plan         api.Rates     `json:"plan"`
 	Power        float64       `json:"power"`
 }
@@ -193,7 +193,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 
 		res := struct {
 			Energy       float64       `json:"energy"`
-			Precondition time.Duration `json:"precondition,format:sec"`
+			Precondition time.Duration `json:"precondition"`
 			Time         time.Time     `json:"time"`
 		}{
 			Energy:       energy,
