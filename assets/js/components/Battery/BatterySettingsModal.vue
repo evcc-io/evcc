@@ -368,7 +368,8 @@ export default defineComponent({
 			if (!Array.isArray(this.battery)) {
 				return;
 			}
-			return this.battery
+			const multipleBatteries = this.battery.devices.length > 1;
+			return this.battery.devices
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc = 0, capacity }) => {
 					const energy = this.fmtWh(
