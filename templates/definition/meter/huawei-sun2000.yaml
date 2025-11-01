@@ -9,7 +9,7 @@ requirements:
   description:
     de: |
       Grid und Batterie erfordern den PowerSensor.
-      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters.
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
     en: |
       Grid and Battery require the PowerSensor.
@@ -32,10 +32,9 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    default: 10000
   - name: maxdischargepower
   - name: capacity
-    advanced: true
+    required: true
   - name: maxacpower
   - name: forceaccharging
     default: false
@@ -284,6 +283,40 @@ render: |
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
+  maxchargepower: {{
+    if .maxchargepower }}
+      {{ .maxchargepower }}
+    {{ else if eq .capacity "5" }}
+      2500
+    {{ else if eq .capacity "10" }}
+      5000
+    {{ else if eq .capacity "15" }}
+      5000
+    {{ else if eq .capacity "6.9" }}
+      3500
+    {{ else if eq .capacity "13.8" }}
+      7000
+    {{ else if eq .capacity "20.7" }}
+      10500
+    {{ else }}
+      2500
+    {{ end }}
+  maxdischargepower: {{
+    if .maxdischargepower }}
+      {{ .maxdischargepower }}
+    {{ else if eq .capacity "5" }}
+      2500
+    {{ else if eq .capacity "10" }}
+      5000
+    {{ else if eq .capacity "15" }}
+      5000
+    {{ else if eq .capacity "6.9" }}
+      3500
+    {{ else if eq .capacity "13.8" }}
+      7000
+    {{ else if eq .capacity "20.7" }}
+      10500
+    {{ else }}
+      2500
+    {{ end }}
   {{- end }}
