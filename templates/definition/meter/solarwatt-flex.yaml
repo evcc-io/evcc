@@ -2,12 +2,18 @@ template: solarwatt-flex
 products:
   - brand: Solarwatt
     description:
-      generic: Manager flex
+      generic: Manager flex (DEPRECATED, do not use!)
 requirements:
   description:
     en: |
+      ! Since SOLARWATT has changed the API the connection does not work anymore (see https://github.com/evcc-io/evcc/issues/24549).
+      ! Better connect all devices separately.
+
       Combines data of all connected PV inverters or batteries.
     de: |
+      ! Da SOLARWATT seine API geändert hat funktioniert die Verbindung nicht mehr (siehe https://github.com/evcc-io/evcc/issues/24549).
+      ! Es ist besser alle angeschlossenen Geräte separat zu verbinden.
+
       Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
 params:
   - name: usage
