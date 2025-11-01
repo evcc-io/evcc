@@ -59,7 +59,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
 	lp.SetThresholds(payload.Thresholds)
-	lp.SetPlanEnergy(payload.PlanTime, time.Duration(payload.PlanPrecondition)*time.Second, payload.PlanEnergy)
+	lp.SetPlanEnergy(payload.PlanTime, payload.PlanPrecondition, payload.PlanEnergy)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
 
