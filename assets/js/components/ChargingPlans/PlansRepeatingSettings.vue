@@ -6,9 +6,9 @@
 				:number="index + 2"
 				class="mb-5 mb-lg-4"
 				:formIdPrefix="formIdPrefix"
+				:strategy-changed="strategyChanged"
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"
-				:showPrecondition="showPrecondition"
 				@updated="updatePlan(index, $event)"
 				@removed="removePlan(index)"
 			/>
@@ -49,7 +49,7 @@ export default defineComponent({
 		id: [Number, String],
 		rangePerSoc: Number,
 		plans: { type: Array as PropType<RepeatingPlan[]>, default: () => [] },
-		showPrecondition: Boolean,
+		strategyChanged: { type: Boolean, default: false },
 	},
 	emits: ["updated"],
 	computed: {

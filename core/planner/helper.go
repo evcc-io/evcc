@@ -80,3 +80,49 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 	}
 	return true
 }
+
+// adjustSlotStart trims slot start to the given time if it starts before
+func adjustSlotStart(slot *api.Rate, start time.Time) {
+	if slot.Start.Before(start) {
+		slot.Start = start
+	}
+}
+
+// adjustSlotEnd trims slot end to the given time if it extends beyond
+func adjustSlotEnd(slot *api.Rate, end time.Time) {
+	if slot.End.After(end) {
+		slot.End = end
+	}
+}
+
+// trimSlot trims excess duration from a slot
+// Single slot: trim end (start early)
+// Multiple slots (first slot): trim start (start late)
+func trimSlot(slot *api.Rate, excess time.Duration, isSingle bool) {
+	if isSingle {
+		slot.End = slot.End.Add(-excess)
+	} else {
+		slot.Start = slot.Start.Add(excess)
+	}
+}
+
+// trimWindow adjusts a continuous window to match the target time and required duration.
+func trimWindow(window api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
+	n := len(window)
+	if n == 0 {
+		return window
+	}
+
+	last := n - 1
+
+	// trim the end to targetTime if needed
+	adjustSlotEnd(&window[last], targetTime)
+
+	// trim excess from the start if window is too long
+	current := window[last].End.Sub(window[0].Start)
+	if excess := current - effectiveDuration; excess > 0 {
+		trimSlot(&window[0], excess, n == 1)
+	}
+
+	return window
+}

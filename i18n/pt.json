@@ -773,11 +773,12 @@
       "modalTitle": "Plano de carga",
       "none": "nenhum",
       "planNumber": "Plano {number}",
-      "preconditionDescription": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
-      "preconditionLong": "Carga tardia",
-      "preconditionOptionAll": "tudo",
-      "preconditionOptionNo": "não",
-      "preconditionShort": "Tarde",
+      "precondition": {
+        "description": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
+        "label": "Carga tardia",
+        "optionAll": "tudo",
+        "optionNo": "não"
+      },
       "remove": "Apagar",
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
