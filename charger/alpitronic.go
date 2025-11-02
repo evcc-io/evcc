@@ -20,7 +20,6 @@ package charger
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -184,7 +183,7 @@ func (wb *AlpitronicHYC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(math.Float32frombits(encoding.Uint32(b))), err
+	return float64(encoding.Uint32(b)), err
 }
 
 var _ api.ChargeTimer = (*AlpitronicHYC)(nil)
