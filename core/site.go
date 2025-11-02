@@ -940,6 +940,10 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+
+		if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+			site.log.ERROR.Println(err)
+		}
 	}
 
 	// prioritize if possible
