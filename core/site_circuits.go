@@ -1,6 +1,11 @@
 package core
 
 import (
+	"errors"
+	"fmt"
+	"slices"
+
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
@@ -42,4 +47,34 @@ func (site *Site) publishCircuits() {
 	}
 
 	site.publish(keys.Circuits, res)
+}
+
+func (site *Site) dimMeters(dim bool) error {
+	var errs error
+
+	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
+		m, ok := dev.Instance().(api.Dimmer)
+		if !ok {
+			continue
+		}
+
+		if dimmed, err := m.Dimmed(); err == nil {
+			if dim == dimmed {
+				continue
+			}
+		} else {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", dev.Config().Name, err))
+			}
+			continue
+		}
+
+		if err := m.Dim(dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, dim)
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", dev.Config().Name, err))
+		}
+	}
+
+	return errs
 }

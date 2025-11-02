@@ -22,6 +22,7 @@ type EEBus struct {
 	*eebus.Connector
 	cs *eebus.ControllableSystem
 	ma *eebus.MonitoringAppliance
+	eg *eebus.EnergyGuard
 
 	root api.Circuit
 
@@ -44,7 +45,7 @@ type Limits struct {
 }
 
 // NewFromConfig creates an EEBus HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
 		Ski      string
 		Limits   `mapstructure:",squash"`
@@ -95,6 +96,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 		root:      root,
 		cs:        eebus.Instance.ControllableSystem(),
 		ma:        eebus.Instance.MonitoringAppliance(),
+		eg:        eebus.Instance.EnergyGuard(),
 		Connector: eebus.NewConnector(),
 		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:  interval,
@@ -135,6 +137,11 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 	}
 	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	// energy guard
+	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
 	// set initial values

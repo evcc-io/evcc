@@ -92,7 +92,7 @@ type LoginData struct {
 }
 
 type Answer struct {
-	Code    int         `json:"code"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message"`
+	Code    int    `json:"code"`
+	Data    any    `json:"data,omitempty"`
+	Message string `json:"message"`
 }

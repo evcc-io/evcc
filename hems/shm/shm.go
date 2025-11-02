@@ -173,7 +173,7 @@ func (s *SEMP) handlers(router *mux.Router) {
 	postRouter.HandleFunc("/", s.deviceControlHandler)
 }
 
-func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
+func (s *SEMP) writeXML(w http.ResponseWriter, msg any) {
 	s.log.TRACE.Printf("send: %+v", msg)
 
 	b, err := xml.MarshalIndent(msg, "", "  ")

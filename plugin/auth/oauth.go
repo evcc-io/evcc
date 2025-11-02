@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -88,8 +89,9 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 }
 
 var _ api.AuthProvider = (*OAuth)(nil)
+var _ oauth2.TokenSource = (*OAuth)(nil)
 
-func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
+func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...oauthOption) (*OAuth, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
@@ -124,7 +126,7 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 		name:    name,
 	}
 
-	if device != "" {
+	if device != "" && !slices.Contains(o.devices, device) {
 		o.devices = append(o.devices, device)
 	}
 

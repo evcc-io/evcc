@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -113,6 +113,11 @@ type Diagnosis interface {
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
 	ChargeDuration() (time.Duration, error)
+}
+
+// ConnectionTimer provides current connection duration
+type ConnectionTimer interface {
+	ConnectionDuration() (time.Duration, error)
 }
 
 // ChargeRater provides charged energy amount in kWh
