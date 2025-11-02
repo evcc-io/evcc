@@ -539,6 +539,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	var wg sync.WaitGroup
 
 	for i, meter := range meters {
+		i, meter := i, meter
 		wg.Go(func(i int, meter config.Device[api.Meter]) func() {
 			return func() { fun(i, meter) }
 		}(i, meter))
@@ -1111,17 +1112,18 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 
 	site.update(<-loadpointChan) // start immediately
 
-	ticker := time.NewTicker(interval)
+    ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
+		var lp updater
 		select {
 		case <-ticker.C:
-			site.update(<-loadpointChan)
-		case lp := <-site.lpUpdateChan:
-			site.update(lp)
+			lp = <-loadpointChan
+		case lp = <-site.lpUpdateChan:
 		case <-stopC:
 			return
 		}
+		site.update(lp)
 	}
 }
