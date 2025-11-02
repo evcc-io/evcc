@@ -540,9 +540,9 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 	for i, meter := range meters {
 		i, meter := i, meter
-		wg.Go(func(i int, meter config.Device[api.Meter]) func() {
-			return func() { fun(i, meter) }
-		}(i, meter))
+		wg.Go(func() {
+			fun(i, meter)
+		})
 	}
 	wg.Wait()
 
