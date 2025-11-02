@@ -49,7 +49,7 @@
         },
         "heatpump": "Bomba de calor definida por el usuario",
         "sgready": "Bomba de calor definida por el usuario (sg-ready, todas)",
-        "sgready-boost": "Bomba de calor definida por el usuario (sg-ready, boost)",
+        "sgready-boost": "Bomba de calor definida por el usuario (sg-ready-relay)",
         "switchsocket": "Enchufe conmutable definido por el usuario"
       }
     },

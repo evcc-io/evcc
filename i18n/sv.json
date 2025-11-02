@@ -59,7 +59,7 @@
         },
         "heatpump": "Egendefinierad värmepump",
         "sgready": "Egendefinierad värmepump (sg-ready, alla)",
-        "sgready-boost": "Egendefinierad värmepump (sg-ready, boost)",
+        "sgready-boost": "Egendefinierad värmepump (sg-ready-relay)",
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },

@@ -59,7 +59,7 @@
         },
         "heatpump": "Gebruikersgedefinieerde warmtepomp",
         "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
-        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready-relay)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },

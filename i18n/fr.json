@@ -59,7 +59,7 @@
         },
         "heatpump": "Pompe à chaleur personnalisée",
         "sgready": "Pompe à chaleur personnalisée (sg-ready, tout)",
-        "sgready-boost": "Pompe à chaleur personnalisée (sg-ready, boost)",
+        "sgready-boost": "Pompe à chaleur personnalisée (sg-ready-relay)",
         "switchsocket": "Prise de commutation personnalisée"
       }
     },

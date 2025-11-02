@@ -59,7 +59,7 @@
         },
         "heatpump": "Korisnički definirana dizalica topline",
         "sgready": "Korisnički definirana dizalica topline (sg-ready, svi)",
-        "sgready-boost": "Korisnički definirana dizalica topline (sg-ready, boost)",
+        "sgready-boost": "Korisnički definirana dizalica topline (sg-ready-relay)",
         "switchsocket": "Korisnički definirana upravljiva utičnica"
       }
     },

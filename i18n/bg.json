@@ -59,7 +59,7 @@
         },
         "heatpump": "Индивидуална термо помпа",
         "sgready": "Индивидуална термо помпа (sg-ready, и др.)",
-        "sgready-boost": "Индивидуална термо помпа (sg-ready, boost)",
+        "sgready-boost": "Индивидуална термо помпа (sg-ready-relay)",
         "switchsocket": "Индивидуален превключвател"
       }
     },

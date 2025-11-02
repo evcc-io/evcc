@@ -573,7 +573,7 @@ test.describe("heating loadpoint", async () => {
     await modal.getByLabel("Manufacturer").selectOption("User-defined heater");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready, all)");
-    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready, boost)");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready-relay)");
     await modal.getByLabel("Manufacturer").selectOption("User-defined switch socket");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
 

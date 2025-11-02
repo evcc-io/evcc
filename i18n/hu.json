@@ -59,7 +59,7 @@
         },
         "heatpump": "Felhasználó által meghatározott hőszivattyú",
         "sgready": "Felhasználó által meghatározott hőszivattyú (sg-ready, all)",
-        "sgready-boost": "Felhasználó által meghatározott hőszivattyú (sg-ready, boost)",
+        "sgready-boost": "Felhasználó által meghatározott hőszivattyú (sg-ready-relay)",
         "switchsocket": "Felhasználó által meghatározott dugalj"
       }
     },

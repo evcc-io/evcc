@@ -59,7 +59,7 @@
         },
         "heatpump": "User-defined heat pump",
         "sgready": "User-defined heat pump (sg-ready, all)",
-        "sgready-boost": "User-defined heat pump (sg-ready, boost)",
+        "sgready-boost": "User-defined heat pump (sg-ready-relay)",
         "switchsocket": "User-defined switch socket"
       }
     },
