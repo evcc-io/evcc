@@ -58,18 +58,20 @@ func (site *Site) dimMeters(dim bool) error {
 			continue
 		}
 
-		dimmed, err := m.Dimmed()
-		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", dev.Config().Name, err))
-			continue
-		}
-		if dim != dimmed {
+		if dimmed, err := m.Dimmed(); err == nil {
+			if dim == dimmed {
+				continue
+			}
+		} else {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", dev.Config().Name, err))
+			}
 			continue
 		}
 
 		if err := m.Dim(dim); err == nil {
 			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, dim)
-		} else {
+		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", dev.Config().Name, err))
 		}
 	}
