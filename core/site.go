@@ -1116,14 +1116,13 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	defer ticker.Stop()
 
 	for {
-		var lp updater
 		select {
 		case <-ticker.C:
-			lp = <-loadpointChan
-		case lp = <-site.lpUpdateChan:
+			site.update(<-loadpointChan)
+		case lp := <-site.lpUpdateChan:
+			site.update(lp)
 		case <-stopC:
 			return
 		}
-		site.update(lp)
 	}
 }
