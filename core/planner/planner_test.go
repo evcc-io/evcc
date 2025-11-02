@@ -308,8 +308,8 @@ func TestPrecondition(t *testing.T) {
 			Value: 1,
 		},
 		{
-			Start: clock.Now().Add(210 * time.Minute),
-			End:   clock.Now().Add(4 * time.Hour),
+			Start: clock.Now().Add(210 * time.Minute), // 3.5h
+			End:   clock.Now().Add(4 * time.Hour),     // 4.0h
 			Value: 4,
 		},
 	}, plan, "expected short early and split late slot")
