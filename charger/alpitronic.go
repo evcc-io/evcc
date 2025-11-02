@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"math"
@@ -74,12 +73,7 @@ func NewAplitronicHYCFromConfig(ctx context.Context, other map[string]any) (api.
 		return nil, err
 	}
 
-	wb, err := NewAlpitronicHYC(ctx, cc.URI, cc.ID, cc.Connector)
-	if err != nil {
-		return nil, err
-	}
-
-	return wb, nil
+	return NewAlpitronicHYC(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewAlpitronicHYC creates Kathrein charger
@@ -112,18 +106,18 @@ func (wb *AlpitronicHYC) setCurrent(current float64) error {
 	b := make([]byte, 4)
 	encoding.PutUint32(b, power)
 
-	_, err := wb.conn.WriteMultipleRegisters(wb.creg(hycRegMaxPowerAC), 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(wb.reg(hycRegMaxPowerAC), 2, b)
 	return err
 }
 
-// creg returns the register address for the connector
-func (wb *AlpitronicHYC) creg(reg uint16) uint16 {
+// reg returns the register address for the connector
+func (wb *AlpitronicHYC) reg(reg uint16) uint16 {
 	return (wb.connector * 100) + reg
 }
 
 // Status implements the api.Charger interface
 func (wb *AlpitronicHYC) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegState), 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegState), 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -142,7 +136,7 @@ func (wb *AlpitronicHYC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *AlpitronicHYC) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.creg(hycRegMaxPowerAC), 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.reg(hycRegMaxPowerAC), 2)
 	if err != nil {
 		return false, err
 	}
@@ -185,7 +179,7 @@ var _ api.Meter = (*AlpitronicHYC)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *AlpitronicHYC) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegChargingPower), 2)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegChargingPower), 2)
 	if err != nil {
 		return 0, err
 	}
@@ -197,7 +191,7 @@ var _ api.ChargeTimer = (*AlpitronicHYC)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *AlpitronicHYC) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegChargeTime), 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegChargeTime), 1)
 	if err != nil {
 		return 0, err
 	}
@@ -209,7 +203,7 @@ var _ api.ChargeRater = (*AlpitronicHYC)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *AlpitronicHYC) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegChargedEnergy), 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegChargedEnergy), 1)
 	if err != nil {
 		return 0, err
 	}
@@ -221,7 +215,7 @@ var _ api.MeterEnergy = (*AlpitronicHYC)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *AlpitronicHYC) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegTotalChargedEnergy), 4)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegTotalChargedEnergy), 4)
 	if err != nil {
 		return 0, err
 	}
@@ -233,7 +227,7 @@ var _ api.StatusReasoner = (*AlpitronicHYC)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *AlpitronicHYC) StatusReason() (api.Reason, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegState), 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegState), 1)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
@@ -252,21 +246,28 @@ var _ api.Identifier = (*AlpitronicHYC)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *AlpitronicHYC) Identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegIdTag), 10)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegVID), 4)
 	if err != nil {
 		return "", err
 	}
 
-	idTag := string(bytes.TrimRight(b, "\x00"))
+	if vid := bytesAsString(b); vid != "" {
+		return vid, nil
+	}
 
-	return idTag, nil
+	b, err = wb.conn.ReadInputRegisters(wb.reg(hycRegIdTag), 10)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(b), nil
 }
 
 var _ api.Battery = (*AlpitronicHYC)(nil)
 
 // Soc implements the api.Battery interface
 func (wb *AlpitronicHYC) Soc() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.creg(hycRegSoC), 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegSoC), 1)
 	if err != nil {
 		return 0, err
 	}
