@@ -1112,7 +1112,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 
 	site.update(<-loadpointChan) // start immediately
 
-    ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
