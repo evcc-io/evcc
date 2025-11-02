@@ -231,10 +231,27 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates, api.Rates) {
 	var res, precond api.Rates
 
-	for _, r := range slices.Clone(rates) {
+	for _, r := range rates {
 		if !r.End.After(preCondStart) {
 			res = append(res, r)
 			continue
+		}
+
+		// split slot
+		if !r.Start.After(preCondStart) {
+			// keep the first part of the slot
+			res = append(res, api.Rate{
+				Start: r.Start,
+				End:   preCondStart,
+				Value: r.Value,
+			})
+
+			// adjust the second part of the slot
+			r = api.Rate{
+				Start: preCondStart,
+				End:   r.End,
+				Value: r.Value,
+			}
 		}
 
 		precond = append(precond, r)
