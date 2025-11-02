@@ -3,7 +3,7 @@ products:
   - brand: Alpitronic
     description:
       generic: Hypercharger
-capabilities: ["mA", "rfid", "iso15118"]
+capabilities: ["mA", "rfid", "iso151182"]
 requirements:
   evcc: ["sponsorship"]
 params:
