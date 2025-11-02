@@ -6,7 +6,7 @@ HASSIO_OPTIONSFILE=/data/options.json
 
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
 	CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$' || true)
-	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
+	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$' || true)
 
 	# Config File Migration
 	# If there is no config file found in '/config' we copy it from '/homeassistant' and rename the old config file to .migrated
