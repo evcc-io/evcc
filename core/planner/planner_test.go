@@ -300,19 +300,19 @@ func TestPrecondition(t *testing.T) {
 		},
 	}, plan, "expected two slots")
 
-	// plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
-	// assert.Equal(t, api.Rates{
-	// 	{
-	// 		Start: clock.Now().Add(30 * time.Minute),
-	// 		End:   clock.Now().Add(time.Hour),
-	// 		Value: 1,
-	// 	},
-	// 	{
-	// 		Start: clock.Now().Add(210 * time.Minute),
-	// 		End:   clock.Now().Add(4 * time.Hour),
-	// 		Value: 4,
-	// 	},
-	// }, plan, "expected short early and split late slot")
+	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(30 * time.Minute),
+			End:   clock.Now().Add(time.Hour),
+			Value: 1,
+		},
+		{
+			Start: clock.Now().Add(210 * time.Minute),
+			End:   clock.Now().Add(4 * time.Hour),
+			Value: 4,
+		},
+	}, plan, "expected short early and split late slot")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
