@@ -1,14 +1,24 @@
-template: mtec-eb-gen2
+template: solinteg-gen2
+covers: ["mtec-eb-gen2", "wattsonic"]
 products:
+  - brand: Solinteg
+    description:
+      generic: Integ ONE GEN2
   - brand: M-TEC
     description:
       generic: Energy Butler GEN2
+  - brand: Wattsonic
+    description:
+      generic: 3p AIO Series GEN2
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485"]
     id: 247
+  - name: delay
+    default: 100ms
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -16,7 +26,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 11000 # Zähler (NVP) Leistung
+      address: 11000 # Total Power on Meter
       type: holding
       decode: int32
     scale: -1
@@ -26,7 +36,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 11028 # PV Leistung
+      address: 11028 # PV Input Total Power
       type: holding
       decode: uint32
   {{- end }}
@@ -35,15 +45,32 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 40258 # Batterie Leistung
+      address: 40258 # Battery_P
       type: holding
       decode: int32
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 43000 # State of Charge (SOC)
+      address: 43000 # SOC
       type: holding
       decode: uint16
     scale: 0.01
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 52503 # min soc
+      type: writeholding
+      encoding: uint16
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 52503 # min soc
+      type: writeholding
+      encoding: uint16
+  capacity: {{ .capacity }} # kWh
   {{- end }}

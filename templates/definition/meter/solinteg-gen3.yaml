@@ -1,8 +1,18 @@
-template: mtec-eb-gen3
+template: solinteg-gen3
+covers: ["mtec-eb-gen3", "wattsonic-gen3"]
 products:
+  - brand: Solinteg
+    description:
+      generic: Integ ONE GEN3
   - brand: M-TEC
     description:
       generic: Energy Butler GEN3
+  - brand: Wattsonic
+    description:
+      generic: 3p AIO Series GEN3
+  - brand: Sunways
+  - brand: A-Tronix
+  - brand: St-ems
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -19,7 +29,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 11000 # Zähler (NVP) Leistung
+      address: 11000 # Total Power on Meter
       type: holding
       decode: int32
     scale: -1
@@ -29,7 +39,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 11028 # PV Leistung
+      address: 11028 # PV Input Total Power
       type: holding
       decode: uint32
   {{- end }}
@@ -38,7 +48,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 30258 # Batterie Leistung
+      address: 30258 # Battery_P
       type: holding
       decode: int32
   soc:
