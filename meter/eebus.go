@@ -275,7 +275,7 @@ func (c *EEBus) Dim(dim bool) error {
 	defer c.mu.Unlock()
 
 	if c.egLpcEntity == nil {
-		return errors.New("not connected")
+		return api.ErrNotAvailable
 	}
 
 	if !slices.Contains(c.eg.EgLPCInterface.AvailableScenariosForEntity(c.egLpcEntity), 1) {
