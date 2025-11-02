@@ -53,11 +53,11 @@ const (
 )
 
 func init() {
-	registry.AddCtx("alpitronic", NewAplitronicHYCFromConfig)
+	registry.AddCtx("alpitronic", NewAlpitronicHYCFromConfig)
 }
 
-// NewAplitronicHYCFromConfig creates a Kathrein charger from generic config
-func NewAplitronicHYCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+// NewAlpitronicHYCFromConfig creates a Alpitronic charger from generic config
+func NewAlpitronicHYCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -75,7 +75,7 @@ func NewAplitronicHYCFromConfig(ctx context.Context, other map[string]any) (api.
 	return NewAlpitronicHYC(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
-// NewAlpitronicHYC creates Kathrein charger
+// NewAlpitronicHYC creates Alpitronic charger
 func NewAlpitronicHYC(ctx context.Context, uri string, id uint8, connector uint16) (*AlpitronicHYC, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
