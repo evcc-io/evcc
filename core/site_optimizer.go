@@ -203,7 +203,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			if demand := continuousDemand(lp, minLen); demand != nil {
 				bat.PDemand = prorate(demand, firstSlotDuration)
 			}
-			
+
 		case api.ModePV:
 			// add plan goal
 			goal, socBased := lp.GetPlanGoal()
