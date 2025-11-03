@@ -171,15 +171,6 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # Self-consumption mode (Default)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13049 # EMS mode selection
-              type: writesingle
-              decode: uint16
-        - source: const
           value: 0xCC # Stop (Default)
           set:
             source: modbus
@@ -209,6 +200,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # Self-consumption mode (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode selection
               type: writesingle
               decode: uint16
     - case: 2 # hold
