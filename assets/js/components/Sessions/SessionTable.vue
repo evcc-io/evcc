@@ -242,7 +242,7 @@ export default defineComponent({
 					unit: "h:mm",
 					total: this.chargeDuration,
 					value: (session) => session.chargeDuration,
-					format: (value) => this.fmtDurationNs(value, false, "h"),
+					format: (value) => this.fmtDuration(value, false, "h"),
 				},
 				{
 					name: "avgPower",
@@ -250,7 +250,7 @@ export default defineComponent({
 					total: this.avgPower,
 					value: (session) => {
 						if (session.chargedEnergy && session.chargeDuration) {
-							return session.chargedEnergy / this.nsToHours(session.chargeDuration);
+							return session.chargedEnergy / (session.chargeDuration / 3600);
 						}
 						return null;
 					},
@@ -339,7 +339,7 @@ export default defineComponent({
 				.reduce(
 					(total, s) => {
 						total.energy += s.chargedEnergy;
-						total.hours += this.nsToHours(s.chargeDuration);
+						total.hours += s.chargeDuration / 3600;
 						return total;
 					},
 					{ energy: 0, hours: 0 }
@@ -398,9 +398,6 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		nsToHours(ns: number) {
-			return ns / 1e9 / 3600;
-		},
 		filterByLoadpoint(session: Session) {
 			return !this.loadpointFilter || session.loadpoint === this.loadpointFilter;
 		},
