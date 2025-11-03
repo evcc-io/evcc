@@ -166,8 +166,11 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	return float64(binary.BigEndian.Uint64(b)) / 1e3, nil
+	result := float64(binary.BigEndian.Uint64(b)) / 1e3
+	if result == 0.0 {
+		return 0, errors.New("cfos returned 0")
+	}
+	return result, nil
 }
 
 // currents implements the api.PhaseCurrents interface
