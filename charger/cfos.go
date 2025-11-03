@@ -166,11 +166,26 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	result := float64(binary.BigEndian.Uint64(b)) / 1e3
-	if result == 0.0 {
-		return 0, errors.New("cfos returned 0")
+
+	// cfos wallboxes sometimes return 0 erroneously shortly after startup
+	// so we cache the last non-zero value
+	//
+	// this has the drawback that on new wallboxes that actually have 0 energy,
+	// we will return an error instead of 0
+	if result != 0.0 {
+		wb.cachedTotalEnergy = result
+		return result, nil
 	}
-	return result, nil
+
+	// return cached value if available
+	if wb.cachedTotalEnergy != 0.0 {
+		return wb.cachedTotalEnergy, nil
+	}
+
+	// return error if no cached value
+	return 0.0, errors.New("cfos returned 0")
 }
 
 // currents implements the api.PhaseCurrents interface
