@@ -172,7 +172,8 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 	// cfos wallboxes sometimes return 0 erroneously shortly after startup
 	// to work around this, we retry once more, and if it is still 0, we return ErrMustRetry
 	//
-	// this has the drawback that on new wallboxes that actually have 0 energy
+	// this has the drawback with new wallboxes that actually have 0 total energy
+	// it will return ErrMustRetry until the wallbox has been used
 	//
 	// see https://github.com/evcc-io/evcc/discussions/12886
 	if res == 0 {
