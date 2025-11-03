@@ -200,8 +200,10 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			bat.PDemand = prorate(continuousDemand(lp, minLen), firstSlotDuration)
-
+			if demand := continuousDemand(lp, minLen); demand != nil  {
+				bat.PDemand = prorate(demand, firstSlotDuration)
+			}
+			
 		case api.ModePV:
 			// add plan goal
 			goal, socBased := lp.GetPlanGoal()
