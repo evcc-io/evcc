@@ -167,7 +167,7 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	result := float64(binary.BigEndian.Uint64(b)) / 1e3
+	res := float64(binary.BigEndian.Uint64(b)) / 1e3
 
 	// cfos wallboxes sometimes return 0 erroneously shortly after startup
 	// to work around this, we retry once more, and if it is still 0, we return ErrMustRetry
@@ -181,14 +181,14 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 			return 0, err
 		}
 
-		result = float64(binary.BigEndian.Uint64(b)) / 1e3
+		res = float64(binary.BigEndian.Uint64(b)) / 1e3
 
-		if result == 0 {
+		if res == 0 {
 			return 0, api.ErrMustRetry
 		}
 	}
 
-	return result, nil
+	return res, nil
 }
 
 // currents implements the api.PhaseCurrents interface
