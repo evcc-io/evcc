@@ -58,8 +58,8 @@
           "heating": "Uporabniško določen grelec"
         },
         "heatpump": "Uporabniško določena toplotna črpalka",
-        "sgready": "Uporabniško določena toplotna črpalka (sg-ready, all)",
-        "sgready-boost": "Uporabniško določena toplotna črpalka (sg-ready-relay)",
+        "sgready": "Uporabniško določena toplotna črpalka (sg-ready preko vtičnikov)",
+        "sgready-relay": "Uporabniško določena toplotna črpalka (sg-ready preko relejev)",
         "switchsocket": "Uporabniško definirana vtičnica stikala"
       }
     },

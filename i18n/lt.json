@@ -58,8 +58,8 @@
           "heating": "Vartotojo nustatytas šildytuvas"
         },
         "heatpump": "Vartotojo nustatytas šilumos siurblys",
-        "sgready": "Vartotojo nustatytas šilumos siurblys (SG-Ready, visi)",
-        "sgready-boost": "Vartotojo nustatytas šilumos siurblys (sg-ready-relay)",
+        "sgready": "Vartotojo nustatytas šilumos siurblys (sg-ready per įskiepius)",
+        "sgready-relay": "Vartotojo nustatytas šilumos siurblys (sg-ready per relės)",
         "switchsocket": "Vartotojo apibrėžta išmanioji rozetė"
       }
     },

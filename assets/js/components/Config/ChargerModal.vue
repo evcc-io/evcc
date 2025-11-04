@@ -8,6 +8,7 @@
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
+		:is-type-deprecated="isTypeDeprecated"
 		:is-yaml-input-type="isYamlInput"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
@@ -187,7 +188,11 @@ export default defineComponent({
 				ConfigType.SwitchSocket,
 				ConfigType.SgReady,
 				ConfigType.SgReadyRelay,
+				ConfigType.SgReadyBoost, // deprecated
 			].includes(type);
+		},
+		isTypeDeprecated(type: ConfigType): boolean {
+			return type === ConfigType.SgReadyBoost;
 		},
 		handleTemplateChange(e: Event, values: DeviceValues) {
 			const value = (e.target as HTMLSelectElement).value as ConfigType;

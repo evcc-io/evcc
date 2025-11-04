@@ -113,6 +113,7 @@ export enum ConfigType {
   SwitchSocket = "switchsocket",
   SgReady = "sgready",
   SgReadyRelay = "sgready-relay",
+  SgReadyBoost = "sgready-boost", // deprecated
 }
 
 export type ConfigVehicle = Entity;

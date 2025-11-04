@@ -17,8 +17,12 @@
 
 				<slot name="before-template" :values="values"></slot>
 
+				<p v-if="showDeprecatedWarning" class="text-danger">
+					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
+				</p>
+
 				<TemplateSelector
-					v-if="showTemplateSelector"
+					v-else-if="showTemplateSelector"
 					ref="templateSelect"
 					v-model="templateName"
 					:device-type="deviceType"
@@ -172,6 +176,8 @@ export default defineComponent({
 		preserveOnTemplateChange: Array as PropType<string[]>,
 		// Optional: determine if YAML input should be shown
 		isYamlInputType: Function as PropType<(type: ConfigType) => boolean>,
+		// Optional: determine if a config type is deprecated
+		isTypeDeprecated: Function as PropType<(type: ConfigType) => boolean>,
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
 		// Optional: handle template change (receives event and values, allows setting values.yaml)
@@ -297,6 +303,9 @@ export default defineComponent({
 		},
 		showTemplateSelector() {
 			return this.computedTemplateOptions.length > 0;
+		},
+		showDeprecatedWarning() {
+			return this.isTypeDeprecated && this.isTypeDeprecated(this.values.type);
 		},
 	},
 	watch: {

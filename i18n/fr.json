@@ -58,8 +58,8 @@
           "heating": "Chauffage personnalisé"
         },
         "heatpump": "Pompe à chaleur personnalisée",
-        "sgready": "Pompe à chaleur personnalisée (sg-ready, tout)",
-        "sgready-boost": "Pompe à chaleur personnalisée (sg-ready-relay)",
+        "sgready": "Pompe à chaleur personnalisée (sg-ready via plugins)",
+        "sgready-relay": "Pompe à chaleur personnalisée (sg-ready via relays)",
         "switchsocket": "Prise de commutation personnalisée"
       }
     },

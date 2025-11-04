@@ -19,7 +19,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/measurement"
@@ -134,11 +133,11 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Dim {
-		return api.StatusNone, errors.New("dim mode")
+	status := map[int64]api.ChargeStatus{
+		Dim:    api.StatusA,
+		Normal: api.StatusB,
+		Boost:  api.StatusC,
 	}
-
-	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
 	return status[mode], nil
 }
 

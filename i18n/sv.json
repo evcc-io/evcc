@@ -58,8 +58,8 @@
           "heating": "Egendefinierad värmare"
         },
         "heatpump": "Egendefinierad värmepump",
-        "sgready": "Egendefinierad värmepump (sg-ready, alla)",
-        "sgready-boost": "Egendefinierad värmepump (sg-ready-relay)",
+        "sgready": "Egendefinierad värmepump (sg-ready via plugins)",
+        "sgready-relay": "Egendefinierad värmepump (sg-ready via reläer)",
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },

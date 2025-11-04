@@ -47,9 +47,12 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	dim, err := NewFromConfig(ctx, cc.Dim.Type, cc.Dim.Other)
-	if err != nil {
-		return nil, err
+	var dim api.Charger
+	if cc.Dim != nil {
+		dim, err = NewFromConfig(ctx, cc.Dim.Type, cc.Dim.Other)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)

@@ -58,8 +58,9 @@
           "heating": "User-defined heater"
         },
         "heatpump": "User-defined heat pump",
-        "sgready": "User-defined heat pump (sg-ready, all)",
-        "sgready-boost": "User-defined heat pump (sg-ready-relay)",
+        "sgready": "User-defined heat pump (sg-ready via plugins)",
+        "sgready-boost": "User-defined heat pump (sg-ready via relays, deprecated)",
+        "sgready-relay": "User-defined heat pump (sg-ready via relays)",
         "switchsocket": "User-defined switch socket"
       }
     },
@@ -185,6 +186,7 @@
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
+      "typeDeprecated": "The type '{type}' is deprecated and will be removed in a future version. Please check the changelog for migration instructions.",
       "validateSave": "Validate & save"
     },
     "grid": {

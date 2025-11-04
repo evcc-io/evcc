@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-relay"}
 )
 
 type configReq struct {
