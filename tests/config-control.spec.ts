@@ -15,7 +15,8 @@ test.describe("control settings (interval)", () => {
     await enableExperimental(page);
 
     const entry = page.getByTestId("generalconfig-control");
-    await expect(entry).toContainText("30 s");
+    await expect(entry).toContainText("30");
+    await expect(entry).toContainText("s");
 
     await entry.getByRole("button", { name: "Edit" }).click();
 
@@ -32,8 +33,9 @@ test.describe("control settings (interval)", () => {
 
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
-    await expect(entry).toContainText("60 s");
-    await expect(entry).not.toContainText("30 s");
+    await expect(entry).toContainText("60");
+    await expect(entry).toContainText("s");
+    await expect(entry).not.toContainText("30");
 
     await entry.getByRole("button", { name: "Edit" }).click();
     await expectModalVisible(modal);

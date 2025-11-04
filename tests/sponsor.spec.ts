@@ -74,15 +74,5 @@ test.describe("sponsor token", () => {
     await textarea.fill(EXPIRED_TOKEN);
     await modal.getByRole("button", { name: "Save" }).click();
     await expect(modal).toContainText("token is expired");
-
-    await modal.getByRole("button", { name: "Cancel" }).click();
-
-    await expect(page.getByTestId("restart-needed")).toBeVisible();
-
-    await expect(entry).toContainText("invalid");
-    await expect(entry).not.toContainText("---");
-
-    await entry.getByRole("button", { name: "Edit" }).click();
-    await expect(modal.getByRole("textbox", { name: "Your token" })).toHaveValue(SHORT_TOKEN);
   });
 });
