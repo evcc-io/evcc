@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
@@ -223,6 +224,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
+	// Initialize sponsor package with UI channel
+	sponsor.Init(valueChan)
+
 	// api
 	api := router.PathPrefix("/api").Subrouter()
 	api.Use(jsonHandler)
@@ -286,8 +290,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, valueChan)},
-			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(valueChan)},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(valueChan)},
+			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler()},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler()},
 		}
 
 		// yaml handlers

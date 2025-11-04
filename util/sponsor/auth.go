@@ -7,6 +7,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,6 +20,7 @@ var (
 	Subject, Token string
 	fromYaml       bool = true
 	ExpiresAt      time.Time
+	uiChan         chan<- util.Param
 )
 
 const (
@@ -122,5 +126,41 @@ func Status() sponsorStatus {
 		ExpiresSoon: expiresSoon,
 		Token:       redactToken(Token),
 		FromYaml:    fromYaml,
+	}
+}
+
+// Init initializes the sponsor package with the UI channel for publishing updates
+func Init(ch chan<- util.Param) {
+	mu.Lock()
+	defer mu.Unlock()
+	uiChan = ch
+}
+
+// SaveToken saves the sponsor token to database and publishes status update
+func SaveToken(token string, setDirty func()) error {
+	if token != "" {
+		if err := ConfigureSponsorship(token); err != nil {
+			return err
+		}
+		SetFromYaml(false)
+	}
+
+	settings.SetString(keys.SponsorToken, token)
+	setDirty()
+
+	publishStatus()
+	return nil
+}
+
+// DeleteToken removes the sponsor token from database and publishes status update
+func DeleteToken(setDirty func()) {
+	settings.SetString(keys.SponsorToken, "")
+	setDirty()
+	publishStatus()
+}
+
+func publishStatus() {
+	if uiChan != nil {
+		uiChan <- util.Param{Key: keys.Sponsor, Val: Status()}
 	}
 }
