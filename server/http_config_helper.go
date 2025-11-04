@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-relay"}
 )
 
 type configReq struct {
@@ -326,6 +326,11 @@ func testInstance(instance any) map[string]testResult {
 			key = "heaterTempLimit"
 		}
 		makeResult(key, val, err)
+	}
+
+	if dev, ok := instance.(api.Dimmer); ok {
+		val, err := dev.Dimmed()
+		makeResult("dimmed", val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {
