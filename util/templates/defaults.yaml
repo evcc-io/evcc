@@ -16,13 +16,11 @@ params:
       de: Modbus Typ
   - name: host
     required: true
-    private: true
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
   - name: ip
-    private: true
     description:
       de: IP-Adresse
       en: IP address
@@ -251,6 +249,7 @@ params:
 
   - name: ski
     required: true
+    private: true
     description:
       en: Subject Key Identifier (SKI)
       de: Identifikationsschlüssel (SKI)
