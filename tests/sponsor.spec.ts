@@ -75,7 +75,10 @@ test.describe("sponsor token", () => {
     await modal.getByRole("button", { name: "Save" }).click();
     await expect(modal).toContainText("token is expired");
 
-    // Verify token is immediately visible in UI after failed save attempt
+    await modal.getByRole("button", { name: "Cancel" }).click();
+
+    await expect(page.getByTestId("restart-needed")).toBeVisible();
+
     await expect(sponsorEntry).toContainText("invalid");
     await expect(sponsorEntry).not.toContainText("---");
 
