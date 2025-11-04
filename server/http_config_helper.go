@@ -125,6 +125,10 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 }
 
 func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any, error) {
+	return sanitizeParams(class, conf, true, true)
+}
+
+func sanitizeParams(class templates.Class, conf map[string]any, maskSecrets, hidePrivate bool) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
 		return nil, err
@@ -133,8 +137,12 @@ func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any,
 	res := make(map[string]any, len(conf))
 
 	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() {
-			v = masked
+		if i, p := tmpl.ParamByName(k); i >= 0 {
+			if maskSecrets && p.IsMasked() {
+				v = masked
+			} else if hidePrivate && p.IsPrivate() {
+				v = masked
+			}
 		}
 
 		res[k] = v

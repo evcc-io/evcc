@@ -16,11 +16,13 @@ params:
       de: Modbus Typ
   - name: host
     required: true
+    private: true
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
   - name: ip
+    private: true
     description:
       de: IP-Adresse
       en: IP address
@@ -43,6 +45,7 @@ params:
     choice: ["https", "http"]
     default: https
   - name: user
+    private: true
     description:
       de: Benutzerkonto
       en: Username
@@ -76,6 +79,7 @@ params:
     usages: ["pv"]
     advanced: true
   - name: vin
+    private: true
     description:
       de: Fahrzeugidentifikationsnummer
       en: Vehicle Identification Number
@@ -254,16 +258,19 @@ params:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
   - name: uri
+    private: true
     description:
       generic: URI
     help:
       en: HTTP(S) address
       de: HTTP(S) Adresse
   - name: url
+    private: true
     description:
       generic: URL
   - name: ain
     mask: true
+    private: true
     example: "307788992233"
     description:
       en: Actor Identification Number (AIN)
@@ -346,6 +353,7 @@ params:
     description:
       generic: Refresh token
   - name: serial
+    private: true
     description:
       en: Serial
       de: Seriennummer
@@ -370,6 +378,7 @@ params:
       de: Intervall
       en: Interval
   - name: mac
+    private: true
     description:
       en: MAC Address
       de: MAC Adresse
@@ -377,6 +386,7 @@ params:
     description:
       generic: PIN
   - name: serial_number
+    private: true
     description:
       en: Serial Number
       de: Seriennummer
@@ -384,9 +394,11 @@ params:
     description:
       generic: Watchdog
   - name: uuid
+    private: true
     description:
       generic: UUID
   - name: zip
+    private: true
     description:
       en: ZIP code
       de: Postleitzahl
