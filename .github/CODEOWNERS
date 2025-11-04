@@ -27,7 +27,7 @@
 /templates/definition/charger/demo-charger.yaml @Starquake @VolkerK62
 /templates/definition/charger/demo-heatpump.yaml @Starquake
 /templates/definition/charger/easee.yaml @GrimmiMeloni @Starquake @jheinitz
-/templates/definition/charger/eebus.yaml @DerAndereAndi @benesolar
+/templates/definition/charger/eebus.yaml @DerAndereAndi
 /templates/definition/charger/elli-2.yaml @Starquake
 /templates/definition/charger/elli-charger-connect.yaml @DerAndereAndi @Starquake
 /templates/definition/charger/elli-charger-pro.yaml @DerAndereAndi @Starquake
@@ -55,7 +55,7 @@
 /templates/definition/charger/ocpp-goe.yaml @Starquake
 /templates/definition/charger/ocpp-mennekes-acu.yaml @Starquake @benesolar
 /templates/definition/charger/ocpp-zaptec.yaml @Starquake
-/templates/definition/charger/ocpp.yaml @DerAndereAndi @Starquake @VolkerK62 @benesolar @xantalor
+/templates/definition/charger/ocpp.yaml @DerAndereAndi @Starquake @VolkerK62 @xantalor
 /templates/definition/charger/openwb-2.0.yaml @Maschga
 /templates/definition/charger/peblar.yaml @PieVo
 /templates/definition/charger/phoenix-charx.yaml @samjay
@@ -67,8 +67,8 @@
 /templates/definition/charger/porsche-pmcp.yaml @DerAndereAndi
 /templates/definition/charger/porsche-wallbox.yaml @DerAndereAndi @Starquake
 /templates/definition/charger/pulsatrix.yaml @Sauttets
-/templates/definition/charger/senec-plus.yaml @StefanSchoof
-/templates/definition/charger/senec-premium.yaml @StefanSchoof
+/templates/definition/charger/senec-plus.yaml
+/templates/definition/charger/senec-premium.yaml
 /templates/definition/charger/shelly.yaml @thierolm
 /templates/definition/charger/smaevcharger.yaml @VolkerK62 @powelllens
 /templates/definition/charger/solax-g2.yaml @tomfrenzel
@@ -137,7 +137,7 @@
 /templates/definition/meter/rct-power.yaml @Maschga
 /templates/definition/meter/saj-r5.yaml @tcoenraad
 /templates/definition/meter/sax.yaml @juergen-weber @oekinger
-/templates/definition/meter/senec-home.yaml @DerAndereAndi @StefanSchoof @VolkerK62
+/templates/definition/meter/senec-home.yaml @DerAndereAndi @VolkerK62
 /templates/definition/meter/shelly-1pm.yaml @VolkerK62 @thierolm
 /templates/definition/meter/shelly-3em.yaml @DerAndereAndi @VolkerK62 @thierolm
 /templates/definition/meter/shelly-pro-3em.yaml @thierolm
