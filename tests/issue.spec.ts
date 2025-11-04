@@ -180,15 +180,16 @@ test.describe("issue creation", () => {
     // Enable experimental features
     await enableExperimental(page, false);
 
-    // Create a vehicle with private data (VIN)
+    // Create a vehicle with private data (VIN and user)
     await page.getByTestId("add-vehicle").click();
     const vehicleModal = page.getByTestId("vehicle-modal");
     await expectModalVisible(vehicleModal);
-    await vehicleModal.getByLabel("Manufacturer").selectOption("Audi (etron)");
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Audi");
     await vehicleModal.getByLabel("Title").fill("Test Audi");
-    await vehicleModal.getByLabel("Username").fill("test@example.com");
-    await vehicleModal.getByLabel("Password").fill("secretpass");
-    await vehicleModal.getByLabel("Vehicle Identification Number (VIN) optional").fill("WAUZZZ8V9KA123456");
+    // Fill in username field - use flexible matching
+    await vehicleModal.locator('input[name="user"]').fill("testuser@example.com");
+    await vehicleModal.locator('input[name="password"]').fill("secretpass123");
+    await vehicleModal.locator('input[name="vin"]').fill("WAUZZZ8V9KA123456");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(vehicleModal);
 
@@ -211,12 +212,12 @@ test.describe("issue creation", () => {
 
     // Verify device is present but private data is redacted
     expect(uiContent).toContain("Test Audi"); // title should be visible
-    expect(uiContent).not.toContain("test@example.com"); // user should be redacted
+    expect(uiContent).not.toContain("testuser@example.com"); // user should be redacted
     expect(uiContent).not.toContain("WAUZZZ8V9KA123456"); // VIN should be redacted
     expect(uiContent).toContain("***"); // redaction marker should be present
 
     // Password should also be redacted (masked field)
-    expect(uiContent).not.toContain("secretpass");
+    expect(uiContent).not.toContain("secretpass123");
 
     await uiModal.getByRole("button", { name: "Close" }).first().click();
     await expectModalHidden(uiModal);
