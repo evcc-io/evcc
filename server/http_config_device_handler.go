@@ -105,7 +105,7 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePri
 		}
 
 		if conf.Type == typeTemplate {
-			params, err := sanitizeParams(class, conf.Other, true, hidePrivate)
+			params, err := sanitizeMasked(class, conf.Other, hidePrivate)
 			if err != nil {
 				return nil, err
 			}
