@@ -19,9 +19,9 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
-  - name: minSoc
+  - name: minsoc
     default: 5
-  - name: maxSoc
+  - name: maxsoc
     default: 100
   - name: maxacpower
   - name: maxchargepower
