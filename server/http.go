@@ -285,9 +285,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
-			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
-			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
+			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, valueChan)},
+			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(valueChan)},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(valueChan)},
 		}
 
 		// yaml handlers
