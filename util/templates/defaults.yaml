@@ -346,9 +346,11 @@ params:
     advanced: true
 
   - name: accesstoken
+    mask: true
     description:
       generic: Access token
   - name: refreshtoken
+    mask: true
     description:
       generic: Refresh token
   - name: serial
@@ -431,12 +433,14 @@ params:
       de: Temperaturquelle
       en: Temperature source
   - name: lat
+    private: true
     description:
       en: Latitude
       de: Breitengrad
     type: float
     example: 55.7351
   - name: lon
+    private: true
     description:
       en: Longitude
       de: Längengrad
