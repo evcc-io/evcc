@@ -8,13 +8,19 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Grid und Batterie erfordern den PowerSensor.
-      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+      
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang".
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      
+      Es ist zu beachten, dass die maximale Batterie Lade- und Entladeleistung standardmäßig auf 2500W gesetzt ist. Je nach installiertem Wechselrichter sowie der Anzahl der Batterietürme/Module kann der unterstützte Maximalwert deutlich höher liegen. Weitere Informationen können den Datenblättern von Huawei entnommen werden.
     en: |
-      Grid and Battery require the PowerSensor.
-      Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
+      Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+      
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account".
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      
+      Beware that maximum battery charge and discharge power are set to 2500W by default. Depending on the installed inverter and number of battery towers/packs, the supported maximum may be well above. Consult Huawei's datasheets for more information.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
