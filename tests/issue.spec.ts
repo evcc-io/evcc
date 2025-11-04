@@ -57,9 +57,6 @@ test.describe("issue creation", () => {
     await meterModal.getByLabel("Title").fill("TestShelly");
     await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
-    
-    // Show advanced settings to access username field
-    await page.getByRole("button", { name: "Show advanced settings" }).click();
     await meterModal.getByLabel("Username").fill("testuser@example.com");
     await meterModal.getByLabel("Password").fill("secretpass");
     

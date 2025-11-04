@@ -173,30 +173,30 @@ type LinkedTemplate struct {
 // 3. defaults.yaml modbus section
 // 4. template
 type Param struct {
-	Name        string       // Param name which is used for assigning defaults properties and referencing in render
-	Description TextLanguage // Language specific titles (presented in UI instead of Name)
-	Help        TextLanguage // Configuration help text shown during CLI setup
-	Preset      string       `json:"-"`          // Reference a predefined set of params
-	Required    bool         `json:",omitempty"` // User must provide a non-empty value
-	Mask        bool         `json:",omitempty"` // Value should be masked (not sent back in clear text), e.g. for passwords
-	Private     bool         `json:",omitempty"` // Value contains private data that should be redacted in bug reports
-	Advanced    bool         `json:",omitempty"` // User does not need to be asked. Requires a "Default" to be defined.
-	Deprecated  bool         `json:",omitempty"` // Parameter is deprecated and should not be presented in the CLI or docs
-	Default     string       `json:",omitempty"` // Default value if no user value is provided in the configuration
-	Example     string       `json:",omitempty"` // Example value shown during CLI configuration
-	Value       string       `json:"-"`          // User provided value via CLI configuration
-	Values      []string     `json:",omitempty"` // User provided list of values e.g. for Type "list"
-	Unit        string       `json:",omitempty"` // Unit of the value, e.g. "kW", "kWh", "A", "V"
-	Usages      []string     `json:",omitempty"` // Restrict param to these usage types, e.g. "battery" for home battery capacity
-	Type        ParamType    // String representation of the value type, "string" is default
-	Choice      []string     `json:",omitempty"` // Defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	AllInOne    bool         `json:"-"`          // Defines if the defined usages can all be present in a single device
+	Name        string       // param name which is used for assigning defaults properties and referencing in render
+	Description TextLanguage // language specific titles (presented in UI instead of Name)
+	Help        TextLanguage // configuration help text
+	Preset      string       `json:"-"`          // reference a predefined set of params
+	Required    bool         `json:",omitempty"` // user must provide a non-empty value
+	Mask        bool         `json:",omitempty"` // value should be masked (not sent back in clear text), e.g. for passwords
+	Private     bool         `json:",omitempty"` // value contains private data that should be redacted in bug reports
+	Advanced    bool         `json:",omitempty"` // user does not need to be asked. Requires a "Default" to be defined.
+	Deprecated  bool         `json:",omitempty"` // parameter is deprecated and should not be presented
+	Default     string       `json:",omitempty"` // default value if no user value is provided in the configuration
+	Example     string       `json:",omitempty"` // example value
+	Value       string       `json:"-"`          // user provided value
+	Values      []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
+	Unit        string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
+	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
+	Type        ParamType    // string representation of the value type, "string" is default
+	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
-	Baudrate int    `json:",omitempty"` // Device specific default for modbus RS485 baudrate
-	Comset   string `json:",omitempty"` // Device specific default for modbus RS485 comset
-	Port     int    `json:",omitempty"` // Device specific default for modbus TCPIP port
-	ID       int    `json:",omitempty"` // Device specific default for modbus ID
+	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
+	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
+	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
+	ID       int    `json:",omitempty"` // device specific default for modbus ID
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
