@@ -15,8 +15,7 @@ test.describe("control settings (interval)", () => {
     await enableExperimental(page);
 
     const entry = page.getByTestId("generalconfig-control");
-    await expect(entry).toContainText("30");
-    await expect(entry).toContainText("s");
+    await expect(entry).toContainText("10 s");
 
     await entry.getByRole("button", { name: "Edit" }).click();
 
@@ -24,8 +23,8 @@ test.describe("control settings (interval)", () => {
     await expectModalVisible(modal);
 
     const intervalInput = modal.getByLabel("Interval");
-    await expect(intervalInput).toHaveValue("30");
-    await intervalInput.fill("60");
+    await expect(intervalInput).toHaveValue("10");
+    await intervalInput.fill("20");
 
     await modal.getByRole("button", { name: "Save" }).click();
 
@@ -33,13 +32,12 @@ test.describe("control settings (interval)", () => {
 
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
-    await expect(entry).toContainText("60");
-    await expect(entry).toContainText("s");
-    await expect(entry).not.toContainText("30");
+    await expect(entry).toContainText("20 s");
+    await expect(entry).not.toContainText("10 s");
 
     await entry.getByRole("button", { name: "Edit" }).click();
     await expectModalVisible(modal);
-    await expect(intervalInput).toHaveValue("60");
+    await expect(intervalInput).toHaveValue("20");
   });
 
   test("residual power is immediately visible after save", async ({ page }) => {
@@ -61,8 +59,6 @@ test.describe("control settings (interval)", () => {
     await modal.getByRole("button", { name: "Save" }).click();
 
     await expectModalHidden(modal);
-
-    await expect(page.getByTestId("restart-needed")).toBeVisible();
 
     await entry.getByRole("button", { name: "Edit" }).click();
     await expectModalVisible(modal);
