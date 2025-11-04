@@ -175,7 +175,7 @@ render: |
     set:
       source: switch
       switch:
-      - case: 1 # normal
+      - case: 1 # normal - charge from grid locked (§ 14a EnWG compatible)
         set:
           source: sequence
           set:
@@ -188,6 +188,15 @@ render: |
                 address: 47100 # Forcible charge/discharge
                 type: writesingle
                 encoding: uint16
+          - source: const
+            value: {{ .maxdischargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47077 # Max. Discharge Power
+                type: writemultiple
+                encoding: uint32
           {{- if eq .forceaccharging "false" }}
           - source: const
             value: 0 # Disable
@@ -199,12 +208,12 @@ render: |
                 type: writesingle
                 encoding: uint16
           {{- end }}
-      - case: 2 # hold
+      - case: 2 # hold - discharge and charge from grid locked (14a EnWG compatible)
         set:
           source: sequence
           set:
           - source: const
-            value: 2 # discharge
+            value: 0 # stop
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -213,33 +222,26 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 0 # duration
+            value: 0 # W Discharge Power
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 47246 # Forcible charge/discharge setting mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Minute
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47083 # Forced charging and discharging period
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # W
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47249 # Forcible discharge power
+                address: 47077 # Discharge Power
                 type: writemultiple
                 encoding: uint32
-      - case: 3 # charge
+          {{- if eq .forceaccharging "false" }}
+          - source: const
+            value: 0 # Disable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47087 # Charge from grid
+                type: writesingle
+                encoding: uint16
+          {{- end }}
+      - case: 3 # charge (forced charging)
         set:
           source: sequence
           set:
