@@ -41,7 +41,19 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
+var (
+	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
+
+	// ModbusFields contains all field names used by modbus templates
+	ModbusFields = []string{
+		ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
+		ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
+	}
+
+	ModbusKeys = []string{
+		ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	}
+)
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -63,12 +75,10 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
-var predefinedTemplateProperties = []string{
-	"type", "template", "name",
-	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
-	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
-}
+var predefinedTemplateProperties = append(
+	[]string{"type", "template", "name"},
+	append(ModbusFields, ModbusKeys...)...,
+)
 
 // TextLanguage contains language-specific texts
 type TextLanguage struct {
