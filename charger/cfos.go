@@ -183,7 +183,6 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 		}
 
 		res = float64(binary.BigEndian.Uint64(b)) / 1e3
-
 		if res == 0 {
 			return 0, api.ErrMustRetry
 		}
