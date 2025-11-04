@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
+import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
 import { enableExperimental, expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
@@ -41,6 +42,7 @@ test.describe("issue creation", () => {
   });
 
   test("create issue via ui", async ({ page }) => {
+    await startSimulator();
     await start(CONFIG);
     await page.goto("/#/config");
 
@@ -54,7 +56,7 @@ test.describe("issue creation", () => {
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Title").fill("TestShelly");
     await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
-    await meterModal.getByLabel("IP address or hostname").fill("192.168.1.100");
+    await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     
     // Show advanced settings to access username field
     await page.getByRole("button", { name: "Show advanced settings" }).click();
