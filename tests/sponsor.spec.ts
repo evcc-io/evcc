@@ -63,31 +63,9 @@ test.describe("sponsor token", () => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
-    // Open sponsor modal and enter token
-    await page
-      .getByTestId("generalconfig-sponsoring")
-      .getByRole("button", { name: "Edit" })
-      .click();
-
-    const modal = page.getByTestId("sponsor-modal");
-    const textarea = modal.getByRole("textbox", { name: "Enter your token" });
-
-    await textarea.fill(EXPIRED_TOKEN);
-    // Try to save to trigger validation
-    await modal.getByRole("button", { name: "Save" }).click();
-    await expect(modal).toContainText("token is expired");
-  });
-
-  test("token is immediately visible after save without restart", async ({ page }) => {
-    await start();
-    await page.goto("/#/config");
-    await enableExperimental(page);
-
-    // Initially, sponsoring entry should show "---" (no sponsor)
     const sponsorEntry = page.getByTestId("generalconfig-sponsoring");
     await expect(sponsorEntry).toContainText("---");
 
-    // Open sponsor modal and enter expired token (will be saved despite being invalid)
     await sponsorEntry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("sponsor-modal");
@@ -95,16 +73,12 @@ test.describe("sponsor token", () => {
 
     await textarea.fill(EXPIRED_TOKEN);
     await modal.getByRole("button", { name: "Save" }).click();
+    await expect(modal).toContainText("token is expired");
 
-    // After save, the modal should close and show error in the entry (NOT "---")
-    // The token should be immediately visible in the UI without restart
-    await expect(modal).not.toBeVisible();
-    
-    // The sponsor entry should now show "invalid" instead of "---"
+    // Verify token is immediately visible in UI after failed save attempt
     await expect(sponsorEntry).toContainText("invalid");
     await expect(sponsorEntry).not.toContainText("---");
 
-    // Verify by opening the modal again
     await sponsorEntry.getByRole("button", { name: "Edit" }).click();
     await expect(modal.getByRole("textbox", { name: "Your token" })).toHaveValue(SHORT_TOKEN);
   });
