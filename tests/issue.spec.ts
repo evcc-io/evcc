@@ -5,6 +5,14 @@ import { enableExperimental, expectModalVisible, expectModalHidden } from "./uti
 
 test.use({ baseURL: baseUrl() });
 
+test.beforeAll(async () => {
+  await startSimulator();
+});
+
+test.afterAll(async () => {
+  await stopSimulator();
+});
+
 test.afterEach(async () => {
   await stop();
 });
@@ -42,7 +50,6 @@ test.describe("issue creation", () => {
   });
 
   test("create issue via ui", async ({ page }) => {
-    await startSimulator();
     await start(CONFIG);
     await page.goto("/#/config");
 
@@ -50,16 +57,14 @@ test.describe("issue creation", () => {
     await enableExperimental(page, false);
 
     // Create a Shelly meter with username (to test private data redaction)
-    await page.getByRole("button", { name: "Add solar or battery" }).click();
     await page.getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Title").fill("TestShelly");
     await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByLabel("Username").fill("testuser@example.com");
     await meterModal.getByLabel("Password").fill("secretpass");
-    
+
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
     await expect(page.getByTestId("grid")).toBeVisible();
@@ -100,13 +105,13 @@ test.describe("issue creation", () => {
     const uiModal = page.getByTestId("issueUiConfig-modal");
     await expectModalVisible(uiModal);
     const uiContent = await uiModal.getByRole("textbox").inputValue();
-    
+
     // Verify meter is present but private data is redacted
-    expect(uiContent).toContain("TestShelly"); // title should be visible
+    expect(uiContent).toContain("shelly"); // meter type should be visible
     expect(uiContent).not.toContain("testuser@example.com"); // user should be redacted
     expect(uiContent).not.toContain("secretpass"); // password should be redacted
     expect(uiContent).toContain("***"); // redaction marker should be present
-    
+
     await uiModal.getByRole("button", { name: "Close" }).first().click();
     await expectModalHidden(uiModal);
 
@@ -146,7 +151,7 @@ test.describe("issue creation", () => {
     await expect(textarea).toBeVisible();
     const textareaContent = await textarea.inputValue();
     expect(textareaContent).toContain("carport_pv"); // from evcc.yaml
-    expect(textareaContent).toContain("TestShelly"); // from ui config
+    expect(textareaContent).toContain("shelly"); // from ui config
     expect(textareaContent).toContain("DEBUG"); // from logs
     expect(textareaContent).toContain('"telemetry":'); // from state
 
@@ -180,7 +185,7 @@ test.describe("issue creation", () => {
       .getByRole("link", { name: "Create GitHub Issue" })
       .getAttribute("href");
     expect(href).toContain("https://github.com/evcc-io/evcc/issues/new?title=Kaboom&body=");
-    expect(href).toContain("TestShelly"); // from ui config
+    expect(href).toContain("shelly"); // from ui config
     expect(href).toContain("carport_pv"); // from evcc.yaml
     expect(href).toContain("DEBUG"); // from logs
     expect(href).toContain("MyFancyState"); // from state
