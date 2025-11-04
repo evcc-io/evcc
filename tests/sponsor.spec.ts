@@ -24,9 +24,9 @@ test.describe("sponsor token", () => {
     await expect(page.getByTestId("fatal-error")).toContainText("sponsorship");
 
     // Open sponsor modal
-    const sponsorEntry = page.getByTestId("generalconfig-sponsoring");
-    await expect(sponsorEntry).toContainText("invalid");
-    await sponsorEntry.getByRole("button", { name: "Edit" }).click();
+    const entry = page.getByTestId("generalconfig-sponsoring");
+    await expect(entry).toContainText("invalid");
+    await entry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("sponsor-modal");
     const tokenInput = modal.getByRole("textbox", { name: "Your token" });
@@ -63,10 +63,10 @@ test.describe("sponsor token", () => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
-    const sponsorEntry = page.getByTestId("generalconfig-sponsoring");
-    await expect(sponsorEntry).toContainText("---");
+    const entry = page.getByTestId("generalconfig-sponsoring");
+    await expect(entry).toContainText("---");
 
-    await sponsorEntry.getByRole("button", { name: "Edit" }).click();
+    await entry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("sponsor-modal");
     const textarea = modal.getByRole("textbox", { name: "Enter your token" });
@@ -79,10 +79,10 @@ test.describe("sponsor token", () => {
 
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
-    await expect(sponsorEntry).toContainText("invalid");
-    await expect(sponsorEntry).not.toContainText("---");
+    await expect(entry).toContainText("invalid");
+    await expect(entry).not.toContainText("---");
 
-    await sponsorEntry.getByRole("button", { name: "Edit" }).click();
+    await entry.getByRole("button", { name: "Edit" }).click();
     await expect(modal.getByRole("textbox", { name: "Your token" })).toHaveValue(SHORT_TOKEN);
   });
 });
