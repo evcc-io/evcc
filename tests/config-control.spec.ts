@@ -14,10 +14,10 @@ test.describe("control settings (interval)", () => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
-    const controlEntry = page.getByTestId("generalconfig-control");
-    await expect(controlEntry).toContainText("30 s");
+    const entry = page.getByTestId("generalconfig-control");
+    await expect(entry).toContainText("30 s");
 
-    await controlEntry.getByRole("button", { name: "Edit" }).click();
+    await entry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("control-modal");
     await expectModalVisible(modal);
@@ -32,10 +32,10 @@ test.describe("control settings (interval)", () => {
 
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
-    await expect(controlEntry).toContainText("60 s");
-    await expect(controlEntry).not.toContainText("30 s");
+    await expect(entry).toContainText("60 s");
+    await expect(entry).not.toContainText("30 s");
 
-    await controlEntry.getByRole("button", { name: "Edit" }).click();
+    await entry.getByRole("button", { name: "Edit" }).click();
     await expectModalVisible(modal);
     await expect(intervalInput).toHaveValue("60");
   });
@@ -45,8 +45,8 @@ test.describe("control settings (interval)", () => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
-    const controlEntry = page.getByTestId("generalconfig-control");
-    await controlEntry.getByRole("button", { name: "Edit" }).click();
+    const entry = page.getByTestId("generalconfig-control");
+    await entry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("control-modal");
     await expectModalVisible(modal);
@@ -62,7 +62,7 @@ test.describe("control settings (interval)", () => {
 
     await expect(page.getByTestId("restart-needed")).toBeVisible();
 
-    await controlEntry.getByRole("button", { name: "Edit" }).click();
+    await entry.getByRole("button", { name: "Edit" }).click();
     await expectModalVisible(modal);
     await expect(residualPowerInput).toHaveValue("200");
     await expect(residualPowerInput).not.toHaveValue(initialValue);
