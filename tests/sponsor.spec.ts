@@ -100,9 +100,6 @@ test.describe("sponsor token", () => {
     // The token should be immediately visible in the UI without restart
     await expect(modal).not.toBeVisible();
     
-    // Wait a moment for websocket update to propagate
-    await page.waitForTimeout(500);
-    
     // The sponsor entry should now show "invalid" instead of "---"
     await expect(sponsorEntry).toContainText("invalid");
     await expect(sponsorEntry).not.toContainText("---");

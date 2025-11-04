@@ -35,9 +35,6 @@ test.describe("control settings (interval)", () => {
     // Modal should close
     await expectModalHidden(modal);
 
-    // Wait a moment for websocket update to propagate
-    await page.waitForTimeout(500);
-
     // The control entry should now show the new interval value (60s) without restart
     await expect(controlEntry).toContainText("60");
     await expect(controlEntry).not.toContainText("30");
@@ -72,9 +69,6 @@ test.describe("control settings (interval)", () => {
 
     // Modal should close
     await expectModalHidden(modal);
-
-    // Wait a moment for websocket update to propagate
-    await page.waitForTimeout(500);
 
     // Verify by opening the modal again
     await controlEntry.getByRole("button", { name: "Edit" }).click();
