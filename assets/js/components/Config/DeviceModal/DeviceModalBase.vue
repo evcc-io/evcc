@@ -17,12 +17,8 @@
 
 				<slot name="before-template" :values="values"></slot>
 
-				<p v-if="showDeprecatedWarning" class="text-danger">
-					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
-				</p>
-
 				<TemplateSelector
-					v-else-if="showTemplateSelector"
+					v-if="showTemplateSelector"
 					ref="templateSelect"
 					v-model="templateName"
 					:device-type="deviceType"
@@ -31,6 +27,10 @@
 					:groups="computedTemplateOptions"
 					@change="handleTemplateChange"
 				/>
+
+				<p v-if="showDeprecatedWarning" class="text-danger">
+					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
+				</p>
 
 				<YamlEntry
 					v-if="showYamlInput"

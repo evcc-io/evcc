@@ -328,6 +328,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
+	if dev, ok := instance.(api.Dimmer); ok {
+		val, err := dev.Dimmed()
+		makeResult("dimmed", val, err)
+	}
+
 	if dev, ok := instance.(api.Identifier); ok {
 		val, err := dev.Identify()
 		makeResult("identifier", val, err)

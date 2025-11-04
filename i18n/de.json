@@ -94,6 +94,7 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "feedinPrice": "Einspeisevergütung",
@@ -185,7 +186,7 @@
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
       "title": "Titel",
-      "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte prüfe das Changelog für Migrationshinweise.",
+      "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
     },
     "grid": {

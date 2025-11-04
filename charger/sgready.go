@@ -134,7 +134,7 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 	}
 
 	status := map[int64]api.ChargeStatus{
-		Dim:    api.StatusA,
+		Dim:    api.StatusB,
 		Normal: api.StatusB,
 		Boost:  api.StatusC,
 	}
