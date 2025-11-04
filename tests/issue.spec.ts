@@ -172,4 +172,53 @@ test.describe("issue creation", () => {
     expect(href).toContain("DEBUG"); // from logs
     expect(href).toContain("MyFancyState"); // from state
   });
+
+  test("verify private data redaction in device configs", async ({ page }) => {
+    await start(CONFIG);
+    await page.goto("/#/config");
+
+    // Enable experimental features
+    await enableExperimental(page, false);
+
+    // Create a vehicle with private data (VIN)
+    await page.getByTestId("add-vehicle").click();
+    const vehicleModal = page.getByTestId("vehicle-modal");
+    await expectModalVisible(vehicleModal);
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Audi (etron)");
+    await vehicleModal.getByLabel("Title").fill("Test Audi");
+    await vehicleModal.getByLabel("Username").fill("test@example.com");
+    await vehicleModal.getByLabel("Password").fill("secretpass");
+    await vehicleModal.getByLabel("Vehicle Identification Number (VIN) optional").fill("WAUZZZ8V9KA123456");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(vehicleModal);
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+
+    // Restart to apply changes
+    await restart(CONFIG);
+    await page.reload();
+
+    // Navigate to issue page
+    await page.getByRole("link", { name: "Report a problem" }).click();
+    await expect(page.getByRole("heading", { name: "Report a problem" })).toBeVisible();
+
+    // Check UI config section for private data redaction
+    const uiItem = page.getByTestId("issueUiConfig-additional-item");
+    await uiItem.getByRole("button", { name: "show details" }).click();
+    const uiModal = page.getByTestId("issueUiConfig-modal");
+    await expectModalVisible(uiModal);
+    const uiContent = await uiModal.getByRole("textbox").inputValue();
+
+    // Verify device is present but private data is redacted
+    expect(uiContent).toContain("Test Audi"); // title should be visible
+    expect(uiContent).not.toContain("test@example.com"); // user should be redacted
+    expect(uiContent).not.toContain("WAUZZZ8V9KA123456"); // VIN should be redacted
+    expect(uiContent).toContain("***"); // redaction marker should be present
+
+    // Password should also be redacted (masked field)
+    expect(uiContent).not.toContain("secretpass");
+
+    await uiModal.getByRole("button", { name: "Close" }).first().click();
+    await expectModalHidden(uiModal);
+  });
 });
