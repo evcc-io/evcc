@@ -22,12 +22,8 @@ params:
   - name: maxacpower
   - name: minsoc
     advanced: true
-    help:
-      en: Minimum state of charge (%) to maintain in the battery. Prevents battery from discharging below this threshold.
   - name: maxsoc
     advanced: true
-    help:
-      en: Maximum state of charge (%) allowed in the battery. Prevents battery from charging above this threshold.
   - name: maxchargepower
     help:
       en: Maximum charge power for forced charging of the battery in watts. (0 to automatically set the value of the maximum BDC rated power)
