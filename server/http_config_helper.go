@@ -120,7 +120,7 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 		}
 
 		// preserve modbus fields if template supports modbus
-		if hasModbus && slices.Contains(templates.ModbusFields, k) {
+		if hasModbus && slices.Contains(templates.ModbusParams, k) {
 			res[k] = v
 			continue
 		}
