@@ -486,7 +486,6 @@
         "backup": {
           "action": "Download sikkerhedskopi...",
           "confirmationButton": "Download sikkerhedskopi",
-          "confirmationText": "Indtast venligst din adgangskode for at downloade databasefilen.",
           "description": "Sikkerhedskopier dine data til en fil. Den kan bruges til at gendanne dine data i tilfælde af systemfejl.",
           "title": "Sikkerhedskopier"
         },

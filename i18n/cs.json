@@ -465,7 +465,6 @@
         "backup": {
           "action": "Stáhnout zálohu...",
           "confirmationButton": "Stáhnout zálohu",
-          "confirmationText": "Prosím, zadejte své heslo pro stažení databázového souboru.",
           "description": "Zálohuje vaši konfiguraci do souboru. Tento soubor může být později použit pro obnovu, např. v případě selhání systému.",
           "title": "Záloha"
         },

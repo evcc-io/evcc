@@ -475,7 +475,6 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "Voer je wachtwoord in om het database bestand te downloaden.",
           "description": "Backup je data naar een bestand. Dit bestand kan gebruikt worden om je data te herstellen in geval van een systeemfout.",
           "title": "Backup"
         },

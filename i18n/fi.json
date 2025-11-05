@@ -486,7 +486,6 @@
         "backup": {
           "action": "Ladataan varmuuskopiota...",
           "confirmationButton": "Lataa varmuuskopio",
-          "confirmationText": "Syötä salasanasi ladataksesi tietokantatiedoston.",
           "description": "Varmuuskopioi tietosi. Tätä tiedostoa voidaan käyttää palauttamaan tietosi järjestelmävirheen jälkeen.",
           "title": "Varmuuskopio"
         },

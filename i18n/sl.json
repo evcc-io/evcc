@@ -485,7 +485,6 @@
         "backup": {
           "action": "Prenesi varnostno kopijo ...",
           "confirmationButton": "Prenesi varnostno kopijo",
-          "confirmationText": "Za prenos datoteke baze podatkov vnesite geslo.",
           "description": "Varnostno kopirajte podatke v datoteko. To datoteko lahko uporabite za obnovitev podatkov v primeru sistemske napake.",
           "title": "Varnostno kopiranje"
         },

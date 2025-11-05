@@ -447,7 +447,6 @@
         "backup": {
           "action": "Yedeklemeyi indir...",
           "confirmationButton": "Yedeklemeyi indir",
-          "confirmationText": "Veritabanı dosyasını indirmek için lütfen şifreni gir.",
           "description": "Verilerini bir dosyaya yedekle. Bu dosya, bir sistem arızası durumunda verilerini geri yüklemek için kullanılabilir.",
           "title": "Yedekle"
         },
