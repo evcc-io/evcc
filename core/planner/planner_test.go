@@ -29,6 +29,14 @@ func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Ra
 	return res
 }
 
+// func dumpRates(rr api.Rates) string {
+// 	var b []byte
+// 	for _, r := range rr {
+// 		b = fmt.Appendf(b, "%+v\n", r)
+// 	}
+// 	return string(b)
+// }
+
 // TODO start before start of rates
 
 func TestPlan(t *testing.T) {
@@ -314,14 +322,6 @@ func TestPrecondition(t *testing.T) {
 			Value: 4,
 		},
 	}, plan, "expected short early and split late slot")
-
-	// dump := func(rr api.Rates) string {
-	// 	var b []byte
-	// 	for _, r := range rr {
-	// 		b = fmt.Appendf(b, "%+v\n", r)
-	// 	}
-	// 	return string(b)
-	// }
 
 	plan = p.Plan(time.Hour, 24*time.Hour, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, api.Rates{
