@@ -120,7 +120,7 @@
 			@closed="confirmType = ''"
 		>
 			<form @submit.prevent="submit">
-				<p v-if="!(authDisabled && confirmType == 'backup')">
+				<p>
 					<span>{{
 						$t(`config.system.backupRestore.${confirmType}.confirmationText`)
 					}}</span>
