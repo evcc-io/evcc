@@ -124,6 +124,10 @@ export default {
 			if (this.transformReadValues) {
 				this.serverValues = this.transformReadValues(this.serverValues);
 			}
+			// Handle null/undefined values when expecting an array or object
+			if (this.serverValues == null) {
+				this.serverValues = this.storeValuesInArray ? [] : {};
+			}
 			this.values = deepClone(this.serverValues);
 		},
 		async save() {

@@ -153,27 +153,22 @@
 		<FormRow
 			v-if="isProxy"
 			id="serialConnectionReadonly"
-			label="Readonly"
+			:label="$t('config.modbus.readonly')"
 			:help="
 				readonly === MODBUS_PROXY_READONLY.TRUE
-					? 'Write access is blocked without response.'
+					? $t('config.modbus.readonlyHelpSilent')
 					: readonly === MODBUS_PROXY_READONLY.FALSE
-						? 'Write access is blocked with a modbus error as response.'
+						? $t('config.modbus.readonlyHelpNo')
 						: readonly === MODBUS_PROXY_READONLY.DENY
-							? 'Write access is forwarded.'
-							: 'Whether Modbus write accesses by third-party systems should be blocked.'
+							? $t('config.modbus.readonlyHelpError')
+							: $t('config.modbus.readonlyHelpDefault')
 			"
 		>
 			<SelectGroup
 				id="serialConnectionReadonly"
 				:model-value="readonly || defaultReadonly"
 				class="w-100"
-				:options="
-					Object.values(MODBUS_PROXY_READONLY).map((v) => ({
-						value: v,
-						name: v,
-					}))
-				"
+				:options="readonlyOptions"
 				transparent
 				@update:model-value="$emit('update:readonly', $event)"
 			/>
@@ -262,6 +257,22 @@ export default defineComponent({
 				.map((v) => {
 					return { key: v, name: `${v}` };
 				});
+		},
+		readonlyOptions() {
+			return [
+				{
+					value: MODBUS_PROXY_READONLY.TRUE,
+					name: this.$t("config.modbus.readonlyOptionSilent"),
+				},
+				{
+					value: MODBUS_PROXY_READONLY.DENY,
+					name: this.$t("config.modbus.readonlyOptionError"),
+				},
+				{
+					value: MODBUS_PROXY_READONLY.FALSE,
+					name: this.$t("config.modbus.readonlyOptionNo"),
+				},
+			];
 		},
 	},
 	watch: {

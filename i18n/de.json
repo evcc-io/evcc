@@ -384,10 +384,19 @@
       "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
       "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "readonly": "Schreibschutz",
+      "readonlyHelpDefault": "Ob Modbus-Schreibzugriffe durch Drittsysteme blockiert werden sollen.",
+      "readonlyHelpError": "Schreibzugriff wird mit einem Modbus-Fehler als Antwort blockiert.",
+      "readonlyHelpNo": "Schreibzugriff wird weitergeleitet.",
+      "readonlyHelpSilent": "Schreibzugriff wird ohne Antwort blockiert.",
+      "readonlyOptionError": "Fehler",
+      "readonlyOptionNo": "nein",
+      "readonlyOptionSilent": "still"
     },
     "modbusproxy": {
-      "description": "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät.",
+      "description": "Manche Modbus-Geräte unterstützen nur eine oder sehr wenige Verbindungen. evcc kann als Proxy fungieren und ermöglicht so simultanen Zugriff für mehrere Clients (Hausautomation, Skripte, etc.).",
+      "sourcePortHelp": "Port für eingehende Client-Verbindungen. Muss verfügbar sein.",
       "title": "Modbus-Proxy"
     },
     "mqtt": {
@@ -477,6 +486,7 @@
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
+      "tokenRequiredFeature": "Diese Funktion erfordert ein Sponsortoken.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",

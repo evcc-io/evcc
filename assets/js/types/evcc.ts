@@ -372,16 +372,18 @@ export enum MODBUS_PROXY_READONLY {
 }
 
 export type ModbusProxy = {
-  Port: number;
-  ReadOnly: MODBUS_PROXY_READONLY;
-  Settings: {
-    URI?: string;
-    RTU?: boolean;
-    Device?: string;
-    Baudrate?: MODBUS_BAUDRATE;
-    Comset?: MODBUS_COMSET;
-  };
+  port: number;
+  readonly: MODBUS_PROXY_READONLY;
+  settings: ModbusProxySettings;
 };
+
+export interface ModbusProxySettings {
+  uri?: string;
+  rtu?: boolean;
+  device?: string;
+  baudrate?: MODBUS_BAUDRATE;
+  comset?: MODBUS_COMSET;
+}
 
 export interface Notification {
   message: string;

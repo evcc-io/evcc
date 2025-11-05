@@ -9,32 +9,36 @@
 		:store-values-in-array="true"
 		disable-remove
 		data-testid="modbusproxy-modal"
-		size="lg"
+		size="xl"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: ModbusProxy[] }">
 			<div class="mb-3">
-				<pre class="text-monospace">{{ ASCII_DIAGRAM }}</pre>
-				<div v-for="(connection, index) in values" :key="index">
+				<SponsorTokenRequired v-if="!isSponsor" feature />
+				<pre class="text-monospace my-5">{{ ASCII_DIAGRAM }}</pre>
+				<div v-for="(c, index) in values" :key="index">
 					<div class="d-block">
 						<hr class="mt-5" />
 						<h5>
-							<div class="inner mb-3">Modbus Proxy Connection #{{ index + 1 }}</div>
+							<div class="inner mb-4">Proxy Connection #{{ index + 1 }}</div>
 						</h5>
 					</div>
 					<div class="row d-inline d-lg-flex mb-3">
 						<div class="col-lg-4">
-							<div class="border rounded px-3">
+							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
-									<hr class="mt-4" />
-									<h5>
-										<div class="inner">Client</div>
+									<h5 class="box-heading">
+										<div class="inner">evcc</div>
 									</h5>
 								</div>
-								<FormRow id="modbusPort" :label="$t('config.modbus.port')">
+								<FormRow
+									id="modbusProxySourcePort"
+									:label="$t('config.modbus.port')"
+									:help="$t('config.modbusproxy.sourcePortHelp')"
+								>
 									<PropertyField
-										id="modbusPort"
-										v-model="connection.Port"
+										id="modbusProxySourcePort"
+										v-model="c.port"
 										property="port"
 										type="Int"
 										class="w-50"
@@ -45,39 +49,38 @@
 						</div>
 						<div
 							class="col d-none d-lg-flex justify-content-center evcc-gray"
-							style="padding-top: 9.5%"
+							style="padding-top: 2.5rem"
 						>
 							<shopicon-regular-arrowright
 								size="l"
 								class="flex-shrink-0"
 							></shopicon-regular-arrowright>
 						</div>
-						<div class="col d-flex d-lg-none justify-content-center evcc-gray">
+						<div class="col d-flex d-lg-none justify-content-center evcc-gray my-3">
 							<shopicon-regular-arrowdown
 								size="l"
 								class="flex-shrink-0"
 							></shopicon-regular-arrowdown>
 						</div>
 						<div class="col-lg-6">
-							<div class="border rounded px-3">
+							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
-									<hr class="mt-4" />
-									<h5>
+									<h5 class="box-heading">
 										<div class="inner">Device</div>
 									</h5>
 								</div>
 								<Modbus
 									:id="index"
-									v-model:baudrate="connection.Settings.Baudrate"
-									v-model:comset="connection.Settings.Comset"
-									v-model:device="connection.Settings.Device"
-									v-model:readonly="connection.ReadOnly"
-									:host="getHost(connection.Settings.URI)"
-									:port="getPort(connection.Settings.URI)"
+									v-model:baudrate="c.settings.baudrate"
+									v-model:comset="c.settings.comset"
+									v-model:device="c.settings.device"
+									v-model:readonly="c.readonly"
+									:host="getHost(c.settings.uri)"
+									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
 									:is-proxy="true"
-									@update:host="updateHost(connection, $event)"
-									@update:port="updatePort(connection, $event)"
+									@update:host="(host) => updateHost(host, c.settings)"
+									@update:port="(port) => updatePort(port, c.settings)"
 								/>
 							</div>
 						</div>
@@ -93,19 +96,24 @@
 							size="s"
 							class="flex-shrink-0"
 						></shopicon-regular-trash>
-						Remove connection
+						Remove
 					</button>
 				</div>
-				<hr />
+				<hr class="my-5" />
 				<button
 					type="button"
-					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
+					class="d-flex btn btn-sm align-items-center gap-2 mb-5"
+					:class="
+						values.length === 0
+							? 'btn-secondary'
+							: 'btn-outline-secondary border-0 evcc-gray'
+					"
 					data-testid="networkconnection-add"
 					tabindex="0"
-					@click="values.push(DEFAULT_MODBUS_PROXY)"
+					@click="addConnection(values)"
 				>
 					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
-					Add network connection
+					Add proxy connection
 				</button>
 			</div>
 		</template>
@@ -118,44 +126,49 @@ import "@h2d2/shopicons/es/regular/arrowdown";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
-import { MODBUS_PROXY_READONLY, type ModbusProxy } from "@/types/evcc";
+import { MODBUS_PROXY_READONLY, type ModbusProxy, type ModbusProxySettings } from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
 import Modbus from "./DeviceModal/Modbus.vue";
 import PropertyField from "./PropertyField.vue";
 import FormRow from "./FormRow.vue";
+import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 import { defineComponent } from "vue";
-
-const DEFAULT_MODBUS_PROXY: ModbusProxy = {
-	Port: 502,
-	ReadOnly: MODBUS_PROXY_READONLY.DENY,
-	Settings: {},
-};
 
 export default defineComponent({
 	name: "ModbusProxyModal",
-	components: { JsonModal, Modbus, FormRow, PropertyField },
+	components: { JsonModal, Modbus, FormRow, PropertyField, SponsorTokenRequired },
+	props: {
+		isSponsor: Boolean,
+	},
 	emits: ["changed"],
 	data() {
 		return {
 			ASCII_DIAGRAM,
 			MODBUS_PROXY_READONLY,
-			DEFAULT_MODBUS_PROXY,
 		};
 	},
 	methods: {
+		addConnection(values: ModbusProxy[]) {
+			const highestPort = values.length > 0 ? Math.max(...values.map((c) => c.port)) : 1501;
+			values.push({
+				port: highestPort + 1,
+				readonly: MODBUS_PROXY_READONLY.DENY,
+				settings: {},
+			});
+		},
 		getHost(uri?: string) {
 			return uri?.split(":")[0] || "";
 		},
 		getPort(uri?: string) {
 			return uri?.split(":")[1] || "";
 		},
-		updateHost(connection: ModbusProxy, newHost: string) {
-			const port = this.getPort(connection.Settings.URI);
-			connection.Settings.URI = `${newHost}:${port}`;
+		updateHost(newHost: string, settings: ModbusProxySettings) {
+			const port = this.getPort(settings.uri);
+			settings.uri = `${newHost}:${port}`;
 		},
-		updatePort(connection: ModbusProxy, newPort: string | number) {
-			const host = this.getHost(connection.Settings.URI);
-			connection.Settings.URI = `${host}:${newPort}`;
+		updatePort(newPort: string | number, settings: ModbusProxySettings) {
+			const host = this.getHost(settings.uri);
+			settings.uri = `${host}:${newPort}`;
 		},
 	},
 });
@@ -169,6 +182,10 @@ h5 {
 	margin-bottom: -0.5rem;
 	padding: 0 0.5rem;
 	justify-content: center;
+}
+h5.box-heading {
+	top: -32px;
+	margin-bottom: -24px;
 }
 h5 .inner {
 	padding: 0 0.5rem;
