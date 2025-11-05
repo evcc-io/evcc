@@ -24,7 +24,7 @@ func init() {
 	registry.Add("fixed", NewFixedFromConfig)
 }
 
-func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Price float64
 		Zones []struct {

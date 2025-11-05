@@ -12,7 +12,7 @@ import (
 func TestReplace(t *testing.T) {
 	cases := []struct {
 		k             string
-		v             interface{}
+		v             any
 		fmt, expected string
 	}{
 		// regex tests
@@ -26,7 +26,7 @@ func TestReplace(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		s, err := ReplaceFormatted(c.fmt, map[string]interface{}{
+		s, err := ReplaceFormatted(c.fmt, map[string]any{
 			c.k: c.v,
 		})
 
@@ -36,7 +36,7 @@ func TestReplace(t *testing.T) {
 }
 
 func TestReplaceMulti(t *testing.T) {
-	s, err := ReplaceFormatted("${foo}-${bar}", map[string]interface{}{
+	s, err := ReplaceFormatted("${foo}-${bar}", map[string]any{
 		"foo": "bar",
 		"bar": "baz",
 	})
@@ -47,7 +47,7 @@ func TestReplaceMulti(t *testing.T) {
 }
 
 func TestReplaceNoMatch(t *testing.T) {
-	s, err := ReplaceFormatted("${foo}", map[string]interface{}{
+	s, err := ReplaceFormatted("${foo}", map[string]any{
 		"bar": "baz",
 	})
 
@@ -69,7 +69,7 @@ func TestReplaceTemplate(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		s, err := ReplaceFormatted(tc.in, map[string]interface{}{
+		s, err := ReplaceFormatted(tc.in, map[string]any{
 			tc.key: tc.val,
 		})
 

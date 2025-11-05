@@ -7,7 +7,7 @@ capabilities: ["1p3p", "rfid"]
 requirements:
   description:
     en: Requires HTTP API access.
-    de: Benötigt HTTP-API-Zugriff.
+    de: Benötigt HTTP-API-Zugriff
   evcc: ["sponsorship"]
 params:
   - name: host
@@ -16,13 +16,11 @@ params:
       de: Hostname oder IP-Adresse
     example: 192.168.1.100
   - name: user
-    required: false
     help:
       en: Username for admin API
       de: Benutzername für Admin-API
     example: admin
   - name: password
-    required: false
     mask: true
     help:
       en: Password for admin API

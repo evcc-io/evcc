@@ -2,8 +2,8 @@ template: homeassistant
 products:
   - brand: Home Assistant
     description:
-      de: Home Assistant Sensor
-      en: Home Assistant Sensor
+      de: Meter
+      en: Meter
 group: generic
 requirements:
   description:

@@ -145,7 +145,7 @@ export default defineComponent({
 								return this.formatTimeRange(index ?? 0);
 							},
 							label: (context) => {
-								const value = context.parsed.y;
+								const value = context.parsed.y ?? 0;
 								return `SoC: ${this.formatValue(value)}%`;
 							},
 						},

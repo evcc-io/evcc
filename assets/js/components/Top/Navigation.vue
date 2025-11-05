@@ -223,7 +223,7 @@ export default defineComponent({
 						validateStatus: (code) => [200, 400].includes(code),
 					});
 					if (response.status === 200) {
-						window.open(response.data?.loginUri, "_blank");
+						window.location.href = response.data?.loginUri;
 					} else {
 						alert(`Failed to login: ${response.data?.error}`);
 					}

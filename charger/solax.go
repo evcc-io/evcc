@@ -63,16 +63,16 @@ func init() {
 	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
 
-func NewSolaxG1FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxG1FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
 }
 
-func NewSolaxG2FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxG2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, false)
 }
 
 // NewSolaxFromConfig creates a Solax charger from generic config
-func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}, isLegacyHw bool) (api.Charger, error) {
+func NewSolaxFromConfig(ctx context.Context, other map[string]any, isLegacyHw bool) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}

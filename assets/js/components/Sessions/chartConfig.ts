@@ -38,7 +38,7 @@ Chart.defaults.layout.padding = 0;
   const { chart } = this;
   const { height, width } = chart;
 
-  const isTop = eventPosition.y > height / 2;
+  const isTop = (eventPosition.y ?? 0) > height / 2;
   const yPadding = height / 5;
   const y = isTop ? yPadding : height - yPadding;
   const x = width / 2;

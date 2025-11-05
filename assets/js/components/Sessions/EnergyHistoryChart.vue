@@ -181,8 +181,8 @@ export default defineComponent({
 							const { innerWidth, innerHeight } = window;
 
 							return {
-								x: Math.min(x, innerWidth - (width || 0)),
-								y: Math.min(y, innerHeight - (height || 0)),
+								x: Math.min(x ?? 0, innerWidth - (width ?? 0)),
+								y: Math.min(y ?? 0, innerHeight - (height ?? 0)),
 							};
 						},
 						callbacks: {

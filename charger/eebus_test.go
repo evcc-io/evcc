@@ -23,7 +23,7 @@ func TestEEBusNoCurrents(t *testing.T) {
 
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 	eebus := &EEBus{
-		uc: &eebus.UseCasesEVSE{
+		cem: &eebus.CustomerEnergyManagement{
 			EvCC:  evcc,
 			EvCem: evcem,
 		},
@@ -198,7 +198,7 @@ func TestEEBusIsCharging(t *testing.T) {
 
 				evEntity := spinemocks.NewEntityRemoteInterface(t)
 				eebus := &EEBus{
-					uc: &eebus.UseCasesEVSE{
+					cem: &eebus.CustomerEnergyManagement{
 						EvCC:  evcc,
 						EvCem: evcem,
 						OpEV:  opev,
@@ -225,7 +225,7 @@ func TestEEBusCurrentPower(t *testing.T) {
 
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 	eebus := &EEBus{
-		uc: &eebus.UseCasesEVSE{
+		cem: &eebus.CustomerEnergyManagement{
 			EvCC:  evcc,
 			EvCem: evcem,
 		},
@@ -248,7 +248,7 @@ func TestEEBusCurrentPower_Elli(t *testing.T) {
 
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 	eebus := &EEBus{
-		uc: &eebus.UseCasesEVSE{
+		cem: &eebus.CustomerEnergyManagement{
 			EvCC:  evcc,
 			EvCem: evcem,
 		},

@@ -1,5 +1,5 @@
 {{ define "vehicle-features" }}
-{{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") }}
+{{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") }}
 features:
 {{- if eq .coarsecurrent "true" }}
 - coarsecurrent

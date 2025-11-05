@@ -21,7 +21,7 @@ func parseLogLevels() {
 	}
 
 	var level string
-	for _, kv := range strings.Split(viper.GetString("log"), ",") {
+	for kv := range strings.SplitSeq(viper.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
 			level = areaLevel[0]

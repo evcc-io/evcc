@@ -97,8 +97,8 @@ func (v *API) DeleteContainer(id string) error {
 	return v.DoJSON(req, &res)
 }
 
-func (v *API) GetTelematics(vin, container string) (TelematicData, error) {
-	var res TelematicData
+func (v *API) GetTelematics(vin, container string) (ContainerContents, error) {
+	var res ContainerContents
 	uri := fmt.Sprintf(ApiURL+"/customers/vehicles/%s/telematicData?containerId=%s", vin, container)
 	err := v.GetJSON(uri, &res)
 	return res, err

@@ -28,7 +28,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Tariff, error) {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Price    *plugin.Config

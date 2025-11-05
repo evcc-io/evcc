@@ -31,26 +31,26 @@ func (cs *CS) print(s string) {
 	}
 }
 
-func (cs *CS) Debug(args ...interface{}) {
+func (cs *CS) Debug(args ...any) {
 	cs.print(fmt.Sprintln(args...))
 }
 
-func (cs *CS) Debugf(f string, args ...interface{}) {
+func (cs *CS) Debugf(f string, args ...any) {
 	cs.print(fmt.Sprintf(f, args...))
 }
 
-func (cs *CS) Info(args ...interface{}) {
+func (cs *CS) Info(args ...any) {
 	cs.print(fmt.Sprintln(args...))
 }
 
-func (cs *CS) Infof(f string, args ...interface{}) {
+func (cs *CS) Infof(f string, args ...any) {
 	cs.print(fmt.Sprintf(f, args...))
 }
 
-func (cs *CS) Error(args ...interface{}) {
+func (cs *CS) Error(args ...any) {
 	cs.print(fmt.Sprintln(args...))
 }
 
-func (cs *CS) Errorf(f string, args ...interface{}) {
+func (cs *CS) Errorf(f string, args ...any) {
 	cs.print(fmt.Sprintf(f, args...))
 }

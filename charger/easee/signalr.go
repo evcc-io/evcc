@@ -13,7 +13,7 @@ type Observation struct {
 	Value     string
 }
 
-func (o *Observation) TypedValue() (interface{}, error) {
+func (o *Observation) TypedValue() (any, error) {
 	switch o.DataType {
 	case Boolean:
 		return o.Value == "1", nil

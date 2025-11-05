@@ -1,8 +1,8 @@
 package cardata
 
 import (
-	"context"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
@@ -10,15 +10,17 @@ import (
 )
 
 func TestCardataStreaming(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.TODO())
-	defer cancel()
+	ctx := t.Context()
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin")
+	}), "client", "vin", 0)
+
+	// prevent container panic
+	p.updated = time.Now()
 
 	keySoc := "vehicle.drivetrain.batteryManagement.header"
-	p.initial = map[string]TelematicDataPoint{
+	p.rest = map[string]TelematicData{
 		keySoc: {Value: "42"},
 	}
 

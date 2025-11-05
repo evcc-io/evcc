@@ -86,7 +86,7 @@ func ParseMonth(s string) (Month, error) {
 func ParseMonths(s string) ([]Month, error) {
 	var res []Month
 
-	for _, segment := range strings.Split(s, ",") {
+	for segment := range strings.SplitSeq(s, ",") {
 		fromto := strings.SplitN(segment, "-", 2)
 		if len(fromto) == 0 {
 			return nil, fmt.Errorf("invalid month range: %s", segment)
