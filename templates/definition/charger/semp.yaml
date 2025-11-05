@@ -6,7 +6,7 @@ products:
 group: generic
 capabilities: ["mA", "1p3p"]
 requirements:
-  evcc: ["sponsorship"]
+  evcc: ["sponsorship", "skiptest"]
   description:
     en: |
       SEMP (Smart Energy Management Protocol) compatible wallbox or device that can be controlled directly via HTTP/XML API.
@@ -32,7 +32,6 @@ params:
       de: Die explizite Angabe einer bestimmten Device ID ist nur bei SEMP-Gateways mit mehreren untergeordneten Geräten erforderlich.
     example: F-12345678-ABCDEF123456-00
     default: ""
-    required: false
     advanced: true
 render: |
   type: semp

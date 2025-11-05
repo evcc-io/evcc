@@ -114,6 +114,14 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    value:
+      - 101:WH
+      - 103:WH
+    scale: 0.001
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}

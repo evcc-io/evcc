@@ -58,8 +58,8 @@
           "heating": "Korisnički definirani grijač"
         },
         "heatpump": "Korisnički definirana dizalica topline",
-        "sgready": "Korisnički definirana dizalica topline (sg-ready, svi)",
-        "sgready-boost": "Korisnički definirana dizalica topline (sg-ready, boost)",
+        "sgready": "Korisnički definirana dizalica topline (sg-ready putem dodataka)",
+        "sgready-relay": "Korisnički definirana dizalica topline (sg-ready putem releja)",
         "switchsocket": "Korisnički definirana upravljiva utičnica"
       }
     },
@@ -74,7 +74,7 @@
       "descriptionResidualPower": "Pomiče operacijsku točku kontrolne petlje. Ukoliko imate kućnu bateriju, savjetuje se vrijednost od 100W. Na taj način će upotreba baterije dobiti prioritet nad energetskom mrežom.",
       "labelInterval": "Interval ažuriranja",
       "labelResidualPower": "Preostala snaga",
-      "title": "Ponašanje upravljanja"
+      "title": "Učestalost upravljanja"
     },
     "deviceValue": {
       "amount": "Iznos",

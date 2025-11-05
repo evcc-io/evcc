@@ -1,0 +1,18 @@
+template: eebus-mcp
+products:
+  - description:
+      de: "EEBus Verbraucher"
+      en: "EEBus Consumer"
+group: generic
+requirements:
+  description:
+    de: EEBus-Verbraucher im Hausnetz mit den Use Cases MPC (Monitoring & Power Consumption) und LPC (Limitation of Power Consumption). Kompatbibel mit steuerbaren Verbrauchseinrichtungen (SteuVE) gemäß §14a EnWG.
+    en: EEBus consumer in the home network using use cases MPC (Monitoring & Power Consumption) and LPC (Limitation of Power Consumption).
+  evcc: ["eebus"]
+params:
+  - name: usage
+    choice: ["charge"]
+  - preset: eebus
+render: |
+  {{ include "eebus" . }}
+  usage: {{ .usage }}

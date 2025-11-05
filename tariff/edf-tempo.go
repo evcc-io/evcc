@@ -35,7 +35,7 @@ func init() {
 	registry.Add("edf-tempo", NewEdfTempoFromConfig)
 }
 
-func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		ClientID     string

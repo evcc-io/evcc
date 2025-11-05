@@ -606,17 +606,6 @@
         },
         "type": "object"
       },
-      "RepeatingPlans": {
-        "properties": {
-          "plans": {
-            "items": {
-              "$ref": "#/components/schemas/RepeatingPlan"
-            },
-            "type": "array"
-          }
-        },
-        "type": "object"
-      },
       "Soc": {
         "description": "SOC in %",
         "example": 60,
@@ -1594,6 +1583,49 @@
         ]
       }
     },
+    "/loadpoints/{id}/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Delete limit for feed-in priority optimization.",
+        "operationId": "deleteLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Delete smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Set limit for feed-in priority optimization.",
+        "operationId": "setLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
     "/loadpoints/{id}/vehicle": {
       "delete": {
         "description": "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.",
@@ -1863,24 +1895,6 @@
         ]
       }
     },
-    "/settings/telemetry": {
-      "get": {
-        "description": "Returns the current telemetry status.",
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
-        },
-        "operationId": "getTelemetryStatus",
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/BooleanResult"
-          }
-        },
-        "summary": "Telemetry status",
-        "tags": [
-          "system"
-        ]
-      }
-    },
     "/settings/telemetry/{enable}": {
       "post": {
         "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
@@ -1937,6 +1951,41 @@
           }
         },
         "summary": "Set smart charging cost limit for all loadpoints",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "removeGlobalSmartFeedInPriorityLimit",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Remove smart feed-in priority limit for all loadpoints.",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "setGlobalSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit for all loadpoints",
         "tags": [
           "general"
         ]
@@ -2250,7 +2299,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RepeatingPlans"
+                "items": {
+                  "$ref": "#/components/schemas/RepeatingPlan"
+                },
+                "type": "array"
               }
             }
           },
@@ -2263,7 +2315,10 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/RepeatingPlans"
+                      "items": {
+                        "$ref": "#/components/schemas/RepeatingPlan"
+                      },
+                      "type": "array"
                     }
                   },
                   "type": "object"

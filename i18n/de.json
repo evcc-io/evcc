@@ -58,8 +58,8 @@
           "heating": "Benutzerdefinierte Heizung"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
-        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready, komplett)",
-        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready, boost)",
+        "sgready": "Benutzerdefinierte Wärmepumpe (SG-Ready über Plugins)",
+        "sgready-relay": "Benutzerdefinierte Wärmepumpe (SG-Ready über Relais)",
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
@@ -94,6 +94,7 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "feedinPrice": "Einspeisevergütung",
@@ -185,6 +186,7 @@
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
       "title": "Titel",
+      "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
     },
     "grid": {
@@ -356,11 +358,11 @@
       "titleLabel": "Titel",
       "usage": {
         "aux": "Intelligenter Verbraucher",
-        "battery": "Batteriezähler",
-        "charge": "Ladegerätzähler",
-        "grid": "Netzzähler",
+        "battery": "Batterie",
+        "charge": "Verbraucher / Ladegerät",
+        "grid": "Netzanschluss",
         "label": "Verwendung",
-        "pv": "PV-Zähler"
+        "pv": "Erzeugung"
       },
       "validateSave": "Überprüfen & speichern"
     },

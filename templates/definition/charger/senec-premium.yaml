@@ -1,6 +1,6 @@
 template: senec-premium
 products:
-  - brand: Senec
+  - brand: SENEC
     description:
       generic: Premium
 capabilities: ["mA", "rfid", "1p3p"]

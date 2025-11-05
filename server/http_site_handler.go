@@ -62,7 +62,7 @@ func indexHandler(customCss bool) http.HandlerFunc {
 
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
-		if err := t.Execute(w, map[string]interface{}{
+		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
 			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
@@ -81,7 +81,7 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
-func jsonWrite(w http.ResponseWriter, data interface{}) {
+func jsonWrite(w http.ResponseWriter, data any) {
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
 	}
@@ -370,7 +370,10 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		settings.Persist()
+		if err := settings.Persist(); err != nil {
+			http.Error(w, "Synching DB failed", http.StatusInternalServerError)
+			return
+		}
 
 		f, err := os.Open(db.FilePath)
 		if err != nil {

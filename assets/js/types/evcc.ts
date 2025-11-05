@@ -112,7 +112,8 @@ export enum ConfigType {
   Heatpump = "heatpump",
   SwitchSocket = "switchsocket",
   SgReady = "sgready",
-  SgReadyBoost = "sgready-boost",
+  SgReadyRelay = "sgready-relay",
+  SgReadyBoost = "sgready-boost", // deprecated
 }
 
 export type ConfigVehicle = Entity;
@@ -375,7 +376,7 @@ export interface Vehicle {
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;
-  repeatingPlans: RepeatingPlan[];
+  repeatingPlans: RepeatingPlan[] | null;
   title: string;
   features?: string[];
   capacity?: number;

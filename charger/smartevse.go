@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -69,7 +70,7 @@ func init() {
 }
 
 // NewsmartEVSEFromConfig creates a new smartEVSE ModbusTCP charger
-func NewsmartEVSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewsmartEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -242,8 +243,17 @@ func (wb *smartEVSE) Phases1p3p(phases int) error {
 	}
 
 	return whenDisabled(wb, func() error {
+		// Wait 10 seconds before switching phases
+		// can this option be made configurable in evcc.yaml?
+		time.Sleep(10 * time.Second)
+
 		// Switch phases
 		_, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, settings)
+		if err != nil {
+			// Wait 10 seconds after switching phases
+			time.Sleep(10 * time.Second)
+		}
+
 		return err
 	})
 }

@@ -99,9 +99,9 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 }
 
 func (c *EEBus) dataUpdateLimit() {
-	limit, err := c.uc.LPC.ConsumptionLimit()
+	limit, err := c.cs.CsLPCInterface.ConsumptionLimit()
 	if err != nil {
-		c.log.ERROR.Println("LPC.ConsumptionLimit:", err)
+		c.log.ERROR.Println("CS LPC ConsumptionLimit:", err)
 		return
 	}
 
@@ -112,9 +112,9 @@ func (c *EEBus) dataUpdateLimit() {
 }
 
 func (c *EEBus) writeApprovalRequired() {
-	for msg, limit := range c.uc.LPC.PendingConsumptionLimits() {
-		c.log.DEBUG.Println("LPC.PendingConsumptionLimit:", msg, limit)
-		c.uc.LPC.ApproveOrDenyConsumptionLimit(msg, true, "")
+	for msg, limit := range c.cs.CsLPCInterface.PendingConsumptionLimits() {
+		c.log.DEBUG.Println("CS LPC PendingConsumptionLimit:", msg, limit)
+		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 
 		c.mux.Lock()
 		defer c.mux.Unlock()
@@ -124,9 +124,9 @@ func (c *EEBus) writeApprovalRequired() {
 }
 
 func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
-	limit, _, err := c.uc.LPC.FailsafeConsumptionActivePowerLimit()
+	limit, _, err := c.cs.CsLPCInterface.FailsafeConsumptionActivePowerLimit()
 	if err != nil {
-		c.log.ERROR.Println("LPC.FailsafeConsumptionActivePowerLimit:", err)
+		c.log.ERROR.Println("CS LPC FailsafeConsumptionActivePowerLimit:", err)
 		return
 	}
 
@@ -137,9 +137,9 @@ func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 }
 
 func (c *EEBus) dataUpdateFailsafeDurationMinimum() {
-	duration, _, err := c.uc.LPC.FailsafeDurationMinimum()
+	duration, _, err := c.cs.CsLPCInterface.FailsafeDurationMinimum()
 	if err != nil {
-		c.log.ERROR.Println("LPC.FailsafeDurationMinimum:", err)
+		c.log.ERROR.Println("CS LPC FailsafeDurationMinimum:", err)
 		return
 	}
 

@@ -16,6 +16,8 @@ func init() {
 	registry.AddCtx("openwbpro", NewOpenWBProFromConfig)
 }
 
+//go:generate go tool decorate -f decorateOpenWBPro -b *OpenWBPro -r api.Charger -t "api.Resurrector,WakeUp,func() error"
+
 // https://openwb.de/main/?page_id=771
 
 // OpenWBPro charger implementation
@@ -27,7 +29,7 @@ type OpenWBPro struct {
 }
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
-func NewOpenWBProFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOpenWBProFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -39,7 +41,22 @@ func NewOpenWBProFromConfig(ctx context.Context, other map[string]interface{}) (
 		return nil, err
 	}
 
-	return NewOpenWBPro(ctx, util.DefaultScheme(cc.URI, "http"), cc.Cache)
+	wb, err := NewOpenWBPro(ctx, util.DefaultScheme(cc.URI, "http"), cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := wb.statusG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	var wakeup func() error
+	if status.Version >= 9 {
+		wakeup = wb.wakeup
+	}
+
+	return decorateOpenWBPro(wb, wakeup), nil
 }
 
 // NewOpenWBPro creates OpenWBPro charger
@@ -226,4 +243,8 @@ func (wb *OpenWBPro) Identify() (string, error) {
 	}
 
 	return res.RfidTag, nil
+}
+
+func (wb *OpenWBPro) wakeup() error {
+	return wb.set("cp_interrupt=true")
 }
