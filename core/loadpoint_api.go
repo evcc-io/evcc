@@ -404,6 +404,8 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
 	lp.publish(keys.PlanContinuous, strategy.Continuous)
 
+	lp.requestUpdate()
+
 	return nil
 }
 

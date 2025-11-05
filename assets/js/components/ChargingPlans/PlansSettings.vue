@@ -11,10 +11,8 @@
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
 					:multiple-plans="multiplePlans"
-					@static-plan-updated="
-						(data: StaticPlan) => updateStaticPlan({ index: 0, ...data })
-					"
-					@static-plan-removed="() => removeStaticPlan(0)"
+					@static-plan-updated="updateStaticPlan"
+					@static-plan-removed="removeStaticPlan"
 					@plan-preview="previewStaticPlan"
 				/>
 				<div v-if="socBasedPlanning">
@@ -309,8 +307,8 @@ export default defineComponent({
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.updateActivePlan(), 1000);
 		},
-		removeStaticPlan(index: number): void {
-			this.$emit("static-plan-removed", index);
+		removeStaticPlan(): void {
+			this.$emit("static-plan-removed");
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			this.$emit("static-plan-updated", plan);
