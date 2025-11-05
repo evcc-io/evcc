@@ -200,7 +200,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			bat.PDemand = prorate(continuousDemand(lp, minLen), firstSlotDuration)
+			if demand := continuousDemand(lp, minLen); demand != nil {
+				bat.PDemand = prorate(demand, firstSlotDuration)
+			}
 
 		case api.ModePV:
 			// add plan goal
@@ -277,9 +279,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if m, ok := instance.(api.BatterySocLimiter); ok {
-			min, max := m.GetSocLimits()
-			bat.SMin = float32(*b.Capacity * float64(min) * 10) // Wh
-			bat.SMax = float32(*b.Capacity * float64(max) * 10) // Wh
+			minSoc, maxSoc := m.GetSocLimits()
+			bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
+			bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
 		}
 
 		req.Batteries = append(req.Batteries, bat)

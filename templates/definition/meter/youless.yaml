@@ -24,6 +24,26 @@ render: |
     source: http
     uri: http://{{ .host }}/e
     jq: .[0]|.p1+.p2
+  currents:
+  - source: http
+    uri: http://{{ .host }}/f
+    jq: .i1
+  - source: http
+    uri: http://{{ .host }}/f
+    jq: .i2
+  - source: http
+    uri: http://{{ .host }}/f
+    jq: .i3
+  powers:
+  - source: http
+    uri: http://{{ .host }}/f
+    jq: .l1
+  - source: http
+    uri: http://{{ .host }}/f
+    jq: .l2
+  - source: http
+    uri: http://{{ .host }}/f
+    jq: .l3
   {{- end }}
   {{- if eq .usage "pv" }}
   power:

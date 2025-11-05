@@ -20,6 +20,10 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
   - name: maxchargepower
     help:
       en: Maximum charge power for forced charging of the battery in watts. (0 to automatically set the value of the maximum BDC rated power)
@@ -292,4 +296,6 @@ render: |
                 decode: uint16
         {{- end }}
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
