@@ -6,7 +6,7 @@
 		docs="/docs/reference/configuration/modbusproxy"
 		endpoint="/config/modbusproxy"
 		state-key="modbusproxy"
-		:store-values-in-array="true"
+		store-values-in-array
 		disable-remove
 		data-testid="modbusproxy-modal"
 		size="xl"
@@ -20,11 +20,13 @@
 					<div class="d-block">
 						<hr class="mt-5" />
 						<h5>
-							<div class="inner mb-4">Proxy Connection #{{ index + 1 }}</div>
+							<div class="inner mb-4">
+								{{ $t("config.modbusproxy.connection", { number: index + 1 }) }}
+							</div>
 						</h5>
 					</div>
 					<div class="row d-inline d-lg-flex mb-3">
-						<div class="col-lg-4">
+						<div class="col-lg-5">
 							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
 									<h5 class="box-heading">
@@ -45,10 +47,23 @@
 										required
 									/>
 								</FormRow>
+								<FormRow
+									id="modbusProxyReadonly"
+									:label="$t('config.modbusproxy.readonly.label')"
+									:help="getReadonlyHelp(c.readonly)"
+								>
+									<SelectGroup
+										id="modbusProxyReadonly"
+										v-model="c.readonly"
+										class="w-100"
+										:options="readonlyOptions"
+										transparent
+									/>
+								</FormRow>
 							</div>
 						</div>
 						<div
-							class="col d-none d-lg-flex justify-content-center evcc-gray"
+							class="col-lg-2 d-none d-lg-flex justify-content-center evcc-gray"
 							style="padding-top: 2.5rem"
 						>
 							<shopicon-regular-arrowright
@@ -62,11 +77,13 @@
 								class="flex-shrink-0"
 							></shopicon-regular-arrowdown>
 						</div>
-						<div class="col-lg-6">
+						<div class="col-lg-5">
 							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
 									<h5 class="box-heading">
-										<div class="inner">Device</div>
+										<div class="inner">
+											{{ $t("config.modbusproxy.device") }}
+										</div>
 									</h5>
 								</div>
 								<Modbus
@@ -74,13 +91,13 @@
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
 									v-model:device="c.settings.device"
-									v-model:readonly="c.readonly"
 									:host="getHost(c.settings.uri)"
 									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
-									:is-proxy="true"
+									hide-modbus-id
 									@update:host="(host) => updateHost(host, c.settings)"
 									@update:port="(port) => updatePort(port, c.settings)"
+									@update:device="updateDevice(c.settings)"
 								/>
 							</div>
 						</div>
@@ -88,7 +105,7 @@
 					<button
 						type="button"
 						class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray ms-auto"
-						aria-label="Remove"
+						:aria-label="$t('config.general.remove')"
 						tabindex="0"
 						@click="values.splice(index, 1)"
 					>
@@ -96,7 +113,7 @@
 							size="s"
 							class="flex-shrink-0"
 						></shopicon-regular-trash>
-						Remove
+						{{ $t("config.general.remove") }}
 					</button>
 				</div>
 				<hr class="my-5" />
@@ -113,7 +130,7 @@
 					@click="addConnection(values)"
 				>
 					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
-					Add proxy connection
+					{{ $t("config.modbusproxy.add") }}
 				</button>
 			</div>
 		</template>
@@ -126,17 +143,23 @@ import "@h2d2/shopicons/es/regular/arrowdown";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
-import { MODBUS_PROXY_READONLY, type ModbusProxy, type ModbusProxySettings } from "@/types/evcc";
+import {
+	MODBUS_COMSET,
+	MODBUS_PROXY_READONLY,
+	type ModbusProxy,
+	type ModbusProxySettings,
+} from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
 import Modbus from "./DeviceModal/Modbus.vue";
 import PropertyField from "./PropertyField.vue";
 import FormRow from "./FormRow.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
+import SelectGroup from "@/components/Helper/SelectGroup.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "ModbusProxyModal",
-	components: { JsonModal, Modbus, FormRow, PropertyField, SponsorTokenRequired },
+	components: { JsonModal, Modbus, FormRow, PropertyField, SponsorTokenRequired, SelectGroup },
 	props: {
 		isSponsor: Boolean,
 	},
@@ -147,13 +170,28 @@ export default defineComponent({
 			MODBUS_PROXY_READONLY,
 		};
 	},
+	computed: {
+		readonlyOptions() {
+			return Object.values(MODBUS_PROXY_READONLY).map((value) => ({
+				value,
+				name: this.$t(`config.modbusproxy.option.${value}`),
+			}));
+		},
+	},
 	methods: {
+		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
+			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
+		},
 		addConnection(values: ModbusProxy[]) {
 			const highestPort = values.length > 0 ? Math.max(...values.map((c) => c.port)) : 1501;
 			values.push({
 				port: highestPort + 1,
-				readonly: MODBUS_PROXY_READONLY.DENY,
-				settings: {},
+				readonly: MODBUS_PROXY_READONLY.FALSE,
+				settings: {
+					uri: ":502",
+					baudrate: 9600,
+					comset: "8N1" as MODBUS_COMSET,
+				},
 			});
 		},
 		getHost(uri?: string) {
@@ -165,10 +203,15 @@ export default defineComponent({
 		updateHost(newHost: string, settings: ModbusProxySettings) {
 			const port = this.getPort(settings.uri);
 			settings.uri = `${newHost}:${port}`;
+			settings.device = "";
 		},
 		updatePort(newPort: string | number, settings: ModbusProxySettings) {
 			const host = this.getHost(settings.uri);
 			settings.uri = `${host}:${newPort}`;
+			settings.device = "";
+		},
+		updateDevice(settings: ModbusProxySettings) {
+			settings.uri = "";
 		},
 	},
 });
@@ -184,7 +227,7 @@ h5 {
 	justify-content: center;
 }
 h5.box-heading {
-	top: -32px;
+	top: -34px;
 	margin-bottom: -24px;
 }
 h5 .inner {
@@ -192,7 +235,6 @@ h5 .inner {
 	background-color: var(--evcc-box);
 	font-weight: normal;
 	color: var(--evcc-gray);
-	text-transform: uppercase;
 	text-align: center;
 }
 </style>

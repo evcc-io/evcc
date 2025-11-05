@@ -366,8 +366,8 @@ export enum MODBUS_COMSET {
 }
 
 export enum MODBUS_PROXY_READONLY {
-  TRUE = "true",
   FALSE = "false",
+  TRUE = "true",
   DENY = "deny",
 }
 

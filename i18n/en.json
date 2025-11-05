@@ -384,18 +384,26 @@
       "protocolHintRtu": "Connection through a RS485 to Ethernet adapter without protocol translation.",
       "protocolHintTcp": "Device has native LAN/Wifi support or is connected through a RS485 to Ethernet adapter with protocol translation.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP",
-      "readonly": "Readonly",
-      "readonlyHelpDefault": "Whether Modbus write accesses by third-party systems should be blocked.",
-      "readonlyHelpError": "Write access is blocked with a modbus error as response.",
-      "readonlyHelpNo": "Write access is forwarded.",
-      "readonlyHelpSilent": "Write access is blocked without response.",
-      "readonlyOptionError": "error",
-      "readonlyOptionNo": "no",
-      "readonlyOptionSilent": "silent"
+      "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
+      "add": "Add proxy connection",
+      "connection": "Connection #{number}",
       "description": "Some Modbus devices only support a single or very few connections. evcc can act as a proxy, enabling simultaneous access for multiple clients (home automation, scripts, etc.).",
+      "device": "Device",
+      "option": {
+        "deny": "error",
+        "false": "no",
+        "true": "silent"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Write access is blocked with a Modbus error.",
+          "false": "Write access is forwarded.",
+          "true": "Write access is blocked without response."
+        },
+        "label": "Readonly"
+      },
       "sourcePortHelp": "Port for incoming client connections. Must be available.",
       "title": "Modbus Proxy"
     },

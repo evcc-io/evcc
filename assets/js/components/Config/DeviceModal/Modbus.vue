@@ -1,176 +1,151 @@
 <template>
-	<div>
+	<FormRow
+		v-if="showConnectionOptions"
+		id="modbusTcpIp"
+		:label="$t('config.modbus.connection')"
+		:help="
+			connection === 'tcpip'
+				? $t('config.modbus.connectionHintTcpip')
+				: $t('config.modbus.connectionHintSerial')
+		"
+	>
+		<div class="btn-group" role="group">
+			<input
+				:id="formId('modbusTcpIp')"
+				v-model="connection"
+				type="radio"
+				class="btn-check"
+				:name="formId('modbusConnection')"
+				value="tcpip"
+				tabindex="0"
+				autocomplete="off"
+			/>
+			<label class="btn btn-outline-primary" :for="formId('modbusTcpIp')">
+				{{ $t("config.modbus.connectionValueTcpip") }}
+			</label>
+			<input
+				:id="formId('modbusSerial')"
+				v-model="connection"
+				type="radio"
+				class="btn-check"
+				:name="formId('modbusConnection')"
+				value="serial"
+				tabindex="0"
+				autocomplete="off"
+			/>
+			<label class="btn btn-outline-primary" :for="formId('modbusSerial')">
+				{{ $t("config.modbus.connectionValueSerial") }}
+			</label>
+		</div>
+	</FormRow>
+	<FormRow v-if="!hideModbusId" id="modbusId" :label="$t('config.modbus.id')">
+		<PropertyField
+			id="modbusId"
+			property="id"
+			type="Int"
+			class="me-2"
+			required
+			:model-value="id || defaultId || 1"
+			@change="$emit('update:id', $event.target.value)"
+		/>
+	</FormRow>
+	<div v-if="connection === 'tcpip'">
+		<FormRow id="modbusHost" :label="$t('config.modbus.host')" example="192.0.2.2">
+			<PropertyField
+				id="modbusHost"
+				property="host"
+				type="String"
+				class="me-2"
+				required
+				:model-value="host"
+				@change="$emit('update:host', $event.target.value)"
+			/>
+		</FormRow>
+		<FormRow id="modbusPort" :label="$t('config.modbus.port')">
+			<PropertyField
+				id="modbusPort"
+				property="port"
+				type="Int"
+				class="me-2 w-50"
+				required
+				:model-value="port || defaultPort || 502"
+				@change="$emit('update:port', $event.target.value)"
+			/>
+		</FormRow>
 		<FormRow
-			v-if="showConnectionOptions"
-			id="modbusTcpIp"
-			:label="$t('config.modbus.connection')"
+			v-if="showProtocolOptions"
+			id="modbusTcp"
+			:label="$t('config.modbus.protocol')"
 			:help="
-				connection === 'tcpip'
-					? $t('config.modbus.connectionHintTcpip')
-					: $t('config.modbus.connectionHintSerial')
+				protocol === 'tcp'
+					? $t('config.modbus.protocolHintTcp')
+					: $t('config.modbus.protocolHintRtu')
 			"
 		>
 			<div class="btn-group" role="group">
 				<input
-					:id="formId('modbusTcpIp')"
-					v-model="connection"
+					:id="formId('modbusTcp')"
+					v-model="protocol"
 					type="radio"
 					class="btn-check"
-					:name="formId('modbusConnection')"
-					value="tcpip"
+					:name="formId('modbusProtocol')"
+					value="tcp"
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" :for="formId('modbusTcpIp')">
-					{{ $t("config.modbus.connectionValueTcpip") }}
+				<label class="btn btn-outline-primary" :for="formId('modbusTcp')">
+					{{ $t("config.modbus.protocolValueTcp") }}
 				</label>
 				<input
-					:id="formId('modbusSerial')"
-					v-model="connection"
+					:id="formId('modbusRtu')"
+					v-model="protocol"
 					type="radio"
 					class="btn-check"
-					:name="formId('modbusConnection')"
-					value="serial"
+					:name="formId('modbusProtocol')"
+					value="rtu"
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" :for="formId('modbusSerial')">
-					{{ $t("config.modbus.connectionValueSerial") }}
+				<label class="btn btn-outline-primary" :for="formId('modbusRtu')">
+					{{ $t("config.modbus.protocolValueRtu") }}
 				</label>
 			</div>
 		</FormRow>
-		<FormRow v-if="!isProxy" id="modbusId" :label="$t('config.modbus.id')">
+	</div>
+	<div v-else>
+		<FormRow id="modbusDevice" :label="$t('config.modbus.device')" example="/dev/ttyUSB0">
 			<PropertyField
-				id="modbusId"
-				property="id"
-				type="Int"
+				id="modbusDevice"
+				property="device"
+				type="String"
 				class="me-2"
 				required
-				:model-value="id || defaultId"
-				@change="$emit('update:id', $event.target.value)"
+				:model-value="device"
+				@change="$emit('update:device', $event.target.value)"
 			/>
 		</FormRow>
-		<div v-if="connection === 'tcpip'">
-			<FormRow id="modbusHost" :label="$t('config.modbus.host')" example="192.0.2.2">
-				<PropertyField
-					id="modbusHost"
-					property="host"
-					type="String"
-					class="me-2"
-					required
-					:model-value="host"
-					@change="$emit('update:host', $event.target.value)"
-				/>
-			</FormRow>
-			<FormRow id="modbusPort" :label="$t('config.modbus.port')">
-				<PropertyField
-					id="modbusPort"
-					property="port"
-					type="Int"
-					class="me-2 w-50"
-					required
-					:model-value="port || defaultPort"
-					@change="$emit('update:port', $event.target.value)"
-				/>
-			</FormRow>
-			<FormRow
-				v-if="showProtocolOptions"
-				id="modbusTcp"
-				:label="$t('config.modbus.protocol')"
-				:help="
-					protocol === 'tcp'
-						? $t('config.modbus.protocolHintTcp')
-						: $t('config.modbus.protocolHintRtu')
-				"
-			>
-				<div class="btn-group" role="group">
-					<input
-						:id="formId('modbusTcp')"
-						v-model="protocol"
-						type="radio"
-						class="btn-check"
-						:name="formId('modbusProtocol')"
-						value="tcp"
-						tabindex="0"
-						autocomplete="off"
-					/>
-					<label class="btn btn-outline-primary" :for="formId('modbusTcp')">
-						{{ $t("config.modbus.protocolValueTcp") }}
-					</label>
-					<input
-						:id="formId('modbusRtu')"
-						v-model="protocol"
-						type="radio"
-						class="btn-check"
-						:name="formId('modbusProtocol')"
-						value="rtu"
-						tabindex="0"
-						autocomplete="off"
-					/>
-					<label class="btn btn-outline-primary" :for="formId('modbusRtu')">
-						{{ $t("config.modbus.protocolValueRtu") }}
-					</label>
-				</div>
-			</FormRow>
-		</div>
-		<div v-else>
-			<FormRow id="modbusDevice" :label="$t('config.modbus.device')" example="/dev/ttyUSB0">
-				<PropertyField
-					id="modbusDevice"
-					property="device"
-					type="String"
-					class="me-2"
-					required
-					:model-value="device"
-					@change="$emit('update:device', $event.target.value)"
-				/>
-			</FormRow>
-			<FormRow id="modbusBaudrate" :label="$t('config.modbus.baudrate')">
-				<PropertyField
-					id="modbusBaudrate"
-					property="baudrate"
-					type="Choice"
-					class="me-2 w-50"
-					:choice="baudrateOptions"
-					required
-					:model-value="baudrate || defaultBaudrate"
-					@change="$emit('update:baudrate', $event.target.value)"
-				/>
-			</FormRow>
-			<FormRow id="modbusComset" :label="$t('config.modbus.comset')">
-				<PropertyField
-					id="modbusComset"
-					property="comset"
-					type="Choice"
-					class="me-2 w-50"
-					:choice="comsetOptions"
-					required
-					:model-value="comset || defaultComset"
-					@change="$emit('update:comset', $event.target.value)"
-				/>
-			</FormRow>
-		</div>
-		<FormRow
-			v-if="isProxy"
-			id="serialConnectionReadonly"
-			:label="$t('config.modbus.readonly')"
-			:help="
-				readonly === MODBUS_PROXY_READONLY.TRUE
-					? $t('config.modbus.readonlyHelpSilent')
-					: readonly === MODBUS_PROXY_READONLY.FALSE
-						? $t('config.modbus.readonlyHelpNo')
-						: readonly === MODBUS_PROXY_READONLY.DENY
-							? $t('config.modbus.readonlyHelpError')
-							: $t('config.modbus.readonlyHelpDefault')
-			"
-		>
-			<SelectGroup
-				id="serialConnectionReadonly"
-				:model-value="readonly || defaultReadonly"
-				class="w-100"
-				:options="readonlyOptions"
-				transparent
-				@update:model-value="$emit('update:readonly', $event)"
+		<FormRow id="modbusBaudrate" :label="$t('config.modbus.baudrate')">
+			<PropertyField
+				id="modbusBaudrate"
+				property="baudrate"
+				type="Choice"
+				class="me-2 w-50"
+				:choice="baudrateOptions"
+				required
+				:model-value="baudrate || defaultBaudrate"
+				@change="$emit('update:baudrate', parseInt($event.target.value))"
+			/>
+		</FormRow>
+		<FormRow id="modbusComset" :label="$t('config.modbus.comset')">
+			<PropertyField
+				id="modbusComset"
+				property="comset"
+				type="Choice"
+				class="me-2 w-50"
+				:choice="comsetOptions"
+				required
+				:model-value="comset || defaultComset || '8N1'"
+				@change="$emit('update:comset', $event.target.value)"
 			/>
 		</FormRow>
 	</div>
@@ -182,15 +157,14 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
-import { MODBUS_BAUDRATE, MODBUS_COMSET, MODBUS_PROXY_READONLY } from "@/types/evcc";
-import SelectGroup from "@/components/Helper/SelectGroup.vue";
+import { MODBUS_BAUDRATE, MODBUS_COMSET } from "@/types/evcc";
 type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
 type ConnectionOption = "tcpip" | "serial";
 type ProtocolOption = "tcp" | "rtu";
 
 export default defineComponent({
 	name: "Modbus",
-	components: { FormRow, PropertyField, SelectGroup },
+	components: { FormRow, PropertyField },
 	props: {
 		capabilities: {
 			type: Array as PropType<ModbusCapability[]>,
@@ -203,16 +177,11 @@ export default defineComponent({
 		baudrate: [Number, String],
 		comset: String,
 		device: String,
-		readonly: String as PropType<MODBUS_PROXY_READONLY>,
-		defaultPort: { type: Number, default: 502 },
-		defaultId: { type: Number, default: 1 },
-		defaultComset: { type: String as PropType<MODBUS_COMSET>, default: "8N1" },
-		defaultBaudrate: { type: Number as PropType<MODBUS_BAUDRATE>, default: 1200 },
-		defaultReadonly: {
-			type: String as PropType<MODBUS_PROXY_READONLY>,
-			default: MODBUS_PROXY_READONLY.DENY,
-		},
-		isProxy: Boolean,
+		defaultPort: Number,
+		defaultId: Number,
+		defaultComset: String,
+		defaultBaudrate: Number,
+		hideModbusId: Boolean,
 	},
 	emits: [
 		"update:modbus",
@@ -222,13 +191,11 @@ export default defineComponent({
 		"update:device",
 		"update:baudrate",
 		"update:comset",
-		"update:readonly",
 	],
 	data() {
 		return {
 			connection: "tcpip" as ConnectionOption,
 			protocol: "tcp" as ProtocolOption,
-			MODBUS_PROXY_READONLY,
 			MODBUS_BAUDRATE,
 			MODBUS_COMSET,
 		};
@@ -257,22 +224,6 @@ export default defineComponent({
 				.map((v) => {
 					return { key: v, name: `${v}` };
 				});
-		},
-		readonlyOptions() {
-			return [
-				{
-					value: MODBUS_PROXY_READONLY.TRUE,
-					name: this.$t("config.modbus.readonlyOptionSilent"),
-				},
-				{
-					value: MODBUS_PROXY_READONLY.DENY,
-					name: this.$t("config.modbus.readonlyOptionError"),
-				},
-				{
-					value: MODBUS_PROXY_READONLY.FALSE,
-					name: this.$t("config.modbus.readonlyOptionNo"),
-				},
-			];
 		},
 	},
 	watch: {
