@@ -12,7 +12,7 @@
 								:id="formId('continuous')"
 								v-model="localContinuous"
 								class="form-select"
-								@change="previewStrategy"
+								@change="updateStrategy"
 							>
 								<option :value="false">
 									{{ $t("main.chargingPlan.optimization.cheapest") }}
@@ -34,8 +34,7 @@
 								:id="formId('precondition')"
 								v-model="localPrecondition"
 								class="form-select"
-								data-testid="plan-strategy-precondition"
-								@change="previewStrategy"
+								@change="updateStrategy"
 							>
 								<option :value="0">
 									{{ $t("main.chargingPlan.precondition.optionNo") }}
@@ -70,7 +69,7 @@ export default defineComponent({
 		precondition: { type: Number, default: 0 },
 		continuous: { type: Boolean, default: false },
 	},
-	emits: ["preview", "apply", "dataChanged"],
+	emits: ["update"],
 	data() {
 		return {
 			localPrecondition: this.precondition,
@@ -78,18 +77,6 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		originalData() {
-			return {
-				continuous: this.continuous,
-				precondition: this.precondition,
-			};
-		},
-		dataChanged() {
-			return (
-				this.localContinuous !== this.continuous ||
-				this.localPrecondition !== this.precondition
-			);
-		},
 		preconditionOptions() {
 			const HOUR = 60 * 60;
 			const QUARTER_HOUR = 0.25 * HOUR;
@@ -133,30 +120,17 @@ export default defineComponent({
 			},
 			immediate: true,
 		},
-		dataChanged: {
-			handler(newValue: boolean) {
-				this.$emit("dataChanged", newValue);
-			},
-			immediate: true,
-		},
 	},
 	methods: {
 		formId(name: string) {
 			return `chargingplan-${this.id}-${name}`;
 		},
-		previewStrategy(): void {
+		updateStrategy(): void {
 			const strategy: PlanStrategy = {
 				continuous: this.localContinuous,
 				precondition: this.localPrecondition,
 			};
-			this.$emit("preview", strategy);
-		},
-		applyStrategy(): void {
-			const strategy: PlanStrategy = {
-				continuous: this.localContinuous,
-				precondition: this.localPrecondition,
-			};
-			this.$emit("apply", strategy);
+			this.$emit("update", strategy);
 		},
 	},
 });

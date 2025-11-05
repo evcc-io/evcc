@@ -161,7 +161,6 @@ export default defineComponent({
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
-		strategyChanged: { type: Boolean, default: false },
 	},
 	emits: ["updated", "removed"],
 	data() {
@@ -182,7 +181,7 @@ export default defineComponent({
 			);
 		},
 		showApply(): boolean {
-			return (this.dataChanged || this.strategyChanged) && this.selectedActive;
+			return this.dataChanged && this.selectedActive;
 		},
 		weekdaysLabel(): string {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);

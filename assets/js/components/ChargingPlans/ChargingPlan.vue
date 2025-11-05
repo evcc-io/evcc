@@ -187,11 +187,7 @@ export default defineComponent({
 			return null;
 		},
 		repeatingPlans(): RepeatingPlan[] {
-			if (
-				this.vehicle &&
-				this.vehicle?.repeatingPlans &&
-				this.vehicle.repeatingPlans.length > 0
-			) {
+			if (this.vehicle?.repeatingPlans?.length > 0) {
 				return [...this.vehicle.repeatingPlans];
 			}
 			return [];

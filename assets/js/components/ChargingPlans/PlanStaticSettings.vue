@@ -128,11 +128,11 @@
 				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
 			>
 				<button
-					v-if="!isNew && (dataChanged || strategyChanged)"
+					v-if="dataChanged && !isNew"
 					type="button"
 					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline text-truncate"
 					data-testid="static-plan-apply"
-					:disabled="timeInThePast && !strategyChanged"
+					:disabled="timeInThePast"
 					tabindex="0"
 					@click="update"
 				>
@@ -173,9 +173,8 @@ export default defineComponent({
 		capacity: Number,
 		socBasedPlanning: Boolean,
 		multiplePlans: Boolean,
-		strategyChanged: { type: Boolean, default: false },
 	},
-	emits: ["static-plan-updated", "static-plan-removed", "plan-preview", "apply-with-strategy"],
+	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data() {
 		return {
 			selectedDay: null as string | null,
@@ -235,7 +234,7 @@ export default defineComponent({
 			const goalChanged = this.socBasedPlanning
 				? this.originalData.soc != this.selectedSoc
 				: this.originalData.energy != this.selectedEnergy;
-			return dateChanged || goalChanged || this.strategyChanged;
+			return dateChanged || goalChanged;
 		},
 		isNew() {
 			return !this.time && (!this.soc || !this.energy);
@@ -332,8 +331,7 @@ export default defineComponent({
 			} catch (e) {
 				console.warn(e);
 			}
-			// Always emit to parent which handles both static plan and strategy
-			this.$emit("apply-with-strategy", {
+			this.$emit("static-plan-updated", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,

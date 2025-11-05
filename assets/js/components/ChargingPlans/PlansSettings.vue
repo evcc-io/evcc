@@ -11,10 +11,9 @@
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
 					:multiple-plans="multiplePlans"
-					:strategy-changed="strategyChanged"
+					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
 					@static-plan-removed="() => removeStaticPlan(0)"
 					@plan-preview="previewStaticPlan"
-					@apply-with-strategy="applyAllChanges"
 				/>
 				<div v-if="socBasedPlanning">
 					<div v-if="multiplePlans" class="d-none d-lg-block">
@@ -30,7 +29,6 @@
 						:id="id"
 						:rangePerSoc="rangePerSoc"
 						:plans="repeatingPlans"
-						:strategy-changed="strategyChanged"
 						@updated="updateRepeatingPlans"
 					/>
 				</div>
@@ -62,9 +60,7 @@
 			v-if="showStrategy"
 			v-bind="chargingPlanStrategyProps"
 			:show="strategyOpen"
-			@preview="previewPlanStrategy"
-			@apply="applyPlanStrategy"
-			@data-changed="strategyChanged = $event"
+			@update="updatePlanStrategy"
 		/>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
@@ -142,8 +138,6 @@ export default defineComponent({
 			debounceTimer: null as Timeout,
 			nextPlanId: 0,
 			strategyOpen: false,
-			strategyPreview: null as PlanStrategy | null,
-			strategyChanged: false,
 		};
 	},
 	computed: {
@@ -222,8 +216,7 @@ export default defineComponent({
 		},
 		async updateActivePlan(): Promise<void> {
 			try {
-				const params = this.buildPreviewParams();
-				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`, params);
+				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
 				this.plan = res?.data ?? ({} as PlanWrapper);
 				this.nextPlanId = this.plan.planId;
 			} catch (e) {
@@ -232,7 +225,7 @@ export default defineComponent({
 		},
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
-			const params = this.buildPreviewParams();
+			const params: Record<string, unknown> = {};
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
 				params
@@ -240,7 +233,7 @@ export default defineComponent({
 		},
 		async fetchStaticPreviewEnergy(plan: StaticEnergyPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
-			const params = this.buildPreviewParams();
+			const params: Record<string, unknown> = {};
 			return await this.apiFetchPlan(
 				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`,
 				params
@@ -311,57 +304,24 @@ export default defineComponent({
 		removeStaticPlan(index: number): void {
 			this.$emit("static-plan-removed", index);
 		},
+		updateStaticPlan(plan: StaticPlan): void {
+			this.$emit("static-plan-updated", plan);
+		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
 			this.$emit("repeating-plans-updated", plans);
-
-			const hasActivePlan = plans.some((p) => p.active);
-			if (hasActivePlan && this.strategyChanged && this.strategyPreview) {
-				this.$emit("plan-strategy-updated", this.strategyPreview);
-				this.strategyChanged = false;
-			}
 		},
 		previewStaticPlan(plan: StaticPlan): void {
 			this.staticPlanPreview = plan;
 			this.updatePlanPreviewDebounced();
 		},
-		previewPlanStrategy(strategy: PlanStrategy): void {
-			this.strategyPreview = strategy;
-			// Immediately update plan with new strategy preview (without debounce)
-			if (this.noActivePlan) {
-				this.updatePreviewPlan();
-			} else {
-				this.updateActivePlan();
-			}
-		},
-		applyPlanStrategy(strategy: PlanStrategy): void {
+		updatePlanStrategy(strategy: PlanStrategy): void {
 			this.$emit("plan-strategy-updated", strategy);
-			this.strategyChanged = false; // Reset changed status
-			// Update plan after persisting
+			// Immediately update plan with new strategy (without debounce)
 			if (this.noActivePlan) {
 				this.updatePreviewPlan();
 			} else {
 				this.updateActivePlan();
 			}
-		},
-		applyAllChanges(staticPlan: StaticPlan): void {
-			// Emit static plan update first
-			this.$emit("static-plan-updated", staticPlan);
-
-			// Then emit strategy update if strategy changed
-			if (this.strategyChanged && this.strategyPreview) {
-				this.$emit("plan-strategy-updated", this.strategyPreview);
-				this.strategyChanged = false;
-			}
-
-			// Don't fetch plan here - it will update reactively after API calls complete
-		},
-		buildPreviewParams(): Record<string, unknown> {
-			const params: Record<string, unknown> = {};
-			if (this.strategyChanged && this.strategyPreview) {
-				params["continuous"] = this.strategyPreview.continuous;
-				params["precondition"] = this.strategyPreview.precondition;
-			}
-			return params;
 		},
 	},
 });
