@@ -326,14 +326,9 @@ func TestPrecondition(t *testing.T) {
 
 	want := api.Rates{
 		{
-			Start: clock.Now().Add(30 * time.Minute),
-			End:   clock.Now().Add(time.Hour),
-			Value: 1,
-		},
-		{
-			Start: clock.Now().Add(210 * time.Minute), // 3.5h
-			End:   clock.Now().Add(4 * time.Hour),     // 4.0h
-			Value: 4,
+			Start: clock.Now().Add(3 * time.Hour),
+			End:   clock.Now().Add(4 * time.Hour),
+			Value: 3,
 		},
 	}
 
