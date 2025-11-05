@@ -200,6 +200,9 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		precondition = max(precondition-durationAfterRates, 0)
 	}
 
+	// don't precondition longer than charging duration
+	precondition = min(precondition, requiredDuration)
+
 	// reduce target time by precondition duration
 	targetTime = targetTime.Add(-precondition)
 	requiredDuration = max(requiredDuration-precondition, 0)
@@ -210,12 +213,12 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		rates, precond = splitPreconditionSlots(rates, targetTime)
 	}
 
-	// sort rates by price and time
-	slices.SortStableFunc(rates, sortByCost)
-
 	// create plan unless only precond slots remaining
 	var plan api.Rates
 	if requiredDuration > 0 {
+		// sort rates by price and time
+		slices.SortStableFunc(rates, sortByCost)
+
 		plan = t.plan(rates, requiredDuration, targetTime)
 
 		// sort plan by time
