@@ -1,7 +1,6 @@
 package planner
 
 import (
-	"fmt"
 	"slices"
 	"testing"
 	"time"
@@ -287,6 +286,7 @@ func TestPrecondition(t *testing.T) {
 		},
 	}, plan, "expected last slot")
 
+	// NOTE: with 15min slots we no longer expect late start of the slot
 	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, api.Rates{
 		{
@@ -302,22 +302,10 @@ func TestPrecondition(t *testing.T) {
 	}, plan, "expected two slots")
 
 	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
-	for _, r := range plan {
-		t.Logf("%+v", r)
-	}
-
-	dump := func(rr api.Rates) string {
-		var b []byte
-		for _, r := range rr {
-			b = fmt.Appendf(b, "%+v\n", r)
-		}
-		return string(b)
-	}
-
-	want := api.Rates{
+	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(30 * time.Minute),
-			End:   clock.Now().Add(time.Hour),
+			Start: clock.Now(),
+			End:   clock.Now().Add(30 * time.Minute),
 			Value: 1,
 		},
 		{
@@ -325,8 +313,7 @@ func TestPrecondition(t *testing.T) {
 			End:   clock.Now().Add(4 * time.Hour),     // 4.0h
 			Value: 4,
 		},
-	}
-	assert.Equal(t, want, plan, "expected short early and split late slot: want\n%sgot\n%s", dump(want), dump(plan))
+	}, plan, "expected short early and split late slot")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
