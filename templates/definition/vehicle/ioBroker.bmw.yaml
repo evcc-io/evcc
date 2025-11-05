@@ -36,7 +36,7 @@ render: |
   {{ include "vehicle-common" . }}
   soc:
     source: http
-    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.batteryManagement.header.value?noStringify
   status:
     source: combined
     plugged:
@@ -49,15 +49,15 @@ render: |
       jq: '. == "CHARGINGACTIVE"'
   range:
     source: http
-    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.kombiRemainingElectricRange.value
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.kombiRemainingElectricRange.value?noStringify
   odometer:
     source: http
-    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.travelledDistance.value
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.travelledDistance.value?noStringify
   climater:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.vehicle.preConditioning.activity.value
-    jq: if .state == "HEATING" or .state == "heating" or .state == "COOLING" or .state == "cooling" then true else false end
+    jq: if .== "HEATING" or .== "heating" or .== "COOLING" or .== "cooling" then true else false end
   limitsoc:
     source: http
-    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateOfCharge.target.value
+    uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateOfCharge.target.value?noStringify
   {{ include "vehicle-features" . }}

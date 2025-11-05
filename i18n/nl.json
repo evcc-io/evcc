@@ -58,8 +58,8 @@
           "heating": "Gebruikersgedefinieerde verwarmer"
         },
         "heatpump": "Gebruikersgedefinieerde warmtepomp",
-        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
-        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready via plugins)",
+        "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },

@@ -167,7 +167,28 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint64(b)) / 1e3, nil
+	res := float64(binary.BigEndian.Uint64(b)) / 1e3
+
+	// cfos wallboxes sometimes return 0 erroneously shortly after startup
+	// to work around this, we retry once more, and if it is still 0, we return ErrMustRetry
+	//
+	// this has the drawback with new wallboxes that actually have 0 total energy
+	// it will return ErrMustRetry until the wallbox has been used
+	//
+	// see https://github.com/evcc-io/evcc/discussions/12886
+	if res == 0 {
+		b, err = wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
+		if err != nil {
+			return 0, err
+		}
+
+		res = float64(binary.BigEndian.Uint64(b)) / 1e3
+		if res == 0 {
+			return 0, api.ErrMustRetry
+		}
+	}
+
+	return res, nil
 }
 
 // currents implements the api.PhaseCurrents interface

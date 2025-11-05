@@ -58,8 +58,8 @@
           "heating": "Benotzerdefinéirt Heizung"
         },
         "heatpump": "Benotzerdefinéirt Wärmepompel",
-        "sgready": "Benotzerdefinéirt Wärmepompel (sg-ready, komplett)",
-        "sgready-boost": "Benotzerdefinéirt Wärmepompel (sg-ready, boost)",
+        "sgready": "Benotzerdefinéiert Wärmepompel (sg-ready iwwer Plugins)",
+        "sgready-relay": "Benotzerdefinéiert Wärmepompel (sg-ready iwwer Relais)",
         "switchsocket": "Benotzerdefinéirt schaltbar Steckdous"
       }
     },

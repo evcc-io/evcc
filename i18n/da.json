@@ -58,8 +58,8 @@
           "heating": "Brugerdefineret varmelegeme"
         },
         "heatpump": "Brugerdefineret varmepumpe",
-        "sgready": "Brugerdefineret varmepumpe (sg-klar, alle)",
-        "sgready-boost": "Brugerdefineret varmepumpe (sg-klar, boost)",
+        "sgready": "Brugerdefineret varmepumpe (sg-ready via plugins)",
+        "sgready-relay": "Brugerdefineret varmepumpe (sg-ready via relæer)",
         "switchsocket": "Brugerdefineret stikkontakt"
       }
     },
