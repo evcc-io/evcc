@@ -28,7 +28,7 @@ params:
     default: 502
   - name: tempsource
     type: choice
-    choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom"]
+    choice: ["warmwater_top", "warmwater_bottom", "buffer_top", "buffer_bottom", "flow_line", "return_line"]
   - name: phases
     deprecated: true
   - name: excess
@@ -88,16 +88,16 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: 1
     register:
-      address: {{ if eq .tempsource "warmwater_top" -}} 2002 {{ else if eq .tempsource "warmwater_bottom" -}} 2003 {{ else if eq .tempsource "buffer_top" -}} 3002 {{ else }} 3003 {{- end }} # 2002 Trinkwasser Oben, 2003 Trinkwasser Unten, 3002 Wärmespeicher Oben, 3003 Wärmespeicher Unten
+      address: {{ if eq .tempsource "warmwater_top" -}} 2002 {{ else if eq .tempsource "warmwater_bottom" -}} 2003 {{ else if eq .tempsource "flow_line" -}} 1004 {{ else if eq .tempsource "return_line" -}} 1005 {{ else if eq .tempsource "buffer_top" -}} 3002 {{ else }} 3003 {{- end }} # 2002 Trinkwasser Oben, 2003 Trinkwasser Unten, 3002 Wärmespeicher Oben, 3003 Wärmespeicher Unten, 1004 Vorlauf, 1005 Rücklauf
       type: holding
       decode: int16
-    scale: 0.1
+    scale: {{ if eq .tempsource "flow_line" -}} 0.01 {{ else if eq .tempsource "return_line" -}} 0.01 {{ else }} 0.1 {{- end }} #die Register für VL/RL haben einen andere Skalierung als die Pufferregister 
   limittemp:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 1
     register:
-      address: {{ if eq .tempsource "warmwater_top" -}} 2050 {{ else if eq .tempsource "warmwater_bottom" -}} 2050 {{ else if eq .tempsource "buffer_top" -}} 3050 {{ else }} 3050 {{- end }} # 2050 Trinkwasser Speicher, 3050 Wärmespeicher
+      address: {{ if eq .tempsource "warmwater_top" -}} 2050 {{ else if eq .tempsource "warmwater_bottom" -}} 2050 {{ else if eq .tempsource "flow_line" -}} 1016 {{ else if eq .tempsource "return_line" -}} 1017 {{ else if eq .tempsource "buffer_top" -}} 3050 {{ else }} 3050 {{- end }} # 2050 Trinkwasser Speicher, 3050 Wärmespeicher, 1016/1017 Angeforderte Temp VL/RL
       type: holding
       encoding: int16
     scale: 0.1
