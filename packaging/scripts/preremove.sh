@@ -8,7 +8,7 @@ fi
 # If package is upgraded, back up the database
 if [ "$1" = "upgrade" ]; then
 	# Get the currently installed version of evcc package
-	CURRENT_VERSION=$(dpkg-query -W -f='${Version}' evcc 2>/dev/null)
+	CURRENT_VERSION=$(dpkg-query -W -f='${Version}' evcc 2> /dev/null)
 	if [ -z "${CURRENT_VERSION}" ]; then
 		CURRENT_VERSION="unknown"
 	fi
