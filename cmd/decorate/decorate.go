@@ -32,8 +32,13 @@ import (
 //go:embed decorate.tpl
 var srcTmpl string
 
+type function struct {
+	function, signature string
+}
+
 type dynamicType struct {
-	typ, function, signature string
+	typ        string
+	interfaces []function
 }
 
 type typeStruct struct {
@@ -121,9 +126,12 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		parts := strings.SplitN(dt.typ, ".", 2)
 		lastPart := parts[len(parts)-1]
 
-		openingBrace := strings.Index(dt.signature, "(")
-		closingBrace := strings.Index(dt.signature, ")")
-		paramsStr := dt.signature[openingBrace+1 : closingBrace]
+		function := dt.interfaces[0].function
+		signature := dt.interfaces[0].signature
+
+		openingBrace := strings.Index(signature, "(")
+		closingBrace := strings.Index(signature, ")")
+		paramsStr := signature[openingBrace+1 : closingBrace]
 
 		var params []string
 		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
@@ -134,10 +142,10 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			Type:        dt.typ,
 			ShortType:   lastPart,
 			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
-			Signature:   dt.signature,
-			Function:    dt.function,
+			Signature:   signature,
+			Function:    function,
 			Params:      params,
-			ReturnTypes: dt.signature[closingBrace+1:],
+			ReturnTypes: signature[closingBrace+1:],
 		}
 
 		combos = append(combos, dt.typ)
@@ -205,7 +213,7 @@ COMBO:
 var (
 	target   = pflag.StringP("out", "o", "", "output file")
 	pkg      = pflag.StringP("package", "p", "", "package name")
-	function = pflag.StringP("function", "f", "", "function name")
+	funcname = pflag.StringP("function", "f", "", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
 	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
@@ -254,6 +262,45 @@ func parseFile(file string, function, basetype, returntype *string, types *[]str
 	return scanner.Err()
 }
 
+func parseFunctions(iface string) []function {
+	var res []function
+
+OUTER:
+	for len(strings.TrimSpace(iface)) > 0 {
+		parts := strings.SplitN(iface, ",", 2)
+
+		fmt.Println(parts[0], "::", parts[1])
+		var brackets int
+
+		for i, ch := range parts[1] {
+			switch ch {
+			case '(':
+				brackets++
+			case ')':
+				brackets--
+			case ',':
+				if brackets == 0 {
+					iface = iface[i:]
+					res = append(res, function{
+						function:  parts[0],
+						signature: parts[1][:i],
+					})
+
+					continue OUTER
+				}
+			}
+		}
+
+		res = append(res, function{
+			function:  parts[0],
+			signature: parts[1],
+		})
+		break
+	}
+
+	return res
+}
+
 func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
@@ -270,8 +317,8 @@ func main() {
 		pkg = &gopkg
 	}
 
-	if *function == "" {
-		if err := parseFile(gofile, function, base, ret, types); err != nil {
+	if *funcname == "" {
+		if err := parseFile(gofile, funcname, base, ret, types); err != nil {
 			fmt.Println(err)
 			os.Exit(2)
 		}
@@ -284,13 +331,12 @@ func main() {
 
 	var dynamicTypes []dynamicType
 	for _, v := range *types {
-		split := strings.SplitN(v, ",", 3)
-		dt := dynamicType{split[0], split[1], split[2]}
-		dynamicTypes = append(dynamicTypes, dt)
+		split := strings.SplitN(v, ",", 2) // iface,...
+		dynamicTypes = append(dynamicTypes, dynamicType{split[0], parseFunctions(split[1])})
 	}
 
 	var buf bytes.Buffer
-	if err := generate(&buf, *pkg, *function, *base, dynamicTypes...); err != nil {
+	if err := generate(&buf, *pkg, *funcname, *base, dynamicTypes...); err != nil {
 		fmt.Println(err)
 		os.Exit(2)
 	}
