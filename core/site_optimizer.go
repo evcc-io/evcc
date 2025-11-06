@@ -212,6 +212,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					goal *= v.Capacity() * 10
 				} else {
 					goal *= 1000
+				}
 			}
 
 			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
