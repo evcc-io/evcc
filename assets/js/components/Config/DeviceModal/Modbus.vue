@@ -50,7 +50,11 @@
 		/>
 	</FormRow>
 	<div v-if="connection === 'tcpip'">
-		<FormRow id="modbusHost" :label="$t('config.modbus.host')" example="192.0.2.2">
+		<FormRow
+			id="modbusHost"
+			:label="$t('config.modbus.host')"
+			:help="$t('config.modbus.hostHint')"
+		>
 			<PropertyField
 				id="modbusHost"
 				property="host"
@@ -113,7 +117,11 @@
 		</FormRow>
 	</div>
 	<div v-else>
-		<FormRow id="modbusDevice" :label="$t('config.modbus.device')" example="/dev/ttyUSB0">
+		<FormRow
+			id="modbusDevice"
+			:label="$t('config.modbus.device')"
+			:help="$t('config.modbus.deviceHint')"
+		>
 			<PropertyField
 				id="modbusDevice"
 				property="device"
@@ -196,8 +204,6 @@ export default defineComponent({
 		return {
 			connection: "tcpip" as ConnectionOption,
 			protocol: "tcp" as ProtocolOption,
-			MODBUS_BAUDRATE,
-			MODBUS_COMSET,
 		};
 	},
 	computed: {
