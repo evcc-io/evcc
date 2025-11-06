@@ -219,7 +219,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
-					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+					site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
 				}
 			}
 
