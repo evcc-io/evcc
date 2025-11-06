@@ -24,7 +24,7 @@ func init() {
 }
 
 // NewSgReadyRelayFromConfig creates an SG Ready charger with boost/dim relays from generic config
-func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		Boost                   config.Typed
