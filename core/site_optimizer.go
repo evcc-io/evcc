@@ -340,7 +340,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
-func continuousDemand(lp loadpoint.API, minLen int, scale float64) []float32 {
+func continuousDemand(lp loadpoint.API, minLen int, scaleSlot float64) []float32 {
 	if lp.GetStatus() != api.StatusC {
 		return nil
 	}
@@ -351,7 +351,7 @@ func continuousDemand(lp loadpoint.API, minLen int, scale float64) []float32 {
 	}
 
 	return lo.RepeatBy(minLen, func(i int) float32 {
-		return float32(scale * pwr)
+		return float32(scaleSlot * pwr)
 	})
 }
 
