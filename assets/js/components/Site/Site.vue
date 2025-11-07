@@ -20,7 +20,7 @@
 				</div>
 			</div>
 			<HemsWarning :circuits="circuits" />
-			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
+			<Energyflow v-if="!isInitialSetup" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div
@@ -118,6 +118,7 @@ export default defineComponent({
 
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
+		initialSetup: Boolean,
 
 		// details
 		gridConfigured: Boolean,
@@ -200,7 +201,7 @@ export default defineComponent({
 			return false;
 		},
 		isInitialSetup() {
-			return this.loadpoints.length === 0;
+			return this.initialSetup === true;
 		},
 		footer() {
 			return {

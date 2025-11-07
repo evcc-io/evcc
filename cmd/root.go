@@ -179,6 +179,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}()
 	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
 
+	// publish to UI
+	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
+
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.Startup, Val: false}
 
@@ -191,9 +194,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if viper.GetBool("profile") {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
-
-	// publish to UI
-	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
@@ -248,6 +248,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// signal devices initialized
 	valueChan <- util.Param{Key: keys.Startup, Val: true}
+	// show onboarding UI
+	valueChan <- util.Param{Key: keys.InitialSetup, Val: len(site.Loadpoints()) == 0}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {

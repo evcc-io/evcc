@@ -999,7 +999,8 @@
     "message": "Keine Verbindung zum Server.",
     "restart": "Neustart",
     "restartNeeded": "Erforderlich, um Änderungen zu übernehmen.",
-    "restarting": "Server ist gleich wieder verfügbar."
+    "restarting": "Server ist gleich wieder verfügbar.",
+    "starting": "Server wird gestartet..."
   },
   "passwordModal": {
     "description": "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich.",

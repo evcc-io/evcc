@@ -18,7 +18,8 @@ const (
 	Config             = "config"
 	Database           = "database"
 	Fatal              = "fatal"
-	Startup            = "startup"
+	Startup            = "startup"      // false: starting, true: started
+	InitialSetup       = "initialSetup" // initial setup is required (lp = 0)
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	DemoMode           = "demoMode"

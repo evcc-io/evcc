@@ -51,6 +51,7 @@ export interface FatalError {
 export interface State {
   offline: boolean;
   startup?: boolean;
+  initialSetup?: boolean;
   loadpoints: Loadpoint[];
   forecast: Forecast;
   currency?: CURRENCY;
