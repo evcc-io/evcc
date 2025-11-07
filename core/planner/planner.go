@@ -91,10 +91,10 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 
 // findContinuousWindow finds the cheapest continuous window of slots for the given duration.
 // - rates are filtered to [now, targetTime] window by caller
-// Returns the selected rates and the total cost.
-func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration time.Duration, targetTime time.Time) (api.Rates, float64) {
+// Returns the selected rates.
+func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
 	if len(validRates) == 0 {
-		return nil, 0
+		return nil
 	}
 
 	// rates are already filtered by caller, so slots are guaranteed to be relevant
@@ -131,12 +131,12 @@ func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration t
 	}
 
 	if bestSlot < 0 {
-		return nil, 0
+		return nil
 	}
 
 	result := trimWindow(validRates[bestSlot:bestSlot+slots], effectiveDuration, targetTime)
 
-	return result, bestCost
+	return result
 }
 
 // Plan creates a continuous emergency charging plan
@@ -207,7 +207,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 	}
 
 	// consume remaining time if total time until target is insufficient; regardless of tariff data availability
-	if t.clock.Until(targetTime) <= requiredDuration || precondition >= requiredDuration {
+	if t.clock.Until(targetTime) <= requiredDuration {
 		return continuousPlan(rates, latestStart, targetTime)
 	}
 
@@ -234,15 +234,21 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
-
 	if precondition > 0 {
+		// don't precondition longer than charging duration
+		precondition = min(precondition, requiredDuration)
+
 		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition)
+
+		// reduce required duration by precondition, skip planning if required
+		requiredDuration = max(requiredDuration-precondition, 0)
+		if requiredDuration == 0 {
+			return precond
+		}
+
 		targetTime = targetTime.Add(-precondition)
 		// chargingRates filtered by split (End <= preCondStart = new targetTime)
 	}
-
-	// reduce required duration by precondition
-	requiredDuration = max(requiredDuration-precondition, 0)
 
 	// create plan unless only precond slots remaining
 	var plan api.Rates
@@ -266,7 +272,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 			}
 		}
 		// find cheapest continuous window
-		plan, _ = t.findContinuousWindow(rates, requiredDuration, targetTime)
+		plan = t.findContinuousWindow(rates, requiredDuration, targetTime)
 	} else {
 		// find cheapest combination of slots
 		slices.SortStableFunc(rates, sortByCost)

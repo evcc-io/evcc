@@ -48,13 +48,12 @@ func (site *Site) publishVehicles() {
 		}
 
 		ac := instance.OnIdentified()
+		strategy := v.GetPlanStrategy()
 
 		var plan *planStruct
-		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
+		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+			plan = &planStruct{Soc: soc, Precondition: int64(strategy.Precondition.Seconds()), Time: time}
 		}
-    
-    strategy := v.GetPlanStrategy()
 
 		res[v.Name()] = vehicleStruct{
 			Title:            instance.GetTitle(),

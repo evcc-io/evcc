@@ -82,6 +82,15 @@ func TestContinuous_Precondition(t *testing.T) {
 			Value: 4,
 		},
 	}, plan, "expected trimmed slot at beginning and precondition slot")
+
+	plan = p.Plan(tariff.SlotDuration, clock.Now().Add(time.Hour), 24*time.Hour, true)
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(3 * tariff.SlotDuration),
+			End:   clock.Now().Add(4 * tariff.SlotDuration),
+			Value: 4,
+		},
+	}, plan, "all precondition")
 }
 
 func TestContinuous_Precondition_NonSlotBoundary(t *testing.T) {

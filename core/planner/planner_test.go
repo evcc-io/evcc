@@ -288,10 +288,7 @@ func TestPrecondition(t *testing.T) {
 		},
 	}, plan, "expected last slot")
 
-	// NOTE: with 15min slots we no longer expect late start of the slot
-	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour), false)
-  // TODO - double check
-  // plan = p.Plan(2*tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), tariff.SlotDuration, false)
+	plan = p.Plan(2*tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), tariff.SlotDuration, false)
 
 	assert.Equal(t, api.Rates{
 		{
@@ -306,28 +303,94 @@ func TestPrecondition(t *testing.T) {
 		},
 	}, plan, "expected two slots")
 
-	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour), false)
+	plan = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), clock.Now().Add(4*tariff.SlotDuration), tariff.SlotDuration, false)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
-			End:   clock.Now().Add(30 * time.Minute),
+			End:   clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
 			Value: 1,
 		},
 		{
-			Start: clock.Now().Add(210 * time.Minute), // 3.5h
-			End:   clock.Now().Add(4 * time.Hour),     // 4.0h
+			Start: clock.Now().Add(3 * tariff.SlotDuration),
+			End:   clock.Now().Add(4 * tariff.SlotDuration),
 			Value: 4,
 		},
-	}, plan, "expected short early and split late slot")
+	}, plan, "expected trimmed slot at beginning and precondition slot")
 
-	plan = p.Plan(time.Hour, 24*time.Hour, clock.Now().Add(4*time.Hour), false)
+	plan = p.Plan(tariff.SlotDuration, clock.Now().Add(time.Hour), 24*time.Hour, false)
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(3 * time.Hour),
-			End:   clock.Now().Add(4 * time.Hour),
+			Start: clock.Now().Add(3 * tariff.SlotDuration),
+			End:   clock.Now().Add(4 * tariff.SlotDuration),
 			Value: 4,
 		},
 	}, plan, "all precondition")
+}
+
+func TestPrecondition_NonSlotBoundary(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	trf := api.NewMockTariff(ctrl)
+
+	slotDuration := 15 * time.Minute
+
+	// Create rates with 15-minute slots covering 8 hours (32 slots)
+	prices := make([]float64, 32)
+	for i := range prices {
+		prices[i] = float64(i + 1)
+	}
+	trf.EXPECT().Rates().AnyTimes().Return(rates(prices, clock.Now(), slotDuration), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	// Target time at 7:20 (non-slot boundary, between 7:15 and 7:30)
+	// 7:20 is 29 slots + 5 minutes from now
+	targetTime := clock.Now().Add(29*slotDuration + 5*time.Minute)
+
+	// 30 minutes preconditioning, 1 hour charging
+	precondition := 30 * time.Minute
+	requiredDuration := 1 * time.Hour
+
+	plan := p.Plan(requiredDuration, targetTime, precondition, false)
+
+	// Verify precondition ends exactly at target time
+	require.NotEmpty(t, plan)
+	lastSlot := plan[len(plan)-1]
+	assert.Equal(t, targetTime, lastSlot.End, "precondition should end exactly at target time")
+
+	// Calculate total precondition duration
+	var precondDuration time.Duration
+	// Precondition starts at targetTime - 30min = 6:50
+	precondStart := targetTime.Add(-precondition)
+	for _, slot := range plan {
+		if !slot.Start.Before(precondStart) {
+			precondDuration += slot.End.Sub(slot.Start)
+		}
+	}
+	assert.Equal(t, precondition, precondDuration, "total precondition duration should be exactly 30 minutes")
+
+	// Verify expected slots structure
+	// Note: precondition (30min) reduces effective required duration from 1h to 30min
+	// Cheapest 30min charging: slots at 01:00-01:30 (slots 0-1, prices 1,2)
+	// Precondition: 07:50-08:20 (exactly 30min before target at 08:20)
+	//   - 07:45-08:00 (slot 27, price 28) -> trimmed to 07:50-08:00 (10min)
+	//   - 08:00-08:15 (slot 28, price 29) -> full slot (15min)
+	//   - 08:15-08:30 (slot 29, price 30) -> trimmed to 08:15-08:20 (5min)
+	expectedPlan := api.Rates{
+		// Charging slots (cheapest 30 minutes after precondition reduction)
+		{Start: clock.Now(), End: clock.Now().Add(slotDuration), Value: 1},
+		{Start: clock.Now().Add(slotDuration), End: clock.Now().Add(2 * slotDuration), Value: 2},
+		// Precondition slots (exactly 30min before target, trimmed at both ends)
+		{Start: targetTime.Add(-precondition), End: clock.Now().Add(28 * slotDuration), Value: 28},
+		{Start: clock.Now().Add(28 * slotDuration), End: clock.Now().Add(29 * slotDuration), Value: 29},
+		{Start: clock.Now().Add(29 * slotDuration), End: targetTime, Value: 30},
+	}
+
+	assert.Equal(t, expectedPlan, plan, "expected charging slots and trimmed precondition slots")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
