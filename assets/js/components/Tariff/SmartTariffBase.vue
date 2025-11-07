@@ -11,15 +11,17 @@
 			<div class="col-sm-8 col-lg-4 pe-0">
 				<div class="input-group input-group-sm mb-1 mb-lg-0">
 					<div class="input-group-text">
-						<input
-							:id="formId + 'Active'"
-							:checked="active"
-							class="form-check-input mt-0"
-							type="checkbox"
-							role="switch"
-							aria-label="Checkbox for following text input"
-							@change="toggleActive"
-						/>
+						<div class="form-check form-switch m-0">
+							<input
+								:id="formId + 'Active'"
+								:checked="active"
+								class="form-check-input"
+								type="checkbox"
+								role="switch"
+								:aria-label="$t('smartCost.enable')"
+								@change="toggleActive"
+							/>
+						</div>
 					</div>
 					<select
 						:id="formId"
