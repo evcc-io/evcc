@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -23,14 +24,22 @@ func init() {
 
 func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		URI string
+		URI  string
+		Name string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	instance := util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http")
+	instanceUri := util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http")
+	instanceName := cc.Name
+	if instanceName == "" {
+		instanceName = instanceUri
+		if uri, err := url.Parse(instanceUri); err == nil {
+			instanceName = uri.Host
+		}
+	}
 
 	uri := "http://localhost:7070"
 	redirectUri := uri + "/providerauth/callback"
@@ -42,10 +51,10 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 		ClientID:    uri,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  instance + "/auth/authorize",
-			TokenURL: instance + "/auth/token",
+			AuthURL:  instanceUri + "/auth/authorize",
+			TokenURL: instanceUri + "/auth/token",
 		},
 	}
 
-	return NewOauth(ctx, "HomeAssistant", instance, &oc)
+	return NewOauth(ctx, "HomeAssistant", instanceName, &oc)
 }
