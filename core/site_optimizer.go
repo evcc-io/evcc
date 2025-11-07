@@ -51,6 +51,8 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
+const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
+
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	var err error
 
@@ -193,8 +195,6 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 		}
 
-		scaleSlot := float64(tariff.SlotDuration) / float64(time.Hour)
-
 		switch lp.GetMode() {
 		case api.ModeOff:
 			// disable charging
@@ -202,7 +202,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			if demand := continuousDemand(lp, minLen, scaleSlot); demand != nil {
+			if demand := continuousDemand(lp, minLen); demand != nil {
 				bat.PDemand = prorate(demand, firstSlotDuration)
 			}
 
@@ -236,7 +236,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					maxPower := lp.EffectiveMaxPower()
 
 					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(scaleSlot * maxPower)
+						return float32(maxPower / slotsPerHour)
 					}), firstSlotDuration)
 
 					for i := range maxLen {
@@ -340,7 +340,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
-func continuousDemand(lp loadpoint.API, minLen int, scaleSlot float64) []float32 {
+func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	if lp.GetStatus() != api.StatusC {
 		return nil
 	}
@@ -351,7 +351,7 @@ func continuousDemand(lp loadpoint.API, minLen int, scaleSlot float64) []float32
 	}
 
 	return lo.RepeatBy(minLen, func(i int) float32 {
-		return float32(scaleSlot * pwr)
+		return float32(pwr / slotsPerHour)
 	})
 }
 
