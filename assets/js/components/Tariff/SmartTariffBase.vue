@@ -222,14 +222,14 @@ export default defineComponent({
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const active =
 					this.limitDirection === "below" &&
-					this.selectedLimit !== null &&
+					this.currentLimit !== null &&
 					value !== undefined &&
-					value <= this.selectedLimit;
+					value <= this.currentLimit;
 				const warning =
 					this.limitDirection === "above" &&
-					this.selectedLimit !== null &&
+					this.currentLimit !== null &&
 					value !== undefined &&
-					value >= this.selectedLimit;
+					value >= this.currentLimit;
 
 				return {
 					day: this.weekdayShort(start),
