@@ -91,6 +91,14 @@
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
 									v-model:device="c.settings.device"
+									:connection="
+										c.settings.uri
+											? MODBUS_CONNECTION.TCPIP
+											: MODBUS_CONNECTION.SERIAL
+									"
+									:protocol="
+										c.settings.rtu ? MODBUS_PROTOCOL.RTU : MODBUS_PROTOCOL.TCP
+									"
 									:host="getHost(c.settings.uri)"
 									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
@@ -98,6 +106,9 @@
 									@update:host="(host) => updateHost(host, c.settings)"
 									@update:port="(port) => updatePort(port, c.settings)"
 									@update:device="updateDevice(c.settings)"
+									@update:protocol="
+										(p) => (c.settings.rtu = p === MODBUS_PROTOCOL.RTU)
+									"
 								/>
 							</div>
 						</div>
@@ -145,6 +156,8 @@ import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
 import {
 	MODBUS_COMSET,
+	MODBUS_CONNECTION,
+	MODBUS_PROTOCOL,
 	MODBUS_PROXY_READONLY,
 	type ModbusProxy,
 	type ModbusProxySettings,
@@ -168,6 +181,8 @@ export default defineComponent({
 		return {
 			ASCII_DIAGRAM,
 			MODBUS_PROXY_READONLY,
+			MODBUS_CONNECTION,
+			MODBUS_PROTOCOL,
 		};
 	},
 	computed: {

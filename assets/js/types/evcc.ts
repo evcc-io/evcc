@@ -371,6 +371,16 @@ export enum MODBUS_PROXY_READONLY {
   DENY = "deny",
 }
 
+export enum MODBUS_CONNECTION {
+  TCPIP = "tcpip",
+  SERIAL = "serial",
+}
+
+export enum MODBUS_PROTOCOL {
+  TCP = "tcp",
+  RTU = "rtu",
+}
+
 export type ModbusProxy = {
   port: number;
   readonly: MODBUS_PROXY_READONLY;
