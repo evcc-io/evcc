@@ -242,6 +242,25 @@ func Yaml(key string, other, res any) error {
 	return DecodeOtherSliceOrMap(other, res)
 }
 
+func IsJson(key string) (bool, error) {
+	s, err := String(key)
+
+	if err != nil {
+		return false, err
+	}
+
+	var data any
+	err = json.Unmarshal([]byte(s), &data)
+
+	var syntaxErr *json.SyntaxError
+
+	if errors.As(err, &syntaxErr) {
+		return true, nil
+	} else {
+		return false, err
+	}
+}
+
 // wrapping Settings into a struct for better decoupling
 type Settings struct{}
 
