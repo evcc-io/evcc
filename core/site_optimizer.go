@@ -211,7 +211,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 				if v := lp.GetVehicle(); socBased && v != nil {
 					goal *= v.Capacity() * 10
 				} else {
-					goal *= 1000
+					goal *= 1000 // Wh
 				}
 			}
 
