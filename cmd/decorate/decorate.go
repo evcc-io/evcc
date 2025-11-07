@@ -38,13 +38,18 @@ type function struct {
 }
 
 type dynamicType struct {
-	typ        string
-	interfaces []function
+	typ       string
+	functions []function
+}
+
+type funcStruct struct {
+	Signature, Function, VarName, ReturnTypes string
+	Params                                    []string
 }
 
 type typeStruct struct {
-	Type, ShortType, Signature, Function, VarName, ReturnTypes string
-	Params                                                     []string
+	Type, ShortType string
+	Functions       []funcStruct
 }
 
 var a struct {
@@ -127,26 +132,35 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		parts := strings.SplitN(dt.typ, ".", 2)
 		lastPart := parts[len(parts)-1]
 
-		function := dt.interfaces[0].function
-		signature := dt.interfaces[0].signature
+		var funcs []funcStruct
 
-		openingBrace := strings.Index(signature, "(")
-		closingBrace := strings.Index(signature, ")")
-		paramsStr := signature[openingBrace+1 : closingBrace]
+		for _, fun := range dt.functions {
+			function := fun.function
+			signature := fun.signature
 
-		var params []string
-		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
-			params = strings.Split(paramsStr, ",")
+			openingBrace := strings.Index(signature, "(")
+			closingBrace := strings.Index(signature, ")")
+			paramsStr := signature[openingBrace+1 : closingBrace]
+			returns := signature[closingBrace+1:]
+
+			var params []string
+			if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
+				params = strings.Split(paramsStr, ",")
+			}
+
+			funcs = append(funcs, funcStruct{
+				VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
+				Signature:   signature,
+				Function:    function,
+				Params:      params,
+				ReturnTypes: returns,
+			})
 		}
 
 		types[dt.typ] = typeStruct{
-			Type:        dt.typ,
-			ShortType:   lastPart,
-			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
-			Signature:   signature,
-			Function:    function,
-			Params:      params,
-			ReturnTypes: signature[closingBrace+1:],
+			Type:      dt.typ,
+			ShortType: lastPart,
+			Functions: funcs,
 		}
 
 		combos = append(combos, dt.typ)
