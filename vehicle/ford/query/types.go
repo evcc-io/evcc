@@ -1,4 +1,4 @@
-package ford
+package query
 
 type VehiclesResponse struct {
 	UserVehicles struct {

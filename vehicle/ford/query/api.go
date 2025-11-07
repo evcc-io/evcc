@@ -1,9 +1,10 @@
-package ford
+package query
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -11,6 +12,17 @@ import (
 )
 
 const ApiURI = "https://usapi.cv.ford.com"
+
+var Config = oauth2.Config{
+	Endpoint: oauth2.Endpoint{
+		AuthURL:  "https://api.vehicle.ford.com/dah2vb2cprod.onmicrosoft.com/oauth2/v2.0/token",
+		TokenURL: "https://api.vehicle.ford.com/dah2vb2cprod.onmicrosoft.com/oauth2/v2.0/token",
+	},
+	Scopes: []string{
+		oidc.ScopeOpenID,
+		oidc.ScopeOfflineAccess,
+	},
+}
 
 // API is the Ford api client
 type API struct {

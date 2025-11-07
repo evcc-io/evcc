@@ -1,4 +1,4 @@
-package ford
+package query
 
 import (
 	"fmt"

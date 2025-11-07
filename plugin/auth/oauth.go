@@ -33,9 +33,10 @@ type OAuth struct {
 	ctx     context.Context
 	onlineC chan<- bool
 
-	deviceFlow     bool
-	tokenRetriever func(string, *oauth2.Token) error
-	tokenStorer    func(*oauth2.Token) any
+	deviceFlow      bool
+	authCodeOptions []oauth2.AuthCodeOption
+	tokenRetriever  func(string, *oauth2.Token) error
+	tokenStorer     func(*oauth2.Token) any
 }
 
 type oauthOption func(*OAuth)
@@ -43,6 +44,12 @@ type oauthOption func(*OAuth)
 func WithOauthDeviceFlowOption() func(o *OAuth) {
 	return func(o *OAuth) {
 		o.deviceFlow = true
+	}
+}
+
+func WithOauthAuthCodeOptionsOption(opts ...oauth2.AuthCodeOption) func(o *OAuth) {
+	return func(o *OAuth) {
+		o.authCodeOptions = opts
 	}
 }
 
@@ -275,7 +282,7 @@ func (o *OAuth) Login(state string) (string, error) {
 		return "", errors.New("missing auth url")
 	}
 
-	return o.oc.AuthCodeURL(state, oauth2.S256ChallengeOption(o.cv)), nil
+	return o.oc.AuthCodeURL(state, append(o.authCodeOptions, oauth2.S256ChallengeOption(o.cv))...), nil
 }
 
 // Logout implements api.AuthProvider.
