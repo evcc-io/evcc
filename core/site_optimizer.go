@@ -51,6 +51,8 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
+const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
+
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	var err error
 
@@ -236,7 +238,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					maxPower := lp.EffectiveMaxPower()
 
 					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(maxPower)
+						return float32(maxPower / slotsPerHour)
 					}), firstSlotDuration)
 
 					for i := range maxLen {
@@ -351,7 +353,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	return lo.RepeatBy(minLen, func(i int) float32 {
-		return float32(pwr)
+		return float32(pwr / slotsPerHour)
 	})
 }
 
