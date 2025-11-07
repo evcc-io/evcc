@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -13,13 +12,13 @@ import (
 func init() {
 	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 
-	if _, err := NewHomeAssistantFromConfig(context.Background(), map[string]any{
-		"uri": "http://localhost:8123",
-	}); err == nil {
-		fmt.Println("HomeAssistant configured")
-	} else {
-		fmt.Println(err)
-	}
+	// if _, err := NewHomeAssistantFromConfig(context.Background(), map[string]any{
+	// 	"uri": "http://localhost:8123",
+	// }); err == nil {
+	// 	fmt.Println("HomeAssistant configured")
+	// } else {
+	// 	fmt.Println(err)
+	// }
 }
 
 func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
