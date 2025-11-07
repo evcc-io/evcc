@@ -256,9 +256,9 @@ tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
     type: template
-    template: energy-charts-api # epex spot market prices
-    bzn: DE-LU
-    charges: 0.15
+    template: demo-dynamic-grid
+    min: 0.18
+    max: 0.41
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh

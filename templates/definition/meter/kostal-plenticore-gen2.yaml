@@ -43,6 +43,10 @@ params:
   - name: maxacpower
   - name: maxchargerate
     advanced: true
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
   - name: watchdog
     type: duration
     default: 60s
@@ -79,6 +83,8 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC # 802 battery control
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2

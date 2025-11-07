@@ -44,6 +44,7 @@ type Keba struct {
 	current      uint16
 	regEnable    uint16
 	energyFactor float64
+	state1p      uint32
 }
 
 const (
@@ -74,7 +75,7 @@ func init() {
 //go:generate go tool decorate -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.StatusReasoner,StatusReason,func() (api.Reason, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
-func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -117,11 +118,13 @@ func NewKebaFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		// P30
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
+		wb.state1p = 0
 	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
 		// P40
 		wb.regEnable = kebaRegMaxCurrent
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
+		wb.state1p = 1
 
 		b, err := wb.conn.ReadHoldingRegisters(kebaRegFirmware, 2)
 		if err != nil {
@@ -395,7 +398,11 @@ func (wb *Keba) getPhases() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return int(binary.BigEndian.Uint32(b)), nil
+
+	if binary.BigEndian.Uint32(b) == wb.state1p {
+		return 1, nil
+	}
+	return 3, nil
 }
 
 var _ api.Diagnosis = (*Keba)(nil)

@@ -58,14 +58,15 @@
           "heating": "Gebruikersgedefinieerde verwarmer"
         },
         "heatpump": "Gebruikersgedefinieerde warmtepomp",
-        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
-        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready via plugins)",
+        "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
-      "title": "Electriciteitsnetwerk beheer"
+      "title": "Electriciteitsnetwerk beheer",
+      "usableMeters": "Bruikbare meterreferenties"
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
@@ -76,7 +77,6 @@
       "title": "Regelgedrag"
     },
     "deviceValue": {
-      "allowControl": "Besturing toestaan",
       "amount": "Aantal",
       "broker": "Agent",
       "bucket": "Bucket",
@@ -99,7 +99,8 @@
       "feedinPrice": "Terugleververgoeding",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
-      "hemsType": "Systeem",
+      "hemsActiveLimit": "Actieve limiet",
+      "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
       "no": "nee",
       "odometer": "Kilometerstand",
@@ -153,12 +154,18 @@
       "optional": "optioneel"
     },
     "general": {
+      "applyAndClose": "Toepassen & sluiten",
       "cancel": "Annuleren",
+      "close": "Sluiten",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
       "docsLink": "Zie documentatie.",
+      "dragHandle": "Schuifknop",
+      "dragItem": "Verplaatsbaar: {title}",
+      "dragList": "Herschikbare lijst",
       "experimental": "Experimenteel",
+      "forceSave": "Toch opslaan",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
       "noFileSelected": "Geen bestand geselecteerd.",
@@ -167,7 +174,11 @@
       "password": "Wachtwoord",
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
+      "required": "vereist",
+      "reset": "Reset",
       "save": "Opslaan",
+      "saved": "Opgeslagen.",
+      "saving": "Bezig met opslaan…",
       "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
       "telemetry": "Telemetrie",
@@ -181,7 +192,7 @@
       "titleEdit": "Bewerk netmeter"
     },
     "hems": {
-      "description": "Verbind evcc met een ander thuis-energie managementsysteem.",
+      "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
       "title": "HEMS"
     },
     "icon": {
@@ -431,7 +442,16 @@
       "vehicles": "Voertuigen"
     },
     "shm": {
-      "cardTitle": "Sunny Home Manager"
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc is uitgerust met een integratie voor de SMA Sunny Home Manager (SHM) via SEMP protocol. Wanneer het is aangesloten op hetzelfde netwerk, na inloggen op je Sunny Portal account, zou je automatisch alle laadpunten geconfigureerd in evcc moeten worden aangeboden als nieuw ontdekte verbruikers. Alles zou meteen gebruikt moeten kunnen worden, zonder enige onderstaande aanpassingen nodig te hebben.",
+      "descriptionDeviceId": "12 karakters HEX string. Prefix voor alle apparaten (EV lader, ..).",
+      "descriptionIdPattern": "Identificatiepatroon",
+      "descriptionIds": "In Sunny Portal heeft elk consumentenapparaat een unieke identificatiecode nodig. evcc genereert een unieke identificatiecode op basis van uw hardware. Als u evcc naar andere hardware migreert, kunnen deze identificatiecodes veranderen. Als u de geschiedenis wilt behouden, kunt u de gegenereerde identificatiecodes hier overschrijven. Open de SEMP-URL (/semp) om uw huidige identificatiecodes te controleren.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Token invoeren",
@@ -446,7 +466,7 @@
       "tokenRequired": "U moet een sponsortoken configureren voordat u dit apparaat kunt aanmaken.",
       "tokenRequiredLearnMore": "Meer informatie.",
       "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
-      "trialToken": "Tijdelijke token",
+      "trialToken": "tijdelijke token",
       "viaYaml": "via evcc.yaml",
       "yourToken": "Jouw token"
     },
@@ -460,7 +480,7 @@
           "title": "Backup"
         },
         "cancel": "Annuleer",
-        "description": "Backup, herstel en rest je data. Nuttig als je je data naar een ander systeem wilt migreren.",
+        "description": "Backup, herstel en reset je data. Nuttig als je je data naar een ander systeem wilt migreren.",
         "note": "Notabene: alle bovenstaande acties hebben alleen impact op je databasedata. Het evcc.yaml configuratiebestand blijft onveranderd.",
         "reset": {
           "action": "Reset...",
@@ -494,6 +514,10 @@
       "description": "Voer jouw energietarief in om de kosten van het laden te berekenen.",
       "title": "Tarieven"
     },
+    "telemetry": {
+      "description": "Configureer het delen van gegevens om evcc te helpen verbeteren. Uw privacy is belangrijk voor ons en deelname is volledig vrijwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wordt weergegeven op het hoofdscherm en op het browsertabblad.",
       "label": "Titel",
@@ -502,7 +526,7 @@
     "validation": {
       "failed": "mislukt",
       "label": "Status",
-      "running": "bezig met valideren…",
+      "running": "Bezig met valideren…",
       "success": "succesvol",
       "unknown": "onbekend",
       "validate": "valideer"
@@ -648,7 +672,7 @@
   "help": {
     "discussionsButton": "GitHub discussies",
     "documentationButton": "Documentatie",
-    "issueButton": "Een bug melden",
+    "issueButton": "Een probleem melden",
     "issueDescription": "Vreemd of foutief gedrag gevonden?",
     "logsButton": "Bekijk logboeken",
     "logsDescription": "Kijk in de logboeken voor foutmeldingen.",
@@ -664,6 +688,57 @@
     "restartButton": "Herstart",
     "restartDescription": "Geprobeerd het uit en weer aan te zetten?",
     "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
+  },
+  "issue": {
+    "additional": {
+      "description": "Voeg configuratie en logbestanden toe zodat we het probleem snel kunnen reproduceren. We raden u aan zoveel mogelijk informatie te delen. De status is meestal niet nodig.",
+      "include": "toevoegen",
+      "lines": "regels",
+      "logs": "Logs",
+      "logsDescription": "Recente logboekvermeldingen die kunnen helpen bij het identificeren van het probleem.",
+      "showDetails": "toon details",
+      "source": "Bron",
+      "state": "Status",
+      "stateDescription": "Volledige runtime-status, inclusief informatie over het oplaadpunt, het apparaat en de energie. Alleen toevoegen indien gevraagd.",
+      "title": "Additionele informatie",
+      "uiConfig": "Configuratie (UI)",
+      "uiConfigDescription": "Configuratie instellingen gemaakt via de web interface.",
+      "yamlConfig": "Configuratie (YAML)",
+      "yamlConfigDescription": "Je complete configuratie bestand."
+    },
+    "additionalContext": "Additionele context",
+    "additionalContextPlaceholder": "Alle aanvullende informatie die nuttig kan zijn...\n- Configuratiegegevens\n- Wat u hebt geprobeerd\n- Omgevingsgegevens",
+    "createButtonDiscussion": "Start GitHub discussie...",
+    "createButtonIssue": "Creëer GitHub Issue...",
+    "description": "Werkt uw installatie niet zoals verwacht? Gebruik deze pagina om hulp te krijgen of problemen te melden. Geef voldoende details om ons te helpen het probleem te begrijpen en te reproduceren, maar houd uw beschrijving beknopt, duidelijk en gemakkelijk te volgen.",
+    "helpType": {
+      "discussion": "Hulp nodig met mijn installatie",
+      "discussionDescription": "Discussies binnen de community bieden antwoorden.",
+      "issue": "Bug gevonden",
+      "issueDescription": "Ik weet zeker dat er iets kapot is en gemaakt moet worden.",
+      "title": "Welk probleem speelt er?"
+    },
+    "issueDescription": "Omschrijving",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Stappen om te reproduceren",
+    "subTitleDiscussion": "Omschrijf je probleem",
+    "subTitleIssue": "Beschrijf het probleem",
+    "summary": {
+      "confirmationButtonDiscussion": "Start GitHub-discussie",
+      "confirmationButtonIssue": "Maak een GitHub-issue aan",
+      "copied": "Gekopiëerd!",
+      "copyButton": "Kopieer additionele informatie",
+      "instructions": "Vanwege de beperkingen van GitHub op het gebied van URL-lengte, bestaat dit proces uit twee stappen:",
+      "singleStepDescription": "Klik op de onderstaande knop om GitHub te openen met een vooraf ingevuld formulier met uw probleemgegevens. Gevoelige gegevens zijn automatisch verwijderd, maar controleer dit nogmaals voordat u het formulier deelt.",
+      "step1Description": "Klik op de onderstaande knop om een basis GitHub-vermelding aan te maken met uw titel, beschrijving en details.",
+      "step2Description": "Nadat je het item hebt aangemaakt, ga je terug naar deze pagina om de onderstaande aanvullende informatie te kopiëren en in je GitHub-formulier te plakken. Gevoelige gegevens zijn verwijderd, maar controleer dit nogmaals voordat je de informatie deelt.",
+      "stepOneDiscussion": "Stap 1: Creëer basis discussie",
+      "stepOneIssue": "Stap 1: Maak een basis issue aan",
+      "stepTwo": "Stap 2: Kopieer aanvullende informatie",
+      "title": "GitHub Probleemoverzicht"
+    },
+    "title": "Rapporteer een probleem",
+    "version": "Versie"
   },
   "log": {
     "areaLabel": "Filter op domain",
@@ -730,6 +805,7 @@
       "gridImport": "Netafname",
       "homePower": "Consumptie",
       "loadpoints": "Lader| Lader | {count} laders",
+      "loadpointsLimit": "{limit} limiet",
       "noEnergy": "Geen meter data",
       "pv": "PV-systeem",
       "pvExport": "Netinjectie",
@@ -741,6 +817,10 @@
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
       "waitForVehicle": "Klaar. Wachten op verwarming…"
+    },
+    "hemsWarning": {
+      "description": "Gereduceerd laden niet hoger dan {limit}.",
+      "title": "Extern limiet:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",
@@ -1018,6 +1098,7 @@
     "vehicle": "Voertuig"
   },
   "settings": {
+    "deviceInfo": "De instellingen die u in dit dialoogvenster maakt, zijn alleen van toepassing op dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",
       "exit": "Volledig scherm afsluiten",
@@ -1030,6 +1111,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Taal"
+    },
+    "loadpoints": {
+      "help": "Wijzig de volgorde en zichtbaarheid van de gebruikersinterface.",
+      "hide": "Verberg {title}",
+      "label": "Laadpunten",
+      "show": "Toon {title}"
     },
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
@@ -1059,7 +1146,7 @@
   },
   "smartCost": {
     "activeHours": "{active} van {total}",
-    "activeHoursLabel": "Actieve uren",
+    "activeHoursLabel": "Actieve tijd",
     "applyToAll": "Overal toepassen?",
     "batteryDescription": "Laadt de huisbatterij op met stroom uit het net.",
     "cheapTitle": "Goedkoop netstroom laden",
@@ -1076,7 +1163,7 @@
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Gepauzeerde uren",
+    "activeHoursLabel": "Gepauzeerde tijd",
     "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",

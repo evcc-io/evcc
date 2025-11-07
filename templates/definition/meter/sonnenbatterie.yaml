@@ -26,8 +26,12 @@ params:
     advanced: true
   - name: maxchargepower
     default: 3300
+  - name: maxdischargepower
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
   - name: token
-    required: false
     help:
       de: API Token (benötigt für aktive Batteriesteuerung)
       en: API Token (required for active battery control)
@@ -59,6 +63,8 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- if .token }}
   batterymode:
     source: switch
@@ -131,4 +137,6 @@ render: |
           - Auth-Token: {{ .token }}
   {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

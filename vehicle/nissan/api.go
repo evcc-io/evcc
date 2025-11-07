@@ -109,7 +109,7 @@ func (v *API) ChargingAction(vin string, action Action) (ActionResponse, error) 
 	data := Request{
 		Data: Payload{
 			Type: "ChargingStart",
-			Attributes: map[string]interface{}{
+			Attributes: map[string]any{
 				"action": action,
 			},
 		},

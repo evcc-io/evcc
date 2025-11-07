@@ -54,11 +54,15 @@
 
 				<form v-if="helpType" @submit.prevent="handleFormSubmit">
 					<!-- Essential Form Section -->
-					<div class="d-flex justify-content-between align-items-center mb-4">
+					<div class="d-flex justify-content-between align-items-center mb-3">
 						<h4>
 							{{ $tt("issue.subTitle") }}
 						</h4>
 					</div>
+
+					<p class="text-muted mb-4">
+						🇬🇧 Please write your issue in English so everyone can participate.
+					</p>
 
 					<!-- Two Column Layout -->
 					<div class="row mb-5 g-5">
@@ -143,10 +147,10 @@
 								<template #description>
 									<p class="text-muted small">
 										{{ $t("issue.additional.yamlConfigDescription") }}<br />
-										<span v-if="configPath"
-											>{{ $t("issue.additional.source") }}:
-											<code>{{ configPath }}</code></span
-										>
+										<span>
+											{{ $t("issue.additional.source") }}:
+											<code>{{ configPath || "---" }}</code>
+										</span>
 									</p>
 								</template>
 							</IssueAdditionalItem>
@@ -427,13 +431,21 @@ export default defineComponent({
 			try {
 				const response = await api.get("config/evcc.yaml", {
 					responseType: "text",
+					validateStatus: (code) => [200, 404].includes(code),
 				});
+
+				// Handle 404 silently when evcc.yaml doesn't exist
+				if (response.status === 404) {
+					this.sections.yamlConfig.content = "no yaml configuration";
+					return;
+				}
+
 				// Remove empty lines from config
 				this.sections.yamlConfig.content = response.data
 					.split("\n")
 					.filter((line: string) => line.trim() !== "")
 					.join("\n");
-			} catch (error) {
+			} catch (error: any) {
 				console.error("Failed to fetch config:", error);
 				this.sections.yamlConfig.content = "Failed to load configuration";
 			}

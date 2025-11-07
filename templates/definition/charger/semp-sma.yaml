@@ -1,0 +1,28 @@
+template: semp-sma
+products:
+  - brand: SMA
+    description:
+      generic: EV Charger (SEMP)
+  - brand: SMA
+    description:
+      generic: eCharger (SEMP)
+capabilities: ["mA", "1p3p"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+  description:
+    en: |
+      Configure the SEMP base URL (e.g. http://192.168.178.100/SEMP) and the device ID of the charger.
+      IMPORTANT: The charger must NOT be registered directly as a consumer in the Sunny Home Manager / Sunny Portal at the same time!
+    de: |
+      Konfiguriere die SEMP Basis-URL (z.B. http://192.168.178.100/SEMP) und die Geräte-ID des Chargers.
+      WICHTIG: Der Charger darf NICHT gleichzeitig im Sunny Home Manager bzw. im Sunny Portal direkt als Verbraucher registriert sein!
+params:
+  - name: uri
+    description:
+      en: SEMP base URL
+      de: SEMP Basis-URL
+    example: http://192.168.178.100/SEMP
+    required: true
+render: |
+  type: semp
+  uri: {{ .uri }}

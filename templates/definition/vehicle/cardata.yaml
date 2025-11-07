@@ -1,0 +1,63 @@
+template: cardata
+products:
+  - brand: BMW
+    description:
+      generic: CarData (EU Data Act)
+  - brand: Mini
+    description:
+      generic: CarData (EU Data Act)
+requirements:
+  description:
+    de: |
+      Benötigt CarData Einrichtung im BMW/Mini portal. Die folgenden Datenpunkte müssen für Streaming konfiguriert werden:
+
+      ```
+      vehicle.body.chargingPort.status
+      vehicle.cabin.hvac.preconditioning.status.comfortState
+      vehicle.drivetrain.batteryManagement.header
+      vehicle.drivetrain.electricEngine.charging.hvStatus
+      vehicle.drivetrain.electricEngine.charging.status
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
+      vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.vehicle.preConditioning.activity
+      vehicle.vehicle.travelledDistance
+      ```
+
+      Aktualisierung der Daten erfolgt einmalig bei Neustart und wenn Streamingdaten eingehen. Dies ist ausschließlich der Fall,
+      wenn das Fahrzeug aktiv Daten erzeugt.
+    en: |
+      Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access:
+
+      ```
+      vehicle.body.chargingPort.status
+      vehicle.cabin.hvac.preconditioning.status.comfortState
+      vehicle.drivetrain.batteryManagement.header
+      vehicle.drivetrain.electricEngine.charging.hvStatus
+      vehicle.drivetrain.electricEngine.charging.status
+      vehicle.drivetrain.electricEngine.charging.timeRemaining
+      vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.vehicle.preConditioning.activity
+      vehicle.vehicle.travelledDistance
+      ```
+
+      Data will be updated on restart and when received using streaming. This only happens when the vehicle actively creates new updates.
+params:
+  - preset: vehicle-common
+  - name: vin
+    required: true
+    example: WBMW...
+  - name: clientid
+    required: true
+  - preset: vehicle-features
+  - name: streaming
+    help:
+      en: Enable if vehicle sends streaming updates during charging.
+      de: Aktivieren falls das Fahrzeug Streaming Updates während des Ladevorgangs schickt.
+render: |
+  type: cardata
+  vin: {{ .vin }}
+  clientid: {{ .clientid }}
+  {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}

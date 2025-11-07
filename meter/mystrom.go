@@ -14,7 +14,7 @@ func init() {
 }
 
 // NewMyStromFromConfig creates a myStrom meter from generic config
-func NewMyStromFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewMyStromFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI string
 	}

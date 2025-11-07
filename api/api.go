@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -44,11 +44,6 @@ type BatteryCapacity interface {
 	Capacity() float64
 }
 
-// MaxACPowerGetter provides max AC power in W
-type MaxACPowerGetter interface {
-	MaxACPower() float64
-}
-
 // BatteryPowerLimiter provides max AC charge- and discharge power in W
 type BatteryPowerLimiter interface {
 	GetPowerLimits() (charge, discharge float64)
@@ -57,6 +52,11 @@ type BatteryPowerLimiter interface {
 // BatterySocLimiter provides min/max battery soc in %
 type BatterySocLimiter interface {
 	GetSocLimits() (min, max float64)
+}
+
+// MaxACPowerGetter provides max AC power in W
+type MaxACPowerGetter interface {
+	MaxACPower() float64
 }
 
 // ChargeState provides current charging status
@@ -113,6 +113,11 @@ type Diagnosis interface {
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
 	ChargeDuration() (time.Duration, error)
+}
+
+// ConnectionTimer provides current connection duration
+type ConnectionTimer interface {
+	ConnectionDuration() (time.Duration, error)
 }
 
 // ChargeRater provides charged energy amount in kWh
@@ -185,6 +190,12 @@ type SocLimiter interface {
 	GetLimitSoc() (int64, error)
 }
 
+// Dimmer provides §14a dimming
+type Dimmer interface {
+	Dimmed() (bool, error)
+	Dim(bool) error
+}
+
 // ChargeController allows to start/stop the charging session on the vehicle side
 type ChargeController interface {
 	ChargeEnable(bool) error
@@ -203,9 +214,9 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	Login(state string) string
+	Login(state string) (string, error)
 	Logout() error
-	HandleCallback(responseValues url.Values) error
+	HandleCallback(params url.Values) error
 	Authenticated() bool
 	DisplayName() string
 }
@@ -258,6 +269,10 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+
+	// §14a
+	Dim(bool)
+	Dimmed() bool
 }
 
 // Redactor is an interface to redact sensitive data

@@ -103,7 +103,7 @@ func tronityToken(conf globalconfig.All, vehicleConf config.Named) (*oauth2.Toke
 	var cc struct {
 		Credentials vehicle.ClientCredentials
 		RedirectURI string
-		Other       map[string]interface{} `mapstructure:",remain"`
+		Other       map[string]any `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(vehicleConf.Other, &cc); err != nil {

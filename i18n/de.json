@@ -58,8 +58,8 @@
           "heating": "Benutzerdefinierte Heizung"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
-        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready, komplett)",
-        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready, boost)",
+        "sgready": "Benutzerdefinierte Wärmepumpe (SG-Ready über Plugins)",
+        "sgready-relay": "Benutzerdefinierte Wärmepumpe (SG-Ready über Relais)",
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
@@ -77,7 +77,6 @@
       "title": "Regelverhalten"
     },
     "deviceValue": {
-      "allowControl": "Steuerung erlauben",
       "amount": "Anzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -95,6 +94,7 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "feedinPrice": "Einspeisevergütung",
@@ -119,7 +119,7 @@
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
-      "vehicleLimitSoc": "Fahrzeuglimit",
+      "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
     "deviceValueChargeStatus": {
@@ -134,6 +134,7 @@
     "devices": {
       "auxMeter": "Smarter Verbraucher",
       "batteryStorage": "Batterie",
+      "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
     "editor": {
@@ -144,9 +145,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kann für Lastmanagement oder Statistikzwecke verwendet werden.",
-      "titleAdd": "Zusätzlichen Zähler hinzufügen",
-      "titleEdit": "Zusätzlichen Zähler bearbeiten"
+      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
@@ -162,7 +163,11 @@
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
+      "dragHandle": "Verschieben",
+      "dragItem": "Verschiebbar: {title}",
+      "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
+      "forceSave": "Trotzdem speichern",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "noFileSelected": "Keine Datei ausgewählt.",
@@ -172,12 +177,16 @@
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "required": "erforderlich",
+      "reset": "Zurücksetzen",
       "save": "Speichern",
+      "saved": "Gespeichert.",
+      "saving": "Speichere …",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
       "title": "Titel",
+      "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
     },
     "grid": {
@@ -190,7 +199,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ändern"
+      "change": "ändern",
+      "label": "Symbol"
     },
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
@@ -338,13 +348,22 @@
       "option": {
         "aux": "Intelligenten Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Zusätzlichen Zähler hinzufügen",
+        "ext": "Regulären Verbraucher hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Intelligenter Verbraucher",
+        "battery": "Batterie",
+        "charge": "Verbraucher / Ladegerät",
+        "grid": "Netzanschluss",
+        "label": "Verwendung",
+        "pv": "Erzeugung"
+      },
       "validateSave": "Überprüfen & speichern"
     },
     "modbus": {
@@ -443,8 +462,6 @@
       "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
-      "labelAllowControl": "Zusätzlich Leistungsbegrenzungsempfehlungen vom SHM akzeptieren.",
-      "labelControl": "Steuerung erlauben",
       "labelDeviceId": "Geräte-ID",
       "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
@@ -510,6 +527,10 @@
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
       "title": "Tarife"
     },
+    "telemetry": {
+      "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
       "label": "Titel",
@@ -518,7 +539,7 @@
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
-      "running": "prüfe …",
+      "running": "Prüfe …",
       "success": "erfolgreich",
       "unknown": "unbekannt",
       "validate": "prüfen"
@@ -650,6 +671,7 @@
     "about": "Über",
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+      "loggedOut": "Erfolgreich abgemeldet",
       "title": "Autorisierungsstatus"
     },
     "blog": "Blog",
@@ -663,8 +685,8 @@
   "help": {
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
-    "issueButton": "Bug melden",
-    "issueDescription": "Komisches Verhalten gefunden?",
+    "issueButton": "Problem melden",
+    "issueDescription": "Seltsames Verhalten gefunden?",
     "logsButton": "Logs ansehen",
     "logsDescription": "Überprüfe die Logs auf Fehler.",
     "modalTitle": "Hilfe benötigt?",
@@ -1088,6 +1110,7 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
@@ -1100,6 +1123,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Sprache"
+    },
+    "loadpoints": {
+      "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
+      "hide": "{title} ausblenden",
+      "label": "Ladepunkte",
+      "show": "{title} anzeigen"
     },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
@@ -1129,7 +1158,7 @@
   },
   "smartCost": {
     "activeHours": "{active} von {total}",
-    "activeHoursLabel": "Aktive Stunden",
+    "activeHoursLabel": "Aktive Zeit",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
     "cheapTitle": "Günstiges Netzladen",
@@ -1146,7 +1175,7 @@
     "saved": "Gepeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Stunden",
+    "activeHoursLabel": "Pausierte Zeit",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",

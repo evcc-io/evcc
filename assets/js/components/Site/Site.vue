@@ -51,7 +51,7 @@
 			<Loadpoints
 				v-else-if="loadpoints.length > 0"
 				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="loadpoints"
+				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
 				:smartCostAvailable="smartCostAvailable"
@@ -65,8 +65,8 @@
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
 				:forecast="forecast"
-				:selectedIndex="selectedLoadpointIndex"
-				@index-changed="selectedLoadpointChanged"
+				:selectedId="selectedLoadpointId"
+				@id-changed="selectedLoadpointChanged"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -87,10 +87,10 @@ import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
 	AuthProviders,
-	Battery,
+	BatteryMeter,
+	Meter,
 	CURRENCY,
 	Forecast,
-	LoadpointCompact,
 	Notification,
 	Circuit,
 	SMART_COST_TYPE,
@@ -98,6 +98,7 @@ import type {
 	FatalError,
 	EvOpt,
 } from "@/types/evcc";
+import store from "@/store";
 import type { Grid } from "./types";
 
 export default defineComponent({
@@ -113,8 +114,7 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		loadpoints: { type: Array as PropType<LoadpointCompact[]>, default: () => [] },
-		selectedLoadpointIndex: Number,
+		selectedLoadpointId: String,
 
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
@@ -124,14 +124,16 @@ export default defineComponent({
 		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
-		pv: { type: Array, default: () => [] },
+		pv: { type: Array as PropType<Meter[]>, default: () => [] },
+		aux: { type: Array as PropType<Meter[]>, default: () => [] },
+		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: { type: Array as PropType<Battery[]>, default: () => [] },
+		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -165,6 +167,12 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		loadpoints() {
+			return store.uiLoadpoints.value || [];
+		},
+		orderedVisibleLoadpoints() {
+			return this.loadpoints.filter((lp) => lp.visible);
+		},
 		batteryConfigured() {
 			return this.battery?.length > 0;
 		},
@@ -178,22 +186,7 @@ export default defineComponent({
 			return this.collectProps(Energyflow);
 		},
 		loadpointTitles() {
-			return this.loadpoints.map((lp) => lp.title);
-		},
-		loadpointsCompact() {
-			return this.loadpoints.map((lp, index) => {
-				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
-				const icon = lp.chargerIcon || vehicleIcon || "car";
-				const title =
-					this.vehicleTitle(lp.vehicleName) ||
-					lp.title ||
-					this.$t("main.loadpoint.fallbackName");
-				const charging = lp.charging;
-				const soc = lp.vehicleSoc;
-				const power = lp.chargePower || 0;
-				const heating = lp.chargerFeatureHeating;
-				return { icon, title, charging, power, soc, heating, index };
-			});
+			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
 		},
 		vehicleList() {
 			const vehicles = this.vehicles || {};
@@ -235,11 +228,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		selectedLoadpointChanged(index: number) {
-			this.$router.push({ query: { lp: index + 1 } });
-		},
-		vehicleTitle(vehicleName: string) {
-			return this.vehicles?.[vehicleName]?.title;
+		selectedLoadpointChanged(id: string | undefined) {
+			this.$router.push({ query: { lp: id } });
 		},
 	},
 });

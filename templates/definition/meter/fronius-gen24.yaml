@@ -7,6 +7,12 @@ products:
     description:
       generic: Primo GEN24 Plus
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zu nutzen darf der Energiekosten-Assistent (ECA) im Fronius Solar.web nicht aktiviert sein. (Fronius Solar.web->Einstellungen->Betriebsmodus->Eigenverbrauch)
+    en: |
+      To use active charge control, the Energy Cost Assistant (ECA) must not be activated in Fronius Solar.web. (Fronius Solar.web -> Settings -> Operating Mode -> Self-Consumption)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -29,6 +35,10 @@ params:
   - name: maxchargerate
     advanced: true
   - name: capacity
+    advanced: true
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
     advanced: true
 render: |
   type: custom
@@ -245,4 +255,6 @@ render: |
             id: 1
             value: 124:0:OutWRte
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

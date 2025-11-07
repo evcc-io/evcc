@@ -38,7 +38,6 @@ export interface HemsConfig {
 }
 
 export interface ShmConfig {
-  allowControl: boolean;
   vendorId: string;
   deviceId: string;
 }
@@ -52,14 +51,17 @@ export interface FatalError {
 export interface State {
   offline: boolean;
   startup?: boolean;
-  loadpoints: [];
-  forecast?: Forecast;
+  loadpoints: Loadpoint[];
+  forecast: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
-  battery?: Battery[];
+  battery?: BatteryMeter[];
+  pv?: Meter[];
+  aux?: Meter[];
+  ext?: Meter[];
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
@@ -110,7 +112,8 @@ export enum ConfigType {
   Heatpump = "heatpump",
   SwitchSocket = "switchsocket",
   SgReady = "sgready",
-  SgReadyBoost = "sgready-boost",
+  SgReadyRelay = "sgready-relay",
+  SgReadyBoost = "sgready-boost", // deprecated
 }
 
 export type ConfigVehicle = Entity;
@@ -177,20 +180,87 @@ export enum LENGTH_UNIT {
   MILES = "mi",
 }
 
-export interface LoadpointCompact {
-  icon: string;
-  title: string;
-  charging: boolean;
-  soc?: number;
-  power: number;
-  heating?: boolean;
+export interface Loadpoint {
+  batteryBoost: boolean;
+  chargeCurrents?: number[];
+  chargeDuration: number;
   chargePower: number;
-  connected: boolean;
-  index: number;
-  vehicleName: string;
-  chargerIcon?: string;
-  vehicleSoc: number;
+  chargeRemainingDuration?: number;
+  chargeRemainingEnergy?: number;
+  chargeTotalImport?: number;
+  chargeVoltages?: number[];
+  chargedEnergy: number;
   chargerFeatureHeating: boolean;
+  chargerFeatureIntegratedDevice: boolean;
+  chargerIcon: string | null;
+  chargerPhases1p3p: boolean;
+  chargerSinglePhase: boolean;
+  chargerStatusReason: CHARGER_STATUS_REASON | null;
+  charging: boolean;
+  connected: boolean;
+  connectedDuration: number;
+  disableDelay: number;
+  disableThreshold: number;
+  effectiveLimitSoc: number;
+  effectiveMaxCurrent: number;
+  effectiveMinCurrent: number;
+  effectivePlanId: number;
+  effectivePlanSoc: number;
+  effectivePlanTime: string | null;
+  effectivePriority: number;
+  enableDelay: number;
+  enableThreshold: number;
+  enabled: boolean;
+  limitEnergy: number;
+  limitSoc: number;
+  maxCurrent: number;
+  minCurrent: number;
+  mode: CHARGE_MODE;
+  offeredCurrent: number;
+  phaseAction: PHASE_ACTION;
+  phaseRemaining: number;
+  phasesActive: number;
+  phasesConfigured: number;
+  planActive: boolean;
+  planEnergy: number;
+  planOverrun: number;
+  planPrecondition: number;
+  planProjectedEnd: string | null;
+  planProjectedStart: string | null;
+  planTime: string | null;
+  priority: number;
+  pvAction: PV_ACTION;
+  pvRemaining: number;
+  sessionCo2PerKWh: number | null;
+  sessionEnergy: number;
+  sessionPrice: number | null;
+  sessionPricePerKWh: number | null;
+  sessionSolarPercentage: number;
+  smartCostActive: boolean;
+  smartCostLimit: number | null;
+  smartCostNextStart: string | null;
+  smartFeedInPriorityActive: boolean;
+  smartFeedInPriorityLimit: number | null;
+  smartFeedInPriorityNextStart: string | null;
+  title: string;
+  vehicleClimaterActive: boolean | null;
+  vehicleDetectionActive: boolean;
+  vehicleLimitSoc: number;
+  vehicleName: string;
+  vehicleOdometer: number;
+  vehicleRange: number;
+  vehicleSoc: number;
+  vehicleTitle: string;
+  vehicleWelcomeActive: boolean;
+}
+
+export interface UiLoadpoint extends Loadpoint {
+  // Derived/computed fields for UI display
+  id: string;
+  displayTitle: string;
+  icon: string;
+  order: number | null;
+  visible: boolean;
 }
 
 export enum THEME {
@@ -238,6 +308,24 @@ export enum PHASES {
   THREE_PHASES = 3,
 }
 
+export enum PHASE_ACTION {
+  INACTIVE = "inactive",
+  SCALE_1P = "scale1p",
+  SCALE_3P = "scale3p",
+}
+
+export enum PV_ACTION {
+  INACTIVE = "inactive",
+  ENABLE = "enable",
+  DISABLE = "disable",
+}
+
+export enum CHARGER_STATUS_REASON {
+  UNKNOWN = "unknown",
+  WAITING_FOR_AUTHORIZATION = "waitingforauthorization",
+  DISCONNECT_REQUIRED = "disconnectrequired",
+}
+
 export enum LOADPOINT_TYPE {
   CHARGING = "charging",
   HEATING = "heating",
@@ -270,12 +358,17 @@ export interface Notification {
   count: number;
 }
 
-export interface Battery {
+export interface Meter {
   power: number;
+  title?: string;
+  icon?: string;
+  energy?: number;
+}
+
+export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  title?: string;
 }
 
 export interface Vehicle {
@@ -283,7 +376,7 @@ export interface Vehicle {
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;
-  repeatingPlans: RepeatingPlan[];
+  repeatingPlans: RepeatingPlan[] | null;
   title: string;
   features?: string[];
   capacity?: number;
@@ -306,8 +399,8 @@ export interface Rate {
 export interface Slot {
   day: string;
   value?: number;
-  startHour: number;
-  endHour: number;
+  start: Date;
+  end: Date;
   charging: boolean;
   toLate?: boolean | null;
   warning?: boolean | null;
@@ -331,7 +424,8 @@ export interface SelectOption<T> {
 }
 
 export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
-export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -352,7 +446,6 @@ export type ValueOf<T> = T[keyof T];
 export interface EvOpt {
   req: OptimizationInput;
   res: OptimizationResult;
-  curl: string;
   details: OptimizationDetails;
 }
 

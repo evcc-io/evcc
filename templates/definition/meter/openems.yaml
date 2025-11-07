@@ -6,9 +6,9 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich.
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (REST-API).
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control.
+      A commercial license is required for FEMS FENECON systems for active battery control (REST-API).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -33,11 +33,14 @@ params:
       en: adjusted to the API timeout
     usages: ["battery"]
     advanced: true
-  - name: maxchargepower
-    default: 4200
-  - name: maxacpower
+  - name: minsoc
+  - name: maxsoc
   - name: capacity
     advanced: true
+  - name: maxchargepower
+    default: 4200
+  - name: maxdischargepower
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
@@ -139,5 +142,9 @@ render: |
           - content-type: application/json
           body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
   {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   capacity: {{ .capacity }} # kWh
   {{- end }}

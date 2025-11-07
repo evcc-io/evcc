@@ -3,7 +3,7 @@ import type { Meta, StoryFn } from "@storybook/vue3";
 import { SMART_COST_TYPE } from "@/types/evcc";
 
 // Create LoadpointCompact structure for the Loadpoints component
-const createLoadpoint = (opts = {}) => {
+const createLoadpoint = (opts: any = {}) => {
   const base = {
     icon: "car",
     title: "Carport",
@@ -18,7 +18,9 @@ const createLoadpoint = (opts = {}) => {
     vehicleSoc: 0,
     chargerFeatureHeating: false,
   };
-  return { ...base, ...opts };
+  const result = { ...base, ...opts };
+  (result as any).id = result.index + 1;
+  return result;
 };
 
 export default {

@@ -153,7 +153,7 @@ export default defineComponent({
 					backgroundColor: lighterColor(color),
 					borderColor: color,
 					fill: "start",
-					tension: 0.5,
+					tension: 0.05,
 					pointRadius: 0,
 					animation: {
 						y: { duration: this.animations ? 500 : 0 },
@@ -178,7 +178,7 @@ export default defineComponent({
 								: index === this.maxPriceIndex || index === this.minPriceIndex),
 					})),
 					yAxisID: "yPrice",
-					borderRadius: 8,
+					borderRadius: 2,
 					backgroundColor: color,
 					borderColor: color,
 					order: active ? 0 : 1,
@@ -206,7 +206,7 @@ export default defineComponent({
 					yAxisID: "yCo2",
 					backgroundColor: color,
 					borderColor: color,
-					tension: 0.25,
+					tension: 0.05,
 					pointRadius: 0,
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
@@ -433,14 +433,9 @@ export default defineComponent({
 			);
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
-			// include 1 hour before and after
-			const start = new Date(this.startDate);
-			start.setHours(start.getHours() - 1);
-			const end = new Date(this.endDate);
-			end.setHours(end.getHours() + 1);
-
 			return entries.filter(
-				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
+				(entry) =>
+					new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
 			);
 		},
 		onMouseLeave() {
