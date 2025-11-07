@@ -224,6 +224,8 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {

@@ -9,17 +9,30 @@
 				{{ limitLabel }}
 			</label>
 			<div class="col-sm-8 col-lg-4 pe-0">
-				<select
-					:id="formId"
-					v-model.number="selectedLimit"
-					class="form-select form-select-sm mb-1"
-					@change="changeLimit"
-				>
-					<option value="null">{{ $t("smartCost.none") }}</option>
-					<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
-						{{ name }}
-					</option>
-				</select>
+				<div class="input-group input-group-sm mb-1">
+					<div class="input-group-text">
+						<input
+							:id="formId + 'Active'"
+							:checked="active"
+							class="form-check-input mt-0"
+							type="checkbox"
+							role="switch"
+							aria-label="Checkbox for following text input"
+							@change="toggleActive"
+						/>
+					</div>
+					<select
+						:id="formId"
+						v-model.number="selectedLimit"
+						class="form-select form-select-sm"
+						:disabled="!active"
+						@change="changeLimit"
+					>
+						<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
+							{{ name }}
+						</option>
+					</select>
+				</div>
 			</div>
 			<div
 				v-if="applyToAllVisible"
@@ -91,6 +104,7 @@ export default defineComponent({
 			type: [Number, null] as PropType<number | null>,
 			required: true,
 		},
+		lastLimit: { type: Number, default: 0 },
 		isCo2: Boolean,
 		currency: String as PropType<CURRENCY>,
 		applyAll: Boolean,
@@ -118,6 +132,7 @@ export default defineComponent({
 			selectedLimit: null as number | null,
 			activeIndex: null as number | null,
 			applyToAllVisible: false,
+			active: false,
 		};
 	},
 	computed: {
@@ -130,6 +145,9 @@ export default defineComponent({
 				}));
 			}
 			return [];
+		},
+		activeLabel() {
+			return this.active ? this.$t("smartCost.active") : this.$t("smartCost.inactive");
 		},
 		limitOptions(): SelectOption<number>[] {
 			const { max } = this.optionsCostRange;
@@ -275,16 +293,25 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		currentLimit(limit) {
-			this.selectedLimit = this.roundLimit(limit);
+		currentLimit() {
+			this.initLimit();
 		},
 	},
 	mounted() {
-		this.selectedLimit = this.roundLimit(this.currentLimit);
+		this.initLimit();
 	},
 	methods: {
 		roundLimit(limit: number | null): number | null {
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
+		},
+		initLimit() {
+			if (this.currentLimit === null) {
+				this.active = false;
+				this.selectedLimit = this.lastLimit;
+			} else {
+				this.active = true;
+				this.selectedLimit = this.roundLimit(this.currentLimit);
+			}
 		},
 		formatLimit(limit: number | null): string {
 			if (limit === null) {
@@ -338,18 +365,27 @@ export default defineComponent({
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;
 				this.selectedLimit = valueRounded;
-				this.saveLimit(`${valueRounded}`);
+				this.active = true;
+				this.saveLimit(valueRounded);
 			}
 		},
 		changeLimit($event: Event) {
-			const value = ($event.target as HTMLSelectElement).value;
-			if (value === "null") {
-				this.resetLimit();
+			const value = parseFloat(($event.target as HTMLSelectElement).value);
+			this.saveLimit(value);
+		},
+		toggleActive($event: Event) {
+			const active = ($event.target as HTMLInputElement).checked;
+			if (active) {
+				this.saveLimit(this.lastLimit);
 			} else {
-				this.saveLimit(value);
+				this.resetLimit();
+			}
+			this.active = active;
+			if (this.applyAll) {
+				this.applyToAllVisible = true;
 			}
 		},
-		saveLimit(limit: string) {
+		saveLimit(limit: number) {
 			this.$emit("save-limit", limit);
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
@@ -362,7 +398,7 @@ export default defineComponent({
 			}
 		},
 		applyToAll() {
-			this.$emit("apply-to-all", this.selectedLimit);
+			this.$emit("apply-to-all", this.currentLimit);
 			this.applyToAllVisible = false;
 		},
 	},
