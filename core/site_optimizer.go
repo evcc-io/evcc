@@ -51,6 +51,8 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
+const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
+
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	var err error
 
@@ -200,7 +202,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			bat.PDemand = prorate(continuousDemand(lp, minLen), firstSlotDuration)
+			if demand := continuousDemand(lp, minLen); demand != nil {
+				bat.PDemand = prorate(demand, firstSlotDuration)
+			}
 
 		case api.ModePV:
 			// add plan goal
@@ -208,6 +212,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			if goal > 0 {
 				if v := lp.GetVehicle(); socBased && v != nil {
 					goal *= v.Capacity() * 10
+				} else {
+					goal *= 1000 // Wh
 				}
 			}
 
@@ -217,7 +223,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
-					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+					site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
 				}
 			}
 
@@ -232,7 +238,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					maxPower := lp.EffectiveMaxPower()
 
 					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(maxPower)
+						return float32(maxPower / slotsPerHour)
 					}), firstSlotDuration)
 
 					for i := range maxLen {
@@ -347,7 +353,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	return lo.RepeatBy(minLen, func(i int) float32 {
-		return float32(pwr)
+		return float32(pwr / slotsPerHour)
 	})
 }
 

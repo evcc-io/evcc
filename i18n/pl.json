@@ -58,8 +58,8 @@
           "heating": "Podgrzewacz zdefiniowany przez użytkownika"
         },
         "heatpump": "Pompa ciepła zdefiniowana przez użytkownika",
-        "sgready": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, all)",
-        "sgready-boost": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready, boost)",
+        "sgready": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready przez wtyczki)",
+        "sgready-relay": "Pompa ciepła zdefiniowana przez użytkownika (sg-ready przez przekaźniki)",
         "switchsocket": "Gniazdo przełączalne zdefiniowane przez użytkownika"
       }
     },

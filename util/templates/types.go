@@ -25,14 +25,14 @@ const (
 	ModbusKeyTCPIP       = "tcpip"
 	ModbusKeyUDP         = "udp"
 
-	ModbusParamNameId       = "id"
-	ModbusParamNameDevice   = "device"
-	ModbusParamNameBaudrate = "baudrate"
-	ModbusParamNameComset   = "comset"
-	ModbusParamNameURI      = "uri"
-	ModbusParamNameHost     = "host"
-	ModbusParamNamePort     = "port"
-	ModbusParamNameRTU      = "rtu"
+	ModbusParamId       = "id"
+	ModbusParamDevice   = "device"
+	ModbusParamBaudrate = "baudrate"
+	ModbusParamComset   = "comset"
+	ModbusParamURI      = "uri"
+	ModbusParamHost     = "host"
+	ModbusParamPort     = "port"
+	ModbusParamRTU      = "rtu"
 )
 
 const (
@@ -41,7 +41,19 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
+var (
+	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
+
+	// ModbusParams contains all field names used by modbus templates
+	ModbusParams = []string{
+		ModbusParamId, ModbusParamDevice, ModbusParamBaudrate, ModbusParamComset,
+		ModbusParamURI, ModbusParamHost, ModbusParamPort, ModbusParamRTU,
+	}
+
+	ModbusConnectionTypes = []string{
+		ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	}
+)
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -63,12 +75,10 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
-var predefinedTemplateProperties = []string{
-	"type", "template", "name",
-	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
-	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
-}
+var predefinedTemplateProperties = append(
+	[]string{"type", "template", "name"},
+	append(ModbusParams, ModbusConnectionTypes...)...,
+)
 
 // TextLanguage contains language-specific texts
 type TextLanguage struct {

@@ -58,8 +58,9 @@
           "heating": "User-defined heater"
         },
         "heatpump": "User-defined heat pump",
-        "sgready": "User-defined heat pump (sg-ready, all)",
-        "sgready-boost": "User-defined heat pump (sg-ready, boost)",
+        "sgready": "User-defined heat pump (sg-ready via plugins)",
+        "sgready-boost": "User-defined heat pump (sg-ready-boost, deprecated)",
+        "sgready-relay": "User-defined heat pump (sg-ready via relays)",
         "switchsocket": "User-defined switch socket"
       }
     },
@@ -94,6 +95,7 @@
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "dimmed": "Dimmed",
       "enabled": "Enabled",
       "energy": "Energy",
       "feedinPrice": "Feed-in price",
@@ -185,6 +187,7 @@
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
+      "typeDeprecated": "The type '{type}' is outdated and will be removed in a future version. Please check the changelog and recreate this device.",
       "validateSave": "Validate & save"
     },
     "grid": {

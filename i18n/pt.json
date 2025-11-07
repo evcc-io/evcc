@@ -58,8 +58,8 @@
           "heating": "Aquecimento personalizado"
         },
         "heatpump": "Bomba de calor personalizada",
-        "sgready": "Bomba de calor personalizada (sg-ready, tout)",
-        "sgready-boost": "Bomba de calor personalizada (sg-ready, boost)",
+        "sgready": "Bomba de calor personalizada (sg-ready via plugins)",
+        "sgready-relay": "Bomba de calor personalizada (sg-ready via relés)",
         "switchsocket": "Tomada de interrutor definida pelo utilizador"
       }
     },

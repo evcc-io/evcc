@@ -1,0 +1,242 @@
+# CODEOWNERS
+#
+# Prompt: update CODEOWNERS for all all template files in templates/definition.
+# For every template, mark any prior contributors as owners.
+# Do not mention premultiply, andi and naltatis.
+# Do not mention contributors that where the template was part of mass-updates.
+# Repeat this prompt in the generated file.
+#
+# Auto-generated based on git commit history
+# Each template file is owned by its contributors (excluding premultiply, andi, naltatis, and mass-update-only contributors)
+# Mass-update threshold: commits touching 10+ template files are considered mass-updates
+
+/.github/CODEOWNERS @andig @naltatis @premultiply
+
+/templates/definition/charger/abl.yaml @DerAndereAndi
+/templates/definition/charger/ac-elwa-2.yaml @docolli
+/templates/definition/charger/ac-elwa-e.yaml @jannismunz
+/templates/definition/charger/ac-thor.yaml @docolli @walburgf
+/templates/definition/charger/alfen.yaml @VolkerK62
+/templates/definition/charger/alphatec.yaml @DerAndereAndi
+/templates/definition/charger/bender-cc.yaml @mfuchs1984
+/templates/definition/charger/cfos.yaml @VolkerK62
+/templates/definition/charger/dadapower.yaml @artemkaTechnolutions
+/templates/definition/charger/daheimladen-pro.yaml @VolkerK62
+/templates/definition/charger/daheimladen.yaml @DerAndereAndi @VolkerK62
+/templates/definition/charger/delta.yaml @mirgonet
+/templates/definition/charger/demo-charger.yaml @Starquake @VolkerK62
+/templates/definition/charger/demo-heatpump.yaml @Starquake
+/templates/definition/charger/easee.yaml @GrimmiMeloni @Starquake @jheinitz
+/templates/definition/charger/eebus.yaml @DerAndereAndi
+/templates/definition/charger/elli-2.yaml @Starquake
+/templates/definition/charger/elli-charger-connect.yaml @DerAndereAndi @Starquake
+/templates/definition/charger/elli-charger-pro.yaml @DerAndereAndi @Starquake
+/templates/definition/charger/emsesp.yaml @diddip21 @lamemate
+/templates/definition/charger/eprowallbox.yaml @Starquake
+/templates/definition/charger/evbox-livo.yaml @Starquake @jomach @swestland85
+/templates/definition/charger/fritzdect.yaml @thierolm
+/templates/definition/charger/ghost.yaml @DerAndereAndi @Starquake
+/templates/definition/charger/go-e-v3.yaml @PeterFlorian @Starquake @VolkerK62
+/templates/definition/charger/heidelberg.yaml @DerAndereAndi
+/templates/definition/charger/homeassistant-switch.yaml @Starquake @niklaswa
+/templates/definition/charger/homematic.yaml @thierolm
+/templates/definition/charger/homewizard.yaml @thierolm
+/templates/definition/charger/innogy-ebox.yaml @DerAndereAndi
+/templates/definition/charger/keba-modbus.yaml @VolkerK62
+/templates/definition/charger/kermi.yaml @diddip21
+/templates/definition/charger/lambda-zewotherm.yaml @Starquake @thecem
+/templates/definition/charger/lg-therma.yaml @maximilianadolf
+/templates/definition/charger/mennekes-compact.yaml @benesolar
+/templates/definition/charger/nrgkick-bluetooth.yaml @DerAndereAndi
+/templates/definition/charger/obo.yaml @ott
+/templates/definition/charger/ocpp-abb-tac.yaml @Starquake
+/templates/definition/charger/ocpp-alfen.yaml @Starquake
+/templates/definition/charger/ocpp-autel.yaml @WoCha-FR @viper-666
+/templates/definition/charger/ocpp-goe.yaml @Starquake
+/templates/definition/charger/ocpp-mennekes-acu.yaml @Starquake @benesolar
+/templates/definition/charger/ocpp-zaptec.yaml @Starquake
+/templates/definition/charger/ocpp.yaml @DerAndereAndi @Starquake @VolkerK62 @xantalor
+/templates/definition/charger/openwb-2.0.yaml @Maschga
+/templates/definition/charger/peblar.yaml @PieVo
+/templates/definition/charger/phoenix-charx.yaml @samjay
+/templates/definition/charger/phoenix-em-eth.yaml @Starquake
+/templates/definition/charger/phoenix-ev-eth.yaml @Starquake
+/templates/definition/charger/phoenix-ev-ser.yaml @Starquake
+/templates/definition/charger/plugchoice.yaml @Starquake @tygoegmond
+/templates/definition/charger/porsche-pmcc.yaml @DerAndereAndi
+/templates/definition/charger/porsche-pmcp.yaml @DerAndereAndi
+/templates/definition/charger/porsche-wallbox.yaml @DerAndereAndi @Starquake
+/templates/definition/charger/pulsatrix.yaml @Sauttets
+/templates/definition/charger/senec-plus.yaml
+/templates/definition/charger/senec-premium.yaml
+/templates/definition/charger/shelly.yaml @thierolm
+/templates/definition/charger/smaevcharger.yaml @VolkerK62 @powelllens
+/templates/definition/charger/solax-g2.yaml @tomfrenzel
+/templates/definition/charger/stiebel-wpm.yaml @Tombra1889
+/templates/definition/charger/tapo.yaml @thierolm
+/templates/definition/charger/tasmota.yaml @thierolm
+/templates/definition/charger/tessie.yaml @Starquake @djfanatix
+/templates/definition/charger/tinkerforge-warp.yaml @DerAndereAndi @poohnet
+/templates/definition/charger/tplink.yaml @thierolm
+/templates/definition/charger/twc3.yaml @RTTTC @Starquake @VolkerK62
+/templates/definition/charger/versicharge.yaml @achgut
+/templates/definition/charger/vestel.yaml @DerAndereAndi @mfuchs1984
+/templates/definition/charger/victron.yaml @VolkerK62
+/templates/definition/charger/volttime.yaml @Starquake @tygoegmond
+/templates/definition/charger/wallbe-meter.yaml @Starquake
+/templates/definition/charger/wallbe-pre2019-meter.yaml @Starquake
+/templates/definition/charger/wallbe-pre2019.yaml @Starquake
+/templates/definition/charger/wallbe.yaml @Starquake
+/templates/definition/meter/alpha-ess-smile.yaml @Nitrox912 @VolkerK62 @softcat
+/templates/definition/meter/batterx.yaml @gramss
+/templates/definition/meter/cozify.yaml @VolkerK62
+/templates/definition/meter/demo-battery.yaml @Maschga @Starquake
+/templates/definition/meter/demo-meter.yaml @Maschga @Starquake
+/templates/definition/meter/deye-hybrid-3p.yaml @VolkerK62
+/templates/definition/meter/deye-hybrid-hp3.yaml @Johnny1206 @Robwagi @VolkerK62
+/templates/definition/meter/e3dc-rscp.yaml @0x3d13f @FlyingLemming @Starquake @der-eismann @docolli
+/templates/definition/meter/eastron-sdm220_230.yaml @ott
+/templates/definition/meter/eastron-sdm72v2_630.yaml @ott
+/templates/definition/meter/enphase.yaml @Lenart12 @salz3n
+/templates/definition/meter/fox-ess-h3-smart.yaml @VolkerK62 @fabian1512
+/templates/definition/meter/fox-ess-h3.yaml @VolkerK62 @thse22
+/templates/definition/meter/fritzdect.yaml @thierolm
+/templates/definition/meter/fritzgrid.yaml @thierolm
+/templates/definition/meter/fronius-gen24.yaml @TomF79 @benesolar @farcorben @hoermto @thecem
+/templates/definition/meter/fronius-solarapi-v1.yaml @AloisKlingler @benesolar @berndkrannich @iseeberg79
+/templates/definition/meter/goodwe-hybrid.yaml @andiwist @maatinh @walburgf
+/templates/definition/meter/goodwe-wifi.yaml @motze92
+/templates/definition/meter/hager-flow-modbus.yaml @unf
+/templates/definition/meter/homematic.yaml @thierolm
+/templates/definition/meter/homewizard-kwh.yaml @Rido @thierolm
+/templates/definition/meter/homewizard-p1.yaml @thierolm
+/templates/definition/meter/hoymiles-ahoydtu.yaml @Starquake
+/templates/definition/meter/hoymiles-opendtu.yaml @Starquake @xerion3800
+/templates/definition/meter/huawei-emma.yaml @Mungg1818 @VolkerK62
+/templates/definition/meter/huawei-smartlogger.yaml @VolkerK62
+/templates/definition/meter/huawei-sun2000-dongle.yaml @RTTTC @natsu-chan
+/templates/definition/meter/huawei-sun2000.yaml @Hypo93 @VolkerK62
+/templates/definition/meter/iometer.yaml @MaestroOnICe
+/templates/definition/meter/kostal-ksem-inverter.yaml @DerAndereAndi
+/templates/definition/meter/kostal-ksem.yaml @DerAndereAndi
+/templates/definition/meter/kostal-piko-hybrid.yaml @xerion3800
+/templates/definition/meter/kostal-piko-legacy.yaml @xerion3800
+/templates/definition/meter/kostal-piko-mp-plus.yaml @DerAndereAndi @tuetenk0pp @xerion3800
+/templates/definition/meter/kostal-piko-pv.yaml @xerion3800
+/templates/definition/meter/kostal-plenticore-gen2.yaml @iseeberg79
+/templates/definition/meter/kostal-plenticore.yaml @DerAndereAndi @iseeberg79 @xerion3800
+/templates/definition/meter/lg-ess-home-8-10.yaml @marcelGoerentz
+/templates/definition/meter/loxone.yaml @Starquake
+/templates/definition/meter/marstek-venus.yaml @Chris8er
+/templates/definition/meter/mypv-wifi-meter.yaml @VolkerK62
+/templates/definition/meter/openems.yaml @VolkerK62 @iseeberg79
+/templates/definition/meter/p1monitor.yaml @derkroesink
+/templates/definition/meter/plexlog.yaml @VolkerK62
+/templates/definition/meter/powerfox-poweropti.yaml @DerAndereAndi
+/templates/definition/meter/qcells-hybrid-cloud.yaml @Starquake
+/templates/definition/meter/rct-power.yaml @Maschga
+/templates/definition/meter/saj-r5.yaml @tcoenraad
+/templates/definition/meter/sax.yaml @juergen-weber @oekinger
+/templates/definition/meter/senec-home.yaml @DerAndereAndi @VolkerK62
+/templates/definition/meter/shelly-1pm.yaml @VolkerK62 @thierolm
+/templates/definition/meter/shelly-3em.yaml @DerAndereAndi @VolkerK62 @thierolm
+/templates/definition/meter/shelly-pro-3em.yaml @thierolm
+/templates/definition/meter/siemens-7kt1665.yaml @DerAndereAndi @JosefRick
+/templates/definition/meter/sigenergy.yaml @ZombieApps
+/templates/definition/meter/slimmelezer-v2.yaml @VolkerK62 @toeklk
+/templates/definition/meter/slimmelezer.yaml @Starquake @ronajon
+/templates/definition/meter/sma-datamanager.yaml @poohnet
+/templates/definition/meter/sma-homemanager.yaml @DerAndereAndi
+/templates/definition/meter/sma-hybrid.yaml @eckerse @mfuchs1984
+/templates/definition/meter/sofarsolar-g3.yaml @Frintrop @VolkerK62
+/templates/definition/meter/solaredge-hybrid.yaml @Cytron1980 @DerAndereAndi @MarkusGH @ben-bole @stefanpelz
+/templates/definition/meter/solaredge-inverter.yaml @DerAndereAndi @MarkusGH @Starquake
+/templates/definition/meter/solarlog.yaml @VolkerK62
+/templates/definition/meter/solarmax-maxstorage.yaml @VolkerK62 @baloo-gh
+/templates/definition/meter/solarwatt-flex.yaml @PeterFlorian
+/templates/definition/meter/solax-hybrid-cloud.yaml @DerAndereAndi @Starquake
+/templates/definition/meter/solax-inverter-cloud.yaml @Starquake
+/templates/definition/meter/solax.yaml @WordsOfMe @farcorben
+/templates/definition/meter/solis-hybrid-s.yaml @hbpv
+/templates/definition/meter/sonnenbatterie.yaml @Starquake @rivengh
+/templates/definition/meter/sonnenbatterie_eco56.yaml @ngehrsitz
+/templates/definition/meter/sungrow-hybrid.yaml @Starquake
+/templates/definition/meter/sunspec-battery-control.yaml @Starquake
+/templates/definition/meter/sunspec-hybrid.yaml @Starquake
+/templates/definition/meter/sunspec-inverter-control.yaml @Starquake
+/templates/definition/meter/sunspec-inverter.yaml @Starquake @benesolar
+/templates/definition/meter/sunspec-meter.yaml @benesolar @marcelGoerentz
+/templates/definition/meter/tapo.yaml @thierolm
+/templates/definition/meter/tasmota-3p.yaml @thierolm
+/templates/definition/meter/tasmota-sml.yaml @thierolm
+/templates/definition/meter/tasmota.yaml @thierolm
+/templates/definition/meter/tesla-powerwall.yaml @GrimmiMeloni @Starquake @mfuchs1984
+/templates/definition/meter/tibber-pulse.yaml @Starquake
+/templates/definition/meter/tplink.yaml @thierolm
+/templates/definition/meter/victron-energy.yaml @Hofyyy @VolkerK62
+/templates/definition/meter/volkszaehler-http.yaml @StefanSchoof
+/templates/definition/meter/volkszaehler-importexport.yaml @StefanSchoof
+/templates/definition/meter/vzlogger.yaml @StefanSchoof
+/templates/definition/meter/wattsonic-gen3.yaml @frankb-CZ
+/templates/definition/tariff/api-akkudoktor-de.yaml @Glopix @RenatusRo
+/templates/definition/tariff/demo-co2-forecast.yaml @Maschga
+/templates/definition/tariff/demo-dynamic-grid.yaml @Maschga
+/templates/definition/tariff/demo-solar-forecast.yaml @Maschga
+/templates/definition/tariff/electricitymaps-free.yaml @RenatusRo
+/templates/definition/tariff/electricitymaps.yaml @Starquake
+/templates/definition/tariff/energinet-co2.yaml @HolgerMiara
+/templates/definition/tariff/energinet-price.yaml @HolgerMiara
+/templates/definition/tariff/energinet.yaml @Starquake
+/templates/definition/tariff/energy-charts-api.yaml @Starquake
+/templates/definition/tariff/energyforecast.yaml @StefanSchoof
+/templates/definition/tariff/enever.yaml @Starquake @drfisheye
+/templates/definition/tariff/entsoe.yaml @Maschga
+/templates/definition/tariff/ews.yaml @Bockhorn-IT
+/templates/definition/tariff/forecast-solar.yaml @Starquake
+/templates/definition/tariff/green-grid-compass.yaml @Starquake
+/templates/definition/tariff/open-meteo.yaml @schrotrf @tantive @thecem
+/templates/definition/tariff/ostrom.yaml @kscholty
+/templates/definition/tariff/pun.yaml @motze92
+/templates/definition/tariff/solarprognose.yaml @thlink68
+/templates/definition/tariff/solcast.yaml @Starquake @TomF79
+/templates/definition/tariff/spottyenergy.yaml @Starquake
+/templates/definition/tariff/stekker.yaml @djfanatix
+/templates/definition/vehicle/audi.yaml @Starquake
+/templates/definition/vehicle/bmw.yaml @BrickTop87 @fscherwi
+/templates/definition/vehicle/cardata.yaml @Copilot
+/templates/definition/vehicle/citroen.yaml @hurzhurz
+/templates/definition/vehicle/ds.yaml @hurzhurz
+/templates/definition/vehicle/evnotify.yaml @DerAndereAndi @Starquake
+/templates/definition/vehicle/fiat.yaml @DerAndereAndi @FraBoCH @SolarPowerEV @Starquake @VolkerK62 @drfisheye
+/templates/definition/vehicle/flobz.yaml @Starquake
+/templates/definition/vehicle/ford.yaml @Starquake
+/templates/definition/vehicle/homeassistant.yaml @thecem
+/templates/definition/vehicle/hyundai.yaml @VolkerK62
+/templates/definition/vehicle/ioBroker.bmw.yaml @StefanSchoof
+/templates/definition/vehicle/iso15118.yaml @DerAndereAndi
+/templates/definition/vehicle/kia.yaml @VolkerK62
+/templates/definition/vehicle/mazda2mqtt.yaml @C64Axel @Starquake
+/templates/definition/vehicle/mercedes.yaml @ReneNulschDE @VolkerK62 @xantalor
+/templates/definition/vehicle/mg.yaml @VolkerK62 @kscholty @mjhgmailcom
+/templates/definition/vehicle/mg2mqtt.yaml @Starquake
+/templates/definition/vehicle/mini.yaml @BrickTop87 @fscherwi
+/templates/definition/vehicle/mz2mqtt.yaml @C64Axel
+/templates/definition/vehicle/niu-e-scooter.yaml @Starquake @thierolm
+/templates/definition/vehicle/offline.yaml @Starquake @VolkerK62
+/templates/definition/vehicle/opel.yaml @hurzhurz
+/templates/definition/vehicle/ovms.yaml @Starquake
+/templates/definition/vehicle/peugeot.yaml @hurzhurz
+/templates/definition/vehicle/renault.yaml @VolkerK62 @mfuchs1984 @savus4
+/templates/definition/vehicle/seat-cupra.yaml @Starquake
+/templates/definition/vehicle/seat.yaml @Starquake
+/templates/definition/vehicle/skoda.yaml @Starquake
+/templates/definition/vehicle/smart.yaml @DerAndereAndi @Tombra1889
+/templates/definition/vehicle/tesla.yaml @FraBoCH @Starquake @VolkerK62
+/templates/definition/vehicle/teslafi.yaml @erikarenhill
+/templates/definition/vehicle/teslalogger.yaml @uwen70
+/templates/definition/vehicle/teslamate.yaml @Hofyyy @Starquake @hanzoh
+/templates/definition/vehicle/tessie.yaml @djfanatix
+/templates/definition/vehicle/tronity.yaml @Starquake
+/templates/definition/vehicle/volvo-connected.yaml @Starquake
+/templates/definition/vehicle/vw.yaml @StefanSchoof
+/templates/definition/vehicle/zero.yaml @kscholty

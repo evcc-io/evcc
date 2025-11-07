@@ -58,8 +58,8 @@
           "heating": "Vlastní konfigurace kotle (topení)"
         },
         "heatpump": "Vlastní konfigurace tepelného čerpadla",
-        "sgready": "Vlastní konfigurace tepelného čerpadla (SG Ready, All)",
-        "sgready-boost": "Vlastní konfigurace tepelného čerpadla (SGReady, Boost)",
+        "sgready": "Vlastní konfigurace tepelného čerpadla (sg-ready přes plugins)",
+        "sgready-relay": "Vlastní konfigurace tepelného čerpadla (sg-ready přes relé)",
         "switchsocket": "Vlastní konfigurace chytré zásuvky"
       }
     },
