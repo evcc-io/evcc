@@ -1,14 +1,34 @@
 template: openems
 products:
-  - brand: OpenEMS (Rest API)
-  - brand: FENECON (Rest API)
+  - brand: OpenEMS
+    description:
+      generic: REST-API
+  - brand: FENECON
+    description:
+      generic: REST-API
 capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (REST-API).
+      :::info
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (*FEMS App REST/JSON Schreibzugriff*).
+      :::
+      **FEMS-Dokumentation:**
+      - [FEMS App REST/JSON Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - [FEMS App REST/JSON Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+
+      **OpenEMS-Dokumentation:**
+      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control (REST-API).
+      :::info
+      A commercial license is required for FEMS FENECON systems for active battery control (*FEMS App REST/JSON Write Access*).
+      :::
+      **FEMS documentation:**
+      - [FEMS App REST/JSON Read Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - [FEMS App REST/JSON Write Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+
+      **OpenEMS documentation:**
+      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -23,6 +43,9 @@ params:
     description:
       de: Steuerbare Batterie Komponente
       en: Controllable battery component
+    help:
+      de: aktive Batteriesteuerung (REST/JSON schreibend)
+      en: active battery control (REST/JSON Write Access)
     usages: ["battery"]
     advanced: true
   - name: watchdog

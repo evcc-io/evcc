@@ -1,24 +1,41 @@
 template: openems-modbus
 products:
-  - brand: OpenEMS (Modbus)
-  - brand: FENECON (Modbus)
+  - brand: OpenEMS
+    description:
+      generic: Modbus-API
+  - brand: FENECON
+    description:
+      generic: Modbus-API
 capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (Modbus-API).
+      :::info Lizenzhinweis
+      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (*FEMS App Modbus/TCP Schreibzugriff*).
+      :::
+      **FEMS-Dokumentation:**
+      - [FEMS App Modbus/TCP – Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
+      - [FEMS App Modbus/TCP – Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
+
+      **OpenEMS-Dokumentation:**
+      - [OpenEMS Edge Api Modbus Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control (Modbus-API).
+      :::info License notice
+      A commercial license is required for FEMS FENECON systems for active battery control (*FEMS App Modbus/TCP Write Access*).
+      :::
+      **FEMS documentation:**
+      - [FEMS App Modbus/TCP — Read Access](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
+      - [FEMS App Modbus/TCP — Write Access](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
+
+      **OpenEMS documentation:**
+      - [OpenEMS Edge Api Modbus Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: host
-  - name: modbusid
-    advanced: true
-  - name: port
-    default: 502
-    advanced: true
+  - name: modbus
+    choice: ["tcpip"]
+    default: "tcpip"
   - name: grid_power_register
     type: int
     default: 315
@@ -93,10 +110,12 @@ params:
     type: bool
     default: false
     description:
-      de: Aktiviert Schreibzugriffe (Batteriesteuerung)
-      en: Enables write access (battery control)
+      de: steuert Batterie Komponente
+      en: controls battery component
+    help:
+      de: aktive Batteriesteuerung (Modbus/TCP schreibend)
+      en: active battery control (Modbus/TCP Write Access)
     usages: ["battery"]
-    advanced: true
   - name: watchdog
     type: duration
     default: 60s
@@ -119,16 +138,14 @@ render: |
   {{- if eq .usage "grid" }} 
   power:
     source: modbus
-    id: {{ .modbusid }}
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ .grid_power_register }} # GridActivePower (W)
       type: input
       encoding: float32
   energy:
     source: modbus
-    id: {{ .modbusid }}
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ .grid_energy_register }} # GridBuyActiveEnergy (Wh)
       type: holding
@@ -138,16 +155,14 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    id: {{ .modbusid }}
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ .pv_power_register }} # ProductionActivePower (W)
       type: input
       encoding: float32
   energy:
     source: modbus
-    id: {{ .modbusid }}
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ .pv_energy_register }} # ProductionActiveEnergy (Wh)
       type: holding
@@ -158,16 +173,14 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    id: {{ .modbusid }}
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ .battery_power_register }} # EssDischargePower (W)
       type: input
       encoding: float32
   soc:
     source: modbus
-    id: {{ .modbusid }}
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ .battery_soc_register }} # EssSoc (%)
       type: input
@@ -186,8 +199,7 @@ render: |
           value: 0
           set:
             source: modbus
-            id: {{ .modbusid }}
-            uri: {{ .host }}:{{ .port }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: {{ .battery_set_register }} # SetActivePowerLessOrEquals (W)
               type: writemultiple
@@ -198,8 +210,7 @@ render: |
           value: 0
           set:
             source: modbus
-            id: {{ .modbusid }}
-            uri: {{ .host }}:{{ .port }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: {{ .battery_set_register }}
               type: writemultiple
@@ -210,8 +221,7 @@ render: |
           value: {{ mul .maxchargepower -1 }} # charge power is negative
           set:
             source: modbus
-            id: {{ .modbusid }}
-            uri: {{ .host }}:{{ .port }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: {{ .battery_set_register }}
               type: writemultiple
