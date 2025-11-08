@@ -11,7 +11,7 @@ requirements:
   description:
     de: |
       ##### Lizenzhinweis:
-      Für FEMS FENECON-Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App Modbus/TCP Schreibzugriff* erforderlich.<br/><br/>
+      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App Modbus/TCP Schreibzugriff* erforderlich.<br/><br/>
       ##### FEMS-Dokumentation:
       - [FEMS App Modbus/TCP – Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
       - [FEMS App Modbus/TCP – Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
@@ -19,7 +19,7 @@ requirements:
       - [OpenEMS Edge Api Modbus Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
     en: |
       ##### License notice:
-      For FEMS FENECON systems is for active battery control a commercial license *FEMS App Modbus/TCP Write Access* needed.<br/><br/>
+      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App Modbus/TCP Write Access*) is required.<br/><br/>
       ##### FEMS documentation:
       - [FEMS App Modbus/TCP — Read Access](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
       - [FEMS App Modbus/TCP — Write Access](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
