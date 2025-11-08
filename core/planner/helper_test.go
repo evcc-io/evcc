@@ -63,8 +63,8 @@ func TestDuration(t *testing.T) {
 func TestAverageCost(t *testing.T) {
 	now := time.Now()
 	plan := api.Rates{
-		{Start: now, End: now.Add(30 * time.Minute), Value: 10.0},      // 0.5h * 10 = 5
-		{Start: now, End: now, Value: 999.0},                            // zero - ignored
+		{Start: now, End: now.Add(30 * time.Minute), Value: 10.0},                    // 0.5h * 10 = 5
+		{Start: now, End: now, Value: 999.0},                                         // zero - ignored
 		{Start: now.Add(30 * time.Minute), End: now.Add(2 * time.Hour), Value: 20.0}, // 1.5h * 20 = 30
 	}
 	require.Equal(t, 17.5, AverageCost(plan)) // (5 + 30) / 2h = 17.5

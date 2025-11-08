@@ -122,7 +122,7 @@ func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration t
 			if slot.Start.Before(windowEnd) {
 				// Trim end if necessary
 				if slot.End.After(windowEnd) {
-					slot.End = windowEnd
+					slot.End = windowEnd.Truncate(time.Second)
 				}
 
 				// only add slots with valid duration
@@ -164,8 +164,8 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	if len(res) == 0 {
 		return api.Rates{
 			api.Rate{
-				Start: start,
-				End:   end,
+				Start: normalizeTZ(start, start),
+				End:   normalizeTZ(end, start),
 			},
 		}
 	}
@@ -174,7 +174,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	// required for scenarios where current time is before first available rate
 	if res[0].Start.After(start) {
 		res = slices.Insert(res, 0, api.Rate{
-			Start: start,
+			Start: normalizeTZ(start, res[0].Start),
 			End:   res[0].Start,
 		})
 	}
@@ -184,7 +184,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	if last := res[len(res)-1]; last.End.Before(end) {
 		res = append(res, api.Rate{
 			Start: last.End,
-			End:   end,
+			End:   normalizeTZ(end, last.End),
 		})
 	}
 

@@ -97,14 +97,14 @@ func isValidSlot(slot api.Rate) bool {
 // adjustSlotStart trims slot start to the given time if it starts before
 func adjustSlotStart(slot *api.Rate, start time.Time) {
 	if slot.Start.Before(start) {
-		slot.Start = start
+		slot.Start = start.Truncate(time.Second)
 	}
 }
 
 // adjustSlotEnd trims slot end to the given time if it extends beyond
 func adjustSlotEnd(slot *api.Rate, end time.Time) {
 	if slot.End.After(end) {
-		slot.End = end
+		slot.End = end.Truncate(time.Second)
 	}
 }
 
@@ -117,13 +117,22 @@ func trimSlot(slot *api.Rate, excess time.Duration, isSingle bool) {
 	}
 
 	if isSingle {
-		slot.End = slot.End.Add(-excess)
+		slot.End = slot.End.Add(-excess).Truncate(time.Second)
 	} else {
-		slot.Start = slot.Start.Add(excess)
+		slot.Start = slot.Start.Add(excess).Truncate(time.Second)
 	}
 
 	// Ensure slot remains valid - if trimming would create invalid slot, make it zero-duration
 	if slot.End.Before(slot.Start) {
 		slot.End = slot.Start
 	}
+}
+
+// normalizeTZ converts time t to the timezone of reference (or UTC) and truncates to seconds
+func normalizeTZ(t, reference time.Time) time.Time {
+	loc := reference.Location()
+	if loc == nil {
+		loc = time.UTC
+	}
+	return t.In(loc).Truncate(time.Second)
 }
