@@ -14,4 +14,4 @@ params:
 render: |
   {{ include "ocpp" . }}
   profilekindrelative: true
-  metervalues: -Current.Offered,Power.Offered,SoC
+  metervalues: "-Current.Offered,Power.Offered,SoC"
