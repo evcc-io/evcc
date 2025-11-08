@@ -249,16 +249,8 @@ func IsJson(key string) (bool, error) {
 		return false, err
 	}
 
-	var data any
-	err = json.Unmarshal([]byte(s), &data)
-
-	var syntaxErr *json.SyntaxError
-
-	if errors.As(err, &syntaxErr) {
-		return true, nil
-	} else {
-		return false, err
-	}
+	var data json.RawMessage
+	return json.Unmarshal([]byte(s), &data) == nil, nil
 }
 
 // wrapping Settings into a struct for better decoupling

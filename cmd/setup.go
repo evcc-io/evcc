@@ -988,7 +988,7 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 			return err
 		}
 
-		if isJson {
+		if !isJson {
 			if err := migrateModbusProxy(); err != nil {
 				return err
 			}
