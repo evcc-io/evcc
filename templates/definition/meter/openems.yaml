@@ -19,7 +19,7 @@ requirements:
       - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
     en: |
       ##### License notice:
-      For FEMS FENECON systems is for active battery control a commercial license *FEMS App REST/JSON Write Access needed.<br/><br/>
+      For active battery control on FEMS FENECON systems, a commercial license (*FEMS App REST/JSON Write Access*) is required.<br/><br/>
       ##### FEMS documentation:
       - [FEMS App REST/JSON Read Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Lesezugriff.html)
       - [FEMS App REST/JSON Write Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
