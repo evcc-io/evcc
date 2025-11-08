@@ -259,8 +259,24 @@ func (m *RCT) totalEnergy() (float64, error) {
 
 // batterySoc implements the api.Battery interface
 func (m *RCT) batterySoc() (float64, error) {
-	res, err := m.queryFloat(rct.BatterySoC)
-	return res * 100, err
+	b, err := m.queryFloat(rct.BatterySoC)
+
+	if err != nil {
+		return 0, err
+	}
+
+	b2, err := m.queryFloat(rct.BatteryPlaceholder0Soc)
+
+	if err != nil {
+		return b, err
+	}
+
+	if b2 != 0.0 {
+		// optional second battery tower available
+		b = (b + b2) / 2
+	}
+
+	return b * 100, err
 }
 
 func (m *RCT) bo() *backoff.ExponentialBackOff {
