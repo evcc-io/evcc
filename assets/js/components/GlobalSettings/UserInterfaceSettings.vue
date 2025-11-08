@@ -74,7 +74,11 @@
 				{{ $t("settings.fullscreen.enter") }}
 			</button>
 		</FormRow>
-		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
+		<FormRow
+			v-if="isLoggedIn()"
+			id="hiddenFeaturesEnabled"
+			:label="`${$t('settings.hiddenFeatures.label')} 🧪`"
+		>
 			<div class="form-check form-switch my-1">
 				<input
 					id="hiddenFeaturesEnabled"
@@ -110,6 +114,7 @@ import { getThemePreference, setThemePreference } from "@/theme.ts";
 import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
+import { isLoggedIn } from "../Auth/auth";
 import { defineComponent, type PropType } from "vue";
 import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
 
@@ -183,6 +188,7 @@ export default defineComponent({
 	},
 	methods: {
 		isApp,
+		isLoggedIn,
 		enterFullscreen() {
 			document.documentElement.requestFullscreen();
 		},
