@@ -1,0 +1,26 @@
+## required attributes [type: sgready-relay]
+
+boost: # relay that switches the boost contact of the heat pump
+  type: template
+  template: shelly # example shelly one
+  host: 192.168.0.101 #
+
+## optional attributes
+
+#dim: # relay that switches the dim contact of the heat pump
+#  type: template
+#  template: shelly # example shelly two
+#  host: 192.168.0.102 #
+
+#power: # meter reading in W
+#  source: const
+#  value: 1234
+#energy: # meter reading in kWh
+#  source: const
+#  value: 42.5
+#temp: # current temperature (°C)
+#  source: const
+#  value: 42
+#limittemp: # temperature limit (°C) configured in device
+#  source: const
+#  value: 84

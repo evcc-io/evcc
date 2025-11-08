@@ -23,14 +23,14 @@ func init() {
 
 type ModbusResult struct {
 	SlaveID uint8
-	Model   int         `json:",omitempty"`
-	Point   string      `json:",omitempty"`
-	Value   interface{} `json:",omitempty"`
+	Model   int    `json:",omitempty"`
+	Point   string `json:",omitempty"`
+	Value   any    `json:",omitempty"`
 }
 
-func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
+func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]any {
 	port := handler.(*ModbusHandler).Port
-	cc := map[string]interface{}{
+	cc := map[string]any{
 		"uri":   net.JoinHostPort(res.ResultDetails.IP, strconv.Itoa(port)),
 		"model": "sunspec",
 		"id":    r.SlaveID,
@@ -39,7 +39,7 @@ func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string
 	return cc
 }
 
-func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func ModbusHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := ModbusHandler{
 		// Port:    502,
 		IDs:     []uint8{1},

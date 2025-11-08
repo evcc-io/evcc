@@ -3,32 +3,46 @@ package meter
 import (
 	"context"
 	"errors"
+	"slices"
+	"sync"
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
-// EEBus is an EEBus meter implementation supporting MGCP and MPC use cases
+// EEBus is an EEBus meter implementation supporting MGCP, MPC, and LPC use cases
 // Uses MGCP (Monitoring of Grid Connection Point) only when usage="grid"
 // Uses MPC (Monitoring & Power Consumption) for all other cases (default)
+// Additionally supports LPC (Limitation of Power Consumption)
 type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
 	ma *eebus.MonitoringAppliance
+	eg *eebus.EnergyGuard
 	mm measurements
 
 	power    *util.Value[float64]
 	energy   *util.Value[float64]
 	currents *util.Value[[]float64]
 	voltages *util.Value[[]float64]
+
+	// TODO use util.Value
+	mu               sync.Mutex
+	consumptionLimit *ucapi.LoadLimit
+	egLpcEntity      spineapi.EntityRemoteInterface
+	// failsafeLimit    float64
+	// failsafeDuration time.Duration
 }
 
 type measurements interface {
@@ -43,7 +57,7 @@ func init() {
 }
 
 // NewEEBusFromConfig creates an EEBus meter from generic config
-func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Ski     string
 		Ip      string
@@ -81,6 +95,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
 		ma:        ma,
+		eg:        eebus.Instance.EnergyGuard(),
 		mm:        mm,
 		Connector: eebus.NewConnector(),
 		power:     util.NewValue[float64](timeout),
@@ -108,18 +123,25 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	c.log.TRACE.Printf("recv: %s", event)
 
 	switch event {
+	// Monitoring Appliance
 	case mpc.DataUpdatePower, mgcp.DataUpdatePower:
-		c.dataUpdatePower(entity)
+		c.maDataUpdatePower(entity)
 	case mpc.DataUpdateEnergyConsumed, mgcp.DataUpdateEnergyConsumed:
-		c.dataUpdateEnergyConsumed(entity)
+		c.maDataUpdateEnergyConsumed(entity)
 	case mpc.DataUpdateCurrentsPerPhase, mgcp.DataUpdateCurrentPerPhase:
-		c.dataUpdateCurrentPerPhase(entity)
+		c.maDataUpdateCurrentPerPhase(entity)
 	case mpc.DataUpdateVoltagePerPhase, mgcp.DataUpdateVoltagePerPhase:
-		c.dataUpdateVoltagePerPhase(entity)
+		c.maDataUpdateVoltagePerPhase(entity)
+
+	// Energy Guard
+	case lpc.UseCaseSupportUpdate:
+		c.egLpcUseCaseSupportUpdate(entity)
+	case lpc.DataUpdateLimit:
+		c.egLpcDataUpdateLimit(entity)
 	}
 }
 
-func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdatePower(entity spineapi.EntityRemoteInterface) {
 	data, err := c.mm.Power(entity)
 	if err != nil {
 		c.log.ERROR.Println("Power:", err)
@@ -129,7 +151,7 @@ func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 	c.power.Set(data)
 }
 
-func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
 	data, err := c.mm.EnergyConsumed(entity)
 	if err != nil {
 		c.log.ERROR.Println("EnergyConsumed:", err)
@@ -140,7 +162,7 @@ func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) 
 	c.energy.Set(data / 1000)
 }
 
-func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
 	data, err := c.mm.CurrentPerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("CurrentPerPhase:", err)
@@ -149,7 +171,7 @@ func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface)
 	c.currents.Set(data)
 }
 
-func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
+func (c *EEBus) maDataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
 	data, err := c.mm.VoltagePerPhase(entity)
 	if err != nil {
 		c.log.ERROR.Println("VoltagePerPhase:", err)
@@ -199,4 +221,78 @@ func (c *EEBus) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, errors.New("invalid phase voltages")
 	}
 	return res[0], res[1], res[2], nil
+}
+
+//
+// Energy Guard
+//
+
+func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.egLpcEntity = entity
+}
+
+func (c *EEBus) egLpcDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
+	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
+	if err != nil {
+		c.log.ERROR.Println("EG LPC ConsumptionLimit:", err)
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.consumptionLimit = &limit
+}
+
+var _ api.Dimmer = (*EEBus)(nil)
+
+// Dimmed implements the api.Dimmer interface
+func (c *EEBus) Dimmed() (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Check if limit is active and has a valid power value
+	return c.consumptionLimit != nil && c.consumptionLimit.IsActive && c.consumptionLimit.Value > 0, nil
+}
+
+// Dim implements the api.Dimmer interface
+func (c *EEBus) Dim(dim bool) error {
+	// Sets or removes the consumption power limit
+
+	// TODO: change api.Dimmer to make limit configurable
+	// For now, we use a fixed safe limit of 0W
+	limit := 0.0
+
+	var value float64
+	if dim {
+		value = limit
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.egLpcEntity == nil {
+		return api.ErrNotAvailable
+	}
+
+	if !slices.Contains(c.eg.EgLPCInterface.AvailableScenariosForEntity(c.egLpcEntity), 1) {
+		return errors.New("scenario 1 not supported")
+	}
+
+	_, err := c.eg.EgLPCInterface.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
+		Value:    value,
+		IsActive: dim,
+	}, func(result model.ResultDataType) {
+		if result.ErrorNumber != nil {
+			c.log.ERROR.Println("ErrorNumber", *result.ErrorNumber)
+		}
+		if result.Description != nil {
+			c.log.ERROR.Println("Description", *result.Description)
+		}
+	})
+
+	return err
 }

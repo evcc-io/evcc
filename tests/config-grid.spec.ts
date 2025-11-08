@@ -57,6 +57,7 @@ test.describe("grid meter", async () => {
 
     // restart
     await restart(CONFIG_ONE_LP);
+    await expect(page.getByTestId("grid")).toContainText("Grid meter");
     await expect(page.getByTestId("grid").getByTestId("device-tag-power")).toContainText("5.0 kW");
 
     // check in main ui

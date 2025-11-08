@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewWattpilotFromConfig creates a wattpilot charger from generic config
-func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewWattpilotFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI      string
 		Password string

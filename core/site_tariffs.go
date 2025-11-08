@@ -20,7 +20,7 @@ type solarDetails struct {
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       []tsEntry    `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 }
 
 type dailyDetails struct {

@@ -19,7 +19,7 @@ type combinedPlugin struct {
 }
 
 // NewCombinedFromConfig creates combined provider
-func NewCombinedFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewCombinedFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Plugged, Charging Config
 	}

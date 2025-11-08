@@ -95,7 +95,7 @@ func (v *API) Action(vin, action, value string) error {
 	req, err := request.New(http.MethodPost, uri, nil, request.AcceptJSON)
 
 	if err == nil {
-		var res interface{}
+		var res any
 		err = v.DoJSON(req, &res)
 	}
 
@@ -103,14 +103,14 @@ func (v *API) Action(vin, action, value string) error {
 }
 
 // Any implements any api response
-func (v *API) Any(uri, vin string) (interface{}, error) {
+func (v *API) Any(uri, vin string) (any, error) {
 	if strings.Contains(uri, "%s") {
 		uri = fmt.Sprintf(uri, vin)
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
-	var res interface{}
+	var res any
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}

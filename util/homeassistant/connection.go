@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 // Connection represents a Home Assistant API connection
@@ -31,7 +32,7 @@ func NewConnection(log *util.Logger, uri, token string) (*Connection, error) {
 
 	c := &Connection{
 		Helper: request.NewHelper(log.Redact(token)),
-		uri:    strings.TrimSuffix(uri, "/"),
+		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
 	// Set up authentication headers
@@ -230,7 +231,11 @@ func (c *Connection) GetPhaseFloatStates(entities []string) (float64, float64, f
 }
 
 // ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
-func ValidatePhaseEntities(entities []string) ([]string, error) {
+func ValidatePhaseEntities(phases []string) ([]string, error) {
+	entities := lo.FilterMap(phases, func(s string, _ int) (string, bool) {
+		t := strings.TrimSpace(s)
+		return t, t != ""
+	})
 	switch len(entities) {
 	case 0:
 		return nil, nil

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"sync/atomic"
 	"time"
 
 	evopt "github.com/andig/evopt/client"
@@ -27,6 +28,7 @@ var (
 	batteryPower = float32(6000) // default power of the battery in W
 
 	updated time.Time
+	mu      atomic.Uint32
 )
 
 type batteryType string
@@ -49,14 +51,23 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
+const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
+
 func (site *Site) optimizerUpdateAsync(battery []measurement) {
+	var err error
+
 	if time.Since(updated) < 2*time.Minute {
 		return
 	}
 
-	var err error
+	if !mu.CompareAndSwap(0, 1) {
+		return
+	}
 
 	defer func() {
+		updated = time.Now()
+		mu.Store(0)
+
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
 		}
@@ -67,8 +78,6 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	}()
 
 	err = site.optimizerUpdate(battery)
-
-	updated = time.Now()
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
@@ -193,7 +202,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			bat.PDemand = prorate(continuousDemand(lp, minLen), firstSlotDuration)
+			if demand := continuousDemand(lp, minLen); demand != nil {
+				bat.PDemand = prorate(demand, firstSlotDuration)
+			}
 
 		case api.ModePV:
 			// add plan goal
@@ -201,6 +212,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			if goal > 0 {
 				if v := lp.GetVehicle(); socBased && v != nil {
 					goal *= v.Capacity() * 10
+				} else {
+					goal *= 1000 // Wh
 				}
 			}
 
@@ -210,7 +223,29 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
 				} else {
-					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+					site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+				}
+			}
+
+			// TODO remove once (using) smartcost limit becomes obsolete
+			if costLimit := lp.GetSmartCostLimit(); costLimit != nil {
+				maxLen := min(minLen, len(grid))
+
+				// limit hit?
+				if slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+					return r.Value <= *costLimit
+				}) {
+					maxPower := lp.EffectiveMaxPower()
+
+					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
+						return float32(maxPower / slotsPerHour)
+					}), firstSlotDuration)
+
+					for i := range maxLen {
+						if grid[i].Value > *costLimit {
+							bat.PDemand[i] = 0
+						}
+					}
 				}
 			}
 		}
@@ -248,9 +283,9 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		}
 
 		if m, ok := instance.(api.BatterySocLimiter); ok {
-			min, max := m.GetSocLimits()
-			bat.SMin = float32(*b.Capacity * float64(min) * 10) // Wh
-			bat.SMax = float32(*b.Capacity * float64(max) * 10) // Wh
+			minSoc, maxSoc := m.GetSocLimits()
+			bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
+			bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
 		}
 
 		req.Batteries = append(req.Batteries, bat)
@@ -318,7 +353,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	return lo.RepeatBy(minLen, func(i int) float32 {
-		return float32(pwr)
+		return float32(pwr / slotsPerHour)
 	})
 }
 

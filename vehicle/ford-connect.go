@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewFordConnectFromConfig creates a new vehicle
-func NewFordConnectFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewFordConnectFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials
