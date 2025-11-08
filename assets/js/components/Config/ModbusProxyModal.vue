@@ -77,7 +77,7 @@
 								class="flex-shrink-0"
 							></shopicon-regular-arrowdown>
 						</div>
-						<div class="col-lg-5"  data-testid="device-box">
+						<div class="col-lg-5" data-testid="device-box">
 							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
 									<h5 class="box-heading">
