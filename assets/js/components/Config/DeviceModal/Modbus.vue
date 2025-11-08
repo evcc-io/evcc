@@ -283,7 +283,7 @@ export default defineComponent({
 					break;
 				case "tcpip":
 					this.connectionData = MODBUS_CONNECTION.TCPIP;
-					this.protocolData = MODBUS_PROTOCOL.RTU;
+					this.protocolData = MODBUS_PROTOCOL.TCP;
 					break;
 			}
 		},
