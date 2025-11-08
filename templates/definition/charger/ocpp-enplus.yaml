@@ -3,6 +3,9 @@ products:
   - brand: EN+
     description:
       generic: AC EV Charger
+  - brand: AlphaESS
+    description:
+      generic: SMILE-G3-EVCT11
 capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
@@ -10,3 +13,5 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  profilekindrelative: true
+  metervalues: -Current.Offered,Power.Offered,SoC
