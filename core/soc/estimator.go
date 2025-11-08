@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const ChargeEfficiency = 0.8 // assume 80% charge efficiency
+const ChargeEfficiency = 0.85 // assume 85% charge efficiency
 
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
