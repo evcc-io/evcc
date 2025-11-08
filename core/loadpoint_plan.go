@@ -37,7 +37,7 @@ func (lp *Loadpoint) finishPlan() {
 
 // remainingPlanEnergy returns missing energy amount in kWh
 func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
-	return max(0, planEnergy-lp.getChargedEnergy()/1e3)
+	return max(0, planEnergy+lp.planEnergyOffset-lp.getChargedEnergy()/1e3)
 }
 
 // GetPlanRequiredDuration is the estimated total charging duration
