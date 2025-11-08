@@ -10,7 +10,7 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      :::info
+      :::info Lizenzhinweis
       Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (*FEMS App REST/JSON Schreibzugriff*).
       :::
       **FEMS-Dokumentation:**
@@ -20,7 +20,7 @@ requirements:
       **OpenEMS-Dokumentation:**
       - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
     en: |
-      :::info
+      :::info License notice
       A commercial license is required for FEMS FENECON systems for active battery control (*FEMS App REST/JSON Write Access*).
       :::
       **FEMS documentation:**
