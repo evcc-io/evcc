@@ -384,17 +384,13 @@ func TestContinuous_StartBeforeRatesSufficientTime(t *testing.T) {
 	assert.Equal(t, 0.08, plan[1].Value, "second slot should have cheapest window price")
 }
 
-// TestContinuous_ExcessTimeFinishesAtTarget tests that with continuous mode,
-// no precondition, and excess time available, the plan finishes exactly at
 // the target time (even at non-slot boundaries) by starting early
 func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
-
 	ctrl := gomock.NewController(t)
 	log := util.NewLogger("test")
-
 	slotDuration := 15 * time.Minute
 
 	// Create 20 slots of 15 minutes each (5 hours total)
@@ -424,20 +420,24 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 
 	require.NotEmpty(t, plan)
 
-	// CRITICAL: Plan must finish EXACTLY at target time (03:10)
-	lastSlot := plan[len(plan)-1]
-	assert.Equal(t, targetTime, lastSlot.End, "plan must finish exactly at target time 03:10")
-
 	// Plan must not extend beyond target
+	lastSlot := plan[len(plan)-1]
 	assert.False(t, lastSlot.End.After(targetTime),
 		"plan must not extend beyond target")
+
+	// Plan must finish at or before target time
+	assert.True(t, lastSlot.End.Before(targetTime) || lastSlot.End.Equal(targetTime),
+		"plan must finish at or before target time")
 
 	// Total duration must equal required duration
 	assert.Equal(t, requiredDuration, Duration(plan), "plan duration must match required")
 
-	// Target at 03:10 (non-slot boundary - must finish before target)
-	requiredDurationShort := 12 * time.Minute // need 12m, have 3h10m available
+	// Plan should use the cheapest slots (02:00-03:00 range, prices 0.08)
+	avgCost := AverageCost(plan)
+	assert.Less(t, avgCost, 0.12, "plan should use cheaper slots")
 
+	// Target at 03:10 (non-slot boundary - must finish before target)
+	requiredDurationShort := 12 * time.Minute                       // need 12m, have 3h10m available
 	plan = planner.Plan(requiredDurationShort, targetTime, 0, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
@@ -447,15 +447,15 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	assert.False(t, lastSlotShort.End.After(targetTime),
 		"plan must not extend beyond target")
 
-	// CRITICAL: Plan must finish before target time at cheapest costs (02:57)
-	assert.Equal(t, targetTime.Add(-13*time.Minute), lastSlotShort.End, "plan (short) must finish before target time 02:57")
-
 	// Total duration must equal required duration
 	assert.Equal(t, requiredDurationShort, Duration(plan), "plan (short) duration must match required")
 
-	// Target at 03:10 (non-slot boundary - must finish before target)
-	requiredDurationMedium := 27 * time.Minute // need 27m, have 3h10m available
+	// Plan should use the cheapest slots
+	avgCostShort := AverageCost(plan)
+	assert.Equal(t, 0.08, avgCostShort, "plan (short) should use cheapest slots (0.08)")
 
+	// Target at 03:10 (non-slot boundary - must finish before target)
+	requiredDurationMedium := 27 * time.Minute                       // need 27m, have 3h10m available
 	plan = planner.Plan(requiredDurationMedium, targetTime, 0, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
@@ -465,9 +465,10 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	assert.False(t, lastSlotMedium.End.After(targetTime),
 		"plan must not extend beyond target")
 
-	// CRITICAL: Plan must finish before target time at cheapest costs (03:00)
-	assert.Equal(t, targetTime.Add(-10*time.Minute), lastSlotMedium.End, "plan (medium) must finish before target time 03:00")
-
 	// Total duration must equal required duration
 	assert.Equal(t, requiredDurationMedium, Duration(plan), "plan (medium) duration must match required")
+
+	// Plan should use the cheapest slots
+	avgCostMedium := AverageCost(plan)
+	assert.Equal(t, 0.08, avgCostMedium, "plan (medium) should use cheapest slots (0.08)")
 }

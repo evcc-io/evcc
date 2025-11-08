@@ -49,7 +49,10 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 		adjustSlotStart(&slot, start)
 		adjustSlotEnd(&slot, end)
 
-		result = append(result, slot)
+		// only add slots with valid duration
+		if isValidSlot(slot) {
+			result = append(result, slot)
+		}
 	}
 
 	return result
@@ -72,10 +75,11 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 		if requiredDuration < 0 {
 			trimSlot(&slot, -requiredDuration, !(IsFirst(slot, plan) && len(plan) > 0))
 			requiredDuration = 0
+		}
 
-			if slot.End.Before(slot.Start) {
-				panic("slot end before start")
-			}
+		// only add slots with valid duration
+		if !isValidSlot(slot) {
+			continue
 		}
 
 		plan = append(plan, slot)
@@ -97,46 +101,58 @@ func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration t
 		return nil
 	}
 
-	// rates are already filtered by caller, so slots are guaranteed to be relevant
-
-	// Detect slot duration from first valid rate (make tests compatible)
-	slotDuration := validRates[0].End.Sub(validRates[0].Start)
-	slots := int(math.Ceil(float64(effectiveDuration) / float64(slotDuration)))
-
-	bestSlot := -1
 	bestCost := math.MaxFloat64
-
-	// build prefix sum for fastest window cost calculation
-	prefix := make([]float64, len(validRates)+1)
-	for i := range validRates {
-		prefix[i+1] = prefix[i] + validRates[i].Value
-	}
+	var bestWindow api.Rates
 
 	for i := range validRates {
-		lastSlot := i + slots - 1
 		windowEnd := validRates[i].Start.Add(effectiveDuration)
 
-		if lastSlot >= len(validRates) || windowEnd.After(targetTime) {
+		if windowEnd.After(targetTime) {
 			break
 		}
 
-		// use prefix sum to get total cost of this window
-		sum := prefix[lastSlot+1] - prefix[i]
+		// Collect all slots that fall within [Start, Start+effectiveDuration]
+		var window api.Rates
+		var duration time.Duration
 
-		// prefer later start if equal cost
-		if sum <= bestCost {
-			bestSlot = i
-			bestCost = sum
+		for j := i; j < len(validRates) && duration < effectiveDuration; j++ {
+			slot := validRates[j]
+
+			// Slot partially or completely within window?
+			if slot.Start.Before(windowEnd) {
+				// Trim end if necessary
+				if slot.End.After(windowEnd) {
+					slot.End = windowEnd
+				}
+
+				// only add slots with valid duration
+				if isValidSlot(slot) {
+					window = append(window, slot)
+					duration += slot.End.Sub(slot.Start)
+				}
+			}
+		}
+
+		// Only consider complete windows
+		if duration < effectiveDuration {
+			continue
+		}
+
+		// Calculate cost
+		var cost float64
+		for _, slot := range window {
+			slotDur := slot.End.Sub(slot.Start)
+			cost += float64(slotDur) * slot.Value
+		}
+
+		// Prefer later start if equal cost
+		if cost <= bestCost {
+			bestCost = cost
+			bestWindow = window
 		}
 	}
 
-	if bestSlot < 0 {
-		return nil
-	}
-
-	result := trimWindow(validRates[bestSlot:bestSlot+slots], effectiveDuration, targetTime)
-
-	return result
+	return bestWindow
 }
 
 // Plan creates a continuous emergency charging plan
@@ -266,7 +282,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 				end = targetTime
 			}
 
-			// available window too small for sliding window - use continuous plan without preconditioning
+			// available window too small for sliding window - charge continuously from now to target
 			if end.Sub(start) < requiredDuration {
 				return continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
 			}
@@ -301,30 +317,20 @@ func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondit
 		precond = append(precond, r)
 	}
 
-	if len(precond) == 0 {
-		return chargingRates, precond
-	}
+	// Use filterRates to trim the precondition window exactly
+	precond = filterRates(precond, preCondStart, targetTime)
 
-	// Trim last slot to end exactly at target
-	adjustSlotEnd(&precond[len(precond)-1], targetTime)
-
-	// Calculate total duration
+	// If we don't have enough duration, extend from chargingRates
 	var total time.Duration
 	for _, p := range precond {
 		total += p.End.Sub(p.Start)
 	}
 
-	// Adjust duration to match precondition exactly
-	if diff := precondition - total; diff != 0 {
-		if diff > 0 {
-			// Deficit: prepend slots from chargingRates to fill the gap
-			extendStart := precond[0].Start.Add(-diff)
-			extension := filterRates(chargingRates, extendStart, precond[0].Start)
-			precond = append(extension, precond...)
-		} else {
-			// Excess: trim first slot to start later
-			trimSlot(&precond[0], -diff, false)
-		}
+	if deficit := precondition - total; deficit > 0 {
+		// Prepend slots from chargingRates to fill the gap
+		extendStart := preCondStart.Add(-deficit)
+		extension := filterRates(chargingRates, extendStart, preCondStart)
+		precond = append(extension, precond...)
 	}
 
 	return chargingRates, precond
