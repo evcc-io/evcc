@@ -33,9 +33,7 @@ type CP struct {
 	NumberOfConnectors      int
 	IdTag                   string
 
-	meterValuesSample string
-
-	//bootNotificationRequestC chan *core.BootNotificationRequest
+	meterValuesSample      string
 	BootNotificationResult *core.BootNotificationRequest
 
 	connectors map[int]*Connector
@@ -51,7 +49,6 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 		connectC:          make(chan struct{}, 1),
 		meterC:            make(chan struct{}, 1),
 		bootNotificationC: make(chan struct{}),
-		//bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
 
 		ChargingRateUnit:        "A",
 		HasRemoteTriggerFeature: true, // assume remote trigger feature is available

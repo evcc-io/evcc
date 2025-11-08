@@ -18,8 +18,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
-	cp.log.DEBUG.Printf("meterValues: %v", meterValues)
-
 	// auto configuration
 	desiredMeasurands := "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 
@@ -36,14 +34,10 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		return err
 	}
 
-	cp.log.DEBUG.Printf("GetConfiguration")
-
 	for _, opt := range resp.ConfigurationKey {
 		if opt.Value == nil {
 			continue
 		}
-
-		cp.log.DEBUG.Printf("GetConfiguration %v", opt.Key)
 
 		match := func(s string) bool {
 			return strings.EqualFold(opt.Key, s)
@@ -112,9 +106,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 	}
 
 	// see who's there
-
-	cp.log.DEBUG.Printf("Checking HasRemoteTriggerFeature: %t", cp.HasRemoteTriggerFeature)
-
 	if cp.HasRemoteTriggerFeature {
 		if cp.BootNotificationResult != nil {
 			cp.log.DEBUG.Printf("BootNotification is already here (BootNotificationResult set)")
@@ -128,19 +119,16 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 			case <-time.After(Timeout):
 				cp.log.DEBUG.Printf("BootNotification timeout part2")
 			case <-cp.HasBootNotification():
-				//cp.BootNotificationResult = res
 			}
 		}
 	}
 
-	cp.log.DEBUG.Printf("autodetect measurands")
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := cp.tryMeasurands(desiredMeasurands, KeyMeterValuesSampledData)
 		meterValues = strings.Join(sampledMeasurands[:min(len(sampledMeasurands), meterValuesSampledDataMaxLength)], ",")
 	}
 
-	cp.log.DEBUG.Printf("configure measurands: %v", meterValues)
 	// configure measurands
 	if meterValues != "" {
 		if err := cp.ChangeConfigurationRequest(KeyMeterValuesSampledData, meterValues); err != nil {
@@ -163,7 +151,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		}
 	}
 
-	cp.log.DEBUG.Printf("meterInterval : %v", meterInterval)
 	// configure sample rate
 	if meterInterval > 0 {
 		if err := cp.ChangeConfigurationRequest(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
@@ -180,8 +167,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.ChargingRateUnit = types.ChargingRateUnitWatts
 		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
-
-	cp.log.DEBUG.Printf("Cool Setup has finished")
 
 	return nil
 }
