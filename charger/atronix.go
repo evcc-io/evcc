@@ -19,13 +19,13 @@ type Atronix struct {
 }
 
 var (
-	_ api.ChargerEx    = (*Atronix)(nil)
-	_ api.Meter        = (*Atronix)(nil)
-	_ api.MeterEnergy  = (*Atronix)(nil)
+	_ api.ChargerEx     = (*Atronix)(nil)
+	_ api.Meter         = (*Atronix)(nil)
+	_ api.MeterEnergy   = (*Atronix)(nil)
 	_ api.PhaseCurrents = (*Atronix)(nil)
 	_ api.PhaseVoltages = (*Atronix)(nil)
 	_ api.CurrentGetter = (*Atronix)(nil)
-	_ api.Battery      = (*Atronix)(nil)
+	_ api.Battery       = (*Atronix)(nil)
 )
 
 func init() {

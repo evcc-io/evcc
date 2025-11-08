@@ -177,7 +177,7 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasBootNotification():
 			}
 
-			log.DEBUG.Printf("ready for setup %v",meterValues)
+			log.DEBUG.Printf("ready for setup %v", meterValues)
 			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
 		},
 	)

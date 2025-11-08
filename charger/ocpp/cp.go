@@ -19,9 +19,9 @@ type CP struct {
 
 	id string
 
-	connected bool
-	connectC  chan struct{}
-	meterC    chan struct{}
+	connected         bool
+	connectC          chan struct{}
+	meterC            chan struct{}
 	bootNotificationC chan struct{}
 
 	// configuration properties
@@ -33,11 +33,10 @@ type CP struct {
 	NumberOfConnectors      int
 	IdTag                   string
 
-	meterValuesSample        string
-
+	meterValuesSample string
 
 	//bootNotificationRequestC chan *core.BootNotificationRequest
-	BootNotificationResult   *core.BootNotificationRequest
+	BootNotificationResult *core.BootNotificationRequest
 
 	connectors map[int]*Connector
 }
@@ -49,8 +48,8 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 
 		connectors: make(map[int]*Connector),
 
-		connectC:                 make(chan struct{}, 1),
-		meterC:                   make(chan struct{}, 1),
+		connectC:          make(chan struct{}, 1),
+		meterC:            make(chan struct{}, 1),
 		bootNotificationC: make(chan struct{}),
 		//bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
 
@@ -140,7 +139,6 @@ func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
 }
 
-
 func (cp *CP) HasBootNotification() <-chan struct{} {
-    return cp.bootNotificationC
+	return cp.bootNotificationC
 }

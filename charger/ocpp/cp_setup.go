@@ -18,7 +18,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
-
 	cp.log.DEBUG.Printf("meterValues: %v", meterValues)
 
 	// auto configuration
@@ -44,7 +43,7 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 			continue
 		}
 
-		cp.log.DEBUG.Printf("GetConfiguration %v",opt.Key )
+		cp.log.DEBUG.Printf("GetConfiguration %v", opt.Key)
 
 		match := func(s string) bool {
 			return strings.EqualFold(opt.Key, s)
@@ -109,7 +108,7 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 			if meterValues == "" {
 				meterValues = *opt.Value
 			}
-		} 
+		}
 	}
 
 	// see who's there
@@ -118,20 +117,20 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 
 	if cp.HasRemoteTriggerFeature {
 		if cp.BootNotificationResult != nil {
-        	cp.log.DEBUG.Printf("BootNotification is already here (BootNotificationResult set)")
-    	} else {
-        	// Noch keine BootNotification, daher Trigger senden und warten
-        	if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
-            	cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
-        	}
+			cp.log.DEBUG.Printf("BootNotification is already here (BootNotificationResult set)")
+		} else {
+			// Noch keine BootNotification, daher Trigger senden und warten
+			if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
+				cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
+			}
 
-        	select {
-        	case <-time.After(Timeout):
-            	cp.log.DEBUG.Printf("BootNotification timeout part2")
-        	case <-cp.HasBootNotification():
-            	//cp.BootNotificationResult = res
-        	}
-    	}
+			select {
+			case <-time.After(Timeout):
+				cp.log.DEBUG.Printf("BootNotification timeout part2")
+			case <-cp.HasBootNotification():
+				//cp.BootNotificationResult = res
+			}
+		}
 	}
 
 	cp.log.DEBUG.Printf("autodetect measurands")

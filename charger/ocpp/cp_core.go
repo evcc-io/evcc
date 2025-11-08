@@ -21,14 +21,14 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	}
 
 	if cp.log != nil {
-        cp.log.INFO.Printf(
-            "BootNotification: Vendor=%s, Model=%s, Serial=%s, Firmware=%s",
-            request.ChargePointVendor,
-            request.ChargePointModel,
-            request.ChargePointSerialNumber,
-            request.FirmwareVersion,
-        )
-    }
+		cp.log.INFO.Printf(
+			"BootNotification: Vendor=%s, Model=%s, Serial=%s, Firmware=%s",
+			request.ChargePointVendor,
+			request.ChargePointModel,
+			request.ChargePointSerialNumber,
+			request.FirmwareVersion,
+		)
+	}
 
 	cp.onceBoot.Do(func() {
 		cp.BootNotificationResult = request
