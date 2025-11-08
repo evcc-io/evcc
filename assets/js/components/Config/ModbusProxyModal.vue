@@ -26,7 +26,7 @@
 						</h5>
 					</div>
 					<div class="row d-inline d-lg-flex mb-3">
-						<div class="col-lg-5">
+						<div class="col-lg-5" data-testid="evcc-box">
 							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
 									<h5 class="box-heading">
@@ -77,7 +77,7 @@
 								class="flex-shrink-0"
 							></shopicon-regular-arrowdown>
 						</div>
-						<div class="col-lg-5">
+						<div class="col-lg-5"  data-testid="device-box">
 							<div class="border rounded px-3 pt-4 pb-3">
 								<div class="d-lg-block">
 									<h5 class="box-heading">
