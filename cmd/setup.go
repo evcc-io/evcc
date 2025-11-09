@@ -973,11 +973,7 @@ func migrateModbusProxy() error {
 
 	settings.SetJson(keys.ModbusProxy, arr)
 
-	if err := settings.Persist(); err != nil {
-		return err
-	}
-
-	return nil
+	return settings.Persist()
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
