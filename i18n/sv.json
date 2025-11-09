@@ -58,8 +58,9 @@
           "heating": "Egendefinierad värmare"
         },
         "heatpump": "Egendefinierad värmepump",
-        "sgready": "Egendefinierad värmepump (sg-ready, alla)",
-        "sgready-boost": "Egendefinierad värmepump (sg-ready, boost)",
+        "sgready": "Egendefinierad värmepump (sg-ready via plugins)",
+        "sgready-boost": "Användardefinierad värmepump (sg-ready-boost, föråldrad)",
+        "sgready-relay": "Egendefinierad värmepump (sg-ready via reläer)",
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },
@@ -94,6 +95,7 @@
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "dimmed": "Nedtonad",
       "enabled": "Aktiverad",
       "energy": "Energi",
       "feedinPrice": "Inmatningspris",
@@ -185,6 +187,7 @@
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
       "title": "Titel",
+      "typeDeprecated": "Typen '{type}' är föråldrad och kommer att tas bort i en framtida version. Kontrollera ändringsloggen och återskapa den här enheten.",
       "validateSave": "Validera & spara"
     },
     "grid": {

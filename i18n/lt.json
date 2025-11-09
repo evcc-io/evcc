@@ -58,8 +58,9 @@
           "heating": "Vartotojo nustatytas šildytuvas"
         },
         "heatpump": "Vartotojo nustatytas šilumos siurblys",
-        "sgready": "Vartotojo nustatytas šilumos siurblys (SG-Ready, visi)",
-        "sgready-boost": "Vartotojo nustatytas šilumos siurblys (SG-Ready, boost)",
+        "sgready": "Vartotojo nustatytas šilumos siurblys (SG-Ready, naudojant įskiepius)",
+        "sgready-boost": "Vartotojo nustatytas šilumos siurblys (SG-Ready-boost, nebenaudojama)",
+        "sgready-relay": "Vartotojo nustatytas šilumos siurblys (SG-Ready, naudojant reles)",
         "switchsocket": "Vartotojo apibrėžta išmanioji rozetė"
       }
     },
@@ -94,6 +95,7 @@
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "dimmed": "Galia sumažinta",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
       "feedinPrice": "Tiekimo į tinklą kaina",
@@ -185,6 +187,7 @@
       "telemetry": "Telemetrija",
       "templateLoading": "Įkrauname...",
       "title": "Pavadinimas",
+      "typeDeprecated": "Tipas '{type}' yra pasenęs ir bus pašalintas būsimoje versijoje. Patikrinkite versijų pakeitimų žurnalą ir iš naujo sukonfigūruokite šį įrenginį.",
       "validateSave": "Patikrinti ir išsaugoti"
     },
     "grid": {
