@@ -376,6 +376,7 @@
       "connectionValueSerial": "Serial / USB",
       "connectionValueTcpip": "Network",
       "device": "Device name",
+      "deviceHint": "Example: /dev/ttyUSB0",
       "host": "IP address or hostname",
       "hostHint": "Example: 192.0.2.2",
       "id": "Modbus ID",
