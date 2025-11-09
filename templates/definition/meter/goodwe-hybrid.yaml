@@ -18,6 +18,7 @@ params:
       en: Battery number
       de: Batteriespeichernummer
     choice: [1, 2]
+    usages: ["battery"]
   - name: capacity
     advanced: true
   - name: maxacpower
