@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
   await enableExperimental(page, false);
 });
 
-test.afterAll(async () => {
+test.afterEach(async () => {
   await stop();
 });
 
