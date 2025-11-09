@@ -33,7 +33,7 @@ type Ekz struct {
 	mux           sync.Mutex
 	uri           string
 	tariffName    string
-	fallbackRates api.Rates // electricity_standard rates as fallback
+	fallbackRates api.Rates // standard tariff rates as fallback
 	data          *util.Monitor[api.Rates]
 }
 
@@ -78,116 +78,102 @@ func NewEkzFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return runOrError(t)
 }
 
+func (t *Ekz) buildURL(name string) string {
+	now := time.Now()
+	start := now.Truncate(15 * time.Minute)
+	end := time.Date(now.Year(), now.Month(), now.Day()+1, 23, 59, 59, 0, now.Location())
+	qs := fmt.Sprintf(
+		"?tariff_name=%s&start_timestamp=%s&end_timestamp=%s",
+		name,
+		url.QueryEscape(start.Format(time.RFC3339)),
+		url.QueryEscape(end.Format(time.RFC3339)),
+	)
+	return t.uri + qs
+}
+
+// parseRates returns only CHF/kWh entries and applies totalPrice.
+func (t *Ekz) parseRates(res ekz.TariffResponse) api.Rates {
+	var out api.Rates
+	for _, e := range res.Prices {
+		for _, ir := range e.Integrated {
+			if ir.Unit == "CHF/kWh" {
+				out = append(out, api.Rate{
+					Start: e.StartTimestamp,
+					End:   e.EndTimestamp,
+					Value: t.totalPrice(ir.Value, e.StartTimestamp),
+				})
+				break
+			}
+		}
+	}
+	return out
+}
+
 func (t *Ekz) run(done chan error) {
 	t.log.DEBUG.Println("start")
-	var once sync.Once
 	client := request.NewHelper(t.log)
+	tick := time.NewTicker(time.Hour)
+	defer tick.Stop()
 
-	// Build URLs for main tariff and fallback using base URI + tariff parameter
-	// Calculate time range: start from previous 15min slot, end at end of next day
-	now := time.Now()
-	startTime := now.Truncate(15 * time.Minute)
-	endTime := time.Date(now.Year(), now.Month(), now.Day()+1, 23, 59, 59, 0, now.Location())
-	
-	startTimestamp := url.QueryEscape(startTime.Format("2006-01-02T15:04:05-07:00"))
-	endTimestamp := url.QueryEscape(endTime.Format("2006-01-02T15:04:05-07:00"))
-	
-	mainURL := fmt.Sprintf("%s?tariff_name=%s&start_timestamp=%s&end_timestamp=%s", 
-		t.uri, t.tariffName, startTimestamp, endTimestamp)
-	fallbackURL := fmt.Sprintf("%s?tariff_name=integrated_400ST&start_timestamp=%s&end_timestamp=%s", 
-		t.uri, startTimestamp, endTimestamp)
+	// trigger initial fetch and close done on first success/fail
+	if err := t.updateAll(client); err != nil {
+		done <- err
+		return
+	}
+	close(done)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
-		// First, try to fetch and update fallback rates (integrated_400ST)
-		t.fetchFallbackRates(client, fallbackURL)
-
-		// Then fetch main tariff rates
-		var res ekz.TariffResponse
-		t.log.DEBUG.Printf("fetching %s tariff data from %s", t.tariffName, mainURL)
-		if err := client.GetJSON(mainURL, &res); err != nil {
-			t.log.ERROR.Printf("failed to get %s tariff data from %s: %v", t.tariffName, mainURL, err)
-
-			// Use fallback rates if available
-			if t.useFallbackRates() {
-				once.Do(func() { close(done) })
-			} else {
-				once.Do(func() { done <- err })
-			}
-			continue
-		}
-
-		t.log.DEBUG.Printf("received %d price entries from %s tariff", len(res.Prices), t.tariffName)
-
-		t.mux.Lock()
-		rates := make(api.Rates, 0, len(res.Prices))
-		for _, entry := range res.Prices {
-			// Find the CHF/kWh price from integrated rates (total cost including all components)
-			t.log.DEBUG.Printf("processing entry with %d integrated rates", len(entry.Integrated))
-			for i, rate := range entry.Integrated {
-				t.log.DEBUG.Printf("  integrated rate[%d]: unit=%s, value=%f", i, rate.Unit, rate.Value)
-				if rate.Unit == "CHF/kWh" {
-					rates = append(rates, api.Rate{
-						Start: entry.StartTimestamp,
-						End:   entry.EndTimestamp,
-						Value: t.totalPrice(rate.Value, entry.StartTimestamp),
-					})
-					break
-				}
-				// Skip CHF/M (monthly fixed costs) and other units
-			}
-		}
-
-		if len(rates) > 0 {
-			t.data.Set(rates)
-			t.log.DEBUG.Printf("updated %s tariff with %d rates", t.tariffName, len(rates))
-			once.Do(func() { close(done) })
-		} else {
-			t.log.WARN.Printf("no CHF/kWh rates found in %s tariff response", t.tariffName)
-			if strings.HasPrefix(t.tariffName, "integrated_") {
-				// Use fallback rates if no integrated rates available
-				t.log.WARN.Printf("using fallback tariff with %d rates because EKZ did not return integrated rates", len(t.fallbackRates))
-				t.useFallbackRates()
-				once.Do(func() { close(done) })
-			}
-		}
-		t.mux.Unlock()
+	for range tick.C {
+		t.updateAll(client)
 	}
 }
 
-// fetchFallbackRates fetches integrated_400ST rates as fallback
-func (t *Ekz) fetchFallbackRates(client *request.Helper, url string) {
-	var res ekz.TariffResponse
+// updateAll fetches fallback then main rates.
+func (t *Ekz) updateAll(client *request.Helper) error {
+	t.fetchFallback(client)
+	return t.fetchMain(client)
+}
 
+func (t *Ekz) fetchMain(client *request.Helper) error {
+	url := t.buildURL(t.tariffName)
+	var res ekz.TariffResponse
 	if err := client.GetJSON(url, &res); err != nil {
-		t.log.ERROR.Printf("failed to get fallback tariff data from %s: %v", url, err)
+		t.log.ERROR.Printf("failed main fetch: %v", err)
+		if !t.useFallbackRates() {
+			return err
+		}
+		return nil
+	}
+	rates := t.parseRates(res)
+	if len(rates) == 0 {
+		t.log.WARN.Println("no CHF/kWh in main response")
+		t.useFallbackRates()
+		return nil
+	}
+
+	t.mux.Lock()
+	t.data.Set(rates)
+	t.mux.Unlock()
+	t.log.DEBUG.Printf("main rates updated (%d)", len(rates))
+	return nil
+}
+
+func (t *Ekz) fetchFallback(client *request.Helper) {
+	url := t.buildURL("integrated_400ST")
+	var res ekz.TariffResponse
+	if err := client.GetJSON(url, &res); err != nil {
+		t.log.ERROR.Printf("failed fallback fetch: %v", err)
+		return
+	}
+	rates := t.parseRates(res)
+	if len(rates) == 0 {
+		t.log.WARN.Println("no CHF/kWh in fallback")
 		return
 	}
 
 	t.mux.Lock()
-	defer t.mux.Unlock()
-
-	rates := make(api.Rates, 0, len(res.Prices))
-	for _, entry := range res.Prices {
-		// Find the CHF/kWh price from integrated rates (total cost including all components)
-		for _, rate := range entry.Integrated {
-			if rate.Unit == "CHF/kWh" {
-				rates = append(rates, api.Rate{
-					Start: entry.StartTimestamp,
-					End:   entry.EndTimestamp,
-					Value: t.totalPrice(rate.Value, entry.StartTimestamp),
-				})
-				break
-			}
-			// Skip CHF/M (monthly fixed costs) and other units
-		}
-	}
-
-	if len(rates) > 0 {
-		t.fallbackRates = rates
-		t.log.DEBUG.Printf("updated fallback tariff with %d rates", len(rates))
-	} else {
-		t.log.WARN.Printf("no CHF/kWh rates found in fallback tariff response")
-	}
+	t.fallbackRates = rates
+	t.mux.Unlock()
+	t.log.DEBUG.Printf("fallback rates updated (%d)", len(rates))
 }
 
 // useFallbackRates applies fallback rates when main tariff is unavailable
