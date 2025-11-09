@@ -359,6 +359,12 @@ export enum MODBUS_BAUDRATE {
   _115200 = 115200,
 }
 
+export enum MODBUS_TYPE {
+  RS485_SERIAL = "rs485serial",
+  RS485_TCPIP = "rs485tcpip",
+  TCPIP = "tcpip",
+}
+
 export enum MODBUS_COMSET {
   _8N1 = "8N1",
   _8E1 = "8E1",

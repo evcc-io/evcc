@@ -4,7 +4,7 @@
 		id="modbusTcpIp"
 		:label="$t('config.modbus.connection')"
 		:help="
-			connectionData === MODBUS_CONNECTION.TCPIP
+			connection === MODBUS_CONNECTION.TCPIP
 				? $t('config.modbus.connectionHintTcpip')
 				: $t('config.modbus.connectionHintSerial')
 		"
@@ -12,7 +12,7 @@
 		<div class="btn-group" role="group">
 			<input
 				:id="formId('modbusTcpIp')"
-				v-model="connectionData"
+				v-model="connection"
 				type="radio"
 				class="btn-check"
 				:name="formId('modbusConnection')"
@@ -25,7 +25,7 @@
 			</label>
 			<input
 				:id="formId('modbusSerial')"
-				v-model="connectionData"
+				v-model="connection"
 				type="radio"
 				class="btn-check"
 				:name="formId('modbusConnection')"
@@ -49,7 +49,7 @@
 			@change="$emit('update:id', $event.target.value)"
 		/>
 	</FormRow>
-	<div v-if="connectionData === MODBUS_CONNECTION.TCPIP">
+	<div v-if="connection === MODBUS_CONNECTION.TCPIP">
 		<FormRow
 			id="modbusHost"
 			:label="$t('config.modbus.host')"
@@ -81,7 +81,7 @@
 			id="modbusTcp"
 			:label="$t('config.modbus.protocol')"
 			:help="
-				protocolData === 'tcp'
+				protocol === 'tcp'
 					? $t('config.modbus.protocolHintTcp')
 					: $t('config.modbus.protocolHintRtu')
 			"
@@ -89,7 +89,7 @@
 			<div class="btn-group" role="group">
 				<input
 					:id="formId('modbusTcp')"
-					v-model="protocolData"
+					v-model="protocol"
 					type="radio"
 					class="btn-check"
 					:name="formId('modbusProtocol')"
@@ -102,7 +102,7 @@
 				</label>
 				<input
 					:id="formId('modbusRtu')"
-					v-model="protocolData"
+					v-model="protocol"
 					type="radio"
 					class="btn-check"
 					:name="formId('modbusProtocol')"
@@ -165,8 +165,13 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
-import { MODBUS_BAUDRATE, MODBUS_COMSET, MODBUS_CONNECTION, MODBUS_PROTOCOL } from "@/types/evcc";
-type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
+import {
+	MODBUS_BAUDRATE,
+	MODBUS_COMSET,
+	MODBUS_CONNECTION,
+	MODBUS_PROTOCOL,
+	MODBUS_TYPE,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "Modbus",
@@ -176,21 +181,13 @@ export default defineComponent({
 			type: Array as PropType<ModbusCapability[]>,
 			default: () => [],
 		},
-		modbus: String as PropType<Modbus>,
+		modbus: String as PropType<MODBUS_TYPE>,
 		host: String,
 		port: [Number, String],
 		id: [Number, String],
 		baudrate: [Number, String],
 		comset: String,
 		device: String,
-		connection: {
-			type: String as PropType<MODBUS_CONNECTION>,
-			default: () => MODBUS_CONNECTION.TCPIP,
-		},
-		protocol: {
-			type: String as PropType<MODBUS_PROTOCOL>,
-			default: () => MODBUS_PROTOCOL.TCP,
-		},
 		defaultPort: Number,
 		defaultId: Number,
 		defaultComset: String,
@@ -209,26 +206,27 @@ export default defineComponent({
 	],
 	data() {
 		return {
-			connectionData: this.connection as MODBUS_CONNECTION,
-			protocolData: this.protocol as MODBUS_PROTOCOL,
+			connection: MODBUS_CONNECTION.TCPIP as MODBUS_CONNECTION,
+			protocol: MODBUS_PROTOCOL.TCP as MODBUS_PROTOCOL,
 			MODBUS_PROTOCOL,
 			MODBUS_CONNECTION,
 		};
 	},
 	computed: {
-		selectedModbus(): Modbus {
-			if (this.connectionData === MODBUS_CONNECTION.SERIAL) {
-				return "rs485serial";
+		selectedModbus(): MODBUS_TYPE {
+			if (this.connection === MODBUS_CONNECTION.SERIAL) {
+				return MODBUS_TYPE.RS485_SERIAL;
 			}
-			return this.protocolData === "rtu" ? "rs485tcpip" : "tcpip";
+			return this.protocol === MODBUS_PROTOCOL.RTU
+				? MODBUS_TYPE.RS485_TCPIP
+				: MODBUS_TYPE.TCPIP;
 		},
 		showConnectionOptions() {
 			return this.capabilities.includes("rs485");
 		},
 		showProtocolOptions() {
 			return (
-				this.connectionData === MODBUS_CONNECTION.TCPIP &&
-				this.capabilities.includes("rs485")
+				this.connection === MODBUS_CONNECTION.TCPIP && this.capabilities.includes("rs485")
 			);
 		},
 		comsetOptions() {
@@ -245,20 +243,17 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		selectedModbus(newValue: Modbus) {
+		selectedModbus(newValue: MODBUS_TYPE) {
 			this.$emit("update:modbus", newValue);
 		},
 		options(newValue: ModbusCapability[]) {
 			this.setProtocolByCapabilities(newValue);
 			this.$emit("update:modbus", this.selectedModbus);
 		},
-		modbus(newValue: Modbus) {
+		modbus(newValue: MODBUS_TYPE) {
 			if (newValue) {
 				this.setConnectionAndProtocolByModbus(newValue);
 			}
-		},
-		protocolData(newProtocol) {
-			this.$emit("update:protocol", newProtocol);
 		},
 	},
 	mounted() {
@@ -267,23 +262,23 @@ export default defineComponent({
 	},
 	methods: {
 		setProtocolByCapabilities(capabilities: ModbusCapability[]) {
-			this.protocolData = capabilities.includes("tcpip")
+			this.protocol = capabilities.includes("tcpip")
 				? MODBUS_PROTOCOL.TCP
 				: MODBUS_PROTOCOL.RTU;
 		},
-		setConnectionAndProtocolByModbus(modbus?: Modbus) {
+		setConnectionAndProtocolByModbus(modbus?: MODBUS_TYPE) {
 			switch (modbus) {
-				case "rs485serial":
-					this.connectionData = MODBUS_CONNECTION.SERIAL;
-					this.protocolData = MODBUS_PROTOCOL.RTU;
+				case MODBUS_TYPE.RS485_SERIAL:
+					this.connection = MODBUS_CONNECTION.SERIAL;
+					this.protocol = MODBUS_PROTOCOL.RTU;
 					break;
-				case "rs485tcpip":
-					this.connectionData = MODBUS_CONNECTION.TCPIP;
-					this.protocolData = MODBUS_PROTOCOL.RTU;
+				case MODBUS_TYPE.RS485_TCPIP:
+					this.connection = MODBUS_CONNECTION.TCPIP;
+					this.protocol = MODBUS_PROTOCOL.RTU;
 					break;
-				case "tcpip":
-					this.connectionData = MODBUS_CONNECTION.TCPIP;
-					this.protocolData = MODBUS_PROTOCOL.TCP;
+				case MODBUS_TYPE.TCPIP:
+					this.connection = MODBUS_CONNECTION.TCPIP;
+					this.protocol = MODBUS_PROTOCOL.TCP;
 					break;
 			}
 		},

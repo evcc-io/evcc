@@ -86,29 +86,20 @@
 										</div>
 									</h5>
 								</div>
+								{{ c }}
 								<Modbus
 									:id="index"
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
 									v-model:device="c.settings.device"
-									:connection="
-										c.settings.uri
-											? MODBUS_CONNECTION.TCPIP
-											: MODBUS_CONNECTION.SERIAL
-									"
-									:protocol="
-										c.settings.rtu ? MODBUS_PROTOCOL.RTU : MODBUS_PROTOCOL.TCP
-									"
+									:modbus="getModbus(c)"
 									:host="getHost(c.settings.uri)"
 									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
 									hide-modbus-id
 									@update:host="(host) => updateHost(host, c.settings)"
 									@update:port="(port) => updatePort(port, c.settings)"
-									@update:device="updateDevice(c.settings)"
-									@update:protocol="
-										(p) => (c.settings.rtu = p === MODBUS_PROTOCOL.RTU)
-									"
+									@update:modbus="(modbus) => updateModbus(c.settings, modbus)"
 								/>
 							</div>
 						</div>
@@ -159,6 +150,7 @@ import {
 	MODBUS_CONNECTION,
 	MODBUS_PROTOCOL,
 	MODBUS_PROXY_READONLY,
+	MODBUS_TYPE,
 	type ModbusProxy,
 	type ModbusProxySettings,
 } from "@/types/evcc";
@@ -183,6 +175,7 @@ export default defineComponent({
 			MODBUS_PROXY_READONLY,
 			MODBUS_CONNECTION,
 			MODBUS_PROTOCOL,
+			MODBUS_TYPE,
 		};
 	},
 	computed: {
@@ -194,6 +187,17 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		getModbus(c: ModbusProxy) {
+			if (!c.settings.uri && !c.settings.device) {
+				return MODBUS_TYPE.TCPIP;
+			}
+
+			if (c.settings.rtu) {
+				return c.settings.uri ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.RS485_SERIAL;
+			}
+
+			return MODBUS_TYPE.TCPIP;
+		},
 		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
 			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
 		},
@@ -218,15 +222,27 @@ export default defineComponent({
 		updateHost(newHost: string, settings: ModbusProxySettings) {
 			const port = this.getPort(settings.uri);
 			settings.uri = `${newHost}:${port}`;
-			settings.device = "";
 		},
 		updatePort(newPort: string | number, settings: ModbusProxySettings) {
 			const host = this.getHost(settings.uri);
 			settings.uri = `${host}:${newPort}`;
-			settings.device = "";
 		},
-		updateDevice(settings: ModbusProxySettings) {
-			settings.uri = "";
+		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
+			console.log(modbus);
+
+			switch (modbus) {
+				case MODBUS_TYPE.RS485_SERIAL:
+					settings.uri = undefined;
+					settings.rtu = true;
+					break;
+				case MODBUS_TYPE.RS485_TCPIP:
+				case MODBUS_TYPE.TCPIP:
+					settings.device = undefined;
+					settings.baudrate = undefined;
+					settings.comset = undefined;
+					settings.rtu = modbus === MODBUS_TYPE.RS485_TCPIP;
+					break;
+			}
 		},
 	},
 });
