@@ -49,7 +49,7 @@ params:
     default: 60s
     description:
       de: FEMS/OpenEMS Batteriesteuerung API-Timeout
-      en: EMS/OpenEMS battery control API timeout
+      en: FEMS/OpenEMS battery control API timeout
     help:
       de: FEMS/OpenEMS Standard 60s
       en: FEMS/OpenEMS standard 60s
