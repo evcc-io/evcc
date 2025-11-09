@@ -951,31 +951,6 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
-func migrateModbusProxy() error {
-	var arr []map[string]any
-	err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &arr)
-	if err != nil {
-		return err
-	}
-
-	for _, obj := range arr {
-		settings := make(map[string]any)
-		for key, value := range obj {
-			if key != "port" && key != "readonly" {
-				settings[key] = value
-				delete(obj, key)
-			}
-		}
-		if len(settings) > 0 {
-			obj["settings"] = settings
-		}
-	}
-
-	settings.SetJson(keys.ModbusProxy, arr)
-
-	return settings.Persist()
-}
-
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	if settings.Exists(keys.ModbusProxy) {
 		isJson, err := settings.IsJson(keys.ModbusProxy)
@@ -985,7 +960,16 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 		}
 
 		if !isJson {
-			if err := migrateModbusProxy(); err != nil {
+			var proxies []globalconfig.ModbusProxy
+
+			err := settings.Yaml(keys.ModbusProxy, new([]globalconfig.ModbusProxy), &proxies)
+			if err != nil {
+				return err
+			}
+
+			settings.SetJson(keys.ModbusProxy, proxies)
+
+			if err := settings.Persist(); err != nil {
 				return err
 			}
 		}
