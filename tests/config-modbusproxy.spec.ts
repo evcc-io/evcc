@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { start, stop, baseUrl, restart } from "./evcc";
 import { expectModalVisible, enableExperimental, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
@@ -16,23 +16,27 @@ test.afterEach(async () => {
 
 test.describe("modbusproxy", async () => {
   test("modbusproxy not configured", async ({ page }) => {
-    await expect(page.getByTestId("modbusproxy")).toBeVisible();
-    await expect(page.getByTestId("modbusproxy")).toContainText(["Configured", "no"].join(""));
+    const modbusproxyCard = page.getByTestId("modbusproxy");
+
+    await expect(modbusproxyCard).toBeVisible();
+    await expect(modbusproxyCard).toContainText(["Configured", "no"].join(""));
   });
 
   test("modbusproxy via ui", async ({ page }) => {
     // add connection
-    await page.getByTestId("modbusproxy").getByRole("button", { name: "edit" }).click();
+    const modbusproxyCard = page.getByTestId("modbusproxy");
+
+    await modbusproxyCard.getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("modbusproxy-modal");
     await expectModalVisible(modal);
 
-    await modal.getByTestId("networkconnection-add").click();
+    await modal.getByRole("button", { name: "Add proxy connection" }).click();
     await expect(modal).toContainText("Connection #1");
 
     const evccBox = modal.getByTestId("evcc-box");
     const deviceBox = modal.getByTestId("device-box");
 
-    const evccPort = evccBox.getByLabel("Port", { exact: true });
+    const evccPort = evccBox.getByLabel("Port");
     await expect(evccPort).toHaveValue("1502");
     await evccPort.fill("501");
 
@@ -42,7 +46,7 @@ test.describe("modbusproxy", async () => {
     await expect(deviceBox.getByLabel("Network")).toBeChecked();
     await deviceBox.getByLabel("IP address or hostname").fill("127.0.0.1");
 
-    const devicePort = deviceBox.getByLabel("Port", { exact: true });
+    const devicePort = deviceBox.getByLabel("Port");
     await expect(devicePort).toHaveValue("502");
     await devicePort.fill("602");
 
@@ -53,9 +57,18 @@ test.describe("modbusproxy", async () => {
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
-    await expect(page.getByTestId("modbusproxy")).toContainText(["Amount", "1"].join(""));
+    await expect(modbusproxyCard).toContainText(["Amount", "1"].join(""));
 
-    await page.getByTestId("modbusproxy").getByRole("button", { name: "edit" }).click();
+    // restart button appears
+    const restartButton = await page
+      .getByTestId("bottom-banner")
+      .getByRole("button", { name: "Restart" });
+    await expect(restartButton).toBeVisible();
+
+    await restart();
+    await page.reload();
+
+    await modbusproxyCard.getByRole("button", { name: "edit" }).click();
 
     await expect(evccBox.getByLabel("Port", { exact: true })).toHaveValue("501");
     await expect(evccBox.getByLabel("error")).toBeChecked();
