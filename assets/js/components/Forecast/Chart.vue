@@ -58,9 +58,9 @@ export default defineComponent({
 	components: { Bar },
 	mixins: [formatter],
 	props: {
-		grid: { type: Array as PropType<ForecastSlot[]>, default: [] },
+		grid: { type: Array as PropType<ForecastSlot[]>, default: () => [] },
 		solar: { type: Object as PropType<SolarDetails> },
-		co2: { type: Array as PropType<ForecastSlot[]>, default: [] },
+		co2: { type: Array as PropType<ForecastSlot[]>, default: () => [] },
 		currency: { type: String as PropType<CURRENCY> },
 		selected: { type: String as PropType<ForecastType> },
 	},
