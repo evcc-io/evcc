@@ -86,7 +86,6 @@
 										</div>
 									</h5>
 								</div>
-								{{ c }}
 								<Modbus
 									:id="index"
 									v-model:baudrate="c.settings.baudrate"
@@ -228,8 +227,6 @@ export default defineComponent({
 			settings.uri = `${host}:${newPort}`;
 		},
 		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
-			console.log(modbus);
-
 			switch (modbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
 					settings.uri = undefined;
