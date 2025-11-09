@@ -515,6 +515,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// create charging session
 	lp.createSession()
+
+	// reset energy-based charging plan offset
+	lp.planEnergyOffset = 0
 }
 
 // evVehicleDisconnectHandler sends external start event
