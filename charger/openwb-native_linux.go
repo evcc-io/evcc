@@ -30,7 +30,7 @@ func init() {
 //go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewOpenWbNativeFromConfig creates an OpenWbNative DIN charger from generic config
-func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Phases1p3p      bool
 		RfId            string
@@ -48,7 +48,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, time.Duration(cc.CpWait), cc.ChargePoint)
+	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, time.Duration(cc.CpWait)*time.Second, cc.ChargePoint)
 }
 
 // NewOpenWbNative creates OpenWbNative charger
@@ -155,10 +155,10 @@ func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
 	time.Sleep(time.Second)
 	pinGpioPhases.High() // move latching relay to desired position
 
-	time.Sleep(time.Second * wb.cpWait / 2.0)
+	time.Sleep(wb.cpWait / 2)
 	pinGpioPhases.Low() // lock latching relay
 
-	time.Sleep(time.Second * wb.cpWait / 2.0)
+	time.Sleep(wb.cpWait / 2)
 	pinGpioCP.Low() // disable phase switching, reconnect CP
 
 	time.Sleep(time.Second)
@@ -171,7 +171,7 @@ func (wb *OpenWbNative) gpioWakeup() error {
 	pinGpioCP.Output()
 
 	pinGpioCP.High()
-	time.Sleep(time.Second * wb.cpWait)
+	time.Sleep(wb.cpWait)
 	pinGpioCP.Low()
 	return nil
 }
