@@ -257,3 +257,5 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0
+
+replace github.com/evcc-io/rct => github.com/Maschga/rct v0.1.2-0.20251108153640-bb646d6442fe
