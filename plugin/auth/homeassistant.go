@@ -2,24 +2,61 @@ package auth
 
 import (
 	"context"
-	"net/url"
+	"fmt"
+	"log"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/libp2p/zeroconf/v2"
 	"golang.org/x/oauth2"
 )
 
 func init() {
 	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 
-	// if _, err := NewHomeAssistantFromConfig(context.Background(), map[string]any{
-	// 	"uri": "http://localhost:8123",
-	// }); err == nil {
-	// 	fmt.Println("HomeAssistant configured")
-	// } else {
-	// 	fmt.Println(err)
-	// }
+	go scan(context.Background())
+}
+
+func scan(ctx context.Context) {
+	entries := make(chan *zeroconf.ServiceEntry, 1)
+
+	go func() {
+		for {
+			select {
+			case se := <-entries:
+				uri := fmt.Sprintf("http://%s:%d", se.HostName, se.Port)
+
+			OUTER:
+				for _, text := range se.Text {
+					for _, prefix := range []string{"external_url", "base_url", "internal_url"} {
+						if u, ok := strings.CutPrefix(text, prefix+"="); ok && u != "" {
+							uri = u
+							break OUTER
+						}
+					}
+				}
+
+				go authorize(se.Instance, uri)
+
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	if err := zeroconf.Browse(ctx, "_home-assistant._tcp.", "local.", entries); err != nil {
+		fmt.Println("zeroconf: failed to browse:", err.Error())
+	}
+}
+
+func authorize(name, uri string) {
+	if _, err := NewHomeAssistantFromConfig(context.Background(), map[string]any{
+		"uri":  uri,
+		"name": name,
+	}); err != nil {
+		log.Println(err)
+	}
 }
 
 func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
@@ -32,15 +69,6 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 		return nil, err
 	}
 
-	instanceUri := util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http")
-	instanceName := cc.Name
-	if instanceName == "" {
-		instanceName = instanceUri
-		if uri, err := url.Parse(instanceUri); err == nil {
-			instanceName = uri.Host
-		}
-	}
-
 	uri := "http://localhost:7070"
 	redirectUri := uri + "/providerauth/callback"
 
@@ -51,10 +79,10 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 		ClientID:    uri,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  instanceUri + "/auth/authorize",
-			TokenURL: instanceUri + "/auth/token",
+			AuthURL:  cc.URI + "/auth/authorize",
+			TokenURL: cc.URI + "/auth/token",
 		},
 	}
 
-	return NewOauth(ctx, "HomeAssistant", instanceName, &oc)
+	return NewOauth(ctx, "HomeAssistant", cc.Name, &oc)
 }
