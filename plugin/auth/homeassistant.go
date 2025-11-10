@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 
@@ -30,6 +29,7 @@ var (
 )
 
 func scan(ctx context.Context) {
+	log := util.NewLogger("homeassistant")
 	entries := make(chan *zeroconf.ServiceEntry, 1)
 
 	go func() {
@@ -48,7 +48,9 @@ func scan(ctx context.Context) {
 					}
 				}
 
-				go authorize(se.Instance, uri)
+				if err := authorize(se.Instance, uri); err != nil {
+					log.ERROR.Println(err)
+				}
 
 			case <-ctx.Done():
 				return
@@ -57,26 +59,27 @@ func scan(ctx context.Context) {
 	}()
 
 	if err := zeroconf.Browse(ctx, "_home-assistant._tcp.", "local.", entries); err != nil {
-		fmt.Println("zeroconf: failed to browse:", err.Error())
+		log.ERROR.Println("zeroconf: failed to browse:", err.Error())
 	}
 }
 
-func authorize(name, uri string) {
+func authorize(name, uri string) error {
 	haMu.Lock()
 	defer haMu.Unlock()
 
 	if _, ok := haInstances[name]; ok {
-		return
+		return nil
 	}
 
-	if ts, err := NewHomeAssistant(context.Background(), name, uri); err == nil {
+	ts, err := NewHomeAssistant(context.Background(), name, uri)
+	if err == nil {
 		haInstances[name] = &HomeAssistantInstance{
 			URI:         uri,
 			TokenSource: ts,
 		}
-	} else {
-		log.Println(err)
 	}
+
+	return err
 }
 
 func HomeAssistantInstanceNyName(name string) *HomeAssistantInstance {
