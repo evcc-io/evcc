@@ -8,18 +8,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type instance struct {
+type proxyInstance struct {
 	mu       sync.Mutex
 	name     string
 	instance *auth.HomeAssistantInstance
 }
 
-type instanceAccessor interface {
-	URI() string
-	oauth2.TokenSource
-}
-
-func (inst *instance) URI() string {
+func (inst *proxyInstance) URI() string {
 	inst.mu.Lock()
 	defer inst.mu.Unlock()
 
@@ -34,7 +29,7 @@ func (inst *instance) URI() string {
 	return inst.instance.URI
 }
 
-func (inst *instance) Token() (*oauth2.Token, error) {
+func (inst *proxyInstance) Token() (*oauth2.Token, error) {
 	inst.mu.Lock()
 	defer inst.mu.Unlock()
 

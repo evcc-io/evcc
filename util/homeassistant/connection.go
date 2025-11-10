@@ -18,14 +18,14 @@ import (
 // Connection represents a Home Assistant API connection
 type Connection struct {
 	*request.Helper
-	instance *instance
+	instance *proxyInstance
 }
 
 // NewConnection creates a new Home Assistant connection
 func NewConnection(log *util.Logger, name string) (*Connection, error) {
 	c := &Connection{
 		Helper:   request.NewHelper(log),
-		instance: &instance{name: name},
+		instance: &proxyInstance{name: name},
 	}
 
 	// Set up authentication headers
