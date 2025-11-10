@@ -130,36 +130,49 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 			}
 
+			var eg errgroup.Group
+
 			switch mode {
 			case api.BatteryNormal:
-				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
-					return err
-				}
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+				})
 
-				if err := m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MinSoc)/100)); err != nil {
-					return err
-				}
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MinSoc)/100))
+				})
 
-				return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
+				})
+
+				return eg.Wait()
 
 			case api.BatteryHold:
-				if err := m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal}); err != nil {
-					return err
-				}
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+				})
 
-				return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MaxSoc)/100))
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MaxSoc)/100))
+				})
+
+				return eg.Wait()
 
 			case api.BatteryCharge:
-				if err := m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1}); err != nil {
-					return err
-				}
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1})
+				})
 
-				if err := m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-maxchargepower))); err != nil {
-					return err
-				}
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-maxchargepower)))
+				})
 
-				return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				})
 
+				return eg.Wait()
 			default:
 				return api.ErrNotAvailable
 			}
