@@ -223,7 +223,6 @@ func (m *RCT) CurrentPower() (float64, error) {
 				voltage, err = m.queryFloat(rct.BatteryPlaceholder0Voltage)
 				return err
 			})
-
 		} else {
 			eg.Go(func() error {
 				var err error
