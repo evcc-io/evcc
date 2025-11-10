@@ -22,7 +22,7 @@ type Ntfy struct {
 }
 
 // NewNtfyFromConfig creates new Ntfy messenger
-func NewNtfyFromConfig(other map[string]interface{}) (Messenger, error) {
+func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 	var cc struct {
 		URI      string
 		Priority string

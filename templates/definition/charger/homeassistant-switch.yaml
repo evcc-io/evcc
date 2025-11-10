@@ -8,10 +8,7 @@ group: switchsockets
 requirements:
   evcc: ["skiptest"]
 params:
-  - name: baseurl
-    description:
-      de: Basis-URL der Home Assistant Instanz
-      en: Base URL of the Home Assistant instance
+  - name: uri
     required: true
     example: http://homeassistant.local:8123
   - name: token
@@ -23,13 +20,13 @@ params:
     help:
       de: aus Home Assistant Profil
       en: from Home Assistant profile
-  - name: switchentity
+  - name: switch
     required: true
     description:
       de: Entity ID des schaltbaren Geräts
       en: Entity ID of the switch device
     example: switch.smartsocket
-  - name: powerentity
+  - name: power
     description:
       de: Entity ID für Leistungsmessung
       en: Entity ID for power measurement
@@ -37,8 +34,8 @@ params:
   - preset: switchsocket
 render: |
   type: homeassistant-switch
-  baseurl: {{ .baseurl }}
+  uri: {{ .uri }}
   token: {{ .token }}
-  switchentity: {{ .switchentity }}
-  powerentity: {{ .powerentity }}
+  enable: {{ .switch }}
+  power: {{ .power }}
   {{ include "switchsocket" . }}

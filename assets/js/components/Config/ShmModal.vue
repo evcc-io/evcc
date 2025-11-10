@@ -7,22 +7,10 @@
 		endpoint="/config/shm"
 		state-key="shm"
 		data-testid="shm-modal"
+		disable-remove
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
-			<FormRow id="shmControl" :label="$t('config.shm.labelControl')" optional>
-				<div class="d-flex">
-					<input
-						id="shmControl"
-						v-model="values.allowControl"
-						class="form-check-input"
-						type="checkbox"
-					/>
-					<label class="form-check-label ms-2" for="shmControl">
-						{{ $t("config.shm.labelAllowControl") }}
-					</label>
-				</div>
-			</FormRow>
 			<PropertyCollapsible>
 				<template #advanced>
 					<p>{{ $t("config.shm.descriptionIds") }}</p>

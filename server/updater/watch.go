@@ -20,7 +20,7 @@ type watch struct {
 	repo    *Repo
 }
 
-func (u *watch) Send(key string, val interface{}) {
+func (u *watch) Send(key string, val any) {
 	u.outChan <- util.Param{
 		Key: key,
 		Val: val,

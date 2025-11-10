@@ -18,15 +18,9 @@ params:
       en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
   - name: minsoc
     default: 11
-    type: int
     advanced: true
-    help:
-      en: Venus can only be discharged down to 11%.
-      de: Venus kann nur bis 11% entladen werden.
-    example: 11
   - name: maxsoc
     default: 100
-    type: int
     advanced: true
   - name: maxchargepower
     default: 2500
@@ -159,3 +153,5 @@ render: |
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %

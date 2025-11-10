@@ -1,4 +1,5 @@
 template: solarwatt-flex
+deprecated: true
 products:
   - brand: Solarwatt
     description:

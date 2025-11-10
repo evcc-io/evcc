@@ -67,20 +67,24 @@ export default defineComponent({
 		batteryModalAvailabe() {
 			return store.state.battery?.length;
 		},
+		state() {
+			const { state, uiLoadpoints } = store;
+			return { ...state, uiLoadpoints: uiLoadpoints.value };
+		},
 		globalSettingsProps() {
-			return this.collectProps(GlobalSettingsModal, store.state);
+			return this.collectProps(GlobalSettingsModal, this.state);
 		},
 		batterySettingsProps() {
-			return this.collectProps(BatterySettingsModal, store.state);
+			return this.collectProps(BatterySettingsModal, this.state);
 		},
 		offlineIndicatorProps() {
-			return this.collectProps(OfflineIndicator, store.state);
+			return this.collectProps(OfflineIndicator, this.state);
 		},
 		forecastModalProps() {
-			return this.collectProps(ForecastModal, store.state);
+			return this.collectProps(ForecastModal, this.state);
 		},
 		loginModalProps() {
-			return this.collectProps(LoginModal, store.state);
+			return this.collectProps(LoginModal, this.state);
 		},
 	},
 	watch: {

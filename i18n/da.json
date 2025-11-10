@@ -58,8 +58,8 @@
           "heating": "Brugerdefineret varmelegeme"
         },
         "heatpump": "Brugerdefineret varmepumpe",
-        "sgready": "Brugerdefineret varmepumpe (sg-klar, alle)",
-        "sgready-boost": "Brugerdefineret varmepumpe (sg-klar, boost)",
+        "sgready": "Brugerdefineret varmepumpe (sg-ready via plugins)",
+        "sgready-relay": "Brugerdefineret varmepumpe (sg-ready via relæer)",
         "switchsocket": "Brugerdefineret stikkontakt"
       }
     },
@@ -77,7 +77,6 @@
       "title": "kontrol adfærd"
     },
     "deviceValue": {
-      "allowControl": "Tillad kontrol",
       "amount": "Mængde",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -119,7 +118,7 @@
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
-      "vehicleLimitSoc": "Køretøjets begrænsning",
+      "vehicleLimitSoc": "Ladegrænse",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -134,6 +133,7 @@
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
       "batteryStorage": "Batterilagring",
+      "consumer": "Forbrugsenhed",
       "solarSystem": "Solcelleanlæg"
     },
     "editor": {
@@ -144,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan bruges til belastningsstyring eller statistikformål.",
-      "titleAdd": "Tilføj ekstern måler",
-      "titleEdit": "Rediger ekstern måler"
+      "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
+      "titleAdd": "Tilføj forbrugsmåler",
+      "titleEdit": "Rediger forbrugsmåler"
     },
     "form": {
       "danger": "Pas på",
@@ -162,7 +162,11 @@
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
       "docsLink": "Se dokumentation.",
+      "dragHandle": "Træk-håndtag",
+      "dragItem": "Kan trækkes: {title}",
+      "dragList": "Rækkefølgen kan ændres",
       "experimental": "Eksperimentel",
+      "forceSave": "Gem alligevel",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
       "noFileSelected": "Ingen fil valgt.",
@@ -172,7 +176,10 @@
       "readFromFile": "Læs fra fil",
       "remove": "Fjern",
       "required": "påkrævet",
+      "reset": "Nulstil",
       "save": "Gem",
+      "saved": "Gemt.",
+      "saving": "Gemmer…",
       "selectFile": "Gennemse",
       "showAdvancedSettings": "Vis avancerede indstillinger",
       "telemetry": "Telemetri",
@@ -190,7 +197,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ændre"
+      "change": "ændre",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data.",
@@ -318,7 +326,7 @@
       "addPvBattery": "Tilføj solpanel eller batteri",
       "addTariffs": "Tilføj tariffer",
       "addVehicle": "Tilføj køretøj",
-      "configured": "Konfigureret",
+      "configured": "konfigureret",
       "edit": "rediger",
       "loadpointRequired": "Der skal konfigureres mindst ét ladepunkt.",
       "name": "Navn",
@@ -338,13 +346,22 @@
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
-        "ext": "Tilføj en ekstra måler",
+        "ext": "Tilføj almindelig forbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
       "specific": "Specifikke integrationer",
       "template": "Fabrikant",
       "titleChoice": "Hvad ønsker du at tilføje?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Selvregulerende forbrugsenhed",
+        "battery": "Batteri",
+        "charge": "Forbrugsenhed/Lader",
+        "grid": "Elnet",
+        "label": "Brug",
+        "pv": "Produktion"
+      },
       "validateSave": "Valider og gem"
     },
     "modbus": {
@@ -443,8 +460,6 @@
       "descriptionIds": "I Sunny Portal skal hver forbrugsenhed have en unik identifikator. evcc genererer en unik identifikator baseret på din hardware. Hvis du flytter evcc til en anden hardware, kan disse identifikatorer ændre sig. Hvis du vil bevare historikken, kan du tilsidesætte de genererede identifikatorer her. Åbn SEMP-URL’en (/semp) for at tjekke dine nuværende identifikatorer.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8-tegns HEX-streng. Generelt præfiks for alle enheder. Som standard vil evcc bruge sit eget interne leverandør-ID.",
-      "labelAllowControl": "Accepter yderligere anbefalinger om effektgrænser fra SHM.",
-      "labelControl": "Tillad kontrol",
       "labelDeviceId": "Enheds ID",
       "labelVendorId": "Leverandør-ID",
       "title": "SMA Sunny Home Manager"
@@ -511,6 +526,10 @@
       "description": "Definer dine energitakster for at beregne omkostningerne ved dine opladningssessioner.",
       "title": "Tariffer"
     },
+    "telemetry": {
+      "description": "Konfigurér datadeling for at hjælpe med at forbedre evcc. Din privatlivsbeskyttelse er vigtig for os, og deltagelse er helt frivillig.",
+      "title": "Telemetri"
+    },
     "title": {
       "description": "Vises på hovedskærm og på browserfane.",
       "label": "Titel",
@@ -519,7 +538,7 @@
     "validation": {
       "failed": "mislykkedes",
       "label": "Status",
-      "running": "validering…",
+      "running": "Validering…",
       "success": "succes",
       "unknown": "ukendt",
       "validate": "validerer"
@@ -651,6 +670,7 @@
     "about": "Om",
     "authProviders": {
       "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
+      "loggedOut": "Du er nu logget ud",
       "title": "Autorisation status"
     },
     "blog": "Blog",
@@ -1091,6 +1111,7 @@
     "vehicle": "Køretøj"
   },
   "settings": {
+    "deviceInfo": "De indstillinger, du laver her, gælder kun for denne enhed.",
     "fullscreen": {
       "enter": "Gå til fuldskærmsvisning",
       "exit": "Afslut fuldskærm",
@@ -1103,6 +1124,12 @@
     "language": {
       "auto": "Automatisk",
       "label": "Sprog"
+    },
+    "loadpoints": {
+      "help": "Tilpas rækkefølge og synlighed i brugerfladen.",
+      "hide": "Skjul {title}",
+      "label": "Opladningspunkter",
+      "show": "Vis {title}"
     },
     "sponsorToken": {
       "expires": "Din sponsortoken udløber {inXDays}. {getNewToken} og opdater det her.",
@@ -1132,7 +1159,7 @@
   },
   "smartCost": {
     "activeHours": "{active} af {total}",
-    "activeHoursLabel": "Aktive timer",
+    "activeHoursLabel": "Aktiv tid",
     "applyToAll": "Anvendes overalt?",
     "batteryDescription": "Oplader hjemmebatteriet med energi fra elnettet.",
     "cheapTitle": "Billig opladning fra elnettet",
@@ -1149,7 +1176,7 @@
     "saved": "Gemt."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pauserede timer",
+    "activeHoursLabel": "Pauseret tid",
     "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
     "priceLabel": "Indfødningspris",
     "priceLimit": "Indfødningsgrænse",

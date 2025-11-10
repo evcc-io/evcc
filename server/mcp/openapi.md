@@ -242,6 +242,12 @@ Convenience method to remove limit for all loadpoints at once. Value is applied 
 
 **Tags:** general
 
+## removeGlobalSmartFeedInPriorityLimit
+
+Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.
+
+**Tags:** general
+
 ## setGlobalSmartCostLimit
 
 Convenience method to set smart charging cost limit for all loadpoints at once. Value is applied to each individual loadpoint.
@@ -258,6 +264,26 @@ Convenience method to set smart charging cost limit for all loadpoints at once. 
 
 ```json
 call setGlobalSmartCostLimit {
+  "cost": 123.45
+}
+```
+
+## setGlobalSmartFeedInPriorityLimit
+
+Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint.
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+
+**Example call:**
+
+```json
+call setGlobalSmartFeedInPriorityLimit {
   "cost": 123.45
 }
 ```
@@ -320,6 +346,26 @@ Delete cost or emission limit for fast-charging with grid energy.
 
 ```json
 call deleteLoadpointSmartCostLimit {
+  "id": 123
+}
+```
+
+## deleteLoadpointSmartFeedInPriorityLimit
+
+Delete limit for feed-in priority optimization.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+
+**Example call:**
+
+```json
+call deleteLoadpointSmartFeedInPriorityLimit {
   "id": 123
 }
 ```
@@ -728,6 +774,28 @@ call setLoadpointSmartCostLimit {
 }
 ```
 
+## setLoadpointSmartFeedInPriorityLimit
+
+Set limit for feed-in priority optimization.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+| id | integer | Loadpoint index starting at 1 |
+
+**Example call:**
+
+```json
+call setLoadpointSmartFeedInPriorityLimit {
+  "cost": 123.45,
+  "id": 123
+}
+```
+
 ## setLoadpointSocLimit
 
 Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.
@@ -869,12 +937,6 @@ call getSystemLogs {
   "level": "example"
 }
 ```
-
-## getTelemetryStatus
-
-Returns the current telemetry status.
-
-**Tags:** system
 
 ## setTelemetryStatus
 
@@ -1023,7 +1085,7 @@ Updates the repeating charging plan.
 | Name | Type | Description |
 |------|------|-------------|
 | name | string | Vehicle name |
-| requestBody | object | The JSON request body. |
+| requestBody | array | The JSON request body. |
 
 **Example call:**
 

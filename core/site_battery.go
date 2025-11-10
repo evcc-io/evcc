@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 func batteryModeModified(mode api.BatteryMode) bool {
@@ -15,6 +16,18 @@ func batteryModeModified(mode api.BatteryMode) bool {
 
 func (site *Site) batteryConfigured() bool {
 	return len(site.batteryMeters) > 0
+}
+
+func (site *Site) hasBatteryControl() bool {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+
+		if _, ok := meter.(api.BatteryController); ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // setBatteryMode sets the battery mode
@@ -40,9 +53,21 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 }
 
 func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
-	if batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate); batteryMode != api.BatteryUnknown {
+	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
+
+	// put battery into hold mode when charging is active and circuit dimmed
+	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+	if fromToCharge && circuitDimmed(site.circuit) {
+		site.log.DEBUG.Println("battery mode: circuit dimmed")
+		batteryMode = api.BatteryHold
+	}
+
+	// NOTE: applyBatteryMode is always called when charge mode is active to validate max soc
+	if modeChanged := batteryMode != api.BatteryUnknown; modeChanged || site.batteryMode == api.BatteryCharge {
 		if err := site.applyBatteryMode(batteryMode); err == nil {
-			site.SetBatteryMode(batteryMode)
+			if modeChanged {
+				site.SetBatteryMode(batteryMode)
+			}
 		} else {
 			site.log.ERROR.Println("battery mode:", err)
 		}
@@ -62,7 +87,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		site.Unlock()
 	}
 
-	mapper := func(s api.BatteryMode) api.BatteryMode {
+	keepUnlessModified := func(s api.BatteryMode) api.BatteryMode {
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
@@ -78,9 +103,9 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 			res = extMode
 		}
 	case batteryGridChargeActive:
-		res = mapper(api.BatteryCharge)
+		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
-		res = mapper(api.BatteryHold)
+		res = keepUnlessModified(api.BatteryHold)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
 	}
@@ -88,12 +113,65 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	return res
 }
 
+// batteryMaxSocReached checks is battery has exceed max soc limit
+func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, error) {
+	meter := dev.Instance()
+
+	batLimiter, ok := meter.(api.BatterySocLimiter)
+	if !ok {
+		return false, nil
+	}
+
+	batSoc, ok := meter.(api.Battery)
+	if !ok {
+		return false, errors.New("battery with soc limits must have soc")
+	}
+
+	soc, err := batSoc.Soc()
+	if err != nil {
+		return false, err
+	}
+
+	if _, max := batLimiter.GetSocLimits(); max > 0 && max < 100 && soc >= max {
+		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f > %.0f)", deviceTitleOrName(dev), soc, max)
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // applyBatteryMode applies the mode to each battery
+//
+// api.BatteryCharge:
+//
+//	The current soc is validated against max soc.
+//	In case max soc is reached, hold mode is applied.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
+	fromToCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
-		if batCtrl, ok := meter.(api.BatteryController); ok {
+		batCtrl, ok := meter.(api.BatteryController)
+		if !ok {
+			continue
+		}
+
+		// validate max soc
+		if fromToCharge && mode != api.BatteryHold {
+			ok, err := site.batteryMaxSocReached(dev)
+			if err != nil {
+				return err
+			}
+
+			// put battery into hold mode when soc limit reached
+			if ok {
+				// TODO do this only once
+				mode = api.BatteryHold
+			}
+		}
+
+		if mode != api.BatteryUnknown {
 			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}

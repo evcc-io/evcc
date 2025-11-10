@@ -2,7 +2,7 @@ template: viessmann
 products:
   - brand: Viessmann
     description:
-      generic: Heatpump (SG Ready)
+      generic: Heatpump (API)
 group: heating
 requirements:
   # evcc: ["sponsorship"]
@@ -14,23 +14,22 @@ requirements:
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 params:
   - name: user
-    required: true
-    help:
-      de: Registrieren auf [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
-      en: Register at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+    deprecated: true
   - name: password
-    required: true
-    help:
-      de: Für den konfigurierten Viessmann Account.
-      en: For the configured Viessmann account.
+    deprecated: true
   - name: clientid
     required: true
-    description:
-      de: Client ID
-      en: Client ID
     help:
       de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
       en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+  - name: redirecturi
+    required: true
+    description:
+      generic: Redirect URI
+    help:
+      en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Viessmann developer portal."
+      de: "Redirect-URI der evcc-Instanz. Muss mit der Redirect URI übereinstimmen, die Viessmann Developer Portal konfiguriert ist."
+    example: "https://evcc.example.org/providerauth/callback"
   - name: gateway_serial
     required: true
     description:
@@ -59,7 +58,7 @@ params:
         Dann holen wir uns einen oauth token (n.b. am besten den gesamten Block in das Terminal kopieren, da die Zwischenvariable 'CODE' nur 20 Sekunden gültig ist):
 
         ```
-        VIESSMANN_REDIRECT_URI="http://localhost:4200/"
+        VIESSMANN_REDIRECT_URI=<your-redirect-uri>
         VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
         VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
 
@@ -101,7 +100,7 @@ params:
         Then execute the following to get an oauth token (n.b. it's best to paste the entire block as-is, since the intermediate 'CODE' is only valid for 20 seconds):
 
         ```
-        VIESSMANN_REDIRECT_URI="http://localhost:4200/"
+        VIESSMANN_REDIRECT_URI=<your-redirect-uri>
         VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
         VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
 
@@ -147,7 +146,6 @@ params:
     help:
       de: Parameter existiert nur aus historischen Gründen. Zieltemperatur kann in der ViCare App eingestellt werden (wird nicht von allen Anlagen unterstützt)
       en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
-    required: false
     default: 45
     type: int
 render: |
@@ -158,9 +156,9 @@ render: |
     cache: 2s # to prevent making two identical requests straight after each other for "getmode"
     auth:
       source: viessmann
-      user: {{ .user }}
-      password: {{ .password }}
       clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway: {{ .gateway_serial }}
     jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
@@ -180,9 +178,9 @@ render: |
             - content-type: application/json
           auth:
             source: viessmann
-            user: {{ .user }}
-            password: {{ .password }}
             clientid: {{ .clientid }}
+            redirecturi: {{ .redirecturi }}
+            gateway: {{ .gateway_serial }}
           body: >
             { }
       - case: 3 # boost
@@ -194,9 +192,9 @@ render: |
             - content-type: application/json
           auth:
             source: viessmann
-            user: {{ .user }}
-            password: {{ .password }}
             clientid: {{ .clientid }}
+            redirecturi: {{ .redirecturi }}
+            gateway: {{ .gateway_serial }}
           body: >
             { }
       - case: 1 # dimm

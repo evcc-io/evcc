@@ -16,7 +16,14 @@
 							<span class="d-block no-wrap text-truncate">Result: Charging Plan</span>
 							<small class="d-block no-wrap text-truncate">
 								{{ evopt.res.status }} ・
-								{{ fmtMoney(evopt.res.objective_value || 0, currency, true, true) }}
+								{{
+									fmtMoney(
+										(evopt.res.objective_value || 0) * -1,
+										currency,
+										true,
+										true
+									)
+								}}
 								saved
 							</small>
 						</h3>
@@ -82,19 +89,6 @@
 						/>
 
 						<h3 class="fw-normal mb-4">Raw Data</h3>
-
-						<div class="mb-4">
-							<p class="mb-2">Curl Command:</p>
-							<div class="position-relative">
-								<div
-									class="p-3 rounded border overflow-auto"
-									style="background-color: var(--evcc-box)"
-								>
-									<code class="text-nowrap d-block">{{ evopt.curl }}</code>
-								</div>
-								<CopyButton :content="evopt.curl" />
-							</div>
-						</div>
 
 						<div class="mb-4">
 							<p class="mb-2">Request:</p>

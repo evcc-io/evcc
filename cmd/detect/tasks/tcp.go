@@ -15,7 +15,7 @@ func init() {
 	registry.Add(Tcp, TcpHandlerFactory)
 }
 
-func TcpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func TcpHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := TcpHandler{
 		Timeout: timeout,
 	}

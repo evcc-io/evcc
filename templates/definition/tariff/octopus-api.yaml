@@ -15,7 +15,6 @@ params:
     required: true
   - name: accountNumber
     type: string
-    required: false
     description:
       en: Account Number
       de: Kundennummer
@@ -23,7 +22,17 @@ params:
       en: "Only required if you have multiple accounts."
       de: "Nur erforderlich, wenn mehrere Konten vorhanden sind."
     example: "X-XXXXXXXX"
+  - name: tariffDirection
+    type: choice
+    choice: ["import", "export"]
+    default: "import"
+    description:
+      generic: The tariff flow direction to query from Octopus.
+    help:
+      generic: "Set to 'export' when using feedin:"
+
 render: |
   type: octopusenergy
   apikey: {{ .apiKey }}
   accountNumber: {{ .accountNumber }}
+  tariffDirection: {{ .tariffDirection }}

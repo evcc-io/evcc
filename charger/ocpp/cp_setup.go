@@ -174,7 +174,7 @@ func (cp *CP) HasMeasurement(val types.Measurand) bool {
 
 func (cp *CP) tryMeasurands(measurands string, key string) []string {
 	var accepted []string
-	for _, m := range strings.Split(measurands, ",") {
+	for m := range strings.SplitSeq(measurands, ",") {
 		if err := cp.ChangeConfigurationRequest(key, m); err == nil {
 			accepted = append(accepted, m)
 		}

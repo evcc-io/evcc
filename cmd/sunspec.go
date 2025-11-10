@@ -31,7 +31,7 @@ func init() {
 	slaveID = sunspecCmd.Flags().IntP("id", "i", 1, "Slave id")
 }
 
-func pf(format string, v ...interface{}) {
+func pf(format string, v ...any) {
 	format = strings.TrimSuffix(format, "\n") + "\n"
 	fmt.Printf(format, v...)
 }
