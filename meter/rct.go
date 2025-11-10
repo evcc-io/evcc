@@ -119,7 +119,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 		batteryMode = func(mode api.BatteryMode) error {
 			if mode != api.BatteryNormal {
-				batStatus, err := m.queryInt32(rct.BatteryBatStatus)
+				batStatus, err := m.queryInt32(rct.BatteryStatus2)
 				if err != nil {
 					return err
 				}
