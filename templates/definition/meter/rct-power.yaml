@@ -12,15 +12,7 @@ params:
     allinone: true
   - name: host
   - name: capacity
-  - name: secondbatterytower
-    type: bool
-    description:
-      de: Zweiter Batterieturm
-      en: Second battery tower
-    help:
-      de: Battery is second battery tower
-      en: Batterie ist zweiter Batterieturm
-    usages: ["battery"]
+  - name: battery
   # battery control
   - name: minsoc
     type: int
@@ -49,7 +41,7 @@ render: |
   uri: {{ .host }}
   usage: {{ .usage }}
   cache: {{ .cache }}
-  secondbatterytower: {{ .secondbatterytower }}
+  battery: {{ .battery }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
