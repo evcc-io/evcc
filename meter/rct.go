@@ -19,10 +19,11 @@ import (
 
 // RCT implements the api.Meter interface
 type RCT struct {
-	conn          *rct.Connection // connection with the RCT device
-	usage         string          // grid, pv, battery
-	externalPower bool            // whether to query external power
-	battery       int             // batter number
+	conn              *rct.Connection // connection with the RCT device
+	usage             string          // grid, pv, battery
+	externalPower     bool            // whether to query external power
+	battery           int             // battery number
+	numberOfBatteries uint8           // number of batteries connected to inverter
 }
 
 var (
@@ -107,6 +108,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	var batteryMode func(api.BatteryMode) error
 
 	if usage == "battery" {
+		if n, err := m.queryUint8(rct.PowerMngNBatteries); err != nil {
+			return nil, err
+		} else {
+			m.numberOfBatteries = n
+		}
+
 		batterySoc = m.batterySoc
 		batterySocLimiter = batterySocLimits.Decorator()
 
@@ -202,8 +209,36 @@ func (m *RCT) CurrentPower() (float64, error) {
 		return a + b + c, err
 
 	case "battery":
-		return m.queryFloat(rct.BatteryPowerW)
+		var eg errgroup.Group
+		var current, voltage float64
 
+		if m.battery == 2 {
+			eg.Go(func() error {
+				var err error
+				current, err = m.queryFloat(rct.BatteryPlaceholder0Current)
+				return err
+			})
+			eg.Go(func() error {
+				var err error
+				voltage, err = m.queryFloat(rct.BatteryPlaceholder0Voltage)
+				return err
+			})
+
+		} else {
+			eg.Go(func() error {
+				var err error
+				current, err = m.queryFloat(rct.BatteryCurrent)
+				return err
+			})
+			eg.Go(func() error {
+				var err error
+				voltage, err = m.queryFloat(rct.BatteryVoltage)
+				return err
+			})
+		}
+
+		err := eg.Wait()
+		return current * voltage, err
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
@@ -252,7 +287,7 @@ func (m *RCT) totalEnergy() (float64, error) {
 		})
 
 		err := eg.Wait()
-		return (in - out) / 1000, err
+		return ((in - out) / 1000) / float64(m.numberOfBatteries), err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -292,6 +327,14 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
 	res, err := backoff.RetryWithData(func() (int32, error) {
 		return m.conn.QueryInt32(id)
+	}, m.bo())
+	return res, err
+}
+
+// queryInt8 adds retry logic of recoverable errors to QueryInt8
+func (m *RCT) queryUint8(id rct.Identifier) (uint8, error) {
+	res, err := backoff.RetryWithData(func() (uint8, error) {
+		return m.conn.QueryUint8(id)
 	}, m.bo())
 	return res, err
 }
