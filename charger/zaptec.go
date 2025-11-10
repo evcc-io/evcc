@@ -23,7 +23,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -53,6 +55,45 @@ type Zaptec struct {
 
 func init() {
 	registry.AddCtx("zaptec", NewZaptecFromConfig)
+}
+
+// exchangePasswordCredentials exchanges user credentials for an OAuth2 token using ROPC grant
+func exchangePasswordCredentials(ctx context.Context, endpoint oauth2.Endpoint, username, password string) (*oauth2.Token, error) {
+	data := url.Values{
+		"grant_type": {"password"},
+		"username":   {username},
+		"password":   {password},
+		"scope":      {"offline_access"},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint.TokenURL, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := http.DefaultClient
+	if c, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); ok {
+		client = c
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("oauth2: %s", resp.Status)
+	}
+
+	var token oauth2.Token
+	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
+		return nil, err
+	}
+
+	return &token, nil
 }
 
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
@@ -124,7 +165,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		c.Client,
 	)
 
-	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
+	token, err := exchangePasswordCredentials(oauthCtx, oc.Endpoint, user, password)
 	if err != nil {
 		return nil, err
 	}
