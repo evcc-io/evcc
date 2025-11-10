@@ -1,6 +1,10 @@
 package api
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/cenkalti/backoff/v4"
+)
 
 // ErrNotAvailable indicates that a feature is not available
 var ErrNotAvailable = errors.New("not available")
@@ -15,7 +19,7 @@ var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc
 var ErrMissingCredentials = errors.New("missing user/password credentials")
 
 // ErrLoginRequired indicates that retrieving tokens credentials waits for login
-var ErrLoginRequired = errors.New("login required")
+var ErrLoginRequired = backoff.Permanent(errors.New("login required"))
 
 // ErrMissingToken indicates that access/refresh tokens are missing
 var ErrMissingToken = errors.New("missing token credentials")

@@ -102,13 +102,14 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 }
 
 func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
-	redirectUri := "http://localhost:7070/providerauth/callback"
+	localUri := "http://localhost:7070"
+	redirectUri := localUri + "/providerauth/callback"
 
 	log := util.NewLogger("homeassistant")
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := oauth2.Config{
-		ClientID:    uri,
+		ClientID:    localUri,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  uri + "/auth/authorize",
