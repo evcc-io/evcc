@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -17,6 +18,16 @@ func init() {
 
 	go scan(context.Background())
 }
+
+type HomeAssistantInstance struct {
+	URI string
+	oauth2.TokenSource
+}
+
+var (
+	haMu        sync.Mutex
+	haInstances = make(map[string]*HomeAssistantInstance)
+)
 
 func scan(ctx context.Context) {
 	entries := make(chan *zeroconf.ServiceEntry, 1)
@@ -51,12 +62,27 @@ func scan(ctx context.Context) {
 }
 
 func authorize(name, uri string) {
-	if _, err := NewHomeAssistantFromConfig(context.Background(), map[string]any{
-		"uri":  uri,
-		"name": name,
-	}); err != nil {
+	haMu.Lock()
+	defer haMu.Unlock()
+
+	if _, ok := haInstances[name]; ok {
+		return
+	}
+
+	if ts, err := NewHomeAssistant(context.Background(), name, uri); err == nil {
+		haInstances[name] = &HomeAssistantInstance{
+			URI:         uri,
+			TokenSource: ts,
+		}
+	} else {
 		log.Println(err)
 	}
+}
+
+func HomeAssistantInstanceNyName(name string) *HomeAssistantInstance {
+	haMu.Lock()
+	defer haMu.Unlock()
+	return haInstances[name]
 }
 
 func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
@@ -69,8 +95,11 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 		return nil, err
 	}
 
-	uri := "http://localhost:7070"
-	redirectUri := uri + "/providerauth/callback"
+	return NewHomeAssistant(ctx, cc.Name, cc.URI)
+}
+
+func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
+	redirectUri := "http://localhost:7070/providerauth/callback"
 
 	log := util.NewLogger("homeassistant")
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
@@ -79,10 +108,10 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 		ClientID:    uri,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  cc.URI + "/auth/authorize",
-			TokenURL: cc.URI + "/auth/token",
+			AuthURL:  uri + "/auth/authorize",
+			TokenURL: uri + "/auth/token",
 		},
 	}
 
-	return NewOauth(ctx, "HomeAssistant", cc.Name, &oc)
+	return NewOauth(ctx, "HomeAssistant", name, &oc)
 }

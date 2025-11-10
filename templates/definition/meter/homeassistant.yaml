@@ -13,15 +13,14 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]
   - name: uri
-    required: true
-    example: "http://homeassistant.local:8123"
+    deprecated: true
   - name: token
+    deprecated: true
+  - name: name
     description:
-      de: Home Assistant Long-Lived Access Token
-      en: Home Assistant Long-Lived Access Token
-    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-    required: true
-    mask: true
+      de: Home Assistant Instanz
+      en: Home Assistant Instance
+    default: Home
   - name: power
     description:
       de: Leistungsentität
@@ -111,8 +110,7 @@ params:
   - name: maxacpower
 render: |
   type: homeassistant
-  uri: {{ .uri }}
-  token: {{ .token }}
+  name: {{ .name }}
   power: {{ .power }}
   energy: {{ .energy }}
   currents:
