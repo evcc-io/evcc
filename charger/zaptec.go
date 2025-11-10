@@ -154,7 +154,6 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	oc := &oauth2.Config{
 		Endpoint: provider.Endpoint(),
 		Scopes: []string{
-			oidc.ScopeOpenID,
 			oidc.ScopeOfflineAccess,
 		},
 	}
