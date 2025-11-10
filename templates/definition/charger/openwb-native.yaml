@@ -111,14 +111,14 @@ params:
       de: RFID-Kartenleser USB VID:PID Wert (kann der Ausgabe von lsusb entnommen werden), leer wenn kein RFID Kartenleser vorhanden ist
     default: ""
   - name: cpwait
-    type: float
+    type: duration
     description:
-      en: Duration of CP interruption in seconds
-      de: Dauer der CP Unterbrechnung in Sekunden
+      en: Duration of CP interruption
+      de: Dauer der CP Unterbrechnung
     help:
       en: when phase-switching and waking up car.
       de: bei der Phasenumschaltung und Aufwecken des Autos.
-    default: 10
+    default: 10s
     advanced: true
   - name: chargePoint
     type: int

@@ -34,21 +34,22 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 	cc := struct {
 		Phases1p3p      bool
 		RfId            string
-		CpWait          float64
+		CpWait          time.Duration
 		ChargePoint     int
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
 			Baudrate: 9600,
 			Comset:   "8N1",
-			ID:       1},
+			ID:       1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, time.Duration(cc.CpWait)*time.Second, cc.ChargePoint)
+	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.ChargePoint)
 }
 
 // NewOpenWbNative creates OpenWbNative charger
@@ -69,7 +70,13 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, err
 	}
 
-	wb := &OpenWbNative{evse, log, nil, "", cpWait, chargePoint, chargeState}
+	wb := &OpenWbNative{
+		Charger:     evse,
+		log:         log,
+		cpWait:      cpWait,
+		chargePoint: chargePoint,
+		chargeState: chargeState,
+	}
 
 	var (
 		phases1p3p func(int) error
@@ -101,6 +108,7 @@ func (wb *OpenWbNative) Status() (api.ChargeStatus, error) {
 		// Status changed from connected/charging to not connected, discard rfid
 		wb.rfId = ""
 	}
+	wb.chargeState = res
 	return res, err
 }
 
@@ -132,11 +140,7 @@ func (wb *OpenWbNative) gpioExecute(worker func() error) error {
 		return err
 	}
 
-	if err := wb.Enable(true); err != nil {
-		return err
-	}
-
-	return nil
+	return wb.Enable(true)
 }
 
 // Worker function to toggle the GPIOs to switch the phases
