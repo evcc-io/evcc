@@ -101,10 +101,10 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2     api.Rates     `json:"co2,omitempty"`
-		FeedIn  api.Rates     `json:"feedin,omitempty"`
-		Grid    api.Rates     `json:"grid,omitempty"`
-		Planner api.Rates     `json:"planner,omitempty"`
+		Co2     api.Rates     `json:"co2"`
+		FeedIn  api.Rates     `json:"feedin"`
+		Grid    api.Rates     `json:"grid"`
+		Planner api.Rates     `json:"planner"`
 		Solar   *solarDetails `json:"solar,omitempty"`
 	}{
 		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
