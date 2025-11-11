@@ -411,7 +411,7 @@ export interface Slot {
 export interface Forecast {
   grid: ForecastSlot[];
   co2: ForecastSlot[];
-  solar: SolarDetails;
+  solar?: SolarDetails;
   planner: ForecastSlot[];
   feedin: ForecastSlot[];
 }
