@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -319,10 +320,11 @@ func (lp *Loadpoint) vehicleOdometer() {
 
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
+	streaming := slices.Contains(lp.vehicle.Features(), 8) 
 	switch {
 	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
 		return true
-	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
+	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways || streaming) && lp.connected():
 		return true
 	default:
 		return false
