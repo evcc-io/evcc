@@ -320,7 +320,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
-	streaming := slices.Contains(lp.vehicle.Features(), 8)
+	streaming := slices.Contains(lp.vehicle.Features(), api.Streaming)
 	switch {
 	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
 		return true
