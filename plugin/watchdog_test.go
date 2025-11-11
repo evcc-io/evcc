@@ -25,7 +25,7 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 			return errors.New("race")
 		}
 
-		time.Sleep(time.Duration(rand.Int32N(256)))
+		time.Sleep(time.Duration(rand.Int32N(int32(p.timeout))))
 
 		if !u.CompareAndSwap(1, 0) {
 			return errors.New("race")
