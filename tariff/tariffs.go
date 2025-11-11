@@ -33,12 +33,12 @@ func Now(t api.Tariff) (float64, error) {
 // Rates returns the tariffs rates if not nil
 func Rates(t api.Tariff) api.Rates {
 	if t == nil {
-		return nil
+		return api.Rates{}
 	}
 
 	rr, err := t.Rates()
 	if err != nil {
-		return nil
+		return api.Rates{}
 	}
 
 	return rr
