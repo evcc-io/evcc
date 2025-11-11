@@ -144,7 +144,7 @@ func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
 
 	// read token
 	var claims jwt.RegisteredClaims
-	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (any, error) {
 		return jwtSecret, nil
 	}, jwt.WithSubject(admin)); err != nil {
 		return false, err

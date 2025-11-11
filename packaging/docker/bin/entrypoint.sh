@@ -5,12 +5,12 @@ set -e
 HASSIO_OPTIONSFILE=/data/options.json
 
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
-	CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
-	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
+	CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$' || true)
+	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$' || true)
 
 	# Config File Migration
 	# If there is no config file found in '/config' we copy it from '/homeassistant' and rename the old config file to .migrated
-	if [ ! -f "${CONFIG}" ]; then
+	if [ -n "${CONFIG}" ] && [ ! -f "${CONFIG}" ]; then
 		CONFIG_OLD=$(echo "${CONFIG}" | sed 's#^/config#/homeassistant#')
 		if [ -f "${CONFIG_OLD}" ]; then
 			mkdir -p "$(dirname "${CONFIG}")" && cp "${CONFIG_OLD}" "${CONFIG}"
@@ -31,16 +31,24 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 	fi
 
 	echo "Using config file: ${CONFIG}"
-	if [ ! -f "${CONFIG}" ]; then
-		echo "Config not found. Please create a config under ${CONFIG}."
-		echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
-	else
+	echo "Using database file: ${SQLITE_FILE}"
+
+	if [ -f "${CONFIG}" ]; then
 		if [ "${SQLITE_FILE}" ]; then
 			echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
 			exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
 		else
 			echo "starting evcc: 'evcc --config ${CONFIG}'"
 			exec evcc --config "${CONFIG}"
+		fi
+	else
+		if [ -f "${SQLITE_FILE}" ]; then
+			echo "No config file (evcc.yaml) configured. Starting with configuration from database: ${SQLITE_FILE}"
+			exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc
+		else
+			echo "No config file (evcc.yaml) and no database (evcc.db) file configured. Please copy your database to ${SQLITE_FILE} or migrate your settings to the database or create a config under ${CONFIG}."
+			echo "For details see evcc Home Assistant documentation at https://docs.evcc.io/docs/installation/home-assistant"
+			exit 1
 		fi
 	fi
 else

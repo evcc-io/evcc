@@ -45,7 +45,7 @@ type API interface {
 	// GetBatteryGridChargeLimit get the grid charge limit
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
-	SetBatteryGridChargeLimit(limit *float64)
+	SetBatteryGridChargeLimit(limit *float64) error
 
 	//
 	// power and energy
@@ -75,5 +75,5 @@ type API interface {
 	// GetBatteryModeExternal returns the external battery mode
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
-	SetBatteryModeExternal(api.BatteryMode)
+	SetBatteryModeExternal(api.BatteryMode) error
 }

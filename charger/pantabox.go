@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewPantaboxFromConfig creates a Pantabox charger from generic config
-func NewPantaboxFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPantaboxFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI string
 	}

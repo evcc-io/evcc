@@ -61,7 +61,7 @@ func init() {
 }
 
 // NewCompleoFromConfig creates a Compleo charger from generic config
-func NewCompleoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewCompleoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		modbus.TcpSettings `mapstructure:",squash"`

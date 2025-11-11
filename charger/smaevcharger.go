@@ -50,7 +50,7 @@ func init() {
 }
 
 // NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
-func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewSmaevchargerFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Uri      string
 		User     string

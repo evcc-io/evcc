@@ -20,7 +20,7 @@
   "main": "index.js",
   "dependencies": {
     "@formkit/drag-and-drop": "^0.5.3",
-    "@guolao/vue-monaco-editor": "^1.5.5",
+    "@guolao/vue-monaco-editor": "1.5.5",
     "@h2d2/shopicons": "^1.9.0",
     "@popperjs/core": "^2.11.8",
     "@unhead/vue": "^2.0.14",
@@ -32,13 +32,16 @@
     "chartjs-plugin-datalabels": "^2.2.0",
     "countup.js": "^2.9.0",
     "dayjs": "^1.11.18",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "0.52.2",
     "smoothscroll-polyfill": "^0.4.4",
     "snarkdown": "^2.0.0",
     "vue": "^3.2.29",
     "vue-chartjs": "^5.3.2",
     "vue-i18n": "^11.1.12",
     "vue-router": "^4.5.1"
+  },
+  "overrides": {
+    "@monaco-editor/loader": "1.5.0"
   },
   "engines": {
     "npm": ">=10.0.0",
@@ -51,7 +54,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.13.0",
     "@jest/types": "^30.2.0",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.56.1",
     "@storybook/vue3": "^10.0.0-beta.2",
     "@storybook/vue3-vite": "^10.0.0-beta.2",
     "@types/body-parser": "^1.19.6",
@@ -77,7 +80,7 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-vue": "^10.4.0",
     "globals": "^16.3.0",
-    "happy-dom": "^19.0.1",
+    "happy-dom": "^20.0.2",
     "jiti": "^2.5.1",
     "kill-port": "^2.0.1",
     "license-compliance": "^3.0.1",
@@ -91,7 +94,7 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint-language-service": "^5.0.5",
-    "vite": "^7.1.5",
+    "vite": "^7.1.11",
     "vitest": "^3.2.4",
     "vue-eslint-parser": "^10.2.0",
     "vue-hot-reload-api": "^2.3.4",

@@ -134,6 +134,22 @@ make ui build
 ./evcc --config tests/simulator.evcc.yaml
 ```
 
+## Communication Language
+
+evcc has a large German-speaking user base, but we want to be open and accessible to everyone in the global community. To balance these needs:
+
+- **Pull Requests**
+  - 🇬🇧 English required
+- **Issues**
+  - 🇬🇧 English recommended
+  - 🇩🇪 German acceptable to start, must switch to English after first English comment
+- **GitHub Discussions**
+  - 🇬🇧 🇩🇪 Both English and German allowed
+
+💬 _Non-German speakers: We strongly encourage you to ask participants to switch to English. For pull requests, we have a language check bot that does this automatically._
+
+Thank you all for helping make evcc accessible! 🌍
+
 ## Adding or modifying translations
 
 evcc already includes many translations for the UI. We're using [Weblate](https://hosted.weblate.org/projects/evcc/evcc/) to maintain translations. Feel free to add more languages or verify and edit existing translations. Weblate will automatically push all modifications to the evcc repository where they get reviewed and merged.

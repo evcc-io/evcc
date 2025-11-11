@@ -1,0 +1,38 @@
+template: ews
+products:
+  - brand: EWS
+    description:
+      generic: Dynamic eco power price of EWS Elektrizitätswerke Schönau
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: "Ein API-Key kann unter der E-Mail-Adresse api@ews-schoenau.de erfragt werden."
+    en: "You can request an API key at api@ews-schoenau.de"
+countries: ["DE"]
+group: price
+params:
+  - name: apiKey
+    type: string
+    required: true
+    mask: true
+    example: pub_dpa_8476c477d8a039529478ebd690d35ddd80e3308ffc
+render: |
+  type: custom
+  forecast:
+    source: http
+    uri: https://api.ews-schoenau.de/v1/dynamicprices/EWS-OEKO-DYN
+    headers:
+      - X-API-Key: {{ .apiKey }}
+    cache: 60m
+    timeout: 10s
+    jq: >
+      ( (.today // []) + (.tomorrow // []) )
+      | map(
+          ( .startsAt | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime ) as $s
+          | {
+              start: ( $s        | strftime("%Y-%m-%dT%H:%M:%SZ") ),
+              end:   ( ($s+900)  | strftime("%Y-%m-%dT%H:%M:%SZ") ),
+              value: ( .total / 100.0 )
+            }
+        )
+      | tostring

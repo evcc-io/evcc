@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
@@ -19,7 +20,7 @@ type solarDetails struct {
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       []tsEntry    `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 }
 
 type dailyDetails struct {
@@ -117,7 +118,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
 
-	site.publish(keys.Forecast, fc)
+	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {

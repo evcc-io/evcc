@@ -92,7 +92,7 @@ export default {
 				case "singlePhase":
 				case "enabled":
 				case "configured":
-				case "allowControl":
+				case "dimmed":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");

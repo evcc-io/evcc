@@ -31,7 +31,7 @@ func init() {
 //go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
-func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string

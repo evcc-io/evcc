@@ -18,9 +18,77 @@
     "modalTitle": "Batteriinnstillinger"
   },
   "config": {
+    "deviceValue": {
+      "chargeStatus": "Status",
+      "phaseCurrents": "Strøm L1, L2, L3",
+      "phasePowers": "Effekt L1, L2, L3",
+      "phaseVoltages": "Spenning L1, L2, L3",
+      "power": "Effekt",
+      "powerRange": "Effekt",
+      "singlePhase": "Enfase",
+      "soc": "Lade",
+      "temp": "Temperatur",
+      "yes": "ja"
+    },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus"
+    },
+    "eebus": {
+      "title": "EEBus"
+    },
     "form": {
+      "deprecated": "utdatert",
       "example": "Eksempel",
       "optional": "valgfritt"
+    },
+    "general": {
+      "delete": "Slett",
+      "docsLink": "Se documentasjonen.",
+      "experimental": "Eksperimentell",
+      "on": "på",
+      "password": "Passord",
+      "telemetry": "Telemetri",
+      "title": "Tittel"
+    },
+    "grid": {
+      "title": "Nettmåler"
+    },
+    "influx": {
+      "labelOrg": "Organisasjon",
+      "labelPassword": "Passord",
+      "labelUser": "Brukernavn"
+    },
+    "loadpoint": {
+      "cancel": "Avbryt",
+      "chargerLabel": {
+        "charging": "Lader",
+        "heating": "Varmeelement"
+      },
+      "chargerPower11kw": "11 kW",
+      "chargerPower22kw": "22 kW",
+      "chargerTypeLabel": "Ladertype",
+      "chargingTitle": "Oppførsel",
+      "circuitUnassigned": "ikke tildelt",
+      "defaultModeLabel": "Standartmodus",
+      "delete": "Slett",
+      "electricalTitle": "Elektrisk",
+      "energyMeterLabel": "Energimåler",
+      "option": {
+        "charging": "Legg til ladepunkt",
+        "heating": "Legg til varmeelement"
+      },
+      "phases1p": "1-fase",
+      "phases3p": "3-fase",
+      "phasesLabel": "Fase",
+      "pollIntervalLabel": "Oppdateringsintervall",
+      "pollModeAlways": "alltid",
+      "pollModeCharging": "lading",
+      "pollModeConnected": "tilkoblet",
+      "priorityLabel": "Prioritet",
+      "save": "Lagre",
+      "showAllSettings": "Vis alle innstillinger",
+      "solarBehaviorLabel": "Solenergi",
+      "solarModeCustom": "tilpasset"
     },
     "main": {
       "addVehicle": "Legg til kjøretøy",

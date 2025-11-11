@@ -1,0 +1,18 @@
+template: eebus-mgcp
+products:
+  - description:
+      de: "EEBus Netzanschlusspunkt"
+      en: "EEBus Grid Connection Point"
+group: generic
+requirements:
+  description:
+    de: EEBus-Messstelle am Netzanschlusspunkt mit dem Use Case MGCP (Monitoring of Grid Connection Point).
+    en: EEBus metering device at the grid connection point using use case MGCP (Monitoring of Grid Connection Point).
+  evcc: ["eebus"]
+params:
+  - name: usage
+    choice: ["grid"]
+  - preset: eebus
+render: |
+  {{ include "eebus" . }}
+  usage: {{ .usage }}

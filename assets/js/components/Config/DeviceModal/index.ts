@@ -1,4 +1,4 @@
-import type { DeviceType } from "@/types/evcc";
+import type { DeviceType, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 
@@ -15,7 +15,7 @@ export type Template = {
   };
 };
 
-export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
+export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
 export type TemplateParam = {
   Name: string;
@@ -24,7 +24,7 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
-  Usages?: TemplateType[];
+  Usages?: TemplateParamUsage[];
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
@@ -38,10 +38,25 @@ export type ModbusParam = TemplateParam & {
 
 export type DeviceValues = {
   type: ConfigType;
-  icon: string | undefined;
-  deviceProduct: string | undefined;
-  yaml: string | undefined;
+  icon?: string;
+  deviceProduct?: string;
+  yaml?: string;
   template: string | null;
+  deviceTitle?: string;
+  deviceIcon?: string;
+  usage?: MeterTemplateUsage;
+  heating?: boolean;
+  integrateddevice?: boolean;
+  stationid?: string;
+  [key: string]: any;
+};
+
+export type ApiData = {
+  type?: ConfigType;
+  icon?: string;
+  usage?: MeterTemplateUsage;
+  title?: string;
+  identifiers?: string[];
   [key: string]: any;
 };
 
@@ -85,8 +100,9 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return api.post(url, data, { timeout });
   }
 
-  function update(id: number, data: any) {
-    return api.put(`config/devices/${deviceType}/${id}`, data);
+  function update(id: number, data: any, force = false) {
+    const params = { force };
+    return api.put(`config/devices/${deviceType}/${id}`, data, { params });
   }
 
   function remove(id: number) {
@@ -98,8 +114,9 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function create(data: any) {
-    const response = await api.post(`config/devices/${deviceType}`, data);
+  async function create(data: any, force = false) {
+    const params = { force };
+    const response = await api.post(`config/devices/${deviceType}`, data, { params });
     return response.data;
   }
 

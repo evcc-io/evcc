@@ -21,7 +21,7 @@ func Init() error {
 	return db.Instance.AutoMigrate(new(Cache))
 }
 
-func Put(key string, value interface{}) error {
+func Put(key string, value any) error {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func Put(key string, value interface{}) error {
 	}).Error
 }
 
-func Get(key string, result interface{}) error {
+func Get(key string, result any) error {
 	var cacheEntry Cache
 
 	err := db.Instance.First(&cacheEntry, "key = ?", key).Error

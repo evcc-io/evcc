@@ -17,7 +17,7 @@
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
 				:tariff="forecast?.planner"
-				class="mt-2"
+				class="mt-2 mb-4"
 			/>
 			<SmartFeedInPriority
 				:current-limit="smartFeedInPriorityLimit"
@@ -26,7 +26,7 @@
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
-				class="mt-2"
+				class="mt-2 mb-4"
 			/>
 			<LoadpointSettingsBatteryBoost
 				v-if="batteryBoostAvailable"
@@ -269,7 +269,7 @@ export default defineComponent({
 		},
 		currentOption(current: number, isDefault: boolean, phases: number) {
 			const kw = this.fmtPhasePower(current, phases);
-			let name = `${this.fmtNumber(current, current <= 1 ? undefined : 0)} A (${kw})`;
+			let name = `${this.fmtNumber(current, undefined)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}

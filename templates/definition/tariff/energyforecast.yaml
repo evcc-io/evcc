@@ -14,7 +14,7 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://www.energyforecast.de/api/v1/predictions/next_48_hours?fixed_cost_cent=0&vat=0&token={{ .token }}
+    uri: https://www.energyforecast.de/api/v1/predictions/next_48_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}
     jq: |
       map({
         "start": .start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),

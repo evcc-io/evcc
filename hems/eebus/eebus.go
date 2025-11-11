@@ -20,7 +20,9 @@ type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	uc *eebus.UseCasesCS
+	cs *eebus.ControllableSystem
+	ma *eebus.MonitoringAppliance
+	eg *eebus.EnergyGuard
 
 	root api.Circuit
 
@@ -43,7 +45,7 @@ type Limits struct {
 }
 
 // NewFromConfig creates an EEBus HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
 		Ski      string
 		Limits   `mapstructure:",squash"`
@@ -92,7 +94,9 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 	c := &EEBus{
 		log:       util.NewLogger("eebus"),
 		root:      root,
-		uc:        eebus.Instance.ControllableSystem(),
+		cs:        eebus.Instance.ControllableSystem(),
+		ma:        eebus.Instance.MonitoringAppliance(),
+		eg:        eebus.Instance.EnergyGuard(),
 		Connector: eebus.NewConnector(),
 		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:  interval,
@@ -119,29 +123,39 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 		return nil, err
 	}
 
-	// scenarios
-	for _, s := range c.uc.LPC.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("LPC RemoteEntitiesScenarios:", s.Scenarios)
+	// controllable system
+	for _, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("CS LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.uc.LPP.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("LPP RemoteEntitiesScenarios:", s.Scenarios)
+	for _, s := range c.cs.CsLPPInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("CS LPP RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
+
+	// monitoring appliance
+	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MA MPC RemoteEntitiesScenarios:", s.Scenarios)
+	}
+	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	// energy guard
+	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
 	// set initial values
-	if err := c.uc.LPC.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("LPC SetConsumptionNominalMax:", err)
+	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
 	}
-	if err := c.uc.LPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
-		c.log.ERROR.Println("LPC SetConsumptionLimit:", err)
+	if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
+		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
-		c.log.ERROR.Println("LPC SetFailsafeConsumptionActivePowerLimit:", err)
+	if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
+		c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
-		c.log.ERROR.Println("LPC SetFailsafeDurationMinimum:", err)
+	if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
 	}
 
 	return c, nil
