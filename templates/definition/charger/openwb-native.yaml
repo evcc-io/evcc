@@ -116,11 +116,11 @@ params:
       en: Duration of CP interruption
       de: Dauer der CP Unterbrechnung
     help:
-      en: when phase-switching and waking up car.
-      de: bei der Phasenumschaltung und Aufwecken des Autos.
+      en: when phase-switching and waking up car. Minimum 5 seconds.
+      de: bei der Phasenumschaltung und Aufwecken des Autos. Mindestens 5 Sekunden.
     default: 10s
     advanced: true
-  - name: chargePoint
+  - name: chargepoint
     type: int
     description:
       en: Chargepoint id
@@ -135,4 +135,5 @@ render: |
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
   cpwait: {{ .cpwait }}
+  chargepoint: {{ .chargepoint }}
   {{- include "modbus" . }}

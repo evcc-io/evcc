@@ -11,12 +11,27 @@ import (
 	"github.com/holoplot/go-evdev"
 )
 
+type RfIdContainer struct {
+	mut  sync.Mutex
+	rfId string
+}
+
+func (c *RfIdContainer) Set(rfId string) {
+	c.mut.Lock()
+	defer c.mut.Unlock()
+	c.rfId = rfId
+}
+
+func (c *RfIdContainer) Get() string {
+	return c.rfId
+}
+
 // NewRFIDHandler initializes RFID device monitoring and returns the channel for RFID reads.
 // It also returns a cancel function to stop monitoring and clean up resources.
-func NewRFIDHandler(rfIdVidPid string, ctx context.Context, log *util.Logger) (chan string, func(), error) {
+func NewRFIDHandler(rfIdVidPid string, ctx context.Context, rfIdContainer *RfIdContainer, log *util.Logger) (func(), error) {
 	devicePaths, err := evdev.ListDevicePaths()
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot list device paths: %w", err)
+		return nil, fmt.Errorf("cannot list device paths: %w", err)
 	}
 
 	var keyboardPaths []string
@@ -45,26 +60,24 @@ func NewRFIDHandler(rfIdVidPid string, ctx context.Context, log *util.Logger) (c
 		}
 	}
 
-	rfIdChannel := make(chan string, 10)
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
 	for _, p := range keyboardPaths {
 		wg.Go(func() {
-			monitorKeyboardRFID(ctx, p, log, rfIdChannel)
+			monitorKeyboardRFID(ctx, p, log, rfIdContainer)
 		})
 	}
 	cleanup := func() {
 		cancel()
 		wg.Wait()
-		close(rfIdChannel)
 	}
-	return rfIdChannel, cleanup, nil
+	return cleanup, nil
 }
 
 // monitorKeyboardRFID listens for RFID input events from the specified device path `p`
 // and sends complete RFID reads to the `rfIdChannel` channel.
 // It stops when the context is cancelled and signals completion via the WaitGroup.
-func monitorKeyboardRFID(ctx context.Context, p string, log *util.Logger, rfIdChannel chan string) {
+func monitorKeyboardRFID(ctx context.Context, p string, log *util.Logger, rfIdContainer *RfIdContainer) {
 	dev, err := evdev.Open(p)
 	if err != nil {
 		log.ERROR.Printf("Cannot read %s: %v\n", p, err)
@@ -89,8 +102,8 @@ func monitorKeyboardRFID(ctx context.Context, p string, log *util.Logger, rfIdCh
 				if e.Value == 1 {
 					log.DEBUG.Printf("Received keystroke \"%s\"", e.CodeName())
 					if e.Code == evdev.KEY_ENTER || e.Code == evdev.KEY_KPENTER {
-						log.DEBUG.Printf("Received enter key, sending RFID \"%s\" to channel", builder.String())
-						rfIdChannel <- builder.String()
+						log.DEBUG.Printf("Received enter key, setting RFID \"%s\"", builder.String())
+						rfIdContainer.Set(builder.String())
 						builder.Reset()
 					} else {
 						if val, ok := convertKeyCodeNameToCharacter(e.CodeName()); ok {

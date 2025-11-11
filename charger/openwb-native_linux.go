@@ -12,12 +12,13 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
+const minCpWaitTime time.Duration = 5 * time.Second
+
 // OpenWbNative charger implementation
 type OpenWbNative struct {
 	api.Charger
 	log         *util.Logger
-	rfIdChannel chan string
-	rfId        string
+	rfId        native.RfIdContainer
 	cpWait      time.Duration
 	chargePoint int
 	chargeState api.ChargeStatus
@@ -57,15 +58,14 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	if (chargePoint < 0) || (chargePoint > 1) {
 		return nil, fmt.Errorf("invalid chargepoint value: %d", chargePoint)
 	}
-
-	log := util.NewLogger("openwb-native")
-
-	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
-	if err != nil {
-		return nil, err
+	if cpWait < minCpWaitTime {
+		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cpWait.String(), minCpWaitTime)
 	}
 
-	chargeState, err := evse.Status()
+	log := util.NewLogger("openwb-native")
+	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, chargepoint %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), chargePoint)
+
+	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		log:         log,
 		cpWait:      cpWait,
 		chargePoint: chargePoint,
-		chargeState: chargeState,
+		chargeState: api.StatusNone,
 	}
 
 	var (
@@ -89,11 +89,10 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	}
 
 	if rfIdVidPid != "" {
-		rfIdChannel, _, err := native.NewRFIDHandler(rfIdVidPid, ctx, log)
+		_, err := native.NewRFIDHandler(rfIdVidPid, ctx, &wb.rfId, log)
 		if err != nil {
 			return nil, err
 		}
-		wb.rfIdChannel = rfIdChannel
 
 		identify = wb.identify
 	}
@@ -106,7 +105,7 @@ func (wb *OpenWbNative) Status() (api.ChargeStatus, error) {
 	res, err := wb.Charger.Status()
 	if wb.chargeState != api.StatusA && res == api.StatusA {
 		// Status changed from connected/charging to not connected, discard rfid
-		wb.rfId = ""
+		wb.rfId.Set("")
 	}
 	wb.chargeState = res
 	return res, err
@@ -182,14 +181,5 @@ func (wb *OpenWbNative) gpioWakeup() error {
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWbNative) identify() (string, error) {
-	for {
-		select {
-		case rfid := <-wb.rfIdChannel:
-			wb.log.DEBUG.Printf("Read RFID \"%s\" from channel", rfid)
-			wb.rfId = rfid
-		default:
-			wb.log.DEBUG.Printf("Returning RFID \"%s\"", wb.rfId)
-			return wb.rfId, nil
-		}
-	}
+	return wb.rfId.Get(), nil
 }
