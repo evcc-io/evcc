@@ -489,7 +489,6 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "Ange ditt lösenord för att ladda hem databasfilen.",
           "description": "Säkerhetskopiera dina data. Denna fil används för att återställa data i händelse av en systemkrasch.",
           "title": "Säkerhetskopia"
         },
