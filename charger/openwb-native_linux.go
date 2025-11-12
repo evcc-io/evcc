@@ -89,7 +89,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	}
 
 	if rfIdVidPid != "" {
-		_, err := native.NewRFIDHandler(rfIdVidPid, ctx, &wb.rfId, log)
+		err := native.NewRFIDHandler(rfIdVidPid, ctx, &wb.rfId, log)
 		if err != nil {
 			return nil, err
 		}

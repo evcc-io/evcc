@@ -28,12 +28,11 @@ func (c *RfIdContainer) Get() string {
 
 // NewRFIDHandler initializes RFID device monitoring and returns the channel for RFID reads.
 // It also returns a cancel function to stop monitoring and clean up resources.
-func NewRFIDHandler(rfIdVidPid string, ctx context.Context, rfIdContainer *RfIdContainer, log *util.Logger) (func(), error) {
+func NewRFIDHandler(rfIdVidPid string, ctx context.Context, rfIdContainer *RfIdContainer, log *util.Logger) error {
 	devicePaths, err := evdev.ListDevicePaths()
 	if err != nil {
-		return nil, fmt.Errorf("cannot list device paths: %w", err)
+		return fmt.Errorf("cannot list device paths: %w", err)
 	}
-
 	var keyboardPaths []string
 	for _, d := range devicePaths {
 		log.DEBUG.Printf("Device path: %s | Name: %s\n", d.Path, d.Name)
@@ -47,7 +46,6 @@ func NewRFIDHandler(rfIdVidPid string, ctx context.Context, rfIdContainer *RfIdC
 			log.WARN.Printf("Cannot get InputID for %s: %s", d.Path, err)
 			continue
 		}
-
 		if fmt.Sprintf("%x:%x", inputId.Vendor, inputId.Product) == rfIdVidPid {
 			log.DEBUG.Printf("found input device which matches VID:PID %s", rfIdVidPid)
 			events := dev.CapableEvents(evdev.EV_KEY)
@@ -59,19 +57,10 @@ func NewRFIDHandler(rfIdVidPid string, ctx context.Context, rfIdContainer *RfIdC
 			}
 		}
 	}
-
-	var wg sync.WaitGroup
-	ctx, cancel := context.WithCancel(ctx)
 	for _, p := range keyboardPaths {
-		wg.Go(func() {
-			monitorKeyboardRFID(ctx, p, log, rfIdContainer)
-		})
+		go monitorKeyboardRFID(ctx, p, log, rfIdContainer)
 	}
-	cleanup := func() {
-		cancel()
-		wg.Wait()
-	}
-	return cleanup, nil
+	return nil
 }
 
 // monitorKeyboardRFID listens for RFID input events from the specified device path `p`
