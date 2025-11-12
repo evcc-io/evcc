@@ -20,12 +20,13 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    default: Home
+    service: homeassistant/homes
   - name: power
     description:
       de: Leistungsentität
       en: Power Entity
     required: true
+    service: homeassistant/home/{name}/entities
     example: "sensor.house_power"
     help:
       en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").

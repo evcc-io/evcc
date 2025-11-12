@@ -1,45 +1,23 @@
 package homeassistant
 
 import (
-	"errors"
 	"sync"
 
-	"github.com/evcc-io/evcc/plugin/auth"
 	"golang.org/x/oauth2"
 )
 
-type proxyInstance struct {
-	mu       sync.Mutex
-	name     string
-	instance *auth.HomeAssistantInstance
+type instance struct {
+	URI string
+	oauth2.TokenSource
 }
 
-func (inst *proxyInstance) URI() string {
-	inst.mu.Lock()
-	defer inst.mu.Unlock()
+var (
+	mu        sync.Mutex
+	instances = make(map[string]*instance)
+)
 
-	if inst.instance == nil {
-		inst.instance = auth.HomeAssistantInstanceNyName(inst.name)
-
-		if inst.instance == nil {
-			return ""
-		}
-	}
-
-	return inst.instance.URI
-}
-
-func (inst *proxyInstance) Token() (*oauth2.Token, error) {
-	inst.mu.Lock()
-	defer inst.mu.Unlock()
-
-	if inst.instance == nil {
-		inst.instance = auth.HomeAssistantInstanceNyName(inst.name)
-
-		if inst.instance == nil {
-			return nil, errors.New("not logged in")
-		}
-	}
-
-	return inst.instance.Token()
+func instanceByName(name string) *instance {
+	mu.Lock()
+	defer mu.Unlock()
+	return instances[name]
 }
