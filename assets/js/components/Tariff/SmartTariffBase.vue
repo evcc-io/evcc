@@ -149,9 +149,6 @@ export default defineComponent({
 			}
 			return [];
 		},
-		activeLabel() {
-			return this.active ? this.$t("smartCost.active") : this.$t("smartCost.inactive");
-		},
 		limitOptions(): SelectOption<number>[] {
 			const { max } = this.optionsCostRange;
 
