@@ -29,7 +29,7 @@ func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[str
 	for _, dev := range h.Devices() {
 		dc, err := deviceConfigMap(class, dev)
 		if err != nil {
-			return nil, err
+			dc["error"] = err.Error()
 		}
 
 		res = append(res, dc)
@@ -94,17 +94,17 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 
 		props, err := propsToMap(configurable.Properties())
 		if err != nil {
-			return nil, err
+			return dc, err
 		}
 
 		if err := mergo.Merge(&dc, props); err != nil {
-			return nil, err
+			return dc, err
 		}
 
 		if conf.Type == typeTemplate {
 			params, err := sanitizeMasked(class, conf.Other)
 			if err != nil {
-				return nil, err
+				return dc, err
 			}
 			dc["config"] = params
 		} else {
