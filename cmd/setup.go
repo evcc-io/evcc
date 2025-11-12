@@ -951,31 +951,32 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string) error {
+	var err error
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var data T
+	if err := settings.Yaml(key, new(T), &data); err == nil {
+		settings.SetJson(key, data)
+		log.INFO.Printf("migrated %s setting to JSON", key)
+	}
+
+	return err
+}
+
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	if settings.Exists(keys.ModbusProxy) {
-		isJson, err := settings.IsJson(keys.ModbusProxy)
-
-		if err != nil {
+		// TODO: delete if not needed any more
+		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
 			return err
-		}
-
-		if !isJson {
-			var proxies []globalconfig.ModbusProxy
-
-			err := settings.Yaml(keys.ModbusProxy, new([]globalconfig.ModbusProxy), &proxies)
-			if err != nil {
-				return err
-			}
-
-			settings.SetJson(keys.ModbusProxy, proxies)
-
-			if err := settings.Persist(); err != nil {
-				return err
-			}
 		}
 
 		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
-			return err
+			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
 		}
 	}
 

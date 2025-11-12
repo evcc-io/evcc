@@ -242,15 +242,9 @@ func Yaml(key string, other, res any) error {
 	return DecodeOtherSliceOrMap(other, res)
 }
 
-func IsJson(key string) (bool, error) {
+func IsJson(key string) bool {
 	s, err := String(key)
-
-	if err != nil {
-		return false, err
-	}
-
-	var data json.RawMessage
-	return json.Unmarshal([]byte(s), &data) == nil, nil
+	return err == nil && json.Unmarshal([]byte(s), &json.RawMessage{}) == nil
 }
 
 // wrapping Settings into a struct for better decoupling

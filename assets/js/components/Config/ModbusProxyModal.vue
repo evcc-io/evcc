@@ -16,7 +16,7 @@
 			<div class="mb-3">
 				<SponsorTokenRequired v-if="!isSponsor" feature />
 				<pre class="text-monospace my-5">{{ ASCII_DIAGRAM }}</pre>
-				<div v-for="(c, index) in values" :key="index">
+				<div v-for="(c, index) in values" :key="index" data-testid="modbusproxy-connection">
 					<div class="d-block">
 						<hr class="mt-5" />
 						<h5>
@@ -34,12 +34,12 @@
 									</h5>
 								</div>
 								<FormRow
-									id="modbusProxySourcePort"
+									:id="formId(index, 'sourcePort')"
 									:label="$t('config.modbus.port')"
 									:help="$t('config.modbusproxy.sourcePortHelp')"
 								>
 									<PropertyField
-										id="modbusProxySourcePort"
+										:id="formId(index, 'sourcePort')"
 										v-model="c.port"
 										property="port"
 										type="Int"
@@ -48,12 +48,12 @@
 									/>
 								</FormRow>
 								<FormRow
-									id="modbusProxyReadonly"
+									:id="formId(index, 'readonly')"
 									:label="$t('config.modbusproxy.readonly.label')"
 									:help="getReadonlyHelp(c.readonly)"
 								>
 									<SelectGroup
-										id="modbusProxyReadonly"
+										:id="formId(index, 'readonly')"
 										v-model="c.readonly"
 										class="w-100"
 										:options="readonlyOptions"
@@ -91,7 +91,7 @@
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
 									v-model:device="c.settings.device"
-									:modbus="getModbus(c)"
+									:modbus="getModbus(c.settings)"
 									:host="getHost(c.settings.uri)"
 									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
@@ -186,16 +186,14 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		getModbus(c: ModbusProxy) {
-			if (!c.settings.uri && !c.settings.device) {
-				return MODBUS_TYPE.TCPIP;
+		formId(index: number, name: string) {
+			return `modbusproxy-connection-${index}-${name}`;
+		},
+		getModbus(s: ModbusProxySettings) {
+			if (s.device) {
+				return MODBUS_TYPE.RS485_SERIAL;
 			}
-
-			if (c.settings.rtu) {
-				return c.settings.uri ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.RS485_SERIAL;
-			}
-
-			return MODBUS_TYPE.TCPIP;
+			return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
 		},
 		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
 			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
@@ -230,7 +228,7 @@ export default defineComponent({
 			switch (modbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
 					settings.uri = undefined;
-					settings.rtu = true;
+					settings.rtu = undefined;
 					break;
 				case MODBUS_TYPE.RS485_TCPIP:
 				case MODBUS_TYPE.TCPIP:

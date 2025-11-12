@@ -51,12 +51,12 @@
 	</FormRow>
 	<div v-if="connection === MODBUS_CONNECTION.TCPIP">
 		<FormRow
-			id="modbusHost"
+			:id="formId('modbusHost')"
 			:label="$t('config.modbus.host')"
 			:help="$t('config.modbus.hostHint')"
 		>
 			<PropertyField
-				id="modbusHost"
+				:id="formId('modbusHost')"
 				property="host"
 				type="String"
 				class="me-2"
@@ -65,9 +65,9 @@
 				@change="$emit('update:host', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusPort" :label="$t('config.modbus.port')">
+		<FormRow :id="formId('modbusPort')" :label="$t('config.modbus.port')">
 			<PropertyField
-				id="modbusPort"
+				:id="formId('modbusPort')"
 				property="port"
 				type="Int"
 				class="me-2 w-50"
@@ -78,7 +78,7 @@
 		</FormRow>
 		<FormRow
 			v-if="showProtocolOptions"
-			id="modbusTcp"
+			:id="formId('modbusTcp')"
 			:label="$t('config.modbus.protocol')"
 			:help="
 				protocol === 'tcp'
@@ -118,12 +118,12 @@
 	</div>
 	<div v-else>
 		<FormRow
-			id="modbusDevice"
+			:id="formId('modbusDevice')"
 			:label="$t('config.modbus.device')"
 			:help="$t('config.modbus.deviceHint')"
 		>
 			<PropertyField
-				id="modbusDevice"
+				:id="formId('modbusDevice')"
 				property="device"
 				type="String"
 				class="me-2"
@@ -132,9 +132,9 @@
 				@change="$emit('update:device', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusBaudrate" :label="$t('config.modbus.baudrate')">
+		<FormRow :id="formId('modbusBaudrate')" :label="$t('config.modbus.baudrate')">
 			<PropertyField
-				id="modbusBaudrate"
+				:id="formId('modbusBaudrate')"
 				property="baudrate"
 				type="Choice"
 				class="me-2 w-50"
@@ -144,9 +144,9 @@
 				@change="$emit('update:baudrate', parseInt($event.target.value))"
 			/>
 		</FormRow>
-		<FormRow id="modbusComset" :label="$t('config.modbus.comset')">
+		<FormRow :id="formId('modbusComset')" :label="$t('config.modbus.comset')">
 			<PropertyField
-				id="modbusComset"
+				:id="formId('modbusComset')"
 				property="comset"
 				type="Choice"
 				class="me-2 w-50"
@@ -202,7 +202,6 @@ export default defineComponent({
 		"update:device",
 		"update:baudrate",
 		"update:comset",
-		"update:protocol",
 	],
 	data() {
 		return {
