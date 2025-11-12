@@ -19,6 +19,7 @@ const SAVINGS_REGION = "savings_region";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
+const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 
 function read(key: string) {
   return window.localStorage[key];
@@ -45,6 +46,16 @@ function readBool(key: string) {
 function saveBool(key: string) {
   return (value: boolean) => {
     save(key)(value ? "true" : "false");
+  };
+}
+
+function readNumber(key: string) {
+  return read(key) ? parseFloat(read(key)) : undefined;
+}
+
+function saveNumber(key: string) {
+  return (value: number | undefined) => {
+    save(key)(value ? value.toString() : null);
   };
 }
 
@@ -83,6 +94,8 @@ export interface LoadpointSettings {
   order?: number;
   visible?: boolean;
   info?: SessionInfoKey;
+  lastSmartCostLimit?: number;
+  lastSmartFeedInPriorityLimit?: number;
 }
 
 export interface Settings {
@@ -103,6 +116,7 @@ export interface Settings {
   sessionsType: string;
   solarAdjusted: boolean;
   loadpoints: Record<string, LoadpointSettings>;
+  lastBatterySmartCostLimit: number | undefined;
 }
 
 const settings: Settings = reactive({
@@ -123,6 +137,7 @@ const settings: Settings = reactive({
   sessionsType: read(SESSIONS_TYPE),
   solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
   loadpoints: readJSON(LOADPOINTS),
+  lastBatterySmartCostLimit: readNumber(LAST_BATTERY_SMART_COST_LIMIT),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -142,6 +157,7 @@ watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
+watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
 
 export default settings;
 

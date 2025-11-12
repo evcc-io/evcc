@@ -489,7 +489,6 @@
         "backup": {
           "action": "Atsisiųsti atsarginę kopiją...",
           "confirmationButton": "Atsisiųsti atsarginę kopiją",
-          "confirmationText": "Norėdami atsisiųsti duomenų bazės failą, įveskite slaptažodį.",
           "description": "Sukurkite duomenų atsarginę kopiją faile. Šis failas gali būti naudojamas duomenims atkurti sistemos gedimo atveju.",
           "title": "Atsarginė kopija"
         },
