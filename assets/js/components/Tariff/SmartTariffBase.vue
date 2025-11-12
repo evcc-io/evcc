@@ -48,7 +48,7 @@
 			</div>
 		</div>
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
-			<div class="text-start">
+			<div class="text-start" data-testid="active-hours">
 				<div class="label">
 					{{ activeHoursLabel }}
 				</div>

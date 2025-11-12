@@ -9,12 +9,14 @@ import {
 } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
-test.beforeAll(async () => {
+test.beforeEach(async () => {
   await startSimulator();
   await start(simulatorConfig());
 });
-test.afterAll(async () => {
+
+test.afterEach(async () => {
   await stop();
   await stopSimulator();
 });
@@ -40,6 +42,7 @@ test.describe("smart cost limit", async () => {
     await expect(modal).toBeVisible();
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption("≤ 40.0 ct/kWh");
+    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "48 hr"].join(""));
     await modal.getByLabel("Close").click();
     await expect(modal).not.toBeVisible();
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
@@ -52,6 +55,7 @@ test.describe("smart cost limit", async () => {
     await expect(modal).toBeVisible();
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption("≤ 10.0 ct/kWh");
+    await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
     await modal.getByLabel("Close").click();
     await expect(modal).not.toBeVisible();
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
