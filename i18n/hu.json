@@ -475,7 +475,6 @@
         "backup": {
           "action": "Biztonsági mentés letöltése...",
           "confirmationButton": "Biztonsági mentés letöltése",
-          "confirmationText": "Kérjük, adja meg jelszavát az adatbázisfájl letöltéséhez.",
           "description": "Készítsen biztonsági másolatot adatairól egy fájlba. Ez a fájl használható az adatok visszaállítására rendszerhiba esetén.",
           "title": "Biztonsági mentés"
         },

@@ -2,6 +2,7 @@
 	<SmartTariffBase
 		v-bind="labels"
 		:current-limit="currentLimit"
+		:last-limit="lastLimit"
 		:currency="currency"
 		:apply-all="multipleLoadpoints"
 		:possible="possible"
@@ -23,6 +24,7 @@ import { defineComponent, type PropType } from "vue";
 import SmartTariffBase from "./SmartTariffBase.vue";
 import api from "@/api";
 import { type CURRENCY } from "@/types/evcc";
+import { setLoadpointLastSmartFeedInPriorityLimit } from "@/uiLoadpoints";
 
 export default defineComponent({
 	name: "SmartFeedInPriority",
@@ -32,8 +34,9 @@ export default defineComponent({
 			type: [Number, null] as PropType<number | null>,
 			required: true,
 		},
+		lastLimit: Number,
 		currency: String as PropType<CURRENCY>,
-		loadpointId: { type: Number, required: true },
+		loadpointId: { type: String, required: true },
 		multipleLoadpoints: Boolean,
 		possible: Boolean,
 		tariff: Array,
@@ -62,16 +65,20 @@ export default defineComponent({
 			// Smart feed-in priority: pause when rates are above or equal to limit
 			return value >= this.currentLimit;
 		},
-		async saveLimit(limit: string) {
-			const url = `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`;
+		async saveLimit(limit: number) {
+			// save last selected value to be suggest again when reactivating limit
+			this.saveLastLimit(limit);
 
-			if (limit === "null") {
-				await api.delete(url);
-			} else {
-				await api.post(`${url}/${encodeURIComponent(limit)}`);
-			}
+			const url = `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`;
+			await api.post(`${url}/${encodeURIComponent(limit)}`);
+		},
+		saveLastLimit(limit: number) {
+			setLoadpointLastSmartFeedInPriorityLimit(this.loadpointId, limit);
 		},
 		async deleteLimit() {
+			// save last selected value to be suggest again when reactivating limit
+			this.saveLastLimit(this.currentLimit || 0);
+
 			const url = `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`;
 			await api.delete(url);
 		},

@@ -489,7 +489,7 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "Please enter your password to download the database file.",
+          "confirmationText": "Download the database file.",
           "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
           "title": "Backup"
         },
@@ -1173,6 +1173,7 @@
     "cleanTitle": "Clean Grid Charging",
     "co2Label": "CO₂ emission",
     "co2Limit": "CO₂ limit",
+    "enable": "Enable limit",
     "loadpointDescription": "Enables temporary fast-charging in solar mode.",
     "modalTitle": "Smart Grid Charging",
     "none": "none",

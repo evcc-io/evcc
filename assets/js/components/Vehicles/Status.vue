@@ -273,7 +273,7 @@ export default defineComponent({
 					tooltipContent: this.vehicleLimitReached
 						? t("vehicleLimitReached")
 						: this.vehicleLimitWarning
-							? t("targetIsAboveVehicleLimit")
+							? this.$t("main.targetCharge.targetIsAboveVehicleLimit")
 							: t("vehicleLimit"),
 					iconComponent: this.vehicleLimitReached
 						? VehicleLimitReachedIcon

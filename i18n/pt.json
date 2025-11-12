@@ -472,7 +472,6 @@
         "backup": {
           "action": "Descarregar cópia de segurança...",
           "confirmationButton": "Descarregar cópia de segurança",
-          "confirmationText": "Introduza a sua palavra-passe para descarregar o ficheiro da base de dados.",
           "description": "Faça uma cópia de segurança dos seus dados para um ficheiro. Este ficheiro pode ser utilizado para restaurar os seus dados em caso de falha do sistema.",
           "title": "Cópia de segurança"
         },

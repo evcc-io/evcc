@@ -148,6 +148,7 @@ type Loadpoint struct {
 	planTime     time.Time        // time goal
 	planStrategy api.PlanStrategy // plan strategy (precondition, continuous)
 	planEnergy   float64          // Plan charge energy in kWh (dumb vehicles)
+  planEnergyOffset float64       // already charged energy in kWh when plan was set
 	planSlotEnd  time.Time        // current plan slot end time
 	planActive   bool             // charge plan exists and has a currently active slot
 
@@ -519,6 +520,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// create charging session
 	lp.createSession()
+
+	// reset energy-based charging plan offset
+	lp.planEnergyOffset = 0
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -1748,7 +1752,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
-	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleHasFeature(api.Streaming) || lp.vehicleSocPollAllowed() {
+	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())

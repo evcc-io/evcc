@@ -366,6 +366,8 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	}
 
 	lp.planTime = finishAt
+	lp.planPrecondition = precondition
+	lp.planEnergyOffset = lp.getChargedEnergy() / 1e3
 	lp.publish(keys.PlanTime, finishAt)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
 

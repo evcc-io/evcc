@@ -472,7 +472,6 @@
         "backup": {
           "action": "Sicherung eroflueden...",
           "confirmationButton": "Sicherung eroflueden",
-          "confirmationText": "Tipp wgl. däi Passwuert an, fir d'Datenbankdatei erofzelueden.",
           "description": "Maach eng Sécherheetskopie vun dengen Daten an eng Datei. Dës Datei ka verwennt ginn, fir deng Daten am Fall vum Ausfall vum System ze restauréieren.",
           "title": "Sécheren"
         },
