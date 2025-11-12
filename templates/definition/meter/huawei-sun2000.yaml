@@ -38,7 +38,7 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    default: 2500
+    default: 10000
   - name: maxdischargepower
     default: 2200
   - name: capacity
