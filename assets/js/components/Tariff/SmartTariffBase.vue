@@ -28,6 +28,7 @@
 						v-model.number="selectedLimit"
 						class="form-select form-select-sm"
 						:disabled="!active"
+						:aria-label="limitLabel"
 						@change="changeLimit"
 					>
 						<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
@@ -156,7 +157,7 @@ export default defineComponent({
 
 			const values = [] as number[];
 			const stepSize = this.optionStepSize;
-			for (let i = 1; i <= 100; i++) {
+			for (let i = 0; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
 				if (max !== undefined && value > max + stepSize) break;
 				values.push(this.roundLimit(value) as number);

@@ -28,6 +28,7 @@ test.describe("smart feed-in priority", async () => {
     await lp.getByTestId("loadpoint-settings-button").nth(1).click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
+    await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Feed-in limit").selectOption("≥ 10.0 ct/kWh");
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
@@ -39,7 +40,7 @@ test.describe("smart feed-in priority", async () => {
     // remove limit
     await lp.getByTestId("loadpoint-settings-button").nth(1).click();
     await expectModalVisible(modal);
-    await modal.getByLabel("Feed-in limit").selectOption("none");
+    await modal.getByLabel("Enable limit").uncheck();
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
 
@@ -54,6 +55,7 @@ test.describe("smart feed-in priority", async () => {
     await lp1.getByTestId("loadpoint-settings-button").nth(1).click();
     const modal1 = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal1);
+    await modal1.getByLabel("Enable limit").check();
     await modal1.getByLabel("Feed-in limit").selectOption("≥ 10.0 ct/kWh");
     await modal1.getByRole("button", { name: "Apply everywhere?" }).click();
     await modal1.getByLabel("Close").click();

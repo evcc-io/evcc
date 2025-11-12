@@ -36,26 +36,24 @@ test.describe("smart cost limit", async () => {
   test("price below limit", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("loadpoint-settings-button").nth(1).click();
-    await expect(page.getByTestId("loadpoint-settings-modal")).toBeVisible();
-    await page
-      .getByTestId("loadpoint-settings-modal")
-      .getByLabel("Price limit")
-      .selectOption("≤ 40.0 ct/kWh");
-    await page.getByTestId("loadpoint-settings-modal").getByLabel("Close").click();
-    await expect(page.getByTestId("loadpoint-settings-modal")).not.toBeVisible();
+    const modal = page.getByTestId("loadpoint-settings-modal");
+    await expect(modal).toBeVisible();
+    await modal.getByLabel("Enable limit").check();
+    await modal.getByLabel("Price limit").selectOption("≤ 40.0 ct/kWh");
+    await modal.getByLabel("Close").click();
+    await expect(modal).not.toBeVisible();
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
     await expect(page.getByTestId("vehicle-status-smartcost")).toHaveText(/[24]0\.0 ct ≤ 40\.0 ct/);
   });
   test("price above limit", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("loadpoint-settings-button").nth(1).click();
-    await expect(page.getByTestId("loadpoint-settings-modal")).toBeVisible();
-    await page
-      .getByTestId("loadpoint-settings-modal")
-      .getByLabel("Price limit")
-      .selectOption("≤ 10.0 ct/kWh");
-    await page.getByTestId("loadpoint-settings-modal").getByLabel("Close").click();
-    await expect(page.getByTestId("loadpoint-settings-modal")).not.toBeVisible();
+    const modal = page.getByTestId("loadpoint-settings-modal");
+    await expect(modal).toBeVisible();
+    await modal.getByLabel("Enable limit").check();
+    await modal.getByLabel("Price limit").selectOption("≤ 10.0 ct/kWh");
+    await modal.getByLabel("Close").click();
+    await expect(modal).not.toBeVisible();
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
     await expect(page.getByTestId("vehicle-status-smartcost")).toHaveText("≤ 10.0 ct");
   });

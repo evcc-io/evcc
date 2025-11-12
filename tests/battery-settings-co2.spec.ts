@@ -19,6 +19,7 @@ test.describe("battery settings co2", async () => {
     await expectModalVisible(modal);
 
     await modal.getByRole("link", { name: "Grid charging" }).click();
+    await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 150 g/kWh" });
     await expect(modal).toContainText("20 g – 150 g");
     await page.getByRole("button", { name: "Close" }).click();

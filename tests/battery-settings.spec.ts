@@ -47,6 +47,7 @@ test.describe("battery settings", async () => {
     await expectModalVisible(modal);
 
     await modal.getByRole("link", { name: "Grid charging" }).click();
+    await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
     await expect(modal).toContainText("5.0 ct – 50.0 ct");
     await page.getByRole("button", { name: "Close" }).click();
