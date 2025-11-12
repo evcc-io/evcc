@@ -261,6 +261,8 @@ export interface UiLoadpoint extends Loadpoint {
   icon: string;
   order: number | null;
   visible: boolean;
+  lastSmartCostLimit: number | undefined;
+  lastSmartFeedInPriorityLimit: number | undefined;
 }
 
 export enum THEME {
