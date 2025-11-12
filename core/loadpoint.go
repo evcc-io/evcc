@@ -1746,7 +1746,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
-	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleHasFeature(api.Streaming) || lp.vehicleSocPollAllowed() {
+	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())
