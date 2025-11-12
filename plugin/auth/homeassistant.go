@@ -12,6 +12,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://developers.home-assistant.io/docs/auth_api
+
 func init() {
 	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 
