@@ -906,6 +906,12 @@ call updateSession {
 }
 ```
 
+## clearCache
+
+Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching.
+
+**Tags:** system
+
 ## getLogAreas
 
 Returns a list of all log areas (e.g. `lp-1`, `site`, `db`).
