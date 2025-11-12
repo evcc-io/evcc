@@ -144,13 +144,13 @@ type Loadpoint struct {
 	socEstimator   *soc.Estimator
 
 	// charge planning
-	planner      *planner.Planner
-	planTime     time.Time        // time goal
-	planStrategy api.PlanStrategy // plan strategy (precondition, continuous)
-	planEnergy   float64          // Plan charge energy in kWh (dumb vehicles)
-  planEnergyOffset float64       // already charged energy in kWh when plan was set
-	planSlotEnd  time.Time        // current plan slot end time
-	planActive   bool             // charge plan exists and has a currently active slot
+	planner          *planner.Planner
+	planTime         time.Time        // time goal
+	planStrategy     api.PlanStrategy // plan strategy (precondition, continuous)
+	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
+	planEnergyOffset float64          // already charged energy in kWh when plan was set
+	planSlotEnd      time.Time        // current plan slot end time
+	planActive       bool             // charge plan exists and has a currently active slot
 
 	// cached state
 	status         api.ChargeStatus // Charger status
