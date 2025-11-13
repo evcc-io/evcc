@@ -121,7 +121,7 @@ render: |
       source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 46609 # limit soc
+        address: 46611 # Minimum SoC OnGrid
         type: writesingle
         decode: uint16
   capacity: {{ .capacity }} # kWh

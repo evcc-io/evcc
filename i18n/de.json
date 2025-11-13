@@ -387,7 +387,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät.",
+      "add": "Proxy-Verbindung hinzufügen",
+      "connection": "Verbindung #{number}",
+      "description": "Manche Modbus-Geräte unterstützen nur eine oder sehr wenige Verbindungen. evcc kann als Proxy fungieren und ermöglicht so simultanen Zugriff für mehrere Clients (Hausautomation, Skripte, etc.).",
+      "device": "Gerät",
+      "option": {
+        "deny": "Fehler",
+        "false": "nein",
+        "true": "still"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Schreibzugriff wird mit Modbus-Fehler blockiert.",
+          "false": "Schreibzugriff wird weitergeleitet.",
+          "true": "Schreibzugriff wird ohne Antwort blockiert."
+        },
+        "label": "Nur lesen"
+      },
+      "sourcePortHelp": "Port für eingehende Client-Verbindungen. Muss verfügbar sein.",
       "title": "Modbus-Proxy"
     },
     "mqtt": {
@@ -477,6 +494,7 @@
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
+      "tokenRequiredFeature": "Diese Funktion erfordert ein Sponsortoken.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",
@@ -488,7 +506,7 @@
         "backup": {
           "action": "Sicherung herunterladen...",
           "confirmationButton": "Sicherung herunterladen",
-          "confirmationText": "Bitte gib dein Passwort ein, um die Datenbankdatei herunterzuladen.",
+          "confirmationText": "Lade die Datenbankdatei herunter.",
           "description": "Sichere deine Daten in eine Datei. Diese Datei kann verwendet werden, um deine Daten im Falle eines Systemausfalls wiederherzustellen.",
           "title": "Sichern"
         },
@@ -1165,6 +1183,7 @@
     "cleanTitle": "Sauberes Netzladen",
     "co2Label": "CO₂-Emission",
     "co2Limit": "CO₂-Grenze",
+    "enable": "Grenze aktivieren",
     "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
     "modalTitle": "Smartes Netzladen",
     "none": "keine",
