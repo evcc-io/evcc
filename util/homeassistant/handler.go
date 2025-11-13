@@ -48,13 +48,23 @@ func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	domain := req.URL.Query().Get("domain")
+	domains := strings.Split(req.URL.Query().Get("domain"), ",")
 
 	// cache list of entities
 	w.Header().Set("Cache-control", "max-age=300")
 
 	jsonWrite(w, lo.Map(lo.Filter(res, func(e StateResponse, _ int) bool {
-		return domain == "" || strings.HasPrefix(e.EntityId, domain+".")
+		if len(domains) == 0 {
+			return true
+		}
+
+		for _, domain := range domains {
+			if strings.HasPrefix(e.EntityId, domain+".") {
+				return true
+			}
+		}
+
+		return false
 	}), func(e StateResponse, _ int) string {
 		return e.EntityId
 	}))

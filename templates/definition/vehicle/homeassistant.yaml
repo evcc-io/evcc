@@ -47,7 +47,7 @@ params:
     description:
       de: Ziel-Ladezustand [%]
       en: Target state of charge [%]
-    service: homeassistant/homes/{home}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=number,input_number
     example: "number.vehicle_target_state_of_charge"
     type: string
   - name: odometer
@@ -96,7 +96,7 @@ params:
     description:
       de: Ladestromstärke setzen [A]
       en: Set charging current [A]
-    service: homeassistant/homes/{home}/entities?domain=number
+    service: homeassistant/homes/{home}/entities?domain=number,input_number
     example: "number.vehicle_charging_current"
     type: string
   - preset: vehicle-features
