@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -24,31 +23,31 @@ func Register(name string, handler http.Handler) {
 }
 
 func Handler(base string) http.Handler {
-	return &handler{
+	handler := &handler{
 		base: base,
 	}
+
+	mux := http.NewServeMux()
+	mux.Handle(base+"/{service}", handler)
+
+	return mux
 }
 
 type handler struct {
 	base string
 }
 
+// func (h *handler) HandleService(w http.ResponseWriter, req *http.Request) {
 func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	fmt.Println(req.URL)
+	service := req.PathValue("service")
 
-	path := strings.TrimPrefix(req.URL.Path, h.base)
-	segments := strings.SplitN(path, "/", 2)
-
-	if len(segments) > 0 {
-		service := segments[0]
-
-		if handler, ok := registry[service]; ok {
-			req.URL.Path = strings.Join(segments[1:], "/")
-			handler.ServeHTTP(w, req)
-			return
-		}
+	handler, ok := registry[service]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, `["foo","bar"]`)
+	req.URL.Path = strings.TrimPrefix(req.URL.Path, h.base+"/"+service)
+
+	handler.ServeHTTP(w, req)
 }

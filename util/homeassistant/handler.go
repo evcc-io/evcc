@@ -2,49 +2,68 @@ package homeassistant
 
 import (
 	"encoding/json"
-	"fmt"
 	"maps"
 	"net/http"
 	"slices"
-	"strings"
 
 	"github.com/evcc-io/evcc/server/service"
+	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
+var log = util.NewLogger("homeassistant")
+
 func init() {
-	service.Register("homeassistant", new(handler))
+	handler := new(handler)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /homes", handler.Homes)
+	mux.HandleFunc("GET /homes/{home}/entities", handler.Home)
+
+	service.Register("homeassistant", mux)
 }
 
 type handler struct{}
 
-func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	fmt.Println(req.URL)
+func (h *handler) Homes(w http.ResponseWriter, req *http.Request) {
+	mu.Lock()
+	defer mu.Unlock()
 
-	segments := strings.Split(req.URL.Path, "/")
-	if len(segments) == 0 {
+	jsonWrite(w, slices.Sorted(maps.Keys(instances)))
+}
+
+func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
+	home := req.PathValue("home")
+	if instanceByName(home) == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	switch segments[0] {
-	case "homes":
-		mu.Lock()
-		defer mu.Unlock()
-
-		b, _ := json.Marshal(slices.Sorted(maps.Keys(instances)))
-		fmt.Fprint(w, string(b))
-
-	case "home":
-		if len(segments) != 3 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		fmt.Fprint(w, `["foo","bar"]`)
-
-	default:
-		w.WriteHeader(http.StatusBadRequest)
+	conn, _ := NewConnection(log, home)
+	res, err := conn.GetStates()
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
 	}
+
+	jsonWrite(w, lo.Map(res, func(e StateResponse, _ int) string {
+		return e.EntityId
+	}))
+}
+
+// jsonWrite writes a JSON response
+func jsonWrite(w http.ResponseWriter, data any) {
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.ERROR.Printf("homeassistant: failed to encode JSON: %v", err)
+	}
+}
+
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
+// jsonError writes an error response
+func jsonError(w http.ResponseWriter, status int, message string) {
+	w.WriteHeader(status)
+	jsonWrite(w, errorResponse{Error: message})
 }

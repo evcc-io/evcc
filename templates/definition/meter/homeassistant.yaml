@@ -26,7 +26,7 @@ params:
       de: Leistungsentität
       en: Power Entity
     required: true
-    service: homeassistant/home/{name}/entities
+    service: homeassistant/homes/{name}/entities
     example: "sensor.house_power"
     help:
       en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").

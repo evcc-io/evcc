@@ -37,10 +37,14 @@ func NewConnection(log *util.Logger, name string) (*Connection, error) {
 	return c, nil
 }
 
-// StateResponse represents a Home Assistant entity state
-type StateResponse struct {
-	State      string         `json:"state"`
-	Attributes map[string]any `json:"attributes"`
+// GetStates retrieves the list of entities
+func (c *Connection) GetStates() ([]StateResponse, error) {
+	var res []StateResponse
+	uri := fmt.Sprintf("%s/api/states", c.instance.URI())
+
+	err := c.GetJSON(uri, &res)
+
+	return res, err
 }
 
 // GetState retrieves the state of an entity
