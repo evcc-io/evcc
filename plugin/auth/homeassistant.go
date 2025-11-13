@@ -28,6 +28,7 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 }
 
 func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
+	// TODO callback uri
 	localUri := "http://localhost:7070"
 	redirectUri := localUri + "/providerauth/callback"
 
