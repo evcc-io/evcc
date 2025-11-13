@@ -1,6 +1,10 @@
 <template>
 	<div class="app">
-		<router-view :notifications="notifications" :offline="offline"></router-view>
+		<router-view
+			v-if="state.startup"
+			:notifications="notifications"
+			:offline="offline"
+		></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
