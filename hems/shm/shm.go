@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	sempController   = "Sunny Home Manager"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
