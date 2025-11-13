@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
@@ -24,7 +25,6 @@ import (
 
 const (
 	sempController   = "Sunny Home Manager"
-	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
@@ -53,7 +53,7 @@ type Config struct {
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
-func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
+func NewFromConfig(cfg Config, network globalconfig.Network, site site.API, addr string, router *mux.Router) error {
 	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"

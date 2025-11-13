@@ -1,7 +1,6 @@
 package globalconfig
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -152,18 +151,22 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema string `json:"schema"`
-	Host   string `json:"host"`
-	Port   int    `json:"port"`
+	Schema_     string `json:"schema"`
+	ExternalUrl string `json:"external_url"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
 }
 
 func (c Network) HostPort() string {
-	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+	if c.Port == 80 {
 		return c.Host
 	}
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
 func (c Network) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
+	if c.ExternalUrl != "" {
+		return c.ExternalUrl
+	}
+	return "http://" + c.HostPort()
 }
