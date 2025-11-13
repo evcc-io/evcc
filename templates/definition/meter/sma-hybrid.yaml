@@ -5,6 +5,10 @@ products:
       de: Smart Energy Hybrid-Wechselrichter
       en: Smart Energy Hybrid Inverter
 capabilities: ["battery-control"]
+requirements:
+  description:
+    en: When using active battery control by evcc, the 'Forecast-based Charging' function in the SMA portal must not be active. Otherwise, conflicts may arise when controlling the battery.
+    de: Bei der Nutzung der aktiven Speichersteuerung durch evcc darf die Funktion 'Prognosebasierten Laden' im SMA Portal nicht aktiv sein. Ansonsten kann es zu Konflikten bei der Steuerung des Speichers kommen.
 params:
   - name: usage
     choice: ["pv", "battery"]
