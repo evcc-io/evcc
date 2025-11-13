@@ -48,7 +48,7 @@ type Config struct {
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
-func NewFromConfig(cfg Config, externalUrl string, site site.API, addr string, router *mux.Router) error {
+func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, router *mux.Router) error {
 	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"
@@ -82,7 +82,7 @@ func NewFromConfig(cfg Config, externalUrl string, site site.API, addr string, r
 		uid:  uid.String(),
 		vid:  vendorId,
 		did:  did,
-		uri:  externalUrl,
+		uri:  hostUri,
 	}
 
 	s.handlers(router)
