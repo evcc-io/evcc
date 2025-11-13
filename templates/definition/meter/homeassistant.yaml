@@ -16,7 +16,7 @@ params:
     deprecated: true
   - name: token
     deprecated: true
-  - name: name
+  - name: home
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
@@ -26,7 +26,7 @@ params:
       de: Leistungsentität
       en: Power Entity
     required: true
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_power"
     help:
       en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").
@@ -35,7 +35,7 @@ params:
     description:
       de: Energieentität
       en: Energy Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_energy"
     advanced: true
     help:
@@ -45,7 +45,7 @@ params:
     description:
       de: L1 Stromentität
       en: L1 Current Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_current_l1"
     advanced: true
     help:
@@ -55,7 +55,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 Current Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_current_l2"
     advanced: true
     help:
@@ -65,7 +65,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 Current Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_current_l3"
     advanced: true
     help:
@@ -75,7 +75,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 Voltage Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_voltage_l1"
     advanced: true
     help:
@@ -85,7 +85,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 Voltage Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_voltage_l2"
     advanced: true
     help:
@@ -95,7 +95,7 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 Voltage Entity
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.house_voltage_l3"
     advanced: true
     help:
@@ -105,7 +105,7 @@ params:
     description:
       de: Batterieladestand
       en: Battery State of Charge
-    service: homeassistant/homes/{name}/entities?domain=sensor
+    service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.battery_soc"
     advanced: true
     help:
@@ -119,7 +119,7 @@ params:
   - name: maxacpower
 render: |
   type: homeassistant
-  name: {{ .name }}
+  home: {{ .home }}
   power: {{ .power }}
   energy: {{ .energy }}
   currents:

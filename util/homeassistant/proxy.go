@@ -9,7 +9,7 @@ import (
 
 type proxyInstance struct {
 	mu       sync.Mutex
-	name     string
+	home     string
 	instance *instance
 }
 
@@ -18,7 +18,7 @@ func (inst *proxyInstance) URI() string {
 	defer inst.mu.Unlock()
 
 	if inst.instance == nil {
-		inst.instance = instanceByName(inst.name)
+		inst.instance = instanceByName(inst.home)
 
 		if inst.instance == nil {
 			return ""
@@ -33,7 +33,7 @@ func (inst *proxyInstance) Token() (*oauth2.Token, error) {
 	defer inst.mu.Unlock()
 
 	if inst.instance == nil {
-		inst.instance = instanceByName(inst.name)
+		inst.instance = instanceByName(inst.home)
 
 		if inst.instance == nil {
 			return nil, errors.New("not logged in")

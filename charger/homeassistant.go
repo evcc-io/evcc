@@ -30,7 +30,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		_URI       string `mapstructure:"uri"`   // TODO deprecated
 		_Token     string `mapstructure:"token"` // TODO deprecated
-		Name       string
+		Home       string
 		Status     string   // required - sensor for charge status
 		Enabled    string   // required - sensor for enabled state
 		Enable     string   // required - switch/input_boolean for enable/disable
@@ -40,7 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Currents   []string // optional - current sensors for L1, L2, L3
 		Voltages   []string // optional - voltage sensors for L1, L2, L3
 	}{
-		Name: "Home",
+		Home: "Home",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -58,7 +58,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	log := util.NewLogger("ha-charger")
-	conn, err := homeassistant.NewConnection(log, cc.Name)
+	conn, err := homeassistant.NewConnection(log, cc.Home)
 	if err != nil {
 		return nil, err
 	}

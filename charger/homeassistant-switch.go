@@ -24,22 +24,22 @@ func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error)
 		embed        `mapstructure:",squash"`
 		_URI         string `mapstructure:"uri"`   // TODO deprecated
 		_Token       string `mapstructure:"token"` // TODO deprecated
-		Name         string
+		Home         string
 		Enable       string
 		Power        string
 		StandbyPower float64
 	}{
-		Name: "Home",
+		Home: "Home",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.Name, cc.Enable, cc.Power, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.Home, cc.Enable, cc.Power, cc.StandbyPower)
 }
 
-func NewHomeAssistantSwitch(embed embed, name, enable, power string, standbypower float64) (api.Charger, error) {
+func NewHomeAssistantSwitch(embed embed, home, enable, power string, standbypower float64) (api.Charger, error) {
 	if enable == "" {
 		return nil, errors.New("missing enable switch entity")
 	}
@@ -50,7 +50,7 @@ func NewHomeAssistantSwitch(embed embed, name, enable, power string, standbypowe
 	}
 
 	log := util.NewLogger("ha-switch")
-	conn, err := homeassistant.NewConnection(log, name)
+	conn, err := homeassistant.NewConnection(log, home)
 	if err != nil {
 		return nil, err
 	}

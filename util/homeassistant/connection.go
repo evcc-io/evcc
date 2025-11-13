@@ -22,10 +22,10 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, name string) (*Connection, error) {
+func NewConnection(log *util.Logger, home string) (*Connection, error) {
 	c := &Connection{
 		Helper:   request.NewHelper(log),
-		instance: &proxyInstance{name: name},
+		instance: &proxyInstance{home: home},
 	}
 
 	// Set up authentication headers

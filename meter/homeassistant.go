@@ -26,7 +26,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		_URI     string `mapstructure:"uri"`   // TODO deprecated
 		_Token   string `mapstructure:"token"` // TODO deprecated
-		Name     string
+		Home     string
 		Power    string
 		Energy   string
 		Currents []string
@@ -41,7 +41,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		batterySocLimits   `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
 	}{
-		Name: "Home",
+		Home: "Home",
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
@@ -57,7 +57,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	log := util.NewLogger("ha-meter")
-	conn, err := homeassistant.NewConnection(log, cc.Name)
+	conn, err := homeassistant.NewConnection(log, cc.Home)
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		embed   `mapstructure:",squash"`
 		_URI    string `mapstructure:"uri"`   // TODO deprecated
 		_Token  string `mapstructure:"token"` // TODO deprecated
-		Name    string
+		Home    string
 		Sensors struct {
 			Soc        string // required
 			Range      string // optional
@@ -44,7 +44,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			SetMaxCurrent string // number.* or input_number.* optional
 		}
 	}{
-		Name: "Home",
+		Home: "Home",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -56,7 +56,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	log := util.NewLogger("ha-vehicle")
-	conn, err := homeassistant.NewConnection(log, cc.Name)
+	conn, err := homeassistant.NewConnection(log, cc.Home)
 	if err != nil {
 		return nil, err
 	}
