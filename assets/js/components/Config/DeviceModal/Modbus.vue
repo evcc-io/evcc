@@ -4,41 +4,41 @@
 		id="modbusTcpIp"
 		:label="$t('config.modbus.connection')"
 		:help="
-			connection === 'tcpip'
+			connection === MODBUS_CONNECTION.TCPIP
 				? $t('config.modbus.connectionHintTcpip')
 				: $t('config.modbus.connectionHintSerial')
 		"
 	>
 		<div class="btn-group" role="group">
 			<input
-				id="modbusTcpIp"
+				:id="formId('modbusTcpIp')"
 				v-model="connection"
 				type="radio"
 				class="btn-check"
-				name="modbusConnection"
+				:name="formId('modbusConnection')"
 				value="tcpip"
 				tabindex="0"
 				autocomplete="off"
 			/>
-			<label class="btn btn-outline-primary" for="modbusTcpIp">
+			<label class="btn btn-outline-primary" :for="formId('modbusTcpIp')">
 				{{ $t("config.modbus.connectionValueTcpip") }}
 			</label>
 			<input
-				id="modbusSerial"
+				:id="formId('modbusSerial')"
 				v-model="connection"
 				type="radio"
 				class="btn-check"
-				name="modbusConnection"
+				:name="formId('modbusConnection')"
 				value="serial"
 				tabindex="0"
 				autocomplete="off"
 			/>
-			<label class="btn btn-outline-primary" for="modbusSerial">
+			<label class="btn btn-outline-primary" :for="formId('modbusSerial')">
 				{{ $t("config.modbus.connectionValueSerial") }}
 			</label>
 		</div>
 	</FormRow>
-	<FormRow id="modbusId" :label="$t('config.modbus.id')">
+	<FormRow v-if="!hideModbusId" id="modbusId" :label="$t('config.modbus.id')">
 		<PropertyField
 			id="modbusId"
 			property="id"
@@ -49,14 +49,14 @@
 			@change="$emit('update:id', $event.target.value)"
 		/>
 	</FormRow>
-	<div v-if="connection === 'tcpip'">
+	<div v-if="connection === MODBUS_CONNECTION.TCPIP">
 		<FormRow
-			id="modbusHost"
+			:id="formId('modbusHost')"
 			:label="$t('config.modbus.host')"
 			:help="$t('config.modbus.hostHint')"
 		>
 			<PropertyField
-				id="modbusHost"
+				:id="formId('modbusHost')"
 				property="host"
 				type="String"
 				class="me-2"
@@ -65,9 +65,9 @@
 				@change="$emit('update:host', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusPort" :label="$t('config.modbus.port')">
+		<FormRow :id="formId('modbusPort')" :label="$t('config.modbus.port')">
 			<PropertyField
-				id="modbusPort"
+				:id="formId('modbusPort')"
 				property="port"
 				type="Int"
 				class="me-2 w-50"
@@ -78,7 +78,7 @@
 		</FormRow>
 		<FormRow
 			v-if="showProtocolOptions"
-			id="modbusTcp"
+			:id="formId('modbusTcp')"
 			:label="$t('config.modbus.protocol')"
 			:help="
 				protocol === 'tcp'
@@ -88,29 +88,29 @@
 		>
 			<div class="btn-group" role="group">
 				<input
-					id="modbusTcp"
+					:id="formId('modbusTcp')"
 					v-model="protocol"
 					type="radio"
 					class="btn-check"
-					name="modbusProtocol"
+					:name="formId('modbusProtocol')"
 					value="tcp"
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" for="modbusTcp">
+				<label class="btn btn-outline-primary" :for="formId('modbusTcp')">
 					{{ $t("config.modbus.protocolValueTcp") }}
 				</label>
 				<input
-					id="modbusRtu"
+					:id="formId('modbusRtu')"
 					v-model="protocol"
 					type="radio"
 					class="btn-check"
-					name="modbusProtocol"
+					:name="formId('modbusProtocol')"
 					value="rtu"
 					tabindex="0"
 					autocomplete="off"
 				/>
-				<label class="btn btn-outline-primary" for="modbusRtu">
+				<label class="btn btn-outline-primary" :for="formId('modbusRtu')">
 					{{ $t("config.modbus.protocolValueRtu") }}
 				</label>
 			</div>
@@ -118,12 +118,12 @@
 	</div>
 	<div v-else>
 		<FormRow
-			id="modbusDevice"
+			:id="formId('modbusDevice')"
 			:label="$t('config.modbus.device')"
 			:help="$t('config.modbus.deviceHint')"
 		>
 			<PropertyField
-				id="modbusDevice"
+				:id="formId('modbusDevice')"
 				property="device"
 				type="String"
 				class="me-2"
@@ -132,21 +132,21 @@
 				@change="$emit('update:device', $event.target.value)"
 			/>
 		</FormRow>
-		<FormRow id="modbusBaudrate" :label="$t('config.modbus.baudrate')">
+		<FormRow :id="formId('modbusBaudrate')" :label="$t('config.modbus.baudrate')">
 			<PropertyField
-				id="modbusBaudrate"
+				:id="formId('modbusBaudrate')"
 				property="baudrate"
 				type="Choice"
 				class="me-2 w-50"
 				:choice="baudrateOptions"
 				required
 				:model-value="baudrate || defaultBaudrate"
-				@change="$emit('update:baudrate', $event.target.value)"
+				@change="$emit('update:baudrate', parseInt($event.target.value))"
 			/>
 		</FormRow>
-		<FormRow id="modbusComset" :label="$t('config.modbus.comset')">
+		<FormRow :id="formId('modbusComset')" :label="$t('config.modbus.comset')">
 			<PropertyField
-				id="modbusComset"
+				:id="formId('modbusComset')"
 				property="comset"
 				type="Choice"
 				class="me-2 w-50"
@@ -165,9 +165,13 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
-type Modbus = "rs485serial" | "rs485tcpip" | "tcpip";
-type ConnectionOption = "tcpip" | "serial";
-type ProtocolOption = "tcp" | "rtu";
+import {
+	MODBUS_BAUDRATE,
+	MODBUS_COMSET,
+	MODBUS_CONNECTION,
+	MODBUS_PROTOCOL,
+	MODBUS_TYPE,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "Modbus",
@@ -177,7 +181,7 @@ export default defineComponent({
 			type: Array as PropType<ModbusCapability[]>,
 			default: () => [],
 		},
-		modbus: String as PropType<Modbus>,
+		modbus: String as PropType<MODBUS_TYPE>,
 		host: String,
 		port: [Number, String],
 		id: [Number, String],
@@ -188,6 +192,7 @@ export default defineComponent({
 		defaultId: Number,
 		defaultComset: String,
 		defaultBaudrate: Number,
+		hideModbusId: Boolean,
 	},
 	emits: [
 		"update:modbus",
@@ -198,45 +203,53 @@ export default defineComponent({
 		"update:baudrate",
 		"update:comset",
 	],
-	data(): { connection: ConnectionOption; protocol: ProtocolOption } {
+	data() {
 		return {
-			connection: "tcpip",
-			protocol: "tcp",
+			connection: MODBUS_CONNECTION.TCPIP as MODBUS_CONNECTION,
+			protocol: MODBUS_PROTOCOL.TCP as MODBUS_PROTOCOL,
+			MODBUS_PROTOCOL,
+			MODBUS_CONNECTION,
 		};
 	},
 	computed: {
-		selectedModbus(): Modbus {
-			if (this.connection === "serial") {
-				return "rs485serial";
+		selectedModbus(): MODBUS_TYPE {
+			if (this.connection === MODBUS_CONNECTION.SERIAL) {
+				return MODBUS_TYPE.RS485_SERIAL;
 			}
-			return this.protocol === "rtu" ? "rs485tcpip" : "tcpip";
+			return this.protocol === MODBUS_PROTOCOL.RTU
+				? MODBUS_TYPE.RS485_TCPIP
+				: MODBUS_TYPE.TCPIP;
 		},
 		showConnectionOptions() {
 			return this.capabilities.includes("rs485");
 		},
 		showProtocolOptions() {
-			return this.connection === "tcpip" && this.capabilities.includes("rs485");
+			return (
+				this.connection === MODBUS_CONNECTION.TCPIP && this.capabilities.includes("rs485")
+			);
 		},
 		comsetOptions() {
-			return ["8N1", "8E1", "8N2"].map((v) => {
+			return Object.values(MODBUS_COMSET).map((v) => {
 				return { key: v, name: v };
 			});
 		},
 		baudrateOptions() {
-			return [1200, 9600, 19200, 38400, 57600, 115200].map((v) => {
-				return { key: v, name: `${v}` };
-			});
+			return Object.values(MODBUS_BAUDRATE)
+				.filter((v) => typeof v === "number")
+				.map((v) => {
+					return { key: v, name: `${v}` };
+				});
 		},
 	},
 	watch: {
-		selectedModbus(newValue: Modbus) {
+		selectedModbus(newValue: MODBUS_TYPE) {
 			this.$emit("update:modbus", newValue);
 		},
 		options(newValue: ModbusCapability[]) {
 			this.setProtocolByCapabilities(newValue);
 			this.$emit("update:modbus", this.selectedModbus);
 		},
-		modbus(newValue: Modbus) {
+		modbus(newValue: MODBUS_TYPE) {
 			if (newValue) {
 				this.setConnectionAndProtocolByModbus(newValue);
 			}
@@ -248,23 +261,28 @@ export default defineComponent({
 	},
 	methods: {
 		setProtocolByCapabilities(capabilities: ModbusCapability[]) {
-			this.protocol = capabilities.includes("tcpip") ? "tcp" : "rtu";
+			this.protocol = capabilities.includes("tcpip")
+				? MODBUS_PROTOCOL.TCP
+				: MODBUS_PROTOCOL.RTU;
 		},
-		setConnectionAndProtocolByModbus(modbus?: Modbus) {
+		setConnectionAndProtocolByModbus(modbus?: MODBUS_TYPE) {
 			switch (modbus) {
-				case "rs485serial":
-					this.connection = "serial";
-					this.protocol = "rtu";
+				case MODBUS_TYPE.RS485_SERIAL:
+					this.connection = MODBUS_CONNECTION.SERIAL;
+					this.protocol = MODBUS_PROTOCOL.RTU;
 					break;
-				case "rs485tcpip":
-					this.connection = "tcpip";
-					this.protocol = "rtu";
+				case MODBUS_TYPE.RS485_TCPIP:
+					this.connection = MODBUS_CONNECTION.TCPIP;
+					this.protocol = MODBUS_PROTOCOL.RTU;
 					break;
-				case "tcpip":
-					this.connection = "tcpip";
-					this.protocol = "tcp";
+				case MODBUS_TYPE.TCPIP:
+					this.connection = MODBUS_CONNECTION.TCPIP;
+					this.protocol = MODBUS_PROTOCOL.TCP;
 					break;
 			}
+		},
+		formId(name: string): string {
+			return `${name}-${this.id}`;
 		},
 	},
 });

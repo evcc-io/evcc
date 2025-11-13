@@ -39,14 +39,17 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		var plan *planStruct
+		instance := v.Instance()
+		if instance == nil {
+			continue
+		}
 
+		ac := instance.OnIdentified()
+
+		var plan *planStruct
 		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
 			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
 		}
-
-		instance := v.Instance()
-		ac := instance.OnIdentified()
 
 		res[v.Name()] = vehicleStruct{
 			Title:          instance.GetTitle(),
