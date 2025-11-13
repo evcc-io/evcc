@@ -28,7 +28,7 @@ func Handler(base string) http.Handler {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(base+"/{service}", handler)
+	mux.Handle(base+"/{service}/", handler)
 
 	return mux
 }
