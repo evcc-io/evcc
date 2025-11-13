@@ -59,6 +59,7 @@
         },
         "heatpump": "Pompe à chaleur personnalisée",
         "sgready": "Pompe à chaleur personnalisée (sg-ready via plugins)",
+        "sgready-boost": "Pompe à chaleur personnalisée (sg-ready-boost, obsolète)",
         "sgready-relay": "Pompe à chaleur personnalisée (sg-ready via relays)",
         "switchsocket": "Prise de commutation personnalisée"
       }
@@ -94,6 +95,7 @@
       "currency": "Devise",
       "current": "Courant",
       "currentRange": "Courant",
+      "dimmed": "Atténué",
       "enabled": "Activé",
       "energy": "Énergie",
       "feedinPrice": "Prix de revente",
@@ -118,7 +120,7 @@
       "temp": "Température",
       "topic": "Sujet",
       "url": "URL",
-      "vehicleLimitSoc": "Limite du véhicule",
+      "vehicleLimitSoc": "Limite de charge",
       "yes": "oui"
     },
     "deviceValueChargeStatus": {
@@ -132,7 +134,7 @@
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
-      "batteryStorage": "Batterie",
+      "batteryStorage": "Stockage de la batterie",
       "consumer": "Consommateur",
       "solarSystem": "Système photovoltaïque"
     },
@@ -185,6 +187,7 @@
       "telemetry": "Télémétrie",
       "templateLoading": "Charge...",
       "title": "Titre",
+      "typeDeprecated": "Le type '{type}' est obsolète est sera supprimé dans une future version. Veuillez consulter les notes de modifications et recréer cet appareil.",
       "validateSave": "Valider & enregistrer"
     },
     "grid": {
@@ -355,12 +358,12 @@
       "titleChoice": "Que voulez-vous ajouter ?",
       "titleLabel": "Titre",
       "usage": {
-        "aux": "Compteur de consommateur auto-régulé",
-        "battery": "Compteur de batterie",
-        "charge": "Compteur de chargeur",
-        "grid": "Compteur du réseau",
+        "aux": "Consommateur auto-régulé",
+        "battery": "Batterie",
+        "charge": "Consommateur / Chargeur",
+        "grid": "Réseau",
         "label": "Utilisation",
-        "pv": "Compteur production solaire"
+        "pv": "Production"
       },
       "validateSave": "Valider et enregistrer"
     },
@@ -486,7 +489,6 @@
         "backup": {
           "action": "Télécharger la sauvegarde...",
           "confirmationButton": "Télécharger la sauvegarde",
-          "confirmationText": "Veuillez saisir votre mot de passe pour télécharger le fichier de la base de données.",
           "description": "Sauvegardez vos données dans un fichier. Ce fichier peut être utilisé pour restaurer vos données en cas de défaillance du système.",
           "title": "Sauvegarde"
         },
@@ -939,7 +941,7 @@
       "unknownPrice": "encore inconnu"
     },
     "targetEnergy": {
-      "label": "Limite de charge",
+      "label": "Limite",
       "noLimit": "aucune"
     },
     "vehicle": {

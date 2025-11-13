@@ -468,7 +468,6 @@
         "backup": {
           "action": "Preuzimanje sigurnosne kopije...",
           "confirmationButton": "Preuzmite sigurnosnu kopiju",
-          "confirmationText": "Upišite lozinku kako bi preuzeli bazu podataka.",
           "description": "Pohranite svoje podatke u datoteku. Ova datoteka se može koristiti za vraćanje podataka u slučaju kvara sustava.",
           "title": "Sigurnosna kopija"
         },

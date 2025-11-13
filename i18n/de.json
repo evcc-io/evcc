@@ -488,7 +488,7 @@
         "backup": {
           "action": "Sicherung herunterladen...",
           "confirmationButton": "Sicherung herunterladen",
-          "confirmationText": "Bitte gib dein Passwort ein, um die Datenbankdatei herunterzuladen.",
+          "confirmationText": "Lade die Datenbankdatei herunter.",
           "description": "Sichere deine Daten in eine Datei. Diese Datei kann verwendet werden, um deine Daten im Falle eines Systemausfalls wiederherzustellen.",
           "title": "Sichern"
         },
@@ -1166,6 +1166,7 @@
     "cleanTitle": "Sauberes Netzladen",
     "co2Label": "CO₂-Emission",
     "co2Limit": "CO₂-Grenze",
+    "enable": "Grenze aktivieren",
     "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
     "modalTitle": "Smartes Netzladen",
     "none": "keine",
