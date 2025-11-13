@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -158,15 +159,24 @@ type Network struct {
 }
 
 func (c Network) HostPort() string {
-	if c.Port == 80 {
-		return c.Host
+	host := c.Host
+	if ips := util.LocalIPs(); len(ips) > 0 {
+		host = ips[0].IP.String()
 	}
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+
+	if c.Port == 80 {
+		return host
+	}
+	return net.JoinHostPort(host, strconv.Itoa(c.Port))
 }
 
-func (c Network) URI() string {
+func (c Network) InternalURL() string {
+	return "http://" + c.HostPort()
+}
+
+func (c Network) ExternalURL() string {
 	if c.ExternalUrl != "" {
 		return c.ExternalUrl
 	}
-	return "http://" + c.HostPort()
+	return c.InternalURL()
 }

@@ -255,7 +255,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start SHM server
 	if err == nil {
-		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, conf.Network.ExternalURL(), site, httpd))
 	}
 
 	// start HEMS server
