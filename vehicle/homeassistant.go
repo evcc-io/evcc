@@ -38,10 +38,10 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			FinishTime string // optional
 		}
 		Services struct {
-			Start         string `mapstructure:"start_charging"` // script.*  optional
-			Stop          string `mapstructure:"stop_charging"`  // script.*  optional
-			Wakeup        string // script.*  optional
-			SetMaxCurrent string `mapstructure:"setMaxCurrent"` // number.* or input_number.* optional
+			Start         string `mapstructure:"start_charging"` // script.* optional
+			Stop          string `mapstructure:"stop_charging"`  // script.* optional
+			Wakeup        string // script.* optional
+			SetMaxCurrent string // number.* or input_number.* optional
 		}
 	}{
 		Name: "Home",
