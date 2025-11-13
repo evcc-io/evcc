@@ -38,7 +38,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: forceaccharging
-    default: false
+    default: true
     advanced: true
     type: bool
     usages: ["battery"]
@@ -46,8 +46,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
+      en: Keep AC charging active to charge the storage from other inverters via AC. Disable this option if older Huawei FW versions prevent battery standby at night.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Deaktiviere diese Option, wenn ältere Huawei FW Versionen den Batterie-Standby verhindern.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
