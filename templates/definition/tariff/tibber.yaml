@@ -29,4 +29,3 @@ render: |
   homeid: {{ .homeid }}
   {{ include "tariff-base" . }}
   {{ include "tariff-features" . }}
-  
