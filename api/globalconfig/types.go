@@ -3,6 +3,7 @@ package globalconfig
 import (
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -152,7 +153,7 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema_     string `json:"schema"`
+	Schema_     string `json:"schema"` // TODO deprecated
 	ExternalUrl string `json:"external_url"`
 	Host        string `json:"host"`
 	Port        int    `json:"port"`
@@ -176,7 +177,7 @@ func (c Network) InternalURL() string {
 
 func (c Network) ExternalURL() string {
 	if c.ExternalUrl != "" {
-		return c.ExternalUrl
+		return strings.TrimRight(c.ExternalUrl, "/")
 	}
 	return c.InternalURL()
 }
