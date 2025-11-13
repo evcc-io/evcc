@@ -26,6 +26,8 @@ params:
     advanced: true
   - name: maxchargepower
     default: 10600 # 10.6kW, max allowed value for register
+  - name: maxdischargepower
+    default: 10600 # 10.6kW, max allowed value for register
 render: |
   type: custom
   {{- if eq .usage "grid" }}
