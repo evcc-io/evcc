@@ -146,8 +146,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
 				})
 
-				return eg.Wait()
-
 			case api.BatteryHold:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
@@ -156,8 +154,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				eg.Go(func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MaxSoc)/100))
 				})
-
-				return eg.Wait()
 
 			case api.BatteryCharge:
 				eg.Go(func() error {
@@ -172,10 +168,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
 				})
 
-				return eg.Wait()
 			default:
 				return api.ErrNotAvailable
 			}
+
+			return eg.Wait()
 		}
 	}
 
