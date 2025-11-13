@@ -1,6 +1,6 @@
 <template>
 	<Site
-		v-if="state.startup"
+		v-if="startupDataReceived"
 		:notifications="notifications"
 		v-bind="state"
 		:selected-loadpoint-index="selectedLoadpointIndex"
