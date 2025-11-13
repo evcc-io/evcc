@@ -72,9 +72,7 @@ func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
 
 // jsonWrite writes a JSON response
 func jsonWrite(w http.ResponseWriter, data any) {
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.ERROR.Printf("homeassistant: failed to encode JSON: %v", err)
-	}
+	json.NewEncoder(w).Encode(data)
 }
 
 type errorResponse struct {
