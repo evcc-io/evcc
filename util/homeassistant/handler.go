@@ -46,6 +46,9 @@ func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// cache list of entities
+	w.Header().Set("Cache-control", "max-age=300")
+
 	jsonWrite(w, lo.Map(res, func(e StateResponse, _ int) string {
 		return e.EntityId
 	}))
