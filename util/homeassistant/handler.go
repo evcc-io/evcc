@@ -5,6 +5,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
@@ -34,6 +35,7 @@ func (h *handler) Homes(w http.ResponseWriter, req *http.Request) {
 
 func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
 	home := req.PathValue("home")
+
 	if instanceByName(home) == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -46,10 +48,14 @@ func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	domain := req.URL.Query().Get("domain")
+
 	// cache list of entities
 	w.Header().Set("Cache-control", "max-age=300")
 
-	jsonWrite(w, lo.Map(res, func(e StateResponse, _ int) string {
+	jsonWrite(w, lo.Map(lo.Filter(res, func(e StateResponse, _ int) bool {
+		return domain == "" || strings.HasPrefix(e.EntityId, domain+".")
+	}), func(e StateResponse, _ int) string {
 		return e.EntityId
 	}))
 }
