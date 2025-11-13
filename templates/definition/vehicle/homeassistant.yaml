@@ -20,6 +20,7 @@ params:
       de: Home Assistant Instanz
       en: Home Assistant Instance
     default: Home
+    service: homeassistant/homes
   - name: soc
     description:
       de: Ladezustand [%]
