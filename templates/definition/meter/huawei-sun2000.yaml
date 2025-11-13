@@ -13,14 +13,14 @@ requirements:
       Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang".
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 
-      Es ist zu beachten, dass die maximale Batterie Lade- und Entladeleistung standardmäßig auf 2500W gesetzt ist. Je nach installiertem Wechselrichter sowie der Anzahl der Batterietürme/Module kann der unterstützte Maximalwert deutlich höher liegen. Weitere Informationen können den Datenblättern von Huawei entnommen werden.
+      Es ist zu beachten, dass die maximale Batterie-Entladeleistung standardmäßig auf 2200W eingestellt ist. Je nach installiertem Wechselrichter sowie der Anzahl der Batterietürme/Module kann der unterstützte Maximalwert deutlich höher liegen. Weitere Informationen können den Datenblättern von Huawei entnommen werden.
     en: |
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account".
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 
-      Beware that maximum battery charge and discharge power are set to 2500W by default. Depending on the installed inverter and number of battery towers/packs, the supported maximum may be well above. Consult Huawei's datasheets for more information.
+      Beware that maximum battery discharge power is set to 2200W by default. Depending on the installed inverter and number of battery towers/packs, the supported maximum may be well above. Consult Huawei's datasheets for more information.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -175,7 +175,7 @@ render: |
     set:
       source: switch
       switch:
-      - case: 1 # normal - charge from grid locked (§ 14a EnWG compatible)
+      - case: 1 # normal
         set:
           source: sequence
           set:
@@ -208,7 +208,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           {{- end }}
-      - case: 2 # hold - discharge and charge from grid locked (14a EnWG compatible)
+      - case: 2 # hold
         set:
           source: sequence
           set:
@@ -241,7 +241,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           {{- end }}
-      - case: 3 # charge (forced charging)
+      - case: 3 # charge
         set:
           source: sequence
           set:
