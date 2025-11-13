@@ -59,7 +59,7 @@ render: |
   limitsoc:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.powertrain.electric.battery.stateOfCharge.target.value?noStringify
-  finishTime:
+  finishtime:
     source: http
     uri: {{ .uri }}/getPlainValue/bmw.{{ .id }}.{{ .vin }}.stream.vehicle.drivetrain.electricEngine.charging.timeRemaining.value?noStringify
     jq: if . == null or . == 0 then null else (now + (. * 60) | strftime("%Y-%m-%dT%H:%M:%SZ")) end
