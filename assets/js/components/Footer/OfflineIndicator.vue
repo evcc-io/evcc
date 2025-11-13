@@ -19,6 +19,10 @@
 				<RestartButton @restart="restart" />
 				{{ $t("offline.restartNeeded") }}
 			</div>
+			<div v-else-if="offline" class="d-flex align-items-center">
+				<CloudOffline class="m-2" />
+				{{ $t("offline.message") }}
+			</div>
 			<div v-else-if="starting" class="d-flex align-items-center">
 				<span
 					class="spinner-border spinner-border-sm m-1 me-2"
@@ -26,10 +30,6 @@
 					aria-hidden="true"
 				></span>
 				{{ $t("offline.starting") }}
-			</div>
-			<div v-else-if="offline" class="d-flex align-items-center">
-				<CloudOffline class="m-2" />
-				{{ $t("offline.message") }}
 			</div>
 			<div
 				v-else-if="showError"
