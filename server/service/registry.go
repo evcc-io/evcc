@@ -1,8 +1,8 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 )
 
@@ -23,31 +23,15 @@ func Register(name string, handler http.Handler) {
 }
 
 func Handler(base string) http.Handler {
-	handler := &handler{
-		base: base,
-	}
-
 	mux := http.NewServeMux()
-	mux.Handle(base+"/{service}/", handler)
+
+	for name, h := range registry {
+		// e.g. "/homes/foo"
+		prefix := fmt.Sprintf("%s/%s", base, name)
+
+		// strip "/homes/foo" then hand off to h
+		mux.Handle(prefix+"/", http.StripPrefix(prefix, h))
+	}
 
 	return mux
-}
-
-type handler struct {
-	base string
-}
-
-// func (h *handler) HandleService(w http.ResponseWriter, req *http.Request) {
-func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	service := req.PathValue("service")
-
-	handler, ok := registry[service]
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	req.URL.Path = strings.TrimPrefix(req.URL.Path, h.base+"/"+service)
-
-	handler.ServeHTTP(w, req)
 }
