@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import type { State } from "./types/evcc";
 import { convertToUiLoadpoints } from "./uiLoadpoints";
 import { useDebouncedComputed } from "./utils/useDebouncedComputed";
@@ -36,6 +36,9 @@ const initialState: State = {
 
 const state = reactive(initialState);
 
+// Track whether initial startup data has been received and processed (reactive ref for Vue)
+const startupDataReceived = ref(false);
+
 // create derived loadpoints array with ui specific fields (defaults, browser settings, ...); debounce for better performance
 const uiLoadpoints = useDebouncedComputed(
   () => convertToUiLoadpoints(state.loadpoints, state.vehicles),
@@ -46,6 +49,7 @@ const uiLoadpoints = useDebouncedComputed(
 export interface Store {
   state: State; // raw state from websocket
   uiLoadpoints: typeof uiLoadpoints;
+  startupDataReceived: typeof startupDataReceived;
   offline(value: boolean): void;
   update(msg: any): void;
   reset(): void;
@@ -54,10 +58,13 @@ export interface Store {
 const store: Store = {
   state,
   uiLoadpoints,
+  startupDataReceived,
   offline(value: boolean) {
     state.offline = value;
   },
   update(msg) {
+    const isStartupMessage = msg.startup === true;
+
     Object.keys(msg).forEach(function (k) {
       if (k === "log") {
         window.app.raise(msg[k]);
@@ -65,6 +72,11 @@ const store: Store = {
         setProperty(state, k.split("."), msg[k]);
       }
     });
+
+    // Mark startup data as received after the first startup message is fully processed
+    if (isStartupMessage) {
+      startupDataReceived.value = true;
+    }
   },
   reset() {
     console.log("resetting state");
@@ -81,6 +93,9 @@ const store: Store = {
         state[k] = undefined;
       }
     });
+
+    // Reset the startup flag when state is reset
+    startupDataReceived.value = false;
   },
 };
 
