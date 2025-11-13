@@ -292,12 +292,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:       func() (any, any) { return map[string]any{}, eebus.Config{} },
-			keys.Hems:        func() (any, any) { return map[string]any{}, config.Typed{} },
-			keys.Tariffs:     func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
-			keys.Messaging:   func() (any, any) { return map[string]any{}, globalconfig.Messaging{} },       // has default
-			keys.ModbusProxy: func() (any, any) { return []map[string]any{}, []globalconfig.ModbusProxy{} }, // slice
-			keys.Circuits:    func() (any, any) { return []map[string]any{}, []config.Named{} },             // slice
+			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
+			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
+			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
+			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
+			keys.Circuits:  func() (any, any) { return []map[string]any{}, []config.Named{} },       // slice
 		} {
 			other, struc := fun()
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
@@ -307,10 +306,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network: func() any { return new(globalconfig.Network) }, // has default
-			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
-			keys.Shm:     func() any { return new(shm.Config) },
-			keys.Influx:  func() any { return new(globalconfig.Influx) },
+			keys.Network:     func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:        func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
+			keys.Shm:         func() any { return new(shm.Config) },
+			keys.Influx:      func() any { return new(globalconfig.Influx) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, valueChan, fun())}

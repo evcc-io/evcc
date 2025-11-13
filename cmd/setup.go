@@ -830,7 +830,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewCachedFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
@@ -951,12 +951,32 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string) error {
+	var err error
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var data T
+	if err := settings.Yaml(key, new(T), &data); err == nil {
+		settings.SetJson(key, data)
+		log.INFO.Printf("migrated %s setting to JSON", key)
+	}
+
+	return err
+}
+
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
-	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		*conf = []globalconfig.ModbusProxy{}
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
+		// TODO: delete if not needed any more
+		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
 			return err
+		}
+
+		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
+			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
 		}
 	}
 
