@@ -15,25 +15,21 @@ import (
 var log = util.NewLogger("homeassistant")
 
 func init() {
-	handler := new(handler)
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /homes", handler.Homes)
-	mux.HandleFunc("GET /homes/{home}/entities", handler.Home)
+	mux.HandleFunc("GET /homes", getHomes)
+	mux.HandleFunc("GET /homes/{home}/entities", getEntities)
 
 	service.Register("homeassistant", mux)
 }
 
-type handler struct{}
-
-func (h *handler) Homes(w http.ResponseWriter, req *http.Request) {
+func getHomes(w http.ResponseWriter, req *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	jsonWrite(w, slices.Sorted(maps.Keys(instances)))
 }
 
-func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
+func getEntities(w http.ResponseWriter, req *http.Request) {
 	home := req.PathValue("home")
 
 	if instanceByName(home) == nil {
@@ -48,7 +44,10 @@ func (h *handler) Home(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	domains := strings.Split(req.URL.Query().Get("domain"), ",")
+	var domains []string
+	if domain := req.URL.Query().Get("domain"); domain != "" {
+		domains = strings.Split(domain, ",")
+	}
 
 	// cache list of entities
 	w.Header().Set("Cache-control", "max-age=300")
