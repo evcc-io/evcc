@@ -68,7 +68,7 @@
 					v-model="values.host"
 					class="form-control"
 					spellcheck="false"
-					placeholder="evcc.local"
+					placeholder="evcc"
 				/>
 			</FormRow>
 		</template>
