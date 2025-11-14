@@ -257,17 +257,17 @@ render: |
               decode: uint16
         - source: go
           script: |
-            power := 1000
-            maxpower := {{ .maxchargepower }}
-            maxacpower := {{ .maxacpower }}
-            capacity := {{ .capacity }}
+            power := 1000.0
+            maxpower := float64({{ .maxchargepower }})
+            maxacpower := float64({{ .maxacpower }})
+            capacity := float64({{ .capacity }})
 
             if maxpower != 0 {
               power := maxpower
             } else if bdc_power != 0 {
               power := bdc_power
             } else {
-              power := math.Min(float64(capacity)*1000/2, float64(maxacpower))
+              power := math.Min(capacity*1000/2, maxacpower)
             }
             power
           in:
