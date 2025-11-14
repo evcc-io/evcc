@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -161,11 +162,13 @@ type Network struct {
 }
 
 func (c Network) HostPort() string {
-	host, err := os.Hostname()
-	if err != nil {
-		host = "localhost"
+	host := "localhost"
+	if h, err := os.Hostname(); err == nil {
+		host = h
 	}
-
+	if ips := util.LocalIPs(); len(ips) > 0 {
+		host = ips[0].IP.String()
+	}
 	if c.Port == 80 {
 		return host
 	}
