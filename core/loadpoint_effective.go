@@ -232,5 +232,10 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
+                lp.log.DEBUG.Printf("Max power from vehicle: %.2f kWh", maxPower / 1000)
+		return maxPower
+	} else {
+		return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	}
 }
