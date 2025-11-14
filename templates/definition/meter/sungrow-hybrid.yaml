@@ -257,8 +257,10 @@ render: |
               decode: uint16
         - source: go
           script: |
-            power := 1000
             maxpower := {{ .maxchargepower }}
+            maxacpower := {{ .maxacpower }}
+            capacity := {{ .capacity }}
+
             if maxpower != 0 {
               power = maxpower
             } else if bdc_power != 0 {
