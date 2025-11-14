@@ -267,7 +267,7 @@ render: |
             } else if bdc_power != 0 {
               power = bdc_power
             } else {
-              power = min(capacity*1000/2, maxacpower)
+              power = math.Min(capacity*1000/2, maxacpower)
             }
             power
           in:
