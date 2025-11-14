@@ -184,6 +184,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
+	// sleep 10s
+	time.Sleep(10 * time.Second)
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -249,7 +251,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// signal devices initialized
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
-	valueChan <- util.Param{Key: keys.SetupRequired, Val: len(site.Loadpoints()) == 0}
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || len(site.Loadpoints()) == 0}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
