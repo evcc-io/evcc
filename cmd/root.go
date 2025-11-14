@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/mcp"
-	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -273,9 +272,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 			router.PathPrefix("/mcp").Handler(handler)
 		}
 	}
-
-	// setup services
-	httpd.Router().PathPrefix("/api/service").Handler(service.Handler("/api/service"))
 
 	// setup messaging
 	var pushChan chan push.Event
