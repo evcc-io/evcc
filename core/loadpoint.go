@@ -883,9 +883,11 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	}
 
 	// apply vehicle limits
-	if lp.vehicle.OnIdentified().MaxPower != 0 {
-		vehicleCurrentLimitViaPower := powerToCurrent(lp.effectiveMaxPower(), activePhases)
-		current = lp.roundedCurrent(min(current, vehicleCurrentLimitViaPower))
+	if lp.vehicle != nil {
+		if lp.vehicle.OnIdentified().MaxPower != 0 {
+			vehicleCurrentLimitViaPower := powerToCurrent(lp.effectiveMaxPower(), activePhases)
+			current = lp.roundedCurrent(min(current, vehicleCurrentLimitViaPower))
+		}
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
