@@ -236,7 +236,7 @@ render: |
     - case: 3 # charge
       set:
         source: sequence
-        steps:
+        set:
         - source: const
           value: 2 # Forced mode (charge/discharge/stop)
           set:
@@ -257,19 +257,19 @@ render: |
               decode: uint16
         - source: go
           script: |
-            power := 1000.0
+            power := 1000
             maxpower := float64({{ .maxchargepower }})
             maxacpower := float64({{ .maxacpower }})
             capacity := float64({{ .capacity }})
 
             if maxpower != 0 {
-              power = maxpower
+              power = int(maxpower)
             } else if bdc_power != 0 {
-              power = float64(bdc_power)
+              power = bdc_power
             } else {
-              power = math.Min(capacity*1000/2, maxacpower)
+              power = int(math.Min(capacity*1000/2, maxacpower))
             }
-            int(power)
+            power
           in:
           - name: bdc_power
             type: int
