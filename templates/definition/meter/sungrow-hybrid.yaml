@@ -236,7 +236,7 @@ render: |
     - case: 3 # charge
       set:
         source: sequence
-        set:
+        steps:
         - source: const
           value: 2 # Forced mode (charge/discharge/stop)
           set:
@@ -263,13 +263,13 @@ render: |
             capacity := float64({{ .capacity }})
 
             if maxpower != 0 {
-              power := maxpower
+              power = maxpower
             } else if bdc_power != 0 {
-              power := bdc_power
+              power = float64(bdc_power)
             } else {
-              power := math.Min(capacity*1000/2, maxacpower)
+              power = math.Min(capacity*1000/2, maxacpower)
             }
-            power
+            int(power)
           in:
           - name: bdc_power
             type: int
