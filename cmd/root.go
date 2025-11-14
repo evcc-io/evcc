@@ -183,7 +183,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// signal ui listening
-	valueChan <- util.Param{Key: keys.Startup, Val: false}
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -247,9 +247,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// signal devices initialized
-	valueChan <- util.Param{Key: keys.Startup, Val: true}
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
-	valueChan <- util.Param{Key: keys.InitialSetup, Val: len(site.Loadpoints()) == 0}
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: len(site.Loadpoints()) == 0}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {

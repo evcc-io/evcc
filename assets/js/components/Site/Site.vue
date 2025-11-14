@@ -6,7 +6,7 @@
 				data-testid="header"
 			>
 				<h1 class="d-block my-0">
-					<span v-if="!isInitialSetup">
+					<span v-if="!setupRequired">
 						{{ siteTitle || "evcc" }}
 					</span>
 				</h1>
@@ -20,7 +20,7 @@
 				</div>
 			</div>
 			<HemsWarning :circuits="circuits" />
-			<Energyflow v-if="!isInitialSetup" v-bind="energyflow" />
+			<Energyflow v-if="!setupRequired" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div
@@ -30,7 +30,7 @@
 				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
 			</div>
 			<div
-				v-else-if="isInitialSetup"
+				v-else-if="setupRequired"
 				class="flex-grow-1 d-flex align-items-center justify-content-center p-3"
 			>
 				<div
@@ -118,7 +118,7 @@ export default defineComponent({
 
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
-		initialSetup: Boolean,
+		setupRequired: Boolean,
 
 		// details
 		gridConfigured: Boolean,
@@ -199,9 +199,6 @@ export default defineComponent({
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		isInitialSetup() {
-			return this.initialSetup === true;
 		},
 		footer() {
 			return {

@@ -113,8 +113,8 @@ watch(
   (offline) => offline && debounedUpdateAuthStatus()
 );
 watch(
-  () => store.state.startup,
-  (startup) => startup && debounedUpdateAuthStatus()
+  () => store.state.startupCompleted,
+  (startupCompleted) => startupCompleted && debounedUpdateAuthStatus()
 );
 
 export default auth;

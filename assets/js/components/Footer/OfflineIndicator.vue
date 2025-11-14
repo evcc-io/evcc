@@ -75,7 +75,7 @@ export default defineComponent({
 	props: {
 		offline: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
-		startup: Boolean,
+		startupCompleted: Boolean,
 	},
 	data() {
 		return { dismissed: false };
@@ -88,7 +88,7 @@ export default defineComponent({
 			return restart.restarting;
 		},
 		starting() {
-			return this.startup === false;
+			return this.startupCompleted === false;
 		},
 		visible() {
 			return (

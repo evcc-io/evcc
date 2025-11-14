@@ -1,7 +1,7 @@
 <template>
 	<div class="app">
 		<router-view
-			v-if="state.startup"
+			v-if="showRoutes"
 			:notifications="notifications"
 			:offline="offline"
 		></router-view>
@@ -70,6 +70,9 @@ export default defineComponent({
 		},
 		batteryModalAvailabe() {
 			return store.state.battery?.length;
+		},
+		showRoutes() {
+			return this.state.startupCompleted;
 		},
 		state() {
 			const { state, uiLoadpoints } = store;
@@ -186,7 +189,7 @@ export default defineComponent({
 			this.ws.onmessage = (evt) => {
 				try {
 					const msg = JSON.parse(evt.data);
-					if (msg.startup) {
+					if (msg.startupCompleted) {
 						store.reset();
 					}
 					store.update(msg);
