@@ -257,7 +257,7 @@ render: |
               decode: uint16
         - source: go
           script: |
-            power := int(0)
+            power := 1000
             if {{ .maxchargepower }} <> 0 {
               power = {{ .maxchargepower }}
             }
@@ -266,7 +266,7 @@ render: |
             } else {
               power = min(capacity*1000/2, maxacpower)
             }
-          power
+            power
           in:
           - name: bdc_power
             type: int
