@@ -263,11 +263,11 @@ render: |
             capacity := {{ .capacity }}
 
             if maxpower != 0 {
-              power = maxpower
+              power := maxpower
             } else if bdc_power != 0 {
-              power = bdc_power
+              power := bdc_power
             } else {
-              power = math.Min(capacity*1000/2, maxacpower)
+              power := min(capacity*1000/2, maxacpower)
             }
             power
           in:
