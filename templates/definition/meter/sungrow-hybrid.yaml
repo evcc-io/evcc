@@ -258,10 +258,10 @@ render: |
         - source: go
           script: |
             power := 1000
-            if {{ .maxchargepower }} != 0 {
-              power = {{ .maxchargepower }}
-            }
-            else if bdc_power != 0 {
+            maxpower := {{ .maxchargepower }}
+            if maxpower != 0 {
+              power = maxpower
+            } else if bdc_power != 0 {
               power = bdc_power
             } else {
               power = min(capacity*1000/2, maxacpower)
