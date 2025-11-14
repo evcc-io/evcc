@@ -325,26 +325,29 @@ func (m *RCT) bo() *backoff.ExponentialBackOff {
 		backoff.WithMaxElapsedTime(10*time.Second))
 }
 
+func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(500*time.Millisecond),
+		backoff.WithMaxInterval(2*time.Second),
+		backoff.WithMaxElapsedTime(10*time.Second))
+
+	return backoff.RetryWithData(func() (T, error) {
+		return fun(id)
+	}, bo)
+}
+
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
 func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
-	res, err := backoff.RetryWithData(func() (float32, error) {
-		return m.conn.QueryFloat32(id)
-	}, m.bo())
+	res, err := queryRCT(id, m.conn.QueryFloat32)
 	return float64(res), err
 }
 
 // queryInt32 adds retry logic of recoverable errors to QueryInt32
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
-	res, err := backoff.RetryWithData(func() (int32, error) {
-		return m.conn.QueryInt32(id)
-	}, m.bo())
-	return res, err
+	return queryRCT(id, m.conn.QueryInt32)
 }
 
-// queryInt8 adds retry logic of recoverable errors to QueryInt8
+// queryUint8 adds retry logic of recoverable errors to QueryUint8
 func (m *RCT) queryUint8(id rct.Identifier) (uint8, error) {
-	res, err := backoff.RetryWithData(func() (uint8, error) {
-		return m.conn.QueryUint8(id)
-	}, m.bo())
-	return res, err
+	return queryRCT(id, m.conn.QueryUint8)
 }
