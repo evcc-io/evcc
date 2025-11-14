@@ -258,12 +258,11 @@ render: |
         - source: go
           script: |
             power := 1000
-            maxpower := float64({{ .maxchargepower }})
+            maxpower := {{ .maxchargepower }}
             maxacpower := float64({{ .maxacpower }})
             capacity := float64({{ .capacity }})
-
             if maxpower != 0 {
-              power = int(maxpower)
+              power = maxpower
             } else if bdc_power != 0 {
               power = bdc_power
             } else {
