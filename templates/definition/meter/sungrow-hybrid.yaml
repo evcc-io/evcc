@@ -18,16 +18,15 @@ params:
     baudrate: 9600
   - name: timeout
   - name: capacity
-    advanced: true
   - name: maxacpower
   - name: minsoc
     advanced: true
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    default: 10600 # 10.6kW, max allowed value for register
+    advanced: true
   - name: maxdischargepower
-    default: 10600 # 10.6kW, max allowed value for register
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -256,21 +255,19 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if .maxchargepower }}
-        - source: const
-          value: {{ .maxchargepower }} # W
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13051 # Charge power
-              type: writesingle
-              decode: uint16
-        {{- else }}
         - source: go
-          script: power
+          script: |
+            if {{ .maxchargepower }} <> 0 {
+              power = {{ .maxchargepower }}
+            }
+            else if bdc_power <> 0 {
+              power = bdc_power
+            } else {
+              power = min(capacity*1000/2, maxacpower)
+            }
+          power
           in:
-          - name: power
+          - name: bdc_power
             type: int
             config:
               source: modbus
@@ -290,7 +287,6 @@ render: |
                 address: 13051 # Charge/discharge power
                 type: writesingle
                 decode: uint16
-        {{- end }}
   capacity: {{ .capacity }} # kWh
   maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
