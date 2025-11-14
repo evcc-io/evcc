@@ -426,12 +426,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt.",
+      "descriptionExternalUrl": "Dient als Callback-Endpunkt für Integrationen (SEMP, OAuth, OCPP, ...) und für die Autodiscovery der evcc-App. Wenn nicht gesetzt, wird die interne URL verwendet.",
+      "descriptionHost": "Bei leerem Feld wird der Hostname des Betriebssystems genutzt.",
+      "descriptionInternalUrl": "Wird für mDNS-Ankündigungen im lokalen Netzwerk verwendet. Ergibt sich aus dem konfigurierten Host und Port.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
-      "descriptionSchema": "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung.",
+      "labelExternalUrl": "Externe URL",
       "labelHost": "Hostname",
+      "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Netzwerk"
     },
     "options": {

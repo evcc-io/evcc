@@ -249,7 +249,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// announce on mDNS
-	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
+	if err == nil {
 		err = configureMDNS(conf.Network)
 	}
 

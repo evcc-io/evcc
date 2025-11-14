@@ -63,7 +63,7 @@ var conf = globalconfig.All{
 	Interval: 10 * time.Second,
 	Log:      "info",
 	Network: globalconfig.Network{
-		Host: "evcc.local",
+		Host: "",
 		Port: 7070,
 	},
 	Mqtt: globalconfig.Mqtt{
@@ -749,7 +749,11 @@ func networkSettings(conf *globalconfig.Network) error {
 
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
-	host := strings.TrimSuffix(conf.Host, ".local")
+	host, err := conf.Hostname()
+	if err != nil {
+		return fmt.Errorf("mDNS failed to determine hostname: %w", err)
+	}
+	host = strings.TrimSuffix(host, ".local")
 
 	internalURL := conf.InternalURL()
 	text := []string{"path=/", "internal_url=" + internalURL}

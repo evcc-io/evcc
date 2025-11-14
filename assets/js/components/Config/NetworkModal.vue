@@ -4,49 +4,25 @@
 		:title="$t('config.network.title')"
 		endpoint="/config/network"
 		state-key="network"
+		:transform-write-values="transformWriteValues"
 		disable-remove
 		data-testid="network-modal"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
 			<FormRow
-				id="networkSchema"
-				:label="$t('config.network.labelSchema')"
-				:help="$t('config.network.descriptionSchema')"
-			>
-				<div class="btn-group" role="group">
-					<input
-						id="networkSchemaHttp"
-						v-model="values.schema"
-						type="radio"
-						class="btn-check"
-						name="networkSchema"
-						tabindex="0"
-						value="http"
-						autocomplete="off"
-					/>
-					<label class="btn btn-outline-primary" for="networkSchemaHttp">HTTP</label>
-					<input
-						id="networkSchemaHttps"
-						v-model="values.schema"
-						type="radio"
-						class="btn-check"
-						name="networkSchema"
-						tabindex="0"
-						value="https"
-						autocomplete="off"
-					/>
-					<label class="btn btn-outline-primary" for="networkSchemaHttps">HTTPS</label>
-				</div>
-			</FormRow>
-
-			<FormRow
 				id="networkHost"
 				:label="$t('config.network.labelHost')"
 				:help="$t('config.network.descriptionHost')"
 				example="evcc.local"
+				optional
 			>
-				<input id="networkHost" v-model="values.host" class="form-control" />
+				<input
+					id="networkHost"
+					v-model="values.host"
+					class="form-control"
+					spellcheck="false"
+				/>
 			</FormRow>
 			<FormRow
 				id="networkPort"
@@ -62,6 +38,39 @@
 					required
 				/>
 			</FormRow>
+
+			<FormRow
+				id="networkInternalUrl"
+				:label="$t('config.network.labelInternalUrl')"
+				:help="$t('config.network.descriptionInternalUrl')"
+			>
+				<input
+					id="networkInternalUrl"
+					v-model="values.internalUrl"
+					class="form-control"
+					type="text"
+					readonly
+					tabindex="-1"
+				/>
+			</FormRow>
+
+			<FormRow
+				id="networkExternalUrl"
+				:label="$t('config.network.labelExternalUrl')"
+				:help="$t('config.network.descriptionExternalUrl')"
+				example="https://foo.local:220"
+				optional
+			>
+				<input
+					id="networkExternalUrl"
+					v-model="values.externalUrl"
+					class="form-control"
+					type="text"
+					inputmode="url"
+					autocomplete="off"
+					spellcheck="false"
+				/>
+			</FormRow>
 		</template>
 	</JsonModal>
 </template>
@@ -74,5 +83,13 @@ export default {
 	name: "NetworkModal",
 	components: { FormRow, JsonModal },
 	emits: ["changed"],
+	methods: {
+		transformWriteValues(values) {
+			const payload = { ...values };
+			delete payload.internalUrl;
+
+			return payload;
+		},
+	},
 };
 </script>

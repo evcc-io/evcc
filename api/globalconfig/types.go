@@ -1,7 +1,9 @@
 package globalconfig
 
 import (
+	"encoding/json"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -153,22 +155,37 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema_     string `json:"schema"` // TODO deprecated
-	ExternalUrl string `json:"external_url"`
+	Schema_     string `json:"schema,omitempty"` // TODO deprecated
+	ExternalUrl string `json:"externalUrl"`
 	Host        string `json:"host"`
 	Port        int    `json:"port"`
 }
 
 func (c Network) HostPort() string {
-	host := c.Host
-	if ips := util.LocalIPs(); len(ips) > 0 {
-		host = ips[0].IP.String()
+	host, err := c.Hostname()
+	if err != nil {
+		if ips := util.LocalIPs(); len(ips) > 0 {
+			host = ips[0].IP.String()
+		}
 	}
 
 	if c.Port == 80 {
 		return host
 	}
 	return net.JoinHostPort(host, strconv.Itoa(c.Port))
+}
+
+// Hostname returns the configured host name, falls back to operating system hostname
+func (c Network) Hostname() (string, error) {
+	if c.Host != "" {
+		return c.Host, nil
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+	return hostname, nil
 }
 
 func (c Network) InternalURL() string {
@@ -180,4 +197,16 @@ func (c Network) ExternalURL() string {
 		return strings.TrimRight(c.ExternalUrl, "/")
 	}
 	return c.InternalURL()
+}
+
+// MarshalJSON includes the computed InternalUrl field in JSON output
+func (c Network) MarshalJSON() ([]byte, error) {
+	type networkAlias Network
+	return json.Marshal(struct {
+		networkAlias
+		InternalUrl string `json:"internalUrl"`
+	}{
+		networkAlias: networkAlias(c),
+		InternalUrl:  c.InternalURL(),
+	})
 }
