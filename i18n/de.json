@@ -1017,7 +1017,8 @@
     "message": "Keine Verbindung zum Server.",
     "restart": "Neustart",
     "restartNeeded": "Erforderlich, um Änderungen zu übernehmen.",
-    "restarting": "Server ist gleich wieder verfügbar."
+    "restarting": "Server ist gleich wieder verfügbar.",
+    "starting": "Server wird gestartet..."
   },
   "passwordModal": {
     "description": "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich.",
@@ -1206,6 +1207,7 @@
     "configuration": "Konfiguration",
     "description": "Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht weiterhelfen, suche in unseren {0} nach einer Lösung.",
     "discussions": "GitHub Diskussionen",
+    "editConfiguration": "Konfiguration bearbeiten",
     "fixAndRestart": "Behebe das Problem und starte den Server neu.",
     "hint": "Hinweis: Ein weiterer Grund könnte ein fehlerhaftes Gerät (Wechselrichter, Zähler, …) sein. Überprüfe deine Netzwerkverbindungen.",
     "lineError": "In {0} wurde ein Fehler gefunden.",
