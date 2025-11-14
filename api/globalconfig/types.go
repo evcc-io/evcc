@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -162,30 +161,15 @@ type Network struct {
 }
 
 func (c Network) HostPort() string {
-	host, err := c.Hostname()
+	host, err := os.Hostname()
 	if err != nil {
-		if ips := util.LocalIPs(); len(ips) > 0 {
-			host = ips[0].IP.String()
-		}
+		host = "localhost"
 	}
 
 	if c.Port == 80 {
 		return host
 	}
 	return net.JoinHostPort(host, strconv.Itoa(c.Port))
-}
-
-// Hostname returns the configured host name, falls back to operating system hostname
-func (c Network) Hostname() (string, error) {
-	if c.Host != "" {
-		return c.Host, nil
-	}
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "", err
-	}
-	return hostname, nil
 }
 
 func (c Network) InternalURL() string {

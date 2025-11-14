@@ -426,12 +426,12 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Dient als Callback-Endpunkt für Integrationen (SEMP, OAuth, OCPP, ...) und für die Autodiscovery der evcc-App. Wenn nicht gesetzt, wird die interne URL verwendet.",
-      "descriptionHost": "Bei leerem Feld wird der Hostname des Betriebssystems genutzt.",
-      "descriptionInternalUrl": "Wird für mDNS-Ankündigungen im lokalen Netzwerk verwendet. Ergibt sich aus dem konfigurierten Host und Port.",
+      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Autodiscovery der evcc-App.",
+      "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
+      "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
       "labelExternalUrl": "Externe URL",
-      "labelHost": "Hostname",
+      "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
       "title": "Netzwerk"

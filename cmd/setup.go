@@ -749,11 +749,10 @@ func networkSettings(conf *globalconfig.Network) error {
 
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
-	host, err := conf.Hostname()
-	if err != nil {
-		return fmt.Errorf("mDNS failed to determine hostname: %w", err)
+	host := strings.TrimSuffix(conf.Host, ".local")
+	if host == "" {
+		host = "evcc"
 	}
-	host = strings.TrimSuffix(host, ".local")
 
 	internalURL := conf.InternalURL()
 	text := []string{"path=/", "internal_url=" + internalURL}

@@ -11,30 +11,16 @@
 	>
 		<template #default="{ values }">
 			<FormRow
-				id="networkHost"
-				:label="$t('config.network.labelHost')"
-				:help="$t('config.network.descriptionHost')"
-				example="evcc.local"
-				optional
-			>
-				<input
-					id="networkHost"
-					v-model="values.host"
-					class="form-control"
-					spellcheck="false"
-				/>
-			</FormRow>
-			<FormRow
 				id="networkPort"
 				:label="$t('config.network.labelPort')"
 				:help="$t('config.network.descriptionPort')"
-				example="7070"
 			>
 				<input
 					id="networkPort"
 					v-model="values.port"
 					class="form-control w-50 me-2 w-50"
 					type="number"
+					placeholder="7070"
 					required
 				/>
 			</FormRow>
@@ -58,7 +44,7 @@
 				id="networkExternalUrl"
 				:label="$t('config.network.labelExternalUrl')"
 				:help="$t('config.network.descriptionExternalUrl')"
-				example="https://foo.local:220"
+				example="https://evcc.example.org"
 				optional
 			>
 				<input
@@ -69,6 +55,20 @@
 					inputmode="url"
 					autocomplete="off"
 					spellcheck="false"
+				/>
+			</FormRow>
+			<FormRow
+				id="networkHost"
+				:label="$t('config.network.labelHost')"
+				:help="$t('config.network.descriptionHost')"
+				optional
+			>
+				<input
+					id="networkHost"
+					v-model="values.host"
+					class="form-control"
+					spellcheck="false"
+					placeholder="evcc.local"
 				/>
 			</FormRow>
 		</template>

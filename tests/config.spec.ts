@@ -79,14 +79,14 @@ test.describe("network modal", async () => {
     await expectModalVisible(modal);
 
     const portValue = await modal.getByLabel("Port").inputValue();
-    await modal.getByLabel("Hostname").fill(NETWORK_HOST);
     await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL);
+    await modal.getByLabel("mDNS Hostname").fill(NETWORK_HOST);
 
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
     // values immediatelly visible
-    await expect(networkEntry).toContainText(`${NETWORK_HOST}:${portValue}`);
+    await expect(networkEntry).toContainText(portValue);
 
     // check persistance
     await restart(CONFIG_GRID_ONLY);
@@ -96,12 +96,11 @@ test.describe("network modal", async () => {
     await networkEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
 
-    await expect(modal.getByLabel("Hostname")).toHaveValue(NETWORK_HOST);
+    await expect(modal.getByLabel("mDNS Hostname")).toHaveValue(NETWORK_HOST);
     await expect(modal.getByLabel("Port")).toHaveValue(portValue);
     await expect(modal.getByLabel("External URL")).toHaveValue(NETWORK_EXTERNAL_URL);
-    const expectedInternal =
-      portValue === "80" ? `http://${NETWORK_HOST}` : `http://${NETWORK_HOST}:${portValue}`;
-    await expect(modal.getByLabel("Internal URL")).toHaveValue(expectedInternal);
+    const internalUrl = await modal.getByLabel("Internal URL").inputValue();
+    expect(internalUrl).toContain(`:${portValue}`);
 
     await modal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(modal);
