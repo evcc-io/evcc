@@ -426,12 +426,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt.",
+      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Autodiscovery der evcc-App.",
+      "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
+      "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
-      "descriptionSchema": "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "Externe URL",
+      "labelHost": "mDNS-Hostname",
+      "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Netzwerk"
     },
     "options": {

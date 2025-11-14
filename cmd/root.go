@@ -261,13 +261,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// announce on mDNS
-	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
+	if err == nil {
 		err = configureMDNS(conf.Network)
 	}
 
 	// start SHM server
 	if err == nil {
-		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, conf.Network.ExternalURL(), site, httpd))
 	}
 
 	// start HEMS server
