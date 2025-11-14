@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -28,15 +29,14 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 }
 
 func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
-	// TODO callback uri
-	localUri := "http://localhost:7070"
-	redirectUri := localUri + "/providerauth/callback"
+	extUrl := network.Config.ExternalURL()
+	redirectUri := extUrl + "/providerauth/callback"
 
 	log := util.NewLogger("homeassistant")
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := oauth2.Config{
-		ClientID:    localUri,
+		ClientID:    extUrl,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  uri + "/auth/authorize",

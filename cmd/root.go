@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/mcp"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -155,6 +156,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// configure network
 	if err == nil {
 		err = networkSettings(&conf.Network)
+	}
+
+	// configure plugin external url
+	if err == nil {
+		network.Config = conf.Network
+
+		// network configuration complete, start dependent services like HomeAssistant discovery
+		network.Start()
 	}
 
 	// start broadcasting values

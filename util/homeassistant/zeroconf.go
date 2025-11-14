@@ -6,15 +6,18 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
 	"github.com/libp2p/zeroconf/v2"
 )
 
 func init() {
-	go scan(context.Background())
+	network.Register(scan)
 }
 
-func scan(ctx context.Context) {
+func scan() {
+	ctx := context.Background()
+
 	log := util.NewLogger("homeassistant")
 	entries := make(chan *zeroconf.ServiceEntry, 1)
 
