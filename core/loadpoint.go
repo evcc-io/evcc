@@ -863,6 +863,7 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(current float64) error {
 	current = lp.roundedCurrent(current)
+	activePhases := lp.ActivePhases()
 
 	// apply circuit limits
 	if lp.circuit != nil {
@@ -875,11 +876,16 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
 
-		activePhases := lp.ActivePhases()
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+	}
+
+	// apply vehicle limits
+	if lp.vehicle.OnIdentified().MaxPower != 0 {
+		vehicleCurrentLimitViaPower := powerToCurrent(lp.effectiveMaxPower(), activePhases)
+		current = lp.roundedCurrent(min(current, vehicleCurrentLimitViaPower))
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
