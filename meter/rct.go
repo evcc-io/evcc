@@ -318,13 +318,6 @@ func (m *RCT) batterySoc() (float64, error) {
 	return soc * 100, err
 }
 
-func (m *RCT) bo() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(500*time.Millisecond),
-		backoff.WithMaxInterval(2*time.Second),
-		backoff.WithMaxElapsedTime(10*time.Second))
-}
-
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(500*time.Millisecond),
