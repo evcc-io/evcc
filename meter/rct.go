@@ -307,12 +307,13 @@ func (m *RCT) totalEnergy() (float64, error) {
 func (m *RCT) batterySoc() (float64, error) {
 	var soc float64
 	var err error
+	id := rct.BatterySoC
 
 	if m.battery == 2 {
-		soc, err = m.queryFloat(rct.BatteryPlaceholder0Soc)
-	} else {
-		soc, err = m.queryFloat(rct.BatterySoC)
+		id = rct.BatteryPlaceholder0Soc
 	}
+
+	soc, err = m.queryFloat(id)
 
 	return soc * 100, err
 }
