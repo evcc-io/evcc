@@ -30,6 +30,7 @@ render: |
     {{- else }}
     jq: .w
     {{- end }}
+    cache: 2s
   energy:
     source: http
     uri: {{ include "uri" . }}
@@ -38,33 +39,43 @@ render: |
     {{- else }}
     jq: .ic
     {{- end }}
+    cache: 2s
   currents:
   - source: http
     uri: {{ include "uri" . }}
     jq: .l1.i
+    cache: 2s
   - source: http
     uri: {{ include "uri" . }}
     jq: .l2.i
+    cache: 2s
   - source: http
     uri: {{ include "uri" . }}
     jq: .l3.i
+    cache: 2s
   voltages:
   - source: http
     uri: {{ include "uri" . }}
     jq: .l1.u
+    cache: 2s
   - source: http
     uri: {{ include "uri" . }}
     jq: .l2.u
+    cache: 2s
   - source: http
     uri: {{ include "uri" . }}
     jq: .l3.u
+    cache: 2s
   powers:
   - source: http
     uri: {{ include "uri" . }}
     jq: .l1.p
+    cache: 2s
   - source: http
     uri: {{ include "uri" . }}
     jq: .l2.p
+    cache: 2s
   - source: http
     uri: {{ include "uri" . }}
     jq: .l3.p
+    cache: 2s
