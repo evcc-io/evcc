@@ -1,4 +1,5 @@
 template: smaevcharger
+deprecated: true
 products:
   - brand: SMA
     description:
