@@ -99,8 +99,8 @@
 
 			<FormRow
 				id="vehicleParamMaxPower"
-				:label="$t('config.vehicle.maxPower')"
-				:help="$t('config.vehicle.maxPowerHelp')"
+				:label="$t('config.vehicle.maximumPower')"
+				:help="$t('config.vehicle.maximumPowerHelp')"
 			>
 				<PropertyField
 					id="vehicleParamMaxPower"
@@ -164,7 +164,15 @@ const initialValues = {
 	yaml: undefined,
 	template: null,
 };
-const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "maxPower", "priority", "identifiers", "phases", "mode"];
+const CUSTOM_FIELDS = [
+	"minCurrent",
+	"maxCurrent",
+	"maxPower",
+	"priority",
+	"identifiers",
+	"phases",
+	"mode",
+];
 
 export default defineComponent({
 	name: "VehicleModal",
