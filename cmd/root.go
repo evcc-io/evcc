@@ -184,8 +184,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
-	// sleep 10s
-	time.Sleep(10 * time.Second)
 
 	// metrics
 	if viper.GetBool("metrics") {
