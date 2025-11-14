@@ -108,7 +108,13 @@ function debounedUpdateAuthStatus() {
 }
 
 // update auth status on reconnect or server restart
-watch(() => store.state.offline, debounedUpdateAuthStatus);
-watch(() => store.state.startup, debounedUpdateAuthStatus);
+watch(
+  () => store.state.offline,
+  (offline) => offline && debounedUpdateAuthStatus()
+);
+watch(
+  () => store.state.startupCompleted,
+  (startupCompleted) => startupCompleted && debounedUpdateAuthStatus()
+);
 
 export default auth;

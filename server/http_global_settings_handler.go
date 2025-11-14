@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -83,9 +84,12 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc fu
 
 		oldStruc := newStruc()
 		if err := settings.Json(key, &oldStruc); err == nil {
-			if err := mergeMaskedAny(oldStruc, struc); err != nil {
-				jsonError(w, http.StatusInternalServerError, err)
-				return
+			// Skip merge for slices - they should be replaced entirely
+			if reflect.ValueOf(struc).Elem().Kind() != reflect.Slice {
+				if err := mergeMaskedAny(oldStruc, struc); err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
 			}
 		}
 

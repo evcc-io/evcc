@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" :title="title" @open="open">
+	<GenericModal ref="modal" :title="title" :size="size" @open="open">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -68,6 +68,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import store from "@/store";
+import deepClone from "@/utils/deepClone";
 
 export default {
 	name: "JsonModal",
@@ -84,6 +85,8 @@ export default {
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
+		storeValuesInArray: Boolean,
+		size: { type: String },
 	},
 	emits: ["changed", "open"],
 	data() {
@@ -91,8 +94,8 @@ export default {
 			saving: false,
 			removing: false,
 			error: "",
-			values: {},
-			serverValues: {},
+			values: this.storeValuesInArray ? [] : {},
+			serverValues: this.storeValuesInArray ? [] : {},
 		};
 	},
 	computed: {
@@ -121,7 +124,11 @@ export default {
 			if (this.transformReadValues) {
 				this.serverValues = this.transformReadValues(this.serverValues);
 			}
-			this.values = { ...this.serverValues };
+			// Handle null/undefined values when expecting an array or object
+			if (this.serverValues == null) {
+				this.serverValues = this.storeValuesInArray ? [] : {};
+			}
+			this.values = deepClone(this.serverValues);
 		},
 		async save() {
 			this.saving = true;
@@ -163,13 +170,19 @@ export default {
 			this.removing = false;
 		},
 		trimValues(values) {
-			// extend to recursive when needed in the future
-			return Object.fromEntries(
-				Object.entries(values).map(([key, value]) => [
-					key,
-					typeof value === "string" ? value.trim() : value,
-				])
-			);
+			if (Array.isArray(values)) {
+				for (let index = 0; index < values.length; index++) {
+					values[index] = this.trimValues(values[index]);
+				}
+				return values;
+			} else {
+				return Object.fromEntries(
+					Object.entries(values).map(([key, value]) => [
+						key,
+						typeof value === "string" ? value.trim() : value,
+					])
+				);
+			}
 		},
 	},
 };
