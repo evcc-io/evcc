@@ -257,6 +257,7 @@ render: |
               decode: uint16
         - source: go
           script: |
+            power := int(0)
             if {{ .maxchargepower }} <> 0 {
               power = {{ .maxchargepower }}
             }
