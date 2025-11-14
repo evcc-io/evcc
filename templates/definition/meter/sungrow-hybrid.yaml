@@ -24,9 +24,11 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
+    default: 0
     advanced: true
   - name: maxdischargepower
     advanced: true
+    default: 0
 render: |
   type: custom
   {{- if eq .usage "grid" }}
