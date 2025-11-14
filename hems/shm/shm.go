@@ -5,10 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
-	"net"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,8 +20,6 @@ import (
 )
 
 const (
-	sempController   = "Sunny Home Manager"
-	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
@@ -37,13 +32,12 @@ var serverName = "EVCC SEMP Server " + util.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log     *util.Logger
-	vid     string
-	did     []byte
-	uid     string
-	hostURI string
-	port    int
-	site    site.API
+	log  *util.Logger
+	vid  string
+	did  []byte
+	uid  string
+	uri  string
+	site site.API
 }
 
 type Config struct {
@@ -53,7 +47,7 @@ type Config struct {
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
-func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
+func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, router *mux.Router) error {
 	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"
@@ -87,19 +81,8 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 		uid:  uid.String(),
 		vid:  vendorId,
 		did:  did,
+		uri:  hostUri,
 	}
-
-	// find external port
-	// TODO refactor network config
-	_, port, err := net.SplitHostPort(addr)
-	if err == nil {
-		s.port, err = strconv.Atoi(port)
-	}
-	if err != nil {
-		return err
-	}
-
-	s.hostURI = s.callbackURI()
 
 	s.handlers(router)
 
@@ -108,7 +91,7 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 }
 
 func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
-	descriptor := s.hostURI + basePath + "/description.xml"
+	descriptor := s.uri + basePath + "/description.xml"
 	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
@@ -137,24 +120,6 @@ func (s *SEMP) run() {
 			}
 		}
 	}
-}
-
-func (s *SEMP) callbackURI() string {
-	if uri := os.Getenv(sempBaseURLEnv); uri != "" {
-		return strings.TrimSuffix(uri, "/")
-	}
-
-	ip := "localhost"
-	ips := util.LocalIPs()
-	if len(ips) > 0 {
-		ip = ips[0].IP.String()
-	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
-	}
-
-	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-
-	return uri
 }
 
 func (s *SEMP) handlers(router *mux.Router) {
@@ -198,11 +163,11 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 			FriendlyName:    "evcc",
 			Manufacturer:    "evcc.io",
 			ModelName:       serverName,
-			PresentationURL: s.hostURI,
+			PresentationURL: s.uri,
 			UDN:             uid,
 			ServiceDefinition: ServiceDefinition{
 				Xmlns:          urnSEMPService,
-				Server:         s.hostURI,
+				Server:         s.uri,
 				BasePath:       basePath,
 				Transport:      "HTTP/Pull",
 				ExchangeFormat: "XML",
