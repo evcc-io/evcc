@@ -3,6 +3,9 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Hybrid Inverter (S Series)
+  - brand: Ginlong
+    description:
+      generic: Solis Storage Inverter (S Series)
   - brand: Axitec
     description:
       generic: AXIhycon 12-15H
