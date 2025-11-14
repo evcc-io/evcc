@@ -11,7 +11,11 @@ var (
 	registry []func()
 )
 
-var Config globalconfig.Network
+var config globalconfig.Network
+
+func Config() globalconfig.Network {
+	return config
+}
 
 func Register(fun func()) {
 	mu.Lock()
@@ -20,7 +24,9 @@ func Register(fun func()) {
 	registry = append(registry, fun)
 }
 
-func Start() {
+func Start(conf globalconfig.Network) {
+	config = conf
+
 	for _, fun := range registry {
 		go fun()
 	}

@@ -160,10 +160,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// configure plugin external url
 	if err == nil {
-		network.Config = conf.Network
-
 		// network configuration complete, start dependent services like HomeAssistant discovery
-		network.Start()
+		network.Start(conf.Network)
 	}
 
 	// start broadcasting values

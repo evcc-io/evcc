@@ -29,7 +29,7 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oaut
 }
 
 func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
-	extUrl := network.Config.ExternalURL()
+	extUrl := network.Config().ExternalURL()
 	redirectUri := extUrl + "/providerauth/callback"
 
 	log := util.NewLogger("homeassistant")
