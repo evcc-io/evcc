@@ -1,0 +1,81 @@
+template: amsleser
+products:
+  - brand: amsleser.no
+    description:
+      generic: Pow-K
+  - brand: amsleser.no
+    description:
+      generic: Pow-U
+  - brand: amsleser.no
+    description:
+      generic: Pow-P1
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+  - name: user
+    advanced: true
+  - name: password
+    advanced: true
+render: |
+  {{- define "uri" -}}
+  http://{{ if .user }}{{ urlEncode .user }}:{{ urlEncode .password }}@{{ end }}{{ .host }}/data.json
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    {{- if eq .usage "pv" }}
+    jq: .e
+    {{- else }}
+    jq: .w
+    {{- end }}
+    cache: 2s
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    {{- if eq .usage "pv" }}
+    jq: .ec
+    {{- else }}
+    jq: .ic
+    {{- end }}
+    cache: 2s
+  currents:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l1.i
+    cache: 2s
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l2.i
+    cache: 2s
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l3.i
+    cache: 2s
+  voltages:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l1.u
+    cache: 2s
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l2.u
+    cache: 2s
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l3.u
+    cache: 2s
+  powers:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l1.p
+    cache: 2s
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l2.p
+    cache: 2s
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .l3.p
+    cache: 2s
