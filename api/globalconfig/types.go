@@ -155,7 +155,7 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema_     string `json:"schema,omitempty"` // TODO deprecated
+	Schema_     string `json:"schema,omitempty" mapstructure:"schema"` // TODO deprecated
 	ExternalUrl string `json:"externalUrl"`
 	Host        string `json:"host"`
 	Port        int    `json:"port"`
