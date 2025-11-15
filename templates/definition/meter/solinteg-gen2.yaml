@@ -1,16 +1,24 @@
-template: mtec-eb-gen3
+template: solinteg-gen2
+covers: ["mtec-eb-gen2", "wattsonic"]
 products:
+  - brand: Solinteg
+    description:
+      generic: Integ ONE GEN2
   - brand: M-TEC
     description:
-      generic: Energy Butler GEN3
+      generic: Energy Butler GEN2
+  - brand: Wattsonic
+    description:
+      generic: 3p AIO Series GEN2
 capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
-    id: 255
-  - name: capacity
+    choice: ["rs485"]
+    id: 247
+  - name: delay
+    default: 100ms
     advanced: true
 render: |
   type: custom
@@ -18,8 +26,9 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
     register:
-      address: 11000 # Zähler (NVP) Leistung
+      address: 11000 # Total Power on Meter
       type: holding
       decode: int32
     scale: -1
@@ -28,8 +37,9 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
     register:
-      address: 11028 # PV Leistung
+      address: 11028 # PV Input Total Power
       type: holding
       decode: uint32
   {{- end }}
@@ -37,15 +47,17 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
     register:
-      address: 30258 # Batterie Leistung
+      address: 40258 # Battery_P
       type: holding
       decode: int32
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
     register:
-      address: 33000 # State of Charge (SOC)
+      address: 43000 # SOC
       type: holding
       decode: uint16
     scale: 0.01
@@ -59,6 +71,7 @@ render: |
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
+          delay: {{ .delay }}
           register:
             address: 50000
             type: writesingle
@@ -70,6 +83,7 @@ render: |
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
+          delay: {{ .delay }}
           register:
             address: 50000
             type: writesingle
@@ -81,6 +95,7 @@ render: |
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
+          delay: {{ .delay }}
           register:
             address: 50000
             type: writesingle
