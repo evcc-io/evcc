@@ -118,19 +118,30 @@ func (wb *OpenWbNative) Status() (api.ChargeStatus, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *OpenWbNative) phases1p3p(phases int) error {
-	return wb.gpioExecute(func() error {
-		return wb.gpioSwitchPhases(phases)
-	})
+	return wb.gpioSwitchPhases(phases)
 }
 
 var _ api.Resurrector = (*OpenWbNative)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (wb *OpenWbNative) WakeUp() error {
-	return wb.gpioExecute(wb.gpioWakeup)
+	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
+	seq := []gpioAction{
+		{pin: cpPin, high: true, delay: wb.cpWait},
+		{pin: cpPin, high: false, delay: 0},
+	}
+	return wb.runGpioSequence(seq)
 }
 
-func (wb *OpenWbNative) gpioExecute(worker func() error) error {
+// gpioAction defines a single GPIO pin operation with timing
+type gpioAction struct {
+	pin   rpio.Pin
+	high  bool
+	delay time.Duration
+}
+
+// runGpioSequence executes a sequence of GPIO operations
+func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
 	if err := wb.Enable(false); err != nil {
 		return err
 	}
@@ -140,48 +151,36 @@ func (wb *OpenWbNative) gpioExecute(worker func() error) error {
 	}
 	defer rpio.Close()
 
-	if err := worker(); err != nil {
-		return err
+	for _, a := range seq {
+		a.pin.Output()
+		if a.high {
+			a.pin.High()
+		} else {
+			a.pin.Low()
+		}
+		if a.delay > 0 {
+			time.Sleep(a.delay)
+		}
 	}
 
 	return wb.Enable(true)
 }
 
-// Worker function to toggle the GPIOs to switch the phases
+// gpioSwitchPhases toggles the GPIOs to switch between 1-phase and 3-phase charging
 func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
-	pinGpioCP := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
-	pinGpioPhases := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_3P)
+	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
+	phPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_3P)
 	if phases == 1 {
-		pinGpioPhases = rpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
+		phPin = rpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
 	}
-	pinGpioCP.Output()
-	pinGpioPhases.Output()
 
-	time.Sleep(time.Second)
-	pinGpioCP.High() // enable phases switch relay (NO), disconnect CP
-
-	time.Sleep(time.Second)
-	pinGpioPhases.High() // move latching relay to desired position
-
-	time.Sleep(wb.cpWait / 2)
-	pinGpioPhases.Low() // lock latching relay
-
-	time.Sleep(wb.cpWait / 2)
-	pinGpioCP.Low() // disable phase switching, reconnect CP
-
-	time.Sleep(time.Second)
-	return nil
-}
-
-// Worker function to toggle the GPIOs for the CP signal
-func (wb *OpenWbNative) gpioWakeup() error {
-	pinGpioCP := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
-	pinGpioCP.Output()
-
-	pinGpioCP.High()
-	time.Sleep(wb.cpWait)
-	pinGpioCP.Low()
-	return nil
+	seq := []gpioAction{
+		{pin: cpPin, high: true, delay: time.Second},    // enable phases switch relay (NO), disconnect CP
+		{pin: phPin, high: true, delay: wb.cpWait / 2},  // move latching relay to desired position
+		{pin: phPin, high: false, delay: wb.cpWait / 2}, // lock latching relay
+		{pin: cpPin, high: false, delay: time.Second},   // disable phase switching, reconnect CP
+	}
+	return wb.runGpioSequence(seq)
 }
 
 // Identify implements the api.Identifier interface
