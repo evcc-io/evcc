@@ -20,7 +20,7 @@ type OpenWbNative struct {
 	log         *util.Logger
 	rfId        native.RfIdContainer
 	cpWait      time.Duration
-	chargePoint int
+	connector   int
 	chargeState api.ChargeStatus
 }
 
@@ -36,7 +36,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		Phases1p3p      bool
 		RfId            string
 		CpWait          time.Duration
-		ChargePoint     int
+		Connector       int
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
@@ -50,20 +50,20 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.ChargePoint)
+	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector)
 }
 
 // NewOpenWbNative creates OpenWbNative charger
-func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, chargePoint int) (api.Charger, error) {
-	if (chargePoint < 0) || (chargePoint > 1) {
-		return nil, fmt.Errorf("invalid chargepoint value: %d", chargePoint)
+func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int) (api.Charger, error) {
+	if (connector < 1) || (connector > 2) {
+		return nil, fmt.Errorf("invalid connector value: %d", connector)
 	}
 	if cpWait < minCpWaitTime {
 		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cpWait.String(), minCpWaitTime)
 	}
 
 	log := util.NewLogger("openwb-native")
-	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, chargepoint %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), chargePoint)
+	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, connector %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), connector)
 
 	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
@@ -74,7 +74,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		Charger:     evse,
 		log:         log,
 		cpWait:      cpWait,
-		chargePoint: chargePoint,
+		connector:   connector,
 		chargeState: api.StatusNone,
 	}
 
@@ -149,10 +149,10 @@ func (wb *OpenWbNative) gpioExecute(worker func() error) error {
 
 // Worker function to toggle the GPIOs to switch the phases
 func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
-	pinGpioCP := rpio.Pin(native.ChargePoints[wb.chargePoint].PIN_CP)
-	pinGpioPhases := rpio.Pin(native.ChargePoints[wb.chargePoint].PIN_3P)
+	pinGpioCP := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
+	pinGpioPhases := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_3P)
 	if phases == 1 {
-		pinGpioPhases = rpio.Pin(native.ChargePoints[wb.chargePoint].PIN_1P)
+		pinGpioPhases = rpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
 	}
 	pinGpioCP.Output()
 	pinGpioPhases.Output()
@@ -175,7 +175,7 @@ func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
 
 // Worker function to toggle the GPIOs for the CP signal
 func (wb *OpenWbNative) gpioWakeup() error {
-	pinGpioCP := rpio.Pin(native.ChargePoints[wb.chargePoint].PIN_CP)
+	pinGpioCP := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
 	pinGpioCP.Output()
 
 	pinGpioCP.High()

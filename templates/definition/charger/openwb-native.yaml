@@ -120,20 +120,20 @@ params:
       de: bei der Phasenumschaltung und Aufwecken des Autos. Mindestens 5 Sekunden.
     default: 10s
     advanced: true
-  - name: chargepoint
+  - name: connector
     type: int
     description:
-      en: Chargepoint id
-      de: Ladepunkt id
+      en: Connector
+      de: Ladepunkt
     help:
-      en: 0 or 1, usually 0, except for Duo
-      de: 0 oder 1, normalerweise 0, ausser bei Duo
-    default: 0
+      en: 1 or 2, usually 1, except for Duo
+      de: 1 oder 2, normalerweise 1, ausser bei Duo
+    default: 1
     advanced: true
 render: |
   type: openwb-native
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
   cpwait: {{ .cpwait }}
-  chargepoint: {{ .chargepoint }}
+  connector: {{ .connector }}
   {{- include "modbus" . }}
