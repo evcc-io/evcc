@@ -1,0 +1,22 @@
+template: ekz
+products:
+  - brand: EKZ
+group: price
+countries: ["CH"]
+params:
+  - name: tariff
+    description:
+      generic: Tariff Name
+      de: Tarifname
+    example: integrated_400D
+    type: choice
+    choice: ["integrated_400D", "integrated_400ST", "integrated_400F"]
+    required: true
+    help:
+      de: "integrated_400D: Dynamischer Tarif (ab 1. Januar 2026), integrated_400ST/400F: Statische Tarife"
+      en: "integrated_400D: Dynamic tariff (from January 1, 2026), integrated_400ST/400F: Static tariffs"
+  - preset: tariff-base
+render: |
+  type: ekz
+  tariff: {{ .tariff }}
+  {{ include "tariff-base" . }}
