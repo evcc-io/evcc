@@ -59,6 +59,7 @@
         },
         "heatpump": "Benotzerdefinéirt Wärmepompel",
         "sgready": "Benotzerdefinéiert Wärmepompel (sg-ready iwwer Plugins)",
+        "sgready-boost": "Benotzerdefinéiert Wärmepompel (sg-ready-boost, obsolet)",
         "sgready-relay": "Benotzerdefinéiert Wärmepompel (sg-ready iwwer Relais)",
         "switchsocket": "Benotzerdefinéirt schaltbar Steckdous"
       }
@@ -94,6 +95,7 @@
       "currency": "Wärung",
       "current": "Stroum",
       "currentRange": "Stroum",
+      "dimmed": "Gedimmt",
       "enabled": "Ageschalt",
       "energy": "Energie",
       "feedinPrice": "Präis fir anzespeisen",
@@ -118,7 +120,7 @@
       "temp": "Temperatur",
       "topic": "Sujet",
       "url": "URL",
-      "vehicleLimitSoc": "Limitt vum Gefier",
+      "vehicleLimitSoc": "Luedlimit",
       "yes": "jo"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +135,7 @@
     "devices": {
       "auxMeter": "Smarte Verbraucher",
       "batteryStorage": "Batterie",
+      "consumer": "Verbraucher",
       "solarSystem": "PV-Anlag"
     },
     "editor": {
@@ -143,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Ka fir d'Gestioun vum Lueden oder fir Statistikzwecker verwennt ginn.",
-      "titleAdd": "Zousätzlechen Zieler derbäi fügen",
-      "titleEdit": "Zousätzlechen Zieler beaarbechten"
+      "description": "Dokumentéiert d'Energiewäerter vun onkontrolléierte Verbraucher (z.B. Frigo, Wäschmaschinn, asw.) fir statistesch Zwecker. Dës Zieler kënnen och fir d'Laaschtverwaltung (z.B. Ënnerverdeelung) benotzt ginn.",
+      "titleAdd": "Zieler derbäi fügen",
+      "titleEdit": "Zieler beaarbechten"
     },
     "form": {
       "danger": "Oppassen",
@@ -165,6 +168,7 @@
       "dragItem": "Verréckelbar: {title}",
       "dragList": "Sortéirbar Lëscht",
       "experimental": "Experimentell",
+      "forceSave": "Trotzdem späicheren",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
       "noFileSelected": "Keng Datei ausgewielt.",
@@ -176,11 +180,14 @@
       "required": "obligatoresch",
       "reset": "Zerécksetzen",
       "save": "Späicheren",
+      "saved": "Gespäichert.",
+      "saving": "Späichert…",
       "selectFile": "Duerchsichen",
       "showAdvancedSettings": "Fortgeschratten Astellungen uweisen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lueden…",
       "title": "Titel",
+      "typeDeprecated": "Den Typ '{type}' ass veraalt a gëtt an enger zukünfteger Versioun ewechgeholl. Kuckt wgl. den Ännerungslog a schaaft dësen Apparat nei.",
       "validateSave": "Iwwerpréiwen & späicheren"
     },
     "grid": {
@@ -193,7 +200,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "änneren"
+      "change": "änneren",
+      "label": "Symbol"
     },
     "influx": {
       "description": "Schreift Lueddaten an aner Moossen an InfluxDB. Benotzt Grafana oder aner Tools fir d'Donnéeën ze visualiséieren.",
@@ -341,13 +349,22 @@
       "option": {
         "aux": "Intelligente Verbraucher derbäi fügen",
         "battery": "Hausbatterie derbäi fügen",
-        "ext": "Externen Zieler derbäi fügen",
+        "ext": "Reegelméissege Verbraucher derbäisetzen",
         "pv": "Sonnen-Zieler derbäi fügen"
       },
       "save": "Späicheren",
       "specific": "Spezifesch Integratiounen",
       "template": "Hiersteller",
       "titleChoice": "Wat wëlls du derbäi setzen?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Intelligente Verbraucher",
+        "battery": "Batterie",
+        "charge": "Verbraucher / Luedgerät",
+        "grid": "Réseau",
+        "label": "Verbrauch",
+        "pv": "Productioun"
+      },
       "validateSave": "Iwwerpréiwen & späicheren"
     },
     "modbus": {
@@ -522,7 +539,7 @@
     "validation": {
       "failed": "feelgeschloen",
       "label": "Status",
-      "running": "validéiert…",
+      "running": "Validéiert…",
       "success": "erfollegräich",
       "unknown": "onbekannt",
       "validate": "validéieren"
@@ -654,6 +671,7 @@
     "about": "Iwwer",
     "authProviders": {
       "confirmLogout": "Sécher, datt s du {title} trenne wëlls?",
+      "loggedOut": "Erfollegräich ofgemellt",
       "title": "Autoriséirungsstatus"
     },
     "blog": "Blog",
