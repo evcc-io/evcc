@@ -427,12 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Use .local suffix to enable mDNS. Relevant for discovery of the mobile app and some OCPP chargers.",
+      "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for autodiscovery of the evcc app.",
+      "descriptionHost": "Used to announce evcc in your local network.",
+      "descriptionInternalUrl": "Local network address of evcc.",
       "descriptionPort": "Port for the web interface and API. You'll need to update your browser URL if you change this.",
-      "descriptionSchema": "Only affects how URLs are generated. Selecting HTTPS will not enable encryption.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "External URL",
+      "labelHost": "mDNS Hostname",
+      "labelInternalUrl": "Internal URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Network"
     },
     "options": {
@@ -1018,7 +1020,8 @@
     "message": "Not connected to a server.",
     "restart": "Restart",
     "restartNeeded": "Required to apply changes.",
-    "restarting": "Server will be back in a moment."
+    "restarting": "Server will be back in a moment.",
+    "starting": "Starting server..."
   },
   "passwordModal": {
     "description": "Set a password to protect the configuration settings. Using the main screen is still possible without login.",
@@ -1207,6 +1210,7 @@
     "configuration": "Config",
     "description": "Please check your configuration file. If the error message does not help, check out the {0}.",
     "discussions": "GitHub Discussions",
+    "editConfiguration": "Edit configuration",
     "fixAndRestart": "Please fix the problem and restart the server.",
     "hint": "Note: It could also be you have a faulty device (inverter, meter, …). Check your network connections.",
     "lineError": "Error in {0}.",

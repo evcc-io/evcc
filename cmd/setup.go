@@ -63,9 +63,8 @@ var conf = globalconfig.All{
 	Interval: 10 * time.Second,
 	Log:      "info",
 	Network: globalconfig.Network{
-		Schema: "http",
-		Host:   "evcc.local",
-		Port:   7070,
+		Host: "",
+		Port: 7070,
 	},
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
@@ -676,14 +675,14 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 }
 
 // setup SHM
-func configureSHM(conf *shm.Config, site *core.Site, httpd *server.HTTPd) error {
+func configureSHM(conf *shm.Config, externalUrl string, site *core.Site, httpd *server.HTTPd) error {
 	if settings.Exists(keys.Shm) {
 		if err := settings.Json(keys.Shm, &conf); err != nil {
 			return err
 		}
 	}
 
-	if err := shm.NewFromConfig(*conf, site, httpd.Addr, httpd.Router()); err != nil {
+	if err := shm.NewFromConfig(*conf, externalUrl, site, httpd.Addr, httpd.Router()); err != nil {
 		return fmt.Errorf("failed configuring shm: %w", err)
 	}
 
@@ -751,8 +750,18 @@ func networkSettings(conf *globalconfig.Network) error {
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
+	if host == "" {
+		host = "evcc"
+	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, []string{"path=/"}, nil)
+	internalURL := conf.InternalURL()
+	text := []string{"path=/", "internal_url=" + internalURL}
+
+	if externalURL := conf.ExternalURL(); externalURL != internalURL {
+		text = append(text, "external_url="+externalURL)
+	}
+
+	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return fmt.Errorf("mDNS announcement: %w", err)
 	}
