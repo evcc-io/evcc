@@ -13,9 +13,11 @@ requirements:
     en: |
       Configure the SEMP base URL (e.g. http://192.168.178.100/SEMP) and the device ID of the charger.
       IMPORTANT: The charger must NOT be registered directly as a consumer in the Sunny Home Manager / Sunny Portal at the same time!
+      The configuration option "Disconnect after full charge" must be disabled.
     de: |
       Konfiguriere die SEMP Basis-URL (z.B. http://192.168.178.100/SEMP) und die Geräte-ID des Chargers.
       WICHTIG: Der Charger darf NICHT gleichzeitig im Sunny Home Manager bzw. im Sunny Portal direkt als Verbraucher registriert sein!
+      Die Konfigurationsoption "Trennung nach Vollladung" muss deaktiviert sein.
 params:
   - name: uri
     description:

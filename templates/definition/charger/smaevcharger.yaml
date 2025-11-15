@@ -1,11 +1,12 @@
 template: smaevcharger
+deprecated: true
 products:
   - brand: SMA
     description:
-      generic: EV Charger
+      generic: EV Charger (HTTP)
   - brand: SMA
     description:
-      generic: eCharger
+      generic: eCharger (HTTP)
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
