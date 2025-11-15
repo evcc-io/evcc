@@ -63,7 +63,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
+import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, Forecast } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -82,7 +82,7 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
-		forecast: Object, // as PropType<Forecast>,
+		forecast: Object as PropType<Forecast>,
 	},
 	emits: ["id-changed"],
 	data() {

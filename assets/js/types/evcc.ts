@@ -463,11 +463,11 @@ export interface Slot {
 }
 
 export interface Forecast {
-  grid?: ForecastSlot[];
-  co2?: ForecastSlot[];
+  grid: ForecastSlot[];
+  co2: ForecastSlot[];
   solar?: SolarDetails;
-  planner?: ForecastSlot[];
-  feedin?: ForecastSlot[];
+  planner: ForecastSlot[];
+  feedin: ForecastSlot[];
 }
 
 export interface SelectOption<T> {

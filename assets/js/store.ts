@@ -31,7 +31,12 @@ const initialState: State = {
   offline: false,
   loadpoints: [],
   vehicles: {},
-  forecast: {},
+  forecast: {
+    grid: [],
+    co2: [],
+    planner: [],
+    feedin: [],
+  },
 };
 
 const state = reactive(initialState);
