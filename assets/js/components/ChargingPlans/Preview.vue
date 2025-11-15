@@ -144,7 +144,12 @@ export default defineComponent({
 			base.setSeconds(0, 0);
 			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
 
-			return Array.from({ length: 48 * 4 }, (_, i) => {
+			const endTime = this.getMaxEndTime([...rates, ...plan]);
+			const interval = endTime
+				? Math.ceil((endTime - base.getTime()) / 1000 / 60 / 15)
+				: 48 * 4; // Default to 48 hours if no end time
+
+			return Array.from({ length: interval }, (_, i) => {
 				const start = new Date(base.getTime() + quarterHour * i);
 				const end = new Date(start.getTime() + quarterHour);
 				const charging = !!this.findSlotInRange(start, end, plan);
@@ -196,6 +201,12 @@ export default defineComponent({
 		},
 		slotHovered(index: number): void {
 			this.activeIndex = index;
+		},
+		getMaxEndTime(list: Rate[]): number | null {
+			if (!list.length) {
+				return null;
+			}
+			return Math.max(...list.map((s) => s.end.getTime()));
 		},
 	},
 });
