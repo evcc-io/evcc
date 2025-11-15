@@ -24,7 +24,14 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
+  Service?: string;
   Usages?: TemplateParamUsage[];
+};
+
+export type ParamService = {
+  name: string;
+  dependencies: string[];
+  url: (values: Record<string, any>) => string;
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
@@ -91,6 +98,72 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
   return `${prefix}${type}`;
 }
 
+export async function loadServiceValues(path: string) {
+  try {
+    const response = await api.get(`/config/service/${path}`);
+    return response.data as string[];
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
+export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
+  const getDependencies = (service: string) =>
+    service.match(/\{([^}]+)\}/g)?.map((match) => match.slice(1, -1)) || [];
+
+  const buildUrl = (service: string) => {
+    return (values: Record<string, any>) =>
+      service.replace(/\{(\w+)\}/g, (match, key) => {
+        const value = values[key];
+        if (value === undefined || value === null || value === "") {
+          return match;
+        }
+        return encodeURIComponent(String(value));
+      });
+  };
+
+  return params
+    .map((param) => {
+      if (!param.Service) {
+        return null;
+      }
+      return {
+        name: param.Name,
+        dependencies: getDependencies(param.Service),
+        url: buildUrl(param.Service),
+      } as ParamService;
+    })
+    .filter((endpoint): endpoint is ParamService => endpoint !== null);
+};
+
+export const fetchServiceValues = async (
+  templateParams: TemplateParam[],
+  values: DeviceValues
+): Promise<Record<string, string[]>> => {
+  const endpoints = createServiceEndpoints(templateParams);
+  const result: Record<string, string[]> = {};
+
+  await Promise.all(
+    endpoints.map(async (endpoint) => {
+      const params: Record<string, any> = {};
+      endpoint.dependencies.forEach((dependency) => {
+        if (values[dependency]) {
+          params[dependency] = values[dependency];
+        }
+      });
+      if (Object.keys(params).length !== endpoint.dependencies.length) {
+        // missing dependency values, skip
+        return;
+      }
+      const url = endpoint.url(params);
+      result[endpoint.name] = await loadServiceValues(url);
+    })
+  );
+
+  return result;
+};
+
 export function createDeviceUtils(deviceType: DeviceType) {
   function test(id: number | undefined, data: any) {
     let url = `config/test/${deviceType}`;
@@ -150,5 +223,6 @@ export function createDeviceUtils(deviceType: DeviceType) {
     create,
     loadProducts,
     loadTemplate,
+    loadServiceValues,
   };
 }

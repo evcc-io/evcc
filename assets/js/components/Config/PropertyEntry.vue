@@ -17,6 +17,7 @@
 			:unit="Unit"
 			:required="Required"
 			:choice="Choice"
+			:service-values="serviceValues"
 			:label="label"
 		/>
 	</FormRow>
@@ -42,6 +43,7 @@ export default {
 		Unit: String,
 		Mask: Boolean,
 		Choice: Array,
+		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],

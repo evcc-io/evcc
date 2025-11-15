@@ -68,6 +68,7 @@
 						:key="param.Name"
 						v-bind="param"
 						v-model="values[param.Name]"
+						:service-values="serviceValues[param.Name]"
 					/>
 
 					<PropertyCollapsible>
@@ -78,6 +79,7 @@
 								:key="param.Name"
 								v-bind="param"
 								v-model="values[param.Name]"
+								:service-values="serviceValues[param.Name]"
 							/>
 						</template>
 						<template v-if="$slots['collapsible-more']" #more>
@@ -129,6 +131,7 @@ import {
 	type ApiData,
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
+	fetchServiceValues,
 } from "./index";
 
 const CUSTOM_FIELDS = ["modbus"];
@@ -201,6 +204,7 @@ export default defineComponent({
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
 			test: initialTestState(),
+			serviceValues: {} as Record<string, string[]>,
 		};
 	},
 	computed: {
@@ -353,6 +357,8 @@ export default defineComponent({
 			if (!isYamlInput) {
 				this.loadTemplate();
 			}
+
+			this.updateServiceValues();
 		},
 		usage() {
 			// Reload products when usage changes (e.g., meter type selection)
@@ -376,6 +382,7 @@ export default defineComponent({
 		values: {
 			handler() {
 				this.test = initialTestState();
+				this.updateServiceValues();
 			},
 			deep: true,
 		},
@@ -547,6 +554,9 @@ export default defineComponent({
 				return this.isYamlInputType(value);
 			}
 			return value === ConfigType.Custom;
+		},
+		async updateServiceValues() {
+			this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
 		},
 	},
 });
