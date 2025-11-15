@@ -560,6 +560,21 @@
         },
         "type": "object"
       },
+      "PlanStrategy": {
+        "description": "Charging plan strategy configuration",
+        "properties": {
+          "continuous": {
+            "description": "Force continuous planning",
+            "type": "boolean"
+          },
+          "precondition": {
+            "description": "Precondition duration in seconds",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Power": {
         "description": "Power in W",
         "example": 2500,
@@ -604,9 +619,6 @@
             "description": "Set plan active.",
             "type": "boolean"
           },
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "soc": {
             "$ref": "#/components/schemas/Soc"
           },
@@ -641,9 +653,6 @@
           "energy": {
             "$ref": "#/components/schemas/Energy"
           },
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "time": {
             "$ref": "#/components/schemas/Timestamp"
           }
@@ -655,9 +664,6 @@
           "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
         },
         "properties": {
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "soc": {
             "$ref": "#/components/schemas/Soc"
           },
@@ -1333,9 +1339,6 @@
                           "properties": {
                             "planId": {
                               "$ref": "#/components/schemas/Id"
-                            },
-                            "precondition": {
-                              "$ref": "#/components/schemas/Precondition"
                             }
                           },
                           "type": "object"
@@ -1511,6 +1514,51 @@
           }
         },
         "summary": "Simulate soc-based charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/strategy": {
+      "post": {
+        "description": "Updates the charging plan strategy for the loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setLoadpointPlanStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStrategy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PlanStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set plan strategy",
         "tags": [
           "loadpoints"
         ]
@@ -2412,13 +2460,6 @@
           },
           {
             "$ref": "#/components/parameters/timestamp"
-          },
-          {
-            "in": "query",
-            "name": "precondition",
-            "schema": {
-              "$ref": "#/components/schemas/Precondition"
-            }
           }
         ],
         "responses": {
@@ -2428,7 +2469,15 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/StaticSocPlan"
+                      "properties": {
+                        "soc": {
+                          "$ref": "#/components/schemas/Soc"
+                        },
+                        "time": {
+                          "$ref": "#/components/schemas/Timestamp"
+                        }
+                      },
+                      "type": "object"
                     }
                   },
                   "type": "object"
@@ -2439,6 +2488,51 @@
           }
         },
         "summary": "Set a SoC-based charging plan",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/plan/strategy": {
+      "post": {
+        "description": "Updates the charging plan strategy for the vehicle.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setVehiclePlanStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStrategy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PlanStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set plan strategy",
         "tags": [
           "vehicles"
         ]
