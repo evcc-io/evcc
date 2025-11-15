@@ -59,6 +59,7 @@
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
         "sgready": "Benutzerdefinierte Wärmepumpe (SG-Ready über Plugins)",
+        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready-boost, veraltet)",
         "sgready-relay": "Benutzerdefinierte Wärmepumpe (SG-Ready über Relais)",
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
