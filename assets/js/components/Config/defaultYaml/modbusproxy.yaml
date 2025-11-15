@@ -1,7 +1,0 @@
-#- port: 5021 # proxy port for incoming ModbusTCP requests
-#  uri: 192.0.2.2:502 # device address for downstream requests
-#  rtu: true # optional: use RTU for downstream requests to device
-#- port: 5022 # proxy port for incoming ModbusTCP requests
-#  device: /dev/ttyUSB0 # local device for downstream requests
-#  baudrate: 9600
-#  comset: "8N1"

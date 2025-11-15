@@ -136,6 +136,10 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"initialising":       api.StatusB,
 	"preparing":          api.StatusB,
 	"2":                  api.StatusB,
+	"no_power":           api.StatusB,
+	"complete":           api.StatusB,
+	"stopped":            api.StatusB,
+	"starting":           api.StatusB,
 
 	// Status A - Disconnected
 	"a":                   api.StatusA,
