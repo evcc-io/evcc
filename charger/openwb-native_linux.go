@@ -103,12 +103,17 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 // Status implements the api.Charger interface
 func (wb *OpenWbNative) Status() (api.ChargeStatus, error) {
 	res, err := wb.Charger.Status()
+	if err != nil {
+		return api.Stat, err
+	}
+
 	if wb.chargeState != api.StatusA && res == api.StatusA {
 		// Status changed from connected/charging to not connected, discard rfid
 		wb.rfId.Set("")
 	}
 	wb.chargeState = res
-	return res, err
+
+	return res, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
