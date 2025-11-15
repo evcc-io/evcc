@@ -195,7 +195,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 33046 # Battery max charge power
-                type: writesingle
+                type: input
                 decode: uint16
           out:
           - name: power
