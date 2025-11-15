@@ -273,18 +273,26 @@ render: |
         - source: go
           script: |
             power := 1000
-            maxpower := {{ .maxchargepower }}
-            maxacpower := float64({{ .maxacpower }})
             capacity := float64({{ .capacity }})
-            if maxpower != 0 {
-              power = maxpower
+            if {{ .maxchargepower }} != 0 {
+              power = {{ .maxchargepower }}
             } else if bdc_power != 0 {
               power = bdc_power
             } else {
-              power = int(math.Min(capacity*1000/2, maxacpower))
+              power = int(math.Min(capacity*1000/2, ac_power))
             }
             power
           in:
+          - name: ac_power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 5000 # AC output power
+                type: input
+                decode: uint16
+              scale: 100
           - name: bdc_power
             type: int
             config:
@@ -302,7 +310,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 13051 # Charge/discharge power
+                address: 13051 # Forced charge/discharge power
                 type: writesingle
                 decode: uint16
   capacity: {{ .capacity }} # kWh
