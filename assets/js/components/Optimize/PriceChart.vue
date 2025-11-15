@@ -34,6 +34,7 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
+import { calculateDynamicScale } from "@/utils/chartScaling";
 
 const tension = 0;
 
@@ -69,6 +70,16 @@ export default defineComponent({
 		},
 	},
 	computed: {
+		priceScale() {
+			// Collect all price values from both import and export
+			const convertPrice = (price: number): number => price * 1000;
+			const importPrices = this.evopt.req.time_series.p_N.map(convertPrice);
+			const exportPrices = this.evopt.req.time_series.p_E.map(convertPrice);
+			const allPrices = [...importPrices, ...exportPrices];
+
+			// Calculate dynamic scale with 10% margin
+			return calculateDynamicScale(allPrices, 10, 0.01);
+		},
 		timeLabels(): string[] {
 			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
@@ -198,7 +209,9 @@ export default defineComponent({
 						grid: {
 							drawOnChartArea: true,
 						},
-						// Keep scales purely based on values, no fixed boundaries
+						// Use dynamic scale with margins to make price differences visible
+						min: this.priceScale.min,
+						max: this.priceScale.max,
 					},
 				},
 			};
