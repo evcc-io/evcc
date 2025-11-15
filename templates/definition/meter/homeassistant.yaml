@@ -20,6 +20,7 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
+    required: true
     service: homeassistant/homes
   - name: power
     description:
