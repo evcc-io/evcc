@@ -77,18 +77,25 @@
 		:required="required"
 		rows="4"
 	/>
-	<input
-		v-else
-		:id="id"
-		v-model="value"
-		class="form-control"
-		:class="inputClasses"
-		:type="inputType"
-		:step="step"
-		:placeholder="placeholder"
-		:required="required"
-		:autocomplete="masked ? 'off' : null"
-	/>
+	<div v-else>
+		<input
+			:id="id"
+			v-model="value"
+			:list="datalistId"
+			class="form-control"
+			:class="inputClasses"
+			:type="inputType"
+			:step="step"
+			:placeholder="placeholder"
+			:required="required"
+			:autocomplete="masked ? 'off' : null"
+		/>
+		<datalist v-if="datalistId" :id="datalistId">
+			<option v-for="v in serviceValues" :key="v" :value="v">
+				{{ v }}
+			</option>
+		</datalist>
+	</div>
 </template>
 
 <script>
@@ -117,12 +124,16 @@ export default {
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
+		serviceValues: { type: Array, default: () => [] },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
 		return { selectMode: false };
 	},
 	computed: {
+		datalistId() {
+			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
+		},
 		inputType() {
 			if (this.masked) {
 				return "password";

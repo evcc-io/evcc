@@ -7,8 +7,8 @@ products:
 group: generic
 requirements:
   description:
-    en: Home Assistant instance with API access
-    de: Home Assistant Instanz mit API-Zugriff
+    en: Requires a running Home Assistant instance with suitable sensor entities. All values are Home Assistant entity IDs (e.g. sensor.*)
+    de: Erfordert eine laufende Home Assistant Instanz mit passenden Sensor-Entitäten. Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*)
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]
@@ -20,8 +20,10 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    required: true
+    default: Home
     service: homeassistant/homes
+    type: string
+    required: true
   - name: power
     description:
       de: Leistungsentität

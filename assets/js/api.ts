@@ -1,4 +1,5 @@
 import axios, { type AxiosResponse } from "axios";
+import { setupCache } from "axios-cache-interceptor";
 import { openLoginModal } from "./components/Auth/auth";
 
 const { protocol, hostname, port, pathname } = window.location;
@@ -19,13 +20,16 @@ function customParamsSerializer(params: { [key: string]: any }) {
     .join("&");
 }
 
-const api = axios.create({
+const axiosInstance = axios.create({
   baseURL: base + "api/",
   headers: {
     Accept: "application/json",
   },
   paramsSerializer: customParamsSerializer,
 });
+
+// combines identical parallel requests into one
+const api = setupCache(axiosInstance);
 
 // global error handling
 api.interceptors.response.use(

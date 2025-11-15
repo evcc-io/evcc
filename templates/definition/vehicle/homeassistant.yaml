@@ -21,6 +21,8 @@ params:
       en: Home Assistant Instance
     required: true
     service: homeassistant/homes
+    type: string
+    required: true
   - name: soc
     description:
       de: Ladezustand [%]
