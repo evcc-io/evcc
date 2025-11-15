@@ -61,6 +61,7 @@ import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
 import type { Slot } from "@/types/evcc";
+import { calculateDynamicScale, normalizeToHeight } from "@/utils/chartScaling";
 const BAR_WIDTH = 8;
 
 export default defineComponent({
@@ -85,16 +86,9 @@ export default defineComponent({
 	},
 	computed: {
 		valueInfo() {
-			let max = Number.MIN_VALUE;
-			let min = 0;
-			this.slots
-				.map((s) => s.value)
-				.filter((value) => value !== undefined)
-				.forEach((value) => {
-					max = Math.max(max, value);
-					min = Math.min(min, value);
-				});
-			return { min, range: max - min };
+			const values = this.slots.map((s) => s.value);
+			const scale = calculateDynamicScale(values, 10, 0.01);
+			return { min: scale.min, range: scale.range };
 		},
 		targetLeft() {
 			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
@@ -150,7 +144,7 @@ export default defineComponent({
 			const val = value === undefined ? this.avgValue : value;
 			const height =
 				value !== undefined && !isNaN(val)
-					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
+					? `${normalizeToHeight(val, this.valueInfo.min, this.valueInfo.range)}%`
 					: "50%";
 			return { height };
 		},

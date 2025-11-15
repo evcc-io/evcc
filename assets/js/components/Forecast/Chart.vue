@@ -38,6 +38,7 @@ import colors, { lighterColor } from "@/colors";
 import type { CURRENCY } from "@/types/evcc";
 import { ForecastType, highestSlotIndexByDay } from "@/utils/forecast";
 import type { ForecastSlot, SolarDetails, TimeseriesEntry } from "./types";
+import { calculateDynamicScale } from "@/utils/chartScaling";
 
 registerChartComponents([
 	BarController,
@@ -111,6 +112,11 @@ export default defineComponent({
 		},
 		maxSolarIndex() {
 			return this.maxEntryIndex(this.solarEntries);
+		},
+		priceScale() {
+			// Calculate dynamic scale for price data with 10% margin
+			const values = this.gridSlots.map((s) => s.value);
+			return calculateDynamicScale(values, 10, 0.01);
 		},
 		solarHighlights() {
 			const { today, tomorrow, dayAfterTomorrow } = this.solar || {};
@@ -381,8 +387,8 @@ export default defineComponent({
 					},
 					yPrice: {
 						...this.yScaleOptions(ForecastType.Price),
-						suggestedMin: 0,
-						max: this.yMax(this.gridSlots),
+						min: this.priceScale.min,
+						max: this.priceScale.max,
 					},
 				},
 			};

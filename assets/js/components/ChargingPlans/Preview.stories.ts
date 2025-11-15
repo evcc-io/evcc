@@ -79,6 +79,18 @@ const dynamicData = {
   targetTime: createDate(13),
 };
 
+// Small variations - tests dynamic scaling
+const smallVariationsData = {
+  rates: [0.25, 0.26, 0.255, 0.27, 0.265, 0.26, 0.255, 0.27, 0.265, 0.26, 0.25, 0.255].map(
+    (value, i) => createRate(value, i)
+  ),
+  duration: 8695,
+  plan: [createRate(0.255, 6, 3)],
+  smartCostType: SMART_COST_TYPE.PRICE_DYNAMIC,
+  currency: CURRENCY.EUR,
+  targetTime: createDate(11),
+};
+
 export default {
   title: "ChargingPlans/Preview",
   component: Preview,
@@ -114,3 +126,6 @@ Unknown.args = unknownData;
 
 export const Dynamic = Template.bind({});
 Dynamic.args = dynamicData;
+
+export const SmallVariations = Template.bind({});
+SmallVariations.args = smallVariationsData;
