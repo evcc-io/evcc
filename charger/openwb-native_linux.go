@@ -104,7 +104,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 func (wb *OpenWbNative) Status() (api.ChargeStatus, error) {
 	res, err := wb.Charger.Status()
 	if err != nil {
-		return api.Stat, err
+		return api.StatusA, err
 	}
 
 	if wb.chargeState != api.StatusA && res == api.StatusA {
