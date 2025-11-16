@@ -271,7 +271,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: {{ div .maxchargepower 10 }}
+          value: {{ .maxchargepower }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
