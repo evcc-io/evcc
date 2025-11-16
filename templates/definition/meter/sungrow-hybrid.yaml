@@ -276,7 +276,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 33047 # Battery max discharge power
+              address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
   capacity: {{ .capacity }} # kWh
