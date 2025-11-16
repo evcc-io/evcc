@@ -19,7 +19,7 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    required: true
+    default: Home
     service: homeassistant/homes
     type: string
     required: true
