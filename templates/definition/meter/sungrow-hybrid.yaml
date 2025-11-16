@@ -181,16 +181,29 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        # Reset max battery discharge power
-        - source: const
-          value: {{ div .maxchargepower 10 }}
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 33047 # Battery max discharge power
-              type: writesingle
-              decode: uint16
+        # Reset max battery discharge power, set equal to max battery charge power
+        - source: go
+          script: power
+          in:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 33046 # Battery max charge power
+                type: holding
+                decode: uint16
+          out:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 33047 # Battery max discharge power
+                type: writesingle
+                decode: uint16
         - source: const
           value: 0 # Self-consumption mode (Default)
           set:
