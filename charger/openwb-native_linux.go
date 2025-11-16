@@ -126,11 +126,11 @@ var _ api.Resurrector = (*OpenWbNative)(nil)
 // WakeUp implements the api.Resurrector interface
 func (wb *OpenWbNative) WakeUp() error {
 	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
-	seq := []gpioAction{
+
+	return wb.runGpioSequence([]gpioAction{
 		{pin: cpPin, high: true, delay: wb.cpWait},
 		{pin: cpPin, high: false, delay: 0},
-	}
-	return wb.runGpioSequence(seq)
+	})
 }
 
 // gpioAction defines a single GPIO pin operation with timing
@@ -174,13 +174,12 @@ func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
 		phPin = rpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
 	}
 
-	seq := []gpioAction{
+	return wb.runGpioSequence([]gpioAction{
 		{pin: cpPin, high: true, delay: time.Second},    // enable phases switch relay (NO), disconnect CP
 		{pin: phPin, high: true, delay: wb.cpWait / 2},  // move latching relay to desired position
 		{pin: phPin, high: false, delay: wb.cpWait / 2}, // lock latching relay
 		{pin: cpPin, high: false, delay: time.Second},   // disable phase switching, reconnect CP
-	}
-	return wb.runGpioSequence(seq)
+	})
 }
 
 // Identify implements the api.Identifier interface
