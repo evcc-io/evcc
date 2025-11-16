@@ -24,13 +24,20 @@ type OpenWbNative struct {
 	chargeState api.ChargeStatus
 }
 
+// gpioAction defines a single GPIO pin operation with timing
+type gpioAction struct {
+	pin   rpio.Pin
+	high  bool
+	delay time.Duration
+}
+
 func init() {
 	registry.AddCtx("openwb-native", NewOpenWbNativeFromConfig)
 }
 
 //go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
-// NewOpenWbNativeFromConfig creates an OpenWbNative DIN charger from generic config
+// NewOpenWbNativeFromConfig creates an OpenWbNative charger from generic config
 func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Phases1p3p      bool
@@ -131,13 +138,6 @@ func (wb *OpenWbNative) WakeUp() error {
 		{pin: cpPin, high: true, delay: wb.cpWait},
 		{pin: cpPin, high: false, delay: 0},
 	})
-}
-
-// gpioAction defines a single GPIO pin operation with timing
-type gpioAction struct {
-	pin   rpio.Pin
-	high  bool
-	delay time.Duration
 }
 
 // runGpioSequence executes a sequence of GPIO operations
