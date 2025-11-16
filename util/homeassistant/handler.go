@@ -40,7 +40,7 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 	conn, _ := NewConnection(log, home)
 	res, err := conn.GetStates()
 	if err != nil {
-		jsonError(w, http.StatusBadRequest, err.Error())
+		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -74,12 +74,8 @@ func jsonWrite(w http.ResponseWriter, data any) {
 	json.NewEncoder(w).Encode(data)
 }
 
-type errorResponse struct {
-	Error string `json:"error"`
-}
-
 // jsonError writes an error response
-func jsonError(w http.ResponseWriter, status int, message string) {
+func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
-	jsonWrite(w, errorResponse{Error: message})
+	jsonWrite(w, util.ErrorAsJson(err))
 }
