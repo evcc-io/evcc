@@ -1,0 +1,45 @@
+template: ora2mqtt
+products:
+  - description:
+      generic: ora2mqtt
+group: generic
+requirements:
+  description:
+    en: Required MQTT broker configuration and a Ora2MQTT Gateway (https://github.com/zivillian/ora2mqtt)
+    de: Voraussetzung ist ein konfigurierter MQTT Broker und ein Ora2MQTT Gateway (https://github.com/zivillian/ora2mqtt)
+params:
+ - name: vin
+    required: true
+  - preset: vehicle-common
+  - name: timeout
+    default: 5min
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  soc: # battery soc (%)
+    source: mqtt
+    topic: GWM/{{ .vin }}/status/items/2013021/value
+    timeout: {{ .timeout }}
+  status:
+    source: mqtt
+    topic: GWM/{{ .vin }}/status/items/2041142/value
+    jq: |
+      if . == 0 then "A"
+          elif . == 1 then "C"
+          elif . == 2 or . == 5 then "B"
+          elif . == 6 then "F"
+          else "A"
+          end
+    timeout: {{ .timeout }}
+  range:
+    source: mqtt
+    topic: GWM/{{ .vin }}/status/items/2011501/value
+    timeout: {{ .timeout }}
+  climater:
+    source: mqtt
+    topic: GWM/{{ .vin }}/status/items/2202001/value
+    timeout: {{ .timeout }}
+  odometer:
+    source: mqtt
+    topic: GWM/{{ .vin }}/status/items/2103010/value
+    timeout: {{ .timeout }}
