@@ -12,22 +12,25 @@ import (
 )
 
 type RfIdContainer struct {
-	mut  sync.Mutex
+	mu   sync.Mutex
 	rfId string
 }
 
 func (c *RfIdContainer) Set(rfId string) {
-	c.mut.Lock()
-	defer c.mut.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.rfId = rfId
 }
 
 func (c *RfIdContainer) Get() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.rfId
 }
 
-// NewRFIDHandler initializes RFID device monitoring and returns the channel for RFID reads.
-// It also returns a cancel function to stop monitoring and clean up resources.
+// NewRFIDHandler initializes RFID device monitoring.
+// It starts goroutines that monitor RFID devices and update the rfIdContainer.
+// Monitoring stops when the context is cancelled.
 func NewRFIDHandler(rfIdVidPid string, ctx context.Context, rfIdContainer *RfIdContainer, log *util.Logger) error {
 	devicePaths, err := evdev.ListDevicePaths()
 	if err != nil {
