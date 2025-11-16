@@ -24,8 +24,10 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
+    default: 5000
     advanced: true
   - name: maxdischargepower
+    default: 5000
     advanced: true
 render: |
   type: custom
@@ -268,48 +270,15 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        - source: go
-          script: |
-            power := 1000
-            if {{ .maxchargepower }} != 0 {
-              power = {{ .maxchargepower }}
-            } else if bdc_power != 0 {
-              power = int(math.Min(float64(bdc_power), float64(ac_power)))
-            } else {
-              power = int(math.Min(float64({{ .capacity }})*1000/2, float64(ac_power)))
-            }
-            power
-          in:
-          - name: ac_power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 5000 # AC output power
-                type: input
-                decode: uint16
-              scale: 100
-          - name: bdc_power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 5627 # BDC rated power
-                type: input
-                decode: uint16
-              scale: 100
-          out:
-          - name: power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 13051 # Forced charge/discharge power
-                type: writesingle
-                decode: uint16
+        - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
   capacity: {{ .capacity }} # kWh
   maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
