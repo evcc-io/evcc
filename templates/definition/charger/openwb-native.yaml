@@ -145,6 +145,36 @@ params:
       de: 1 oder 2, normalerweise 1, ausser bei Duo
     default: 1
     advanced: true
+  - name: pinCp
+    type: int
+    description:
+      en: GPIO pin which toggles CP
+      de: GPIO pin welcher CP schaltet
+    help:
+      en: This parameter is usually only needed for self-built OpenWB Hardware.
+      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt.
+    default: 0
+    advanced: true
+  - name: pin1p
+    type: int
+    description:
+      en: GPIO pin which sets 1 phase charging
+      de: GPIO pin welcher 1 Phase aktiv schaltet
+    help:
+      en: This parameter is usually only needed for self-built OpenWB Hardware.
+      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt.
+    default: 0
+    advanced: true
+  - name: pin3p
+    type: int
+    description:
+      en: GPIO pin which sets 3 phase charging
+      de: GPIO pin welcher 3 Phasen aktiv schaltet
+    help:
+      en: This parameter is usually only needed for self-built OpenWB Hardware.
+      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt.
+    default: 0
+    advanced: true
 render: |
   type: openwb-native
   phases1p3p: {{ .phases1p3p }}
