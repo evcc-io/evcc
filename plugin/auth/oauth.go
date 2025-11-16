@@ -106,7 +106,7 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
-		if device != "" {
+		if device != "" && !slices.Contains(instance.devices, device) {
 			instance.devices = append(instance.devices, device)
 		}
 		return instance, nil
@@ -126,12 +126,12 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 		name:    name,
 	}
 
-	if device != "" && !slices.Contains(o.devices, device) {
-		o.devices = append(o.devices, device)
-	}
-
 	for _, opt := range opts {
 		opt(o)
+	}
+
+	if device != "" {
+		o.devices = []string{device}
 	}
 
 	// load token from db
