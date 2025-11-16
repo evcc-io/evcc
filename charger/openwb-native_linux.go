@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/charger/openwb/native"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/fatih/structs"
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
@@ -26,8 +27,7 @@ type OpenWbNative struct {
 
 // gpioAction defines a single GPIO pin operation with timing
 type gpioAction struct {
-	pin   rpio.Pin
-	high  bool
+	pin   func()
 	delay time.Duration
 }
 
@@ -104,6 +104,11 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		identify = wb.identify
 	}
 
+	// set pins to output
+	for _, pin := range structs.Fields(native.ChargePoints[connector-1]) {
+		rpio.Pin(pin.Value().(int)).Output()
+	}
+
 	return decorateOpenWbNative(wb, phases1p3p, identify), nil
 }
 
@@ -135,8 +140,8 @@ func (wb *OpenWbNative) WakeUp() error {
 	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
 
 	return wb.runGpioSequence([]gpioAction{
-		{pin: cpPin, high: true, delay: wb.cpWait},
-		{pin: cpPin, high: false, delay: 0},
+		{pin: cpPin.High, delay: wb.cpWait},
+		{pin: cpPin.Low, delay: 0},
 	})
 }
 
@@ -152,12 +157,7 @@ func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
 	defer rpio.Close()
 
 	for _, a := range seq {
-		a.pin.Output()
-		if a.high {
-			a.pin.High()
-		} else {
-			a.pin.Low()
-		}
+		a.pin()
 		if a.delay > 0 {
 			time.Sleep(a.delay)
 		}
@@ -175,10 +175,10 @@ func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
 	}
 
 	return wb.runGpioSequence([]gpioAction{
-		{pin: cpPin, high: true, delay: time.Second},    // enable phases switch relay (NO), disconnect CP
-		{pin: phPin, high: true, delay: wb.cpWait / 2},  // move latching relay to desired position
-		{pin: phPin, high: false, delay: wb.cpWait / 2}, // lock latching relay
-		{pin: cpPin, high: false, delay: time.Second},   // disable phase switching, reconnect CP
+		{pin: cpPin.High, delay: time.Second},   // enable phases switch relay (NO), disconnect CP
+		{pin: phPin.High, delay: wb.cpWait / 2}, // move latching relay to desired position
+		{pin: phPin.Low, delay: wb.cpWait / 2},  // lock latching relay
+		{pin: cpPin.Low, delay: time.Second},    // disable phase switching, reconnect CP
 	})
 }
 
