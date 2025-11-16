@@ -16,15 +16,15 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    required: true
+    default: Home
     service: homeassistant/homes
   - name: switch
-    required: true
     description:
       de: Entity ID des schaltbaren Geräts
       en: Entity ID of the switch device
     service: homeassistant/homes/{home}/entities?domain=switch
     example: switch.smartsocket
+    required: true
   - name: power
     description:
       de: Entity ID für Leistungsmessung

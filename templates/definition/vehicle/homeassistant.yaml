@@ -19,9 +19,8 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    required: true
+    default: Home
     service: homeassistant/homes
-    type: string
     required: true
   - name: soc
     description:
@@ -29,7 +28,6 @@ params:
       en: State of charge [%]
     service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.vehicle_soc"
-    type: string
     required: true
   - name: range
     description:
@@ -37,70 +35,60 @@ params:
       en: Remaining range [km]
     service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.vehicle_range"
-    type: string
   - name: status
     description:
       de: Ladestatus
       en: Charging status
     service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.vehicle_charging"
-    type: string
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
       en: Target state of charge [%]
     service: homeassistant/homes/{home}/entities?domain=number,input_number
     example: "number.vehicle_target_state_of_charge"
-    type: string
   - name: odometer
     description:
       de: Kilometerstand [km]
       en: Odometer [km]
     service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.vehicle_odometer"
-    type: string
   - name: climater
     description:
       de: Klimatisierung aktiv
       en: Climatisation active
     service: homeassistant/homes/{home}/entities?domain=binary_sensor
     example: "binary_sensor.vehicle_climater"
-    type: string
   - name: finishTime
     description:
       de: Ladeende (ISO8601 oder Unix)
       en: Finish time (ISO8601 or Unix)
     service: homeassistant/homes/{home}/entities?domain=sensor
     example: "sensor.vehicle_finish_time"
-    type: string
   - name: start_charging
     description:
       de: Service zum Laden starten
       en: Service to start charging
     service: homeassistant/homes/{home}/entities?domain=script
     example: "script.vehicle_start_charge"
-    type: string
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
       en: Service to stop charging
     service: homeassistant/homes/{home}/entities?domain=script
     example: "script.vehicle_stop_charge"
-    type: string
   - name: wakeup
     description:
       de: Service zum Aufwecken
       en: Service to wake up vehicle
     service: homeassistant/homes/{home}/entities?domain=script
     example: "script.vehicle_wakeup"
-    type: string
   - name: setMaxCurrent
     description:
       de: Ladestromstärke setzen [A]
       en: Set charging current [A]
     service: homeassistant/homes/{home}/entities?domain=number,input_number
     example: "number.vehicle_charging_current"
-    type: string
   - preset: vehicle-features
   - name: streaming
     default: true

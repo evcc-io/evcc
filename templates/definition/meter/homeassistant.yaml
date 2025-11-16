@@ -22,7 +22,6 @@ params:
       en: Home Assistant Instance
     default: Home
     service: homeassistant/homes
-    type: string
     required: true
   - name: power
     description:
