@@ -116,7 +116,10 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	// close GPIO when context is cancelled
 	go func() {
 		<-ctx.Done()
-		rpio.Close()
+		log.DEBUG.Println("context canceled, closing GPIO")
+		if err := rpio.Close(); err != nil {
+			log.ERROR.Printf("error closing GPIO: %v", err)
+		}
 	}()
 
 	return decorateOpenWbNative(wb, phases1p3p, identify), nil
