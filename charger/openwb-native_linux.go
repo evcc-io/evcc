@@ -104,10 +104,20 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		identify = wb.identify
 	}
 
-	// set pins to output
+	// initialize GPIO and set pins to output
+	if err := rpio.Open(); err != nil {
+		return nil, fmt.Errorf("failed to open GPIO: %w", err)
+	}
+
 	for _, pin := range structs.Fields(native.ChargePoints[connector-1]) {
 		rpio.Pin(pin.Value().(int)).Output()
 	}
+
+	// close GPIO when context is cancelled
+	go func() {
+		<-ctx.Done()
+		rpio.Close()
+	}()
 
 	return decorateOpenWbNative(wb, phases1p3p, identify), nil
 }
