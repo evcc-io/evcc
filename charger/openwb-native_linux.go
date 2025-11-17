@@ -161,11 +161,6 @@ func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
 		return err
 	}
 
-	if err := rpio.Open(); err != nil {
-		return err
-	}
-	defer rpio.Close()
-
 	for _, a := range seq {
 		a.pin()
 		if a.delay > 0 {
