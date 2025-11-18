@@ -151,8 +151,8 @@ params:
       en: GPIO pin which toggles CP
       de: GPIO pin welcher CP schaltet
     help:
-      en: This parameter is usually only needed for self-built OpenWB Hardware.
-      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt.
+      en: This parameter is usually only needed for self-built OpenWB Hardware. GPIO pin number at the BCM chip, not the header pin number! See https://pinout.xyz/ for the mapping between those.
+      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt. Nummer des GPIO pins am BCM chip, nicht die Pin-Nummer am Stecker! Siehe https://pinout.xyz/ für die entsprechende Zuordnung.
     default: 0
     advanced: true
   - name: pin1p
@@ -161,8 +161,8 @@ params:
       en: GPIO pin which sets 1 phase charging
       de: GPIO pin welcher 1 Phase aktiv schaltet
     help:
-      en: This parameter is usually only needed for self-built OpenWB Hardware.
-      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt.
+      en: This parameter is usually only needed for self-built OpenWB Hardware. GPIO pin number at the BCM chip, not the header pin number! See https://pinout.xyz/ for the mapping between those.
+      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt. Nummer des GPIO pins am BCM chip, nicht die Pin-Nummer am Stecker! Siehe https://pinout.xyz/ für die entsprechende Zuordnung.
     default: 0
     advanced: true
   - name: pin3p
@@ -171,8 +171,8 @@ params:
       en: GPIO pin which sets 3 phase charging
       de: GPIO pin welcher 3 Phasen aktiv schaltet
     help:
-      en: This parameter is usually only needed for self-built OpenWB Hardware.
-      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt.
+      en: This parameter is usually only needed for self-built OpenWB Hardware. GPIO pin number at the BCM chip, not the header pin number! See https://pinout.xyz/ for the mapping between those.
+      de: Dieser Parameter wird nur bei selbstgebauten OpenWB benötigt. Nummer des GPIO pins am BCM chip, nicht die Pin-Nummer am Stecker! Siehe https://pinout.xyz/ für die entsprechende Zuordnung.
     default: 0
     advanced: true
 render: |
@@ -180,5 +180,31 @@ render: |
   phases1p3p: {{ .phases1p3p }}
   rfid: {{ .rfid }}
   cpwait: {{ .cpwait }}
-  connector: {{ .connector }}
+  {{- if ne .pinCp "0" }}
+  pinCp: {{ .pinCp }}
+  {{- else }}
+  {{- if eq .connector "1" }}
+  pinCp: 25 # Connector 1
+  {{- else }}
+  pinCp: 22 # Connector 2
+  {{- end }}
+  {{- end }}
+  {{- if ne .pin1p "0" }}
+  pin1p: {{ .pin1p }}
+  {{- else }}
+  {{- if eq .connector "1" }}
+  pin1p: 5 # Connector 1
+  {{- else }}
+  pin1p: 17 # Connector 2
+  {{- end }}
+  {{- end }}
+  {{- if ne .pin3p "0" }}
+  pin3p: {{ .pin3p }}
+  {{- else }}
+  {{- if eq .connector "1" }}
+  pin3p: 26 # Connector 1
+  {{- else }}
+  pin3p: 27 # Connector 2
+  {{- end }}
+  {{- end }}
   {{- include "modbus" . }}

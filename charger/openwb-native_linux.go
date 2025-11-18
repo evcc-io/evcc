@@ -43,10 +43,9 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		Phases1p3p      bool
 		RfId            string
 		CpWait          time.Duration
-		Connector       int
-		pinCp           int
-		pin1p           int
-		pin3p           int
+		PinCp           int
+		Pin1p           int
+		Pin3p           int
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
@@ -64,19 +63,10 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cc.CpWait.String(), minCpWaitTime)
 	}
 
-	if (cc.Connector < 1) || (cc.Connector > 2) {
-		return nil, fmt.Errorf("invalid connector value: %d", cc.Connector)
-	}
-
-	gpios := native.ChargePoints[cc.Connector-1]
-	if cc.pinCp != 0 {
-		gpios.PIN_CP = cc.pinCp
-	}
-	if cc.pin1p != 0 {
-		gpios.PIN_1P = cc.pin1p
-	}
-	if cc.pin3p != 0 {
-		gpios.PIN_3P = cc.pin3p
+	gpios := native.ChargePointGPIO{
+		PIN_CP: cc.PinCp,
+		PIN_1P: cc.Pin1p,
+		PIN_3P: cc.Pin3p,
 	}
 
 	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, gpios)
