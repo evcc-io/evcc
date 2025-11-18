@@ -21,41 +21,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type OAuth struct {
-	mu      sync.Mutex
-	log     *util.Logger
-	oc      *oauth2.Config
-	token   *oauth2.Token
-	name    string
-	devices []string
-	subject string
-	cv      string
-	ctx     context.Context
-	onlineC chan<- bool
-
-	deviceFlow     bool
-	tokenRetriever func(string, *oauth2.Token) error
-	tokenStorer    func(*oauth2.Token) any
-}
-
-type oauthOption func(*OAuth)
-
-func WithOauthDeviceFlowOption() func(o *OAuth) {
-	return func(o *OAuth) {
-		o.deviceFlow = true
-	}
-}
-
-func WithTokenStorerOption(ts func(*oauth2.Token) any) func(o *OAuth) {
-	return func(o *OAuth) {
-		o.tokenStorer = ts
-	}
-}
-
-func WithTokenRetrieverOption(tr func(string, *oauth2.Token) error) func(o *OAuth) {
-	return func(o *OAuth) {
-		o.tokenRetriever = tr
-	}
+func init() {
+	registry.AddCtx("oauth", NewOauthFromConfig)
 }
 
 var (
@@ -71,8 +38,21 @@ func addInstance(subject string, identity *OAuth) {
 	identities[subject] = identity
 }
 
-func init() {
-	registry.AddCtx("oauth", NewOauthFromConfig)
+type OAuth struct {
+	mu      sync.Mutex
+	log     *util.Logger
+	oc      *oauth2.Config
+	token   *oauth2.Token
+	name    string
+	devices []string
+	subject string
+	cv      string
+	ctx     context.Context
+	onlineC chan<- bool
+
+	deviceFlow     bool
+	tokenRetriever func(string, *oauth2.Token) error
+	tokenStorer    func(*oauth2.Token) any
 }
 
 func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
@@ -91,7 +71,7 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 var _ api.AuthProvider = (*OAuth)(nil)
 var _ oauth2.TokenSource = (*OAuth)(nil)
 
-func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...oauthOption) (*OAuth, error) {
+func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...func(o *OAuth)) (*OAuth, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
@@ -106,7 +86,7 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
-		if device != "" {
+		if device != "" && !slices.Contains(instance.devices, device) {
 			instance.devices = append(instance.devices, device)
 		}
 		return instance, nil
@@ -126,12 +106,12 @@ func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 		name:    name,
 	}
 
-	if device != "" && !slices.Contains(o.devices, device) {
-		o.devices = append(o.devices, device)
-	}
-
 	for _, opt := range opts {
 		opt(o)
+	}
+
+	if device != "" {
+		o.devices = []string{device}
 	}
 
 	// load token from db

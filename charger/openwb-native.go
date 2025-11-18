@@ -14,6 +14,6 @@ func init() {
 }
 
 // NewOpenWbNativeFromConfig creates an OpenWbNative DIN charger from generic config
-func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return nil, errors.New("unsupported platform")
 }
