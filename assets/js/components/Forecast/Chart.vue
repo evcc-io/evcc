@@ -85,7 +85,7 @@ export default defineComponent({
 	computed: {
 		endDate() {
 			const end = new Date(this.startDate);
-			end.setHours(end.getHours() + 48);
+			end.setHours(end.getHours() + 96);
 			return end;
 		},
 		solarEntries() {
