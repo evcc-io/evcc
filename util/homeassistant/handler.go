@@ -17,6 +17,7 @@ var log = util.NewLogger("homeassistant")
 func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /homes", getHomes)
+	mux.HandleFunc("GET /homes/{home}/select", validateLogin)
 	mux.HandleFunc("GET /homes/{home}/entities", getEntities)
 
 	service.Register("homeassistant", mux)
@@ -27,6 +28,23 @@ func getHomes(w http.ResponseWriter, req *http.Request) {
 	defer mu.Unlock()
 
 	jsonWrite(w, slices.Sorted(maps.Keys(instances)))
+}
+
+func validateLogin(w http.ResponseWriter, req *http.Request) {
+	home := req.PathValue("home")
+
+	if instanceByName(home) == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	conn, _ := NewConnection(log, home)
+	if _, err := conn.GetStates(); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func getEntities(w http.ResponseWriter, req *http.Request) {
