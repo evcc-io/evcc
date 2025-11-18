@@ -1,5 +1,4 @@
 import axios, { type AxiosResponse } from "axios";
-import { setupCache } from "axios-cache-interceptor";
 import { openLoginModal } from "./components/Auth/auth";
 
 const { protocol, hostname, port, pathname } = window.location;
