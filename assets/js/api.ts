@@ -20,16 +20,13 @@ function customParamsSerializer(params: { [key: string]: any }) {
     .join("&");
 }
 
-const axiosInstance = axios.create({
+const api = axios.create({
   baseURL: base + "api/",
   headers: {
     Accept: "application/json",
   },
   paramsSerializer: customParamsSerializer,
 });
-
-// combines identical parallel requests into one
-const api = setupCache(axiosInstance);
 
 // global error handling
 api.interceptors.response.use(

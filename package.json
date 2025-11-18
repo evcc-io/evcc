@@ -25,7 +25,6 @@
     "@popperjs/core": "^2.11.8",
     "@unhead/vue": "^2.0.14",
     "axios": "^1.13.2",
-    "axios-cache-interceptor": "^1.8.3",
     "bootstrap": "^5.3.8",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.5.0",
