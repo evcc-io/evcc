@@ -57,6 +57,7 @@ require (
 	github.com/grid-x/modbus v0.0.0-20251101080009-99e372e638c1
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hasura/go-graphql-client v0.15.0
+	github.com/holoplot/go-evdev v0.0.0-20240306072622-217e18f17db1
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.1
 	github.com/itchyny/gojq v0.12.17
@@ -94,6 +95,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
+	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.0
 	github.com/traefik/yaegi v0.16.1
