@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
+	"golang.org/x/oauth2"
 )
 
 var log = util.NewLogger("homeassistant")
@@ -39,7 +40,7 @@ func validateLogin(w http.ResponseWriter, req *http.Request) {
 	}
 
 	conn, _ := NewConnection(log, home)
-	if _, err := conn.GetStates(); err != nil {
+	if _, err := conn.Client.Transport.(*oauth2.Transport).Source.Token(); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
