@@ -77,20 +77,27 @@
 		:required="required"
 		rows="4"
 	/>
-	<div v-else>
+	<div v-else class="position-relative">
 		<input
 			:id="id"
 			v-model="value"
 			:list="datalistId"
-			class="form-control"
-			:class="inputClasses"
+			:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${inputClasses}`"
 			:type="inputType"
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
 			:autocomplete="masked ? 'off' : null"
 		/>
-		<datalist v-if="datalistId" :id="datalistId">
+		<button
+			v-if="datalistId && value"
+			type="button"
+			class="from-control-clear"
+			@click="value = ''"
+		>
+			&times;
+		</button>
+		<datalist v-if="showDatalist" :id="datalistId">
 			<option v-for="v in serviceValues" :key="v" :value="v">
 				{{ v }}
 			</option>
@@ -134,6 +141,18 @@ export default {
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
 		},
+		showDatalist() {
+			if (!this.datalistId) return false;
+			const length = this.serviceValues.length;
+			// no values
+			if (length === 0) return false;
+			// value selected, dont offer single same option again
+			if (this.value && this.serviceValues.includes(this.value)) return false;
+			return true;
+		},
+		showClearButton() {
+			return this.datalistId && this.value;
+		},
 		inputType() {
 			if (this.masked) {
 				return "password";
@@ -156,6 +175,9 @@ export default {
 			let result = this.sizeClass;
 			if (this.invalid) {
 				result += " is-invalid";
+			}
+			if (this.showClearButton) {
+				result += " has-clear-button";
 			}
 			return result;
 		},
