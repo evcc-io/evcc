@@ -22,7 +22,7 @@ test.describe("battery settings co2", async () => {
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 150 g/kWh" });
     // CO2 demo tariff provides 72 hours, so active hours vary by test execution time
-    await expect(modal.getByTestId("active-hours").locator('.value')).toHaveText(/^\d+ hr$/);
+    await expect(modal.getByTestId("active-hours").locator(".value")).toHaveText(/^\d+ hr$/);
     await expect(modal).toContainText("20 g – 150 g");
     await page.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
