@@ -153,19 +153,15 @@ export default defineComponent({
 			);
 		},
 		ocppUrl(): string | null {
-			if (this.isOcpp) {
-				return getOcppUrl(this.ocpp);
-			}
-			return null;
+			return this.isOcpp ? getOcppUrl(this.ocpp) : null;
 		},
 		ocppUrlWithStationId(): string | null {
-			if (this.isOcpp) {
-				return getOcppUrlWithStationId(this.ocpp);
-			}
-			return null;
+			return this.isOcpp ? getOcppUrlWithStationId(this.ocpp) : null;
 		},
 		ocppStationIdDetected(): string | undefined {
-			return this.ocpp.stations.find((station) => station.status === "unknown")?.id;
+			return this.isOcpp
+				? this.ocpp.stations.find((station) => station.status === "unknown")?.id
+				: undefined;
 		},
 		hideTemplateFields(): boolean {
 			return this.isOcpp && !this.ocppNextStepConfirmed;

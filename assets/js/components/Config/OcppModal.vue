@@ -87,24 +87,18 @@ export default defineComponent({
 		},
 	},
 	computed: {
-		ocppUrl(): string | null {
+		ocppUrl(): string {
 			return getOcppUrl(this.ocpp);
 		},
-		ocppUrlWithStationId(): string | null {
+		ocppUrlWithStationId(): string {
 			return getOcppUrlWithStationId(this.ocpp);
 		},
 		connectedStations(): OcppStationStatus[] {
-			if (!this.ocpp || !this.ocpp.stations) {
-				return [];
-			}
 			return this.ocpp.stations.filter(
 				(s) => s.status === "connected" || s.status === "configured"
 			);
 		},
 		detectedStations(): OcppStationStatus[] {
-			if (!this.ocpp || !this.ocpp.stations) {
-				return [];
-			}
 			return this.ocpp.stations.filter((s) => s.status === "unknown");
 		},
 	},
