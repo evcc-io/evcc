@@ -37,7 +37,13 @@
 				:label="$t('config.charger.ocppLabel')"
 				:help="$t('config.charger.ocppHelp', { url: ocppUrlWithStationId })"
 			>
-				<input type="text" class="form-control border" :value="ocppUrl" readonly />
+				<input
+					id="chargerOcppUrl"
+					type="text"
+					class="form-control border"
+					:value="ocppUrl"
+					readonly
+				/>
 			</FormRow>
 
 			<div
