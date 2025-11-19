@@ -23,11 +23,11 @@
 		@close="$emit('close')"
 	>
 		<template v-if="isOcpp" #template-description>
-			<p>evcc has a built-in OCPP server. Follow these steps:</p>
+			<p>{{ $t("config.charger.ocppDescription") }}</p>
 			<ol class="mb-4">
-				<li>Configure your charger to use evcc as OCPP server.</li>
-				<li>Wait for your charger to connect to evcc.</li>
-				<li>Proceed and complete the configuration.</li>
+				<li>{{ $t("config.charger.ocppStep1") }}</li>
+				<li>{{ $t("config.charger.ocppStep2") }}</li>
+				<li>{{ $t("config.charger.ocppStep3") }}</li>
 			</ol>
 		</template>
 
@@ -97,6 +97,7 @@ import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw"
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
 import { LOADPOINT_TYPE, type LoadpointType, type OcppConfig } from "@/types/evcc";
+import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -153,18 +154,13 @@ export default defineComponent({
 		},
 		ocppUrl(): string | null {
 			if (this.isOcpp) {
-				// user specified url. e.g. for reverse proxy setups
-				if (this.ocpp.externalUri) {
-					return this.ocpp.externalUri;
-				}
-				const port = this.ocpp.port;
-				return `ws://${window.location.hostname}:${port}/`;
+				return getOcppUrl(this.ocpp);
 			}
 			return null;
 		},
 		ocppUrlWithStationId(): string | null {
-			if (this.ocppUrl) {
-				return `${this.ocppUrl}<station-id>`;
+			if (this.isOcpp) {
+				return getOcppUrlWithStationId(this.ocpp);
 			}
 			return null;
 		},

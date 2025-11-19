@@ -220,6 +220,18 @@
 								<DeviceTags :tags="eebusTags" />
 							</template>
 						</DeviceCard>
+						<DeviceCard
+							:title="$t('config.ocpp.title')"
+							editable
+							:error="hasClassError('ocpp')"
+							data-testid="ocpp"
+							@edit="openModal('ocppModal')"
+						>
+							<template #icon><OcppIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="ocppTags" />
+							</template>
+						</DeviceCard>
 
 						<DeviceCard
 							:title="`${$t('config.circuits.title')} 🧪`"
@@ -367,6 +379,7 @@
 					@changed="yamlChanged"
 				/>
 				<EebusModal @changed="yamlChanged" />
+				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
@@ -391,6 +404,8 @@ import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
+import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
+import OcppModal from "../components/Config/OcppModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -453,6 +468,8 @@ export default defineComponent({
 		DeviceTags,
 		EebusIcon,
 		EebusModal,
+		OcppIcon,
+		OcppModal,
 		ExperimentalBanner,
 		GeneralConfig,
 		HemsIcon,
@@ -648,6 +665,28 @@ export default defineComponent({
 		},
 		eebusTags() {
 			return { configured: { value: store.state?.eebus || false } };
+		},
+		ocppTags() {
+			const ocpp = store.state?.ocpp;
+			const stations = ocpp?.stations || [];
+			if (stations.length === 0) {
+				return { configured: { value: false } };
+			}
+
+			const connected = stations.filter((s) => s.status === "connected").length;
+			const configured = stations.filter((s) => s.status === "configured").length;
+			const detected = stations.filter((s) => s.status === "unknown").length;
+			const total = connected + configured;
+
+			const tags: Record<string, any> = {
+				connections: { value: `${connected}/${total}` },
+			};
+
+			if (detected > 0) {
+				tags["detected"] = { value: detected };
+			}
+
+			return tags;
 		},
 		modbusproxyTags() {
 			const config = store.state?.modbusproxy || [];
