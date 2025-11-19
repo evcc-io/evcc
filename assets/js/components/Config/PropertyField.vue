@@ -87,7 +87,7 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
-			:autocomplete="masked ? 'off' : null"
+			:autocomplete="masked || datalistId ? 'off' : null"
 		/>
 		<button
 			v-if="datalistId && value"

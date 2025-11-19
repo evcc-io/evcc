@@ -601,6 +601,7 @@ input[list]::-webkit-list-button {
 	width: 1.1rem;
 	font-size: 1.5rem;
 	font-weight: normal;
+	color: var(--evcc-default-text);
 	border: none;
 	background-color: transparent;
 	padding: 0;
