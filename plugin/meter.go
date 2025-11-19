@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewMeterFromConfig creates type conversion provider
-func NewMeterFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewMeterFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Config config.Typed
 		Method

@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		VIN         string
@@ -65,5 +65,5 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
 	}
 
-	return v, err
+	return v, nil
 }

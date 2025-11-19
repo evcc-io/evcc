@@ -24,7 +24,7 @@ const (
 type DeviceTest struct {
 	DeviceCategory DeviceCategory
 	Template       templates.Template
-	ConfigValues   map[string]interface{}
+	ConfigValues   map[string]any
 }
 
 // Test returns:
@@ -52,7 +52,7 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 }
 
 // configure creates a configured device from a template so we can test it
-func (d *DeviceTest) configure() (interface{}, error) {
+func (d *DeviceTest) configure() (any, error) {
 	b, _, err := d.Template.RenderResult(templates.RenderModeInstance, d.ConfigValues)
 	if err != nil {
 		return nil, err
@@ -60,14 +60,14 @@ func (d *DeviceTest) configure() (interface{}, error) {
 
 	var instance struct {
 		Type  string
-		Other map[string]interface{} `yaml:",inline"`
+		Other map[string]any `yaml:",inline"`
 	}
 
 	if err := yaml.Unmarshal(b, &instance); err != nil {
 		return nil, err
 	}
 
-	var v interface{}
+	var v any
 
 	ctx := context.TODO()
 	switch DeviceCategories[d.DeviceCategory].class {
@@ -83,7 +83,7 @@ func (d *DeviceTest) configure() (interface{}, error) {
 }
 
 // testCharger tests a charger device
-func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
+func (d *DeviceTest) testCharger(v any) (DeviceTestResult, error) {
 	c, ok := v.(api.Charger)
 	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a wallbox")
@@ -105,7 +105,7 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 }
 
 // testMeter tests a meter device
-func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (DeviceTestResult, error) {
+func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v any) (DeviceTestResult, error) {
 	m, ok := v.(api.Meter)
 	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a meter")
@@ -145,7 +145,7 @@ func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (De
 }
 
 // testVehicle tests a vehicle device
-func (d *DeviceTest) testVehicle(v interface{}) (DeviceTestResult, error) {
+func (d *DeviceTest) testVehicle(v any) (DeviceTestResult, error) {
 	vv, ok := v.(api.Vehicle)
 	if !ok {
 		return DeviceTestResultInvalid, errors.New("selected device is not a vehicle")

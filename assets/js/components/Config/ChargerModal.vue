@@ -8,6 +8,7 @@
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
+		:is-type-deprecated="isTypeDeprecated"
 		:is-yaml-input-type="isYamlInput"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
@@ -95,6 +96,8 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyBoostYaml from "./defaultYaml/sgreadyBoost.yaml?raw";
+import { LOADPOINT_TYPE, type LoadpointType, type OcppConfig } from "@/types/evcc";
+import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
 import { LOADPOINT_TYPE, type LoadpointType, type OcppConfig } from "@/types/evcc";
 
 const initialValues = {
@@ -185,7 +188,7 @@ export default defineComponent({
 						...products.filter((p) => p.group === "heatinggeneric"),
 						...[
 							ConfigType.Custom,
-							ConfigType.SgReadyBoost,
+							ConfigType.SgReadyRelay,
 							ConfigType.SgReady,
 							ConfigType.Heatpump,
 							ConfigType.SwitchSocket,
@@ -249,8 +252,12 @@ export default defineComponent({
 				ConfigType.Heatpump,
 				ConfigType.SwitchSocket,
 				ConfigType.SgReady,
-				ConfigType.SgReadyBoost,
+				ConfigType.SgReadyRelay,
+				ConfigType.SgReadyBoost, // deprecated
 			].includes(type);
+		},
+		isTypeDeprecated(type: ConfigType): boolean {
+			return type === ConfigType.SgReadyBoost;
 		},
 		handleTemplateChange(e: Event, values: DeviceValues) {
 			const value = (e.target as HTMLSelectElement).value as ConfigType;
@@ -288,8 +295,8 @@ export default defineComponent({
 					return this.isHeating ? switchsocketHeaterYaml : switchsocketChargerYaml;
 				case ConfigType.SgReady:
 					return sgreadyYaml;
-				case ConfigType.SgReadyBoost:
-					return sgreadyBoostYaml;
+				case ConfigType.SgReadyRelay:
+					return sgreadyRelayYaml;
 				default: // template
 					return "";
 			}

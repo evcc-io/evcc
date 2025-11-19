@@ -58,14 +58,16 @@
           "heating": "Kullanıcı tanımlı ısıtıcı"
         },
         "heatpump": "Kullanıcı tanımlı ısı pompası",
-        "sgready": "Kullanıcı tanımlı ısı pompası (sg-ready, tamamı)",
-        "sgready-boost": "Kullanıcı tanımlı ısı pompası (sg-ready, takviye)",
+        "sgready": "Kullanıcı tanımlı ısı pompası (sg-ready eklentiler üzerinden)",
+        "sgready-boost": "Kullanıcı tanımlı ısı pompası (sg-ready-boost, kullanımdan kaldırıldı)",
+        "sgready-relay": "Kullanıcı tanımlı ısı pompası (sg-ready röleler üzerinden)",
         "switchsocket": "Kullanıcı tanımlı şalterli priz"
       }
     },
     "circuits": {
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
-      "title": "Yük yönetimi"
+      "title": "Yük yönetimi",
+      "usableMeters": "Kullanılabilir sayaç referansları"
     },
     "control": {
       "description": "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir.",
@@ -93,12 +95,14 @@
       "currency": "Para Birimi",
       "current": "Akım",
       "currentRange": "Akım",
+      "dimmed": "Karartılmış",
       "enabled": "Etkin",
       "energy": "Enerji",
       "feedinPrice": "Satış fiyatı",
       "gridPrice": "Alım fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
-      "hemsType": "Sistem",
+      "hemsActiveLimit": "Etkin sınır",
+      "hemsType": "İletişim",
       "identifier": "RFID tanımlayıcısı",
       "no": "hayır",
       "odometer": "Kilometre Sayacı",
@@ -116,7 +120,7 @@
       "temp": "Isı",
       "topic": "Konu",
       "url": "URL",
-      "vehicleLimitSoc": "“Araç sınırı”",
+      "vehicleLimitSoc": "Doldurma sınırı",
       "yes": "evet"
     },
     "deviceValueChargeStatus": {
@@ -124,9 +128,14 @@
       "B": "“B (bağlı)”",
       "C": "“C (dolduruyor)”"
     },
+    "deviceValueHemsType": {
+      "eebus": "EEBus aracılığıyla",
+      "relay": "Röle aracılığıyla"
+    },
     "devices": {
       "auxMeter": "“Akıllı tüketici”",
       "batteryStorage": "“Batarya”",
+      "consumer": "Tüketici",
       "solarSystem": "“Güneş Enerji Sistemi”"
     },
     "editor": {
@@ -137,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Yük yönetimi veya istatistik amaçları için kullanılabilir.",
-      "titleAdd": "Harici Sayaç Ekle",
-      "titleEdit": "Harici Sayacı Düzenle"
+      "description": "Kontrol edilemeyen tüketicilerin (örneğin buzdolabı, çamaşır makinesi vb.) enerji değerlerini istatistiksel amaçlarla kaydeder. Bu sayaçlar yük yönetimi (örneğin alt dağıtım) için de kullanılabilir.",
+      "titleAdd": "Tüketici Sayacı Ekle",
+      "titleEdit": "Tüketici Sayacını Düzenle"
     },
     "form": {
       "danger": "Dikkat",
@@ -148,12 +157,18 @@
       "optional": "isteğe bağlı"
     },
     "general": {
+      "applyAndClose": "Uygula ve kapat",
       "cancel": "İptal",
+      "close": "Kapat",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
       "customOption": "Kullanıcı tanımlı cihaz",
       "delete": "“Sil”",
       "docsLink": "Belgelere bak.",
+      "dragHandle": "Sürükleme kolu",
+      "dragItem": "Sürüklenebilir: {title}",
+      "dragList": "Yeniden sıralanabilir liste",
       "experimental": "Deneysel",
+      "forceSave": "Yine de kaydet",
       "hideAdvancedSettings": "“Gelişmiş ayarları gizle”",
       "invalidFileSelected": "Geçersiz dosya seçildi",
       "noFileSelected": "Seçili dosya yok.",
@@ -162,12 +177,17 @@
       "password": "Şifre",
       "readFromFile": "Dosyadan oku",
       "remove": "Kaldır",
+      "required": "gerekli",
+      "reset": "Sıfırla",
       "save": "Kaydet",
+      "saved": "Kaydedildi.",
+      "saving": "Kaydediliyor…",
       "selectFile": "Gözat",
       "showAdvancedSettings": "“Gelişmiş ayarları göster”",
       "telemetry": "Uzölçüm",
       "templateLoading": "Dolduruyorum...",
       "title": "Başlık",
+      "typeDeprecated": "'{type}' türü eski bir türdür ve gelecek sürümlerde kaldırılacaktır. Değişiklik günlüğünü kontrol et ve bu cihazı yeniden oluştur.",
       "validateSave": "“Doğrula ve kaydet”"
     },
     "grid": {
@@ -176,11 +196,12 @@
       "titleEdit": "Elektrik Sayacını Düzenle"
     },
     "hems": {
-      "description": "evcc'yi başka bir ev enerji yönetim sistemine bağla.",
+      "description": "Harici sistemler tarafından güç sınırlaması (ör. EnWG 14a kontrolörleri). Yük yönetimi yapılandırması gerektirir.",
       "title": "HEMS"
     },
     "icon": {
-      "change": "değiştir"
+      "change": "değiştir",
+      "label": "Simge"
     },
     "influx": {
       "description": "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan.",
@@ -315,7 +336,7 @@
       "title": "Yapılandırma",
       "unconfigured": "yapılandırılmadı",
       "vehicles": "Araçlarım",
-      "yaml": "evcc.yaml dosyasındaki cihazlar düzenlenemez."
+      "yaml": "evcc.yaml'daki cihazlar düzenlenemez."
     },
     "messaging": {
       "description": "Dolum oturumları hakkında bildirimler al.",
@@ -328,13 +349,22 @@
       "option": {
         "aux": "Kendi kendini düzenleyen tüketici ekle",
         "battery": "Pil ölçer ekle",
-        "ext": "Harici sayaç ekle",
+        "ext": "Düzenli tüketici ekle",
         "pv": "Güneş ölçer ekle"
       },
       "save": "Kaydet",
       "specific": "Özel bütünleşmeler",
       "template": "Üretici",
       "titleChoice": "Ne Eklemek İstersin?",
+      "titleLabel": "Başlık",
+      "usage": {
+        "aux": "Kendi kendini düzenleyen tüketici",
+        "battery": "Batarya",
+        "charge": "Tüketici / Doldurma Cihazı",
+        "grid": "Şebeke",
+        "label": "Kullanım",
+        "pv": "Üretim"
+      },
       "validateSave": "Doğrula ve kaydet"
     },
     "modbus": {
@@ -358,7 +388,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Birden fazla istemcinin tek bir Modbus cihazına erişmesine izin verir.",
+      "add": "Vekil bağlantısı ekle",
+      "connection": "Bağlantı #{number}",
+      "description": "Bazı Modbus cihazları yalnızca tek bir bağlantıyı veya çok az sayıda bağlantıyı destekler. evcc, bir vekil sunucu görevi görerek birden fazla istemcinin (ev otomasyonu, komut dosyaları vb.) aynı anda erişimini sağlar.",
+      "device": "Cihaz",
+      "option": {
+        "deny": "hata",
+        "false": "hayır",
+        "true": "sessiz"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Modbus hatası nedeniyle yazma erişimi engellendi.",
+          "false": "Yazma erişimi iletildi.",
+          "true": "Yazma erişimi yanıt verilmeden engellenir."
+        },
+        "label": "Salt okunur"
+      },
+      "sourcePortHelp": "Gelen istemci bağlantıları için bağlantı noktası. Kullanılabilir olmalı.",
       "title": "Modbus vekili"
     },
     "mqtt": {
@@ -425,6 +472,18 @@
       "system": "Sistem",
       "vehicles": "Araçlar"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc, SEMP protokolü aracılığıyla SMA Sunny Home Manager (SHM) ile entegrasyon özelliğine sahiptir. Aynı ağda çalışıyorsa, Sunny Portal hesabına giriş yaptıktan sonra, evcc'de yapılandırılmış tüm doldurma cihazlarını yeni keşfedilen tüketiciler olarak eklemen otomatik olarak önerilecektir. Aşağıda herhangi bir ayar yapmana gerek kalmadan, her şey hemen kullanıma hazır olacaktır.",
+      "descriptionDeviceId": "12 karakterlik HEX dizesi. Tüm cihazlar için önek (doldurma noktası, ..).",
+      "descriptionIdPattern": "Tanımlayıcı desen",
+      "descriptionIds": "Sunny Portal'da her tüketici cihazının benzersiz bir tanımlayıcıya ihtiyacı vardır. evcc, donanımına göre benzersiz bir tanımlayıcı oluşturur. evcc'yi başka bir donanıma taşırsan, bu tanımlayıcılar değişebilir. Geçmişi korumak istiyorsan, burada oluşturulan tanımlayıcıları geçersiz kılabilirsin. Mevcut tanımlayıcılarını kontrol etmek için SEMP URL'sini (/semp) aç.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 karakterlik HEX dizesi. Tüm varlıkların genel öneki. Varsayılan olarak evcc kendi dahili satıcı kimliğini kullanır.",
+      "labelDeviceId": "Cihaz Kimliği",
+      "labelVendorId": "Satıcı Kimliği",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Jetonu gir",
       "changeToken": "Jetonu değiştir",
@@ -436,9 +495,10 @@
       "labelToken": "Destekçi jetonu",
       "title": "Destekçilik",
       "tokenRequired": "Bu cihazı oluşturabilmen için önce bir destekçi jetonu yapılandırmalısın.",
+      "tokenRequiredFeature": "Bu özellik bir sponsor jetonu gerektirir.",
       "tokenRequiredLearnMore": "Daha fazla bilgi edin.",
       "tokenRequiredShort": "Sponsor jetonu yapılandırılmadı.",
-      "trialToken": "Deneme jetonu",
+      "trialToken": "deneme jetonu",
       "viaYaml": "evcc.yaml üzerinden",
       "yourToken": "Jetonun"
     },
@@ -447,7 +507,7 @@
         "backup": {
           "action": "Yedeklemeyi indir...",
           "confirmationButton": "Yedeklemeyi indir",
-          "confirmationText": "Veritabanı dosyasını indirmek için lütfen şifreni gir.",
+          "confirmationText": "Veritabanı dosyasını indir.",
           "description": "Verilerini bir dosyaya yedekle. Bu dosya, bir sistem arızası durumunda verilerini geri yüklemek için kullanılabilir.",
           "title": "Yedekle"
         },
@@ -486,6 +546,10 @@
       "description": "Doldurma oturumlarının maliyetlerini hesaplamak için elektrik tarifelerini gir.",
       "title": "Tarifeler"
     },
+    "telemetry": {
+      "description": "EVCC'yi iyileştirmek için veri paylaşımını yapılandır. Gizliliğin bizim için önemlidir ve katılım tamamen isteğe bağlıdır.",
+      "title": "Uzaktan ölçüm"
+    },
     "title": {
       "description": "Ana ekranda ve tarayıcı sekmesinde görüntülenir.",
       "label": "Başlık",
@@ -494,7 +558,7 @@
     "validation": {
       "failed": "başarısız",
       "label": "Durum",
-      "running": "doğrulanıyor…",
+      "running": "Doğrulanıyor…",
       "success": "başarılı",
       "unknown": "bilinmiyor",
       "validate": "doğrula"
@@ -626,6 +690,7 @@
     "about": "evcc hakkında",
     "authProviders": {
       "confirmLogout": "{title} kesmek istediğine emin misin?",
+      "loggedOut": "Oturum başarıyla kapatıldı",
       "title": "Onay Durumu"
     },
     "blog": "Blog",
@@ -640,7 +705,7 @@
   "help": {
     "discussionsButton": "GitHub tartışmaları",
     "documentationButton": "Belgeler",
-    "issueButton": "Hata bildir",
+    "issueButton": "Sorun bildir",
     "issueDescription": "Tuhaf yada yanlış bir durum mu buldun?",
     "logsButton": "Logları görüntüle",
     "logsDescription": "Hatalar için logları gözden geçir.",
@@ -656,6 +721,57 @@
     "restartButton": "Yeniden Başlat",
     "restartDescription": "Cihazı kapatıp tekrar açmayı denedin mi?",
     "secondaryActions": "Hâlâ bir çözüm bulamadın mı? Burada birkaç seçenek daha var.."
+  },
+  "issue": {
+    "additional": {
+      "description": "Sorunu hızlı bir şekilde yeniden oluşturmamıza yardımcı olacak yapılandırma ve günlükleri ekle. Mümkün olduğunca fazla bilgi paylaşmanı öneririz. Durum bilgisi genellikle gerekli değildir.",
+      "include": "dahil et",
+      "lines": "satırlar",
+      "logs": "Günlükler",
+      "logsDescription": "Sorunun tanımlanmasına yardımcı olabilecek son günlük girişleri.",
+      "showDetails": "ayrıntıları göster",
+      "source": "Kaynak",
+      "state": "Durum",
+      "stateDescription": "Doldurma noktası, cihaz ve enerji bilgileri dahil olmak üzere tam çalışma zamanı durumu. Yalnızca talep edildiğinde dahil et.",
+      "title": "Ek Bilgiler",
+      "uiConfig": "Yapılandırma ( Kullanıcı Arayüzü)",
+      "uiConfigDescription": "Web arayüzü üzerinden yapılan yapılandırma ayarları.",
+      "yamlConfig": "Yapılandırma (YAML)",
+      "yamlConfigDescription": "Tam yapılandırma dosyan."
+    },
+    "additionalContext": "Ek bağlam",
+    "additionalContextPlaceholder": "Yardımcı olabilecek ek bilgiler...\n- Yapılandırma ayrıntıları\n- Denediğin şeyler\n- Ortam ayrıntıları",
+    "createButtonDiscussion": "GitHub Tartışmasını Başlat...",
+    "createButtonIssue": "GitHub Sorunu Oluştur...",
+    "description": "Kurulumun beklediğin gibi çalışmıyor mu? Bu sayfayı kullanarak yardım al veya sorunları bildir. Sorunu anlamamıza ve yeniden oluşturmamıza yardımcı olacak kadar ayrıntılı bilgi ver, ancak açıklamanı kısa, net ve anlaşılır tut.",
+    "helpType": {
+      "discussion": "Kurulumumla ilgili yardıma ihtiyacım var",
+      "discussionDescription": "Topluluk tartışmaları cevaplar sunar.",
+      "issue": "Bir hata buldum",
+      "issueDescription": "Bir şeyin bozuk olduğundan ve tamir edilmesi gerektiğinden eminim.",
+      "title": "Hangi sorundan bahsediyoruz?"
+    },
+    "issueDescription": "Açıklama",
+    "issueTitle": "Başlık",
+    "stepsToReproduce": "Tekrarlamak için adımlar",
+    "subTitleDiscussion": "Sorununuzu açıklayın",
+    "subTitleIssue": "Sorunu tarif et",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub Tartışmasını Başlat",
+      "confirmationButtonIssue": "GitHub Sorunu Oluştur",
+      "copied": "Kopyalandı!",
+      "copyButton": "Ek bilgileri kopyala",
+      "instructions": "GitHub'ın URL boyut sınırlamaları nedeniyle, bu işlem iki adımda gerçekleştirilir:",
+      "singleStepDescription": "Sorununun ayrıntılarını içeren önceden doldurulmuş bir formla GitHub'ı açmak için aşağıdaki düğmeyi tıkla. Hassas veriler otomatik olarak sansürlenmiştir, ancak paylaşmadan önce lütfen tekrar kontrol et.",
+      "step1Description": "Başlığını, açıklamanı ve ayrıntılarını içeren temel bir GitHub girişi oluşturmak için aşağıdaki düğmeyi tıkla.",
+      "step2Description": "Girişi oluşturduktan sonra, buraya geri dön ve aşağıdaki ek bilgileri kopyalayıp GitHub formuna yapıştır. Hassas veriler sansürlenmiştir, ancak paylaşmadan önce lütfen tekrar kontrol et.",
+      "stepOneDiscussion": "Adım 1: Temel tartışma oluştur",
+      "stepOneIssue": "Adım 1: Temel sorun oluştur",
+      "stepTwo": "Adım 2: Ek bilgileri kopyala",
+      "title": "GitHub Sorun Özeti"
+    },
+    "title": "Sorun bildir",
+    "version": "Sürüm"
   },
   "log": {
     "areaLabel": "Alana göre filtrele",
@@ -722,6 +838,7 @@
       "gridImport": "Şebeke kullanımı",
       "homePower": "Tüketim",
       "loadpoints": "Doldurma cihazı| Doldurma cihazı | {count} doldurma cihazları",
+      "loadpointsLimit": "{limit} sınır",
       "noEnergy": "Ölçüm verisi yok",
       "pv": "“Güneş enerji sistemi”",
       "pvExport": "Şebekeye ihracat",
@@ -733,6 +850,10 @@
       "connected": "Beklemede.",
       "vehicleLimit": "“Isıtıcı sınırlaması”",
       "waitForVehicle": "Hazır. Isıtıcı bekleniyor…"
+    },
+    "hemsWarning": {
+      "description": "Doldurmayı {limit} değerini aşmayacak şekilde azalt.",
+      "title": "Harici sınır:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Fiyat",
@@ -1010,6 +1131,7 @@
     "vehicle": "Araç"
   },
   "settings": {
+    "deviceInfo": "Bu iletişim kutusunda yaptığın ayarlar yalnızca bu cihazı etkiler.",
     "fullscreen": {
       "enter": "Tam ekrana geç",
       "exit": "Tam ekrandan çık",
@@ -1022,6 +1144,12 @@
     "language": {
       "auto": "Otomatik",
       "label": "Dil"
+    },
+    "loadpoints": {
+      "help": "Kullanıcı arayüzü için sıralamayı ve görünürlüğü değiştir.",
+      "hide": "{title} gizle",
+      "label": "Doldurma noktaları",
+      "show": "{title} göster"
     },
     "sponsorToken": {
       "expires": "Sponsor jetonun {inXDays} sonra sona erecek. {getNewToken} ve burada güncelle.",
@@ -1051,13 +1179,14 @@
   },
   "smartCost": {
     "activeHours": "{total} saat içinde {active}",
-    "activeHoursLabel": "Aktif saatler",
+    "activeHoursLabel": "Etkin zaman",
     "applyToAll": "Heryerde uygulansın mı?",
     "batteryDescription": "Ev enerji deposunu şebekeden doldurur.",
     "cheapTitle": "Ucuz Şebeke Doldurması",
     "cleanTitle": "Temiz Şebeke Doldurması",
     "co2Label": "CO₂ emisyonu",
     "co2Limit": "CO₂ sınırı",
+    "enable": "Sınırı etkinleştir",
     "loadpointDescription": "Güneş enerjisi modunda hızlı doldurmayı geçici olarak etkinleştirir.",
     "modalTitle": "Akıllı Şebeke Doldurması",
     "none": "yok",
@@ -1068,7 +1197,7 @@
     "saved": "Kaydedildi."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Duraklatılmış saatler",
+    "activeHoursLabel": "Duraklatılmış zaman",
     "description": "Kârlı şebeke beslemesine öncelik vermek için yüksek fiyatlar sırasında doldurmayı durdurur.",
     "priceLabel": "Besleme fiyatı",
     "priceLimit": "Besleme sınırı",

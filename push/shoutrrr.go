@@ -19,7 +19,7 @@ type Shoutrrr struct {
 }
 
 // NewShoutrrrFromConfig creates new Shoutrrr messenger
-func NewShoutrrrFromConfig(other map[string]interface{}) (Messenger, error) {
+func NewShoutrrrFromConfig(other map[string]any) (Messenger, error) {
 	var cc struct {
 		URI string
 	}

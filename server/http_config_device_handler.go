@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -101,7 +102,6 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		}
 
 		if conf.Type == typeTemplate {
-			// template device, mask config
 			params, err := sanitizeMasked(class, conf.Other)
 			if err != nil {
 				return nil, err
@@ -109,10 +109,7 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			dc["config"] = params
 		} else {
 			// custom device, no masking
-			config := make(map[string]any)
-			for k, v := range conf.Other {
-				config[k] = v
-			}
+			config := maps.Clone(conf.Other)
 
 			// extract title & icon if possible (user-defined vehicle embeds)
 			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
@@ -300,7 +297,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
 	}
@@ -381,7 +378,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
 	}

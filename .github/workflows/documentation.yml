@@ -39,3 +39,36 @@ jobs:
           allow_empty_commit: false
           commit_message: ${{ github.event_name == 'release' && 'Templates update for release' || github.event_name == 'schedule' && 'Templates update for nightly' || 'Templates update unknown trigger' }}
         if: success()
+
+  openapi:
+    name: Deploy OpenAPI spec
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
+
+    # run on release or manual trigger, but not on schedule
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Prepare OpenAPI spec
+        run: |
+          mkdir -p ./openapi-deploy
+          cp ./server/openapi.yaml ./openapi-deploy/openapi.yaml
+
+      - name: Deploy OpenAPI spec to docs repo
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          publish_dir: ./openapi-deploy
+          external_repository: evcc-io/docs
+          publish_branch: main
+          destination_dir: static
+          allow_empty_commit: false
+          commit_message: Update OpenAPI spec
+          keep_files: true
+        if: success()

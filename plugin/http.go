@@ -35,7 +35,7 @@ func init() {
 var mc = httpcache.NewMemoryCache()
 
 // NewHTTPPluginFromConfig creates a HTTP provider
-func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -197,7 +197,7 @@ func (p *HTTP) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-func (p *HTTP) set(param string, val interface{}) error {
+func (p *HTTP) set(param string, val any) error {
 	url, err := setFormattedValue(p.url, param, val)
 	if err != nil {
 		return err

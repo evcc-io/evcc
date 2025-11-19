@@ -45,7 +45,7 @@ type Salia struct {
 	log     *util.Logger
 	uri     string
 	current int64
-	fw      int // 2 if fw 2.0 3 if fw >= 2.3.0
+	fw      int // 2 if fw 2.0 3 if fw >= 2.3.64 (oldest firmware we seen with the new behavior)
 	apiG    util.Cacheable[salia.Api]
 }
 
@@ -56,7 +56,7 @@ func init() {
 //go:generate go tool decorate -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
-func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSaliaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -116,7 +116,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 		wb.fw = 2
 	}
 
-	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.3.0"))) {
+	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.3.64"))) {
 		wb.fw = 3
 	}
 

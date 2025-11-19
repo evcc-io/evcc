@@ -15,6 +15,6 @@ func Types() []string {
 }
 
 // NewFromConfig creates meter from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Meter, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Meter, error) {
 	return config.NewFromConfig(ctx, typ, other)
 }

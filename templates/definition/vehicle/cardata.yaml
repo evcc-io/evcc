@@ -51,6 +51,10 @@ params:
   - name: clientid
     required: true
   - preset: vehicle-features
+  - name: streaming
+    help:
+      en: Enable if vehicle sends streaming updates during charging.
+      de: Aktivieren falls das Fahrzeug Streaming Updates während des Ladevorgangs schickt.
 render: |
   type: cardata
   vin: {{ .vin }}

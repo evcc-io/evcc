@@ -58,8 +58,9 @@
           "heating": "Vlastní konfigurace kotle (topení)"
         },
         "heatpump": "Vlastní konfigurace tepelného čerpadla",
-        "sgready": "Vlastní konfigurace tepelného čerpadla (SG Ready, All)",
-        "sgready-boost": "Vlastní konfigurace tepelného čerpadla (SGReady, Boost)",
+        "sgready": "Vlastní konfigurace tepelného čerpadla (sg-ready přes plugins)",
+        "sgready-boost": "Uživatelsky definované tepelné čerpadlo (sg-ready-boost, zastaralé)",
+        "sgready-relay": "Vlastní konfigurace tepelného čerpadla (sg-ready přes relé)",
         "switchsocket": "Vlastní konfigurace chytré zásuvky"
       }
     },
@@ -118,7 +119,7 @@
       "temp": "Teplota",
       "topic": "Téma",
       "url": "URL",
-      "vehicleLimitSoc": "Limit vozidla",
+      "vehicleLimitSoc": "Limit nabíjení",
       "yes": "ano"
     },
     "deviceValueChargeStatus": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Lze použít pro správu zatížení nebo pro statistické účely.",
-      "titleAdd": "Přidat externí měřič",
-      "titleEdit": "Upravit externí měřič"
+      "description": "Zaznamenávat hodnoty energie neřízených spotřebičů (např. mrazák, myčka nádobí, atd.) pro statistické účely. Tyto měřáky je možné použít pro správu příkonu (např. dílčí distribuci).",
+      "titleAdd": "Přidat měřič spotřebiče",
+      "titleEdit": "Upravit měřič spotřebiče"
     },
     "form": {
       "danger": "Nebezpečí",
@@ -334,7 +335,7 @@
       "option": {
         "aux": "Přidat samoregulační spotřebič",
         "battery": "Přidat měřič baterie",
-        "ext": "Přidat externí měřič",
+        "ext": "Přidat běžný spotřebič",
         "pv": "Přidat měřič solární energie"
       },
       "save": "Uložit",
@@ -465,7 +466,6 @@
         "backup": {
           "action": "Stáhnout zálohu...",
           "confirmationButton": "Stáhnout zálohu",
-          "confirmationText": "Prosím, zadejte své heslo pro stažení databázového souboru.",
           "description": "Zálohuje vaši konfiguraci do souboru. Tento soubor může být později použit pro obnovu, např. v případě selhání systému.",
           "title": "Záloha"
         },
@@ -512,7 +512,7 @@
     "validation": {
       "failed": "selhalo",
       "label": "Stav",
-      "running": "Ověřování…",
+      "running": "Ověřování správnosti…",
       "success": "úspěch",
       "unknown": "neznámý",
       "validate": "ověřit"
@@ -658,7 +658,7 @@
   "help": {
     "discussionsButton": "GitHub diskuse",
     "documentationButton": "Dokumentace",
-    "issueButton": "Nahlásit bug",
+    "issueButton": "Nahlásit problém",
     "issueDescription": "Našli jste podivné nebo nesprávné chování?",
     "logsButton": "Zobrazit protokoly",
     "logsDescription": "Zkontrolujte protokoly na chyby.",
@@ -1074,7 +1074,7 @@
   },
   "smartCost": {
     "activeHours": "{active} z {total}",
-    "activeHoursLabel": "Aktivních hodin",
+    "activeHoursLabel": "Aktivní čas",
     "applyToAll": "Aplikovat všude?",
     "batteryDescription": "Nabíjí baterii FVE ze distribuční sítě.",
     "cheapTitle": "Levné nabíjení ze sítě",
@@ -1091,7 +1091,7 @@
     "saved": "Uloženo."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pozastaveno",
+    "activeHoursLabel": "Doba pozastavení",
     "description": "Pozastaví nabíjení pro maximalizaci výdělečné dodávky do distribuční sítě.",
     "priceLabel": "Cena výkupu energie",
     "priceLimit": "Cenový strop pro výkup energie",

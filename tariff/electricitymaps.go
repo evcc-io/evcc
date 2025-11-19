@@ -40,7 +40,7 @@ func init() {
 	registry.Add("electricitymaps", NewElectricityMapsFromConfig)
 }
 
-func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewElectricityMapsFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		Uri   string
 		Token string

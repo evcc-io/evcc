@@ -58,8 +58,8 @@
           "heating": "Индивидуален нагревател"
         },
         "heatpump": "Индивидуална термо помпа",
-        "sgready": "Индивидуална термо помпа (sg-ready, и др.)",
-        "sgready-boost": "Индивидуална термо помпа (sg-ready, boost)",
+        "sgready": "Индивидуална термо помпа (sg-ready чрез plugins)",
+        "sgready-relay": "Индивидуална термо помпа (sg-ready чрез relays)",
         "switchsocket": "Индивидуален превключвател"
       }
     },

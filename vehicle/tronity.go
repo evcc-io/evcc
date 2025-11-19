@@ -51,7 +51,7 @@ func init() {
 //go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
 
 // NewTronityFromConfig creates a new vehicle
-func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials

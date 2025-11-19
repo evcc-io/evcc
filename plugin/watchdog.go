@@ -27,7 +27,7 @@ func init() {
 }
 
 // NewWatchDogFromConfig creates watchDog provider
-func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Reset   []string
 		Initial *string
@@ -69,6 +69,7 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
 	return func(val T) error {
 		o.mu.Lock()
+		defer o.mu.Unlock()
 
 		// stop wdt on new write
 		if o.cancel != nil {
@@ -82,11 +83,12 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			ctx, o.cancel = context.WithCancel(context.Background())
 
 			go o.wdt(ctx, func() error {
+				o.mu.Lock()
+				defer o.mu.Unlock()
+
 				return set(val)
 			})
 		}
-
-		o.mu.Unlock()
 
 		return set(val)
 	}
