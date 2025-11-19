@@ -59,6 +59,7 @@
         },
         "heatpump": "Gebruikersgedefinieerde warmtepomp",
         "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready via plugins)",
+        "sgready-boost": "Gebruiker gedefinieerde verwarmer (sg-ready-boost, verouderd)",
         "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
@@ -94,6 +95,7 @@
       "currency": "Valuta",
       "current": "Stroomsterkte",
       "currentRange": "Stroomsterkte",
+      "dimmed": "Gedimd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
       "feedinPrice": "Terugleververgoeding",
@@ -118,7 +120,7 @@
       "temp": "Temperatuur",
       "topic": "Onderwerp",
       "url": "URL",
-      "vehicleLimitSoc": "Voertuig limiet",
+      "vehicleLimitSoc": "Laad limiet",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +135,7 @@
     "devices": {
       "auxMeter": "Slimme verbruiker",
       "batteryStorage": "Thuisaccu",
+      "consumer": "Verbruiker",
       "solarSystem": "PV systeem"
     },
     "editor": {
@@ -143,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan worden gebruikt voor electriciteitsnetwerk beheer of statistische doeleinden.",
-      "titleAdd": "Externe Meter Toevoegen",
-      "titleEdit": "Externe meter bewerken"
+      "description": "Registreert energie van ongestuurde verbruikers (bijv. koelkast, wasmachine, etc) voor statistieken. Deze meters kunnen ook gebruikt worden voor electriciteitsnetwerk beheer (bijv onderverdeling).",
+      "titleAdd": "Externe verbruiker toevoegen",
+      "titleEdit": "Wijzig verbruikmeter"
     },
     "form": {
       "danger": "Gevaar",
@@ -184,6 +187,7 @@
       "telemetry": "Telemetrie",
       "templateLoading": "Laden...",
       "title": "Titel",
+      "typeDeprecated": "Het type '{type}' is verouderd en zal in een toekomstige versie verwijderd worden. Lees de changelog en maak dit apparaat opnieuw aan.",
       "validateSave": "Valideren & opslaan"
     },
     "grid": {
@@ -196,7 +200,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "wijzig"
+      "change": "wijzig",
+      "label": "Pictogram"
     },
     "influx": {
       "description": "Schrijft laad-data en andere cijfers naar InfluxDB. Gebruik Grafana of andere tools om de data te visualiseren.",
@@ -344,13 +349,22 @@
       "option": {
         "aux": "Zelfregulerende consument toevoegen",
         "battery": "Batterijmeter toevoegen",
-        "ext": "Externe meter toevoegen",
+        "ext": "Standaard verbruiker toevoegen",
         "pv": "Zonne-energie meter toevoegen"
       },
       "save": "Opslaan",
       "specific": "Specifieke integraties",
       "template": "Fabrikant",
       "titleChoice": "Wat wil je toevoegen?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Zelf regulerende verbruiker",
+        "battery": "Batterij",
+        "charge": "Verbruiker / Lader",
+        "grid": "Netwerk",
+        "label": "Verbruik",
+        "pv": "Productie"
+      },
       "validateSave": "Valideren en opslaan"
     },
     "modbus": {
@@ -374,7 +388,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Sta meerdere clients de toegang tot één Modbus apparaat toe.",
+      "add": "Voeg een proxy verbinding toe",
+      "connection": "Connectie #{number}",
+      "description": "Sommige Modbus apparaten ondersteunen slechts 1 of enkele connecties. EVCC kan als een proxy fungeren, waarmee meerdere clients de toegang krijgen tot één Modbus apparaat .",
+      "device": "Apparaat",
+      "option": {
+        "deny": "fout",
+        "false": "nee",
+        "true": "stil"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Schrijftoegang is geblokkeerd met een foutmelding op Modbus.",
+          "false": "Schrijftoegang wordt doorgestuurd.",
+          "true": "Schrijftoegang is geblokkeerd zonder antwoord."
+        },
+        "label": "Alleen-lezen"
+      },
+      "sourcePortHelp": "Poort voor inkomende client connecties. Moet beschikbaar zijn.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -396,10 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Gebruik de .local toevoeging om mDNS te activeren. Voor toegang vanuit de mobiele app en sommige OCPP laders van belang.",
+      "descriptionExternalUrl": "Adres voor andere apparaten die willen verbinden met evcc en voor het automatisch ontdekken van de evcc app.",
+      "descriptionHost": "Gebruikt om evcc in je lokale netwerk aan te kondigen.",
+      "descriptionInternalUrl": "Lokaal netwerk adres van evcc.",
       "descriptionPort": "Poort voor de web interface en API. Update de browser url wanneer je dit aanpast.",
       "descriptionSchema": "Beïnvloedt enkel hoe URLs gegenereerd worden. HTTPS selecteren activeert geen encryptie.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "Externe URL",
+      "labelHost": "mDNS Hostname",
+      "labelInternalUrl": "Interne URL",
       "labelPort": "Poort",
       "labelSchema": "Schema",
       "title": "Netwerk"
@@ -464,6 +499,7 @@
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "U moet een sponsortoken configureren voordat u dit apparaat kunt aanmaken.",
+      "tokenRequiredFeature": "Deze functie vereist een sponsortoken.",
       "tokenRequiredLearnMore": "Meer informatie.",
       "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
       "trialToken": "tijdelijke token",
@@ -475,6 +511,7 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
+          "confirmationText": "Download het database bestand.",
           "description": "Backup je data naar een bestand. Dit bestand kan gebruikt worden om je data te herstellen in geval van een systeemfout.",
           "title": "Backup"
         },
@@ -514,7 +551,7 @@
       "title": "Tarieven"
     },
     "telemetry": {
-      "description": "Het delen van je data helpt om evcc te verbeteren. Jouw privacy is belangrijk voor ons en deelname is geheel optioneel",
+      "description": "Het delen van je data helpt om evcc te verbeteren. Jouw privacy is belangrijk voor ons en deelname is geheel optioneel.",
       "title": "Telemetrie"
     },
     "title": {
@@ -657,6 +694,7 @@
     "about": "Over",
     "authProviders": {
       "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
+      "loggedOut": "Succesvol uitgelogd",
       "title": "Authorisatie Status"
     },
     "blog": "Blog",
@@ -986,7 +1024,8 @@
     "message": "Niet verbonden met een server.",
     "restart": "Herstart",
     "restartNeeded": "Benodigd om aanpassingen door te voeren.",
-    "restarting": "Server is binnenkort weer beschikbaar."
+    "restarting": "Server is binnenkort weer beschikbaar.",
+    "starting": "Server wordt gestart..."
   },
   "passwordModal": {
     "description": "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord.",
@@ -1152,6 +1191,7 @@
     "cleanTitle": "Laden met schone energie uit het net",
     "co2Label": "CO₂ uitstoot",
     "co2Limit": "CO₂ limiet",
+    "enable": "Activeer de limiet",
     "loadpointDescription": "Zet tijdelijk snel-laden in solar mode aan.",
     "modalTitle": "Smart Grid laden",
     "none": "geen",
@@ -1174,6 +1214,7 @@
     "configuration": "Configuratie",
     "description": "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}.",
     "discussions": "GitHub Discussies",
+    "editConfiguration": "Wijzig de configuratie",
     "fixAndRestart": "Los het probleem op en herstart de server.",
     "hint": "Let op: het kan ook zijn dat u een defect apparaat heeft (omvormer, meter, …). Controleer uw netwerkverbindingen.",
     "lineError": "Fout in {0}.",
