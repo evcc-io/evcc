@@ -271,5 +271,5 @@ func (wb *AlpitronicHYC) Soc() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)), nil
+	return float64(encoding.Uint16(b)) / 100, nil
 }
