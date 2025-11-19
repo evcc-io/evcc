@@ -52,6 +52,8 @@ type responseDetails struct {
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
+const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
+
 func (site *Site) optimizerUpdateAsync(battery []types.Measurement) {
 	var err error
 
@@ -201,7 +203,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 		case api.ModeNow, api.ModeMinPV:
 			// forced min/max charging
-			bat.PDemand = prorate(continuousDemand(lp, minLen), firstSlotDuration)
+			if demand := continuousDemand(lp, minLen); demand != nil {
+				bat.PDemand = prorate(demand, firstSlotDuration)
+			}
 
 		case api.ModePV:
 			// add plan goal
@@ -209,16 +213,19 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			if goal > 0 {
 				if v := lp.GetVehicle(); socBased && v != nil {
 					goal *= v.Capacity() * 10
+				} else {
+					goal *= 1000 // Wh
 				}
 			}
 
 			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
 				// TODO precise slot placement
-				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen {
+				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen && slot >= 0 {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
+					bat.SMax = max(bat.SMax, float32(goal))
 				} else {
-					site.log.WARN.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
+					site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 				}
 			}
 
@@ -233,7 +240,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 					maxPower := lp.EffectiveMaxPower()
 
 					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(maxPower)
+						return float32(maxPower / slotsPerHour)
 					}), firstSlotDuration)
 
 					for i := range maxLen {
@@ -278,9 +285,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		if m, ok := instance.(api.BatterySocLimiter); ok {
-			min, max := m.GetSocLimits()
-			bat.SMin = float32(*b.Capacity * float64(min) * 10) // Wh
-			bat.SMax = float32(*b.Capacity * float64(max) * 10) // Wh
+			minSoc, maxSoc := m.GetSocLimits()
+			bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
+			bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
 		}
 
 		req.Batteries = append(req.Batteries, bat)
@@ -348,7 +355,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	return lo.RepeatBy(minLen, func(i int) float32 {
-		return float32(pwr)
+		return float32(pwr / slotsPerHour)
 	})
 }
 

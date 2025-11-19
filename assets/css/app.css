@@ -576,8 +576,8 @@ input.form-control:read-only,
 	color: var(--evcc-default-text);
 }
 
-.dark .form-control::placeholder {
-	color: var(--bs-gray-medium);
+.form-control::placeholder {
+	opacity: 0.5 !important;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {

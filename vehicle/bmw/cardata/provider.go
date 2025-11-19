@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -237,13 +238,15 @@ var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
+	activeStates := []string{"HEATING", "COOLING", "VENTILATION", "DEFROST"}
+
 	res, err := v.String("vehicle.cabin.hvac.preconditioning.status.comfortState")
 	if err == nil && res != "" {
-		return slices.Contains([]string{"COMFORT_HEATING", "COMFORT_COOLING", "COMFORT_VENTILATION", "DEFROST"}, res), nil
+		return slices.Contains(activeStates, strings.TrimPrefix(strings.ToUpper(res), "COMFORT_")), nil
 	}
 
 	if res, err = v.String("vehicle.vehicle.preConditioning.activity"); err == nil {
-		return slices.Contains([]string{"HEATING", "COOLING", "VENTILATION"}, res), nil
+		return slices.Contains(activeStates, strings.ToUpper(res)), nil
 	}
 
 	return false, err

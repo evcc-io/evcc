@@ -2,8 +2,8 @@ template: homeassistant
 products:
   - brand: Home Assistant
     description:
-      de: Home Assistant Sensor
-      en: Home Assistant Sensor
+      de: Meter
+      en: Meter
 group: generic
 requirements:
   description:
@@ -103,6 +103,12 @@ params:
     help:
       en: Entity ID for battery state of charge in percent
       de: Entitäts-ID für Batterieladestand in Prozent
+  - name: capacity
+  - name: minsoc
+  - name: maxsoc
+  - name: maxchargepower
+  - name: maxdischargepower
+  - name: maxacpower
 render: |
   type: homeassistant
   uri: {{ .uri }}
@@ -117,4 +123,10 @@ render: |
     - {{ .voltageL1 }}
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
+  maxacpower: {{ .maxacpower }} # W
   soc: {{ .soc }}
+  capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %

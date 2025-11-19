@@ -65,5 +65,5 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api
 		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
 	}
 
-	return v, err
+	return v, nil
 }

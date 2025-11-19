@@ -58,8 +58,8 @@
           "heating": "Itse määritelty lämmitin"
         },
         "heatpump": "Itse määritelty lämpöpumppu",
-        "sgready": "Itse määritelty lämpöpumppu (älyverkkovalmius, kaikki)",
-        "sgready-boost": "Itse määritelty lämpöpumppu (älyverkkovalmius, tehostus)",
+        "sgready": "Itse määritelty lämpöpumppu (sg-ready pluginien kautta)",
+        "sgready-relay": "Itse määritelty lämpöpumppu (sg-ready releiden kautta)",
         "switchsocket": "Itse määritelty relepistorasia"
       }
     },
@@ -486,7 +486,6 @@
         "backup": {
           "action": "Ladataan varmuuskopiota...",
           "confirmationButton": "Lataa varmuuskopio",
-          "confirmationText": "Syötä salasanasi ladataksesi tietokantatiedoston.",
           "description": "Varmuuskopioi tietosi. Tätä tiedostoa voidaan käyttää palauttamaan tietosi järjestelmävirheen jälkeen.",
           "title": "Varmuuskopio"
         },
