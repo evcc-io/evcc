@@ -5,8 +5,14 @@
 			<div class="mb-3">
 				<Markdown :markdown="$t('config.ocpp.urlHelp', { url: ocppUrlWithStationId })" />
 			</div>
-			<FormRow id="ocppUrl" :label="$t('config.ocpp.url')">
-				<input type="text" class="form-control border" :value="ocppUrl" readonly />
+			<FormRow id="ocppModalServerUrl" :label="$t('config.ocpp.url')">
+				<input
+					id="ocppModalServerUrl"
+					type="text"
+					class="form-control border"
+					:value="ocppUrl"
+					readonly
+				/>
 			</FormRow>
 
 			<hr class="my-4" />
