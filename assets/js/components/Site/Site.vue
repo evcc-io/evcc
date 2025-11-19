@@ -63,7 +63,7 @@
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
-				:batterySoc="battery?.soc"
+				:batterySoc="batterySoc"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
@@ -170,6 +170,9 @@ export default defineComponent({
 		},
 		orderedVisibleLoadpoints() {
 			return this.loadpoints.filter((lp) => lp.visible);
+		},
+		batterySoc() {
+			return this.battery?.soc;
 		},
 		batteryConfigured() {
 			return this.battery && this.battery.devices.length > 0;

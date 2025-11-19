@@ -19,7 +19,7 @@
 				:batteryHold="batteryHold"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
-				:battery="battery"
+				:batterySoc="batterySoc"
 				:powerUnit="powerUnit"
 				:vehicleIcons="vehicleIcons"
 				:inPower="inPower"
@@ -113,10 +113,10 @@
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
-								soc: battery?.soc,
+								soc: batterySoc,
 								gridCharge: batteryGridChargeActive,
 							}"
-							:details="battery?.soc"
+							:details="batterySoc"
 							:detailsFmt="batteryFmt"
 							:expanded="batteryExpanded"
 							detailsClickable
@@ -127,9 +127,9 @@
 							<template v-if="batteryGridChargeLimitSet" #subline>
 								<div class="d-none d-md-block">&nbsp;</div>
 							</template>
-							<template v-if="battery && battery.devices.length > 1" #expanded>
+							<template v-if="hasMultipleBatteries" #expanded>
 								<EnergyflowEntry
-									v-for="(b, index) in battery.devices"
+									v-for="(b, index) in batteryDevices"
 									:key="index"
 									:name="b.title || genericBatteryTitle(index)"
 									:details="b.soc"
@@ -231,10 +231,10 @@
 							:powerUnit="powerUnit"
 							:iconProps="{
 								hold: batteryHold,
-								soc: battery?.soc,
+								soc: batterySoc,
 								gridCharge: batteryGridChargeActive,
 							}"
-							:details="battery?.soc"
+							:details="batterySoc"
 							:detailsFmt="batteryFmt"
 							:expanded="batteryExpanded"
 							detailsClickable
@@ -262,9 +262,9 @@
 									</span>
 								</button>
 							</template>
-							<template v-if="battery && battery.devices.length > 1" #expanded>
+							<template v-if="hasMultipleBatteries" #expanded>
 								<EnergyflowEntry
-									v-for="(b, index) in battery.devices"
+									v-for="(b, index) in batteryDevices"
 									:key="index"
 									:name="b.title || genericBatteryTitle(index)"
 									:details="b.soc"
@@ -359,11 +359,23 @@ export default defineComponent({
 		pvProduction() {
 			return Math.abs(this.pvPower);
 		},
+		batterySoc() {
+			return this.battery?.soc;
+		},
+		batteryPower() {
+			return this.battery?.power ?? 0;
+		},
+		batteryDevices() {
+			return this.battery?.devices ?? [];
+		},
+		hasMultipleBatteries() {
+			return this.batteryDevices.length > 1;
+		},
 		batteryDischarge() {
-			return this.dischargePower(this.battery?.power ?? 0);
+			return this.dischargePower(this.batteryPower);
 		},
 		batteryCharge() {
-			return this.chargePower(this.battery?.power ?? 0);
+			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);

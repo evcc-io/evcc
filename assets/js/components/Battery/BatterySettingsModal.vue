@@ -33,7 +33,7 @@
 		<div v-show="usageTabActive" class="row">
 			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
 				{{ $t("batterySettings.batteryLevel") }}:
-				<strong>{{ fmtSoc(battery?.soc ?? 0) }}</strong>
+				<strong>{{ fmtSoc(batterySoc) }}</strong>
 				<small v-for="(line, index) in batteryDetails" :key="index" class="d-block">
 					{{ line }}
 				</small>
@@ -106,7 +106,7 @@
 					</div>
 					<div
 						class="batterySoc ps-0 bg-white pe-none"
-						:style="{ top: `${100 - (battery?.soc ?? 100)}%` }"
+						:style="{ top: `${100 - (batterySoc || 100)}%` }"
 					></div>
 					<div
 						class="bufferStartIndicator pe-none"
@@ -297,6 +297,12 @@ export default defineComponent({
 		usageTabActive() {
 			return !this.gridTabActive;
 		},
+		batterySoc() {
+			return this.battery?.soc ?? 0;
+		},
+		batteryDevices() {
+			return this.battery?.devices ?? [];
+		},
 		priorityOptions() {
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
@@ -309,7 +315,7 @@ export default defineComponent({
 			return options;
 		},
 		controllable() {
-			return this.battery && this.battery.devices.some(({ controllable }) => controllable);
+			return this.batteryDevices.some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
 			return this.controllable && this.isModalVisible && this.smartCostAvailable;
@@ -365,11 +371,11 @@ export default defineComponent({
 			return this.prioritySoc;
 		},
 		batteryDetails() {
-			if (!this.battery) {
+			if (!this.batteryDevices.length) {
 				return;
 			}
-			const multipleBatteries = this.battery.devices.length > 1;
-			return this.battery.devices
+			const multipleBatteries = this.batteryDevices.length > 1;
+			return this.batteryDevices
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc = 0, capacity }) => {
 					const energy = this.fmtWh(
