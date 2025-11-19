@@ -106,7 +106,7 @@
 					</div>
 					<div
 						class="batterySoc ps-0 bg-white pe-none"
-						:style="{ top: `${100 - (batterySoc || 100)}%` }"
+						:style="{ top: `${100 - batterySoc}%` }"
 					></div>
 					<div
 						class="bufferStartIndicator pe-none"
