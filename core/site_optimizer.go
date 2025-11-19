@@ -200,11 +200,20 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			// disable charging
 			bat.CMax = 0
 
-		case api.ModeNow, api.ModeMinPV:
-			// forced min/max charging
+		case api.ModeNow:
+			// forced max charging
 			if demand := continuousDemand(lp, minLen); demand != nil {
 				bat.PDemand = prorate(demand, firstSlotDuration)
 			}
+
+		case api.ModeMinPV:
+			// forced min charging
+			if demand := continuousDemand(lp, minLen); demand != nil {
+				bat.PDemand = prorate(demand, firstSlotDuration)
+			}
+
+			// apply plan goal, smartcost limit for ModeMinPV too
+			fallthrough
 
 		case api.ModePV:
 			// add plan goal
@@ -238,13 +247,26 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 				}) {
 					maxPower := lp.EffectiveMaxPower()
 
-					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(maxPower / slotsPerHour)
-					}), firstSlotDuration)
+					// no PDemand from ModeMinPV yet?
+					if bat.PDemand == nil {
+						bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
+							return float32(maxPower / slotsPerHour)
+						}), firstSlotDuration)
 
-					for i := range maxLen {
-						if grid[i].Value > *costLimit {
-							bat.PDemand[i] = 0
+						for i := range maxLen {
+							if grid[i].Value > *costLimit {
+								bat.PDemand[i] = 0
+							}
+						}
+					} else {
+						for i := range maxLen {
+							if grid[i].Value <= *costLimit {
+								bat.PDemand[i] = float32(maxPower)
+							}
+						}
+						// only prorate if slot 0 might be changed from prorated minPower to unrated maxPower
+						if grid[0].Value <= *costLimit {
+							bat.PDemand = prorate(bat.PDemand, firstSlotDuration)
 						}
 					}
 				}
