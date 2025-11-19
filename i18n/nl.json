@@ -162,8 +162,8 @@
       "delete": "Wissen",
       "docsLink": "Zie documentatie.",
       "dragHandle": "Schuifknop",
-      "dragItem": "Verplaatsbaar: {title}",
-      "dragList": "Herschikbare lijst",
+      "dragItem": "Verschuifbaar:{title}",
+      "dragList": "Sorteerbare lijst",
       "experimental": "Experimenteel",
       "forceSave": "Toch opslaan",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
@@ -175,7 +175,7 @@
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
       "required": "vereist",
-      "reset": "Reset",
+      "reset": "Herstel",
       "save": "Opslaan",
       "saved": "Opgeslagen.",
       "saving": "Bezig met opslaan…",
@@ -238,7 +238,7 @@
       "chargerTypeLabel": "Type laadpunt",
       "chargingTitle": "Gedrag",
       "circuitHelp": "Toewijzing van een circuit van je electriciteitsnetwerk om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
-      "circuitLabel": "Circuit",
+      "circuitLabel": "Groep",
       "circuitUnassigned": "niet toegewezen",
       "defaultModeHelp": {
         "charging": "Laadmodus bij het aansluiten van een voertuig.",
@@ -307,7 +307,7 @@
         "unknown": "Wijzig lader of verwarmingsapparaat"
       },
       "titleExample": {
-        "charging": "Garage, Carport, etc.",
+        "charging": "Garage, oprit, etc.",
         "heating": "Warmtepomp, verwarmingsapparaat, etc."
       },
       "titleLabel": "Titel",
@@ -514,7 +514,7 @@
       "title": "Tarieven"
     },
     "telemetry": {
-      "description": "Configureer het delen van gegevens om evcc te helpen verbeteren. Uw privacy is belangrijk voor ons en deelname is volledig vrijwillig.",
+      "description": "Het delen van je data helpt om evcc te verbeteren. Jouw privacy is belangrijk voor ons en deelname is geheel optioneel",
       "title": "Telemetrie"
     },
     "title": {
@@ -706,15 +706,15 @@
       "yamlConfigDescription": "Je complete configuratie bestand."
     },
     "additionalContext": "Additionele context",
-    "additionalContextPlaceholder": "Alle aanvullende informatie die nuttig kan zijn...\n- Configuratiegegevens\n- Wat u hebt geprobeerd\n- Omgevingsgegevens",
+    "additionalContextPlaceholder": "Alle aanvullende informatie die behulpzaam kan zijn...\n- Configuratie details\n- Wat je hebt geprobeerd\n- Omgevingsfactoren",
     "createButtonDiscussion": "Start GitHub discussie...",
     "createButtonIssue": "Creëer GitHub Issue...",
-    "description": "Werkt uw installatie niet zoals verwacht? Gebruik deze pagina om hulp te krijgen of problemen te melden. Geef voldoende details om ons te helpen het probleem te begrijpen en te reproduceren, maar houd uw beschrijving beknopt, duidelijk en gemakkelijk te volgen.",
+    "description": "Werkt je installatie niet zoals verwacht? Gebruik deze pagina om hulp te vragen of problemen te rapporteren. Geef voldoende informatie, dat helpt ons om het probleem te begrijpen en na te bouwen, maar hou de beschrijving beknopt, helder en makkelijk te begrijpen.",
     "helpType": {
       "discussion": "Hulp nodig met mijn installatie",
       "discussionDescription": "Discussies binnen de community bieden antwoorden.",
       "issue": "Bug gevonden",
-      "issueDescription": "Ik weet zeker dat er iets kapot is en gemaakt moet worden.",
+      "issueDescription": "Ik ben er zeker van dat iets kapot is en moet worden gerepareerd.",
       "title": "Welk probleem speelt er?"
     },
     "issueDescription": "Omschrijving",
@@ -723,12 +723,12 @@
     "subTitleDiscussion": "Omschrijf je probleem",
     "subTitleIssue": "Beschrijf het probleem",
     "summary": {
-      "confirmationButtonDiscussion": "Start GitHub-discussie",
-      "confirmationButtonIssue": "Maak een GitHub-issue aan",
+      "confirmationButtonDiscussion": "GitHub discussie starten",
+      "confirmationButtonIssue": "Maak GitHub issue",
       "copied": "Gekopiëerd!",
       "copyButton": "Kopieer additionele informatie",
-      "instructions": "Vanwege de beperkingen van GitHub op het gebied van URL-lengte, bestaat dit proces uit twee stappen:",
-      "singleStepDescription": "Klik op de onderstaande knop om GitHub te openen met een vooraf ingevuld formulier met uw probleemgegevens. Gevoelige gegevens zijn automatisch verwijderd, maar controleer dit nogmaals voordat u het formulier deelt.",
+      "instructions": "Door limitaties in GitHubs URL lengte is dit een twee staps proces:",
+      "singleStepDescription": "Klik op onderstaande knop om GitHub te openen met een voor ingevuld formulier met de beschrijving van jouw probleem. Gevoelige informatie is automatisch verwijderd, maar controleer dit voordat je het deelt.",
       "step1Description": "Klik op de onderstaande knop om een basis GitHub-vermelding aan te maken met uw titel, beschrijving en details.",
       "step2Description": "Nadat je het item hebt aangemaakt, ga je terug naar deze pagina om de onderstaande aanvullende informatie te kopiëren en in je GitHub-formulier te plakken. Gevoelige gegevens zijn verwijderd, maar controleer dit nogmaals voordat je de informatie deelt.",
       "stepOneDiscussion": "Stap 1: Creëer basis discussie",
@@ -1008,8 +1008,8 @@
     "delete": "Verwijder",
     "finished": "Afgerond",
     "meter": "Meter",
-    "meterstart": "Meter start",
-    "meterstop": "Meter stop",
+    "meterstart": "Beginwaarde meter",
+    "meterstop": "Eindwaarde meter",
     "odometer": "Kilometerstand",
     "price": "Prijs",
     "started": "Gestart",
@@ -1047,8 +1047,8 @@
       "finished": "Beëindigd",
       "identifier": "ID",
       "loadpoint": "Oplaadpunt",
-      "meterstart": "Meter start (kWh)",
-      "meterstop": "Meter stop (kWh)",
+      "meterstart": "Beginwaarde meter (kWh)",
+      "meterstop": "Eindwaarde meter (kWh)",
       "odometer": "Kilometerstand (km)",
       "price": "Prijs",
       "priceperkwh": "Prijs/kWh",
@@ -1097,7 +1097,7 @@
     "vehicle": "Voertuig"
   },
   "settings": {
-    "deviceInfo": "De instellingen die u in dit dialoogvenster maakt, zijn alleen van toepassing op dit apparaat.",
+    "deviceInfo": "Instellingen die je in dit scherm maakt, gelden alleen voor dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",
       "exit": "Volledig scherm afsluiten",
@@ -1112,10 +1112,10 @@
       "label": "Taal"
     },
     "loadpoints": {
-      "help": "Wijzig de volgorde en zichtbaarheid van de gebruikersinterface.",
-      "hide": "Verberg {title}",
+      "help": "Wijzig de volgorde en zichtbaarheid in de gebruikersinterface.",
+      "hide": "{title} verbergen",
       "label": "Laadpunten",
-      "show": "Toon {title}"
+      "show": "{title} tonen"
     },
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
