@@ -23,6 +23,16 @@ params:
   - name: cache
     advanced: true
     default: 1s
+  - name: battery_type
+    description:
+      en: "Enphase Battery Type (AC or IQ)"
+      de: "Enphase Batterietyp (AC oder IQ)"
+    help:
+      en: "Select 'iq' for new Enphase IQ Batteries. Leave at default 'ac' for older generation AC Batteries."
+      de: "Wähle 'iq' falls die neuere 'IQ Battery' Generation installiert ist. Standardeinstellung 'ac' für die ältere 'AC Battery' Generation."
+    default: ac
+    choice: ["ac", "iq"]
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -128,7 +138,11 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
+    {{- if eq .battery_type "iq" }}
+    uri: {{ .schema }}://{{ .host }}/ivp/livedata/status
+    {{- else }}
     uri: {{ .schema }}://{{ .host }}/production.json?details=1
+    {{- end}}
     {{- if .token }}
     auth:
       type: bearer
@@ -136,7 +150,11 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    {{- if eq .battery_type "iq" }}
+    jq: ((.meters.storage.agg_p_mw // 0) / 1000 | round)
+    {{- else }}
     jq: .storage[] | .wNow
+    {{- end}}
   soc:
     source: http
     uri: {{ .schema }}://{{ .host }}/ivp/ensemble/inventory
