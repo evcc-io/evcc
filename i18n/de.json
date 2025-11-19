@@ -71,23 +71,6 @@
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
-    "ocpp": {
-      "connectionStatus": "Konfigurierte Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
-      "connectedChargers": "Verbundene Wallboxen",
-      "detectedChargers": "Erkannte Station-IDs",
-      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
-      "noChargers": "Keine OCPP-Wallboxen erkannt.",
-      "noStations": "Keine Stationen verbunden",
-      "status": {
-        "connected": "Verbunden",
-        "configured": "Nicht verbunden",
-        "unknown": "Unbekannt"
-      },
-      "title": "OCPP Server",
-      "url": "Server-URL",
-      "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
-    },
     "circuits": {
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
       "title": "Lastmanagement",
@@ -117,10 +100,10 @@
       "configured": "Konfiguriert",
       "connections": "Verbindungen",
       "controllable": "Steuerbar",
-      "detected": "Erkannt",
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "detected": "Erkannt",
       "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
@@ -462,6 +445,23 @@
       "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
       "title": "Netzwerk"
+    },
+    "ocpp": {
+      "connectedChargers": "Verbundene Wallboxen",
+      "connectionStatus": "Konfigurierte Station-IDs",
+      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
+      "detectedChargers": "Erkannte Station-IDs",
+      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
+      "noChargers": "Keine OCPP-Wallboxen erkannt.",
+      "noStations": "Keine Stationen verbunden",
+      "status": {
+        "configured": "Nicht verbunden",
+        "connected": "Verbunden",
+        "unknown": "Unbekannt"
+      },
+      "title": "OCPP Server",
+      "url": "Server-URL",
+      "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
     },
     "options": {
       "boolean": {
