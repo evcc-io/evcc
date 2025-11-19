@@ -87,7 +87,7 @@ export interface State {
 
 export interface OcppConfig {
   port: number;
-  externalUri?: string;
+  externalUrl?: string;
   stations: OcppStationStatus[];
 }
 

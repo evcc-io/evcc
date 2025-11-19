@@ -38,7 +38,7 @@ type stationStatus struct {
 
 type status struct {
 	Port        int             `json:"port"`
-	ExternalUri string          `json:"externalUri,omitempty"`
+	ExternalUrl string          `json:"externalUrl,omitempty"`
 	Stations    []stationStatus `json:"stations"`
 }
 
@@ -71,7 +71,7 @@ func (cs *CS) status() status {
 
 	return status{
 		Port:        port,
-		ExternalUri: externalUri,
+		ExternalUrl: externalUrl,
 		Stations:    stations,
 	}
 }

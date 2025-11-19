@@ -7,8 +7,8 @@ import type { OcppConfig } from "@/types/evcc";
  */
 export function getOcppUrl(ocppConfig: OcppConfig): string | null {
 	// User specified url, e.g., for reverse proxy setups
-	if (ocppConfig.externalUri) {
-		return ocppConfig.externalUri;
+	if (ocppConfig.externalUrl) {
+		return ocppConfig.externalUrl;
 	}
 
 	const port = ocppConfig.port;

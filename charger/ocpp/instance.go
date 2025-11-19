@@ -18,14 +18,14 @@ import (
 
 type Config struct {
 	Port        int    `json:"port"`
-	ExternalUri string `json:"externalUri,omitempty" yaml:",omitempty"`
+	ExternalUrl string `json:"externalUrl,omitempty" yaml:",omitempty"`
 }
 
 var (
 	once        sync.Once
 	instance    *CS
 	port        = 8887
-	externalUri string
+	externalUrl string
 )
 
 // Status returns the OCPP status
@@ -44,7 +44,7 @@ func Port() int {
 // Init initializes the OCPP server
 func Init(cfg Config) {
 	port = cfg.Port
-	externalUri = cfg.ExternalUri
+	externalUrl = cfg.ExternalUrl
 }
 
 func Instance() *CS {
