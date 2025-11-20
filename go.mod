@@ -105,7 +105,7 @@ require (
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20251111182123-122a78f140d9
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
 	golang.org/x/net v0.47.0
