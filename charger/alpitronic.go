@@ -19,7 +19,9 @@ package charger
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -250,8 +252,9 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	if vid := bytesAsString(b); vid != "" {
-		return vid, nil
+	id := hex.EncodeToString(b)
+	if strings.Trim(id, "0") != "" {
+		return id, nil
 	}
 
 	b, err = wb.conn.ReadInputRegisters(wb.reg(hycRegIdTag), 10)
@@ -259,7 +262,12 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	return bytesAsString(b), nil
+	id = hex.EncodeToString(b)
+	if strings.Trim(id, "0") != "" {
+		return id, nil
+	}
+
+	return "", nil
 }
 
 var _ api.Battery = (*AlpitronicHYC)(nil)
