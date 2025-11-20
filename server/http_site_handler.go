@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
-	"go.yaml.in/yaml/v4"
 	"golang.org/x/text/language"
 )
 
@@ -82,35 +81,12 @@ func jsonHandler(h http.Handler) http.Handler {
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-	}
+	json.NewEncoder(w).Encode(data)
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
-
-	res := struct {
-		Error       string `json:"error"`
-		Line        int    `json:"line,omitempty"`
-		IsAuthError bool   `json:"isAuthError,omitempty"`
-	}{
-		Error:       err.Error(),
-		IsAuthError: errors.Is(err, api.ErrLoginRequired) || errors.Is(err, api.ErrMissingToken),
-	}
-
-	var (
-		ype *yaml.ParserError
-		yue *yaml.UnmarshalError
-	)
-	switch {
-	case errors.As(err, &ype):
-		res.Line = ype.Line
-	case errors.As(err, &yue):
-		res.Line = yue.Line
-	}
-
-	jsonWrite(w, res)
+	jsonWrite(w, util.ErrorAsJson(err))
 }
 
 func handler[T any](conv func(string) (T, error), set func(T) error, get func() T) http.HandlerFunc {
