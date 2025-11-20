@@ -5,11 +5,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func Oauth2Config(id, secret, redirecturi string) *oauth2.Config {
+func Oauth2Config(id, secret, redirectUri string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
-		RedirectURL:  redirecturi,
+		RedirectURL:  redirectUri,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:   "https://volvoid.eu.volvocars.com/as/authorization.oauth2",
 			TokenURL:  "https://volvoid.eu.volvocars.com/as/token.oauth2",
