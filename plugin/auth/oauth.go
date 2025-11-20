@@ -160,7 +160,7 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 	defer o.mu.Unlock()
 
 	if o.token == nil {
-		return nil, api.ErrMissingToken
+		return nil, api.LoginRequiredError(o.subject)
 	}
 
 	if o.token.Valid() {
