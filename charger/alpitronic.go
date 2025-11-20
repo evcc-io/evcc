@@ -18,10 +18,10 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -253,7 +253,7 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 	}
 
 	id := hex.EncodeToString(b)
-	if strings.Trim(id, "0") != "" {
+	if !bytes.Equal(b, make([]byte, len(b))) {
 		return id, nil
 	}
 
@@ -263,7 +263,7 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 	}
 
 	id = hex.EncodeToString(b)
-	if strings.Trim(id, "0") != "" {
+	if !bytes.Equal(b, make([]byte, len(b))) {
 		return id, nil
 	}
 
