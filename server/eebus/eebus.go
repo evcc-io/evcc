@@ -22,6 +22,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	"github.com/enbility/eebus-go/usecases/cs/lpp"
+	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
@@ -60,12 +61,18 @@ type MonitoringAppliance struct {
 	ucapi.MaMPCInterface
 }
 
+// Energy Guard
+type EnergyGuard struct {
+	ucapi.EgLPCInterface
+}
+
 type EEBus struct {
 	service eebusapi.ServiceInterface
 
 	cem CustomerEnergyManagement
 	cs  ControllableSystem
 	ma  MonitoringAppliance
+	eg  EnergyGuard
 
 	mux sync.Mutex
 	log *util.Logger
@@ -170,6 +177,11 @@ func NewServer(other Config) (*EEBus, error) {
 		MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
+	// energy guard
+	c.eg = EnergyGuard{
+		EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+	}
+
 	// register use cases
 	for _, uc := range []eebusapi.UseCaseInterface{
 		c.cem.EvseCC, c.cem.EvCC,
@@ -177,6 +189,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.OscEV, c.cem.EvSoc,
 		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
 		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
+		c.eg.EgLPCInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -228,6 +241,10 @@ func (c *EEBus) ControllableSystem() *ControllableSystem {
 
 func (c *EEBus) MonitoringAppliance() *MonitoringAppliance {
 	return &c.ma
+}
+
+func (c *EEBus) EnergyGuard() *EnergyGuard {
+	return &c.eg
 }
 
 func (c *EEBus) Run() {
@@ -306,34 +323,34 @@ func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.Connectio
 
 // EEBUS Logging interface
 
-func (c *EEBus) Trace(args ...interface{}) {
+func (c *EEBus) Trace(args ...any) {
 	c.log.TRACE.Println(args...)
 }
 
-func (c *EEBus) Tracef(format string, args ...interface{}) {
+func (c *EEBus) Tracef(format string, args ...any) {
 	c.log.TRACE.Printf(format, args...)
 }
 
-func (c *EEBus) Debug(args ...interface{}) {
+func (c *EEBus) Debug(args ...any) {
 	c.log.DEBUG.Println(args...)
 }
 
-func (c *EEBus) Debugf(format string, args ...interface{}) {
+func (c *EEBus) Debugf(format string, args ...any) {
 	c.log.DEBUG.Printf(format, args...)
 }
 
-func (c *EEBus) Info(args ...interface{}) {
+func (c *EEBus) Info(args ...any) {
 	c.log.INFO.Println(args...)
 }
 
-func (c *EEBus) Infof(format string, args ...interface{}) {
+func (c *EEBus) Infof(format string, args ...any) {
 	c.log.INFO.Printf(format, args...)
 }
 
-func (c *EEBus) Error(args ...interface{}) {
+func (c *EEBus) Error(args ...any) {
 	c.log.ERROR.Println(args...)
 }
 
-func (c *EEBus) Errorf(format string, args ...interface{}) {
+func (c *EEBus) Errorf(format string, args ...any) {
 	c.log.ERROR.Printf(format, args...)
 }

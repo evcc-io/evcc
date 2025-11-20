@@ -41,7 +41,7 @@ func init() {
 }
 
 // NewDadapowerFromConfig creates a Dadapower charger from generic config
-func NewDadapowerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewDadapowerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

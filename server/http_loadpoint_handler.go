@@ -122,7 +122,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		tz := vars["tz"]
 
 		var weekdays []int
-		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
+		for weekdayStr := range strings.SplitSeq(vars["weekdays"], ",") {
 			weekday, err := strconv.Atoi(weekdayStr)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))

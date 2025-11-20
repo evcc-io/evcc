@@ -58,8 +58,9 @@
           "heating": "Vartotojo nustatytas šildytuvas"
         },
         "heatpump": "Vartotojo nustatytas šilumos siurblys",
-        "sgready": "Vartotojo nustatytas šilumos siurblys (SG-Ready, visi)",
-        "sgready-boost": "Vartotojo nustatytas šilumos siurblys (SG-Ready, boost)",
+        "sgready": "Vartotojo nustatytas šilumos siurblys (SG-Ready, naudojant įskiepius)",
+        "sgready-boost": "Vartotojo nustatytas šilumos siurblys (SG-Ready-boost, nebenaudojama)",
+        "sgready-relay": "Vartotojo nustatytas šilumos siurblys (SG-Ready, naudojant reles)",
         "switchsocket": "Vartotojo apibrėžta išmanioji rozetė"
       }
     },
@@ -94,6 +95,7 @@
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "dimmed": "Galia sumažinta",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
       "feedinPrice": "Tiekimo į tinklą kaina",
@@ -118,7 +120,7 @@
       "temp": "Temperatūra",
       "topic": "Tema",
       "url": "URL",
-      "vehicleLimitSoc": "Automobilio limitas",
+      "vehicleLimitSoc": "Įkrovimo limitas",
       "yes": "taip"
     },
     "deviceValueChargeStatus": {
@@ -185,6 +187,7 @@
       "telemetry": "Telemetrija",
       "templateLoading": "Įkrauname...",
       "title": "Pavadinimas",
+      "typeDeprecated": "Tipas '{type}' yra pasenęs ir bus pašalintas būsimoje versijoje. Patikrinkite versijų pakeitimų žurnalą ir iš naujo sukonfigūruokite šį įrenginį.",
       "validateSave": "Patikrinti ir išsaugoti"
     },
     "grid": {
@@ -355,12 +358,12 @@
       "titleChoice": "Ką norite pridėti?",
       "titleLabel": "Pavadinimas",
       "usage": {
-        "aux": "Savireguliuojančio įrenginio skaitiklis",
-        "battery": "Kaupiklio skaitiklis",
-        "charge": "Įkroviklio skaitiklis",
-        "grid": "Tinklo įvado skaitiklis",
+        "aux": "Savireguliuojantis įrenginys",
+        "battery": "Kaupiklis",
+        "charge": "Vartotojas / Įkroviklis",
+        "grid": "Įvadas",
         "label": "Naudojimas",
-        "pv": "Saulės jėgainės skaitiklis"
+        "pv": "Gamyba"
       },
       "validateSave": "Patikrinti ir išsaugoti"
     },
@@ -486,7 +489,7 @@
         "backup": {
           "action": "Atsisiųsti atsarginę kopiją...",
           "confirmationButton": "Atsisiųsti atsarginę kopiją",
-          "confirmationText": "Norėdami atsisiųsti duomenų bazės failą, įveskite slaptažodį.",
+          "confirmationText": "Parsisiųsti duomenų bazės failą.",
           "description": "Sukurkite duomenų atsarginę kopiją faile. Šis failas gali būti naudojamas duomenims atkurti sistemos gedimo atveju.",
           "title": "Atsarginė kopija"
         },
@@ -1166,6 +1169,7 @@
     "cleanTitle": "Švarus įkrovimas iš tinklo",
     "co2Label": "CO₂ emisijos",
     "co2Limit": "CO₂ limitas",
+    "enable": "Įjungti limitą",
     "loadpointDescription": "Laikinai aktyvuoja greitą įkrovimą (režime Saulė).",
     "modalTitle": "Išmanaus tinklo įkrovimas",
     "none": "nėra",

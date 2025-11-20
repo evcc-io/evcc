@@ -24,7 +24,7 @@ type Telegram struct {
 }
 
 // NewTelegramFromConfig creates new pushover messenger
-func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (Messenger, error) {
+func NewTelegramFromConfig(ctx context.Context, other map[string]any) (Messenger, error) {
 	var cc struct {
 		Token string
 		Chats []int64
@@ -43,7 +43,7 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]interface{}) (M
 
 	bot, err := bot.New(cc.Token, bot.WithDefaultHandler(m.handler), bot.WithErrorsHandler(func(err error) {
 		log.ERROR.Println(err)
-	}), bot.WithDebugHandler(func(format string, args ...interface{}) {
+	}), bot.WithDebugHandler(func(format string, args ...any) {
 		log.TRACE.Printf(format, args...)
 	}))
 	if err != nil {

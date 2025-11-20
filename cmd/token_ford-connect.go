@@ -16,7 +16,7 @@ func fordConnectToken(conf config.Named) (*oauth2.Token, error) {
 	var cc struct {
 		Credentials vehicle.ClientCredentials
 		Tokens      vehicle.Tokens
-		Other       map[string]interface{} `mapstructure:",remain"`
+		Other       map[string]any `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(conf.Other, &cc); err != nil {

@@ -1,9 +1,11 @@
 package globalconfig
 
 import (
-	"fmt"
+	"encoding/json"
 	"net"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -40,7 +43,7 @@ type All struct {
 	Chargers     []config.Named
 	Vehicles     []config.Named
 	Tariffs      Tariffs
-	Site         map[string]interface{}
+	Site         map[string]any
 	Loadpoints   []config.Named
 	Circuits     []config.Named
 }
@@ -56,9 +59,9 @@ type Go struct {
 }
 
 type ModbusProxy struct {
-	Port            int
-	ReadOnly        string `yaml:",omitempty" json:",omitempty"`
-	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:",omitempty"`
+	Port            int    `json:"port"`
+	ReadOnly        string `yaml:",omitempty" json:"readonly,omitempty"`
+	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:"settings,omitempty"`
 }
 
 var _ api.Redactor = (*Hems)(nil)
@@ -152,18 +155,45 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema string `json:"schema"`
-	Host   string `json:"host"`
-	Port   int    `json:"port"`
+	Schema_     string `json:"schema,omitempty" mapstructure:"schema"` // TODO deprecated
+	ExternalUrl string `json:"externalUrl"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
 }
 
 func (c Network) HostPort() string {
-	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
-		return c.Host
+	host := "localhost"
+	if h, err := os.Hostname(); err == nil {
+		host = h
 	}
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	if ips := util.LocalIPs(); len(ips) > 0 {
+		host = ips[0].IP.String()
+	}
+	if c.Port == 80 {
+		return host
+	}
+	return net.JoinHostPort(host, strconv.Itoa(c.Port))
 }
 
-func (c Network) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
+func (c Network) InternalURL() string {
+	return "http://" + c.HostPort()
+}
+
+func (c Network) ExternalURL() string {
+	if c.ExternalUrl != "" {
+		return strings.TrimRight(c.ExternalUrl, "/")
+	}
+	return c.InternalURL()
+}
+
+// MarshalJSON includes the computed InternalUrl field in JSON output
+func (c Network) MarshalJSON() ([]byte, error) {
+	type networkAlias Network
+	return json.Marshal(struct {
+		networkAlias
+		InternalUrl string `json:"internalUrl"`
+	}{
+		networkAlias: networkAlias(c),
+		InternalUrl:  c.InternalURL(),
+	})
 }

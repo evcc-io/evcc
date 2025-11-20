@@ -20,19 +20,20 @@ const (
 	// per-unit registers
 	charxOffset = 1000
 
-	charxRegMeter        = 112
-	charxRegVoltages     = 232 // mV
-	charxRegCurrents     = 238 // mA
-	charxRegPower        = 244 // mW
-	charxRegEnergy       = 250 // Wh
-	charxRegSoc          = 264 // %
-	charxRegEvid         = 265 // 10
-	charxRegRfid         = 275 // 10
-	charxRegChargeTime   = 287 // s
-	charxRegChargeEnergy = 289 // Wh
-	charxRegStatus       = 299 // IEC 61851-1
-	charxRegEnable       = 300
-	charxRegMaxCurrent   = 301 // A
+	charxRegMeter          = 112
+	charxRegVoltages       = 232 // mV
+	charxRegCurrents       = 238 // mA
+	charxRegPower          = 244 // mW
+	charxRegEnergy         = 250 // Wh
+	charxRegSoc            = 264 // %
+	charxRegEvid           = 265 // 10
+	charxRegRfid           = 275 // 10
+	charxRegConnectionTime = 285 // s
+	charxRegChargeTime     = 287 // s
+	charxRegChargeEnergy   = 289 // Wh
+	charxRegStatus         = 299 // IEC 61851-1
+	charxRegEnable         = 300
+	charxRegMaxCurrent     = 301 // A
 )
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
@@ -49,7 +50,7 @@ func init() {
 //go:generate go tool decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
-func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16
@@ -199,7 +200,19 @@ func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint16(b)) * time.Second, nil
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
+}
+
+var _ api.ConnectionTimer = (*PhoenixCharx)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (wb *PhoenixCharx) ConnectionDuration() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegConnectionTime), 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
 }
 
 // currentPower implements the api.Meter interface

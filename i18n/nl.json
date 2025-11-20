@@ -58,8 +58,8 @@
           "heating": "Gebruikersgedefinieerde verwarmer"
         },
         "heatpump": "Gebruikersgedefinieerde warmtepomp",
-        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
-        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready via plugins)",
+        "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },
@@ -475,7 +475,6 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "Voer je wachtwoord in om het database bestand te downloaden.",
           "description": "Backup je data naar een bestand. Dit bestand kan gebruikt worden om je data te herstellen in geval van een systeemfout.",
           "title": "Backup"
         },

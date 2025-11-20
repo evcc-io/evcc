@@ -199,7 +199,7 @@ export default {
 			// Otherwise, convert them to the correct format
 			return values.map((value) => ({
 				key: value,
-				name: this.$t(`config.options.${this.property}.${value || "none"}`),
+				name: this.getOptionName(value),
 			}));
 		},
 		value: {
@@ -247,6 +247,10 @@ export default {
 		},
 	},
 	methods: {
+		getOptionName(value) {
+			const translationKey = `config.options.${this.property}.${value || "none"}`;
+			return this.$te(translationKey) ? this.$t(translationKey) : value;
+		},
 		toggleSelectMode() {
 			this.$nextTick(() => {
 				this.selectMode = !this.selectMode;

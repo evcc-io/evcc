@@ -64,7 +64,7 @@ func init() {
 }
 
 // NewEtrelFromConfig creates a Etrel charger from generic config
-func NewEtrelFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEtrelFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          int
 		modbus.TcpSettings `mapstructure:",squash"`

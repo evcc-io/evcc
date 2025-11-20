@@ -27,16 +27,16 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("dacia", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("dacia", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("dacia", other)
 	})
-	registry.Add("renault", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("renault", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("renault", other)
 	})
 }
 
 // NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
-func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
