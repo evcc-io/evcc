@@ -252,9 +252,8 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	id := hex.EncodeToString(b)
 	if !bytes.Equal(b, make([]byte, len(b))) {
-		return id, nil
+		return hex.EncodeToString(b), nil
 	}
 
 	b, err = wb.conn.ReadInputRegisters(wb.reg(hycRegIdTag), 10)
@@ -262,9 +261,8 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	id = hex.EncodeToString(b)
 	if !bytes.Equal(b, make([]byte, len(b))) {
-		return id, nil
+		return hex.EncodeToString(b), nil
 	}
 
 	return "", nil
