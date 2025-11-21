@@ -53,11 +53,11 @@ params:
     required: false
   - name: device
     description:
-      de: Gerätekennung/Name
-      en: Device identifier/name
+      de: Seriennummer oder Name
+      en: Serial number or name
     help:
-      de: Gerätekennung oder Name des Geräts in IAquaLink (nur Cloud-Modus)
-      en: Device identifier or name in IAquaLink (Cloud mode only)
+      de: Seriennummer (bevorzugt) oder Name des Geräts in IAquaLink. Seriennummer wird zuerst versucht.
+      en: Serial number (preferred) or name of the device in IAquaLink. Serial number is tried first.
     required: false
 
 render: |

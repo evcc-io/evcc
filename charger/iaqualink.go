@@ -48,6 +48,7 @@ type IAquaLink struct {
 	deviceName string             // Device name/identifier
 	features   []string           // Available device features
 	localMode  bool               // true if using local IP, false if using cloud
+	readModeDisabled bool         // If true, skip mode reading attempts (API limitations)
 	mu         sync.Mutex
 	cache      time.Duration
 }
@@ -143,22 +144,76 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 		}
 
 		var deviceID string
+		var serialNumber string
+		var matchedBy string
+
+		// Try to match device by serial number first (more reliable), then by name
+		deviceLower := strings.ToLower(device)
 		for _, dev := range devices {
-			// Match device by name (case-insensitive)
-			if strings.Contains(strings.ToLower(dev.Name), strings.ToLower(device)) {
+			// Match by serial number (exact match, case-insensitive)
+			if strings.EqualFold(dev.SerialNumber, device) {
 				deviceID = strconv.Itoa(dev.ID)
+				serialNumber = dev.SerialNumber
+				matchedBy = "serial number"
+				log.DEBUG.Printf("Found device by serial number: ID=%d, Name=%s, SerialNumber=%s, OwnerID=%d", dev.ID, dev.Name, dev.SerialNumber, dev.OwnerID)
 				break
 			}
 		}
 
+		// If not found by serial number, try matching by name
 		if deviceID == "" {
-			return nil, fmt.Errorf("device '%s' not found in IAquaLink systems", device)
+			for _, dev := range devices {
+				// Match device by name (case-insensitive, partial match)
+				if strings.Contains(strings.ToLower(dev.Name), deviceLower) {
+					deviceID = strconv.Itoa(dev.ID)
+					serialNumber = dev.SerialNumber
+					matchedBy = "name"
+					log.DEBUG.Printf("Found device by name: ID=%d, Name=%s, SerialNumber=%s, OwnerID=%d", dev.ID, dev.Name, dev.SerialNumber, dev.OwnerID)
+					break
+				}
+			}
+		}
+
+		if deviceID == "" {
+			return nil, fmt.Errorf("device '%s' not found in IAquaLink systems (tried matching by serial number and name)", device)
+		}
+
+		log.INFO.Printf("IAquaLink device matched by %s: %s", matchedBy, device)
+
+		// Try using serial number if ID doesn't work
+		// Some API endpoints might require serial number instead of ID
+		deviceIdentifiers := []string{deviceID}
+		if serialNumber != "" {
+			deviceIdentifiers = append(deviceIdentifiers, serialNumber)
 		}
 
 		// Get device features to determine available modes
-		featuresOutput, err := client.DeviceFeatures(deviceID)
-		if err != nil {
-			log.WARN.Printf("Failed to get device features: %v, using default modes", err)
+		// Try different identifiers in case one doesn't work
+		var featuresOutput *iaqualink.DeviceFeaturesOutput
+		var featuresErr error
+		for _, identifier := range deviceIdentifiers {
+			log.DEBUG.Printf("Trying to get device features with identifier: %s", identifier)
+			featuresOutput, featuresErr = client.DeviceFeatures(identifier)
+			if featuresErr == nil {
+				log.DEBUG.Printf("Successfully got device features with identifier: %s", identifier)
+				// Update deviceID to the working identifier
+				deviceID = identifier
+				break
+			}
+			log.DEBUG.Printf("Failed with identifier %s: %v", identifier, featuresErr)
+		}
+
+		if featuresErr != nil {
+			// Log as debug if it's a server error (500) - these are often transient
+			// Only warn for authentication errors (401) or other client errors
+			if strings.Contains(featuresErr.Error(), "500") || strings.Contains(featuresErr.Error(), "SERVER_ERROR") {
+				log.DEBUG.Printf("Device features endpoint returned server error (may be unsupported): %v, using default modes", featuresErr)
+				// If features endpoint fails with 500, mode reading will likely also fail
+				// Set flag to skip mode reading attempts to reduce log noise
+				c.readModeDisabled = true
+			} else {
+				log.WARN.Printf("Failed to get device features with all identifiers: %v, using default modes", featuresErr)
+			}
 			featuresOutput = &iaqualink.DeviceFeaturesOutput{Features: []string{}}
 		}
 
@@ -332,10 +387,26 @@ func (c *IAquaLink) getMode(ctx context.Context) (int64, error) {
 
 // getModeCloud gets mode using cloud API
 func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
+	// Check if we have a valid client
+	if c.client == nil {
+		return 2, fmt.Errorf("IAquaLink client not initialized")
+	}
+
+	// If mode reading is disabled (due to API limitations), return default immediately
+	if c.readModeDisabled {
+		return 2, nil // Default to normal mode
+	}
+
 	// Try multiple methods to get device state
 	// Method 1: Use DeviceSite to get device information
 	site, err := c.client.DeviceSite(c.deviceID)
-	if err == nil && site != nil {
+	if err != nil {
+		// Suppress 401/500 errors as they're likely API limitations
+		errStr := err.Error()
+		if !strings.Contains(errStr, "401") && !strings.Contains(errStr, "500") && !strings.Contains(errStr, "UNAUTHORIZED") {
+			c.log.DEBUG.Printf("DeviceSite failed: %v", err)
+		}
+	} else if site != nil {
 		if mode := c.parseModeFromSite(site); mode > 0 {
 			return mode, nil
 		}
@@ -355,7 +426,15 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 		values.Set(cmd, "1")
 
 		output, err := c.client.DeviceExecuteReadCommand(c.deviceID, values)
-		if err == nil && output != nil && output.Command.Response != "" {
+		if err != nil {
+			// Suppress repeated 401/500 errors as they're likely API limitations
+			errStr := err.Error()
+			if !strings.Contains(errStr, "401") && !strings.Contains(errStr, "500") && !strings.Contains(errStr, "UNAUTHORIZED") {
+				c.log.DEBUG.Printf("DeviceExecuteReadCommand '%s' failed: %v", cmd, err)
+			}
+			continue
+		}
+		if output != nil && output.Command.Response != "" {
 			if mode := c.parseModeFromResponse(output.Command.Response); mode > 0 {
 				c.log.DEBUG.Printf("Got mode %d from command '%s': %s", mode, cmd, output.Command.Response)
 				return mode, nil
@@ -364,7 +443,8 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 	}
 
 	// Fallback: assume normal mode if we can't determine
-	c.log.DEBUG.Printf("Could not determine device mode, defaulting to normal")
+	// Don't log this every time as it's expected for devices that don't support mode reading
+	c.log.DEBUG.Printf("Could not determine device mode from any method, defaulting to normal")
 	return 2, nil
 }
 
