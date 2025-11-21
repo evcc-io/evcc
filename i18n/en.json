@@ -158,6 +158,7 @@
     },
     "general": {
       "applyAndClose": "Apply & close",
+      "authorize": "Authorize access",
       "cancel": "Cancel",
       "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",

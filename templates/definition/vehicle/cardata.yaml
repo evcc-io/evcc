@@ -57,7 +57,7 @@ params:
       de: Aktivieren falls das Fahrzeug Streaming Updates während des Ladevorgangs schickt.
 auth:
   type: cardata
-  clientid: "{clientid}"
+  params: [clientid]
 render: |
   type: cardata
   vin: {{ .vin }}

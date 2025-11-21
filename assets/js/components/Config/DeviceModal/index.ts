@@ -10,6 +10,10 @@ export type Product = {
 
 export type Template = {
   Params: TemplateParam[];
+  Auth?: {
+    type: string;
+    params?: string[];
+  };
   Requirements: {
     Description: string;
   };
@@ -142,6 +146,22 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
+  async function checkAuth(type: string, values: Record<string, any>) {
+    const params = { type, ...values };
+    let res = null;
+    try {
+      res = await api.post(`config/auth`, params, {
+        validateStatus: (status) => [204, 400].includes(status),
+      });
+    } catch (error) {
+      console.error(error);
+      throw new Error("unexpected error");
+    }
+    if (res?.status === 400) {
+      throw new Error(res?.data?.error ?? "unknown error");
+    }
+  }
+
   return {
     test,
     update,
@@ -150,5 +170,6 @@ export function createDeviceUtils(deviceType: DeviceType) {
     create,
     loadProducts,
     loadTemplate,
+    checkAuth,
   };
 }

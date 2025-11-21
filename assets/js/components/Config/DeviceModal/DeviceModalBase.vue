@@ -44,46 +44,73 @@
 					<SponsorTokenRequired v-if="sponsorTokenRequired" />
 					<Markdown v-if="description" :markdown="description" class="my-4" />
 
-					<slot name="after-template-info" :values="values"></slot>
+					<div v-if="authRequired">
+						<PropertyEntry
+							v-for="param in authParams"
+							:id="`${deviceType}Param${param.Name}`"
+							:key="param.Name"
+							v-bind="param"
+							v-model="values[param.Name]"
+						/>
+						<p v-if="authError" class="text-danger">{{ authError }}</p>
+						<div class="d-flex justify-content-end">
+							<button
+								class="btn btn-outline-primary"
+								:disabled="authLoading"
+								@click.prevent="checkAuthStatus"
+							>
+								<span
+									v-if="authLoading"
+									class="spinner-border spinner-border-sm me-2"
+									role="status"
+									aria-hidden="true"
+								></span>
+								{{ $t("config.general.authorize") }}
+							</button>
+						</div>
+					</div>
+					<div v-else>
+						<slot name="after-template-info" :values="values"></slot>
 
-					<Modbus
-						v-if="modbus"
-						v-model:modbus="values['modbus']"
-						v-model:id="values['id']"
-						v-model:host="values['host']"
-						v-model:port="values['port']"
-						v-model:device="values['device']"
-						v-model:baudrate="values['baudrate']"
-						v-model:comset="values['comset']"
-						:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
-						:defaultComset="modbus.Comset"
-						:defaultBaudrate="modbus.Baudrate"
-						:defaultPort="modbus.Port"
-						:capabilities="modbusCapabilities"
-					/>
+						<Modbus
+							v-if="modbus"
+							v-model:modbus="values['modbus']"
+							v-model:id="values['id']"
+							v-model:host="values['host']"
+							v-model:port="values['port']"
+							v-model:device="values['device']"
+							v-model:baudrate="values['baudrate']"
+							v-model:comset="values['comset']"
+							:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
+							:defaultComset="modbus.Comset"
+							:defaultBaudrate="modbus.Baudrate"
+							:defaultPort="modbus.Port"
+							:capabilities="modbusCapabilities"
+						/>
 
-					<PropertyEntry
-						v-for="param in normalParams"
-						:id="`${deviceType}Param${param.Name}`"
-						:key="param.Name"
-						v-bind="param"
-						v-model="values[param.Name]"
-					/>
+						<PropertyEntry
+							v-for="param in normalParams"
+							:id="`${deviceType}Param${param.Name}`"
+							:key="param.Name"
+							v-bind="param"
+							v-model="values[param.Name]"
+						/>
 
-					<PropertyCollapsible>
-						<template v-if="advancedParams.length" #advanced>
-							<PropertyEntry
-								v-for="param in advancedParams"
-								:id="`${deviceType}Param${param.Name}`"
-								:key="param.Name"
-								v-bind="param"
-								v-model="values[param.Name]"
-							/>
-						</template>
-						<template v-if="$slots['collapsible-more']" #more>
-							<slot name="collapsible-more" :values="values"></slot>
-						</template>
-					</PropertyCollapsible>
+						<PropertyCollapsible>
+							<template v-if="advancedParams.length" #advanced>
+								<PropertyEntry
+									v-for="param in advancedParams"
+									:id="`${deviceType}Param${param.Name}`"
+									:key="param.Name"
+									v-bind="param"
+									v-model="values[param.Name]"
+								/>
+							</template>
+							<template v-if="$slots['collapsible-more']" #more>
+								<slot name="collapsible-more" :values="values"></slot>
+							</template>
+						</PropertyCollapsible>
+					</div>
 				</div>
 
 				<DeviceModalActions
@@ -197,6 +224,9 @@ export default defineComponent({
 			templateName: null as string | null,
 			template: null as Template | null,
 			saving: false,
+			authOk: false,
+			authLoading: false,
+			authError: null as string | null,
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -230,6 +260,10 @@ export default defineComponent({
 			}
 
 			return filtered;
+		},
+		authParams() {
+			const { params = [] } = this.template?.Auth ?? {};
+			return this.templateParams.filter((p) => params.includes(p.Name));
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
@@ -296,7 +330,7 @@ export default defineComponent({
 			return !this.isNew;
 		},
 		showActions() {
-			return this.templateName || this.showYamlInput;
+			return (this.templateName && !this.authRequired) || this.showYamlInput;
 		},
 		showYamlInput() {
 			return this.isYamlInputTypeByValue(this.values.type);
@@ -306,6 +340,22 @@ export default defineComponent({
 		},
 		showDeprecatedWarning() {
 			return this.isTypeDeprecated && this.isTypeDeprecated(this.values.type);
+		},
+		authRequired() {
+			return this.template?.Auth && !this.authOk;
+		},
+		authValuesMissing() {
+			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
+		},
+		authValues() {
+			const params = this.template?.Auth?.params ?? [];
+			return params.reduce(
+				(acc, param) => {
+					acc[param] = this.values[param];
+					return acc;
+				},
+				{} as Record<string, any>
+			);
 		},
 	},
 	watch: {
@@ -406,6 +456,7 @@ export default defineComponent({
 				if (this.onConfigurationLoaded) {
 					this.onConfigurationLoaded(this.values);
 				}
+				this.checkAuthStatus();
 			} catch (e) {
 				console.error(e);
 			}
@@ -438,10 +489,39 @@ export default defineComponent({
 					this.$i18n?.locale
 				);
 				this.applyDefaults();
+				this.checkAuthStatus();
 			} catch (e) {
 				console.error(e);
 			}
 			this.loadingTemplate = false;
+		},
+		async checkAuthStatus() {
+			// no auth required
+			if (!this.template?.Auth) return;
+
+			// trigger browser validation
+			if (this.$refs["form"]) {
+				if (!(this.$refs["form"] as HTMLFormElement).reportValidity()) {
+					return;
+				}
+			}
+
+			// validate data
+			if (this.authValuesMissing) return;
+
+			this.authOk = false;
+			const { type } = this.template.Auth;
+			const values = this.authValues;
+			try {
+				this.authLoading = true;
+				await this.device.checkAuth(type, values);
+				this.authError = null;
+				this.authOk = true;
+			} catch (e: any) {
+				this.authError = e?.message ?? "unknown error";
+			} finally {
+				this.authLoading = false;
+			}
 		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {
