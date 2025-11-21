@@ -1,14 +1,30 @@
 template: openems
 products:
   - brand: OpenEMS
+    description:
+      generic: REST-API
   - brand: FENECON
+    description:
+      generic: REST-API
 capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich (REST-API).
+      ##### Lizenzhinweis:
+      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App REST/JSON Schreibzugriff* erforderlich.<br/><br/>
+      ##### FEMS-Dokumentation:
+      - [FEMS App REST/JSON Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - [FEMS App REST/JSON Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+      ##### OpenEMS-Dokumentation:
+      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control (REST-API).
+      ##### License notice:
+      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App REST/JSON Write Access*) is required.<br/><br/>
+      ##### FEMS documentation:
+      - [FEMS App REST/JSON Read Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - [FEMS App REST/JSON Write Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+      ##### OpenEMS documentation:
+      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -23,14 +39,20 @@ params:
     description:
       de: Steuerbare Batterie Komponente
       en: Controllable battery component
+    help:
+      de: aktive Batteriesteuerung (REST/JSON schreibend)
+      en: active battery control (REST/JSON Write Access)
     usages: ["battery"]
     advanced: true
   - name: watchdog
     type: duration
     default: 60s
+    description:
+      de: FEMS/OpenEMS Batteriesteuerung API-Timeout
+      en: FEMS/OpenEMS battery control API timeout
     help:
-      de: abgestimmt auf das API-Timeout
-      en: adjusted to the API timeout
+      de: FEMS/OpenEMS Standard 60s
+      en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
     advanced: true
   - name: minsoc
