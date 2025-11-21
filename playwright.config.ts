@@ -15,6 +15,7 @@ export default defineConfig({
     video: "on-first-retry",
     screenshot: "only-on-failure",
     permissions: ["clipboard-write"],
+    actionTimeout: 20000, // 20s for individual actions
   },
   projects: [
     {
