@@ -512,13 +512,30 @@ export default defineComponent({
 			this.authOk = false;
 			const { type } = this.template.Auth;
 			const values = this.authValues;
-			try {
-				this.authLoading = true;
-				await this.device.checkAuth(type, values);
+			this.authLoading = true;
+			const result = await this.device.checkAuth(type, values);
+			this.authLoading = false;
+			if (result.success) {
+				// login already exists
 				this.authError = null;
 				this.authOk = true;
-			} catch (e: any) {
-				this.authError = e?.message ?? "unknown error";
+			} else if (result.authId) {
+				// todo, save form field state and restore on callback
+				await this.performAuthLogin(result.authId);
+			} else {
+				// something else failed
+				this.authError = result.error ?? "unknown error";
+			}
+		},
+		async performAuthLogin(authId: string) {
+			// trigger external login flow
+			try {
+				this.authLoading = true;
+				await this.device.performLogin(authId);
+				this.authLoading = false;
+			} catch (e) {
+				console.error("performAuthLogin failed", e);
+				this.authError = (e as any).message;
 			} finally {
 				this.authLoading = false;
 			}

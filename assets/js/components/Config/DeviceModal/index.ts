@@ -1,6 +1,6 @@
 import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
-import api from "@/api";
+import api, { baseApi } from "@/api";
 
 export type Product = {
   group: string;
@@ -62,6 +62,17 @@ export type ApiData = {
   title?: string;
   identifiers?: string[];
   [key: string]: any;
+};
+
+export type AuthCheckResponse = {
+  success: boolean;
+  error?: string;
+  authId?: string;
+};
+
+export type ProviderLoginResponse = {
+  loginUri?: string;
+  error?: string;
 };
 
 export function handleError(e: any, msg: string) {
@@ -146,19 +157,39 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function checkAuth(type: string, values: Record<string, any>) {
+  async function checkAuth(type: string, values: Record<string, any>): Promise<AuthCheckResponse> {
     const params = { type, ...values };
-    let res = null;
     try {
-      res = await api.post(`config/auth`, params, {
+      const { status, data = {} } = await api.post(`config/auth`, params, {
         validateStatus: (status) => [204, 400].includes(status),
       });
+      // already set up
+      if (status === 204) {
+        return { success: true };
+      }
+      // auth error, user has to perform login
+      if (status === 400) {
+        return { success: false, error: data?.error, authId: data?.loginRequired };
+      }
     } catch (error) {
-      console.error(error);
-      throw new Error("unexpected error");
+      return { success: false, error: (error as any).message };
     }
-    if (res?.status === 400) {
-      throw new Error(res?.data?.error ?? "unknown error");
+    return { success: false, error: "unexpected error" };
+  }
+
+  async function performLogin(authId: string) {
+    try {
+      const url = `providerauth/login?id=${encodeURIComponent(authId)}`;
+      const { status, data = {} } = await baseApi.get(url, {
+        validateStatus: (code) => [200, 400].includes(code),
+      });
+      if (status === 200) {
+        window.location.href = data?.loginUri;
+        return;
+      }
+      throw new Error(data?.error ?? "unknown error");
+    } catch (error) {
+      throw new Error((error as Error).message ?? "unknown error");
     }
   }
 
@@ -171,5 +202,6 @@ export function createDeviceUtils(deviceType: DeviceType) {
     loadProducts,
     loadTemplate,
     checkAuth,
+    performLogin,
   };
 }
