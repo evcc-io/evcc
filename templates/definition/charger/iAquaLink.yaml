@@ -1,0 +1,71 @@
+template: IAquaLink
+group: heating
+products:
+  - description:
+      de: Wärmepumpe (IAquaLink)
+      en: Heat pump (IAquaLink)
+requirements:
+  description:
+    de: |
+      Steuert eine über IAquaLink verbundene Wärmepumpe.
+
+      Unterstützt zwei Modi:
+      - Lokaler Modus: Direkte Kommunikation über IP-Adresse (uri)
+      - Cloud-Modus: Über IAquaLink-Cloud (email/password/device)
+
+      Hinweis: Die evcc-Modi (sgready) werden wie folgt verwendet:
+      - 3 Boost → IAquaLink „Boost"
+      - 2 Normal → IAquaLink „Smart"
+      - 1 Dimm → IAquaLink „Eco" bzw. „Aus"
+
+      Für lokalen Modus: IP-Adresse angeben (z.B. http://192.168.1.100)
+      Für Cloud-Modus: Zugangsdaten und Gerätekennung angeben.
+    en: |
+      Controls an IAquaLink-connected heat pump.
+
+      Supports two modes:
+      - Local mode: Direct communication via IP address (uri)
+      - Cloud mode: Via IAquaLink cloud (email/password/device)
+
+      Note: evcc (sgready) modes are used as follows:
+      - 3 Boost → IAquaLink "Boost"
+      - 2 Normal → IAquaLink "Smart"
+      - 1 Dimm → IAquaLink "Eco" or "Off"
+
+      For local mode: Provide IP address (e.g., http://192.168.1.100)
+      For cloud mode: Provide credentials and device identifier.
+params:
+  - name: uri
+    description:
+      de: IP-Adresse oder URL des Geräts (Lokaler Modus)
+      en: IP address or URL of the device (Local mode)
+    required: false
+  - name: email
+    description:
+      de: IAquaLink E-Mail (Cloud-Modus)
+      en: IAquaLink email (Cloud mode)
+    required: false
+  - name: password
+    description:
+      de: IAquaLink Passwort (Cloud-Modus)
+      en: IAquaLink password (Cloud mode)
+    mask: true
+    required: false
+  - name: device
+    description:
+      de: Gerätekennung/Name
+      en: Device identifier/name
+    help:
+      de: Gerätekennung oder Name des Geräts in IAquaLink (nur Cloud-Modus)
+      en: Device identifier or name in IAquaLink (Cloud mode only)
+    required: false
+
+render: |
+  type: iaqualink
+  {{- if .uri }}
+  uri: "{{ .uri }}"
+  {{- else }}
+  email: "{{ .email }}"
+  password: "{{ .password }}"
+  device: "{{ .device }}"
+  {{- end }}

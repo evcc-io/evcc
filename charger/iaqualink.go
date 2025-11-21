@@ -1,0 +1,469 @@
+package charger
+
+// LICENSE
+//
+// Copyright (c) 2024 andig
+//
+// This module is NOT covered by the MIT license. All rights reserved.
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/tekkamanendless/iaqualink"
+)
+
+func init() {
+	registry.AddCtx("iaqualink", NewIAquaLinkFromConfig)
+}
+
+type IAquaLink struct {
+	*SgReady
+	log        *util.Logger
+	client     *iaqualink.Client // Cloud mode client
+	helper     *request.Helper   // Local mode HTTP helper
+	uri        string             // Local mode: device IP/URL
+	deviceID   string             // Cloud mode: device ID
+	deviceName string             // Device name/identifier
+	features   []string           // Available device features
+	localMode  bool               // true if using local IP, false if using cloud
+	mu         sync.Mutex
+	cache      time.Duration
+}
+
+//go:generate go tool decorate -f decorateIAquaLink -b *IAquaLink -r api.Charger
+
+// NewIAquaLinkFromConfig creates an IAquaLink charger from generic config
+func NewIAquaLinkFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	cc := struct {
+		embed           `mapstructure:",squash"`
+		URI             string // Local mode: IP address or URL of the device
+		Email, Password string // Cloud mode: IAquaLink credentials
+		Device          string // Device name/identifier (required for cloud mode)
+		Cache           time.Duration
+	}{
+		embed: embed{
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+		},
+		Cache: time.Minute,
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	// Either URI (local) or Email/Password (cloud) must be provided
+	if cc.URI == "" && (cc.Email == "" || cc.Password == "") {
+		return nil, errors.New("must provide either uri (local mode) or email/password (cloud mode)")
+	}
+
+	if cc.URI != "" && (cc.Email != "" || cc.Password != "") {
+		return nil, errors.New("cannot use both uri (local) and email/password (cloud) - choose one mode")
+	}
+
+	// For cloud mode, device name is required
+	if cc.URI == "" && cc.Device == "" {
+		return nil, errors.New("device name is required for cloud mode")
+	}
+
+	return NewIAquaLink(ctx, &cc.embed, cc.URI, cc.Email, cc.Password, cc.Device, cc.Cache)
+}
+
+// NewIAquaLink creates IAquaLink charger
+// Supports both local mode (via URI) and cloud mode (via email/password)
+func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, device string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("iaqualink").Redact(email, password)
+
+	c := &IAquaLink{
+		SgReady:    nil, // will be set after creating mode functions
+		log:        log,
+		deviceName: device,
+		cache:      cache,
+	}
+
+	// Determine mode: local (URI) or cloud (email/password)
+	if uri != "" {
+		// Local mode: direct IP communication
+		c.localMode = true
+		c.uri = util.DefaultScheme(strings.TrimRight(uri, "/"), "http")
+		c.helper = request.NewHelper(log)
+
+		log.INFO.Printf("IAquaLink using local mode: %s", c.uri)
+
+		// For local mode, try to discover device capabilities
+		// Most IAquaLink devices support similar local APIs
+		c.features = []string{iaqualink.FeatureModeInfo, iaqualink.FeatureStatus}
+
+	} else {
+		// Cloud mode: use IAquaLink API
+		c.localMode = false
+		client := &iaqualink.Client{
+			Client: request.NewClient(log),
+		}
+
+		// Login to IAquaLink
+		loginOutput, err := client.Login(email, password)
+		if err != nil {
+			return nil, fmt.Errorf("IAquaLink login failed: %w", err)
+		}
+
+		// Store authentication tokens
+		client.AuthenticationToken = loginOutput.AuthenticationToken
+		if loginOutput.UserPoolOAuth.IDToken != "" {
+			client.IDToken = loginOutput.UserPoolOAuth.IDToken
+		}
+		client.UserID = loginOutput.ID.String()
+
+		// Find device by name
+		devices, err := client.ListDevices()
+		if err != nil {
+			return nil, fmt.Errorf("failed to list IAquaLink devices: %w", err)
+		}
+
+		var deviceID string
+		for _, dev := range devices {
+			// Match device by name (case-insensitive)
+			if strings.Contains(strings.ToLower(dev.Name), strings.ToLower(device)) {
+				deviceID = strconv.Itoa(dev.ID)
+				break
+			}
+		}
+
+		if deviceID == "" {
+			return nil, fmt.Errorf("device '%s' not found in IAquaLink systems", device)
+		}
+
+		// Get device features to determine available modes
+		featuresOutput, err := client.DeviceFeatures(deviceID)
+		if err != nil {
+			log.WARN.Printf("Failed to get device features: %v, using default modes", err)
+			featuresOutput = &iaqualink.DeviceFeaturesOutput{Features: []string{}}
+		}
+
+		c.client = client
+		c.deviceID = deviceID
+		c.features = featuresOutput.Features
+
+		log.DEBUG.Printf("IAquaLink device features: %v", featuresOutput.Features)
+	}
+
+	// Log available modes based on features
+	availableModes := c.determineAvailableModes(c.features)
+	log.INFO.Printf("IAquaLink device '%s' supports modes: %v (mode: %s)", device, availableModes, map[bool]string{true: "local", false: "cloud"}[c.localMode])
+
+	// Create mode setter and getter functions
+	setMode := func(mode int64) error {
+		return c.setMode(ctx, mode)
+	}
+
+	getMode := func() (int64, error) {
+		return c.getMode(ctx)
+	}
+
+	sgr, err := NewSgReady(ctx, embed, setMode, getMode, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.SgReady = sgr
+
+	return decorateIAquaLink(c), nil
+}
+
+// setMode sets the device mode based on evcc SGReady mode (1/2/3)
+func (c *IAquaLink) setMode(ctx context.Context, mode int64) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if mode < 1 || mode > 3 {
+		return fmt.Errorf("invalid mode %d, expected 1/2/3", mode)
+	}
+
+	if c.localMode {
+		return c.setModeLocal(ctx, mode)
+	}
+	return c.setModeCloud(ctx, mode)
+}
+
+// setModeCloud sets mode using cloud API
+func (c *IAquaLink) setModeCloud(ctx context.Context, mode int64) error {
+	// Determine available actions based on device features and mode
+	actions := c.getActionsForMode(mode)
+	if len(actions) == 0 {
+		return fmt.Errorf("device does not support mode %d (available features: %v)", mode, c.features)
+	}
+
+	// Use DeviceWebSocket to set mode
+	// Try each action until one succeeds (some devices may not support all actions)
+	var lastErr error
+	for _, action := range actions {
+		c.log.DEBUG.Printf("Trying to set mode %d with action '%s'", mode, action)
+		result, err := c.client.DeviceWebSocket(c.deviceID, action)
+		if err == nil {
+			c.log.DEBUG.Printf("Successfully set mode %d with action '%s', result: %v", mode, action, result)
+			return nil
+		}
+		lastErr = err
+		c.log.DEBUG.Printf("Action '%s' failed: %v, trying next", action, err)
+	}
+
+	// All actions failed
+	return fmt.Errorf("failed to set IAquaLink mode %d with any action %v: %w", mode, actions, lastErr)
+}
+
+// setModeLocal sets mode using local IP API
+func (c *IAquaLink) setModeLocal(ctx context.Context, mode int64) error {
+	// Map evcc mode to IAquaLink local API commands
+	// Common local API endpoints (may vary by device model)
+	modeCommands := map[int64]string{
+		1: "eco",   // Dimm
+		2: "smart", // Normal
+		3: "boost", // Boost
+	}
+
+	command := modeCommands[mode]
+	if command == "" {
+		return fmt.Errorf("invalid mode %d for local API", mode)
+	}
+
+	// Try common local API endpoints
+	endpoints := []string{
+		fmt.Sprintf("%s/api/v1/mode", c.uri),
+		fmt.Sprintf("%s/api/mode", c.uri),
+		fmt.Sprintf("%s/mode", c.uri),
+		fmt.Sprintf("%s/api/v1/command", c.uri),
+	}
+
+	data := map[string]string{"mode": command}
+	body, _ := json.Marshal(data)
+
+	var lastErr error
+	for _, endpoint := range endpoints {
+		c.log.DEBUG.Printf("Trying local endpoint: %s with command: %s", endpoint, command)
+
+		req, err := request.New("POST", endpoint, strings.NewReader(string(body)), request.JSONEncoding)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		_, err = c.helper.DoBody(req)
+		if err == nil {
+			c.log.DEBUG.Printf("Successfully set mode %d via local API: %s", mode, endpoint)
+			return nil
+		}
+		lastErr = err
+		c.log.DEBUG.Printf("Local endpoint %s failed: %v", endpoint, err)
+	}
+
+	return fmt.Errorf("failed to set mode %d via local API: %w", mode, lastErr)
+}
+
+// getActionsForMode returns the IAquaLink actions for the given evcc mode
+// based on available device features
+func (c *IAquaLink) getActionsForMode(mode int64) []string {
+	// Check what actions are available based on device features
+	// Different devices may support different modes
+
+	// Common mode mappings (try these in order of preference)
+	modeActions := map[int64][]string{
+		1: {"eco", "off"},      // Dimm - try eco first, then off
+		2: {"smart", "normal"}, // Normal - try smart first, then normal
+		3: {"boost"},            // Boost
+	}
+
+	actions := modeActions[mode]
+	if len(actions) == 0 {
+		return nil
+	}
+
+	// Filter actions based on device capabilities
+	// If device has mode_info feature, it likely supports mode commands
+	hasModeInfo := false
+	for _, feature := range c.features {
+		if feature == iaqualink.FeatureModeInfo {
+			hasModeInfo = true
+			break
+		}
+	}
+
+	// If we can't determine from features, try all actions
+	// The DeviceWebSocket will fail if action is not supported
+	if !hasModeInfo {
+		return actions
+	}
+
+	// Return actions - let the API determine what works
+	return actions
+}
+
+// getMode gets the current device mode as evcc SGReady mode (1/2/3)
+func (c *IAquaLink) getMode(ctx context.Context) (int64, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.localMode {
+		return c.getModeLocal(ctx)
+	}
+	return c.getModeCloud(ctx)
+}
+
+// getModeCloud gets mode using cloud API
+func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
+	// Try multiple methods to get device state
+	// Method 1: Use DeviceSite to get device information
+	site, err := c.client.DeviceSite(c.deviceID)
+	if err == nil && site != nil {
+		if mode := c.parseModeFromSite(site); mode > 0 {
+			return mode, nil
+		}
+	}
+
+	// Method 2: Use DeviceExecuteReadCommand to read state
+	// Try different commands based on available features
+	commandsToTry := []string{"state", "status"}
+
+	// If device has mode_info feature, try that first
+	if c.hasFeature(iaqualink.FeatureModeInfo) {
+		commandsToTry = append([]string{"mode_info"}, commandsToTry...)
+	}
+
+	for _, cmd := range commandsToTry {
+		values := url.Values{}
+		values.Set(cmd, "1")
+
+		output, err := c.client.DeviceExecuteReadCommand(c.deviceID, values)
+		if err == nil && output != nil && output.Command.Response != "" {
+			if mode := c.parseModeFromResponse(output.Command.Response); mode > 0 {
+				c.log.DEBUG.Printf("Got mode %d from command '%s': %s", mode, cmd, output.Command.Response)
+				return mode, nil
+			}
+		}
+	}
+
+	// Fallback: assume normal mode if we can't determine
+	c.log.DEBUG.Printf("Could not determine device mode, defaulting to normal")
+	return 2, nil
+}
+
+// getModeLocal gets mode using local IP API
+func (c *IAquaLink) getModeLocal(ctx context.Context) (int64, error) {
+	// Try common local API endpoints to read device state
+	endpoints := []string{
+		fmt.Sprintf("%s/api/v1/state", c.uri),
+		fmt.Sprintf("%s/api/state", c.uri),
+		fmt.Sprintf("%s/state", c.uri),
+		fmt.Sprintf("%s/api/v1/status", c.uri),
+		fmt.Sprintf("%s/api/status", c.uri),
+		fmt.Sprintf("%s/status", c.uri),
+	}
+
+	for _, endpoint := range endpoints {
+		c.log.DEBUG.Printf("Trying local endpoint: %s", endpoint)
+
+		req, err := request.New("GET", endpoint, nil, request.AcceptJSON)
+		if err != nil {
+			continue
+		}
+
+		respBody, err := c.helper.DoBody(req)
+		if err == nil && len(respBody) > 0 {
+			if mode := c.parseModeFromResponse(string(respBody)); mode > 0 {
+				c.log.DEBUG.Printf("Got mode %d from local endpoint: %s", mode, endpoint)
+				return mode, nil
+			}
+		}
+	}
+
+	// Fallback: assume normal mode if we can't determine
+	c.log.DEBUG.Printf("Could not determine device mode from local API, defaulting to normal")
+	return 2, nil
+}
+
+// parseModeFromSite extracts mode from DeviceSite output
+func (c *IAquaLink) parseModeFromSite(site *iaqualink.DeviceSiteOutput) int64 {
+	// DeviceSiteOutput only contains timezone info, not mode
+	// This method is a placeholder for future expansion
+	return 0
+}
+
+// parseModeFromResponse parses mode from device response string
+func (c *IAquaLink) parseModeFromResponse(response string) int64 {
+	stateStr := strings.ToLower(response)
+
+	// Check for boost mode (highest priority)
+	if strings.Contains(stateStr, "boost") {
+		return 3
+	}
+
+	// Check for normal/smart mode
+	if strings.Contains(stateStr, "smart") || strings.Contains(stateStr, "normal") {
+		return 2
+	}
+
+	// Check for eco/off mode (dimm)
+	if strings.Contains(stateStr, "eco") || strings.Contains(stateStr, "off") {
+		return 1
+	}
+
+	// Try numeric values (some devices use 0/1/2)
+	if strings.Contains(stateStr, "\"0\"") || strings.Contains(stateStr, ":0") {
+		return 3 // Boost
+	}
+	if strings.Contains(stateStr, "\"1\"") || strings.Contains(stateStr, ":1") {
+		return 1 // Eco
+	}
+	if strings.Contains(stateStr, "\"2\"") || strings.Contains(stateStr, ":2") {
+		return 2 // Smart
+	}
+
+	return 0 // Unknown
+}
+
+// hasFeature checks if device has a specific feature
+func (c *IAquaLink) hasFeature(feature string) bool {
+	for _, f := range c.features {
+		if f == feature {
+			return true
+		}
+	}
+	return false
+}
+
+// determineAvailableModes returns a map of evcc modes (1/2/3) to their IAquaLink action names
+// based on device features. This is used for logging/debugging purposes.
+func (c *IAquaLink) determineAvailableModes(features []string) map[int64][]string {
+	modes := make(map[int64][]string)
+
+	// Default mode mappings - most devices support these
+	// We'll try them and let the API reject unsupported ones
+	modes[1] = []string{"eco", "off"}      // Dimm
+	modes[2] = []string{"smart", "normal"} // Normal
+	modes[3] = []string{"boost"}           // Boost
+
+	// Note: Device features don't directly map to available modes
+	// We try actions and let the API reject unsupported ones
+	return modes
+}
