@@ -321,17 +321,8 @@ func (wb *Kathrein) ChargeDuration() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
-var _ api.ChargeRater = (*Kathrein)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Kathrein) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
-}
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25427
+// var _ api.ChargeRater = (*Kathrein)(nil)
 
 var _ api.MeterEnergy = (*Kathrein)(nil)
 
