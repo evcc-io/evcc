@@ -1,4 +1,4 @@
-package auth
+package homeassistant
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 // https://developers.home-assistant.io/docs/auth_api
 
 func init() {
-	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
+	auth.Register("homeassistant", NewHomeAssistantFromConfig)
 }
 
 func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
@@ -44,5 +44,5 @@ func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
 		},
 	}
 
-	return NewOauth(ctx, "HomeAssistant", name, &oc)
+	return auth.NewOauth(ctx, "HomeAssistant", name, &oc)
 }

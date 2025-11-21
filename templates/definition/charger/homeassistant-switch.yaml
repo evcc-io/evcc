@@ -7,6 +7,9 @@ products:
 group: switchsockets
 requirements:
   evcc: ["skiptest"]
+auth:
+  type: homeassistant
+  params: [home]
 params:
   - name: uri
     deprecated: true

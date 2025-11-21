@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
 	"github.com/libp2p/zeroconf/v2"
@@ -60,13 +59,15 @@ func authorize(name, uri string) error {
 		return nil
 	}
 
-	ts, err := auth.NewHomeAssistant(context.Background(), name, uri)
-	if err == nil {
-		instances[name] = &instance{
-			URI:         uri,
-			TokenSource: ts,
-		}
+	ts, err := NewHomeAssistant(context.Background(), name, uri)
+	if err != nil {
+		return err
 	}
 
-	return err
+	instances[name] = &instance{
+		URI:         uri,
+		TokenSource: ts,
+	}
+
+	return nil
 }
