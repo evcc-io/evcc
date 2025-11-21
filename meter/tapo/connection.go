@@ -60,17 +60,16 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
-	return c.plug.SetDeviceInfo(enable)
+	if enable {
+		return c.plug.On()
+	} else {
+		return c.plug.Off()
+	}
 }
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	resp, err := c.plug.GetDeviceInfo()
-	if err != nil {
-		return false, err
-	}
-
-	return resp.DeviceON, nil
+	return c.plug.IsOn()
 }
 
 // CurrentPower provides current power consuption
