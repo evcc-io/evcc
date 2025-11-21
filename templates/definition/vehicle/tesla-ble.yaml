@@ -48,6 +48,11 @@ render: |
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.battery_level
     timeout: 30s
+  getmaxcurrent:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    jq: .response.response.charge_state.charge_amps
+    timeout: 30s
   limitsoc:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state

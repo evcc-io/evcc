@@ -19,7 +19,9 @@ test.describe("battery settings co2", async () => {
     await expectModalVisible(modal);
 
     await modal.getByRole("link", { name: "Grid charging" }).click();
+    await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 150 g/kWh" });
+    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "48 hr"].join(""));
     await expect(modal).toContainText("20 g – 150 g");
     await page.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
@@ -27,6 +29,7 @@ test.describe("battery settings co2", async () => {
     await page.getByRole("button", { name: "grid charging active (≤ 150 g)" }).click();
     await expectModalVisible(modal);
     await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 10 g/kWh" });
+    await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
     await expect(modal).not.toBeVisible();

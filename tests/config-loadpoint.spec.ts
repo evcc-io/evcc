@@ -475,6 +475,7 @@ power:
     await expect(meterRestResult).toContainText(["Power", "5.0 kW"].join(""));
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
+    await expectModalVisible(lpModal);
 
     // create
     await lpModal.getByRole("button", { name: "Save" }).click();
@@ -571,8 +572,12 @@ test.describe("heating loadpoint", async () => {
     await expectModalVisible(modal);
     await modal.getByLabel("Manufacturer").selectOption("User-defined heater");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
-    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready, all)");
-    await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump (sg-ready, boost)");
+    await modal
+      .getByLabel("Manufacturer")
+      .selectOption("User-defined heat pump (sg-ready via plugins)");
+    await modal
+      .getByLabel("Manufacturer")
+      .selectOption("User-defined heat pump (sg-ready via relays)");
     await modal.getByLabel("Manufacturer").selectOption("User-defined switch socket");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
 

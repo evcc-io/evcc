@@ -368,6 +368,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 
 	lp.planTime = finishAt
 	lp.planPrecondition = precondition
+	lp.planEnergyOffset = lp.getChargedEnergy() / 1e3
 	lp.publish(keys.PlanTime, finishAt)
 	lp.publish(keys.PlanPrecondition, precondition)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
@@ -578,24 +579,6 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	return nil
 }
 
-// RemoteControl sets remote status demand
-func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Println("remote demand:", demand)
-
-	// apply immediately
-	if lp.remoteDemand != demand {
-		lp.remoteDemand = demand
-
-		lp.publish(keys.RemoteDisabled, demand)
-		lp.publish(keys.RemoteDisabledSource, source)
-
-		lp.requestUpdate()
-	}
-}
-
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
@@ -625,7 +608,8 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 
-// GetMaxPhaseCurrent returns the current charge power
+// GetMaxPhaseCurrent returns the maximum charge current per phase or- if not available-
+// the offered current from either charger or charge meter
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()

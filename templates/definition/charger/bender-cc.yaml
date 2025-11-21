@@ -58,11 +58,20 @@ products:
   - brand: Spelsberg
     description:
       generic: Wallbox Smart Pro
-capabilities: ["rfid"]
+  - brand: SMA
+    description:
+      generic: EV Charger Business
+capabilities: ["rfid", "1p3p"]
 requirements:
   description:
-    de: Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein.
-    en: The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+    de: |
+      Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein. 
+
+      Für Phasenumschaltung ist mindestens Firmware 5.33 notwendig. Das 'SEMP interface' muss aktiviert sein, der 'SEMP Charging Mode' muss auf 'Surplus Charging' stehen. 'Software function to use phase switching' muss auf SEMP konfiguriert sein.
+    en: |
+      The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
+
+      Firmware 5.33 or higher is required for phase switching. The 'SEMP interface' must be enabled, the 'SEMP Charging Mode' must be set to 'Surplus Charging'. Set 'Software function to use phase switching' to SEMP.
   evcc: ["sponsorship"]
 params:
   - name: modbus

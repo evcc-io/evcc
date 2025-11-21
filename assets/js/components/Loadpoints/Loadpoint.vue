@@ -24,6 +24,7 @@
 			</div>
 		</div>
 		<LoadpointSettingsModal
+			:id="id"
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
@@ -110,6 +111,9 @@ import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
 	PHASES,
+	PHASE_ACTION,
+	PV_ACTION,
+	CHARGER_STATUS_REASON,
 	Timeout,
 	Vehicle,
 	Forecast,
@@ -130,12 +134,12 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: Number,
+		id: { type: String, required: true },
 		single: Boolean,
 
 		// main
 		title: String,
-		mode: String,
+		mode: String as PropType<CHARGE_MODE>,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		remoteDisabled: String,
@@ -147,16 +151,16 @@ export default defineComponent({
 
 		// session
 		sessionEnergy: Number,
-		sessionCo2PerKWh: Number,
-		sessionPricePerKWh: Number,
-		sessionPrice: Number,
+		sessionCo2PerKWh: Number as PropType<number | null>,
+		sessionPricePerKWh: Number as PropType<number | null>,
+		sessionPrice: Number as PropType<number | null>,
 		sessionSolarPercentage: Number,
 
 		// charger
-		chargerStatusReason: String,
+		chargerStatusReason: String as PropType<CHARGER_STATUS_REASON | null>,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
-		chargerIcon: String,
+		chargerIcon: String as PropType<string | null>,
 
 		// vehicle
 		connected: Boolean,
@@ -170,20 +174,20 @@ export default defineComponent({
 		vehicleLimitSoc: Number,
 		vehicles: Array as PropType<Vehicle[]>,
 		planActive: Boolean,
-		planProjectedStart: String,
-		planProjectedEnd: String,
+		planProjectedStart: String as PropType<string | null>,
+		planProjectedEnd: String as PropType<string | null>,
 		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
 		planPrecondition: Number,
-		planTime: String,
-		effectivePlanTime: String,
+		planTime: String as PropType<string | null>,
+		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
 
 		// details
-		vehicleClimaterActive: Boolean,
+		vehicleClimaterActive: Boolean as PropType<boolean | null>,
 		vehicleWelcomeActive: Boolean,
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
@@ -200,19 +204,19 @@ export default defineComponent({
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeRemainingEnergy: Number,
-		phaseAction: String,
+		phaseAction: String as PropType<PHASE_ACTION>,
 		phaseRemaining: { type: Number, default: 0 },
 		pvRemaining: { type: Number, default: 0 },
-		pvAction: String,
-		smartCostLimit: { type: Number, default: null },
+		pvAction: String as PropType<PV_ACTION>,
+		smartCostLimit: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartCostActive: Boolean,
-		smartCostNextStart: String,
-		smartFeedInPriorityLimit: { type: Number, default: null },
+		smartCostNextStart: String as PropType<string | null>,
+		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },
 		smartFeedInPriorityAvailable: Boolean,
 		smartFeedInPriorityActive: Boolean,
-		smartFeedInPriorityNextStart: String,
+		smartFeedInPriorityNextStart: String as PropType<string | null>,
 		tariffGrid: Number,
 		tariffFeedIn: Number,
 		tariffCo2: Number,
@@ -221,6 +225,8 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {

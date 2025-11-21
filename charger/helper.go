@@ -28,15 +28,24 @@ func ensureChargerEx[T any](
 	list func() ([]T, error),
 	extract func(T) (string, error),
 ) (T, error) {
+	return ensureEx("charger", id, list, extract)
+}
+
+// ensureEx extracts element with name typ with matching id from list of elements
+func ensureEx[T any](
+	typ, id string,
+	list func() ([]T, error),
+	extract func(T) (string, error),
+) (T, error) {
 	var zero T
 
-	chargers, err := list()
+	elems, err := list()
 	if err != nil {
-		return zero, fmt.Errorf("cannot get chargers: %w", err)
+		return zero, fmt.Errorf("cannot get %ss: %w", typ, err)
 	}
 
 	if id = strings.ToUpper(id); id != "" {
-		for _, charger := range chargers {
+		for _, charger := range elems {
 			cc, err := extract(charger)
 			if err != nil {
 				return zero, err
@@ -45,12 +54,12 @@ func ensureChargerEx[T any](
 				return charger, nil
 			}
 		}
-	} else if len(chargers) == 1 {
+	} else if len(elems) == 1 {
 		// id empty and exactly one charger
-		return chargers[0], nil
+		return elems[0], nil
 	}
 
-	return zero, fmt.Errorf("cannot find charger, got: %v", lo.Map(chargers, func(v T, _ int) string {
+	return zero, fmt.Errorf("cannot find %s, got: %v", typ, lo.Map(elems, func(v T, _ int) string {
 		vin, _ := extract(v)
 		return vin
 	}))
@@ -80,4 +89,26 @@ func verifyEnabled(c api.Charger, enabled bool) (bool, error) {
 
 	// always treat charging as enabled
 	return status == api.StatusC, err
+}
+
+// whenDisabled disables charger before executing fun()
+func whenDisabled(wb api.Charger, fun func() error) error {
+	enabled, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	if !enabled {
+		return fun()
+	}
+
+	if err := wb.Enable(false); err != nil {
+		return err
+	}
+
+	if err := fun(); err != nil {
+		return err
+	}
+
+	return wb.Enable(true)
 }

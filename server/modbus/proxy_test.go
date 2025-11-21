@@ -44,7 +44,7 @@ func TestConcurrentRead(t *testing.T) {
 				require.NoError(t, err)
 
 				if err == nil {
-					for u := uint16(0); u < qty; u++ {
+					for u := range qty {
 						assert.Equal(t, addr^uint16(id)^u, binary.BigEndian.Uint16(b[2*u:]))
 					}
 				}

@@ -9,7 +9,7 @@ image = "evcc/evcc:latest"
 
 [experimental]
 auto_rollback = true
-cmd = ["evcc", "--demo", "--mcp"]
+cmd = ["evcc", "--demo", "--metrics", "--profile", "--mcp"]
 
 [[services]]
 http_checks = []

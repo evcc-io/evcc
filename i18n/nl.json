@@ -58,14 +58,16 @@
           "heating": "Gebruikersgedefinieerde verwarmer"
         },
         "heatpump": "Gebruikersgedefinieerde warmtepomp",
-        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready, alle)",
-        "sgready-boost": "Gebruikersgedefinieerde warmtepomp (sg-ready, boost)",
+        "sgready": "Gebruikersgedefinieerde warmtepomp (sg-ready via plugins)",
+        "sgready-boost": "Gebruiker gedefinieerde verwarmer (sg-ready-boost, verouderd)",
+        "sgready-relay": "Gebruikersgedefinieerde warmtepomp (sg-ready via relais)",
         "switchsocket": "Gebruikersgedefinieerd schakelbaar stopcontact"
       }
     },
     "circuits": {
       "description": "Zorgt ervoor dat de som van alle laadpunten die zijn aangesloten op een circuit de ingestelde vermogens- en stroomlimieten niet overschrijdt. Circuits kunnen genest worden om een hiërarchie op te bouwen.",
-      "title": "Electriciteitsnetwerk beheer"
+      "title": "Electriciteitsnetwerk beheer",
+      "usableMeters": "Bruikbare meterreferenties"
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
@@ -93,12 +95,14 @@
       "currency": "Valuta",
       "current": "Stroomsterkte",
       "currentRange": "Stroomsterkte",
+      "dimmed": "Gedimd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
       "feedinPrice": "Terugleververgoeding",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
-      "hemsType": "Systeem",
+      "hemsActiveLimit": "Actieve limiet",
+      "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
       "no": "nee",
       "odometer": "Kilometerstand",
@@ -116,7 +120,7 @@
       "temp": "Temperatuur",
       "topic": "Onderwerp",
       "url": "URL",
-      "vehicleLimitSoc": "Voertuig limiet",
+      "vehicleLimitSoc": "Laad limiet",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -124,9 +128,14 @@
       "B": "B (aangesloten)",
       "C": "C (opladen)"
     },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relais"
+    },
     "devices": {
       "auxMeter": "Slimme verbruiker",
       "batteryStorage": "Thuisaccu",
+      "consumer": "Verbruiker",
       "solarSystem": "PV systeem"
     },
     "editor": {
@@ -137,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan worden gebruikt voor electriciteitsnetwerk beheer of statistische doeleinden.",
-      "titleAdd": "Externe Meter Toevoegen",
-      "titleEdit": "Externe meter bewerken"
+      "description": "Registreert energie van ongestuurde verbruikers (bijv. koelkast, wasmachine, etc) voor statistieken. Deze meters kunnen ook gebruikt worden voor electriciteitsnetwerk beheer (bijv onderverdeling).",
+      "titleAdd": "Externe verbruiker toevoegen",
+      "titleEdit": "Wijzig verbruikmeter"
     },
     "form": {
       "danger": "Gevaar",
@@ -148,12 +157,18 @@
       "optional": "optioneel"
     },
     "general": {
+      "applyAndClose": "Toepassen & sluiten",
       "cancel": "Annuleren",
+      "close": "Sluiten",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
       "docsLink": "Zie documentatie.",
+      "dragHandle": "Schuifknop",
+      "dragItem": "Verschuifbaar:{title}",
+      "dragList": "Sorteerbare lijst",
       "experimental": "Experimenteel",
+      "forceSave": "Toch opslaan",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
       "noFileSelected": "Geen bestand geselecteerd.",
@@ -162,12 +177,17 @@
       "password": "Wachtwoord",
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
+      "required": "vereist",
+      "reset": "Herstel",
       "save": "Opslaan",
+      "saved": "Opgeslagen.",
+      "saving": "Bezig met opslaan…",
       "selectFile": "Bladeren",
       "showAdvancedSettings": "Toon geavanceerde instellingen",
       "telemetry": "Telemetrie",
       "templateLoading": "Laden...",
       "title": "Titel",
+      "typeDeprecated": "Het type '{type}' is verouderd en zal in een toekomstige versie verwijderd worden. Lees de changelog en maak dit apparaat opnieuw aan.",
       "validateSave": "Valideren & opslaan"
     },
     "grid": {
@@ -176,11 +196,12 @@
       "titleEdit": "Bewerk netmeter"
     },
     "hems": {
-      "description": "Verbind evcc met een ander thuis-energie managementsysteem.",
+      "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
       "title": "HEMS"
     },
     "icon": {
-      "change": "wijzig"
+      "change": "wijzig",
+      "label": "Pictogram"
     },
     "influx": {
       "description": "Schrijft laad-data en andere cijfers naar InfluxDB. Gebruik Grafana of andere tools om de data te visualiseren.",
@@ -222,7 +243,7 @@
       "chargerTypeLabel": "Type laadpunt",
       "chargingTitle": "Gedrag",
       "circuitHelp": "Toewijzing van een circuit van je electriciteitsnetwerk om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
-      "circuitLabel": "Circuit",
+      "circuitLabel": "Groep",
       "circuitUnassigned": "niet toegewezen",
       "defaultModeHelp": {
         "charging": "Laadmodus bij het aansluiten van een voertuig.",
@@ -272,7 +293,7 @@
       "solarModeMaximum": "Maximale zonne-energie",
       "thresholdDisableDelayLabel": "Vertraging uitschakelen",
       "thresholdDisableHelpInvalid": "Gebruik alstublieft een positieve waarde.",
-      "thresholdDisableHelpPositive": "Stop wanneer er meer dan {stroom} van het net wordt gebruikt voor {vertraging}.",
+      "thresholdDisableHelpPositive": "Stop wanneer er meer dan {power} van het net wordt gebruikt voor {delay}.",
       "thresholdDisableHelpZero": "Stop wanneer het minimaal vereiste laadvermogen niet kan worden voldaan voor {delay}.",
       "thresholdDisableLabel": "Schakel netspanning uit",
       "thresholdEnableDelayLabel": "Vertraging inschakelen",
@@ -291,7 +312,7 @@
         "unknown": "Wijzig lader of verwarmingsapparaat"
       },
       "titleExample": {
-        "charging": "Garage, Carport, etc.",
+        "charging": "Garage, oprit, etc.",
         "heating": "Warmtepomp, verwarmingsapparaat, etc."
       },
       "titleLabel": "Titel",
@@ -328,13 +349,22 @@
       "option": {
         "aux": "Zelfregulerende consument toevoegen",
         "battery": "Batterijmeter toevoegen",
-        "ext": "Externe meter toevoegen",
+        "ext": "Standaard verbruiker toevoegen",
         "pv": "Zonne-energie meter toevoegen"
       },
       "save": "Opslaan",
       "specific": "Specifieke integraties",
       "template": "Fabrikant",
       "titleChoice": "Wat wil je toevoegen?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Zelf regulerende verbruiker",
+        "battery": "Batterij",
+        "charge": "Verbruiker / Lader",
+        "grid": "Netwerk",
+        "label": "Verbruik",
+        "pv": "Productie"
+      },
       "validateSave": "Valideren en opslaan"
     },
     "modbus": {
@@ -358,7 +388,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Sta meerdere clients de toegang tot één Modbus apparaat toe.",
+      "add": "Voeg een proxy verbinding toe",
+      "connection": "Connectie #{number}",
+      "description": "Sommige Modbus apparaten ondersteunen slechts 1 of enkele connecties. EVCC kan als een proxy fungeren, waarmee meerdere clients de toegang krijgen tot één Modbus apparaat .",
+      "device": "Apparaat",
+      "option": {
+        "deny": "fout",
+        "false": "nee",
+        "true": "stil"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Schrijftoegang is geblokkeerd met een foutmelding op Modbus.",
+          "false": "Schrijftoegang wordt doorgestuurd.",
+          "true": "Schrijftoegang is geblokkeerd zonder antwoord."
+        },
+        "label": "Alleen-lezen"
+      },
+      "sourcePortHelp": "Poort voor inkomende client connecties. Moet beschikbaar zijn.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -380,10 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Gebruik de .local toevoeging om mDNS te activeren. Voor toegang vanuit de mobiele app en sommige OCPP laders van belang.",
+      "descriptionExternalUrl": "Adres voor andere apparaten die willen verbinden met evcc en voor het automatisch ontdekken van de evcc app.",
+      "descriptionHost": "Gebruikt om evcc in je lokale netwerk aan te kondigen.",
+      "descriptionInternalUrl": "Lokaal netwerk adres van evcc.",
       "descriptionPort": "Poort voor de web interface en API. Update de browser url wanneer je dit aanpast.",
       "descriptionSchema": "Beïnvloedt enkel hoe URLs gegenereerd worden. HTTPS selecteren activeert geen encryptie.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "Externe URL",
+      "labelHost": "mDNS Hostname",
+      "labelInternalUrl": "Interne URL",
       "labelPort": "Poort",
       "labelSchema": "Schema",
       "title": "Netwerk"
@@ -425,6 +476,18 @@
       "system": "Systeem",
       "vehicles": "Voertuigen"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc is uitgerust met een integratie voor de SMA Sunny Home Manager (SHM) via SEMP protocol. Wanneer het is aangesloten op hetzelfde netwerk, na inloggen op je Sunny Portal account, zou je automatisch alle laadpunten geconfigureerd in evcc moeten worden aangeboden als nieuw ontdekte verbruikers. Alles zou meteen gebruikt moeten kunnen worden, zonder enige onderstaande aanpassingen nodig te hebben.",
+      "descriptionDeviceId": "12 karakters HEX string. Prefix voor alle apparaten (EV lader, ..).",
+      "descriptionIdPattern": "Identificatiepatroon",
+      "descriptionIds": "In Sunny Portal heeft elk consumentenapparaat een unieke identificatiecode nodig. evcc genereert een unieke identificatiecode op basis van uw hardware. Als u evcc naar andere hardware migreert, kunnen deze identificatiecodes veranderen. Als u de geschiedenis wilt behouden, kunt u de gegenereerde identificatiecodes hier overschrijven. Open de SEMP-URL (/semp) om uw huidige identificatiecodes te controleren.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
@@ -436,9 +499,10 @@
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "U moet een sponsortoken configureren voordat u dit apparaat kunt aanmaken.",
+      "tokenRequiredFeature": "Deze functie vereist een sponsortoken.",
       "tokenRequiredLearnMore": "Meer informatie.",
       "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
-      "trialToken": "Tijdelijke token",
+      "trialToken": "tijdelijke token",
       "viaYaml": "via evcc.yaml",
       "yourToken": "Jouw token"
     },
@@ -447,12 +511,12 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "Voer je wachtwoord in om het database bestand te downloaden.",
+          "confirmationText": "Download het database bestand.",
           "description": "Backup je data naar een bestand. Dit bestand kan gebruikt worden om je data te herstellen in geval van een systeemfout.",
           "title": "Backup"
         },
         "cancel": "Annuleer",
-        "description": "Backup, herstel en rest je data. Nuttig als je je data naar een ander systeem wilt migreren.",
+        "description": "Backup, herstel en reset je data. Nuttig als je je data naar een ander systeem wilt migreren.",
         "note": "Notabene: alle bovenstaande acties hebben alleen impact op je databasedata. Het evcc.yaml configuratiebestand blijft onveranderd.",
         "reset": {
           "action": "Reset...",
@@ -486,6 +550,10 @@
       "description": "Voer jouw energietarief in om de kosten van het laden te berekenen.",
       "title": "Tarieven"
     },
+    "telemetry": {
+      "description": "Het delen van je data helpt om evcc te verbeteren. Jouw privacy is belangrijk voor ons en deelname is geheel optioneel.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wordt weergegeven op het hoofdscherm en op het browsertabblad.",
       "label": "Titel",
@@ -494,7 +562,7 @@
     "validation": {
       "failed": "mislukt",
       "label": "Status",
-      "running": "bezig met valideren…",
+      "running": "Bezig met valideren…",
       "success": "succesvol",
       "unknown": "onbekend",
       "validate": "valideer"
@@ -626,6 +694,7 @@
     "about": "Over",
     "authProviders": {
       "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
+      "loggedOut": "Succesvol uitgelogd",
       "title": "Authorisatie Status"
     },
     "blog": "Blog",
@@ -640,7 +709,7 @@
   "help": {
     "discussionsButton": "GitHub discussies",
     "documentationButton": "Documentatie",
-    "issueButton": "Een bug melden",
+    "issueButton": "Een probleem melden",
     "issueDescription": "Vreemd of foutief gedrag gevonden?",
     "logsButton": "Bekijk logboeken",
     "logsDescription": "Kijk in de logboeken voor foutmeldingen.",
@@ -656,6 +725,57 @@
     "restartButton": "Herstart",
     "restartDescription": "Geprobeerd het uit en weer aan te zetten?",
     "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
+  },
+  "issue": {
+    "additional": {
+      "description": "Voeg configuratie en logbestanden toe zodat we het probleem snel kunnen reproduceren. We raden u aan zoveel mogelijk informatie te delen. De status is meestal niet nodig.",
+      "include": "toevoegen",
+      "lines": "regels",
+      "logs": "Logs",
+      "logsDescription": "Recente logboekvermeldingen die kunnen helpen bij het identificeren van het probleem.",
+      "showDetails": "toon details",
+      "source": "Bron",
+      "state": "Status",
+      "stateDescription": "Volledige runtime-status, inclusief informatie over het oplaadpunt, het apparaat en de energie. Alleen toevoegen indien gevraagd.",
+      "title": "Additionele informatie",
+      "uiConfig": "Configuratie (UI)",
+      "uiConfigDescription": "Configuratie instellingen gemaakt via de web interface.",
+      "yamlConfig": "Configuratie (YAML)",
+      "yamlConfigDescription": "Je complete configuratie bestand."
+    },
+    "additionalContext": "Additionele context",
+    "additionalContextPlaceholder": "Alle aanvullende informatie die behulpzaam kan zijn...\n- Configuratie details\n- Wat je hebt geprobeerd\n- Omgevingsfactoren",
+    "createButtonDiscussion": "Start GitHub discussie...",
+    "createButtonIssue": "Creëer GitHub Issue...",
+    "description": "Werkt je installatie niet zoals verwacht? Gebruik deze pagina om hulp te vragen of problemen te rapporteren. Geef voldoende informatie, dat helpt ons om het probleem te begrijpen en na te bouwen, maar hou de beschrijving beknopt, helder en makkelijk te begrijpen.",
+    "helpType": {
+      "discussion": "Hulp nodig met mijn installatie",
+      "discussionDescription": "Discussies binnen de community bieden antwoorden.",
+      "issue": "Bug gevonden",
+      "issueDescription": "Ik ben er zeker van dat iets kapot is en moet worden gerepareerd.",
+      "title": "Welk probleem speelt er?"
+    },
+    "issueDescription": "Omschrijving",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Stappen om te reproduceren",
+    "subTitleDiscussion": "Omschrijf je probleem",
+    "subTitleIssue": "Beschrijf het probleem",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub discussie starten",
+      "confirmationButtonIssue": "Maak GitHub issue",
+      "copied": "Gekopiëerd!",
+      "copyButton": "Kopieer additionele informatie",
+      "instructions": "Door limitaties in GitHubs URL lengte is dit een twee staps proces:",
+      "singleStepDescription": "Klik op onderstaande knop om GitHub te openen met een voor ingevuld formulier met de beschrijving van jouw probleem. Gevoelige informatie is automatisch verwijderd, maar controleer dit voordat je het deelt.",
+      "step1Description": "Klik op de onderstaande knop om een basis GitHub-vermelding aan te maken met uw titel, beschrijving en details.",
+      "step2Description": "Nadat je het item hebt aangemaakt, ga je terug naar deze pagina om de onderstaande aanvullende informatie te kopiëren en in je GitHub-formulier te plakken. Gevoelige gegevens zijn verwijderd, maar controleer dit nogmaals voordat je de informatie deelt.",
+      "stepOneDiscussion": "Stap 1: Creëer basis discussie",
+      "stepOneIssue": "Stap 1: Maak een basis issue aan",
+      "stepTwo": "Stap 2: Kopieer aanvullende informatie",
+      "title": "GitHub Probleemoverzicht"
+    },
+    "title": "Rapporteer een probleem",
+    "version": "Versie"
   },
   "log": {
     "areaLabel": "Filter op domain",
@@ -693,7 +813,7 @@
       "modalTitle": "Laad Plan",
       "none": "geen",
       "planNumber": "Schema {number}",
-      "preconditionDescription": "Laad(duur) voor vertrek voor accu voorbereiding.",
+      "preconditionDescription": "Laad {duration} voor vertrek voor accu voorbereiding.",
       "preconditionLong": "Laat Opladen",
       "preconditionOptionAll": "alles",
       "preconditionOptionNo": "nee",
@@ -722,6 +842,7 @@
       "gridImport": "Netafname",
       "homePower": "Consumptie",
       "loadpoints": "Lader| Lader | {count} laders",
+      "loadpointsLimit": "{limit} limiet",
       "noEnergy": "Geen meter data",
       "pv": "PV-systeem",
       "pvExport": "Netinjectie",
@@ -733,6 +854,10 @@
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
       "waitForVehicle": "Klaar. Wachten op verwarming…"
+    },
+    "hemsWarning": {
+      "description": "Gereduceerd laden niet hoger dan {limit}.",
+      "title": "Extern limiet:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",
@@ -899,7 +1024,8 @@
     "message": "Niet verbonden met een server.",
     "restart": "Herstart",
     "restartNeeded": "Benodigd om aanpassingen door te voeren.",
-    "restarting": "Server is binnenkort weer beschikbaar."
+    "restarting": "Server is binnenkort weer beschikbaar.",
+    "starting": "Server wordt gestart..."
   },
   "passwordModal": {
     "description": "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord.",
@@ -921,8 +1047,8 @@
     "delete": "Verwijder",
     "finished": "Afgerond",
     "meter": "Meter",
-    "meterstart": "Meter start",
-    "meterstop": "Meter stop",
+    "meterstart": "Beginwaarde meter",
+    "meterstop": "Eindwaarde meter",
     "odometer": "Kilometerstand",
     "price": "Prijs",
     "started": "Gestart",
@@ -960,8 +1086,8 @@
       "finished": "Beëindigd",
       "identifier": "ID",
       "loadpoint": "Oplaadpunt",
-      "meterstart": "Meter start (kWh)",
-      "meterstop": "Meter stop (kWh)",
+      "meterstart": "Beginwaarde meter (kWh)",
+      "meterstop": "Eindwaarde meter (kWh)",
       "odometer": "Kilometerstand (km)",
       "price": "Prijs",
       "priceperkwh": "Prijs/kWh",
@@ -1010,6 +1136,7 @@
     "vehicle": "Voertuig"
   },
   "settings": {
+    "deviceInfo": "Instellingen die je in dit scherm maakt, gelden alleen voor dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",
       "exit": "Volledig scherm afsluiten",
@@ -1022,6 +1149,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Taal"
+    },
+    "loadpoints": {
+      "help": "Wijzig de volgorde en zichtbaarheid in de gebruikersinterface.",
+      "hide": "{title} verbergen",
+      "label": "Laadpunten",
+      "show": "{title} tonen"
     },
     "sponsorToken": {
       "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
@@ -1051,13 +1184,14 @@
   },
   "smartCost": {
     "activeHours": "{active} van {total}",
-    "activeHoursLabel": "Actieve uren",
+    "activeHoursLabel": "Actieve tijd",
     "applyToAll": "Overal toepassen?",
     "batteryDescription": "Laadt de huisbatterij op met stroom uit het net.",
     "cheapTitle": "Goedkoop netstroom laden",
     "cleanTitle": "Laden met schone energie uit het net",
     "co2Label": "CO₂ uitstoot",
     "co2Limit": "CO₂ limiet",
+    "enable": "Activeer de limiet",
     "loadpointDescription": "Zet tijdelijk snel-laden in solar mode aan.",
     "modalTitle": "Smart Grid laden",
     "none": "geen",
@@ -1068,7 +1202,7 @@
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Gepauzeerde uren",
+    "activeHoursLabel": "Gepauzeerde tijd",
     "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",
@@ -1080,6 +1214,7 @@
     "configuration": "Configuratie",
     "description": "Controleer uw configuratiebestand. Als de foutmelding niet helpt, bekijk dan de {0}.",
     "discussions": "GitHub Discussies",
+    "editConfiguration": "Wijzig de configuratie",
     "fixAndRestart": "Los het probleem op en herstart de server.",
     "hint": "Let op: het kan ook zijn dat u een defect apparaat heeft (omvormer, meter, …). Controleer uw netwerkverbindingen.",
     "lineError": "Fout in {0}.",

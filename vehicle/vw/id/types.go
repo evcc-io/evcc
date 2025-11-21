@@ -66,9 +66,9 @@ type Status struct {
 		} `json:"climatisationTimer"`
 		ChargingProfiles *struct {
 			Value struct {
-				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
-				TimeInCar            string        `json:"timeInCar"`
-				Profiles             []interface{} `json:"profiles"`
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				TimeInCar            string    `json:"timeInCar"`
+				Profiles             []any     `json:"profiles"`
 			} `json:"value"`
 		} `json:"chargingProfiles"`
 	} `json:"automation"`
@@ -234,9 +234,9 @@ type Status struct {
 	VehicleHealthWarnings *struct {
 		WarningLights struct {
 			Value struct {
-				CarCapturedTimestamp Timestamp     `json:"carCapturedTimestamp"`
-				MileageKm            int           `json:"mileage_km"`
-				WarningLights        []interface{} `json:"warningLights"`
+				CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+				MileageKm            int       `json:"mileage_km"`
+				WarningLights        []any     `json:"warningLights"`
 			} `json:"value"`
 		} `json:"warningLights"`
 	} `json:"vehicleHealthWarnings"`
@@ -277,8 +277,8 @@ type Status struct {
 						StartTime string `json:"startTime"`
 						EndTime   string `json:"endTime"`
 					} `json:"preferredChargingTimes"`
-					Timers        []interface{} `json:"timers"`
-					MinSOCEnabled bool          `json:"minSOC_enabled"`
+					Timers        []any `json:"timers"`
+					MinSOCEnabled bool  `json:"minSOC_enabled"`
 				} `json:"profiles"`
 			} `json:"value"`
 		} `json:"chargingProfilesStatus"`
@@ -318,6 +318,13 @@ type EngineRangeStatus struct {
 	Type             string `json:"type"`
 	CurrentSOCPct    int    `json:"currentSOC_pct"`
 	RemainingRangeKm int    `json:"remainingRange_km"`
+}
+
+// ParkingPosition is the /parkingposition api response
+type ParkingPosition struct {
+	Latitude             float64   `json:"latitude"`
+	Longitude            float64   `json:"longitude"`
+	CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
 }
 
 // Timestamp implements JSON unmarshal

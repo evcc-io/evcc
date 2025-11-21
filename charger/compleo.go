@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -32,28 +32,28 @@ import (
 
 // Compleo charger implementation
 type Compleo struct {
-	lp    loadpoint.API
-	conn  *modbus.Connection
-	base  uint16
-	power uint16
+	lp     loadpoint.API
+	conn   *modbus.Connection
+	offset uint16
+	power  uint16
 }
 
 const (
 	// global
-	compleoRegBase       = 0x0100 // input
-	compleoRegFallback   = 0x5    // holding
-	compleoRegConnectors = 0x0008 // input
+	compleoRegFallback   = 0x5 // holding
+	compleoRegConnectors = 0x8 // input
 
 	// per connector
-	compleoRegMaxPower       = 0x0 // holding
-	compleoRegStatus         = 0x1 // input
-	compleoRegActualPower    = 0x2 // input
-	compleoRegCurrents       = 0x3 // input
-	compleoRegChargeDuration = 0x6 // input
-	compleoRegEnergy         = 0x8 // input
-	compleoRegVoltages       = 0xD // input
+	compleoRegBase           = 0x0100 // input
+	compleoRegMaxPower       = 0x0    // holding
+	compleoRegStatus         = 0x1    // input
+	compleoRegActualPower    = 0x2    // input
+	compleoRegCurrents       = 0x3    // input
+	compleoRegChargeDuration = 0x6    // input
+	compleoRegEnergy         = 0x8    // input
+	compleoRegVoltages       = 0xD    // input
 
-	compleoRegIdTag = 0x1000 - compleoRegBase // input
+	compleoRegIdTag = 0x1000 // input
 )
 
 func init() {
@@ -61,7 +61,7 @@ func init() {
 }
 
 // NewCompleoFromConfig creates a Compleo charger from generic config
-func NewCompleoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewCompleoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -103,9 +103,9 @@ func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16
 	}
 
 	wb := &Compleo{
-		conn:  conn,
-		base:  compleoRegBase + (connector-1)*0x010,
-		power: 3 * 230 * 6, // assume min power
+		conn:   conn,
+		offset: (connector - 1) * 0x10,
+		power:  3 * 230 * 6, // assume min power
 	}
 
 	// heartbeat
@@ -134,8 +134,12 @@ func (wb *Compleo) heartbeat(ctx context.Context, log *util.Logger, timeout time
 	}
 }
 
+func (wb *Compleo) reg(addr uint16) uint16 {
+	return compleoRegBase + wb.offset + addr
+}
+
 func (wb *Compleo) status() (byte, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(compleoRegStatus), 1)
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +167,7 @@ func (wb *Compleo) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Compleo) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(compleoRegMaxPower, 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.reg(compleoRegMaxPower), 1)
 	if err != nil {
 		return false, err
 	}
@@ -183,7 +187,7 @@ func (wb *Compleo) Enable(enable bool) error {
 
 // setPower writes the power limit in 100W steps
 func (wb *Compleo) setPower(power uint16) error {
-	_, err := wb.conn.WriteSingleRegister(compleoRegMaxPower, power/100)
+	_, err := wb.conn.WriteSingleRegister(wb.reg(compleoRegMaxPower), power/100)
 	return err
 }
 
@@ -221,7 +225,7 @@ var _ api.Meter = (*Compleo)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Compleo) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegActualPower, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(compleoRegActualPower), 1)
 	if err != nil {
 		return 0, err
 	}
@@ -233,7 +237,7 @@ var _ api.ChargeRater = (*Compleo)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Compleo) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegEnergy, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(compleoRegEnergy), 1)
 	if err != nil {
 		return 0, err
 	}
@@ -260,21 +264,21 @@ var _ api.PhaseCurrents = (*Compleo)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Compleo) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(compleoRegCurrents, 10)
+	return wb.getPhaseValues(wb.reg(compleoRegCurrents), 10)
 }
 
 var _ api.PhaseVoltages = (*Compleo)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Compleo) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(compleoRegVoltages, 1)
+	return wb.getPhaseValues(wb.reg(compleoRegVoltages), 1)
 }
 
 var _ api.ChargeTimer = (*Compleo)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Compleo) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(compleoRegChargeDuration, 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.reg(compleoRegChargeDuration), 2)
 	if err != nil {
 		return 0, err
 	}
@@ -286,7 +290,7 @@ var _ api.Identifier = (*Compleo)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Compleo) Identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag, 0x10)
+	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 0x10)
 	if err != nil {
 		return "", err
 	}

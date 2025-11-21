@@ -49,7 +49,7 @@ type PositionResponse struct {
 		Timestamp       string
 		Speed           float64
 		Heading         float64
-		PositionQuality interface{}
+		PositionQuality any
 	}
 }
 

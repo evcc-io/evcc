@@ -58,8 +58,9 @@
           "heating": "Benutzerdefinierte Heizung"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
-        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready, komplett)",
-        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready, boost)",
+        "sgready": "Benutzerdefinierte Wärmepumpe (SG-Ready über Plugins)",
+        "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready-boost, veraltet)",
+        "sgready-relay": "Benutzerdefinierte Wärmepumpe (SG-Ready über Relais)",
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
@@ -94,6 +95,7 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "feedinPrice": "Einspeisevergütung",
@@ -118,7 +120,7 @@
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
-      "vehicleLimitSoc": "Fahrzeuglimit",
+      "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +135,7 @@
     "devices": {
       "auxMeter": "Smarter Verbraucher",
       "batteryStorage": "Batterie",
+      "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
     "editor": {
@@ -143,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kann für Lastmanagement oder Statistikzwecke verwendet werden.",
-      "titleAdd": "Zusätzlichen Zähler hinzufügen",
-      "titleEdit": "Zusätzlichen Zähler bearbeiten"
+      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
@@ -154,12 +157,18 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Übernehmen & schließen",
       "cancel": "Abbrechen",
+      "close": "Schließen",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
       "docsLink": "Siehe Dokumentation.",
+      "dragHandle": "Verschieben",
+      "dragItem": "Verschiebbar: {title}",
+      "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
+      "forceSave": "Trotzdem speichern",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "noFileSelected": "Keine Datei ausgewählt.",
@@ -168,12 +177,17 @@
       "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
+      "required": "erforderlich",
+      "reset": "Zurücksetzen",
       "save": "Speichern",
+      "saved": "Gespeichert.",
+      "saving": "Speichere …",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
       "title": "Titel",
+      "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
     },
     "grid": {
@@ -186,7 +200,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "ändern"
+      "change": "ändern",
+      "label": "Symbol"
     },
     "influx": {
       "description": "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren.",
@@ -334,13 +349,22 @@
       "option": {
         "aux": "Intelligenten Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Zusätzlichen Zähler hinzufügen",
+        "ext": "Regulären Verbraucher hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
       "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleChoice": "Was möchtest du hinzufügen?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Intelligenter Verbraucher",
+        "battery": "Batterie",
+        "charge": "Verbraucher / Ladegerät",
+        "grid": "Netzanschluss",
+        "label": "Verwendung",
+        "pv": "Erzeugung"
+      },
       "validateSave": "Überprüfen & speichern"
     },
     "modbus": {
@@ -364,7 +388,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät.",
+      "add": "Proxy-Verbindung hinzufügen",
+      "connection": "Verbindung #{number}",
+      "description": "Manche Modbus-Geräte unterstützen nur eine oder sehr wenige Verbindungen. evcc kann als Proxy fungieren und ermöglicht so simultanen Zugriff für mehrere Clients (Hausautomation, Skripte, etc.).",
+      "device": "Gerät",
+      "option": {
+        "deny": "Fehler",
+        "false": "nein",
+        "true": "still"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Schreibzugriff wird mit Modbus-Fehler blockiert.",
+          "false": "Schreibzugriff wird weitergeleitet.",
+          "true": "Schreibzugriff wird ohne Antwort blockiert."
+        },
+        "label": "Nur lesen"
+      },
+      "sourcePortHelp": "Port für eingehende Client-Verbindungen. Muss verfügbar sein.",
       "title": "Modbus-Proxy"
     },
     "mqtt": {
@@ -386,12 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt.",
+      "descriptionExternalUrl": "Adresse, mit der sich andere Geräte mit evcc verbinden und für die Autodiscovery der evcc-App.",
+      "descriptionHost": "Wird verwendet, um evcc in deinem lokalen Netzwerk anzukündigen.",
+      "descriptionInternalUrl": "Lokale Netzwerkadresse von evcc.",
       "descriptionPort": "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst.",
-      "descriptionSchema": "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "Externe URL",
+      "labelHost": "mDNS-Hostname",
+      "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Netzwerk"
     },
     "options": {
@@ -431,6 +474,18 @@
       "system": "System",
       "vehicles": "Fahrzeuge"
     },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc ist mit einer Integration für den SMA Sunny Home Manager (SHM) mittels SEMP-Protokoll ausgestattet. Wenn dieser im selben Netzwerk läuft, sollte dir nach der Anmeldung in deinem Sunny Portal-Konto automatisch angeboten werden, alle in evcc konfigurierten Ladepunkte als neu erkannte Verbraucher hinzuzufügen. Alles sollte sofort einsatzbereit sein, ohne dass hier weitere Anpassungen erforderlich sind.",
+      "descriptionDeviceId": "12-stelliger HEX-String. Präfix für alle Geräte (Ladepunkt, ..).",
+      "descriptionIdPattern": "Kennungsmuster",
+      "descriptionIds": "Im Sunny Portal benötigt jeder Verbraucher (Ladepunkt, ..) eine eindeutige Kennung. evcc generiert basierend auf deiner Hardware eine eindeutige Kennung. Wenn du evcc auf andere Hardware migrierst, kann sich diese Kennung ändern. Um die Historie zu erhalten, kannst du die generierten Kennungen hier überschreiben. Öffne die SEMP-URL (/semp), um deine aktuellen Kennungen zu überprüfen.",
+      "descriptionSempUrl": "SEMP-URL",
+      "descriptionVendorId": "8-stelliger HEX-String. Allgemeines Präfix aller Entitäten. Standardmäßig verwendet evcc seine eigene interne Hersteller-ID.",
+      "labelDeviceId": "Geräte-ID",
+      "labelVendorId": "Hersteller-ID",
+      "title": "SMA Sunny Home Manager"
+    },
     "sponsor": {
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
@@ -442,6 +497,7 @@
       "labelToken": "Sponsortoken",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
+      "tokenRequiredFeature": "Diese Funktion erfordert ein Sponsortoken.",
       "tokenRequiredLearnMore": "Mehr erfahren.",
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",
@@ -453,7 +509,7 @@
         "backup": {
           "action": "Sicherung herunterladen...",
           "confirmationButton": "Sicherung herunterladen",
-          "confirmationText": "Bitte gib dein Passwort ein, um die Datenbankdatei herunterzuladen.",
+          "confirmationText": "Lade die Datenbankdatei herunter.",
           "description": "Sichere deine Daten in eine Datei. Diese Datei kann verwendet werden, um deine Daten im Falle eines Systemausfalls wiederherzustellen.",
           "title": "Sichern"
         },
@@ -492,6 +548,10 @@
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
       "title": "Tarife"
     },
+    "telemetry": {
+      "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
       "label": "Titel",
@@ -500,7 +560,7 @@
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
-      "running": "prüfe …",
+      "running": "Prüfe …",
       "success": "erfolgreich",
       "unknown": "unbekannt",
       "validate": "prüfen"
@@ -632,6 +692,7 @@
     "about": "Über",
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+      "loggedOut": "Erfolgreich abgemeldet",
       "title": "Autorisierungsstatus"
     },
     "blog": "Blog",
@@ -645,8 +706,8 @@
   "help": {
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
-    "issueButton": "Bug melden",
-    "issueDescription": "Komisches Verhalten gefunden?",
+    "issueButton": "Problem melden",
+    "issueDescription": "Seltsames Verhalten gefunden?",
     "logsButton": "Logs ansehen",
     "logsDescription": "Überprüfe die Logs auf Fehler.",
     "modalTitle": "Hilfe benötigt?",
@@ -661,6 +722,57 @@
     "restartButton": "Neu starten",
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
+  },
+  "issue": {
+    "additional": {
+      "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
+      "include": "einbeziehen",
+      "lines": "Zeilen",
+      "logs": "Logs",
+      "logsDescription": "Aktuelle Log-Einträge, die bei der Identifizierung des Problems helfen können.",
+      "showDetails": "Details anzeigen",
+      "source": "Quelle",
+      "state": "Zustand",
+      "stateDescription": "Kompletter Laufzeitzustand inklusive Ladepunkt-, Geräte- und Energieinformationen. Nur auf Nachfrage hinzufügen.",
+      "title": "Zusätzliche Informationen",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationseinstellungen, die über die Web-Oberfläche vorgenommen wurden.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Deine komplette Konfigurationsdatei."
+    },
+    "additionalContext": "Zusätzlicher Kontext",
+    "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
+    "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "helpType": {
+      "discussion": "Brauche Hilfe bei meiner Einrichtung",
+      "discussionDescription": "Community-Diskussionen bieten Antworten.",
+      "issue": "Habe einen Fehler gefunden",
+      "issueDescription": "Ich bin sicher, dass etwas kaputt ist und repariert werden muss.",
+      "title": "Um welches Problem geht es?"
+    },
+    "issueDescription": "Beschreibung",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Schritte zur Reproduktion",
+    "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleIssue": "Beschreibe das Problem",
+    "summary": {
+      "confirmationButtonDiscussion": "GitHub Diskussion starten",
+      "confirmationButtonIssue": "GitHub Issue erstellen",
+      "copied": "Kopiert!",
+      "copyButton": "Zusätzliche Informationen kopieren",
+      "instructions": "Aufgrund von GitHubs URL-Größenbeschränkungen ist dies ein zweistufiger Prozess:",
+      "singleStepDescription": "Klicke den Button unten, um GitHub mit einem vorausgefüllten Formular mit deinen Problemdetails zu öffnen. Sensible Daten wurden automatisch entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "step1Description": "Klicke den Button unten, um einen grundlegenden GitHub-Eintrag mit Titel, Beschreibung und Details zu erstellen.",
+      "step2Description": "Nach der Erstellung des Eintrags, kehre hierher zurück, um die zusätzlichen Informationen unten zu kopieren und in dein GitHub-Formular einzufügen. Sensible Daten wurden entfernt, aber bitte überprüfe vor dem Teilen nochmals.",
+      "stepOneDiscussion": "Schritt 1: Basis-Diskussion erstellen",
+      "stepOneIssue": "Schritt 1: Basis-Issue erstellen",
+      "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
+      "title": "GitHub Problem-Zusammenfassung"
+    },
+    "title": "Problem melden",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Nach Bereich filtern",
@@ -908,7 +1020,8 @@
     "message": "Keine Verbindung zum Server.",
     "restart": "Neustart",
     "restartNeeded": "Erforderlich, um Änderungen zu übernehmen.",
-    "restarting": "Server ist gleich wieder verfügbar."
+    "restarting": "Server ist gleich wieder verfügbar.",
+    "starting": "Server wird gestartet..."
   },
   "passwordModal": {
     "description": "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich.",
@@ -1019,6 +1132,7 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",
@@ -1031,6 +1145,12 @@
     "language": {
       "auto": "Automatisch",
       "label": "Sprache"
+    },
+    "loadpoints": {
+      "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
+      "hide": "{title} ausblenden",
+      "label": "Ladepunkte",
+      "show": "{title} anzeigen"
     },
     "sponsorToken": {
       "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
@@ -1060,13 +1180,14 @@
   },
   "smartCost": {
     "activeHours": "{active} von {total}",
-    "activeHoursLabel": "Aktive Stunden",
+    "activeHoursLabel": "Aktive Zeit",
     "applyToAll": "Überall anwenden?",
     "batteryDescription": "Lädt die Hausbatterie aus dem Netz.",
     "cheapTitle": "Günstiges Netzladen",
     "cleanTitle": "Sauberes Netzladen",
     "co2Label": "CO₂-Emission",
     "co2Limit": "CO₂-Grenze",
+    "enable": "Grenze aktivieren",
     "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
     "modalTitle": "Smartes Netzladen",
     "none": "keine",
@@ -1077,7 +1198,7 @@
     "saved": "Gepeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Stunden",
+    "activeHoursLabel": "Pausierte Zeit",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",
@@ -1089,6 +1210,7 @@
     "configuration": "Konfiguration",
     "description": "Bitte überprüfe deine Konfigurationsdatei. Sollte dir die Fehlermeldung nicht weiterhelfen, suche in unseren {0} nach einer Lösung.",
     "discussions": "GitHub Diskussionen",
+    "editConfiguration": "Konfiguration bearbeiten",
     "fixAndRestart": "Behebe das Problem und starte den Server neu.",
     "hint": "Hinweis: Ein weiterer Grund könnte ein fehlerhaftes Gerät (Wechselrichter, Zähler, …) sein. Überprüfe deine Netzwerkverbindungen.",
     "lineError": "In {0} wurde ein Fehler gefunden.",

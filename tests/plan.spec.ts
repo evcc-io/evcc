@@ -8,6 +8,7 @@ const mobile = devices["iPhone 12 Mini"].viewport;
 
 const CONFIG = "plan.evcc.yaml";
 const CONFIG_NO_TARIFF = "basics.evcc.yaml";
+const CONFIG_FIXED_TARIFF = "plan-fixed-tariff.evcc.yaml";
 
 test.beforeEach(async () => {
   await start(CONFIG);
@@ -369,6 +370,18 @@ test.describe("preview", async () => {
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
     });
   });
+  test("fixed tariff: show prices", async ({ page }) => {
+    await restart(CONFIG_FIXED_TARIFF);
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+
+    const modal = await page.getByTestId("charging-plan-modal");
+    await expect(modal.getByTestId("tariff-value")).toHaveText(
+      ["Energy price", "40.0 ct/kWh"].join("")
+    );
+  });
 });
 
 test.describe("warnings", async () => {
@@ -544,6 +557,7 @@ test.describe("repeating", async () => {
     // activate
     await modal.getByTestId("repeating-plan-time").fill("02:22");
     await modal.getByTestId("repeating-plan-active").click();
+    await page.waitForLoadState("networkidle");
 
     // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");

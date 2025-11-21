@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply, andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -44,8 +44,9 @@ type OCPP struct {
 	enabled bool
 	current float64
 
-	stackLevelZero bool
-	lp             loadpoint.API
+	stackLevelZero      bool
+	profileKindRelative bool
+	lp                  loadpoint.API
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -55,7 +56,7 @@ func init() {
 }
 
 // NewOCPPFromConfig creates a OCPP charger from generic config
-func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		StationId      string
 		IdTag          string
@@ -71,9 +72,10 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
-		ForcePowerCtrl bool
-		StackLevelZero *bool
-		RemoteStart    bool
+		ForcePowerCtrl      bool
+		StackLevelZero      *bool
+		ProfileKindRelative bool
+		RemoteStart         bool
 	}{
 		Connector:      1,
 		MeterInterval:  10 * time.Second,
@@ -85,11 +87,12 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 	}
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
+	profileKindRelative := cc.ProfileKindRelative
 
 	c, err := NewOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		cc.ForcePowerCtrl, stackLevelZero, cc.RemoteStart,
+		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart,
 		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
@@ -143,7 +146,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.C
 func NewOCPP(ctx context.Context,
 	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	forcePowerCtrl, stackLevelZero, remoteStart bool,
+	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
@@ -184,10 +187,11 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
-		log:            log,
-		cp:             cp,
-		conn:           conn,
-		stackLevelZero: stackLevelZero,
+		log:                 log,
+		cp:                  cp,
+		conn:                conn,
+		stackLevelZero:      stackLevelZero,
+		profileKindRelative: profileKindRelative,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -328,12 +332,17 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	res := &types.ChargingProfile{
 		ChargingProfileId:      c.cp.ChargingProfileId,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
-		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
-			StartSchedule:          types.NewDateTime(time.Now().Add(-time.Minute)),
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
+	}
+
+	if c.profileKindRelative {
+		res.ChargingProfileKind = types.ChargingProfileKindRelative
+	} else {
+		res.ChargingProfileKind = types.ChargingProfileKindAbsolute
+		res.ChargingSchedule.StartSchedule = types.NewDateTime(time.Now().Add(-time.Minute))
 	}
 
 	if !c.stackLevelZero {

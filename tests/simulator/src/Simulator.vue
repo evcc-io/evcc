@@ -294,18 +294,24 @@ export default defineComponent({
 		},
 		addVehicle() {
 			// push a duplacate of the last entry
-			this.state?.vehicles.push({
-				...this.state.vehicles[this.state.vehicles.length - 1],
-			});
+			const vehicles = this.state?.vehicles;
+			if (!vehicles) return;
+			const lastVehicle = vehicles[vehicles.length - 1];
+			if (lastVehicle) {
+				vehicles.push({ ...lastVehicle });
+			}
 		},
 		removeVehicle(index: number) {
 			this.state?.vehicles.splice(index, 1);
 		},
 		addLoadpoint() {
 			// push a duplacate of the last entry
-			this.state?.loadpoints.push({
-				...this.state.loadpoints[this.state.loadpoints.length - 1],
-			});
+			const loadpoints = this.state?.loadpoints;
+			if (!loadpoints) return;
+			const lastLoadpoint = loadpoints[loadpoints.length - 1];
+			if (lastLoadpoint) {
+				loadpoints.push({ ...lastLoadpoint });
+			}
 		},
 		removeLoadpoint(index: number) {
 			this.state?.loadpoints.splice(index, 1);

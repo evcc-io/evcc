@@ -15,8 +15,8 @@ func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 	vehicle := api.NewMockVehicle(ctrl)
-	// 9 kWh userBatCap => 10 kWh virtualBatCap
-	vehicle.EXPECT().Capacity().Return(float64(9))
+	// 8.5 kWh userBatCap => 10 kWh virtualBatCap (at 85% efficiency)
+	vehicle.EXPECT().Capacity().Return(float64(8.5))
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 	ce.vehicleSoc = 20.0
@@ -39,8 +39,8 @@ func TestSocEstimation(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
-	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
-	var capacity float64 = 9
+	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
+	var capacity float64 = 8.5
 	vehicle.EXPECT().Capacity().Return(capacity)
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
@@ -123,8 +123,8 @@ func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
-	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
-	var capacity float64 = 9
+	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
+	var capacity float64 = 8.5
 	vehicle.EXPECT().Capacity().Return(capacity)
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
@@ -214,6 +214,7 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 
 	// https://github.com/evcc-io/evcc/pull/7510#issuecomment-1512688548
+	// Updated for 85% charge efficiency (previously 90%)
 	tc := []struct {
 		capacity    float64
 		soc         float64
@@ -221,14 +222,14 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 		chargePower float64
 		duration    time.Duration
 	}{
-		{0.75, 10, 60, 300, 1*time.Hour + 23*time.Minute + 20*time.Second},
-		{0.75, 50, 100, 300, 1*time.Hour + 23*time.Minute + 20*time.Second},
-		{17, 10, 60, 7 * 1e3, 1*time.Hour + 20*time.Minute + 57*time.Second},
-		{17, 50, 100, 7 * 1e3, 1*time.Hour + 28*time.Minute + 23*time.Second},
-		{50, 10, 60, 11 * 1e3, 2*time.Hour + 31*time.Minute + 31*time.Second},
-		{50, 50, 100, 11 * 1e3, 2*time.Hour + 57*time.Minute + 17*time.Second},
-		{80, 10, 60, 22 * 1e3, 2*time.Hour + 0o1*time.Minute + 13*time.Second},
-		{80, 50, 100, 22 * 1e3, 2*time.Hour + 48*time.Minute + 39*time.Second},
+		{0.75, 10, 60, 300, 1*time.Hour + 28*time.Minute + 14*time.Second},
+		{0.75, 50, 100, 300, 1*time.Hour + 28*time.Minute + 14*time.Second},
+		{17, 10, 60, 7 * 1e3, 1*time.Hour + 25*time.Minute + 43*time.Second},
+		{17, 50, 100, 7 * 1e3, 1*time.Hour + 33*time.Minute + 35*time.Second},
+		{50, 10, 60, 11 * 1e3, 2*time.Hour + 40*time.Minute + 26*time.Second},
+		{50, 50, 100, 11 * 1e3, 3*time.Hour + 7*time.Minute + 43*time.Second},
+		{80, 10, 60, 22 * 1e3, 2*time.Hour + 8*time.Minute + 21*time.Second},
+		{80, 50, 100, 22 * 1e3, 2*time.Hour + 58*time.Minute + 34*time.Second},
 	}
 
 	for _, tc := range tc {

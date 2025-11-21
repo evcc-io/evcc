@@ -3,7 +3,7 @@
 		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
-		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block evcc-gray mb-1">
+		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block text-warning mb-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
 		</span>
 		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mb-1">
@@ -49,7 +49,7 @@ export default defineComponent({
 				return null;
 			}
 			const { plan } = this.plan;
-			return plan[plan.length - 1].end;
+			return plan[plan.length - 1]!.end;
 		},
 		overrunFmt(): string {
 			if (!this.planOverrun) {

@@ -5,7 +5,7 @@ import { ChildProcess } from "child_process";
 
 test.use({ baseURL: baseUrl() });
 
-let instance: ChildProcess;
+let instance: ChildProcess | undefined;
 
 test.beforeAll(async () => {
   instance = await start(undefined, undefined, "--demo");

@@ -2,7 +2,7 @@ package vehicle
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -51,7 +51,7 @@ func init() {
 //go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
 
 // NewTronityFromConfig creates a new vehicle
-func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials

@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewOpenWBFromConfig creates a new configurable meter
-func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewOpenWBFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		mqtt.Config     `mapstructure:",squash"`
 		Topic           string
@@ -139,7 +139,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	res := m.Decorate(nil, currents, nil, nil, soc, capacity, nil, nil, nil)
+	res := m.Decorate(nil, currents, nil, nil, soc, capacity, nil, nil, nil, nil)
 
 	return res, nil
 }

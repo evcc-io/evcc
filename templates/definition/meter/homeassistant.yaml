@@ -1,0 +1,132 @@
+template: homeassistant
+products:
+  - brand: Home Assistant
+    description:
+      de: Meter
+      en: Meter
+group: generic
+requirements:
+  description:
+    en: Home Assistant instance with API access
+    de: Home Assistant Instanz mit API-Zugriff
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "aux", "charge"]
+  - name: uri
+    required: true
+    example: "http://homeassistant.local:8123"
+  - name: token
+    description:
+      de: Home Assistant Long-Lived Access Token
+      en: Home Assistant Long-Lived Access Token
+    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+    required: true
+    mask: true
+  - name: power
+    description:
+      de: Leistungsentität
+      en: Power Entity
+    required: true
+    example: "sensor.house_power"
+    help:
+      en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").
+      de: Entitäts-ID für momentane Leistungsmessung in Watt. Die Entität muss nur numerische Werte liefern (z.B. "1234", nicht "1234 W").
+  - name: energy
+    description:
+      de: Energieentität
+      en: Energy Entity
+    example: "sensor.house_energy"
+    advanced: true
+    help:
+      en: Entity ID for cumulative energy measurement in kWh. Should provide total energy consumed/produced, not daily or interval values.
+      de: Entitäts-ID für kumulative Energiemessung in kWh. Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
+  - name: currentL1
+    description:
+      de: L1 Stromentität
+      en: L1 Current Entity
+    example: "sensor.house_current_l1"
+    advanced: true
+    help:
+      en: Entity ID for L1 current measurement in amperes
+      de: Entitäts-ID für L1 Strommessung in Ampere
+  - name: currentL2
+    description:
+      de: L2 Stromentität
+      en: L2 Current Entity
+    example: "sensor.house_current_l2"
+    advanced: true
+    help:
+      en: Entity ID for L2 current measurement in amperes
+      de: Entitäts-ID für L2 Strommessung in Ampere
+  - name: currentL3
+    description:
+      de: L3 Stromentität
+      en: L3 Current Entity
+    example: "sensor.house_current_l3"
+    advanced: true
+    help:
+      en: Entity ID for L3 current measurement in amperes
+      de: Entitäts-ID für L3 Strommessung in Ampere
+  - name: voltageL1
+    description:
+      de: L1 Spannungsentität
+      en: L1 Voltage Entity
+    example: "sensor.house_voltage_l1"
+    advanced: true
+    help:
+      en: Entity ID for L1 voltage measurement in volts
+      de: Entitäts-ID für L1 Spannungsmessung in Volt
+  - name: voltageL2
+    description:
+      de: L2 Spannungsentität
+      en: L2 Voltage Entity
+    example: "sensor.house_voltage_l2"
+    advanced: true
+    help:
+      en: Entity ID for L2 voltage measurement in volts
+      de: Entitäts-ID für L2 Spannungsmessung in Volt
+  - name: voltageL3
+    description:
+      de: L3 Spannungsentität
+      en: L3 Voltage Entity
+    example: "sensor.house_voltage_l3"
+    advanced: true
+    help:
+      en: Entity ID for L3 voltage measurement in volts
+      de: Entitäts-ID für L3 Spannungsmessung in Volt
+  - name: soc
+    description:
+      de: Batterieladestand
+      en: Battery State of Charge
+    example: "sensor.battery_soc"
+    advanced: true
+    help:
+      en: Entity ID for battery state of charge in percent
+      de: Entitäts-ID für Batterieladestand in Prozent
+  - name: capacity
+  - name: minsoc
+  - name: maxsoc
+  - name: maxchargepower
+  - name: maxdischargepower
+  - name: maxacpower
+render: |
+  type: homeassistant
+  uri: {{ .uri }}
+  token: {{ .token }}
+  power: {{ .power }}
+  energy: {{ .energy }}
+  currents:
+    - {{ .currentL1 }}
+    - {{ .currentL2 }}
+    - {{ .currentL3 }}
+  voltages:
+    - {{ .voltageL1 }}
+    - {{ .voltageL2 }}
+    - {{ .voltageL3 }}
+  maxacpower: {{ .maxacpower }} # W
+  soc: {{ .soc }}
+  capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %

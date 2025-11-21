@@ -29,6 +29,14 @@ func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Ra
 	return res
 }
 
+// func dumpRates(rr api.Rates) string {
+// 	var b []byte
+// 	for _, r := range rr {
+// 		b = fmt.Appendf(b, "%+v\n", r)
+// 	}
+// 	return string(b)
+// }
+
 // TODO start before start of rates
 
 func TestPlan(t *testing.T) {
@@ -269,7 +277,7 @@ func TestPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	trf := api.NewMockTariff(ctrl)
-	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 1, 2, 3}, clock.Now(), time.Hour), nil)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{1, 2, 3, 4}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
 		log:    util.NewLogger("foo"),
@@ -282,37 +290,47 @@ func TestPrecondition(t *testing.T) {
 		{
 			Start: clock.Now().Add(3 * time.Hour),
 			End:   clock.Now().Add(4 * time.Hour),
-			Value: 3,
+			Value: 4,
 		},
 	}, plan, "expected last slot")
 
+	// NOTE: with 15min slots we no longer expect late start of the slot
 	plan = p.Plan(2*time.Hour, time.Hour, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
 			End:   clock.Now().Add(1 * time.Hour),
-			Value: 0,
+			Value: 1,
 		},
 		{
 			Start: clock.Now().Add(3 * time.Hour),
 			End:   clock.Now().Add(4 * time.Hour),
-			Value: 3,
+			Value: 4,
 		},
 	}, plan, "expected two slots")
 
 	plan = p.Plan(time.Hour, 30*time.Minute, clock.Now().Add(4*time.Hour))
 	assert.Equal(t, api.Rates{
 		{
-			Start: clock.Now().Add(30 * time.Minute),
-			End:   clock.Now().Add(time.Hour),
-			Value: 0,
+			Start: clock.Now(),
+			End:   clock.Now().Add(30 * time.Minute),
+			Value: 1,
 		},
 		{
-			Start: clock.Now().Add(210 * time.Minute),
-			End:   clock.Now().Add(4 * time.Hour),
-			Value: 3,
+			Start: clock.Now().Add(210 * time.Minute), // 3.5h
+			End:   clock.Now().Add(4 * time.Hour),     // 4.0h
+			Value: 4,
 		},
 	}, plan, "expected short early and split late slot")
+
+	plan = p.Plan(time.Hour, 24*time.Hour, clock.Now().Add(4*time.Hour))
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now().Add(3 * time.Hour),
+			End:   clock.Now().Add(4 * time.Hour),
+			Value: 4,
+		},
+	}, plan, "all precondition")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {

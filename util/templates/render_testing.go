@@ -9,7 +9,7 @@ import (
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
-func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
+func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map[string]any)) {
 	t.Helper()
 
 	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
@@ -19,7 +19,7 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 		return
 	}
 
-	var instance interface{}
+	var instance any
 	if err := yaml.Unmarshal(b, &instance); err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -34,12 +34,10 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 	cb(values)
 }
 
-func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
+func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]any)) {
 	t.Parallel()
 
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
-		tmpl := tmpl
-
 		// set default values for all params
 		values := tmpl.Defaults(RenderModeUnitTest)
 
@@ -67,7 +65,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, values, func(values map[string]interface{}) {
+				test(t, tmpl, values, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})
@@ -84,7 +82,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, usageValues, func(values map[string]interface{}) {
+				test(t, tmpl, usageValues, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})

@@ -19,18 +19,18 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title          string                    `json:"title"`
-	Icon           string                    `json:"icon,omitempty"`
-	Capacity       float64                   `json:"capacity,omitempty"`
-	Phases         int                       `json:"phases,omitempty"`
-	MinSoc         int                       `json:"minSoc,omitempty"`
-	LimitSoc       int                       `json:"limitSoc,omitempty"`
-	MinCurrent     float64                   `json:"minCurrent,omitempty"`
-	MaxCurrent     float64                   `json:"maxCurrent,omitempty"`
-	Priority       int                       `json:"priority,omitempty"`
-	Features       []string                  `json:"features,omitempty"`
-	Plan           *planStruct               `json:"plan,omitempty"`
-	RepeatingPlans []api.RepeatingPlanStruct `json:"repeatingPlans"`
+	Title          string              `json:"title"`
+	Icon           string              `json:"icon,omitempty"`
+	Capacity       float64             `json:"capacity,omitempty"`
+	Phases         int                 `json:"phases,omitempty"`
+	MinSoc         int                 `json:"minSoc,omitempty"`
+	LimitSoc       int                 `json:"limitSoc,omitempty"`
+	MinCurrent     float64             `json:"minCurrent,omitempty"`
+	MaxCurrent     float64             `json:"maxCurrent,omitempty"`
+	Priority       int                 `json:"priority,omitempty"`
+	Features       []string            `json:"features,omitempty"`
+	Plan           *planStruct         `json:"plan,omitempty"`
+	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -39,14 +39,17 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		var plan *planStruct
+		instance := v.Instance()
+		if instance == nil {
+			continue
+		}
 
+		ac := instance.OnIdentified()
+
+		var plan *planStruct
 		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
 			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
 		}
-
-		instance := v.Instance()
-		ac := instance.OnIdentified()
 
 		res[v.Name()] = vehicleStruct{
 			Title:          instance.GetTitle(),

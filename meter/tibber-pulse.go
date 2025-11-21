@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
@@ -46,7 +47,7 @@ type Tibber struct {
 	data *util.Monitor[tibber.LiveMeasurement]
 }
 
-func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Token   string
 		HomeID  string
@@ -109,34 +110,32 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		WithConnectionParams(map[string]any{
 			"token": cc.Token,
 		}).
-		WithRetryTimeout(15 * time.Second). // Retry 15 seconds (3 tries), then exit to outer retry loop that has backoff
-		WithRetryDelay(5 * time.Second).
+		WithRetryTimeout(20 * time.Second). // 2 tries, then exit to outer retry loop that has backoff
+		WithRetryDelay(10 * time.Second).
 		WithWriteTimeout(request.Timeout).
 		WithReadTimeout(90 * time.Second).
 		WithLog(log.TRACE.Println).
 		OnConnected(func() {
-			log.INFO.Println("Tibber pulse: websocket connected")
+			log.DEBUG.Println("websocket connected")
 		}).
 		OnDisconnected(func() {
-			log.WARN.Println("Tibber pulse: websocket disconnected")
+			log.WARN.Println("websocket disconnected")
 		}).
 		OnSubscriptionComplete(func(_ graphql.Subscription) {
-			log.WARN.Println("Tibber pulse: websocket subscription completed by server")
+			log.DEBUG.Println("websocket subscription completed by server")
 		}).
 		OnError(func(sc *graphql.SubscriptionClient, err error) error {
-			// Don't let Hasura go graphql client reconnect when authorization fails
+			// Don't let graphql client reconnect when authorization fails
 			if sc.IsUnauthorized(err) {
-				log.ERROR.Printf("Tibber pulse: Unauthorized: %v", err)
 				return err
 			}
 			// Don't let Hasura	go graphql client reconnect when too many initialisation requests
 			// Reconnection will be attempted in the loop later
 			if sc.IsTooManyInitialisationRequests(err) {
-				log.ERROR.Printf("Tibber pulse: Too many initialisation requests: %v", err)
 				return err
 			}
 
-			log.ERROR.Printf("Tibber pulse: error occurred: %v", err)
+			log.ERROR.Printf("error occurred: %v", err)
 			return nil
 		})
 
@@ -162,7 +161,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		}
 	}()
 
-	reconnectCount := 0
 	go func() {
 		// The pulse sometimes declines valid(!) subscription requests, and asks the client to disconnect.
 		// Therefore we need to restart the client when exiting gracefully upon server request
@@ -173,47 +171,46 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 		// 2. This loop, which is triggered server when Hasura exits on error or gracefully
 		// 3. evcc itself restarts if the client exits with an error
 
-		// Exponential backoff parameters
-		baseDelay := 5 * time.Second
-		maxDelay := 5 * time.Hour
-		delay := baseDelay
+		var reconnectCount int
+
+		bo := backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(30*time.Second),
+			backoff.WithMaxInterval(10*time.Minute),
+			backoff.WithMaxElapsedTime(0),
+		)
 
 		for {
 			reconnectCount++
-			log.INFO.Printf("Tibber pulse: Hasura go graphql client connection attempt #%d", reconnectCount)
+			log.DEBUG.Printf("graphql client connection attempt #%d", reconnectCount)
 
 			startTime := time.Now()
 			err := client.Run()
 			duration := time.Since(startTime).Round(time.Second)
+
 			if err != nil {
-				log.ERROR.Printf("Tibber pulse: Hasura go graphql client exited with error at %s: %v", duration, err)
+				log.ERROR.Printf("graphql client exited with error at %s: %v", duration, err)
 				// Do not retry if unauthorized
 				if client.IsUnauthorized(err) {
-					log.ERROR.Println("Tibber pulse: Not retrying due to unauthorized error.")
+					log.ERROR.Println("Not retrying due to unauthorized error.")
 					return
 				}
-				// Exponential backoff: double the delay, up to maxDelay
-				delay *= 2
-				if delay > maxDelay {
-					delay = maxDelay
-				}
 			} else {
-				log.INFO.Printf("Tibber pulse: Hasura go graphql client exited gracefully at %s", duration)
-				// Reset delay after successful connection
-				delay = baseDelay
+				log.DEBUG.Printf("graphql client exited gracefully at %s", duration)
+				bo.Reset()
 			}
+
+			delay := bo.NextBackOff()
 
 			select {
 			case <-time.After(delay):
-				log.INFO.Printf("Tibber pulse: Reconnection timer triggered after %s, attempting reconnect", delay)
+				log.DEBUG.Printf("reconnecting after %v backoff delay", delay)
 			case <-ctx.Done():
-				log.INFO.Println("Tibber pulse: Context canceled, exit reconnection loop")
 				return
 			}
 		}
 	}()
 
-	log.INFO.Printf("!! User-Agent set to %s", getUserAgent())
+	log.DEBUG.Printf("!! User-Agent set to %s", getUserAgent())
 
 	return t, nil
 }
@@ -227,7 +224,7 @@ func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string, lo
 		"homeId": graphql.ID(homeID),
 	}, func(data []byte, err error) error {
 		if err != nil {
-			log.ERROR.Printf("Tibber pulse: Error during subscription: %v", err)
+			log.ERROR.Printf("Error during subscription: %v", err)
 			return err
 		}
 
@@ -236,7 +233,7 @@ func (t *Tibber) subscribe(client *graphql.SubscriptionClient, homeID string, lo
 		}
 
 		if err := json.Unmarshal(data, &res); err != nil {
-			log.ERROR.Printf("Tibber pulse: Error unmarshaling data: %v", err)
+			log.ERROR.Printf("Error unmarshaling data: %v", err)
 			return err
 		}
 

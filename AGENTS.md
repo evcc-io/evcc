@@ -198,7 +198,9 @@ This file provides guidance to AI coding agents when working with code in this r
 - **Examples**:
   - `page.getByRole("button", { name: "Add charger" })`
   - `page.getByLabel("Manufacturer").selectOption("Demo charger")`
+  - `page.getByRole("listitem", { name: "Draggable: First Loadpoint" })` (using aria-label)
   - `page.getByTestId("loadpoint")` (fallback only)
+- never use `.locator()` or `class` and `id`-based selectors
 
 ### Test Patterns
 

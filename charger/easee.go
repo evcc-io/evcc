@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -74,7 +74,7 @@ func init() {
 }
 
 // NewEaseeFromConfig creates a Easee charger from generic config
-func NewEaseeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		User      string
 		Password  string
@@ -202,7 +202,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 }
 
 func (c *Easee) waitForOptionalState() {
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		if c.optionalStatePresent() {
 			return
 		}

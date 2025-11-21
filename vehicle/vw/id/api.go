@@ -75,6 +75,19 @@ func (v *API) Status(vin string) (res Status, err error) {
 	return res, err
 }
 
+// ParkingPosition implements the /parkingposition response
+func (v *API) ParkingPosition(vin string) (ParkingPosition, error) {
+	var res ParkingPosition
+	uri := fmt.Sprintf("%s/vehicles/%s/parkingposition", BaseURL, vin)
+
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
 // Action implements vehicle actions
 func (v *API) Action(vin, action, value string) error {
 	uri := fmt.Sprintf("%s/vehicles/%s/%s/%s", BaseURL, vin, action, value)
@@ -82,7 +95,7 @@ func (v *API) Action(vin, action, value string) error {
 	req, err := request.New(http.MethodPost, uri, nil, request.AcceptJSON)
 
 	if err == nil {
-		var res interface{}
+		var res any
 		err = v.DoJSON(req, &res)
 	}
 
@@ -90,14 +103,14 @@ func (v *API) Action(vin, action, value string) error {
 }
 
 // Any implements any api response
-func (v *API) Any(uri, vin string) (interface{}, error) {
+func (v *API) Any(uri, vin string) (any, error) {
 	if strings.Contains(uri, "%s") {
 		uri = fmt.Sprintf(uri, vin)
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
-	var res interface{}
+	var res any
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -59,7 +59,7 @@ func init() {
 }
 
 // NewEm2GoDuoFromConfig creates a Em2GoDuo charger from generic config
-func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int

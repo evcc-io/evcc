@@ -22,18 +22,18 @@ func init() {
 	registry.Add("lgess15", NewLgEss15FromConfig)
 }
 
-//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
 
-func NewLgEss8FromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewLgEss8FromConfig(other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
 }
 
-func NewLgEss15FromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewLgEss15FromConfig(other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss15)
 }
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
-func NewLgEssFromConfig(other map[string]interface{}, essType lgpcs.Model) (api.Meter, error) {
+func NewLgEssFromConfig(other map[string]any, essType lgpcs.Model) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity        `mapstructure:",squash"`
 		batterySocLimits       `mapstructure:",squash"`
@@ -79,15 +79,18 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 
 	// decorate battery
 	var batterySoc func() (float64, error)
+	var batterySocLimiter func() (float64, float64)
 	var setBatteryMode func(api.BatteryMode) error
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+		batterySocLimiter = batterySocLimits.Decorator()
+
 		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7430 {
 			setBatteryMode = m.batteryMode(batterySocLimits)
 		}
 	}
 
-	return decorateLgEss(m, totalEnergy, batterySoc, setBatteryMode, capacity), nil
+	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, setBatteryMode), nil
 }
 
 // CurrentPower implements the api.Meter interface

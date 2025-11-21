@@ -58,14 +58,16 @@
           "heating": "Egendefinierad värmare"
         },
         "heatpump": "Egendefinierad värmepump",
-        "sgready": "Egendefinierad värmepump (sg-ready, alla)",
-        "sgready-boost": "Egendefinierad värmepump (sg-ready, boost)",
+        "sgready": "Egendefinierad värmepump (sg-ready via plugins)",
+        "sgready-boost": "Användardefinierad värmepump (sg-ready-boost, föråldrad)",
+        "sgready-relay": "Egendefinierad värmepump (sg-ready via reläer)",
         "switchsocket": "Egendefinierad strömbrytare"
       }
     },
     "circuits": {
       "description": "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki.",
-      "title": "Belastningshantering"
+      "title": "Belastningshantering",
+      "usableMeters": "Mätarreferenser som kan användas"
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
@@ -93,12 +95,14 @@
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "dimmed": "Nedtonad",
       "enabled": "Aktiverad",
       "energy": "Energi",
       "feedinPrice": "Inmatningspris",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
-      "hemsType": "System",
+      "hemsActiveLimit": "Aktiv begränsning",
+      "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -116,7 +120,7 @@
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
-      "vehicleLimitSoc": "Fordonsbegränsning",
+      "vehicleLimitSoc": "Laddgräns",
       "yes": "ja"
     },
     "deviceValueChargeStatus": {
@@ -124,9 +128,14 @@
       "B": "B (ansluten)",
       "C": "C (laddar)"
     },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via relä"
+    },
     "devices": {
       "auxMeter": "Smart förbrukare",
       "batteryStorage": "Batterilager",
+      "consumer": "Brukare",
       "solarSystem": "Solanläggning"
     },
     "editor": {
@@ -137,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Kan användas för belastningsstyrning eller statistik.",
-      "titleAdd": "Lägg till extern mätare",
-      "titleEdit": "Ändra extern mätare"
+      "description": "Registrerar energivärden för brukare som inte hanteras av evcc (t.ex. kylskåp, tvättmaskin etc.) för statistiska ändamål. Mätarna kan också användas för lastreglering (t.ex. underdistribution).",
+      "titleAdd": "Lägg till extern förbrukares mätare",
+      "titleEdit": "Ändra extern förbrukares mätare"
     },
     "form": {
       "danger": "Fara",
@@ -148,12 +157,18 @@
       "optional": "valfri"
     },
     "general": {
+      "applyAndClose": "Använd & stäng",
       "cancel": "Avbryt",
+      "close": "Stäng",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
       "docsLink": "Se dokumentation.",
+      "dragHandle": "Senarelägga",
+      "dragItem": "Går att senarelägga: {title}",
+      "dragList": "Sorterbar lista",
       "experimental": "Experimentell",
+      "forceSave": "Spara ändå",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "noFileSelected": "Ingen fil vald.",
@@ -162,12 +177,17 @@
       "password": "Lösenord",
       "readFromFile": "Läs från fil",
       "remove": "Ta bort",
+      "required": "nödvändig",
+      "reset": "Nollställ",
       "save": "Spara",
+      "saved": "Sparad.",
+      "saving": "Sparar…",
       "selectFile": "Bläddra",
       "showAdvancedSettings": "Visa avancerade inställningar",
       "telemetry": "Telemetri",
       "templateLoading": "Laddar...",
       "title": "Titel",
+      "typeDeprecated": "Typen '{type}' är föråldrad och kommer att tas bort i en framtida version. Kontrollera ändringsloggen och återskapa den här enheten.",
       "validateSave": "Validera & spara"
     },
     "grid": {
@@ -176,11 +196,12 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
-      "description": "Anslut evcc till annat energistyrningssystem i hemmet.",
+      "description": "Effektbegränsning mha externt system (tex. §14a EnWG styrbox). Fordrar lasthanteringskonfiguration.",
       "title": "HEMS"
     },
     "icon": {
-      "change": "ändra"
+      "change": "ändra",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Skriver laddata och andra mätningar till InfluxDB. Använd Grafana eller andra verktyg för att visualisera data.",
@@ -243,7 +264,7 @@
       "noVehicles": "Inga fordon är konfigurerade.",
       "option": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmare"
+        "heating": "Lägg till värmningsenhet"
       },
       "phases1p": "1-fas",
       "phases3p": "3-fas",
@@ -266,23 +287,23 @@
       "save": "Spara",
       "showAllSettings": "Visa alla inställningar",
       "solarBehaviorCustomHelp": "Definera dina egna aktiverings- och deaktiverings-tröskelvärden och fördröjningar.",
-      "solarBehaviorDefaultHelp": "Ladda endast med solenergiöverskott. Starta efter {enableDelay} av överskott. Stanna när överskottet går under {disableDelay}.",
-      "solarBehaviorLabel": "Solenergi inställningar",
+      "solarBehaviorDefaultHelp": "Starta efter {enableDelay} av tillräckligt överskott. Stanna när det inte är tillräckligt överskottet i {disableDelay}.",
+      "solarBehaviorLabel": "Solöverskott",
       "solarModeCustom": "egen",
       "solarModeMaximum": "maximal solenergi",
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
       "thresholdDisableHelpInvalid": "Ange ett positivt värde.",
-      "thresholdDisableHelpPositive": "Sluta ladda när mer än {power} under {delay} används från elnätet.",
-      "thresholdDisableHelpZero": "Sluta när minimum laddningseffekt inte kan uppfyllas under {delay}.",
+      "thresholdDisableHelpPositive": "Sluta när mer än {power} används från elnätet i {delay} .",
+      "thresholdDisableHelpZero": "Sluta när minimum effekt inte kan uppfyllas under {delay}.",
       "thresholdDisableLabel": "Koppla bort elnätet",
       "thresholdEnableDelayLabel": "Slå på fördröjning",
       "thresholdEnableHelpInvalid": "Ange ett negativt värde.",
-      "thresholdEnableHelpNegative": "Börjar ladda när {surplus} överskott finns i {delay}.",
-      "thresholdEnableHelpZero": "Starta när minimum överskott av laddningseffekt finns i {delay}.",
+      "thresholdEnableHelpNegative": "Starta när {surplus} överskott finns i {delay}.",
+      "thresholdEnableHelpZero": "Starta när minimum av nödvändig effekt finns i {delay}.",
       "thresholdEnableLabel": "Anslut elnätet",
       "titleAdd": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmare",
+        "heating": "Lägg till värmningsenhet",
         "unknown": "Lägg till laddare eller värmare"
       },
       "titleEdit": {
@@ -304,7 +325,7 @@
     "main": {
       "addAdditional": "Lägg till ytterligare mätare",
       "addGrid": "Lägg till elmätare",
-      "addLoadpoint": "Lägg till laddbox",
+      "addLoadpoint": "Lägg till laddare eller värmekälla",
       "addPvBattery": "Lägg till solceller eller batteri",
       "addTariffs": "Lägg till tariffer",
       "addVehicle": "Lägg till fordon",
@@ -328,13 +349,22 @@
       "option": {
         "aux": "Lägg till enhet som själv anpassar förbrukning",
         "battery": "Lägg till batterimätare",
-        "ext": "Lägg till ytterligare mätare",
+        "ext": "Lägg till vanlig förbrukare",
         "pv": "Lägg till solenergimätare"
       },
       "save": "Spara",
       "specific": "Specifik integration",
       "template": "Tillverkare",
       "titleChoice": "Vad vill du lägga till?",
+      "titleLabel": "Titel",
+      "usage": {
+        "aux": "Själv-reglerande förbrukare",
+        "battery": "Batteri",
+        "charge": "Förbrukare / Laddare",
+        "grid": "Elnät",
+        "label": "Användning",
+        "pv": "Produktion"
+      },
       "validateSave": "Validera & spara"
     },
     "modbus": {
@@ -420,16 +450,28 @@
       "general": "Allmänna",
       "grid": "Elnät",
       "integrations": "Integrationer",
-      "loadpoints": "Laddpunkter",
+      "loadpoints": "Laddare & värmekällor",
       "meter": "Sol & batteri",
       "system": "System",
       "vehicles": "Fordon"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc är utrustad med en integration för SMA Sunny Home Manager (SHM) via SEMP-protokollet. Om den körs på samma nätverk, bör du efter att du har loggat in på ditt Sunny Portal-konto automatiskt erbjudas att lägga till alla laddare som är konfigurerade i evcc. Det bör fungera direkt utan att några justeringar behöver göras nedan.",
+      "descriptionDeviceId": "Hexsträng med 12 tecken. Prefix för alla enheter (laddare, ..).",
+      "descriptionIdPattern": "Identifieringsmönster",
+      "descriptionIds": "I Sunny Portal behöver varje konsumentenhet en unik identifierare. evcc genererar en unik identifierare baserat på din hårdvara. Om du migrerar evcc till en annan hårdvara kan dessa identifierare ändras. Om du vill behålla historiken kan du åsidosätta de genererade identifierarna här. Öppna SEMP-URL:en (/semp) för att kontrollera dina aktuella identifierare.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "Hexsträng med 8 tecken. Generellt prefix för alla entiteter. Evcc använder sitt egna tillverkar-ID som standard.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Tillverkar-ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Du får token från {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
       "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
@@ -447,7 +489,7 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
-          "confirmationText": "Ange ditt lösenord för att ladda hem databasfilen.",
+          "confirmationText": "Ladda hem databasfilen.",
           "description": "Säkerhetskopiera dina data. Denna fil används för att återställa data i händelse av en systemkrasch.",
           "title": "Säkerhetskopia"
         },
@@ -487,6 +529,10 @@
       "description": "Lägg in din energitariff för att beräkna kostnaden för dina laddningar.",
       "title": "Tariffer"
     },
+    "telemetry": {
+      "description": "Konfigurera datadelning för att hjälpa oss förbättra evcc. Ditt privatliv är viktigt för oss och deltagande är helt frivilligt.",
+      "title": "Telemetri"
+    },
     "title": {
       "description": "Visas på huvudskärm och tabbar.",
       "label": "Titel",
@@ -495,7 +541,7 @@
     "validation": {
       "failed": "misslyckades",
       "label": "Status",
-      "running": "validerar…",
+      "running": "Validerar…",
       "success": "lyckades",
       "unknown": "okänd",
       "validate": "validerar"
@@ -627,6 +673,7 @@
     "about": "Om",
     "authProviders": {
       "confirmLogout": "Är du säker på att du vill bryta anslutningen {title}?",
+      "loggedOut": "Du har loggats ut",
       "title": "Auktoriseringsstatus"
     },
     "blog": "Blogg",
@@ -641,7 +688,7 @@
   "help": {
     "discussionsButton": "GitHub diskussioner",
     "documentationButton": "Dokumentation",
-    "issueButton": "Rapportera fel",
+    "issueButton": "Rapportera ett problem",
     "issueDescription": "Hittat ett konstigt eller felaktigt beteende?",
     "logsButton": "Se loggar",
     "logsDescription": "Felsök loggar.",
@@ -657,6 +704,57 @@
     "restartButton": "Omstart",
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inkludera konfiguration och loggar för att hjälpa oss att återskapa problemet snabbt. Vi uppmuntrar till att dela så mycket som möjligt. Status behövs normalt inte.",
+      "include": "inkludera",
+      "lines": "linjer",
+      "logs": "Loggar",
+      "logsDescription": "Senaste loggar kan hjälpa att identifiera problemet.",
+      "showDetails": "visa detaljer",
+      "source": "Källa",
+      "state": "Status",
+      "stateDescription": "Komplett runtime status inklusive laddpunkter, enhets och energiinformation. Inkludera enbart om det efterfrågas.",
+      "title": "Ytterligare information",
+      "uiConfig": "Konfiguration (UI)",
+      "uiConfigDescription": "Konfigurationsinställningar gjorda via webinterface.",
+      "yamlConfig": "Konfiguration (YAML)",
+      "yamlConfigDescription": "Din kompletta konfigurationsfil."
+    },
+    "additionalContext": "Ytterligare upplysningar",
+    "additionalContextPlaceholder": "Eventuellt ytterligare information som kan vara till hjälp...\n- Konfigurationsdetaljer\n- Vad du provat\n- Plattforms och systemupplysningar",
+    "createButtonDiscussion": "Starta en GitHub-diskussion...",
+    "createButtonIssue": "Starta ett GitHub-ärende...",
+    "description": "Fungerar inte din installation som förväntat? Använd denna sida för hjälp eller rapportera problem. Bifoga tillräckligt med upplysningar för att vi ska förstå och kunna reproducera problemet. Gör beskrivningen kort, koncis och enkel att följa.",
+    "helpType": {
+      "discussion": "Behöver du hjälp med inställningarna",
+      "discussionDescription": "Forumdiskussioner ger dig svar.",
+      "issue": "Hittat ett fel",
+      "issueDescription": "Jag är säker på att något är fel och behöver fixas.",
+      "title": "Vilket problem rör det sig om?"
+    },
+    "issueDescription": "Beskrivning",
+    "issueTitle": "Titel",
+    "stepsToReproduce": "Steg för att återskapa",
+    "subTitleDiscussion": "Beskriv ditt problem",
+    "subTitleIssue": "Beskriv ditt problem",
+    "summary": {
+      "confirmationButtonDiscussion": "Starta en GitHub-diskussion",
+      "confirmationButtonIssue": "Skapa GitHub-issue",
+      "copied": "Kopierad!",
+      "copyButton": "Kopiera ytterligare information",
+      "instructions": ":På grund av GitHUb's begränsning av URL-längd görs detta i två steg:",
+      "singleStepDescription": "Klicka på knappen nedan för att öppna GitHub med ett ifyllt formulär med ditt problem. Känsliga data har automatiskt tagits bort men dubbelkolla innan du delar.",
+      "step1Description": "Klicka på knappen nedan för att skapa en GitHub-post med titel, beskrivning och detaljer.",
+      "step2Description": "När posten skapats, återvänd hit för att kopiera ytterligare information nedan och klistra in i ditt GitHub-formulär. Känsliga data har automatiskt tagits bort men dubbelkolla innan du delar.",
+      "stepOneDiscussion": "Steg 1: Skapa en grund-diskussion",
+      "stepOneIssue": "Steg 1: Skapa en grundläggande problemrapport",
+      "stepTwo": "Steg 2: Kopiera ytterligare information",
+      "title": "GitHub problemöversikt"
+    },
+    "title": "Rapportera ett problem",
+    "version": "Version"
   },
   "log": {
     "areaLabel": "Filtrera per område",
@@ -679,7 +777,7 @@
     "iframeIssue": "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP.",
     "invalid": "Ogiltigt lösenord.",
     "login": "Logga in",
-    "password": "Lösenord",
+    "password": "Lösenord administratör",
     "reset": "Återställ lösenord?",
     "title": "Autentisering"
   },
@@ -723,6 +821,7 @@
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
       "loadpoints": "Laddare | Laddare | {count} laddare",
+      "loadpointsLimit": "{limit} begränsning",
       "noEnergy": "Inga mätaruppgifter",
       "pv": "Solanläggning",
       "pvExport": "Export till elnät",
@@ -734,6 +833,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
       "waitForVehicle": "Redo, väntar på värmare…"
+    },
+    "hemsWarning": {
+      "description": "Reducerad laddning för att inte överskrida {limit}.",
+      "title": "Extern begränsning:"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -811,7 +914,7 @@
       "goalReached": "Målet är uppnått",
       "inactiveLabel": "Mål-tid",
       "nextPlan": "Nästa plan",
-      "notReachableInTime": "Laddmål kommer att nås {endTime} senare.",
+      "notReachableInTime": "Laddmål kommer att nås {overrun} senare.",
       "onlyInPvMode": "Laddplan fungerar enbart i sol-läge.",
       "planDuration": "Laddtid",
       "planPeriodLabel": "Period",
@@ -1011,6 +1114,7 @@
     "vehicle": "Fordon"
   },
   "settings": {
+    "deviceInfo": "Inställningar du gör här påverkar endast denna enhet.",
     "fullscreen": {
       "enter": "Till helskärmsläge",
       "exit": "Lämna helskärmsläge",
@@ -1023,6 +1127,12 @@
     "language": {
       "auto": "Automatisk",
       "label": "Språk"
+    },
+    "loadpoints": {
+      "help": "Ändra sortering och synlighet för UI.",
+      "hide": "Göm {title}",
+      "label": "Laddpunkter",
+      "show": "Visa {title}"
     },
     "sponsorToken": {
       "expires": "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera här.",
@@ -1047,18 +1157,19 @@
     "unit": {
       "km": "km",
       "label": "Enheter",
-      "mi": "miles"
+      "mi": "amerikanska mil"
     }
   },
   "smartCost": {
     "activeHours": "{active} av {total}",
-    "activeHoursLabel": "Aktiva timmar",
+    "activeHoursLabel": "Aktiv tid",
     "applyToAll": "Tillämpa överallt?",
     "batteryDescription": "Laddar batteriet med el från nätet.",
     "cheapTitle": "Billig laddning från nätet",
     "cleanTitle": "Laddar grön el från nätet",
     "co2Label": "CO₂ utsläpp",
     "co2Limit": "CO₂ gräns",
+    "enable": "Aktivera begränsning",
     "loadpointDescription": "Aktiverar tillfällig snabbladdning i sol-läge.",
     "modalTitle": "Smartladdning elnät",
     "none": "ingen",
@@ -1069,7 +1180,7 @@
     "saved": "Sparad."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausade timmar",
+    "activeHoursLabel": "Pausad tid",
     "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
     "priceLabel": "Inmatningshastighet",
     "priceLimit": "Inmatningsbegränsning",

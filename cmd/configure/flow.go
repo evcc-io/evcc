@@ -15,7 +15,7 @@ import (
 func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	var err error
 
-	var values map[string]interface{}
+	var values map[string]any
 	var deviceCategory DeviceCategory
 	var supportedDeviceCategories []DeviceCategory
 	var templateItem templates.Template

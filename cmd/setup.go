@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
 	"github.com/evcc-io/evcc/plugin/javascript"
@@ -62,9 +63,8 @@ var conf = globalconfig.All{
 	Interval: 10 * time.Second,
 	Log:      "info",
 	Network: globalconfig.Network{
-		Schema: "http",
-		Host:   "evcc.local",
-		Port:   7070,
+		Host: "",
+		Port: 7070,
 	},
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
@@ -674,6 +674,21 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 	return nil
 }
 
+// setup SHM
+func configureSHM(conf *shm.Config, externalUrl string, site *core.Site, httpd *server.HTTPd) error {
+	if settings.Exists(keys.Shm) {
+		if err := settings.Json(keys.Shm, &conf); err != nil {
+			return err
+		}
+	}
+
+	if err := shm.NewFromConfig(*conf, externalUrl, site, httpd.Addr, httpd.Router()); err != nil {
+		return fmt.Errorf("failed configuring shm: %w", err)
+	}
+
+	return nil
+}
+
 // setup javascript
 func configureJavascript(conf []globalconfig.Javascript) error {
 	for _, cc := range conf {
@@ -695,7 +710,7 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
 		*conf = globalconfig.Hems{}
@@ -713,7 +728,7 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site, httpd *server.HTTPd
 		return fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site, httpd)
+	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
 	}
@@ -735,8 +750,18 @@ func networkSettings(conf *globalconfig.Network) error {
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
+	if host == "" {
+		host = "evcc"
+	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, []string{"path=/"}, nil)
+	internalURL := conf.InternalURL()
+	text := []string{"path=/", "internal_url=" + internalURL}
+
+	if externalURL := conf.ExternalURL(); externalURL != internalURL {
+		text = append(text, "external_url="+externalURL)
+	}
+
+	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
 		return fmt.Errorf("mDNS announcement: %w", err)
 	}
@@ -814,7 +839,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewCachedFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
 	if err != nil {
 		if ce := new(util.ConfigError); errors.As(err, &ce) {
 			return nil, err
@@ -935,12 +960,32 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string) error {
+	var err error
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var data T
+	if err := settings.Yaml(key, new(T), &data); err == nil {
+		settings.SetJson(key, data)
+		log.INFO.Printf("migrated %s setting to JSON", key)
+	}
+
+	return err
+}
+
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
-	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		*conf = []globalconfig.ModbusProxy{}
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
+		// TODO: delete if not needed any more
+		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
 			return err
+		}
+
+		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
+			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
 		}
 	}
 
@@ -1040,7 +1085,7 @@ CONTINUE:
 	return nil
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
 		return site, err
@@ -1122,6 +1167,9 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 	auth.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
+
+	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
+	router.PathPrefix("/oauth").Handler(auth)
 
 	// wire the handler
 	providerauth.Setup(auth, paramC)

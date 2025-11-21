@@ -2,6 +2,7 @@ package push
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"text/template"
 
@@ -62,7 +63,7 @@ func (h *Hub) Add(sender Messenger) {
 
 // apply applies the event template to the content to produce the actual message
 func (h *Hub) apply(ev Event, tmpl string) (string, error) {
-	attr := make(map[string]interface{})
+	attr := make(map[string]any)
 
 	// loadpoint id
 	if ev.Loadpoint != nil {
@@ -72,7 +73,14 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	// get all values from cache
 	for _, p := range h.cache.All() {
 		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
-			attr[p.Key] = p.Val
+			val := p.Val
+
+			// resolve pointers (https://github.com/evcc-io/evcc/issues/24688)
+			if rv := reflect.ValueOf(p.Val); rv.Kind() == reflect.Pointer && !rv.IsNil() {
+				val = rv.Elem().Interface()
+			}
+
+			attr[p.Key] = val
 		}
 	}
 

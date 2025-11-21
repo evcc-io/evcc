@@ -1,6 +1,10 @@
 <template>
 	<div class="app">
-		<router-view :notifications="notifications" :offline="offline"></router-view>
+		<router-view
+			v-if="showRoutes"
+			:notifications="notifications"
+			:offline="offline"
+		></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
@@ -67,20 +71,27 @@ export default defineComponent({
 		batteryModalAvailabe() {
 			return store.state.battery?.length;
 		},
+		showRoutes() {
+			return this.state.startupCompleted;
+		},
+		state() {
+			const { state, uiLoadpoints } = store;
+			return { ...state, uiLoadpoints: uiLoadpoints.value };
+		},
 		globalSettingsProps() {
-			return this.collectProps(GlobalSettingsModal, store.state);
+			return this.collectProps(GlobalSettingsModal, this.state);
 		},
 		batterySettingsProps() {
-			return this.collectProps(BatterySettingsModal, store.state);
+			return this.collectProps(BatterySettingsModal, this.state);
 		},
 		offlineIndicatorProps() {
-			return this.collectProps(OfflineIndicator, store.state);
+			return this.collectProps(OfflineIndicator, this.state);
 		},
 		forecastModalProps() {
-			return this.collectProps(ForecastModal, store.state);
+			return this.collectProps(ForecastModal, this.state);
 		},
 		loginModalProps() {
-			return this.collectProps(LoginModal, store.state);
+			return this.collectProps(LoginModal, this.state);
 		},
 	},
 	watch: {
@@ -178,7 +189,7 @@ export default defineComponent({
 			this.ws.onmessage = (evt) => {
 				try {
 					const msg = JSON.parse(evt.data);
-					if (msg.startup) {
+					if (msg.startupCompleted) {
 						store.reset();
 					}
 					store.update(msg);

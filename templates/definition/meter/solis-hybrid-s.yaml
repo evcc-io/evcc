@@ -3,9 +3,23 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Hybrid Inverter (S Series)
+  - brand: Ginlong
+    description:
+      generic: Solis Storage Inverter (S Series)
   - brand: Axitec
     description:
       generic: AXIhycon 12-15H
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zum Netzladen nutzen zu können ist eine einmalige manuelle Einrichtung notwendig.
+      Navigiere zu "System Settings" > "Storage Mode" im Wechselrichter Menü und aktiviere "Allow grid charging".
+      Wenn die aktive Ladesteuerung dann die "Battery Reserve"-Einstellung anpasst, lädt der Wechselrichter die Batterie aus dem Netz bis zum hier konfigurierten Max SOC Wert auf (Standard: 95%).
+    en: |
+      To use active battery control with grid charging, a one-time manual setup is required.
+      Navigate to "System Settings" > "Storage Mode" in the inverter menu and enable "Allow grid charging".
+      When active battery control adjusts the "Battery Reserve" setting, the inverter will charge the battery from the grid up to the Max SOC setting configured here (Default: 95%).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -17,6 +31,10 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -100,25 +118,13 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: calc
-    mul:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 33149 # Battery power
-        decode: uint32
-    - source: calc
-      add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          type: input
-          address: 33135 # Battery current direction
-          decode: uint16 # 0：charge, 1：discharge
-        scale: 2
-      - source: const
-        value: -1
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      type: input
+      address: 33149 # Battery power
+      decode: int32
+    scale: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -133,5 +139,14 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 43024 # Battery Reserve Mode SOC
+      type: writeholding
+      encoding: uint16
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

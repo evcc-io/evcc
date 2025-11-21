@@ -26,7 +26,9 @@ const (
 	masked       = "***"      // masked indicates a masked config parameter value
 )
 
-var customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+var (
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-relay"}
+)
 
 type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
@@ -105,6 +107,32 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
+func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
+	res := make(map[string]any)
+
+	// check if template has modbus capability
+	hasModbus := len(tmpl.ModbusChoices()) > 0
+
+	for k, v := range conf {
+		if k == "template" {
+			res[k] = v
+			continue
+		}
+
+		// preserve modbus fields if template supports modbus
+		if hasModbus && slices.Contains(templates.ModbusParams, k) {
+			res[k] = v
+			continue
+		}
+
+		if i, _ := tmpl.ParamByName(k); i >= 0 {
+			res[k] = v
+		}
+	}
+
+	return res
+}
+
 func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
@@ -121,7 +149,7 @@ func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any,
 		res[k] = v
 	}
 
-	return res, nil
+	return filterValidTemplateParams(&tmpl, res), nil
 }
 
 func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
@@ -140,7 +168,7 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 		res[k] = v
 	}
 
-	return res, nil
+	return filterValidTemplateParams(&tmpl, res), nil
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
@@ -309,6 +337,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
+	if dev, ok := instance.(api.Dimmer); ok {
+		val, err := dev.Dimmed()
+		makeResult("dimmed", val, err)
+	}
+
 	if dev, ok := instance.(api.Identifier); ok {
 		val, err := dev.Identify()
 		makeResult("identifier", val, err)
@@ -325,6 +358,14 @@ func mergeMaskedAny(old, new any) error {
 type maskedTransformer struct{}
 
 func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	// Only provide transformer for booleans to prevent them from being merged
+	if typ.Kind() == reflect.Bool {
+		return func(dst, src reflect.Value) error {
+			// Keep dst value, don't merge
+			return nil
+		}
+	}
+
 	if typ.Kind() != reflect.String {
 		return nil
 	}

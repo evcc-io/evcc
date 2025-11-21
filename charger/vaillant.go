@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -46,11 +46,12 @@ type Vaillant struct {
 //go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
-func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed           `mapstructure:",squash"`
 		User, Password  string
 		Realm           string
+		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
 		Cache           time.Duration
@@ -85,12 +86,16 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	homes, err := conn.GetHomes()
+	home, err := ensureEx("home", cc.System, func() ([]sensonet.Home, error) {
+		return conn.GetHomes()
+	}, func(home sensonet.Home) (string, error) {
+		return home.SystemID, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	systemId := homes[0].SystemID
+	systemId := home.SystemID
 	heating := cc.HeatingSetpoint > 0
 
 	wwCancel := func() {}

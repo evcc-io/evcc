@@ -72,14 +72,14 @@ type attributes struct {
 }
 
 type EvSettingsRequest struct {
-	LastSettingsUpdateTimestamp    string        `json:"lastSettingsUpdateTimestamp"`
-	DelegatedActivated             bool          `json:"delegatedActivated"`
-	ChargeModeRq                   string        `json:"chargeModeRq"`
-	ChargeTimeStart                string        `json:"chargeTimeStart"`
-	ChargeDuration                 int           `json:"chargeDuration"`
-	PreconditioningTemperature     float64       `json:"preconditioningTemperature"`
-	PreconditioningHeatedStrgWheel bool          `json:"preconditioningHeatedStrgWheel"`
-	PreconditioningHeatedRightSeat bool          `json:"preconditioningHeatedRightSeat"`
-	PreconditioningHeatedLeftSeat  bool          `json:"preconditioningHeatedLeftSeat"`
-	Programs                       []interface{} `json:"programs"`
+	LastSettingsUpdateTimestamp    string  `json:"lastSettingsUpdateTimestamp"`
+	DelegatedActivated             bool    `json:"delegatedActivated"`
+	ChargeModeRq                   string  `json:"chargeModeRq"`
+	ChargeTimeStart                string  `json:"chargeTimeStart"`
+	ChargeDuration                 int     `json:"chargeDuration"`
+	PreconditioningTemperature     float64 `json:"preconditioningTemperature"`
+	PreconditioningHeatedStrgWheel bool    `json:"preconditioningHeatedStrgWheel"`
+	PreconditioningHeatedRightSeat bool    `json:"preconditioningHeatedRightSeat"`
+	PreconditioningHeatedLeftSeat  bool    `json:"preconditioningHeatedLeftSeat"`
+	Programs                       []any   `json:"programs"`
 }

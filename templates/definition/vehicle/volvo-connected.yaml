@@ -12,6 +12,8 @@ requirements:
       4. Beim Anlegen des Fahrzeugs über die UI wird ein Fehler angezeigt.
       5. Öffne einen neuen Tab und gehe auf die evcc Konfigurationsseite. Im Menü oben rechts wird ein Knopf zum Anmelden angezeigt.
       6. Melde dich mit deinem Volvo Account an und erlaube den Zugriff auf die Daten. Ist die Autorisierung erfolgreich, kann das Fahrzeug hinzugefügt werden.
+
+      **HINWEIS:** Volvo erfordert erneutes Login alle 7 Tage. Falls Fahrzeug nicht mehr eingeloggt, Logout/Login im Menü nutzen.
     en: |
       To use with evcc, you need a Volvo account and a Volvo Connected Car API Key.
       1. To do this, create a new application on the [Account page](https://developer.volvocars.com/account/) and save the primary VCC API key.
@@ -20,6 +22,8 @@ requirements:
       4. When adding the vehicle via the UI, an error message is displayed.
       5. Open a new tab and go to the evcc configuration page. A button for logging in will appear in the top right menu.
       6. Log in with your Volvo account and allow access to the data. If the authorization is successful, the vehicle can be added.
+
+      **NOTE:** Volvo enforces re-login every 7 days. Use "hamburger" menu logout/login.
 params:
   - preset: vehicle-common
   - name: vccapikey
@@ -49,6 +53,7 @@ params:
     example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WF0FXX...
+    required: true
   - name: accessToken
     deprecated: true
   - name: refreshToken

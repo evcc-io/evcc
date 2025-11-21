@@ -33,10 +33,10 @@ func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
 
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
-func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity  `mapstructure:",squash"`
 		batterySocLimits `mapstructure:",squash"`
@@ -101,9 +101,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 	// decorate api.Battery
 	var batterySoc func() (float64, error)
+	var batterySocLimiter func() (float64, float64)
 	var batteryMode func(api.BatteryMode) error
+
 	if usage == "battery" {
 		batterySoc = m.batterySoc
+		batterySocLimiter = batterySocLimits.Decorator()
 
 		batteryMode = func(mode api.BatteryMode) error {
 			if mode != api.BatteryNormal {
@@ -154,7 +157,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, batteryMode, capacity), nil
+	return decorateRCT(m, totalEnergy, batterySoc, batterySocLimiter, batteryMode, capacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {

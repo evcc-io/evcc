@@ -36,11 +36,12 @@ func Profile(from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
+	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
 		FROM meters
 		WHERE meter = ? AND ts >= ?
-		GROUP BY strftime("%H:%M", ts)
-		ORDER BY strftime("%H:%M", ts) ASC`, 1, from,
+		GROUP BY strftime("%H:%M", ts, 'localtime')
+		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, 1, from,
 	)
 	if err != nil {
 		return nil, err

@@ -36,13 +36,14 @@ type Circuit struct {
 
 	current float64
 	power   float64
+	dimmed  bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
@@ -147,6 +148,12 @@ func (c *Circuit) GetParent() api.Circuit {
 
 // setParent set parent circuit
 func (c *Circuit) setParent(parent api.Circuit) error {
+	// prevent cyclical dependency
+	for p := parent.GetParent(); p != nil; p = p.GetParent() {
+		if c == p {
+			return fmt.Errorf("cycle detected: %s and %s cannot be mutual parents", c.GetTitle(), parent.GetTitle())
+		}
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
@@ -373,4 +380,25 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	}
 
 	return c.parent.ValidateCurrent(old, new)
+}
+
+func (c *Circuit) Dim(dim bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.dimmed = dim
+}
+
+func (c *Circuit) Dimmed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.dimmed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Dimmed()
 }

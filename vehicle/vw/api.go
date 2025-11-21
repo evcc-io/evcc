@@ -210,8 +210,8 @@ func (v *API) Action(vin, action, value string) error {
 }
 
 // Any implements any api response
-func (v *API) Any(base, vin string) (interface{}, error) {
-	var res interface{}
+func (v *API) Any(base, vin string) (any, error) {
+	var res any
 	uri := fmt.Sprintf("%s/"+strings.TrimLeft(base, "/"), v.baseURI, v.brand, v.country, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
