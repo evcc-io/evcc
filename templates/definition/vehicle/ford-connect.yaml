@@ -17,12 +17,17 @@ params:
       de: Einrichtung unter https://developer.ford.com
       en: Setup at https://developer.ford.com
     required: true
+  - name: redirecturi
+    description:
+      generic: FordConnect API Redirect URL
+    help:
+      de: Einrichtung unter https://developer.ford.com
+      en: Setup at https://developer.ford.com
+    required: true
   - name: accessToken
-    required: true
-    mask: true
+    deprecated: true
   - name: refreshToken
-    required: true
-    mask: true
+    deprecated: true
   - name: vin
     example: WF0FXX...
   - name: cache
@@ -33,8 +38,6 @@ render: |
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
-  tokens:
-    access: {{ .accessToken }}
-    refresh: {{ .refreshToken }}
+  redirecturi: {{ .redirecturi }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}

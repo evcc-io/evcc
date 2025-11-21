@@ -9,20 +9,17 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	ApplicationID = "AFDC085B-377A-4351-B23E-5E1D35FB3700"
-	baseURL       = "https://dah2vb2cprod.b2clogin.com/914d88b1-3523-4bf6-9be4-1b96b4f6f919/oauth2/v2.0/token?p=B2C_1A_signup_signin_common"
-)
+// https://api.vehicle.ford.com/fcon-public/v1/auth/init?client_id=799ef34f-99d3-45b2-939b-95f35abaa735&state=123456&redirect_uri=http://localhost:7070/providerauth/callback
 
-func Oauth2Config(id, secret string) *oauth2.Config {
+func OAuth2Config(id, secret, redirectUri string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  baseURL,
-			TokenURL: baseURL,
+			AuthURL:  "https://api.vehicle.ford.com/fcon-public/v1/auth/init",
+			TokenURL: "https://api.vehicle.ford.com/dah2vb2cprod.onmicrosoft.com/oauth2/v2.0/token",
 		},
-		RedirectURL: "https://localhost:3000",
+		RedirectURL: redirectUri,
 		Scopes: []string{
 			oidc.ScopeOpenID,
 			oidc.ScopeOfflineAccess,
@@ -32,7 +29,7 @@ func Oauth2Config(id, secret string) *oauth2.Config {
 
 // NewIdentity creates FordConnect token source
 func NewIdentity(log *util.Logger, id, secret string, token *oauth2.Token) oauth2.TokenSource {
-	oc := Oauth2Config(id, secret)
+	oc := OAuth2Config(id, secret)
 	client := request.NewClient(log)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
 	return oc.TokenSource(ctx, token)
