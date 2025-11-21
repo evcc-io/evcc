@@ -88,7 +88,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 			}
 		}
 	}
-	return float64(resp.CurrentPower) / 1e3, nil
+	return float64(resp.CurrentPower) / 1e3, err
 }
 
 // ChargedEnergy collects the daily charged energy
