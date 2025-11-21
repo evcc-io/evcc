@@ -321,6 +321,9 @@ func (wb *Kathrein) ChargeDuration() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25427
+// var _ api.ChargeRater = (*Kathrein)(nil)
+
 var _ api.MeterEnergy = (*Kathrein)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
