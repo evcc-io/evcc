@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/plugin/auth"
 	"golang.org/x/oauth2"
 )
 
@@ -28,9 +27,7 @@ func OAuth2Config(id, secret, redirectUri string) *oauth2.Config {
 }
 
 // NewIdentity creates FordConnect token source
-func NewIdentity(log *util.Logger, id, secret string, token *oauth2.Token) oauth2.TokenSource {
-	oc := OAuth2Config(id, secret)
-	client := request.NewClient(log)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
-	return oc.TokenSource(ctx, token)
+func NewIdentity(id, secret, redirectUri string) (oauth2.TokenSource, error) {
+	oc := OAuth2Config(id, secret, redirectUri)
+	return auth.NewOauth(context.Background(), "Ford Connect", "", oc)
 }

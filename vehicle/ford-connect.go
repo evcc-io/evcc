@@ -25,7 +25,8 @@ func NewFordConnectFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials
-		Tokens      Tokens
+		RedirectURI string
+		Tokens_     Tokens // TODO deprecated
 		VIN         string
 		Cache       time.Duration
 	}{
@@ -44,15 +45,13 @@ func NewFordConnectFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	token, err := cc.Tokens.Token()
+	log := util.NewLogger("ford").Redact(cc.VIN)
+	ts, err := connect.NewIdentity(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectURI)
 	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("ford").Redact(cc.VIN)
-	identity := connect.NewIdentity(log, cc.Credentials.ID, cc.Credentials.Secret, token)
-
-	api := connect.NewAPI(log, identity)
+	api := connect.NewAPI(log, ts)
 
 	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v connect.Vehicle) (string, error) {
 		return api.VIN(v.VehicleID)
