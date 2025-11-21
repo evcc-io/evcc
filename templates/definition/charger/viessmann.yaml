@@ -148,6 +148,9 @@ params:
       en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
     default: 45
     type: int
+auth:
+  type: viessmann
+  params: [clientid, redirecturi, gateway]
 render: |
   type: sgready
   getmode:
