@@ -95,9 +95,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
-			return c.MissingMeterCheck(err)
-		}
+		return c.MissingMeterCheck(err)
 	}
 
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
