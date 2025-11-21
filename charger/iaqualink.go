@@ -53,6 +53,8 @@ type IAquaLink struct {
 	cache      time.Duration
 }
 
+var _ api.ChargerEx = (*IAquaLink)(nil)
+
 //go:generate go tool decorate -f decorateIAquaLink -b *IAquaLink -r api.Charger
 
 // NewIAquaLinkFromConfig creates an IAquaLink charger from generic config
