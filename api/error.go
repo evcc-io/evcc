@@ -1,6 +1,10 @@
 package api
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/cenkalti/backoff/v4"
+)
 
 // ErrNotAvailable indicates that a feature is not available
 var ErrNotAvailable = errors.New("not available")
@@ -12,26 +16,32 @@ var ErrMustRetry = errors.New("must retry")
 var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
 
 // ErrMissingCredentials indicates that user/password are missing
-var ErrMissingCredentials = errors.New("missing user/password credentials")
-
-// ErrLoginRequired indicates that retrieving tokens credentials waits for login
-var ErrLoginRequired = errors.New("login required")
+var ErrMissingCredentials = backoff.Permanent(errors.New("missing user/password credentials"))
 
 // ErrMissingToken indicates that access/refresh tokens are missing
-var ErrMissingToken = errors.New("missing token credentials")
+var ErrMissingToken = backoff.Permanent(errors.New("missing token credentials"))
 
 // ErrOutdated indicates that result is outdated
 var ErrOutdated = errors.New("outdated")
 
-// ErrTimeout is the error returned when a timeout happened.
-// Modeled after context.DeadlineError
-var ErrTimeout error = errTimeoutError{}
+// ErrTimeout is the error returned when a timeout happened
+var ErrTimeout error = errors.New("timeout")
 
-type errTimeoutError struct{}
+// LoginRequiredError creates a login error for given auth provider
+func LoginRequiredError(providerAuth string) error {
+	return backoff.Permanent(&ErrLoginRequired{
+		ProviderAuth: providerAuth,
+	})
+}
 
-func (errTimeoutError) Error() string   { return "timeout" }
-func (errTimeoutError) Timeout() bool   { return true }
-func (errTimeoutError) Temporary() bool { return true }
+// ErrLoginRequired indicates that retrieving tokens credentials waits for login
+type ErrLoginRequired struct {
+	ProviderAuth string
+}
+
+func (err *ErrLoginRequired) Error() string {
+	return "login required"
+}
 
 // ErrAsleep indicates that vehicle is asleep. Caller may chose to wake up the vehicle and retry.
 var ErrAsleep error = errAsleep{}

@@ -55,6 +55,18 @@ func init() {
 	registry.AddCtx("zaptec", NewZaptecFromConfig)
 }
 
+// passwordTokenSource implements oauth2.TokenSource for password grant flow
+type passwordTokenSource struct {
+	ctx    context.Context
+	config *oauth2.Config
+	user   string
+	pass   string
+}
+
+func (p passwordTokenSource) Token() (*oauth2.Token, error) {
+	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
+}
+
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
@@ -114,14 +126,19 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		Endpoint: provider.Endpoint(),
 		Scopes: []string{
 			oidc.ScopeOpenID,
-			oidc.ScopeOfflineAccess,
 		},
+	}
+
+	// Create a separate HTTP client for OAuth token requests to avoid circular dependency
+	// (c.Transport will be modified to use oauth2.Transport, which would create a loop)
+	tokenClient := &http.Client{
+		Transport: c.Transport,
 	}
 
 	oauthCtx := context.WithValue(
 		ctx,
 		oauth2.HTTPClient,
-		c.Client,
+		tokenClient,
 	)
 
 	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
@@ -129,8 +146,16 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		return nil, err
 	}
 
+	// Create custom token source that always uses password grant (no refresh tokens)
+	ts := oauth2.ReuseTokenSource(token, passwordTokenSource{
+		ctx:    oauthCtx,
+		config: oc,
+		user:   user,
+		pass:   password,
+	})
+
 	c.Transport = &oauth2.Transport{
-		Source: oc.TokenSource(ctx, token),
+		Source: ts,
 		Base:   c.Transport,
 	}
 

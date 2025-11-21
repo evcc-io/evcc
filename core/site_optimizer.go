@@ -222,6 +222,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen && slot >= 0 {
 					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
 					bat.SGoal[slot] = float32(goal)
+					bat.SMax = max(bat.SMax, float32(goal))
 				} else {
 					site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 				}
