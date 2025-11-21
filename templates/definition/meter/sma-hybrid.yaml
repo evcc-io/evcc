@@ -11,7 +11,7 @@ requirements:
     de: Bei der Nutzung der aktiven Speichersteuerung durch evcc darf die Funktion 'Prognosebasierten Laden' im SMA Portal nicht aktiv sein. Ansonsten kann es zu Konflikten bei der Steuerung des Speichers kommen.
 params:
   - name: usage
-    choice: ["pv", "battery"]
+    choice: ["pv", "battery", "grid"]
     allinone: true
   - name: modbus
     choice: ["tcpip"]
@@ -36,12 +36,21 @@ render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30865 # SMA Modbus Profile: Metering.GridMs.TotWIn
-      type: input
-      decode: int32nan
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 30865 # SMA Modbus Profile: Metering.GridMs.TotWIn
+          type: input
+          decode: int32nan
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 32341 # SMA Modbus Profile: Metering.GridMs.TotWOut
+          type: input
+          decode: int32nan
+        scale: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
