@@ -73,28 +73,21 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	enabled, err := c.plug.IsOn()
-	if err != nil {
-		err = c.RetryHandshake(err)
-		if err == nil {
-			return c.plug.IsOn()
-		}
-	}
-	return enabled, err
+	return c.plug.IsOn()
 }
 
 // CurrentPower provides current power consuption
 func (c *Connection) CurrentPower() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
-		} else {
-			return 0, err
+		err = c.RetryHandshake(err)
+		if err == nil {
+			resp, err = c.plug.GetEnergyUsage()
+			if err != nil {
+				return c.MissingMeterCheck(err)
+			}
 		}
 	}
-
 	return float64(resp.CurrentPower) / 1e3, nil
 }
 
@@ -103,10 +96,7 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
 		if strings.Contains(err.Error(), "-1001") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
-		} else {
-			return 0, err
+			return c.MissingMeterCheck(err)
 		}
 	}
 
@@ -116,6 +106,16 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 	c.lasttodayenergy = int64(resp.TodayEnergy)
 
 	return float64(c.energy) / 1000, nil
+}
+
+// MissingMeterCheck checks for missing meter error
+func (c *Connection) MissingMeterCheck(err error) (float64, error) {
+	if strings.Contains(err.Error(), "-1001") {
+		c.log.DEBUG.Printf("meter not available")
+		return 0, nil
+	} else {
+		return 0, err
+	}
 }
 
 // RetryHandshake retries the handshake on Forbidden errors
