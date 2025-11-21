@@ -8,6 +8,7 @@
 		:size="modalSize"
 		@open="handleOpen"
 		@close="handleClose"
+		@visibilitychange="handleVisibilityChange"
 	>
 		<form ref="form" class="container mx-0 px-0">
 			<slot name="pre-content" :values="values"></slot>
@@ -54,7 +55,21 @@
 						/>
 						<p v-if="authError" class="text-danger">{{ authError }}</p>
 						<div class="d-flex justify-content-end">
+							<div
+								v-if="authProviderUrl"
+								class="d-flex flex-column align-items-end gap-2"
+							>
+								<a :href="authProviderUrl" target="_blank" class="btn btn-primary">
+									{{
+										$t("config.general.authPerform", {
+											provider: authProviderDomain,
+										})
+									}}
+								</a>
+								<small>{{ $t("config.general.authPerformHint") }}</small>
+							</div>
 							<button
+								v-else
 								class="btn btn-outline-primary"
 								:disabled="authLoading"
 								@click.prevent="checkAuthStatus"
@@ -65,7 +80,7 @@
 									role="status"
 									aria-hidden="true"
 								></span>
-								{{ $t("config.general.authorize") }}
+								{{ $t("config.general.authPrepare") }}
 							</button>
 						</div>
 					</div>
@@ -143,6 +158,7 @@ import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
 import { initialTestState, performTest } from "../utils/test";
 import sleep from "@/utils/sleep";
+import { extractDomain } from "@/utils/extractDomain";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType } from "@/types/evcc";
 import {
@@ -227,6 +243,7 @@ export default defineComponent({
 			authOk: false,
 			authLoading: false,
 			authError: null as string | null,
+			authProviderUrl: null as string | null,
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -356,6 +373,9 @@ export default defineComponent({
 				},
 				{} as Record<string, any>
 			);
+		},
+		authProviderDomain() {
+			return this.authProviderUrl ? extractDomain(this.authProviderUrl) : null;
 		},
 	},
 	watch: {
@@ -496,6 +516,9 @@ export default defineComponent({
 			this.loadingTemplate = false;
 		},
 		async checkAuthStatus() {
+			this.authOk = false;
+			this.authProviderUrl = null;
+
 			// no auth required
 			if (!this.template?.Auth) return;
 
@@ -510,6 +533,7 @@ export default defineComponent({
 			if (this.authValuesMissing) return;
 
 			this.authOk = false;
+			this.authProviderUrl = null;
 			const { type } = this.template.Auth;
 			const values = this.authValues;
 			this.authLoading = true;
@@ -531,7 +555,7 @@ export default defineComponent({
 			// trigger external login flow
 			try {
 				this.authLoading = true;
-				await this.device.performLogin(authId);
+				this.authProviderUrl = await this.device.getAuthProviderUrl(authId);
 				this.authLoading = false;
 			} catch (e) {
 				console.error("performAuthLogin failed", e);
@@ -638,6 +662,9 @@ export default defineComponent({
 		},
 		handleRemove() {
 			this.remove();
+		},
+		handleVisibilityChange() {
+			this.checkAuthStatus();
 		},
 		isYamlInputTypeByValue(value: ConfigType): boolean {
 			if (this.isYamlInputType) {

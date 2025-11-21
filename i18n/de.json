@@ -158,7 +158,9 @@
     },
     "general": {
       "applyAndClose": "Übernehmen & schließen",
-      "authorize": "Zugang autorisieren",
+      "authPerform": "Mit {provider} verbinden",
+      "authPerformHint": "Öffnet ein neues Tab. Anschließend hier weiter machen.",
+      "authPrepare": "Verbindung vorbereiten",
       "cancel": "Abbrechen",
       "close": "Schließen",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",

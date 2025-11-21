@@ -177,15 +177,15 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return { success: false, error: "unexpected error" };
   }
 
-  async function performLogin(authId: string) {
+  async function getAuthProviderUrl(authId: string): Promise<string> {
     try {
       const url = `providerauth/login?id=${encodeURIComponent(authId)}`;
       const { status, data = {} } = await baseApi.get(url, {
         validateStatus: (code) => [200, 400].includes(code),
       });
+      //return "https://test.example.org/auth";
       if (status === 200) {
-        window.location.href = data?.loginUri;
-        return;
+        return data?.loginUri;
       }
       throw new Error(data?.error ?? "unknown error");
     } catch (error) {
@@ -202,6 +202,6 @@ export function createDeviceUtils(deviceType: DeviceType) {
     loadProducts,
     loadTemplate,
     checkAuth,
-    performLogin,
+    getAuthProviderUrl,
   };
 }

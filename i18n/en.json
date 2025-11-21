@@ -158,7 +158,9 @@
     },
     "general": {
       "applyAndClose": "Apply & close",
-      "authorize": "Authorize access",
+      "authPerform": "Connect with {provider}",
+      "authPerformHint": "Will open in a new tab. Return here to continue.",
+      "authPrepare": "Prepare connection",
       "cancel": "Cancel",
       "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
