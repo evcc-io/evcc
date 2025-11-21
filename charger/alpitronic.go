@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -252,7 +251,7 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	if !bytes.Equal(b, make([]byte, len(b))) {
+	if !allZero(b) {
 		return hex.EncodeToString(b), nil
 	}
 
@@ -261,7 +260,7 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	if !bytes.Equal(b, make([]byte, len(b))) {
+	if !allZero(b) {
 		return hex.EncodeToString(b), nil
 	}
 
@@ -278,4 +277,13 @@ func (wb *AlpitronicHYC) Soc() (float64, error) {
 	}
 
 	return float64(encoding.Uint16(b)) / 100, nil
+}
+
+func allZero(s []byte) bool {
+	for _, v := range s {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
 }
