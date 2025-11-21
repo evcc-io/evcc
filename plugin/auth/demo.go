@@ -34,11 +34,10 @@ func NewDemo() (oauth2.TokenSource, error) {
 }
 
 func (o *demo) Token() (*oauth2.Token, error) {
-	var err error
 	if o.token == nil {
-		err = api.LoginRequiredError("demo")
+		return nil, api.LoginRequiredError("demo")
 	}
-	return o.token, err
+	return o.token, nil
 }
 
 func (o *demo) Login(_ string) (string, error) {
