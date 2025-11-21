@@ -17,6 +17,8 @@ type Connection struct {
 	plug            tapo.Plug
 	lasttodayenergy int64
 	energy          int64
+	user            string
+	password        string
 }
 
 // NewConnection creates a new Tapo device connection.
@@ -44,18 +46,20 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	conn := &Connection{
-		log:  log,
-		plug: *plug,
+	c := &Connection{
+		log:      log,
+		plug:     *plug,
+		user:     user,
+		password: password,
 	}
 
-	res, err := conn.plug.GetDeviceInfo()
+	res, err := c.plug.GetDeviceInfo()
 	if err != nil {
 		return nil, err
 	}
-	conn.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
+	c.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
-	return conn, nil
+	return c, nil
 }
 
 // Enable implements the api.Charger interface
@@ -69,7 +73,14 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	return c.plug.IsOn()
+	enabled, err := c.plug.IsOn()
+	if err != nil {
+		err = c.RetryHandshake(err)
+		if err == nil {
+			return c.plug.IsOn()
+		}
+	}
+	return enabled, err
 }
 
 // CurrentPower provides current power consuption
@@ -105,4 +116,14 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 	c.lasttodayenergy = int64(resp.TodayEnergy)
 
 	return float64(c.energy) / 1000, nil
+}
+
+// RetryHandshake retries the handshake on Forbidden errors
+func (c *Connection) RetryHandshake(err error) error {
+	if strings.Contains(err.Error(), "Forbidden") {
+		c.log.ERROR.Printf("%s => redoing handshake", err.Error())
+		c.plug = *tapo.NewPlug(c.plug.Addr, nil)
+		return c.plug.Handshake(c.user, c.password)
+	}
+	return err
 }
