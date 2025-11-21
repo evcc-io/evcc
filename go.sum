@@ -8,8 +8,6 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/toml v1.5.0 h1:W5quZX/G/csjUnuI8SUYlsHs9M38FC7znL0lIO+DvMg=
 github.com/BurntSushi/toml v1.5.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
-github.com/Maschga/rct v0.1.2-0.20251110105653-62bb9a81edc7 h1:790lO4BAfwv1gTNa4yslZ84UUNjB7G0yKnl3XTzAQeA=
-github.com/Maschga/rct v0.1.2-0.20251110105653-62bb9a81edc7/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.3.0 h1:B8LGeaivUe71a5qox1ICM/JLl0NqZSW5CHyL+hmvYS0=
@@ -197,6 +195,8 @@ github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0 h1:Qz34Pm1Wr05jjJi
 github.com/evcc-io/ocpp-go v0.0.0-20250322092544-c0c6094051c0/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
 github.com/evcc-io/openapi-mcp v0.6.0 h1:cq8CWG+3gNQ9ID0ZE8MoDHZxgdJmBZ1fFyt5xAfTRfA=
 github.com/evcc-io/openapi-mcp v0.6.0/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
+github.com/evcc-io/rct v0.1.2-0.20251121151844-04c32662cf6f h1:akSiKunHdPxxxfPGvNN+zlW6PdQ59PMXy1+VIW+2gyg=
+github.com/evcc-io/rct v0.1.2-0.20251121151844-04c32662cf6f/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
