@@ -18,19 +18,25 @@ type demo struct {
 	token *oauth2.Token
 }
 
+var demoInstance *demo
+
 func NewDemoFromConfig(_ context.Context, _ map[string]any) (oauth2.TokenSource, error) {
 	return NewDemo()
 }
 
 func NewDemo() (oauth2.TokenSource, error) {
-	o := new(demo)
+	// reuse instance (similar to oauth.go getInstance pattern)
+	if demoInstance != nil {
+		return demoInstance, nil
+	}
 
-	// register auth redirect
-	if _, err := providerauth.Register("demo", o); err != nil {
+	demoInstance = new(demo)
+
+	if _, err := providerauth.Register("demo", demoInstance); err != nil {
 		return nil, err
 	}
 
-	return o, nil
+	return demoInstance, nil
 }
 
 func (o *demo) Token() (*oauth2.Token, error) {
@@ -41,6 +47,11 @@ func (o *demo) Token() (*oauth2.Token, error) {
 }
 
 func (o *demo) Login(_ string) (string, error) {
+	// for demo, immediately authenticate without requiring external flow
+	o.token = &oauth2.Token{
+		AccessToken: "demo-token",
+		Expiry:      time.Now().Add(24 * time.Hour),
+	}
 	// TODO use network settings after https://github.com/evcc-io/evcc/pull/25141
 	return "http://localhost:7070/providerauth/callback", nil
 }
@@ -51,10 +62,7 @@ func (o *demo) Logout() error {
 }
 
 func (o *demo) HandleCallback(params url.Values) error {
-	o.token = &oauth2.Token{
-		AccessToken: "foo",
-		Expiry:      time.Now().Add(24 * time.Hour),
-	}
+	// no-op: token already set in Login()
 	return nil
 }
 
