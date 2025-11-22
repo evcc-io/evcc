@@ -158,6 +158,9 @@
     },
     "general": {
       "applyAndClose": "Appliquer & fermer",
+      "authPerform": "Se connecter à {provider}",
+      "authPerformHint": "Va s’ouvrir dans un nouvel onglet. Revenez ici pour continuer.",
+      "authPrepare": "Préparer la connexion",
       "cancel": "Annuler",
       "close": "Fermer",
       "customHelp": "Créer un appareil sur mesure en utilisant le système de plugins d’evcc.",
@@ -216,7 +219,7 @@
       "labelUrl": "URL",
       "labelUser": "Nom d’utilisateur",
       "title": "InfluxDB",
-      "v1Support": "Besoin d’aide pour InfluxDB 1x?",
+      "v1Support": "Besoin d’aide pour InfluxDB 1x ?",
       "v2Support": "Revenir à InfluxDB 2.x"
     },
     "loadpoint": {
