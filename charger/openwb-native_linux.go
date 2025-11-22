@@ -21,7 +21,7 @@ type OpenWbNative struct {
 	log         *util.Logger
 	rfId        native.RfIdContainer
 	cpWait      time.Duration
-	connector   int
+	gpios       native.ChargePointGPIO
 	chargeState api.ChargeStatus
 }
 
@@ -43,7 +43,9 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		Phases1p3p      bool
 		RfId            string
 		CpWait          time.Duration
-		Connector       int
+		PinCp           int
+		Pin1p           int
+		Pin3p           int
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
@@ -57,20 +59,23 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector)
+	if cc.CpWait < minCpWaitTime {
+		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cc.CpWait.String(), minCpWaitTime)
+	}
+
+	gpios := native.ChargePointGPIO{
+		PIN_CP: cc.PinCp,
+		PIN_1P: cc.Pin1p,
+		PIN_3P: cc.Pin3p,
+	}
+
+	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, gpios)
 }
 
 // NewOpenWbNative creates OpenWbNative charger
-func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int) (api.Charger, error) {
-	if (connector < 1) || (connector > 2) {
-		return nil, fmt.Errorf("invalid connector value: %d", connector)
-	}
-	if cpWait < minCpWaitTime {
-		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cpWait.String(), minCpWaitTime)
-	}
-
+func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, gpios native.ChargePointGPIO) (api.Charger, error) {
 	log := util.NewLogger("openwb-native")
-	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, connector %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), connector)
+	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, CP %d, 1P %d, 3P %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), gpios.PIN_CP, gpios.PIN_1P, gpios.PIN_3P)
 
 	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
@@ -81,7 +86,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		Charger:     evse,
 		log:         log,
 		cpWait:      cpWait,
-		connector:   connector,
+		gpios:       gpios,
 		chargeState: api.StatusNone,
 	}
 
@@ -109,7 +114,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, fmt.Errorf("failed to open GPIO: %w", err)
 	}
 
-	for _, pin := range structs.Fields(native.ChargePoints[connector-1]) {
+	for _, pin := range structs.Fields(wb.gpios) {
 		rpio.Pin(pin.Value().(int)).Output()
 	}
 
@@ -150,7 +155,7 @@ var _ api.Resurrector = (*OpenWbNative)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (wb *OpenWbNative) WakeUp() error {
-	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
+	cpPin := rpio.Pin(wb.gpios.PIN_CP)
 
 	return wb.runGpioSequence([]gpioAction{
 		{pin: cpPin.High, delay: wb.cpWait},
@@ -176,10 +181,10 @@ func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
 
 // gpioSwitchPhases toggles the GPIOs to switch between 1-phase and 3-phase charging
 func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
-	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
-	phPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_3P)
+	cpPin := rpio.Pin(wb.gpios.PIN_CP)
+	phPin := rpio.Pin(wb.gpios.PIN_3P)
 	if phases == 1 {
-		phPin = rpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
+		phPin = rpio.Pin(wb.gpios.PIN_1P)
 	}
 
 	return wb.runGpioSequence([]gpioAction{
