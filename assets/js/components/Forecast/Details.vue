@@ -71,7 +71,7 @@ import { ForecastType, findLowestSumSlotIndex } from "@/utils/forecast";
 import type { ForecastSlot, SolarDetails } from "./types";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
 
-const FORECASTED_HOURS = 48;
+const FORECASTED_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
 export interface Energy {
