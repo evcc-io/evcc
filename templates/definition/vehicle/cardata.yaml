@@ -55,6 +55,9 @@ params:
     help:
       en: Enable if vehicle sends streaming updates during charging.
       de: Aktivieren falls das Fahrzeug Streaming Updates während des Ladevorgangs schickt.
+auth:
+  type: cardata
+  params: [clientid]
 render: |
   type: cardata
   vin: {{ .vin }}

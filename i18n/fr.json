@@ -388,7 +388,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Autoriser plusieurs clients à accéder à un appareil Modbus unique.",
+      "add": "Ajouter une connexion proxy",
+      "connection": "Connexion #{number}",
+      "description": "Certains appareils Modbus ne prennent en charge qu'une seule connexion ou un nombre très limité de connexions. evcc peut agir comme un proxy, permettant l'accès simultané à plusieurs clients (domotique, scripts, etc.).",
+      "device": "Appareil",
+      "option": {
+        "deny": "erreur",
+        "false": "non",
+        "true": "silencieux"
+      },
+      "readonly": {
+        "help": {
+          "deny": "L'accès en écriture est bloqué par une erreur Modbus.",
+          "false": "L'accès en écriture est transféré.",
+          "true": "L'accès en écriture est bloqué sans réponse."
+        },
+        "label": "Lecture seule"
+      },
+      "sourcePortHelp": "Port pour les connexions entrantes des clients. Doit être disponible.",
       "title": "Proxy Modbus"
     },
     "mqtt": {
@@ -410,10 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Utilisez le suffixe .local pour activer mDNS. Pertinent pour la découverte de l'application mobile et de certains chargeurs OCPP.",
+      "descriptionExternalUrl": "Adresse pour les autres appareils qui souhaitent se connecter à evcc et pour la détection automatique de l'application evcc.",
+      "descriptionHost": "Utilisé pour annoncer evcc sur votre réseau local.",
+      "descriptionInternalUrl": "Adresse réseau locale de evcc.",
       "descriptionPort": "Port pour l'interface web et l'API. Vous devrez mettre à jour l'URL de votre navigateur si vous modifiez cela.",
       "descriptionSchema": "Cela n'affecte que la façon dont les URL sont générées. La sélection de HTTPS n'activera pas le cryptage.",
-      "labelHost": "Nom d’hôte",
+      "labelExternalUrl": "URL externe",
+      "labelHost": "Nom d'hôte mDNS",
+      "labelInternalUrl": "URL interne",
       "labelPort": "Port",
       "labelSchema": "Schéma",
       "title": "Réseau"
@@ -478,6 +499,7 @@
       "labelToken": "Jeton de sponsor",
       "title": "Sponsoring",
       "tokenRequired": "Vous devez configurer un jeton de sponsor avant de pouvoir créer cet appareil.",
+      "tokenRequiredFeature": "Cette fonctionnalité nécessite un jeton sponsor.",
       "tokenRequiredLearnMore": "Plus d’information.",
       "tokenRequiredShort": "Aucun jeton de parrainage n'est configuré.",
       "trialToken": "jeton d’essai",
@@ -489,6 +511,7 @@
         "backup": {
           "action": "Télécharger la sauvegarde...",
           "confirmationButton": "Télécharger la sauvegarde",
+          "confirmationText": "Téléchargez le fichier de base de données.",
           "description": "Sauvegardez vos données dans un fichier. Ce fichier peut être utilisé pour restaurer vos données en cas de défaillance du système.",
           "title": "Sauvegarde"
         },
@@ -1001,7 +1024,8 @@
     "message": "Pas de connexion au serveur.",
     "restart": "Redémarrer",
     "restartNeeded": "Nécessaire afin de prendre en compte les modifications.",
-    "restarting": "Le serveur se à nouveau disponible dans quelques instants."
+    "restarting": "Le serveur se à nouveau disponible dans quelques instants.",
+    "starting": "Démarrage du serveur..."
   },
   "passwordModal": {
     "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.",
@@ -1167,6 +1191,7 @@
     "cleanTitle": "Charge propre depuis le réseau",
     "co2Label": "Émissions de CO₂",
     "co2Limit": "Limite CO₂",
+    "enable": "Activer la limite",
     "loadpointDescription": "Autorise la charge rapide temporaire en mode solaire.",
     "modalTitle": "Recharge réseau intelligente",
     "none": "aucune",
@@ -1189,6 +1214,7 @@
     "configuration": "Config",
     "description": "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, recherchez une solution : {0}.",
     "discussions": "Discussions GitHub",
+    "editConfiguration": "Modifier la configuration",
     "fixAndRestart": "Corrigez le problème et redémarrez le serveur.",
     "hint": "Remarque : Il se peut aussi que vous ayez un appareil défectueux (onduleur, compteur, …). Vérifiez vos connexions réseau.",
     "lineError": "Erreur à la ligne {0}.",
