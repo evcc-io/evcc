@@ -60,27 +60,55 @@ render: |
       decode: int32nan
     scale: 0.001
   currents:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 31435 # SMA Modbus Profile: Metering.GridMs.A.phsA
-        type: input
-        decode: int32nan
-      scale: 0.001
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 31437 # SMA Modbus Profile: Metering.GridMs.A.phsB
-        type: input
-        decode: int32nan
-      scale: 0.001
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 31439 # SMA Modbus Profile: Metering.GridMs.A.phsC
-        type: input
-        decode: int32nan
-      scale: 0.001
+    - source: calc
+      add:
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 30977 # SMA Modbus Profile: GridMs.A.phsA # Netzstrom Phase L1
+            type: input
+            decode: int32nan
+          scale: 0.001
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 30977 # SMA Modbus Profile: Metering.GridMs.A.phsA # Ausgangsstrom Netzeinspeisung Phase L1
+            type: input
+            decode: int32nan
+          scale: -0.001
+    - source: calc
+      add:
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31437 # SMA Modbus Profile: GridMs.A.phsB # Netzstrom Phase L2
+            type: input
+            decode: int32nan
+          scale: 0.001
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31437 # SMA Modbus Profile: Metering.GridMs.A.phsB # Ausgangsstrom Netzeinspeisung Phase L2
+            type: input
+            decode: int32nan
+          scale: -0.001
+    - source: calc
+      add:
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 30981 # SMA Modbus Profile: GridMs.A.phsC # Netzstrom Phase L3
+            type: input
+            decode: int32nan
+          scale: 0.001
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31439 # SMA Modbus Profile: Metering.GridMs.A.phsC # Ausgangsstrom Netzeinspeisung Phase L3
+            type: input
+            decode: int32nan
+          scale: -0.001
+    
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
