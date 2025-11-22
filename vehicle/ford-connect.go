@@ -45,12 +45,13 @@ func NewFordConnectFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ford").Redact(cc.VIN)
-	ts, err := connect.NewIdentity(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectURI)
+	oc := connect.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectURI)
+	ts, err := connect.NewOAuth(oc, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}
 
+	log := util.NewLogger("ford").Redact(cc.VIN)
 	api := connect.NewAPI(log, ts)
 
 	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v connect.Vehicle) (string, error) {

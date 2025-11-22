@@ -5,10 +5,29 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
 // https://api.vehicle.ford.com/fcon-public/v1/auth/init?client_id=799ef34f-99d3-45b2-939b-95f35abaa735&state=123456&redirect_uri=http://localhost:7070/providerauth/callback
+
+func init() {
+	auth.Register("ford-connect", func(other map[string]any) (oauth2.TokenSource, error) {
+		var cc struct {
+			ClientID     string
+			ClientSecret string
+			RedirectURI  string
+		}
+
+		if err := util.DecodeOther(other, &cc); err != nil {
+			return nil, err
+		}
+
+		oc := OAuth2Config(cc.ClientID, cc.ClientSecret, cc.RedirectURI)
+
+		return NewOAuth(oc, "")
+	})
+}
 
 func OAuth2Config(id, secret, redirectUri string) *oauth2.Config {
 	return &oauth2.Config{
@@ -26,8 +45,7 @@ func OAuth2Config(id, secret, redirectUri string) *oauth2.Config {
 	}
 }
 
-// NewIdentity creates FordConnect token source
-func NewIdentity(id, secret, redirectUri string) (oauth2.TokenSource, error) {
-	oc := OAuth2Config(id, secret, redirectUri)
-	return auth.NewOauth(context.Background(), "Ford Connect", "", oc)
+// NewOAuth creates FordConnect token source
+func NewOAuth(oc *oauth2.Config, title string) (oauth2.TokenSource, error) {
+	return auth.NewOauth(context.Background(), "Ford Connect", title, oc)
 }

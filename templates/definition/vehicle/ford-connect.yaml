@@ -32,6 +32,9 @@ params:
     example: WF0FXX...
   - name: cache
     default: 15m
+auth:
+  type: ford-connect
+  params: [clientid, clientsecret, redirecturi]
 render: |
   type: ford-connect
   vin: {{ .vin }}
