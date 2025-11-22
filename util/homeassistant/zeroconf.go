@@ -59,7 +59,7 @@ func authorize(name, uri string) error {
 		return nil
 	}
 
-	ts, err := NewHomeAssistant(context.Background(), name, uri)
+	ts, err := NewHomeAssistant(name, uri)
 	if err != nil {
 		return err
 	}

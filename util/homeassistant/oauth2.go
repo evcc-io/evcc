@@ -2,7 +2,9 @@ package homeassistant
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -15,25 +17,29 @@ func init() {
 	auth.Register("homeassistant", NewHomeAssistantFromConfig)
 }
 
-func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
+func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		URI  string
-		Name string
+		Home string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHomeAssistant(ctx, cc.Name, cc.URI)
+	inst := instanceByName(cc.Home)
+	if inst == nil {
+		return nil, fmt.Errorf("unknown instance: %s", cc.Home)
+	}
+
+	return NewHomeAssistant(cc.Home, inst.URI)
 }
 
-func NewHomeAssistant(ctx context.Context, name, uri string) (*OAuth, error) {
+func NewHomeAssistant(name, uri string) (oauth2.TokenSource, error) {
 	extUrl := network.Config().ExternalURL()
 	redirectUri := extUrl + "/providerauth/callback"
 
 	log := util.NewLogger("homeassistant")
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
 	oc := oauth2.Config{
 		ClientID:    extUrl,
