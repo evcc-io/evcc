@@ -9,7 +9,7 @@ const templateFlags = [
   "--template-type",
   "meter",
   "--template",
-  "tests/config-device-auth-demo.yaml",
+  "tests/config-device-auth-demo.tpl.yaml",
 ];
 
 test.beforeEach(async () => {
