@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 )
@@ -17,11 +18,6 @@ type Event struct {
 	Event     string
 }
 
-// EventTemplateConfig is the push message configuration for an event
-type EventTemplateConfig struct {
-	Title, Msg string
-}
-
 type Vehicles interface {
 	// ByName returns a single vehicle adapter by name
 	ByName(string) (vehicle.API, error)
@@ -29,14 +25,14 @@ type Vehicles interface {
 
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	definitions map[string]EventTemplateConfig
+	definitions map[string]globalconfig.MessagingEventTemplate
 	sender      []Messenger
 	cache       *util.ParamCache
 	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
