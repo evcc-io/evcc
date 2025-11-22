@@ -19,6 +19,7 @@ function customParamsSerializer(params: { [key: string]: any }) {
     .join("&");
 }
 
+// general api client
 const api = axios.create({
   baseURL: base + "api/",
   headers: {
@@ -27,31 +28,34 @@ const api = axios.create({
   paramsSerializer: customParamsSerializer,
 });
 
-// global error handling
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // handle unauthorized errors
-    if (error.response?.status === 401) {
-      openLoginModal();
-      return Promise.reject(error);
-    }
-
-    const message = [`${error.message}.`];
-    if (error.response?.data?.error) {
-      message.push(`${error.response.data.error}.`);
-    }
-    if (error.config) {
-      const method = error.config.method.toUpperCase();
-      const url = error.request.responseURL;
-      message.push(`${method} ${url}`);
-    }
-    window.app.raise({ message });
+const errorInterceptor = (error: any) => {
+  // handle unauthorized errors
+  if (error.response?.status === 401) {
+    openLoginModal();
     return Promise.reject(error);
   }
-);
+
+  const message = [`${error.message}.`];
+  if (error.response?.data?.error) {
+    message.push(`${error.response.data.error}.`);
+  }
+  if (error.config) {
+    const method = error.config.method.toUpperCase();
+    const url = error.request.responseURL;
+    message.push(`${method} ${url}`);
+  }
+  window.app.raise({ message });
+  return Promise.reject(error);
+};
+api.interceptors.response.use((response) => response, errorInterceptor);
 
 export default api;
+
+// api client for calling non `/api` prefixed routes (e.g. auth provider)
+export const baseApi = axios.create({
+  baseURL: base,
+});
+baseApi.interceptors.response.use((response) => response, errorInterceptor);
 
 export const i18n = axios.create({
   baseURL: base + "i18n/",

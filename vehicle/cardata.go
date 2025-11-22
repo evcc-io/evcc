@@ -2,16 +2,13 @@ package vehicle
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bmw/cardata"
-	"golang.org/x/oauth2"
 )
 
 // Cardata is an api.Vehicle implementation for BMW and Mini cars
@@ -54,28 +51,9 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 		embed: &cc.embed,
 	}
 
-	oc := cardata.Config
-	oc.ClientID = cc.ClientID
-
 	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN)
 
-	ts, err := auth.NewOauth(context.Background(), "BMW/Mini", cc.embed.GetTitle(), &oc,
-		auth.WithOauthDeviceFlowOption(),
-		auth.WithTokenRetrieverOption(func(data string, res *oauth2.Token) error {
-			var token cardata.Token
-			if err := json.Unmarshal([]byte(data), &token); err != nil {
-				return err
-			}
-			*res = *token.TokenEx()
-			return nil
-		}),
-		auth.WithTokenStorerOption(func(token *oauth2.Token) any {
-			return cardata.Token{
-				Token:   token,
-				IdToken: cardata.TokenExtra(token, "id_token"),
-				Gcid:    cardata.TokenExtra(token, "gcid"),
-			}
-		}))
+	ts, err := cardata.NewOAuth(cc.ClientID, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}

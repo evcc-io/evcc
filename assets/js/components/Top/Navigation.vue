@@ -136,7 +136,7 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import baseAPI from "./baseapi";
+import { baseApi } from "@/api";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
@@ -219,7 +219,7 @@ export default defineComponent({
 			const { title, authenticated, loginPath, logoutPath } = provider;
 			if (!authenticated) {
 				try {
-					const response = await baseAPI.get(loginPath, {
+					const response = await baseApi.get(loginPath, {
 						validateStatus: (code) => [200, 400].includes(code),
 					});
 					if (response.status === 200) {
@@ -234,7 +234,7 @@ export default defineComponent({
 			} else {
 				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
 					try {
-						const response = await baseAPI.get(logoutPath, {
+						const response = await baseApi.get(logoutPath, {
 							validateStatus: (code) => [200, 400, 500].includes(code),
 						});
 						if (response.status === 200) {

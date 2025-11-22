@@ -51,7 +51,7 @@ export default defineComponent({
 		size: String,
 		autofocus: { type: Boolean, default: true },
 	},
-	emits: ["open", "opened", "close", "closed"],
+	emits: ["open", "opened", "close", "closed", "visibilitychange"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -83,12 +83,14 @@ export default defineComponent({
 		this.$refs["modal"]?.addEventListener("shown.bs.modal", this.handleShown);
 		this.$refs["modal"]?.addEventListener("hide.bs.modal", this.handleHide);
 		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.handleHidden);
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
 	},
 	unmounted() {
 		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.handleShow);
 		this.$refs["modal"]?.removeEventListener("shown.bs.modal", this.handleShown);
 		this.$refs["modal"]?.removeEventListener("hide.bs.modal", this.handleHide);
 		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 	},
 	methods: {
 		handleShow() {
@@ -130,6 +132,11 @@ export default defineComponent({
 			// @ts-expect-error bs internal
 			console.log(this.dataTestid, "> close", modal._isShown);
 			Modal.getOrCreateInstance(modal).hide();
+		},
+		handleVisibilityChange() {
+			if (document.visibilityState === "visible" && this.isModalVisible) {
+				this.$emit("visibilitychange");
+			}
 		},
 	},
 });
