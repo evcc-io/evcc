@@ -52,7 +52,7 @@
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
-              :service-values="serviceValues[param.Name]"
+							:service-values="serviceValues[param.Name]"
 						/>
 						<p v-if="authError" class="text-danger">{{ authError }}</p>
 						<div class="d-flex justify-content-end">
@@ -110,7 +110,7 @@
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
-              :service-values="serviceValues[param.Name]"
+							:service-values="serviceValues[param.Name]"
 						/>
 
 						<PropertyCollapsible>
@@ -121,7 +121,7 @@
 									:key="param.Name"
 									v-bind="param"
 									v-model="values[param.Name]"
-  								:service-values="serviceValues[param.Name]"
+									:service-values="serviceValues[param.Name]"
 								/>
 							</template>
 							<template v-if="$slots['collapsible-more']" #more>
