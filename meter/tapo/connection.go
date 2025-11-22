@@ -97,9 +97,18 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		return c.MissingMeterCheck(err)
+		err = c.RetryHandshake(err)
+		if err == nil {
+			resp, err = c.plug.GetEnergyUsage()
+			if err != nil {
+				return c.MissingMeterCheck(err)
+			}
+		} else {
+			return 0, err
+		}
 	}
 
+	// add energy usage to total
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
 		c.energy += (int64(resp.TodayEnergy) - c.lasttodayenergy)
 	}
