@@ -58,6 +58,9 @@ params:
     deprecated: true
   - name: refreshToken
     deprecated: true
+auth:
+  type: volvo-connected
+  params: [clientId, clientSecret, redirectUri]
 render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}
