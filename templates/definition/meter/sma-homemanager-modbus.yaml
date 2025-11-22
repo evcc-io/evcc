@@ -1,0 +1,43 @@
+template: sma-home-manager-modbus
+products:
+  - brand: SMA
+    description:
+      generic: Sunny Home Manager 2.0 (Modbus)
+requirements:
+  description:
+    de: Modbus gridmeter über verbundenen Wechselrichter (id:3) (In der Weboberfläche des WR muss "Externe Kommunikation/Modbus" "Modbus Server" eingeschaltet sein) ODER direkt vom Sunny Home Manager 2.0 (id:2) (Im Sunny Portal EnnexOS muss im Bereich "Konfiguration/Netzsystemdienstleistungen" der Schalter "Vorgaben über lokale Schnittstellen" eingeschaltet sein.)
+    en: Modbus gridmeter via connected inverter (id:3) (In the web interface of the inverter you need to activate "Modbus Server" in the section "External communication") or directly via Sunny Home Manager 2.0 (id:2) (In the Sunny Portal EnnexOS you need to activate "Specification via local interfaces" in "Configuration/Grid management service")
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: id
+    default: 3
+    required: true
+  - name: host
+    required: true
+  - name: port
+    default: 502
+    required: true
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      register:
+        address: 30865 # Aktueller_Netzbezug_30865, W
+        type: input # coil, holding or input
+        decode: uint32nan
+      scale: 1.0 # floating point factor applied to result, e.g. for kW to W conversion
+      timeout: 3s # timeout, without unit in ns
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      register:
+        address: 30867 # Aktuelle_Netzeinspeisung_30867, W
+        type: input # coil, holding or input
+        decode: uint32nan
+      scale: -1.0 # floating point factor applied to result, e.g. for kW to W conversion
+      timeout: 3s # timeout, without unit in ns
