@@ -19,6 +19,7 @@ type Connection struct {
 	energy          int64
 	user            string
 	password        string
+	name            string
 }
 
 // NewConnection creates a new Tapo device connection.
@@ -57,7 +58,8 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
+	c.name = res.DecodedNickname
+	c.log.DEBUG.Printf("%s %s %s connected (fw:%s,hw:%s,mac:%s)", c.name, res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
 	return c, nil
 }
@@ -130,7 +132,7 @@ func (c *Connection) MissingMeterCheck(err error) (float64, error) {
 // RetryHandshake retries the handshake on Forbidden errors
 func (c *Connection) RetryHandshake(err error) error {
 	if strings.Contains(err.Error(), "Forbidden") {
-		c.log.ERROR.Printf("%s => redoing handshake", err.Error())
+		c.log.WARN.Printf("%s (%s) 3rd party session was invalidated by another 3rd party app => redoing handshake", c.name, c.plug.Addr)
 		c.plug = *tapo.NewPlug(c.plug.Addr, nil)
 		return c.plug.Handshake(c.user, c.password)
 	}
