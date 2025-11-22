@@ -163,7 +163,7 @@ import { initialTestState, performTest } from "../utils/test";
 import sleep from "@/utils/sleep";
 import { extractDomain } from "@/utils/extractDomain";
 import { ConfigType } from "@/types/evcc";
-import type { DeviceType } from "@/types/evcc";
+import type { DeviceType, Timeout } from "@/types/evcc";
 import {
 	handleError,
 	type DeviceValues,
@@ -253,6 +253,7 @@ export default defineComponent({
 			values: { ...this.initialValues } as DeviceValues,
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
+			serviceValuesTimer: null as Timeout | null,
 		};
 	},
 	computed: {
@@ -457,6 +458,18 @@ export default defineComponent({
 			},
 			deep: true,
 		},
+		authValues: {
+			handler() {
+				if (this.authRequired) {
+					this.resetAuthStatus();
+				}
+			},
+			deep: true,
+		},
+		authRequired() {
+			// update on auth state change
+			this.updateServiceValues();
+		},
 	},
 	methods: {
 		reset() {
@@ -523,9 +536,12 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
-		async checkAuthStatus() {
+		resetAuthStatus() {
 			this.authOk = false;
 			this.authProviderUrl = null;
+		},
+		async checkAuthStatus() {
+			this.resetAuthStatus();
 
 			// no auth required
 			if (!this.template?.Auth) return;
@@ -540,8 +556,6 @@ export default defineComponent({
 			// validate data
 			if (this.authValuesMissing) return;
 
-			this.authOk = false;
-			this.authProviderUrl = null;
 			const { type } = this.template.Auth;
 			const values = this.authValues;
 			this.authLoading = true;
@@ -681,7 +695,12 @@ export default defineComponent({
 			return value === ConfigType.Custom;
 		},
 		async updateServiceValues() {
-			this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+			if (this.serviceValuesTimer) {
+				clearTimeout(this.serviceValuesTimer);
+			}
+			this.serviceValuesTimer = setTimeout(async () => {
+				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+			}, 500);
 		},
 	},
 });
