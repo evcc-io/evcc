@@ -89,12 +89,7 @@
 			:required="required"
 			:autocomplete="masked || datalistId ? 'off' : null"
 		/>
-		<button
-			v-if="datalistId && value"
-			type="button"
-			class="from-control-clear"
-			@click="value = ''"
-		>
+		<button v-if="showClearButton" type="button" class="form-control-clear" @click="value = ''">
 			&times;
 		</button>
 		<datalist v-if="showDatalist" :id="datalistId">
