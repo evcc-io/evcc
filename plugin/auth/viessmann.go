@@ -46,5 +46,5 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.T
 		return nil, err
 	}
 
-	return NewOauth(ctx, "Viessmann", cc.Gateway, &oc)
+	return NewOAuth(ctx, "Viessmann", cc.Gateway, &oc)
 }
