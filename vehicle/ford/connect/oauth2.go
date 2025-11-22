@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// https://api.vehicle.ford.com/fcon-public/v1/auth/init?client_id=799ef34f-99d3-45b2-939b-95f35abaa735&state=123456&redirect_uri=http://localhost:7070/providerauth/callback
+// https://api.vehicle.ford.com/fcon-public/v1/auth/init?client_id=<client_id>&redirect_uri=http://localhost:7070/providerauth/callback
 
 func init() {
 	auth.Register("ford-connect", func(other map[string]any) (oauth2.TokenSource, error) {
