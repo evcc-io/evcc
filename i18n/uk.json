@@ -427,10 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Використовуйте суфікс .local, щоб увімкнути mDNS. Важливо для виявлення мобільного додатку та деяких зарядних пристроїв OCPP.",
+      "descriptionExternalUrl": "Адреса для інших пристроїв, які хочуть підключитися до evcc, та для автоматичного виявлення програми evcc.",
+      "descriptionHost": "Використовується для оголошення evcc у вашій локальній мережі.",
+      "descriptionInternalUrl": "Локальна мережева адреса evcc.",
       "descriptionPort": "Порт для веб-інтерфейсу та API. Вам потрібно буде оновити URL-адресу веб-переглядача, якщо ви зміните це.",
       "descriptionSchema": "Впливає лише на те, як генеруються URL-адреси. Вибір HTTPS не вмикає шифрування.",
-      "labelHost": "Ім'я хоста",
+      "labelExternalUrl": "Зовнішня URL-адреса",
+      "labelHost": "Ім'я хоста mDNS",
+      "labelInternalUrl": "Внутрішня URL-адреса",
       "labelPort": "Порт",
       "labelSchema": "Схема",
       "title": "Мережа"
