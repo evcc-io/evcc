@@ -12,15 +12,12 @@ func ErrorAsJson(err error) any {
 	res := struct {
 		Error         string `json:"error"`
 		Line          int    `json:"line,omitempty"`
-		IsAuthError   bool   `json:"isAuthError,omitempty"`
 		LoginRequired string `json:"loginRequired,omitempty"`
 	}{
-		Error:       err.Error(),
-		IsAuthError: errors.Is(err, api.ErrMissingToken),
+		Error: err.Error(),
 	}
 
 	if ae := new(api.ErrLoginRequired); errors.As(err, &ae) {
-		res.IsAuthError = true
 		res.LoginRequired = ae.ProviderAuth
 	}
 
