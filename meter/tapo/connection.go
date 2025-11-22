@@ -86,9 +86,11 @@ func (c *Connection) CurrentPower() (float64, error) {
 			if err != nil {
 				return c.MissingMeterCheck(err)
 			}
+		} else {
+			return 0, err
 		}
 	}
-	return float64(resp.CurrentPower) / 1e3, err
+	return float64(resp.CurrentPower) / 1e3, nil
 }
 
 // ChargedEnergy collects the daily charged energy
