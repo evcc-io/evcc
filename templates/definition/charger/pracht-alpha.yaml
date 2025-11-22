@@ -18,22 +18,22 @@ products:
 requirements:
   evcc: ["sponsorship"]
   description:
-        de: |
-          Eine Station mit zwei Ladepunkten z.B. Alpha Duo muss als zwei Wallboxen mit unterschiedlichen `connector` Werten hinzugefügt werden.
+    de: |
+      Eine Station mit zwei Ladepunkten z.B. Alpha Duo muss als zwei Wallboxen mit unterschiedlichen `connector` Werten hinzugefügt werden.
 
-          Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
+      Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
 
-          Um Kommunikationsprobleme durch die doppelte Verbindung zu verhindern, empfiehlt es sich einen [`modbusproxy`](/docs/reference/configuration/modbusproxy) einzurichten.
-          
-          Füge den zweiten Ladepunkt als Kopie ersten hinzu und ändere `connector:` zu `2`, sowie `name:` z.B. zu `pracht_2`.
-        en: |
-          A Charger with two Loadpoints e.g. Alpha Duo needs to be added as two chargers with modified `connector` settings.
-  
-          Vehicle identification via RFID is not possible.
-  
-          Configure [`modbusproxy`](/docs/reference/configuration/modbusproxy) so there are no connection issues caused by using multiple connections.
-  
-          Add the right Loadpoint as a copy of the left Loadpoint and change `connector:` to `2`, and `name:` e.g. to `pracht_2`.
+      Um Kommunikationsprobleme durch die doppelte Verbindung zu verhindern, empfiehlt es sich einen [`modbusproxy`](/docs/reference/configuration/modbusproxy) einzurichten.
+      
+      Füge den zweiten Ladepunkt als Kopie ersten hinzu und ändere `connector:` zu `2`, sowie `name:` z.B. zu `pracht_2`.
+    en: |
+      A Charger with two Loadpoints e.g. Alpha Duo needs to be added as two chargers with modified `connector` settings.
+
+      Vehicle identification via RFID is not possible.
+
+      Configure [`modbusproxy`](/docs/reference/configuration/modbusproxy) so there are no connection issues caused by using multiple connections.
+
+      Add the right Loadpoint as a copy of the left Loadpoint and change `connector:` to `2`, and `name:` e.g. to `pracht_2`.
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
