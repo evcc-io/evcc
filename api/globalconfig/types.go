@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/plugin/mqtt"
-	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -137,8 +136,13 @@ type DB struct {
 }
 
 type Messaging struct {
-	Events   map[string]push.EventTemplateConfig
+	Events   map[string]MessagingEventTemplate
 	Services []config.Typed
+}
+
+// MessagingEventTemplate is the push message configuration for an event
+type MessagingEventTemplate struct {
+	Title, Msg string
 }
 
 func (c Messaging) Configured() bool {
