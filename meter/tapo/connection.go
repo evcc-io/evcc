@@ -17,6 +17,9 @@ type Connection struct {
 	plug            tapo.Plug
 	lasttodayenergy int64
 	energy          int64
+	user            string
+	password        string
+	name            string
 }
 
 // NewConnection creates a new Tapo device connection.
@@ -44,47 +47,51 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	conn := &Connection{
-		log:  log,
-		plug: *plug,
+	c := &Connection{
+		log:      log,
+		plug:     *plug,
+		user:     user,
+		password: password,
 	}
 
-	res, err := conn.plug.GetDeviceInfo()
+	res, err := c.plug.GetDeviceInfo()
 	if err != nil {
 		return nil, err
 	}
-	conn.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
+	c.name = res.DecodedNickname
+	c.log.DEBUG.Printf("%s %s %s connected (fw:%s,hw:%s,mac:%s)", c.name, res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
-	return conn, nil
+	return c, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
-	return c.plug.SetDeviceInfo(enable)
+	if enable {
+		return c.plug.On()
+	} else {
+		return c.plug.Off()
+	}
 }
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	resp, err := c.plug.GetDeviceInfo()
-	if err != nil {
-		return false, err
-	}
-
-	return resp.DeviceON, nil
+	return c.plug.IsOn()
 }
 
 // CurrentPower provides current power consuption
 func (c *Connection) CurrentPower() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
+		err = c.RetryHandshake(err)
+		if err == nil {
+			resp, err = c.plug.GetEnergyUsage()
+			if err != nil {
+				return c.MissingMeterCheck(err)
+			}
 		} else {
 			return 0, err
 		}
 	}
-
 	return float64(resp.CurrentPower) / 1e3, nil
 }
 
@@ -92,18 +99,42 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
+		err = c.RetryHandshake(err)
+		if err == nil {
+			resp, err = c.plug.GetEnergyUsage()
+			if err != nil {
+				return c.MissingMeterCheck(err)
+			}
 		} else {
 			return 0, err
 		}
 	}
 
+	// add energy usage to total
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
 		c.energy += (int64(resp.TodayEnergy) - c.lasttodayenergy)
 	}
 	c.lasttodayenergy = int64(resp.TodayEnergy)
 
 	return float64(c.energy) / 1000, nil
+}
+
+// MissingMeterCheck checks for missing meter error
+func (c *Connection) MissingMeterCheck(err error) (float64, error) {
+	if strings.Contains(err.Error(), "-1001") {
+		c.log.DEBUG.Printf("meter not available")
+		return 0, nil
+	} else {
+		return 0, err
+	}
+}
+
+// RetryHandshake retries the handshake on Forbidden errors
+func (c *Connection) RetryHandshake(err error) error {
+	if strings.Contains(err.Error(), "Forbidden") {
+		c.log.WARN.Printf("%s (%s) 3rd party session was invalidated by another 3rd party app => redoing handshake", c.name, c.plug.Addr)
+		c.plug = *tapo.NewPlug(c.plug.Addr, nil)
+		return c.plug.Handshake(c.user, c.password)
+	}
+	return err
 }
