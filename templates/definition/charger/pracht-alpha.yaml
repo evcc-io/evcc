@@ -33,7 +33,7 @@ requirements:
   
           Configure [`modbusproxy`](/docs/reference/configuration/modbusproxy) so there are no connection issues caused by using multiple connections.
   
-          Add the right Loadpoint as a copy of the left Loadpoint und change `connector:` to `2`, and `name:` e.g. to `pracht_2`.
+          Add the right Loadpoint as a copy of the left Loadpoint and change `connector:` to `2`, and `name:` e.g. to `pracht_2`.
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
