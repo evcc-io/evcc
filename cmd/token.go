@@ -57,8 +57,6 @@ func runToken(cmd *cobra.Command, args []string) {
 		typ := strings.ToLower(vehicleConf.Type)
 
 		switch typ {
-		case "ford", "ford-connect":
-			token, err = fordConnectToken(vehicleConf)
 		case "tronity":
 			token, err = tronityToken(conf, vehicleConf)
 		case "citroen", "ds", "opel", "peugeot":
