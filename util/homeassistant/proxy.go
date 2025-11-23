@@ -1,7 +1,7 @@
 package homeassistant
 
 import (
-	"errors"
+	"fmt"
 	"sync"
 
 	"golang.org/x/oauth2"
@@ -36,7 +36,7 @@ func (inst *proxyInstance) Token() (*oauth2.Token, error) {
 		inst.instance = instanceByName(inst.home)
 
 		if inst.instance == nil {
-			return nil, errors.New("not logged in")
+			return nil, fmt.Errorf("unknown instance: %s", inst.home)
 		}
 	}
 
