@@ -150,7 +150,7 @@ params:
     type: int
 auth:
   type: viessmann
-  params: [clientid, redirecturi, gateway]
+  params: [clientid, redirecturi, gateway_serial]
 render: |
   type: sgready
   getmode:
