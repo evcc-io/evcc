@@ -50,5 +50,5 @@ func NewHomeAssistant(name, uri string) (oauth2.TokenSource, error) {
 		},
 	}
 
-	return auth.NewOauth(ctx, "HomeAssistant", name, &oc)
+	return auth.NewOAuth(ctx, "HomeAssistant", name, &oc)
 }
