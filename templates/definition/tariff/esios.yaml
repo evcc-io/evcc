@@ -47,7 +47,7 @@ render: |
         | {
           start: .datetime_utc,
           end: (.datetime_utc | fromdateiso8601 + 3600 | strftime("%Y-%m-%dT%H:%M:%SZ")),
-          value: (.value) / 1000
+          value: (.value | tonumber) / 1000
           }
       ]
         | tostring
