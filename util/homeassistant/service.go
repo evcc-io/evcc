@@ -32,7 +32,7 @@ func getHomes(w http.ResponseWriter, req *http.Request) {
 func getEntities(w http.ResponseWriter, req *http.Request) {
 	home := req.PathValue("home")
 
-	if instanceByName(home) == nil {
+	if instanceUriByName(home) == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
