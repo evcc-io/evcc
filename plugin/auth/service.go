@@ -15,6 +15,6 @@ func init() {
 }
 
 func getRedirectUri(w http.ResponseWriter, req *http.Request) {
-	uri := network.Config().ExternalUrl + "/providerauth/callback"
+	uri := network.Config().ExternalURL() + "/providerauth/callback"
 	json.NewEncoder(w).Encode([]string{uri})
 }
