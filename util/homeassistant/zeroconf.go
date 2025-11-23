@@ -16,7 +16,7 @@ var (
 )
 
 func init() {
-	scan()
+	go scan()
 }
 
 func instanceUriByName(name string) string {
