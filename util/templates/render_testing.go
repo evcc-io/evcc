@@ -2,6 +2,7 @@ package templates
 
 import (
 	"context"
+	"errors"
 	"maps"
 	"slices"
 	"testing"
@@ -56,7 +57,10 @@ func testAuth(other map[string]any) error {
 		params[p] = "foo"
 	}
 
-	if _, err := auth.NewFromConfig(context.TODO(), cc.Type, params); err != nil {
+	_, err := auth.NewFromConfig(context.TODO(), cc.Type, params)
+
+	// ConfigError indicates invalid parameters in mapstructure decode
+	if ce := new(util.ConfigError); errors.As(err, &ce) {
 		return err
 	}
 
