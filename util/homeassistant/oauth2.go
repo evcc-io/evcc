@@ -26,17 +26,17 @@ func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error
 		return nil, err
 	}
 
-	inst := instanceByName(cc.Home)
-	if inst == nil {
+	uri := instanceUriByName(cc.Home)
+	if uri == "" {
 		return nil, fmt.Errorf("unknown instance: %s", cc.Home)
 	}
 
-	return NewHomeAssistant(cc.Home, inst.URI)
+	return NewHomeAssistant(cc.Home, uri)
 }
 
-func NewHomeAssistant(name, uri string) (oauth2.TokenSource, error) {
+func NewHomeAssistant(home, uri string) (oauth2.TokenSource, error) {
 	extUrl := network.Config().ExternalURL()
-	redirectUri := extUrl + "/providerauth/callback"
+	redirectUri := extUrl + network.CallbackPath
 
 	log := util.NewLogger("homeassistant")
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
@@ -50,5 +50,5 @@ func NewHomeAssistant(name, uri string) (oauth2.TokenSource, error) {
 		},
 	}
 
-	return auth.NewOAuth(ctx, "HomeAssistant", name, &oc)
+	return auth.NewOAuth(ctx, "HomeAssistant", home, &oc)
 }

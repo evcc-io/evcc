@@ -4,20 +4,36 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
-	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
 	"github.com/libp2p/zeroconf/v2"
 )
 
+var (
+	mu        sync.Mutex
+	instances = make(map[string]string)
+)
+
 func init() {
-	network.Register(scan)
+	go scan()
+}
+
+func instanceUriByName(name string) string {
+	mu.Lock()
+	defer mu.Unlock()
+	return instances[name]
+}
+
+func addInstance(name, uri string) {
+	mu.Lock()
+	defer mu.Unlock()
+	instances[name] = uri
 }
 
 func scan() {
 	ctx := context.Background()
 
-	log := util.NewLogger("homeassistant")
 	entries := make(chan *zeroconf.ServiceEntry, 1)
 
 	go func() {
@@ -36,9 +52,7 @@ func scan() {
 					}
 				}
 
-				if err := authorize(se.Instance, uri); err != nil {
-					log.ERROR.Println(err)
-				}
+				addInstance(se.Instance, uri)
 
 			case <-ctx.Done():
 				return
@@ -47,27 +61,7 @@ func scan() {
 	}()
 
 	if err := zeroconf.Browse(ctx, "_home-assistant._tcp.", "local.", entries); err != nil {
+		log := util.NewLogger("homeassistant")
 		log.ERROR.Println("zeroconf: failed to browse:", err.Error())
 	}
-}
-
-func authorize(name, uri string) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if _, ok := instances[name]; ok {
-		return nil
-	}
-
-	ts, err := NewHomeAssistant(name, uri)
-	if err != nil {
-		return err
-	}
-
-	instances[name] = &instance{
-		URI:         uri,
-		TokenSource: ts,
-	}
-
-	return nil
 }
