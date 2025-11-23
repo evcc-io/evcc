@@ -11,7 +11,7 @@ params:
     description:
       generic: "Esios personal Security token"
     help:
-      en: Request your token at <a href="mailto:consultasios@ree.es?subject=Personal token request"></a>
+      en: Request your token at <a href="mailto:consultasios@ree.es?subject=Personal token request">consultasios@ree.es</a>
     required: true
   - name: indicator
     description:
