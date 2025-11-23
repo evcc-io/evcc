@@ -52,6 +52,7 @@
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
+							:service-values="serviceValues[param.Name]"
 						/>
 						<p v-if="authError" class="text-danger">{{ authError }}</p>
 						<div class="d-flex justify-content-end">
@@ -109,6 +110,7 @@
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
+							:service-values="serviceValues[param.Name]"
 						/>
 
 						<PropertyCollapsible>
@@ -119,6 +121,7 @@
 									:key="param.Name"
 									v-bind="param"
 									v-model="values[param.Name]"
+									:service-values="serviceValues[param.Name]"
 								/>
 							</template>
 							<template v-if="$slots['collapsible-more']" #more>
@@ -160,7 +163,7 @@ import { initialTestState, performTest } from "../utils/test";
 import sleep from "@/utils/sleep";
 import { extractDomain } from "@/utils/extractDomain";
 import { ConfigType } from "@/types/evcc";
-import type { DeviceType } from "@/types/evcc";
+import type { DeviceType, Timeout } from "@/types/evcc";
 import {
 	handleError,
 	type DeviceValues,
@@ -172,6 +175,7 @@ import {
 	type ApiData,
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
+	fetchServiceValues,
 } from "./index";
 
 const CUSTOM_FIELDS = ["modbus"];
@@ -248,6 +252,8 @@ export default defineComponent({
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
 			test: initialTestState(),
+			serviceValues: {} as Record<string, string[]>,
+			serviceValuesTimer: null as Timeout | null,
 		};
 	},
 	computed: {
@@ -423,6 +429,8 @@ export default defineComponent({
 			if (!isYamlInput) {
 				this.loadTemplate();
 			}
+
+			this.updateServiceValues();
 		},
 		usage() {
 			// Reload products when usage changes (e.g., meter type selection)
@@ -446,8 +454,21 @@ export default defineComponent({
 		values: {
 			handler() {
 				this.test = initialTestState();
+				this.updateServiceValues();
 			},
 			deep: true,
+		},
+		authValues: {
+			handler() {
+				if (this.authRequired) {
+					this.resetAuthStatus();
+				}
+			},
+			deep: true,
+		},
+		authRequired() {
+			// update on auth state change
+			this.updateServiceValues();
 		},
 	},
 	methods: {
@@ -515,9 +536,12 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
-		async checkAuthStatus() {
+		resetAuthStatus() {
 			this.authOk = false;
 			this.authProviderUrl = null;
+		},
+		async checkAuthStatus() {
+			this.resetAuthStatus();
 
 			// no auth required
 			if (!this.template?.Auth) return;
@@ -532,8 +556,6 @@ export default defineComponent({
 			// validate data
 			if (this.authValuesMissing) return;
 
-			this.authOk = false;
-			this.authProviderUrl = null;
 			const { type } = this.template.Auth;
 			const values = this.authValues;
 			this.authLoading = true;
@@ -671,6 +693,14 @@ export default defineComponent({
 				return this.isYamlInputType(value);
 			}
 			return value === ConfigType.Custom;
+		},
+		async updateServiceValues() {
+			if (this.serviceValuesTimer) {
+				clearTimeout(this.serviceValuesTimer);
+			}
+			this.serviceValuesTimer = setTimeout(async () => {
+				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+			}, 500);
 		},
 	},
 });
