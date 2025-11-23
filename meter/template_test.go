@@ -36,6 +36,7 @@ var acceptable = []string{
 	"missing config values: username, password, key",                       // E3DC
 	"eebus not configured",                                                 // EEBus
 	"missing token",                                                        // HomeAssistant
+	"unknown instance: foo",                                                // HomeAssistant
 }
 
 func TestTemplates(t *testing.T) {

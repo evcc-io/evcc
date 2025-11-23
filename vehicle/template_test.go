@@ -26,7 +26,8 @@ var acceptable = []string{
 	"unexpected status: 401",
 	"discussions/17501",                            // Tesla
 	"login failed: code not found",                 // Polestar
-	"empty instance type- check for missing usage", // Merces
+	"empty instance type- check for missing usage", // Mercedes
+	"unknown instance: foo",                        // HomeAssistant
 }
 
 func TestTemplates(t *testing.T) {

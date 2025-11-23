@@ -35,6 +35,7 @@ var acceptable = []string{
 	"timeout",                              // ocpp
 	"must have uri and password",           // Wattpilot
 	"either identity or uuid are required", // Plugchoice
+	"unknown instance: foo",                // HomeAssistant
 }
 
 func TestTemplates(t *testing.T) {
