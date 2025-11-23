@@ -12,15 +12,16 @@ import (
 func init() {
 	auth.Register("volvo-connected", func(other map[string]any) (oauth2.TokenSource, error) {
 		var cc struct {
-			ID, Secret  string
-			RedirectUri string
+			ClientID     string
+			ClientSecret string
+			RedirectUri  string
 		}
 
 		if err := util.DecodeOther(other, &cc); err != nil {
 			return nil, err
 		}
 
-		oc := OAuthConfig(cc.ID, cc.Secret, cc.RedirectUri)
+		oc := OAuthConfig(cc.ClientID, cc.ClientSecret, cc.RedirectUri)
 
 		return NewOAuth(oc, "")
 	})
