@@ -46,5 +46,5 @@ func OAuthConfig(id, secret, redirectUri string) *oauth2.Config {
 }
 
 func NewOAuth(oc *oauth2.Config, title string) (oauth2.TokenSource, error) {
-	return auth.NewOauth(context.Background(), "Volvo", title, oc)
+	return auth.NewOAuth(context.Background(), "Volvo", title, oc)
 }

@@ -31,7 +31,7 @@ var loginHeaders = map[string]string{
 	"User-Agent":      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
 }
 
-func NewOauth2Config(domain string) *oauth2.Config {
+func OAuth2Config(domain string) *oauth2.Config {
 	uri := loginUri(domain)
 	return &oauth2.Config{
 		ClientID: ClientID,
@@ -80,7 +80,7 @@ func (v *Identity) Login() error {
 
 // login authenticates with username/password to get new token
 func (v *Identity) login() (*oauth2.Token, error) {
-	oc := NewOauth2Config(v.domain)
+	oc := OAuth2Config(v.domain)
 
 	cv := oauth2.GenerateVerifier()
 	state := lo.RandomString(16, lo.AlphanumericCharset)

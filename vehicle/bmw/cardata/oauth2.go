@@ -43,7 +43,7 @@ func OAuthConfig(clientId string) *oauth2.Config {
 func NewOAuth(clientId, title string) (oauth2.TokenSource, error) {
 	oc := OAuthConfig(clientId)
 
-	return auth.NewOauth(context.Background(), "BMW/Mini", title, oc,
+	return auth.NewOAuth(context.Background(), "BMW/Mini", title, oc,
 		auth.WithOauthDeviceFlowOption(),
 		auth.WithTokenRetrieverOption(func(data string, res *oauth2.Token) error {
 			var token Token
