@@ -46,7 +46,7 @@ render: |
         | select(.geo_name == "{{.region}}") 
         | {
           start: .datetime_utc,
-          end: (.datetime_utc | fromdateiso8601 + 3600 | strftime("%Y-%m-%dT%H:%M:%SZ")),
+          end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
           value: (.value | tonumber) / 1000
           }
       ]
