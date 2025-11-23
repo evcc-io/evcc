@@ -49,7 +49,7 @@ test.describe("battery settings", async () => {
     await modal.getByRole("link", { name: "Grid charging" }).click();
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
-    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "48 hr"].join(""));
+    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "96 hr"].join(""));
     await expect(modal).toContainText("5.0 ct – 50.0 ct");
     await page.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);

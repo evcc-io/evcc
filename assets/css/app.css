@@ -589,7 +589,7 @@ input[list]::-webkit-list-button {
 	appearance: none !important;
 }
 
-.from-control-clear {
+.form-control-clear {
 	position: absolute;
 	right: 0.75rem;
 	top: 0;

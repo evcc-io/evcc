@@ -22,7 +22,7 @@ import (
 )
 
 func init() {
-	registry.AddCtx("oauth", NewOauthFromConfig)
+	registry.AddCtx("oauth", NewOAuthFromConfig)
 }
 
 var (
@@ -55,7 +55,7 @@ type OAuth struct {
 	tokenStorer    func(*oauth2.Token) any
 }
 
-func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
+func NewOAuthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
 		Name, Device  string
 		oauth2.Config `mapstructure:",squash"`
@@ -65,13 +65,13 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 		return nil, err
 	}
 
-	return NewOauth(ctx, cc.Name, cc.Device, &cc.Config)
+	return NewOAuth(ctx, cc.Name, cc.Device, &cc.Config)
 }
 
 var _ api.AuthProvider = (*OAuth)(nil)
 var _ oauth2.TokenSource = (*OAuth)(nil)
 
-func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...func(o *OAuth)) (*OAuth, error) {
+func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...func(o *OAuth)) (*OAuth, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}

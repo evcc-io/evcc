@@ -1,6 +1,7 @@
 import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api, { baseApi } from "@/api";
+import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 export type Product = {
   group: string;
@@ -124,29 +125,25 @@ export async function loadServiceValues(path: string) {
 }
 
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
-  const getDependencies = (service: string) =>
-    service.match(/\{([^}]+)\}/g)?.map((match) => match.slice(1, -1)) || [];
-
-  const buildUrl = (service: string) => {
-    return (values: Record<string, any>) =>
-      service.replace(/\{(\w+)\}/g, (match, key) => {
-        const value = values[key];
-        if (value === undefined || value === null || value === "") {
-          return match;
-        }
-        return encodeURIComponent(String(value));
-      });
-  };
-
   return params
     .map((param) => {
       if (!param.Service) {
         return null;
       }
+      const stringValues = (values: Record<string, any>): Record<string, string> =>
+        Object.entries(values).reduce(
+          (acc, [key, val]) => {
+            if (val !== undefined && val !== null) acc[key] = String(val);
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
       return {
         name: param.Name,
-        dependencies: getDependencies(param.Service),
-        url: buildUrl(param.Service),
+        dependencies: extractPlaceholders(param.Service),
+        url: (values: Record<string, any>) =>
+          replacePlaceholders(param.Service!, stringValues(values)),
       } as ParamService;
     })
     .filter((endpoint): endpoint is ParamService => endpoint !== null);
