@@ -42,9 +42,6 @@ jobs:
       - name: Assets
         run: make assets
 
-      - name: Modernize
-        run: make modernize
-
       - name: Docs
         run: make docs
 
