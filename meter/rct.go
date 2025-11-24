@@ -108,12 +108,13 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	var batteryMode func(api.BatteryMode) error
 
 	if usage == "battery" {
-		if n, err := m.queryUint8(rct.PowerMngNBatteries); err != nil {
+		n, err := m.queryUint8(rct.PowerMngNBatteries)
+
+		if err != nil {
 			return nil, err
-		} else {
-			m.numberOfBatteries = n
 		}
 
+		m.numberOfBatteries = n
 		batterySoc = m.batterySoc
 		batterySocLimiter = batterySocLimits.Decorator()
 
