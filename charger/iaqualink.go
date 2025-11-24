@@ -140,37 +140,7 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 			return nil, fmt.Errorf("failed to list IAquaLink devices: %w", err)
 		}
 
-		var deviceID string
-		var serialNumber string
-		var matchedBy string
-
-		// Try to match device by serial number first (more reliable), then by name
-		deviceLower := strings.ToLower(device)
-		for _, dev := range devices {
-			// Match by serial number (exact match, case-insensitive)
-			if strings.EqualFold(dev.SerialNumber, device) {
-				deviceID = strconv.Itoa(dev.ID)
-				serialNumber = dev.SerialNumber
-				matchedBy = "serial number"
-				log.DEBUG.Printf("Found device by serial number: ID=%d", dev.ID)
-				break
-			}
-		}
-
-		// If not found by serial number, try matching by name
-		if deviceID == "" {
-			for _, dev := range devices {
-				// Match device by name (case-insensitive, partial match)
-				if strings.Contains(strings.ToLower(dev.Name), deviceLower) {
-					deviceID = strconv.Itoa(dev.ID)
-					serialNumber = dev.SerialNumber
-					matchedBy = "name"
-					log.DEBUG.Printf("Found device by name: ID=%d", dev.ID)
-					break
-				}
-			}
-		}
-
+		deviceID, serialNumber, matchedBy := c.findDevice(devices, device, log)
 		if deviceID == "" {
 			return nil, fmt.Errorf("device not found in IAquaLink systems (tried matching by serial number and name)")
 		}
@@ -203,7 +173,7 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 		if featuresErr != nil {
 			// Log as debug if it's a server error (500) - these are often transient
 			// Only warn for authentication errors (401) or other client errors
-			if strings.Contains(featuresErr.Error(), "500") || strings.Contains(featuresErr.Error(), "SERVER_ERROR") {
+			if isAPIErrorSuppressible(featuresErr) {
 				log.DEBUG.Printf("Device features endpoint returned server error (may be unsupported): %v, using default modes", featuresErr)
 				// If features endpoint fails with 500, mode reading will likely also fail
 				// Set flag to skip mode reading attempts to reduce log noise
@@ -336,9 +306,6 @@ func (c *IAquaLink) setModeLocal(ctx context.Context, mode int64) error {
 // getActionsForMode returns the IAquaLink actions for the given evcc mode
 // based on available device features
 func (c *IAquaLink) getActionsForMode(mode int64) []string {
-	// Check what actions are available based on device features
-	// Different devices may support different modes
-
 	// Common mode mappings (try these in order of preference)
 	modeActions := map[int64][]string{
 		1: {"eco", "off"},      // Dimm - try eco first, then off
@@ -347,21 +314,7 @@ func (c *IAquaLink) getActionsForMode(mode int64) []string {
 	}
 
 	actions := modeActions[mode]
-	if len(actions) == 0 {
-		return nil
-	}
-
-	// Filter actions based on device capabilities
-	// If device has mode_info feature, it likely supports mode commands
-	hasModeInfo := slices.Contains(c.features, iaqualink.FeatureModeInfo)
-
-	// If we can't determine from features, try all actions
-	// The DeviceWebSocket will fail if action is not supported
-	if !hasModeInfo {
-		return actions
-	}
-
-	// Return actions - let the API determine what works
+	// The DeviceWebSocket will fail if action is not supported, so return all actions
 	return actions
 }
 
@@ -395,8 +348,7 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 	site, err := c.client.DeviceSite(c.deviceID)
 	if err != nil {
 		// Suppress 401/500 errors as they're likely API limitations
-		errStr := err.Error()
-		if !strings.Contains(errStr, "401") && !strings.Contains(errStr, "500") && !strings.Contains(errStr, "UNAUTHORIZED") {
+		if !isAPIErrorSuppressible(err) {
 			c.log.DEBUG.Printf("DeviceSite failed: %v", err)
 		}
 	} else if site != nil {
@@ -421,8 +373,7 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 		output, err := c.client.DeviceExecuteReadCommand(c.deviceID, values)
 		if err != nil {
 			// Suppress repeated 401/500 errors as they're likely API limitations
-			errStr := err.Error()
-			if !strings.Contains(errStr, "401") && !strings.Contains(errStr, "500") && !strings.Contains(errStr, "UNAUTHORIZED") {
+			if !isAPIErrorSuppressible(err) {
 				c.log.DEBUG.Printf("DeviceExecuteReadCommand '%s' failed: %v", cmd, err)
 			}
 			continue
@@ -513,4 +464,39 @@ func (c *IAquaLink) parseModeFromResponse(response string) int64 {
 // hasFeature checks if device has a specific feature
 func (c *IAquaLink) hasFeature(feature string) bool {
 	return slices.Contains(c.features, feature)
+}
+
+// findDevice searches for a device in the list by serial number or name
+// Returns deviceID, serialNumber, and matchedBy (how it was matched)
+func (c *IAquaLink) findDevice(devices iaqualink.ListDevicesOutput, device string, log *util.Logger) (string, string, string) {
+	deviceLower := strings.ToLower(device)
+
+	// Try to match device by serial number first (more reliable)
+	for _, dev := range devices {
+		if strings.EqualFold(dev.SerialNumber, device) {
+			log.DEBUG.Printf("Found device by serial number: ID=%d", dev.ID)
+			return strconv.Itoa(dev.ID), dev.SerialNumber, "serial number"
+		}
+	}
+
+	// If not found by serial number, try matching by name
+	for _, dev := range devices {
+		if strings.Contains(strings.ToLower(dev.Name), deviceLower) {
+			log.DEBUG.Printf("Found device by name: ID=%d", dev.ID)
+			return strconv.Itoa(dev.ID), dev.SerialNumber, "name"
+		}
+	}
+
+	return "", "", ""
+}
+
+// isAPIErrorSuppressible checks if an error should be suppressed (logged as debug)
+// Returns true for common API limitations like 401/500 errors
+func isAPIErrorSuppressible(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "401") || strings.Contains(errStr, "500") ||
+		strings.Contains(errStr, "UNAUTHORIZED") || strings.Contains(errStr, "SERVER_ERROR")
 }

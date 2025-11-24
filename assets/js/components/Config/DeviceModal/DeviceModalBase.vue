@@ -60,7 +60,12 @@
 								v-if="authProviderUrl"
 								class="d-flex flex-column align-items-end gap-2"
 							>
-								<a :href="authProviderUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+								<a
+									:href="authProviderUrl"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="btn btn-primary"
+								>
 									{{
 										$t("config.general.authPerform", {
 											provider: authProviderDomain,
@@ -104,40 +109,15 @@
 							:capabilities="modbusCapabilities"
 						/>
 
-					<PropertyEntry
-						v-for="param in normalParams"
-						:id="`${deviceType}Param${param.Name}`"
-						:key="param.Name"
-						v-bind="param"
-						:dependencies="param.Dependencies"
-						v-model="values[param.Name]"
-						:all-values="values"
-						:template="template || undefined"
-					/>
-
-					<PropertyCollapsible>
-						<template v-if="advancedParams.length" #advanced>
-							<PropertyEntry
-								v-for="param in advancedParams"
-								:id="`${deviceType}Param${param.Name}`"
-								:key="param.Name"
-								v-bind="param"
-								:dependencies="param.Dependencies"
-								v-model="values[param.Name]"
-								:all-values="values"
-								:template="template || undefined"
-							/>
-						</template>
-						<template v-if="$slots['collapsible-more']" #more>
-							<slot name="collapsible-more" :values="values"></slot>
-						</template>
-					</PropertyCollapsible>
 						<PropertyEntry
 							v-for="param in normalParams"
 							:id="`${deviceType}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
+							:dependencies="param.Dependencies"
+							:all-values="values"
+							:template="template || undefined"
 							:service-values="serviceValues[param.Name]"
 						/>
 
@@ -149,6 +129,9 @@
 									:key="param.Name"
 									v-bind="param"
 									v-model="values[param.Name]"
+									:dependencies="param.Dependencies"
+									:all-values="values"
+									:template="template || undefined"
 									:service-values="serviceValues[param.Name]"
 								/>
 							</template>
