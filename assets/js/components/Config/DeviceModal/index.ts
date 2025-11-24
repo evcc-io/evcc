@@ -1,6 +1,7 @@
 import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api, { baseApi } from "@/api";
+import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 export type Product = {
   group: string;
@@ -28,7 +29,14 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
+  Service?: string;
   Usages?: TemplateParamUsage[];
+};
+
+export type ParamService = {
+  name: string;
+  dependencies: string[];
+  url: (values: Record<string, any>) => string;
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
@@ -105,6 +113,68 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
   }
   return `${prefix}${type}`;
 }
+
+export async function loadServiceValues(path: string) {
+  try {
+    const response = await api.get(`/config/service/${path}`);
+    return response.data as string[];
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
+export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
+  return params
+    .map((param) => {
+      if (!param.Service) {
+        return null;
+      }
+      const stringValues = (values: Record<string, any>): Record<string, string> =>
+        Object.entries(values).reduce(
+          (acc, [key, val]) => {
+            if (val !== undefined && val !== null) acc[key] = String(val);
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+      return {
+        name: param.Name,
+        dependencies: extractPlaceholders(param.Service),
+        url: (values: Record<string, any>) =>
+          replacePlaceholders(param.Service!, stringValues(values)),
+      } as ParamService;
+    })
+    .filter((endpoint): endpoint is ParamService => endpoint !== null);
+};
+
+export const fetchServiceValues = async (
+  templateParams: TemplateParam[],
+  values: DeviceValues
+): Promise<Record<string, string[]>> => {
+  const endpoints = createServiceEndpoints(templateParams);
+  const result: Record<string, string[]> = {};
+
+  await Promise.all(
+    endpoints.map(async (endpoint) => {
+      const params: Record<string, any> = {};
+      endpoint.dependencies.forEach((dependency) => {
+        if (values[dependency]) {
+          params[dependency] = values[dependency];
+        }
+      });
+      if (Object.keys(params).length !== endpoint.dependencies.length) {
+        // missing dependency values, skip
+        return;
+      }
+      const url = endpoint.url(params);
+      result[endpoint.name] = await loadServiceValues(url);
+    })
+  );
+
+  return result;
+};
 
 export function createDeviceUtils(deviceType: DeviceType) {
   function test(id: number | undefined, data: any) {
@@ -201,6 +271,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     create,
     loadProducts,
     loadTemplate,
+    loadServiceValues,
     checkAuth,
     getAuthProviderUrl,
   };
