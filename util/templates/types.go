@@ -208,9 +208,7 @@ type Param struct {
 	Choice      []string     `json:",omitempty" yaml:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne    bool         `json:"-" yaml:"allinone,omitempty"`          // defines if the defined usages can all be present in a single device
 	Dependencies []Dependency `json:",omitempty" yaml:",omitempty"` // conditions for when this parameter should be shown
-	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
-	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
