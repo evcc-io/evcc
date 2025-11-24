@@ -167,16 +167,8 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	maxCurrent := lp.getMaxCurrent()
 
 	if v := lp.GetVehicle(); v != nil {
-		var vehicleMaxCurrent float64
-		var maxCurrentFromPower float64
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
-			vehicleMaxCurrent = res
-		}
-		if res, ok := v.OnIdentified().GetMaxPower(); ok && res > 0 {
-			maxCurrentFromPower = lp.roundedCurrent(powerToCurrent(res, lp.phases))
-		}
-		if vehicleMaxCurrent > 0  && maxCurrentFromPower > 0 {
-			maxCurrent = min(maxCurrent, vehicleMaxCurrent, maxCurrentFromPower)
+			maxCurrent = min(maxCurrent, res)
 		}
 	}
 
@@ -240,7 +232,7 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
+	if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok && lp.vehicle != nil {
 		lp.log.DEBUG.Printf("Max power from vehicle: %.2f kWh", maxPower/1000)
 		return maxPower
 	} else {
