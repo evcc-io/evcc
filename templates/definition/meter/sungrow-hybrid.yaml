@@ -186,7 +186,7 @@ render: |
               decode: uint16
         # Reset max battery discharge power
         - source: const
-          value: {{ .maxdischargepower }}
+          value: {{ div .maxdischargepower 10 }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
