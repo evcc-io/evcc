@@ -123,22 +123,9 @@ export function checkDependencies(
 
     if (dep.check === "equal") {
       // Convert both to strings for comparison to handle type mismatches
-      const fieldStr = String(fieldValue || "");
-      const depStr = String(dep.value || "");
-
-      // Debug logging (remove after fixing)
-      if (param.Name === "uri" || param.Name === "email" || param.Name === "password" || param.Name === "device") {
-        console.log(`[checkDependencies] ${param.Name} checking ${dep.name}:`, {
-          fieldValue,
-          fieldStr,
-          depValue: dep.value,
-          depStr,
-          match: fieldStr === depStr,
-          values,
-          templateExists: !!template,
-          depParamDefault: template?.Params.find((p) => p.Name === dep.name)?.Default
-        });
-      }
+      // Use nullish coalescing to preserve legitimate falsy values (0, false)
+      const fieldStr = String(fieldValue ?? "");
+      const depStr = String(dep.value ?? "");
 
       return fieldStr === depStr;
     }

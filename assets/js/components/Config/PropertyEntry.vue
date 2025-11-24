@@ -70,25 +70,8 @@ export default {
 			return this.Type === "Duration" ? undefined : this.Example;
 		},
 		isVisible() {
-			// Debug: Log all props to see what we're receiving
-			if (this.Name === "mode" || this.Name === "uri" || this.Name === "email" || this.Name === "password" || this.Name === "device") {
-				console.log(`[PropertyEntry] ${this.Name} props:`, {
-					Name: this.Name,
-					Dependencies: this.Dependencies,
-					DependenciesType: typeof this.Dependencies,
-					DependenciesLength: this.Dependencies?.length,
-					allValues: this.allValues,
-					modeValue: this.allValues?.mode,
-					template: this.template,
-					hasTemplate: !!this.template
-				});
-			}
-
 			// Fields without dependencies are always visible
 			if (!this.Dependencies || this.Dependencies.length === 0) {
-				if (this.Name === "mode" || this.Name === "uri" || this.Name === "email") {
-					console.log(`[PropertyEntry] ${this.Name}: No dependencies, returning true`);
-				}
 				return true;
 			}
 
@@ -101,11 +84,7 @@ export default {
 				Dependencies: this.Dependencies,
 			};
 
-			const result = checkDependencies(param, this.allValues || {}, this.template || null);
-
-			console.log(`[PropertyEntry] ${this.Name}: Dependency check result:`, result);
-
-			return result;
+			return checkDependencies(param, this.allValues || {}, this.template || null);
 		},
 	},
 };
