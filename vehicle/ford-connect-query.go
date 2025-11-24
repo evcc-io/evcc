@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/ford/query"
 )
 
-// https://developer.ford.com/apis/fordconnect
+// https://developer.ford.com/apis/fordconnect-query
 
 // FordConnectQuery is an api.Vehicle implementation for Ford cars
 type FordConnectQuery struct {
