@@ -1,0 +1,37 @@
+template: homeassistant
+products:
+  - brand: Home Assistant
+    description:
+      de: Wallbox
+      en: Charger
+requirements:
+  evcc: ["skiptest"]
+auth:
+  type: homeassistant
+  params: [home]
+params:
+  - name: home
+    description:
+      de: Home Assistant Instanz
+      en: Home Assistant Instance
+    default: Home
+    service: homeassistant/homes
+  - name: switch
+    description:
+      de: Entity ID des schaltbaren Geräts
+      en: Entity ID of the switch device
+    service: homeassistant/homes/{home}/entities?domain=switch
+    example: switch.smartsocket
+    required: true
+  - name: power
+    description:
+      de: Entity ID für Leistungsmessung
+      en: Entity ID for power measurement
+    service: homeassistant/homes/{home}/entities?domain=sensor
+    example: sensor.smartsocket_power
+  - preset: switchsocket
+render: |
+  type: homeassistant
+  home: {{ .home }}
+  enable: {{ .switch }}
+  power: {{ .power }}
