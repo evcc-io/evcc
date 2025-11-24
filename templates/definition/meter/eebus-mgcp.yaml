@@ -2,7 +2,7 @@ template: eebus-mgcp
 products:
   - description:
       de: "EEBus Netzanschlusspunkt"
-      en: "EEBus Grid Connection Point"
+      en: "EEBus grid meter"
 group: generic
 requirements:
   description:

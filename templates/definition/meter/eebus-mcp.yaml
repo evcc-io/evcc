@@ -2,7 +2,7 @@ template: eebus-mcp
 products:
   - description:
       de: "EEBus Verbraucher"
-      en: "EEBus Consumer"
+      en: "EEBus consumer meter"
 group: generic
 requirements:
   description:

@@ -1,9 +1,6 @@
 template: homeassistant
 products:
   - brand: Home Assistant
-    description:
-      de: Meter
-      en: Meter
 group: generic
 requirements:
   description:
