@@ -24,7 +24,8 @@ func NewState() State {
 	}
 }
 
-// use base32 to avoid special characters
+// Use base32 to avoid special characters. Changed from base64 with padding for
+// compatibility with FordConnect Query in https://github.com/evcc-io/evcc/pull/25462
 var encoding = base32.StdEncoding.WithPadding(base32.NoPadding)
 
 func DecryptState(enc string, key []byte) (*State, error) {
