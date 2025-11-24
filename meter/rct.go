@@ -219,35 +219,32 @@ func (m *RCT) CurrentPower() (float64, error) {
 		return a + b + c, err
 
 	case "battery":
-		var eg errgroup.Group
-		var current, voltage float64
-
-		if m.battery == 2 {
-			eg.Go(func() error {
-				var err error
-				current, err = m.queryFloat(rct.BatteryPlaceholder0Current)
-				return err
-			})
-			eg.Go(func() error {
-				var err error
-				voltage, err = m.queryFloat(rct.BatteryPlaceholder0Voltage)
-				return err
-			})
+		if m.numberOfBatteries == 1 {
+			return m.queryFloat(rct.BatteryPowerW)
 		} else {
-			eg.Go(func() error {
-				var err error
-				current, err = m.queryFloat(rct.BatteryCurrent)
-				return err
-			})
-			eg.Go(func() error {
-				var err error
-				voltage, err = m.queryFloat(rct.BatteryVoltage)
-				return err
-			})
-		}
+			idCurrent, idVoltage := rct.BatteryCurrent, rct.BatteryVoltage
 
-		err := eg.Wait()
-		return current * voltage, err
+			if m.battery == 2 {
+				idCurrent, idVoltage = rct.BatteryPlaceholder0Current, rct.BatteryPlaceholder0Voltage
+			}
+
+			var eg errgroup.Group
+			var current, voltage float64
+
+			eg.Go(func() error {
+				var err error
+				current, err = m.queryFloat(idCurrent)
+				return err
+			})
+			eg.Go(func() error {
+				var err error
+				voltage, err = m.queryFloat(idVoltage)
+				return err
+			})
+
+			err := eg.Wait()
+			return current * voltage, err
+		}
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
