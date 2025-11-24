@@ -54,8 +54,6 @@ type IAquaLink struct {
 
 var _ api.ChargerEx = (*IAquaLink)(nil)
 
-//go:generate go tool decorate -f decorateIAquaLink -b *IAquaLink -r api.Charger
-
 // NewIAquaLinkFromConfig creates an IAquaLink charger from generic config
 func NewIAquaLinkFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {

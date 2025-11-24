@@ -86,7 +86,7 @@ export default {
 				Dependencies: this.Dependencies,
 			};
 
-			return checkDependencies(param, this.allValues || {}, this.template || null);
+			return checkDependencies(param, this.allValues ?? {}, this.template ?? null);
 		},
 	},
 };
