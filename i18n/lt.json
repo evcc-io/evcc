@@ -158,6 +158,9 @@
     },
     "general": {
       "applyAndClose": "Pritaikyti ir uždaryti",
+      "authPerform": "Jungtis naudojant {provider}",
+      "authPerformHint": "Bus atidaryta naujame skirtuke. Pratęsimui grįžkite čia.",
+      "authPrepare": "Paruošti ryšį",
       "cancel": "Atšaukti",
       "close": "Uždaryti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
