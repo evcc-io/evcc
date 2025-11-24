@@ -49,5 +49,4 @@ render: |
           end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
           value: (.value | tonumber) / 1000
           }
-      ]
-        | tostring
+      ] | tostring
