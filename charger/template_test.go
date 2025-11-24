@@ -40,7 +40,7 @@ var acceptable = []string{
 	"device name is required for cloud mode",                                // IAquaLink
 	"IAquaLink login failed",                                               // IAquaLink
 	"failed to list IAquaLink devices",                                     // IAquaLink
-	"device.*not found in IAquaLink systems",                              // IAquaLink
+	"device not found in IAquaLink systems",                               // IAquaLink
 }
 
 func TestTemplates(t *testing.T) {
