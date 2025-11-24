@@ -18,6 +18,7 @@
 			:unit="Unit"
 			:required="Required"
 			:choice="Choice"
+			:service-values="serviceValues"
 			:label="label"
 		/>
 	</FormRow>
@@ -45,6 +46,7 @@ export default {
 		Mask: Boolean,
 		Choice: Array,
 		Dependencies: { type: Array, default: () => [] },
+		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
 		allValues: Object,
 		template: Object,

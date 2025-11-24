@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
@@ -273,6 +274,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		api.Use(ensureAuthHandler(auth))
 
 		routes := map[string]route{
+			"auth":               {"POST", "/auth", authHandler},
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
 			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
@@ -319,6 +321,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
+
+		// services
+		api.PathPrefix("/service").Handler(http.StripPrefix("/api/config/service", service.Handler()))
 
 		// site
 		for _, r := range map[string]route{
