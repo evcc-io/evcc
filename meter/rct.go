@@ -40,12 +40,13 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity         `mapstructure:",squash"`
-		batterySocLimits        `mapstructure:",squash"`
-		Uri, Usage              string
-		MaxChargePower, Battery int
-		ExternalPower           bool
-		Cache                   time.Duration
+		batteryCapacity  `mapstructure:",squash"`
+		batterySocLimits `mapstructure:",squash"`
+		Uri, Usage       string
+		MaxChargePower   int
+		Battery          int
+		ExternalPower    bool
+		Cache            time.Duration
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
