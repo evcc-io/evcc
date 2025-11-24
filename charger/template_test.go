@@ -32,14 +32,14 @@ var acceptable = []string{
 	"sponsorship required, see https://docs.evcc.io/docs/sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
-	"timeout",                              // ocpp
-	"must have uri and password",           // Wattpilot
-	"either identity or uuid are required", // Plugchoice
+	"timeout",                                                             // ocpp
+	"must have uri and password",                                          // Wattpilot
+	"either identity or uuid are required",                                // Plugchoice
 	"must provide either uri (local mode) or email/password (cloud mode)", // IAquaLink
 	"cannot use both uri (local) and email/password (cloud)",              // IAquaLink
-	"device name is required for cloud mode",                                // IAquaLink
-	"IAquaLink login failed",                                               // IAquaLink
-	"failed to list IAquaLink devices",                                     // IAquaLink
+	"device name is required for cloud mode",                              // IAquaLink
+	"IAquaLink login failed",                                              // IAquaLink
+	"failed to list IAquaLink devices",                                    // IAquaLink
 	"device not found in IAquaLink systems",                               // IAquaLink
 }
 

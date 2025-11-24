@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -39,16 +40,16 @@ func init() {
 
 type IAquaLink struct {
 	*SgReady
-	log        *util.Logger
-	client     *iaqualink.Client // Cloud mode client
-	helper     *request.Helper   // Local mode HTTP helper
-	uri        string             // Local mode: device IP/URL
-	deviceID   string             // Cloud mode: device ID
-	deviceName string             // Device name/identifier
-	features   []string           // Available device features
-	localMode  bool               // true if using local IP, false if using cloud
-	readModeDisabled bool         // If true, skip mode reading attempts (API limitations)
-	mu         sync.Mutex
+	log              *util.Logger
+	client           *iaqualink.Client // Cloud mode client
+	helper           *request.Helper   // Local mode HTTP helper
+	uri              string            // Local mode: device IP/URL
+	deviceID         string            // Cloud mode: device ID
+	deviceName       string            // Device name/identifier
+	features         []string          // Available device features
+	localMode        bool              // true if using local IP, false if using cloud
+	readModeDisabled bool              // If true, skip mode reading attempts (API limitations)
+	mu               sync.Mutex
 }
 
 var _ api.ChargerEx = (*IAquaLink)(nil)
@@ -56,7 +57,7 @@ var _ api.ChargerEx = (*IAquaLink)(nil)
 //go:generate go tool decorate -f decorateIAquaLink -b *IAquaLink -r api.Charger
 
 // NewIAquaLinkFromConfig creates an IAquaLink charger from generic config
-func NewIAquaLinkFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewIAquaLinkFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed           `mapstructure:",squash"`
 		URI             string // Local mode: IP address or URL of the device
@@ -113,7 +114,6 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 		// For local mode, try to discover device capabilities
 		// Most IAquaLink devices support similar local APIs
 		c.features = []string{iaqualink.FeatureModeInfo, iaqualink.FeatureStatus}
-
 	} else {
 		// Cloud mode: use IAquaLink API
 		c.localMode = false
@@ -343,7 +343,7 @@ func (c *IAquaLink) getActionsForMode(mode int64) []string {
 	modeActions := map[int64][]string{
 		1: {"eco", "off"},      // Dimm - try eco first, then off
 		2: {"smart", "normal"}, // Normal - try smart first, then normal
-		3: {"boost"},            // Boost
+		3: {"boost"},           // Boost
 	}
 
 	actions := modeActions[mode]
@@ -353,13 +353,7 @@ func (c *IAquaLink) getActionsForMode(mode int64) []string {
 
 	// Filter actions based on device capabilities
 	// If device has mode_info feature, it likely supports mode commands
-	hasModeInfo := false
-	for _, feature := range c.features {
-		if feature == iaqualink.FeatureModeInfo {
-			hasModeInfo = true
-			break
-		}
-	}
+	hasModeInfo := slices.Contains(c.features, iaqualink.FeatureModeInfo)
 
 	// If we can't determine from features, try all actions
 	// The DeviceWebSocket will fail if action is not supported
@@ -483,7 +477,6 @@ func (c *IAquaLink) getModeLocal(ctx context.Context) (int64, error) {
 	return 2, nil
 }
 
-
 // parseModeFromResponse parses mode from device response string
 func (c *IAquaLink) parseModeFromResponse(response string) int64 {
 	stateStr := strings.ToLower(response)
@@ -519,11 +512,5 @@ func (c *IAquaLink) parseModeFromResponse(response string) int64 {
 
 // hasFeature checks if device has a specific feature
 func (c *IAquaLink) hasFeature(feature string) bool {
-	for _, f := range c.features {
-		if f == feature {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.features, feature)
 }
-

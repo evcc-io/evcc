@@ -60,7 +60,7 @@
 								v-if="authProviderUrl"
 								class="d-flex flex-column align-items-end gap-2"
 							>
-								<a :href="authProviderUrl" target="_blank" class="btn btn-primary">
+								<a :href="authProviderUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
 									{{
 										$t("config.general.authPerform", {
 											provider: authProviderDomain,
@@ -112,7 +112,7 @@
 						:dependencies="param.Dependencies"
 						v-model="values[param.Name]"
 						:all-values="values"
-						:template="template"
+						:template="template || undefined"
 					/>
 
 					<PropertyCollapsible>
@@ -125,7 +125,7 @@
 								:dependencies="param.Dependencies"
 								v-model="values[param.Name]"
 								:all-values="values"
-								:template="template"
+								:template="template || undefined"
 							/>
 						</template>
 						<template v-if="$slots['collapsible-more']" #more>

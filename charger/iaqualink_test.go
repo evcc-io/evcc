@@ -11,21 +11,21 @@ import (
 
 func TestIAquaLinkFromConfig(t *testing.T) {
 	tests := []struct {
-	name    string
-	config  map[string]interface{}
-	wantErr bool
-	errMsg  string
+		name    string
+		config  map[string]any
+		wantErr bool
+		errMsg  string
 	}{
 		{
 			name: "valid local mode config",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"uri": "http://192.168.1.100",
 			},
 			wantErr: false,
 		},
 		{
 			name: "valid cloud mode config",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"email":    "test@example.com",
 				"password": "password123",
 				"device":   "device123",
@@ -34,7 +34,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "missing both uri and credentials",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"device": "device123",
 			},
 			wantErr: true,
@@ -42,7 +42,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "missing email in cloud mode",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"password": "password123",
 				"device":   "device123",
 			},
@@ -51,7 +51,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "missing password in cloud mode",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"email":  "test@example.com",
 				"device": "device123",
 			},
@@ -60,7 +60,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "missing device in cloud mode",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"email":    "test@example.com",
 				"password": "password123",
 			},
@@ -69,7 +69,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "both uri and credentials provided",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"uri":      "http://192.168.1.100",
 				"email":    "test@example.com",
 				"password": "password123",
@@ -80,7 +80,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "uri with email only",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"uri":   "http://192.168.1.100",
 				"email": "test@example.com",
 			},
@@ -89,7 +89,7 @@ func TestIAquaLinkFromConfig(t *testing.T) {
 		},
 		{
 			name: "uri with password only",
-			config: map[string]interface{}{
+			config: map[string]any{
 				"uri":      "http://192.168.1.100",
 				"password": "password123",
 			},
@@ -136,7 +136,7 @@ func TestIAquaLink_InterfaceImplementation(t *testing.T) {
 	// Test that IAquaLink properly implements required interfaces
 	// This is a compile-time check, but we can also verify at runtime
 	ctx := context.Background()
-	config := map[string]interface{}{
+	config := map[string]any{
 		"uri": "http://192.168.1.100",
 	}
 
@@ -160,4 +160,3 @@ func TestIAquaLink_InterfaceImplementation(t *testing.T) {
 	_, ok = charger.(api.Dimmer)
 	assert.True(t, ok, "IAquaLink should implement api.Dimmer via SgReady")
 }
-
