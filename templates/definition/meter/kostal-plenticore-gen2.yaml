@@ -49,7 +49,7 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    default: 4200
+    required: true
   - name: maxdischargepower
   - name: watchdog
     type: duration
