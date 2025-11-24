@@ -95,7 +95,7 @@ func jsonMarshalers() *json.Marshalers {
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
-	json.MarshalWrite(w, data, json.WithMarshalers(jsonMarshalers())); err != nil {
+	json.MarshalWrite(w, data, json.WithMarshalers(jsonMarshalers()))
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
