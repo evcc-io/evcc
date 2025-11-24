@@ -293,7 +293,13 @@ func (m *RCT) totalEnergy() (float64, error) {
 		})
 
 		err := eg.Wait()
-		return ((in - out) / 1000) / float64(m.numberOfBatteries), err
+		totalWh := (in - out) / 1000
+
+		if m.numberOfBatteries == 2 {
+			totalWh *= 0.5
+		}
+
+		return totalWh, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
