@@ -22,7 +22,6 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    default: Home
     service: homeassistant/homes
     required: true
   - name: soc

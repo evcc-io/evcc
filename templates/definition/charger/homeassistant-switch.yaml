@@ -19,8 +19,8 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    default: Home
     service: homeassistant/homes
+    required: true
   - name: switch
     description:
       de: Entity ID des schaltbaren Geräts
