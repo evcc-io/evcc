@@ -891,6 +891,20 @@ paths:
                     $ref: "#/components/schemas/LogAreas"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /system/cache:
+    delete:
+      operationId: clearCache
+      summary: Clear cache
+      description: "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching."
+      security:
+        - cookieAuth: []
+      tags:
+        - system
+      responses:
+        "200":
+          $ref: "#/components/responses/SuccessResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /system/shutdown:
     post:
       operationId: shutdownSystem
@@ -1517,6 +1531,16 @@ components:
                 type: "object"
     BlankResponse:
       description: Success - Blank response
+    SuccessResult:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                example: "OK"
     EmptyResult:
       description: Success - Empty result
       content:

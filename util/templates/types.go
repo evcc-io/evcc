@@ -25,14 +25,14 @@ const (
 	ModbusKeyTCPIP       = "tcpip"
 	ModbusKeyUDP         = "udp"
 
-	ModbusParamNameId       = "id"
-	ModbusParamNameDevice   = "device"
-	ModbusParamNameBaudrate = "baudrate"
-	ModbusParamNameComset   = "comset"
-	ModbusParamNameURI      = "uri"
-	ModbusParamNameHost     = "host"
-	ModbusParamNamePort     = "port"
-	ModbusParamNameRTU      = "rtu"
+	ModbusParamId       = "id"
+	ModbusParamDevice   = "device"
+	ModbusParamBaudrate = "baudrate"
+	ModbusParamComset   = "comset"
+	ModbusParamURI      = "uri"
+	ModbusParamHost     = "host"
+	ModbusParamPort     = "port"
+	ModbusParamRTU      = "rtu"
 )
 
 const (
@@ -41,7 +41,19 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
+var (
+	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
+
+	// ModbusParams contains all field names used by modbus templates
+	ModbusParams = []string{
+		ModbusParamId, ModbusParamDevice, ModbusParamBaudrate, ModbusParamComset,
+		ModbusParamURI, ModbusParamHost, ModbusParamPort, ModbusParamRTU,
+	}
+
+	ModbusConnectionTypes = []string{
+		ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	}
+)
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -63,12 +75,10 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
-var predefinedTemplateProperties = []string{
-	"type", "template", "name",
-	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
-	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
-}
+var predefinedTemplateProperties = append(
+	[]string{"type", "template", "name"},
+	append(ModbusParams, ModbusConnectionTypes...)...,
+)
 
 // TextLanguage contains language-specific texts
 type TextLanguage struct {
@@ -189,6 +199,7 @@ type Param struct {
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Service     string       `json:",omitempty"` // defines a service to provide choices
 	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
@@ -276,13 +287,14 @@ func (c CountryCode) IsValid() bool {
 type TemplateDefinition struct {
 	Template     string
 	Deprecated   bool             `json:"-"`
+	Auth         map[string]any   `json:",omitempty"` // OAuth parameters (if required)
 	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []string         `json:",omitempty"`
 	Countries    []CountryCode    `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements     `json:",omitempty"`
-	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
+	Linked       []LinkedTemplate `json:",omitempty"` // list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`
 	Render       string           `json:"-"` // rendering template
 }

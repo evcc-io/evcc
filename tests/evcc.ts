@@ -68,7 +68,11 @@ export async function stop(instance?: ChildProcess) {
   await _clean();
 }
 
-export async function restart(config?: string, flags = "--disable-auth", alreadyStopped = false) {
+export async function restart(
+  config?: string,
+  flags: string | string[] = "--disable-auth",
+  alreadyStopped = false
+) {
   if (!alreadyStopped) {
     await _stop();
   }

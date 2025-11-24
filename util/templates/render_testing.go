@@ -1,10 +1,14 @@
 package templates
 
 import (
+	"context"
+	"errors"
 	"maps"
 	"slices"
 	"testing"
 
+	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -34,6 +38,35 @@ func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map
 	cb(values)
 }
 
+func testAuth(other map[string]any) error {
+	if len(other) == 0 {
+		return nil
+	}
+
+	var cc struct {
+		Type   string
+		Params []string
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return err
+	}
+
+	params := make(map[string]any)
+	for _, p := range cc.Params {
+		params[p] = "foo"
+	}
+
+	_, err := auth.NewFromConfig(context.TODO(), cc.Type, params)
+
+	// ConfigError indicates invalid parameters in mapstructure decode
+	if ce := new(util.ConfigError); errors.As(err, &ce) {
+		return err
+	}
+
+	return nil
+}
+
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]any)) {
 	t.Parallel()
 
@@ -59,6 +92,11 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		values["template"] = tmpl.Template
 		// https://github.com/evcc-io/evcc/pull/10272 - override example IP (192.0.2.2)
 		values["host"] = "localhost"
+
+		// test auth configuration
+		if err := testAuth(tmpl.TemplateDefinition.Auth); err != nil {
+			t.Error("authorization:", err)
+		}
 
 		usages := tmpl.Usages()
 		if len(usages) == 0 {

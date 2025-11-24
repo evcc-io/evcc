@@ -576,12 +576,42 @@ input.form-control:read-only,
 	color: var(--evcc-default-text);
 }
 
-.dark .form-control::placeholder {
-	color: var(--bs-gray-medium);
+.form-control::placeholder {
+	opacity: 0.5 !important;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
+}
+
+input[list]::-webkit-list-button {
+	display: none !important;
+	appearance: none !important;
+}
+
+.form-control-clear {
+	position: absolute;
+	right: 0.75rem;
+	top: 0;
+	bottom: 0;
+	justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-self: center;
+	width: 1.1rem;
+	font-size: 1.5rem;
+	font-weight: normal;
+	color: var(--evcc-default-text);
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+
+/* hide dropdown arrow if clear is visible */
+.form-select.has-clear-button {
+	background-image: none;
 }
 
 .table {
