@@ -5,12 +5,12 @@ products:
 group: generic
 requirements:
   description:
-    en: Required MQTT broker configuration and a Ora2MQTT Gateway (https://github.com/zivillian/ora2mqtt)
-    de: Voraussetzung ist ein konfigurierter MQTT Broker und ein Ora2MQTT Gateway (https://github.com/zivillian/ora2mqtt)
+    en: ora2mqtt. Required MQTT broker configuration and a Ora2MQTT Gateway (https://github.com/zivillian/ora2mqtt)
+    de: ora2mqtt. Voraussetzung ist ein konfigurierter MQTT Broker und ein Ora2MQTT Gateway (https://github.com/zivillian/ora2mqtt)
 params:
- - name: vin
-    required: true
   - preset: vehicle-common
+  - name: vin
+	required: true
   - name: timeout
     default: 5min
 render: |
