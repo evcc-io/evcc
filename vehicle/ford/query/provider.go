@@ -1,0 +1,78 @@
+package query
+
+import (
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+)
+
+type Provider struct {
+	statusG func() (Telemetry, error)
+}
+
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+	impl := &Provider{
+		statusG: util.Cached(func() (Telemetry, error) {
+			return api.Telemetry(vin)
+		}, cache),
+	}
+
+	return impl
+}
+
+var _ api.Battery = (*Provider)(nil)
+
+// Soc implements the api.Battery interface
+func (v *Provider) Soc() (float64, error) {
+	res, err := v.statusG()
+	_ = res
+	return 0, err
+	// return res.VehicleDetails.BatteryChargeLevel.Value, err
+}
+
+// var _ api.VehicleRange = (*Provider)(nil)
+
+// // Range implements the api.VehicleRange interface
+// func (v *Provider) Range() (int64, error) {
+// 	res, err := v.statusG()
+// 	return int64(res.VehicleDetails.BatteryChargeLevel.DistanceToEmpty), err
+// }
+
+// var _ api.ChargeState = (*Provider)(nil)
+
+// // Status implements the api.ChargeState interface
+// func (v *Provider) Status() (api.ChargeStatus, error) {
+// 	status := api.StatusA
+
+// 	res, err := v.statusG()
+// 	if err != nil {
+// 		return status, err
+// 	}
+
+// 	if res.VehicleStatus.PlugStatus.Value {
+// 		status = api.StatusB // plugged
+
+// 		if res.VehicleStatus.ChargingStatus.Value == "Charging" {
+// 			status = api.StatusC // charging
+// 		}
+// 	}
+
+// 	return status, nil
+// }
+
+// var _ api.VehicleOdometer = (*Provider)(nil)
+
+// // Odometer implements the api.VehicleOdometer interface
+// func (v *Provider) Odometer() (float64, error) {
+// 	res, err := v.statusG()
+// 	return res.VehicleDetails.Odometer, err
+// }
+
+// var _ api.VehiclePosition = (*Provider)(nil)
+
+// // Position implements the api.VehiclePosition interface
+// func (v *Provider) Position() (float64, float64, error) {
+// 	res, err := v.statusG()
+// 	return res.VehicleLocation.Latitude, res.VehicleLocation.Longitude, err
+// }
