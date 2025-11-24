@@ -105,7 +105,7 @@
 				<PropertyField
 					id="vehicleParamMaxPower"
 					v-model="values.maxPower"
-					type="Int"
+					type="Float"
 					unit="W"
 					size="w-25 w-min-200"
 					class="me-2"

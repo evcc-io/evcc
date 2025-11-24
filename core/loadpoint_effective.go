@@ -167,8 +167,16 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	maxCurrent := lp.getMaxCurrent()
 
 	if v := lp.GetVehicle(); v != nil {
+		var vehicleMaxCurrent float64
+		var maxCurrentFromPower float64
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
-			maxCurrent = min(maxCurrent, res)
+			vehicleMaxCurrent = res
+		}
+		if res, ok := v.OnIdentified().GetMaxPower(); ok && res > 0 {
+			maxCurrentFromPower = lp.roundedCurrent(powerToCurrent(res, lp.phases))
+		}
+		if vehicleMaxCurrent > 0  && maxCurrentFromPower > 0 {
+			maxCurrent = min(maxCurrent, vehicleMaxCurrent, maxCurrentFromPower)
 		}
 	}
 
