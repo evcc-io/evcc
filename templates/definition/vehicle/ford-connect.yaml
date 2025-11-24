@@ -1,6 +1,6 @@
 template: ford-connect
 products:
-  - brand: Ford
+  - brand: Ford (FordConnect)
 params:
   - preset: vehicle-common
   - name: clientid

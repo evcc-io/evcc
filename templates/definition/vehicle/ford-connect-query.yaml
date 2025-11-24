@@ -1,34 +1,30 @@
-template: ford-connect
+template: ford-connect-query
 products:
-  - brand: Ford
+  - brand: Ford (FordConnect Query)
 params:
   - preset: vehicle-common
   - name: clientid
     description:
-      generic: FordConnect API Client ID
+      generic: FordConnect Query Client ID
     help:
-      de: Einrichtung unter https://developer.ford.com
-      en: Setup at https://developer.ford.com
+      de: Einrichtung unter https://developer.ford.com/apis/fordconnect-query
+      en: Setup at https://developer.ford.com/apis/fordconnect-query
     required: true
   - name: clientsecret
     description:
-      generic: FordConnect API Client Secret
+      generic: FordConnect Query Client Secret
     help:
-      de: Einrichtung unter https://developer.ford.com
-      en: Setup at https://developer.ford.com
+      de: Einrichtung unter https://developer.ford.com/apis/fordconnect-query
+      en: Setup at https://developer.ford.com/apis/fordconnect-query
     required: true
   - name: redirecturi
     description:
-      generic: FordConnect API Redirect URL
+      generic: FordConnect Query Redirect URL
     help:
-      de: Einrichtung unter https://developer.ford.com
-      en: Setup at https://developer.ford.com
+      de: Einrichtung unter https://developer.ford.com/apis/fordconnect-query
+      en: Setup at https://developer.ford.com/apis/fordconnect-query
     service: auth/redirecturi
     required: true
-  - name: accessToken
-    deprecated: true
-  - name: refreshToken
-    deprecated: true
   - name: vin
     example: WF0FXX...
   - name: cache
