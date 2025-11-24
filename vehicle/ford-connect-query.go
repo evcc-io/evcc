@@ -36,7 +36,7 @@ func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	v := &FordConnect{
+	v := &FordConnectQuery{
 		embed: &cc.embed,
 	}
 

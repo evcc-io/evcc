@@ -8,12 +8,12 @@ import (
 )
 
 type Provider struct {
-	statusG func() (Telemetry, error)
+	telemetryG func() (Telemetry, error)
 }
 
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: util.Cached(func() (Telemetry, error) {
+		telemetryG: util.Cached(func() (Telemetry, error) {
 			return api.Telemetry(vin)
 		}, cache),
 	}
@@ -25,54 +25,51 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Battery interface
 func (v *Provider) Soc() (float64, error) {
-	res, err := v.statusG()
-	_ = res
-	return 0, err
-	// return res.VehicleDetails.BatteryChargeLevel.Value, err
+	res, err := v.telemetryG()
+	return res.Metrics.XevBatteryStateOfCharge.Value, err
 }
 
-// var _ api.VehicleRange = (*Provider)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (int64, error) {
-// 	res, err := v.statusG()
-// 	return int64(res.VehicleDetails.BatteryChargeLevel.DistanceToEmpty), err
-// }
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.telemetryG()
+	return int64(res.Metrics.XevBatteryRange.Value), err
+}
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusA
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA
 
-// 	res, err := v.statusG()
-// 	if err != nil {
-// 		return status, err
-// 	}
+	res, err := v.telemetryG()
+	if err != nil {
+		return status, err
+	}
 
-// 	if res.VehicleStatus.PlugStatus.Value {
-// 		status = api.StatusB // plugged
+	switch res.Metrics.XevPlugChargerStatus.Value {
+	case "CONNECTED":
+		status = api.StatusB
+	case "CHARGING":
+		status = api.StatusC
+	}
 
-// 		if res.VehicleStatus.ChargingStatus.Value == "Charging" {
-// 			status = api.StatusC // charging
-// 		}
-// 	}
+	return status, nil
+}
 
-// 	return status, nil
-// }
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.telemetryG()
+	return res.Metrics.Odometer.Value, err
+}
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	return res.VehicleDetails.Odometer, err
-// }
+var _ api.VehiclePosition = (*Provider)(nil)
 
-// var _ api.VehiclePosition = (*Provider)(nil)
-
-// // Position implements the api.VehiclePosition interface
-// func (v *Provider) Position() (float64, float64, error) {
-// 	res, err := v.statusG()
-// 	return res.VehicleLocation.Latitude, res.VehicleLocation.Longitude, err
-// }
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.telemetryG()
+	return res.Metrics.Position.Value.Location.Lat, res.Metrics.Position.Value.Location.Lon, err
+}
