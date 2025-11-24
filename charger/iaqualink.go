@@ -208,7 +208,7 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 
 	c.SgReady = sgr
 
-	return decorateIAquaLink(c), nil
+	return c, nil
 }
 
 // setMode sets the device mode based on evcc SGReady mode (1/2/3)
