@@ -95,6 +95,7 @@
       "currency": "Měna",
       "current": "Proud",
       "currentRange": "Proud",
+      "dimmed": "Ztlumeno",
       "enabled": "Zapnuto",
       "energy": "Energie",
       "feedinPrice": "Cena za výkup energie",
@@ -134,6 +135,7 @@
     "devices": {
       "auxMeter": "Chytrý spotřebič",
       "batteryStorage": "Bateriové úložiště",
+      "consumer": "Spotřebič",
       "solarSystem": "Fotovoltaický systém"
     },
     "editor": {
@@ -155,12 +157,19 @@
       "optional": "volitelné"
     },
     "general": {
+      "applyAndClose": "Použít a zavřít",
+      "authPerform": "Propojit s {provider}",
+      "authPerformHint": "Bude otevřeno v novém okně. Pro pokračování se vraťte na tuto stránku.",
+      "authPrepare": "Připravit propojení",
       "cancel": "Zrušit",
+      "close": "Zavřít",
       "customHelp": "Vytvořit zařízení definované uživatelem s použitím EVCC plugin rozhraní.",
       "customOption": "Zařízení nastavené uživatelem",
       "delete": "Smazat",
       "docsLink": "Další informace jsou uvedeny v dokumentaci.",
+      "dragList": "Seznam umožňující úpravy pořadí",
       "experimental": "Experimentální nastavení",
+      "forceSave": "Vynutit uložení",
       "hideAdvancedSettings": "Skrýt pokročilá nastavení",
       "invalidFileSelected": "Zvolen neplatný soubor",
       "noFileSelected": "Nebyl zvolen žádný soubor.",
@@ -169,12 +178,17 @@
       "password": "Heslo",
       "readFromFile": "Načíst ze souboru",
       "remove": "Odebrat",
+      "required": "požadováno",
+      "reset": "Reset",
       "save": "Uložit",
+      "saved": "Uloženo.",
+      "saving": "Ukládání…",
       "selectFile": "Vybrat soubor",
       "showAdvancedSettings": "Zobrazit pokročilá nastavení",
       "telemetry": "Telemetrie",
       "templateLoading": "Načítání...",
       "title": "Název",
+      "typeDeprecated": "Typ '{type}' je zastaralý a bude v budoucích verzích programu odstraněn. Zkontrolujte poznámky k vydání a vytvořte zařízení znovu.",
       "validateSave": "Ověřit a uložit"
     },
     "grid": {
@@ -187,7 +201,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "Změnit"
+      "change": "Změnit",
+      "label": "Ikona"
     },
     "influx": {
       "description": "Zapisuje údaje o nabíjení a další metriky do InfluxDB. K vizualizaci dat použijte Grafanu nebo jiné nástroje.",
@@ -342,6 +357,15 @@
       "specific": "Specifické integrace",
       "template": "Výrobce",
       "titleChoice": "Co chcete přidat?",
+      "titleLabel": "Název",
+      "usage": {
+        "aux": "Samoregulační spotřebič",
+        "battery": "Baterie",
+        "charge": "Spotřebič/ Nabíjecí stanice",
+        "grid": "Distribuční síť",
+        "label": "Využití",
+        "pv": "Produkce"
+      },
       "validateSave": "Zkontrolovat a uložit"
     },
     "modbus": {
@@ -365,7 +389,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Povolit více klientům přístup k jednomu Modbus zařízení.",
+      "add": "Přidat připojení proxy (můstek)",
+      "connection": "Připojení č.{number}",
+      "description": "Některá Modbus zařízení podporuji jedno či velmi málo připojených klientů. EVCC může fungovat jako proxy - můstek, který umožňuje přístup více klientům zároveň (např. EVCC a HomeAssistant zároveň).",
+      "device": "Zařízení",
+      "option": {
+        "deny": "chyba",
+        "false": "ne",
+        "true": "tlumený"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Zápis je blokován z důvodu chyby Modbus.",
+          "false": "Příkaz pro zápis bude přesměrován.",
+          "true": "Příkazy pro zápis jsou blokovány bez odpovědi zařízení."
+        },
+        "label": "Pouze pro čtení"
+      },
+      "sourcePortHelp": "Port pro příchozí připojení klientů. Musí být volný - k dispozici.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -387,10 +428,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Použijte příponu .local pro povolení mDNS. Relevance pro detekci mobilní aplikace a některých OCPP nabíječek.",
+      "descriptionExternalUrl": "Adresa pro ostatní zařízení, která se chtějí připojit k EVCC a pro automatickou detekci aplikace EVCC.",
+      "descriptionHost": "Použito k označení EVCC ve Vaší LAN (lokální síti).",
+      "descriptionInternalUrl": "Lokální adresa EVCC.",
       "descriptionPort": "Port pro webové rozhraní a API. Pokud tuto hodnotu změníte, budete muset aktualizovat URL ve vašem prohlížeči.",
       "descriptionSchema": "Ovlivňuje pouze způsob generování URL adres. Výběr HTTPS nezajistí šifrování.",
-      "labelHost": "Název hostitele",
+      "labelExternalUrl": "Externí URL adresa",
+      "labelHost": "mDNS název hostitele",
+      "labelInternalUrl": "Interní URL adresa",
       "labelPort": "Port",
       "labelSchema": "Schéma",
       "title": "Síť"
@@ -455,6 +500,7 @@
       "labelToken": "Sponzorský token",
       "title": "Sponzorství",
       "tokenRequired": "Před vytvořením tohoto zařízení musíte nakonfigurovat sponzorský token.",
+      "tokenRequiredFeature": "Tato funkce vyžaduje sponzorský token.",
       "tokenRequiredLearnMore": "Zjistit více.",
       "tokenRequiredShort": "Nebyl přidán sponzorský token.",
       "trialToken": "zkušební token",
@@ -466,6 +512,7 @@
         "backup": {
           "action": "Stáhnout zálohu...",
           "confirmationButton": "Stáhnout zálohu",
+          "confirmationText": "Stáhnout soubor databáze.",
           "description": "Zálohuje vaši konfiguraci do souboru. Tento soubor může být později použit pro obnovu, např. v případě selhání systému.",
           "title": "Záloha"
         },
@@ -503,6 +550,10 @@
     "tariffs": {
       "description": "Definujte své energetické tarify pro výpočet nákladů na nabíjecí relace.",
       "title": "Tarify"
+    },
+    "telemetry": {
+      "description": "Data konfigurace umožňují vylepšovat EVCC. Vaše soukromí je důležité a účast je zcela dobrovolná.",
+      "title": "Telemetrie"
     },
     "title": {
       "description": "Zobrazeno na hlavní obrazovce a kartě prohlížeče.",
@@ -644,6 +695,7 @@
     "about": "O",
     "authProviders": {
       "confirmLogout": "Opravdu chcete odpojit {title}?",
+      "loggedOut": "Odhlášení proběhlo úspěšně",
       "title": "Stav autorizace"
     },
     "blog": "Blog",
@@ -674,6 +726,14 @@
     "restartButton": "Restartovat",
     "restartDescription": "Zkusili jste to restartovat?",
     "secondaryActions": "Stále se vám nedaří vyřešit váš problém? Zde jsou některé další možnosti."
+  },
+  "issue": {
+    "additional": {
+      "description": "Vložte detaily konfigurace a protokoly jež pomohou reprodukovat problém. Žádáme o co největší sdílnost.",
+      "include": "zahrnout",
+      "lines": "řádky",
+      "logs": "Protokoly"
+    }
   },
   "log": {
     "areaLabel": "Filtruj podle oblasti",
