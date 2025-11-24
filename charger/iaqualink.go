@@ -93,7 +93,7 @@ func NewIAquaLinkFromConfig(ctx context.Context, other map[string]interface{}) (
 // NewIAquaLink creates IAquaLink charger
 // Supports both local mode (via URI) and cloud mode (via email/password)
 func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, device string) (api.Charger, error) {
-	log := util.NewLogger("iaqualink").Redact(email, password)
+	log := util.NewLogger("iaqualink").Redact(email, password, device)
 
 	c := &IAquaLink{
 		SgReady:    nil, // will be set after creating mode functions
@@ -152,7 +152,7 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 				deviceID = strconv.Itoa(dev.ID)
 				serialNumber = dev.SerialNumber
 				matchedBy = "serial number"
-				log.DEBUG.Printf("Found device by serial number: ID=%d, Name=%s, SerialNumber=%s, OwnerID=%d", dev.ID, dev.Name, dev.SerialNumber, dev.OwnerID)
+				log.DEBUG.Printf("Found device by serial number: ID=%d", dev.ID)
 				break
 			}
 		}
@@ -165,17 +165,17 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 					deviceID = strconv.Itoa(dev.ID)
 					serialNumber = dev.SerialNumber
 					matchedBy = "name"
-					log.DEBUG.Printf("Found device by name: ID=%d, Name=%s, SerialNumber=%s, OwnerID=%d", dev.ID, dev.Name, dev.SerialNumber, dev.OwnerID)
+					log.DEBUG.Printf("Found device by name: ID=%d", dev.ID)
 					break
 				}
 			}
 		}
 
 		if deviceID == "" {
-			return nil, fmt.Errorf("device '%s' not found in IAquaLink systems (tried matching by serial number and name)", device)
+			return nil, fmt.Errorf("device not found in IAquaLink systems (tried matching by serial number and name)")
 		}
 
-		log.INFO.Printf("IAquaLink device matched by %s: %s", matchedBy, device)
+		log.INFO.Printf("IAquaLink device matched by %s", matchedBy)
 
 		// Try using serial number if ID doesn't work
 		// Some API endpoints might require serial number instead of ID
@@ -189,15 +189,15 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 		var featuresOutput *iaqualink.DeviceFeaturesOutput
 		var featuresErr error
 		for _, identifier := range deviceIdentifiers {
-			log.DEBUG.Printf("Trying to get device features with identifier: %s", identifier)
+			log.DEBUG.Printf("Trying to get device features")
 			featuresOutput, featuresErr = client.DeviceFeatures(identifier)
 			if featuresErr == nil {
-				log.DEBUG.Printf("Successfully got device features with identifier: %s", identifier)
+				log.DEBUG.Printf("Successfully got device features")
 				// Update deviceID to the working identifier
 				deviceID = identifier
 				break
 			}
-			log.DEBUG.Printf("Failed with identifier %s: %v", identifier, featuresErr)
+			log.DEBUG.Printf("Failed to get device features: %v", featuresErr)
 		}
 
 		if featuresErr != nil {
@@ -222,7 +222,7 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 	}
 
 	// Log available modes
-	log.INFO.Printf("IAquaLink device '%s' supports modes: Boost(3), Smart(2), Eco/Off(1) (mode: %s)", device, map[bool]string{true: "local", false: "cloud"}[c.localMode])
+	log.INFO.Printf("IAquaLink device supports modes: Boost(3), Smart(2), Eco/Off(1) (mode: %s)", map[bool]string{true: "local", false: "cloud"}[c.localMode])
 
 	// Create mode setter and getter functions
 	setMode := func(mode int64) error {
@@ -435,7 +435,7 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 		}
 		if output != nil && output.Command.Response != "" {
 			if mode := c.parseModeFromResponse(output.Command.Response); mode > 0 {
-				c.log.DEBUG.Printf("Got mode %d from command '%s': %s", mode, cmd, output.Command.Response)
+				c.log.DEBUG.Printf("Got mode %d from command '%s'", mode, cmd)
 				return mode, nil
 			}
 		}
