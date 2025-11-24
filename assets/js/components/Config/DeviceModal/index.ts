@@ -17,6 +17,12 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+export type TemplateParamDependency = {
+  name: string;
+  check: "equal";
+  value: string | number | boolean;
+};
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
@@ -25,6 +31,7 @@ export type TemplateParam = {
   Default?: string | number | boolean;
   Choice?: string[];
   Usages?: TemplateParamUsage[];
+  Dependencies?: TemplateParamDependency[];
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
@@ -89,6 +96,55 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
     return `${prefix}custom${suffix}`;
   }
   return `${prefix}${type}`;
+}
+
+export function checkDependencies(
+  param: TemplateParam,
+  values: DeviceValues,
+  template?: Template | null
+): boolean {
+  if (!param.Dependencies || param.Dependencies.length === 0) {
+    return true;
+  }
+
+  // All dependencies must be satisfied
+  return param.Dependencies.every((dep) => {
+    let fieldValue = values[dep.name];
+
+    // If field value is not set, try to get default from template
+    if (fieldValue === undefined || fieldValue === null || fieldValue === "") {
+      if (template) {
+        const depParam = template.Params.find((p) => p.Name === dep.name);
+        if (depParam && depParam.Default !== undefined && depParam.Default !== null) {
+          fieldValue = depParam.Default;
+        }
+      }
+    }
+
+    if (dep.check === "equal") {
+      // Convert both to strings for comparison to handle type mismatches
+      const fieldStr = String(fieldValue || "");
+      const depStr = String(dep.value || "");
+
+      // Debug logging (remove after fixing)
+      if (param.Name === "uri" || param.Name === "email" || param.Name === "password" || param.Name === "device") {
+        console.log(`[checkDependencies] ${param.Name} checking ${dep.name}:`, {
+          fieldValue,
+          fieldStr,
+          depValue: dep.value,
+          depStr,
+          match: fieldStr === depStr,
+          values,
+          templateExists: !!template,
+          depParamDefault: template?.Params.find((p) => p.Name === dep.name)?.Default
+        });
+      }
+
+      return fieldStr === depStr;
+    }
+    // Add more check types here if needed in the future
+    return false;
+  });
 }
 
 export function createDeviceUtils(deviceType: DeviceType) {

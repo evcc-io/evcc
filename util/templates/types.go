@@ -171,6 +171,13 @@ type LinkedTemplate struct {
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
+// Dependency defines a condition for when a parameter should be shown
+type Dependency struct {
+	Name  string      `json:"name" yaml:"name"`  // name of the parameter to check
+	Check string      `json:"check" yaml:"check"` // type of check, e.g. "equal"
+	Value interface{} `json:"value" yaml:"value"` // value to compare against
+}
+
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -198,8 +205,9 @@ type Param struct {
 	Unit        string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
-	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
-	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
+	Choice      []string     `json:",omitempty" yaml:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	AllInOne    bool         `json:"-" yaml:"allinone,omitempty"`          // defines if the defined usages can all be present in a single device
+	Dependencies []Dependency `json:",omitempty" yaml:",omitempty"` // conditions for when this parameter should be shown
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate

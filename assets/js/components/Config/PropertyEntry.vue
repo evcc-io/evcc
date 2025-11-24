@@ -1,5 +1,6 @@
 <template>
 	<FormRow
+		v-if="isVisible"
 		:id="id"
 		:optional="!Required"
 		:deprecated="Deprecated"
@@ -26,6 +27,7 @@
 /* eslint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import { checkDependencies } from "./DeviceModal/index";
 
 export default {
 	name: "PropertyEntry",
@@ -42,7 +44,10 @@ export default {
 		Unit: String,
 		Mask: Boolean,
 		Choice: Array,
+		Dependencies: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
+		allValues: Object,
+		template: Object,
 	},
 	emits: ["update:modelValue"],
 	computed: {
@@ -63,6 +68,44 @@ export default {
 		example() {
 			// hide example text since config ui doesnt use go duration format (e.g. 5m)
 			return this.Type === "Duration" ? undefined : this.Example;
+		},
+		isVisible() {
+			// Debug: Log all props to see what we're receiving
+			if (this.Name === "mode" || this.Name === "uri" || this.Name === "email" || this.Name === "password" || this.Name === "device") {
+				console.log(`[PropertyEntry] ${this.Name} props:`, {
+					Name: this.Name,
+					Dependencies: this.Dependencies,
+					DependenciesType: typeof this.Dependencies,
+					DependenciesLength: this.Dependencies?.length,
+					allValues: this.allValues,
+					modeValue: this.allValues?.mode,
+					template: this.template,
+					hasTemplate: !!this.template
+				});
+			}
+
+			// Fields without dependencies are always visible
+			if (!this.Dependencies || this.Dependencies.length === 0) {
+				if (this.Name === "mode" || this.Name === "uri" || this.Name === "email") {
+					console.log(`[PropertyEntry] ${this.Name}: No dependencies, returning true`);
+				}
+				return true;
+			}
+
+			// Create a param-like object for checkDependencies
+			const param = {
+				Name: this.Name,
+				Required: this.Required,
+				Advanced: false,
+				Deprecated: this.Deprecated,
+				Dependencies: this.Dependencies,
+			};
+
+			const result = checkDependencies(param, this.allValues || {}, this.template || null);
+
+			console.log(`[PropertyEntry] ${this.Name}: Dependency check result:`, result);
+
+			return result;
 		},
 	},
 };

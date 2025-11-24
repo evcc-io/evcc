@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -50,7 +49,6 @@ type IAquaLink struct {
 	localMode  bool               // true if using local IP, false if using cloud
 	readModeDisabled bool         // If true, skip mode reading attempts (API limitations)
 	mu         sync.Mutex
-	cache      time.Duration
 }
 
 var _ api.ChargerEx = (*IAquaLink)(nil)
@@ -64,13 +62,11 @@ func NewIAquaLinkFromConfig(ctx context.Context, other map[string]interface{}) (
 		URI             string // Local mode: IP address or URL of the device
 		Email, Password string // Cloud mode: IAquaLink credentials
 		Device          string // Device name/identifier (required for cloud mode)
-		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
-		Cache: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -91,19 +87,18 @@ func NewIAquaLinkFromConfig(ctx context.Context, other map[string]interface{}) (
 		return nil, errors.New("device name is required for cloud mode")
 	}
 
-	return NewIAquaLink(ctx, &cc.embed, cc.URI, cc.Email, cc.Password, cc.Device, cc.Cache)
+	return NewIAquaLink(ctx, &cc.embed, cc.URI, cc.Email, cc.Password, cc.Device)
 }
 
 // NewIAquaLink creates IAquaLink charger
 // Supports both local mode (via URI) and cloud mode (via email/password)
-func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, device string, cache time.Duration) (api.Charger, error) {
+func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, device string) (api.Charger, error) {
 	log := util.NewLogger("iaqualink").Redact(email, password)
 
 	c := &IAquaLink{
 		SgReady:    nil, // will be set after creating mode functions
 		log:        log,
 		deviceName: device,
-		cache:      cache,
 	}
 
 	// Determine mode: local (URI) or cloud (email/password)
@@ -226,9 +221,8 @@ func NewIAquaLink(ctx context.Context, embed *embed, uri, email, password, devic
 		log.DEBUG.Printf("IAquaLink device features: %v", featuresOutput.Features)
 	}
 
-	// Log available modes based on features
-	availableModes := c.determineAvailableModes(c.features)
-	log.INFO.Printf("IAquaLink device '%s' supports modes: %v (mode: %s)", device, availableModes, map[bool]string{true: "local", false: "cloud"}[c.localMode])
+	// Log available modes
+	log.INFO.Printf("IAquaLink device '%s' supports modes: Boost(3), Smart(2), Eco/Off(1) (mode: %s)", device, map[bool]string{true: "local", false: "cloud"}[c.localMode])
 
 	// Create mode setter and getter functions
 	setMode := func(mode int64) error {
@@ -291,9 +285,10 @@ func (c *IAquaLink) setModeCloud(ctx context.Context, mode int64) error {
 }
 
 // setModeLocal sets mode using local IP API
+// Note: Local API endpoints vary by device model/installation. This implementation
+// tries common endpoint patterns, but may need device-specific configuration for some installations.
 func (c *IAquaLink) setModeLocal(ctx context.Context, mode int64) error {
 	// Map evcc mode to IAquaLink local API commands
-	// Common local API endpoints (may vary by device model)
 	modeCommands := map[int64]string{
 		1: "eco",   // Dimm
 		2: "smart", // Normal
@@ -305,7 +300,7 @@ func (c *IAquaLink) setModeLocal(ctx context.Context, mode int64) error {
 		return fmt.Errorf("invalid mode %d for local API", mode)
 	}
 
-	// Try common local API endpoints
+	// Try common local API endpoints (endpoints may vary by device model)
 	endpoints := []string{
 		fmt.Sprintf("%s/api/v1/mode", c.uri),
 		fmt.Sprintf("%s/api/mode", c.uri),
@@ -401,6 +396,8 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 
 	// Try multiple methods to get device state
 	// Method 1: Use DeviceSite to get device information
+	// Note: DeviceSite currently only provides timezone info, not mode information
+	// This is kept for potential future API expansion
 	site, err := c.client.DeviceSite(c.deviceID)
 	if err != nil {
 		// Suppress 401/500 errors as they're likely API limitations
@@ -409,9 +406,9 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 			c.log.DEBUG.Printf("DeviceSite failed: %v", err)
 		}
 	} else if site != nil {
-		if mode := c.parseModeFromSite(site); mode > 0 {
-			return mode, nil
-		}
+		// DeviceSite doesn't currently provide mode information
+		// This is a placeholder for future API expansion
+		_ = site
 	}
 
 	// Method 2: Use DeviceExecuteReadCommand to read state
@@ -451,8 +448,10 @@ func (c *IAquaLink) getModeCloud(ctx context.Context) (int64, error) {
 }
 
 // getModeLocal gets mode using local IP API
+// Note: Local API endpoints vary by device model/installation. This implementation
+// tries common endpoint patterns, but may need device-specific configuration for some installations.
 func (c *IAquaLink) getModeLocal(ctx context.Context) (int64, error) {
-	// Try common local API endpoints to read device state
+	// Try common local API endpoints to read device state (endpoints may vary by device model)
 	endpoints := []string{
 		fmt.Sprintf("%s/api/v1/state", c.uri),
 		fmt.Sprintf("%s/api/state", c.uri),
@@ -484,12 +483,6 @@ func (c *IAquaLink) getModeLocal(ctx context.Context) (int64, error) {
 	return 2, nil
 }
 
-// parseModeFromSite extracts mode from DeviceSite output
-func (c *IAquaLink) parseModeFromSite(site *iaqualink.DeviceSiteOutput) int64 {
-	// DeviceSiteOutput only contains timezone info, not mode
-	// This method is a placeholder for future expansion
-	return 0
-}
 
 // parseModeFromResponse parses mode from device response string
 func (c *IAquaLink) parseModeFromResponse(response string) int64 {
@@ -534,18 +527,3 @@ func (c *IAquaLink) hasFeature(feature string) bool {
 	return false
 }
 
-// determineAvailableModes returns a map of evcc modes (1/2/3) to their IAquaLink action names
-// based on device features. This is used for logging/debugging purposes.
-func (c *IAquaLink) determineAvailableModes(features []string) map[int64][]string {
-	modes := make(map[int64][]string)
-
-	// Default mode mappings - most devices support these
-	// We'll try them and let the API reject unsupported ones
-	modes[1] = []string{"eco", "off"}      // Dimm
-	modes[2] = []string{"smart", "normal"} // Normal
-	modes[3] = []string{"boost"}           // Boost
-
-	// Note: Device features don't directly map to available modes
-	// We try actions and let the API reject unsupported ones
-	return modes
-}

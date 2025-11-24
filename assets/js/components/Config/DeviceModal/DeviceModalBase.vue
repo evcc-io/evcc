@@ -67,7 +67,10 @@
 						:id="`${deviceType}Param${param.Name}`"
 						:key="param.Name"
 						v-bind="param"
+						:dependencies="param.Dependencies"
 						v-model="values[param.Name]"
+						:all-values="values"
+						:template="template"
 					/>
 
 					<PropertyCollapsible>
@@ -77,7 +80,10 @@
 								:id="`${deviceType}Param${param.Name}`"
 								:key="param.Name"
 								v-bind="param"
+								:dependencies="param.Dependencies"
 								v-model="values[param.Name]"
+								:all-values="values"
+								:template="template"
 							/>
 						</template>
 						<template v-if="$slots['collapsible-more']" #more>
