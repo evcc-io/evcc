@@ -358,7 +358,10 @@ export default defineComponent({
 			return !this.isNew;
 		},
 		showActions() {
-			return ((this.templateName && !this.authRequired) || this.showYamlInput) && !this.hideTemplateFields;
+			return (
+				((this.templateName && !this.authRequired) || this.showYamlInput) &&
+				!this.hideTemplateFields
+			);
 		},
 		showYamlInput() {
 			return this.isYamlInputTypeByValue(this.values.type);
