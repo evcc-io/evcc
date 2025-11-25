@@ -59,7 +59,7 @@ func (err *ErrUrl) Error() string {
 	return err.err
 }
 
-func (err *ErrUrl) URL() string {
+func (err *ErrUrl) URL() *url.URL {
 	return err.url
 }
 
