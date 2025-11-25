@@ -183,18 +183,18 @@ type LinkedTemplate struct {
 // 3. defaults.yaml modbus section
 // 4. template
 type Param struct {
-	Name        string       // param name which is used for assigning defaults properties and referencing in render
+	Name        string       // Param name which is used for assigning defaults properties and referencing in render
 	Description TextLanguage // language specific titles (presented in UI instead of Name)
-	Help        TextLanguage // configuration help text
-	Preset      string       `json:"-"`          // reference a predefined set of params
-	Required    bool         `json:",omitempty"` // user must provide a non-empty value
-	Mask        bool         `json:",omitempty"` // value should be masked (not sent back in clear text), e.g. for passwords
-	Private     bool         `json:",omitempty"` // value contains private data that should be redacted in bug reports
-	Advanced    bool         `json:",omitempty"` // user does not need to be asked. Requires a "Default" to be defined.
-	Deprecated  bool         `json:",omitempty"` // parameter is deprecated and should not be presented
+	Help        TextLanguage // cli configuration help
+	Preset      string       `json:"-"`          // Reference a predefined set of params
+	Required    bool         `json:",omitempty"` // cli if the user has to provide a non empty value
+	Mask        bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
+	Private     bool         `json:",omitempty"` // value should be redacted in bug reports, e.g. email, locations, ...
+	Advanced    bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Deprecated  bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default     string       `json:",omitempty"` // default value if no user value is provided in the configuration
-	Example     string       `json:",omitempty"` // example value
-	Value       string       `json:"-"`          // user provided value
+	Example     string       `json:",omitempty"` // cli example value
+	Value       string       `json:"-"`          // user provided value via cli configuration
 	Values      []string     `json:",omitempty"` // user provided list of values e.g. for Type "list"
 	Unit        string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity

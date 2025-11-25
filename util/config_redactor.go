@@ -19,8 +19,6 @@ func init() {
 	// fields that are not covered by template params (yet)
 	additional := []string{
 		"sponsortoken", "plant", // global settings
-		"access", "refresh", "secret", // tokens not in params
-		"deviceid", "machineid", "idtag", // devices
 		"app", "chats", "recipients", // push messaging
 	}
 

@@ -268,7 +268,6 @@ params:
     description:
       generic: URL
   - name: ain
-    mask: true
     private: true
     example: "307788992233"
     description:
@@ -369,9 +368,11 @@ params:
     description:
       generic: Client ID
   - name: clientsecret
+    mask: true
     description:
       generic: Client Secret
   - name: token
+    private: true
     description:
       generic: Token
   - name: interval
@@ -384,6 +385,7 @@ params:
       en: MAC Address
       de: MAC Adresse
   - name: pin
+    private: true
     description:
       generic: PIN
   - name: serial_number
@@ -616,6 +618,7 @@ presets:
         en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary! (Uses OCPP RemoteStartTransaction)
     - name: idtag
       advanced: true
+      private: true
       type: string
       description:
         en: Authentication token
