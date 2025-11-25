@@ -72,7 +72,7 @@ func (c *Connection) Enabled() (bool, error) {
 func (c *Connection) CurrentPower() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		return c.MissingMeterCheck(err)
+		return 0, c.checkMeterError(err)
 	}
 
 	return float64(resp.CurrentPower) / 1e3, nil
@@ -82,7 +82,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		return c.MissingMeterCheck(err)
+		return 0, c.checkMeterError(err)
 	}
 
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
@@ -93,12 +93,11 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 	return float64(c.energy) / 1000, nil
 }
 
-// MissingMeterCheck checks for missing meter error
-func (c *Connection) MissingMeterCheck(err error) (float64, error) {
+// checkMeterError checks for missing meter error
+func (c *Connection) checkMeterError(err error) error {
 	if strings.Contains(err.Error(), "-1001") {
-		c.log.DEBUG.Printf("meter not available")
-		return 0, nil
-	} else {
-		return 0, err
+		return nil
 	}
+
+	return err
 }
