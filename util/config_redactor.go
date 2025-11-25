@@ -39,12 +39,11 @@ func RedactConfigString(src string) string {
 func RedactConfigMap(src map[string]any) map[string]any {
 	res := maps.Clone(src)
 	for k := range res {
-		for _, secret := range configRedactSecrets {
-			// ignore case
-			if strings.EqualFold(k, secret) {
-				res[k] = "*****"
-				break
-			}
+		if !slices.ContainsFunc(configRedactSecrets, func(s string) bool {
+			return strings.EqualFold(k, s)
+		}) {
+			res[k] = "*****"
+			break
 		}
 	}
 	return res
