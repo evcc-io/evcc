@@ -1,4 +1,4 @@
-package util
+package redact
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRedactConfigString(t *testing.T) {
+func TestConfigString(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -48,7 +48,7 @@ password: secretpass123`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := RedactConfigString(tt.input)
+			result := ConfigString(tt.input)
 
 			// Check expected strings are present
 			for _, exp := range tt.expected {
@@ -63,7 +63,7 @@ password: secretpass123`,
 	}
 }
 
-func TestRedactConfigMap(t *testing.T) {
+func TestConfigMap(t *testing.T) {
 	input := map[string]any{
 		"title":    "My Home",
 		"password": "secret123",
@@ -73,7 +73,7 @@ func TestRedactConfigMap(t *testing.T) {
 		"apikey":   "abc-def-123",
 	}
 
-	result := RedactConfigMap(input)
+	result := ConfigMap(input)
 
 	// Check non-sensitive fields are unchanged
 	assert.Equal(t, "My Home", result["title"], "title should not be redacted")

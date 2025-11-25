@@ -11,6 +11,7 @@ import (
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/redact"
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
@@ -21,7 +22,7 @@ func settingsGetStringHandler(key string) http.HandlerFunc {
 
 		// Check if private data should be hidden
 		if r.URL.Query().Get("private") == "false" && res != "" {
-			res = util.RedactConfigString(res)
+			res = redact.ConfigString(res)
 		}
 
 		jsonWrite(w, res)
