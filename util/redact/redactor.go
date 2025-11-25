@@ -43,10 +43,8 @@ func redactableParams() []string {
 		}
 	}
 
-	// Sort
+	// sort and deduplicate
 	slices.Sort(params)
-
-	// De-duplicate
 	return slices.Compact(params)
 }
 
