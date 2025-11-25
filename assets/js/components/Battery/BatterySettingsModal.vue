@@ -245,6 +245,7 @@
 			v-if="isModalVisible"
 			v-show="gridTabActive"
 			:current-limit="batteryGridChargeLimit"
+			:last-limit="lastSmartCostLimit"
 			:smart-cost-type="smartCostType"
 			:currency="currency"
 			:tariff="gridChargeTariff"
@@ -263,6 +264,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import collector from "@/mixins/collector.js";
 import api from "@/api";
+import settings from "@/settings";
 import { defineComponent, type PropType } from "vue";
 import type { BatteryMeter, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
 import { SMART_COST_TYPE } from "@/types/evcc";
@@ -388,6 +390,9 @@ export default defineComponent({
 					});
 					return `${name}${formattedEnergy}${formattedSoc}`;
 				});
+		},
+		lastSmartCostLimit() {
+			return settings.lastBatterySmartCostLimit;
 		},
 	},
 	watch: {

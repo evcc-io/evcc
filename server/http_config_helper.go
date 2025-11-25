@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-relay"}
 )
 
 type configReq struct {
@@ -110,8 +110,17 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
+	// check if template has modbus capability
+	hasModbus := len(tmpl.ModbusChoices()) > 0
+
 	for k, v := range conf {
 		if k == "template" {
+			res[k] = v
+			continue
+		}
+
+		// preserve modbus fields if template supports modbus
+		if hasModbus && slices.Contains(templates.ModbusParams, k) {
 			res[k] = v
 			continue
 		}
@@ -330,6 +339,11 @@ func testInstance(instance any) map[string]testResult {
 			key = "heaterTempLimit"
 		}
 		makeResult(key, val, err)
+	}
+
+	if dev, ok := instance.(api.Dimmer); ok {
+		val, err := dev.Dimmed()
+		makeResult("dimmed", val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {

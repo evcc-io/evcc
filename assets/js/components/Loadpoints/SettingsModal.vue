@@ -10,10 +10,11 @@
 		<div class="container">
 			<SmartCostLimit
 				:current-limit="smartCostLimit"
+				:last-limit="lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
 				is-loadpoint
-				:loadpoint-id="Number(loadpointId)"
+				:loadpoint-id="loadpointId"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
 				:tariff="forecast?.planner"
@@ -21,8 +22,9 @@
 			/>
 			<SmartFeedInPriority
 				:current-limit="smartFeedInPriorityLimit"
+				:last-limit="lastSmartFeedInPriorityLimit"
 				:currency="currency"
-				:loadpoint-id="Number(loadpointId)"
+				:loadpoint-id="loadpointId"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
@@ -161,7 +163,7 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: [String, Number],
+		id: { type: String, required: true },
 		phasesConfigured: { type: Number, default: 0 },
 		chargerPhases1p3p: Boolean,
 		chargerSinglePhase: Boolean,
@@ -181,6 +183,8 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	emits: [
 		"phasesconfigured-updated",

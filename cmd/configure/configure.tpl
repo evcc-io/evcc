@@ -1,7 +1,7 @@
 # open evcc at http://evcc.local:7070
 network:
   schema: http
-  host: evcc.local # .local suffix announces the hostname on MDNS
+  host: evcc # announces the hostname on mDNS
   port: 7070
 
 log: debug
