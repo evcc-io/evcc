@@ -385,7 +385,7 @@ params:
       en: MAC Address
       de: MAC Adresse
   - name: pin
-    private: true
+    mask: true
     description:
       generic: PIN
   - name: serial_number
