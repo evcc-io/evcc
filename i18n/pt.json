@@ -388,7 +388,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Permitir que vários clientes acedam ao mesmo dispositivo Modbus.",
+      "add": "Adicionar uma ligação proxy",
+      "connection": "Conexão #{number}",
+      "description": "Alguns dispositivos Modbus suportam apenas uma única conexão ou muito poucas conexões. O evcc pode atuar como um proxy, permitindo o acesso simultâneo de vários clientes (automação residencial, scripts, etc.).",
+      "device": "Aparelho",
+      "option": {
+        "deny": "erro",
+        "false": "não",
+        "true": "silencioso"
+      },
+      "readonly": {
+        "help": {
+          "deny": "O acesso de escrita está bloqueado com um erro Modbus.",
+          "false": "O acesso de escrita é transferido.",
+          "true": "Sem resposta, o acesso de escrita fica bloqueado ."
+        },
+        "label": "Somente leitura"
+      },
+      "sourcePortHelp": "Port para ligações de clientes recebidas. Deve estar disponível.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -410,10 +427,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Use sufixo .local para permitir mDNS. Importante para a descoberta do aplicativo móvel e alguns carregadores OCPP.",
+      "descriptionExternalUrl": "Endereço para outros dispositivos que desejam se conectar ao evcc e para a descoberta automática do aplicativo evcc.",
+      "descriptionHost": "Usado para anunciar o evcc na sua rede local.",
+      "descriptionInternalUrl": "Endereço de rede local do evcc.",
       "descriptionPort": "Port para a interface web e API. É preciso atualizar o URL do navegador se mudar este parâmetro.",
       "descriptionSchema": "Apenas afeta como as URLs são geradas. Selecionar HTTPS não permitirá encriptação.",
-      "labelHost": "Nome do anfitrião",
+      "labelExternalUrl": "URL externo",
+      "labelHost": "Nome de host mDNS",
+      "labelInternalUrl": "URL interna",
       "labelPort": "Porta",
       "labelSchema": "Esquema",
       "title": "Rede"
@@ -478,6 +499,7 @@
       "labelToken": "Token de Apoiante (Sponsor)",
       "title": "Patrocínio",
       "tokenRequired": "Tem de configurar um token de Patrocínio (Sponsor) antes de poder criar este dispositivo.",
+      "tokenRequiredFeature": "Esta funcionalidade requer um token de patrocinador.",
       "tokenRequiredLearnMore": "Mais informações.",
       "tokenRequiredShort": "Nenhum token de patrocínio configurado.",
       "trialToken": "token de teste",
@@ -489,6 +511,7 @@
         "backup": {
           "action": "Descarregar cópia de segurança...",
           "confirmationButton": "Descarregar cópia de segurança",
+          "confirmationText": "Descarregar o ficheiro da base de dados.",
           "description": "Faça uma cópia de segurança dos seus dados para um ficheiro. Este ficheiro pode ser utilizado para restaurar os seus dados em caso de falha do sistema.",
           "title": "Cópia de segurança"
         },
@@ -1001,7 +1024,8 @@
     "message": "Não conectado a nenhum servidor.",
     "restart": "Reiniciar",
     "restartNeeded": "Necessário para aplicar as alterações.",
-    "restarting": "Servidor a reiniciar."
+    "restarting": "Servidor a reiniciar.",
+    "starting": "Iniciando servidor..."
   },
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
@@ -1167,6 +1191,7 @@
     "cleanTitle": "Carregamento de Rede \"Verde\"",
     "co2Label": "Emissão de CO₂",
     "co2Limit": "Limite de CO₂",
+    "enable": "Ativar limite",
     "loadpointDescription": "Permite carregamento rápido temporário no modo solar.",
     "modalTitle": "Carregamento de Rede Inteligente",
     "none": "nenhum",
@@ -1189,6 +1214,7 @@
     "configuration": "Configuração",
     "description": "Verifique seu ficheiro de configuração. Se a mensagem de erro não ajudar, verifique as {0}.",
     "discussions": "Discussões no GitHub",
+    "editConfiguration": "Editar configuração",
     "fixAndRestart": "Por favor corrija o problema e reinicie o servidor.",
     "hint": "Nota: Pode acontecer que tenha um equipamento com defeito (inversor, contador, …). Verifique as suas conexões de rede.",
     "lineError": "Erro em {0}.",

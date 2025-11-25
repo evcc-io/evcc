@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/mcp"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -158,7 +159,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("UI listening at http://127.0.0.1:%d/", conf.Network.Port)
+	// configure plugin external url
+	if err == nil {
+		// network configuration complete, start dependent services like HomeAssistant discovery
+		network.Start(conf.Network)
+	}
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -187,7 +192,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI listening at http://127.0.0.1:%d", conf.Network.Port)
 
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
@@ -272,7 +277,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// announce on mDNS
 	if err == nil {
-		err = configureMDNS(conf.Network)
+		if err := configureMDNS(conf.Network); err != nil {
+			log.WARN.Println("mDNS:", err)
+		}
 	}
 
 	// start SHM server

@@ -772,7 +772,7 @@ func configureMDNS(conf globalconfig.Network) error {
 
 	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
-		return fmt.Errorf("mDNS announcement: %w", err)
+		return err
 	}
 
 	shutdown.Register(zc.Shutdown)
