@@ -220,10 +220,6 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 }
 
 func resolveLocation(base *url.URL, location string) (*url.URL, error) {
-	if location == "" {
-		return base, nil
-	}
-
 	locURL, err := url.Parse(location)
 	if err != nil {
 		return nil, err
@@ -235,10 +231,6 @@ func resolveLocation(base *url.URL, location string) (*url.URL, error) {
 }
 
 func parseAuthLocation(u *url.URL) (url.Values, error) {
-	if u == nil {
-		return nil, errors.New("missing auth redirect location")
-	}
-
 	u.RawQuery = u.Fragment
 
 	if errStr := u.Query().Get("error"); errStr != "" {
