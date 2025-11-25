@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Använd & stäng",
+      "authPerform": "Anslut med {provider}",
+      "authPerformHint": "Kommer att öppnas i en ny flik. Kom tillbaka hit för att fortsätta.",
+      "authPrepare": "Förbered anslutning",
       "cancel": "Avbryt",
+      "clear": "Rensa",
       "close": "Stäng",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
