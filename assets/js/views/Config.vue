@@ -752,7 +752,7 @@ export default defineComponent({
 			if (!names || !this.meters) {
 				return [];
 			}
-			return this.meters.filter((m) => names.includes(m.name));
+			return names.map((name) => this.meters.find((m) => m.name === name)).filter((m) => m);
 		},
 		getMeterById(id?: number) {
 			if (!id || !this.meters) {
