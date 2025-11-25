@@ -12,6 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
@@ -101,18 +102,15 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	// Try to extract legacy form, but don't fail if it's not found
-	vars, formErr := FormValues(bytes.NewReader(body), "form#emailPasswordForm")
-
-	// Check if we found the legacy form
-	if formErr == nil {
+	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
 		return v.loginLegacy(vars, user, password)
 	}
 
@@ -189,23 +187,23 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 		"state":    {state},
 	}
 
-	loginURL := fmt.Sprintf("%s/u/login?state=%s", BaseURL, state)
-	resp, err := v.PostForm(loginURL, loginData)
+	uri := fmt.Sprintf("%s/u/login?state=%s", BaseURL, state)
+	resp, err := v.PostForm(uri, loginData)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	redirectLocation := resp.Header.Get("Location")
+	location := resp.Header.Get("Location")
 	if resp.StatusCode >= http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
 	}
 
-	if redirectLocation == "" {
+	if location == "" {
 		return nil, errors.New("no redirect location in new login flow")
 	}
 
-	redirectURL, err := resolveLocation(resp.Request.URL, redirectLocation)
+	redirectURL, err := resolveLocation(resp.Request.URL, location)
 	if err != nil {
 		return nil, err
 	}
@@ -268,12 +266,15 @@ func parseAuthLocation(u string) (url.Values, error) {
 		return nil, err
 	}
 
-	if errVal := parsed.Query().Get("error"); errVal != "" {
-		return nil, errors.New(errVal)
+	if errStr := parsed.Query().Get("error"); errStr != "" {
+		return nil, errors.New(errStr)
 	}
 
 	if consent := parsed.Query().Get("updated") != "" || strings.Contains(parsed.Path, "/consent/"); consent {
-		return nil, fmt.Errorf("terms of service updated- please open app or website and confirm: %s", parsed.String())
+		return nil, api.UrlError(
+			fmt.Sprintf("terms of service updated- please open app or website and confirm: %s", parsed.String()),
+			parsed,
+		)
 	}
 
 	return parsed.Query(), nil
@@ -290,8 +291,8 @@ func extractState(body []byte) (string, error) {
 		return "", errors.New("state parameter not found")
 	}
 
-	state, exists := stateInput.Attr("value")
-	if !exists || state == "" {
+	state, ok := stateInput.Attr("value")
+	if !ok || state == "" {
 		return "", errors.New("state value not found")
 	}
 
