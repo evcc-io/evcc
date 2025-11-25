@@ -117,7 +117,7 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
 export async function loadServiceValues(path: string) {
   try {
     const response = await api.get(`/config/service/${path}`);
-    return response.data as string[];
+    return (response.data as string[]) || [];
   } catch (e) {
     console.error(e);
     return [];
