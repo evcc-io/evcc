@@ -705,7 +705,19 @@ export default defineComponent({
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
 				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+				this.applyServiceDefaults();
 			}, 500);
+		},
+		applyServiceDefaults() {
+			// Auto-apply single service values when field is empty and required
+			Object.keys(this.serviceValues).forEach((paramName) => {
+				const values = this.serviceValues[paramName];
+				const param = this.templateParams.find((p) => p.Name === paramName);
+				// Only auto-apply if exactly one value is returned, field is empty, and field is required
+				if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+					this.values[paramName] = values[0];
+				}
+			});
 		},
 	},
 });

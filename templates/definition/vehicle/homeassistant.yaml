@@ -1,14 +1,11 @@
 template: homeassistant
 products:
   - brand: Home Assistant
-    description:
-      de: Fahrzeug
-      en: Vehicle
 group: generic
 requirements:
   description:
-    en: Requires a running Home Assistant instance with suitable vehicle entities and services. All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
-    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services. Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
+    en: Requires a running Home Assistant instance with suitable vehicle entities and services. All values are Home Assistant entity IDs (e.g. `sensor.*`, `binary_sensor.*`, `number.*`, `script.*`)
+    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services. Alle Werte sind Home Assistant Entity IDs (z.B. `sensor.*`, `binary_sensor.*`, `number.*`, `script.*`)
 auth:
   type: homeassistant
   params: [home]
@@ -22,7 +19,6 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    default: Home
     service: homeassistant/homes
     required: true
   - name: soc

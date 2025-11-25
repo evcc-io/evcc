@@ -171,6 +171,7 @@
       "authPerformHint": "Will open in a new tab. Return here to continue.",
       "authPrepare": "Prepare connection",
       "cancel": "Cancel",
+      "clear": "Clear",
       "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
