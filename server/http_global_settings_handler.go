@@ -22,7 +22,7 @@ func settingsGetStringHandler(key string) http.HandlerFunc {
 
 		// Check if private data should be hidden
 		if r.URL.Query().Get("private") == "false" && res != "" {
-			res = redact.ConfigString(res)
+			res = redact.String(res)
 		}
 
 		jsonWrite(w, res)

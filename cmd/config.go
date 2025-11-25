@@ -55,7 +55,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 			}
 
 			for _, c := range configurable {
-				fmt.Println(config.NameForID(c.ID), fmt.Sprintf("%+v", c.Properties), redact.ConfigMap(c.Data))
+				fmt.Println(config.NameForID(c.ID), fmt.Sprintf("%+v", c.Properties), redact.Map(c.Data))
 			}
 
 			fmt.Println("")

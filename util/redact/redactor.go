@@ -50,13 +50,13 @@ func redactableParams() []string {
 	return slices.Compact(params)
 }
 
-// ConfigString redacts a configuration string by replacing sensitive values with *****
-func ConfigString(src string) string {
+// String redacts a configuration string by replacing sensitive values with *****
+func String(src string) string {
 	return configRedactRegex.ReplaceAllString(src, "$1: *****")
 }
 
-// ConfigMap redacts sensitive keys in a configuration map
-func ConfigMap(src map[string]any) map[string]any {
+// Map redacts sensitive keys in a configuration map
+func Map(src map[string]any) map[string]any {
 	res := maps.Clone(src)
 	for k := range res {
 		if !slices.ContainsFunc(configRedactSecrets, func(s string) bool {

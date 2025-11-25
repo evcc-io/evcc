@@ -45,7 +45,7 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 
 	var redacted string
 	if src, err := os.ReadFile(cfgFile); err == nil {
-		redacted = redact.ConfigString(string(src))
+		redacted = redact.String(string(src))
 	}
 
 	tmpl := template.Must(template.New("discuss").Parse(discussTmpl))

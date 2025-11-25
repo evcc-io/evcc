@@ -25,7 +25,7 @@ func configYamlHandler(configFilePath string) http.HandlerFunc {
 		}
 
 		// Redact sensitive information
-		redacted := redact.ConfigString(string(src))
+		redacted := redact.String(string(src))
 
 		// Return the redacted content as plain text
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
