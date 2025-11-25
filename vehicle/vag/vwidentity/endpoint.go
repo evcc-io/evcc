@@ -170,7 +170,11 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	// GET identity.vwgroup.io/signin-service/v1/consent/users/bca09cc0-8eba-4110-af71-7242868e1bf1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&callback=https://identity.vwgroup.io/oidc/v1/oauth/client/callback&hmac=a590931ca3cd9dc3a27f1d1c0c162bf1e5c5c32c9f5b40fcb36d4c6edc631e03
 	// GET identity.vwgroup.io/oidc/v1/oauth/client/callback/success?user_id=bca09cc0-8eba-4110-af71-7242868e1bf1&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&consentedScopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=f89a0b750c93e278a7ace170ce374e9cb9eb0a74&hmac=2b728f463c3cfe80f3271fbb35680e5e5218ca70025a46e7fadf7c7982decc2b
 
-	return parseAuthLocation(resp.Header.Get("Location"))
+	parsed, err := url.Parse(resp.Header.Get("Location"))
+	if err != nil {
+		return nil, err
+	}
+	return parseAuthLocation(parsed)
 }
 
 // loginNew performs the new VW identity login flow
@@ -208,35 +212,10 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 		return nil, err
 	}
 
-	for {
-		if redirectURL.Scheme != "https" && redirectURL.Scheme != "http" {
-			return parseAuthLocation(redirectURL.String())
-		}
-
-		resp, err = v.Get(redirectURL.String())
-		if err != nil {
-			return nil, err
-		}
-
-		if resp.StatusCode >= http.StatusBadRequest {
-			statusErr := fmt.Errorf("vwidentity: redirect GET %s failed: %s", redirectURL.String(), resp.Status)
-			resp.Body.Close()
-			return nil, statusErr
-		}
-
-		nextLocation := resp.Header.Get("Location")
-		if nextLocation == "" {
-			finalURL := resp.Request.URL
-			resp.Body.Close()
-			values, parseErr := parseAuthLocation(finalURL.String())
-			return values, parseErr
-		}
-
-		redirectURL, err = resolveLocation(resp.Request.URL, nextLocation)
-		resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
+	if redirectURL.Scheme == "https" && redirectURL.Scheme != "http" {
+		return parseAuthLocation(redirectURL)
+	} else {
+		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
 	}
 }
 
@@ -255,29 +234,25 @@ func resolveLocation(base *url.URL, location string) (*url.URL, error) {
 	return base.ResolveReference(locURL), nil
 }
 
-func parseAuthLocation(u string) (url.Values, error) {
-	if u == "" {
+func parseAuthLocation(u *url.URL) (url.Values, error) {
+	if u == nil {
 		return nil, errors.New("missing auth redirect location")
 	}
 
-	loc := strings.ReplaceAll(u, "#", "?")
-	parsed, err := url.Parse(loc)
-	if err != nil {
-		return nil, err
-	}
+	u.RawQuery = u.Fragment
 
-	if errStr := parsed.Query().Get("error"); errStr != "" {
+	if errStr := u.Query().Get("error"); errStr != "" {
 		return nil, errors.New(errStr)
 	}
 
-	if consent := parsed.Query().Get("updated") != "" || strings.Contains(parsed.Path, "/consent/"); consent {
+	if consent := u.Query().Get("updated") != "" || strings.Contains(u.Path, "/consent/"); consent {
 		return nil, api.UrlError(
-			fmt.Sprintf("terms of service updated- please open app or website and confirm: %s", parsed.String()),
-			parsed,
+			fmt.Sprintf("terms of service updated- please open app or website and confirm: %s", u.String()),
+			u,
 		)
 	}
 
-	return parsed.Query(), nil
+	return u.Query(), nil
 }
 
 func extractState(body []byte) (string, error) {
