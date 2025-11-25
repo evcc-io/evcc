@@ -212,11 +212,11 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 		return nil, err
 	}
 
-	if redirectURL.Scheme == "https" && redirectURL.Scheme != "http" {
-		return parseAuthLocation(redirectURL)
-	} else {
+	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
 		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
 	}
+
+	return parseAuthLocation(redirectURL)
 }
 
 func resolveLocation(base *url.URL, location string) (*url.URL, error) {
