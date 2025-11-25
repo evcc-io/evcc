@@ -476,8 +476,7 @@ export default defineComponent({
 				for (const endpoint of endpoints) {
 					try {
 						// Add private=false for device endpoints to hide private data in bug reports
-						const params = deviceEndpoints.includes(endpoint) ? { private: false } : {};
-						const response = await api.get(endpoint, { params });
+						const response = await api.get(endpoint, { params: { private: false } });
 						if (response.data && Object.keys(response.data).length > 0) {
 							const key = endpoint.replace("config/", "").replace("devices/", "");
 							let data = response.data;

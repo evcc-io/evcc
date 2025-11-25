@@ -17,6 +17,12 @@ import (
 func settingsGetStringHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, _ := settings.String(key)
+
+		// Check if private data should be hidden
+		if r.URL.Query().Get("private") == "false" && res != "" {
+			res = util.RedactConfigString(res)
+		}
+
 		jsonWrite(w, res)
 	}
 }
