@@ -215,24 +215,27 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 			return parseAuthLocation(redirectURL.String())
 		}
 
-		resp, err = v.Client.Get(redirectURL.String())
+		resp, err = v.Get(redirectURL.String())
 		if err != nil {
 			return nil, err
 		}
 
 		if resp.StatusCode >= http.StatusBadRequest {
 			statusErr := fmt.Errorf("vwidentity: redirect GET %s failed: %s", redirectURL.String(), resp.Status)
+			resp.Body.Close()
 			return nil, statusErr
 		}
 
 		nextLocation := resp.Header.Get("Location")
 		if nextLocation == "" {
 			finalURL := resp.Request.URL
+			resp.Body.Close()
 			values, parseErr := parseAuthLocation(finalURL.String())
 			return values, parseErr
 		}
 
 		redirectURL, err = resolveLocation(resp.Request.URL, nextLocation)
+		resp.Body.Close()
 		if err != nil {
 			return nil, err
 		}
@@ -255,6 +258,10 @@ func resolveLocation(base *url.URL, location string) (*url.URL, error) {
 }
 
 func parseAuthLocation(u string) (url.Values, error) {
+	if u == "" {
+		return nil, errors.New("missing auth redirect location")
+	}
+
 	loc := strings.ReplaceAll(u, "#", "?")
 	parsed, err := url.Parse(loc)
 	if err != nil {
