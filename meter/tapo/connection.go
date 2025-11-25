@@ -65,12 +65,7 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	resp, err := c.plug.GetDeviceInfo()
-	if err != nil {
-		return false, err
-	}
-
-	return resp.DeviceON, nil
+	return c.plug.IsOn()
 }
 
 // CurrentPower provides current power consuption
