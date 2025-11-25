@@ -1,9 +1,6 @@
 template: homeassistant-switch
 products:
   - brand: Home Assistant
-    description:
-      de: Schalter
-      en: Switch
 group: switchsockets
 requirements:
   evcc: ["skiptest"]
