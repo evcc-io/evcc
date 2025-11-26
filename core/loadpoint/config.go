@@ -17,19 +17,20 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title                    string           `json:"title"`
-	DefaultMode              string           `json:"defaultMode"`
-	Priority                 int              `json:"priority"`
-	PhasesConfigured         int              `json:"phasesConfigured"`
-	MinCurrent               float64          `json:"minCurrent"`
-	MaxCurrent               float64          `json:"maxCurrent"`
-	SmartCostLimit           *float64         `json:"smartCostLimit"`
-	SmartFeedInPriorityLimit *float64         `json:"smartFeedInPriorityLimit"`
-	PlanEnergy               float64          `json:"planEnergy"`
-	PlanTime                 time.Time        `json:"planTime"`
-	PlanStrategy             api.PlanStrategy `json:"planStrategy"`
-	LimitEnergy              float64          `json:"limitEnergy"`
-	LimitSoc                 int              `json:"limitSoc"`
+	Title                    string    `json:"title"`
+	DefaultMode              string    `json:"defaultMode"`
+	Priority                 int       `json:"priority"`
+	PhasesConfigured         int       `json:"phasesConfigured"`
+	MinCurrent               float64   `json:"minCurrent"`
+	MaxCurrent               float64   `json:"maxCurrent"`
+	SmartCostLimit           *float64  `json:"smartCostLimit"`
+	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
+	PlanEnergy               float64   `json:"planEnergy"`
+	PlanTime                 time.Time `json:"planTime"`
+	LimitEnergy              float64   `json:"limitEnergy"`
+	LimitSoc                 int       `json:"limitSoc"`
+
+	PlanStrategy api.PlanStrategy `json:"planStrategy"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
