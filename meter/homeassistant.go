@@ -24,8 +24,8 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
-		_URI     string `mapstructure:"uri"`   // TODO deprecated
-		_Token   string `mapstructure:"token"` // TODO deprecated
+		URI_     string `mapstructure:"uri"`   // TODO deprecated
+		Token_   string `mapstructure:"token"` // TODO deprecated
 		Home     string
 		Power    string
 		Energy   string
