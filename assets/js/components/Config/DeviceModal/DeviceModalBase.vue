@@ -60,7 +60,12 @@
 								v-if="authProviderUrl"
 								class="d-flex flex-column align-items-end gap-2"
 							>
-								<a :href="authProviderUrl" target="_blank" class="btn btn-primary">
+								<a
+									:href="authProviderUrl"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="btn btn-primary"
+								>
 									{{
 										$t("config.general.authPerform", {
 											provider: authProviderDomain,
@@ -110,6 +115,9 @@
 							:key="param.Name"
 							v-bind="param"
 							v-model="values[param.Name]"
+							:dependencies="param.Dependencies"
+							:all-values="values"
+							:template="template || undefined"
 							:service-values="serviceValues[param.Name]"
 						/>
 
@@ -121,6 +129,9 @@
 									:key="param.Name"
 									v-bind="param"
 									v-model="values[param.Name]"
+									:dependencies="param.Dependencies"
+									:all-values="values"
+									:template="template || undefined"
 									:service-values="serviceValues[param.Name]"
 								/>
 							</template>

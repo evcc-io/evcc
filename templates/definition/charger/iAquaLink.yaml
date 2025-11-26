@@ -1,0 +1,108 @@
+template: IAquaLink
+group: heating
+products:
+  - description:
+      de: Wärmepumpe (IAquaLink)
+      en: Heat pump (IAquaLink)
+requirements:
+  description:
+    de: |
+      Steuert eine über IAquaLink verbundene Wärmepumpe.
+
+      Unterstützt zwei Modi:
+      - Lokaler Modus: Direkte Kommunikation über IP-Adresse (uri)
+      - Cloud-Modus: Über IAquaLink-Cloud (email/password/device)
+
+      Hinweis: Die evcc-Modi (sgready) werden wie folgt verwendet:
+      - 3 Boost → IAquaLink „Boost"
+      - 2 Normal → IAquaLink „Smart"
+      - 1 Dimm → IAquaLink „Eco" bzw. „Aus"
+
+      Für lokalen Modus: IP-Adresse angeben (z.B. http://192.168.1.100)
+      Für Cloud-Modus: Zugangsdaten und Gerätekennung angeben.
+    en: |
+      Controls an IAquaLink-connected heat pump.
+
+      Supports two modes:
+      - Local mode: Direct communication via IP address (uri)
+      - Cloud mode: Via IAquaLink cloud (email/password/device)
+
+      Note: evcc (sgready) modes are used as follows:
+      - 3 Boost → IAquaLink "Boost"
+      - 2 Normal → IAquaLink "Smart"
+      - 1 Dimm → IAquaLink "Eco" or "Off"
+
+      For local mode: Provide IP address (e.g., http://192.168.1.100)
+      For cloud mode: Provide credentials and device identifier.
+params:
+  - name: mode
+    description:
+      de: Verbindungsmodus
+      en: Connection mode
+    help:
+      de: Wählen Sie zwischen lokalem Modus (direkte IP-Verbindung) oder Cloud-Modus (IAquaLink-Cloud)
+      en: Choose between local mode (direct IP connection) or cloud mode (IAquaLink cloud)
+    type: choice
+    choice: [local, cloud]
+    default: local
+    required: true
+  - name: uri
+    description:
+      de: IP-Adresse oder URL des Geräts
+      en: IP address or URL of the device
+    help:
+      de: Nur für lokalen Modus erforderlich. Direkte Kommunikation über IP-Adresse (z.B. http://192.168.1.100)
+      en: Required for local mode only. Direct communication via IP address (e.g. http://192.168.1.100)
+    example: http://192.168.1.100
+    required: false
+    dependencies:
+      - name: mode
+        check: equal
+        value: local
+  - name: email
+    description:
+      de: IAquaLink E-Mail
+      en: IAquaLink email
+    help:
+      de: Nur für Cloud-Modus erforderlich. E-Mail-Adresse für die IAquaLink-Cloud-Anmeldung.
+      en: Required for cloud mode only. Email address for IAquaLink cloud login.
+    required: false
+    dependencies:
+      - name: mode
+        check: equal
+        value: cloud
+  - name: password
+    description:
+      de: IAquaLink Passwort
+      en: IAquaLink password
+    help:
+      de: Nur für Cloud-Modus erforderlich. Passwort für die IAquaLink-Cloud-Anmeldung.
+      en: Required for cloud mode only. Password for IAquaLink cloud login.
+    mask: true
+    required: false
+    dependencies:
+      - name: mode
+        check: equal
+        value: cloud
+  - name: device
+    description:
+      de: Seriennummer oder Name
+      en: Serial number or name
+    help:
+      de: Nur für Cloud-Modus erforderlich. Seriennummer (bevorzugt) oder Name des Geräts in IAquaLink. Seriennummer wird zuerst versucht.
+      en: Required for cloud mode only. Serial number (preferred) or name of the device in IAquaLink. Serial number is tried first.
+    required: false
+    dependencies:
+      - name: mode
+        check: equal
+        value: cloud
+
+render: |
+  type: iaqualink
+  {{- if eq .mode "local" }}
+  uri: "{{ .uri }}"
+  {{- else }}
+  email: "{{ .email }}"
+  password: "{{ .password }}"
+  device: "{{ .device }}"
+  {{- end }}

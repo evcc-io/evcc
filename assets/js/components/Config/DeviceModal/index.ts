@@ -22,6 +22,12 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+export type TemplateParamDependency = {
+  name: string;
+  check: "equal";
+  value: string | number | boolean;
+};
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
@@ -31,6 +37,7 @@ export type TemplateParam = {
   Choice?: string[];
   Service?: string;
   Usages?: TemplateParamUsage[];
+  Dependencies?: TemplateParamDependency[];
 };
 
 export type ParamService = {
@@ -114,6 +121,41 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
   return `${prefix}${type}`;
 }
 
+export function checkDependencies(
+  param: TemplateParam,
+  values: DeviceValues,
+  template?: Template | null
+): boolean {
+  if (!param.Dependencies || param.Dependencies.length === 0) {
+    return true;
+  }
+
+  // All dependencies must be satisfied
+  return param.Dependencies.every((dep) => {
+    let fieldValue = values[dep.name];
+
+    // If field value is not set, try to get default from template
+    if (fieldValue === undefined || fieldValue === null || fieldValue === "") {
+      if (template) {
+        const depParam = template.Params.find((p) => p.Name === dep.name);
+        if (depParam && depParam.Default !== undefined && depParam.Default !== null) {
+          fieldValue = depParam.Default;
+        }
+      }
+    }
+
+    if (dep.check === "equal") {
+      // Convert both to strings for comparison to handle type mismatches
+      // Use nullish coalescing to preserve legitimate falsy values (0, false)
+      const fieldStr = String(fieldValue ?? "");
+      const depStr = String(dep.value ?? "");
+
+      return fieldStr === depStr;
+    }
+    // Add more check types here if needed in the future
+    return false;
+  });
+}
 export async function loadServiceValues(path: string) {
   try {
     const response = await api.get(`/config/service/${path}`);

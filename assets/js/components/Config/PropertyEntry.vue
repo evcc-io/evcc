@@ -1,5 +1,6 @@
 <template>
 	<FormRow
+		v-if="isVisible"
 		:id="id"
 		:optional="!Required"
 		:deprecated="Deprecated"
@@ -27,6 +28,7 @@
 /* eslint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import { checkDependencies } from "./DeviceModal/index";
 
 export default {
 	name: "PropertyEntry",
@@ -43,8 +45,11 @@ export default {
 		Unit: String,
 		Mask: Boolean,
 		Choice: Array,
+		Dependencies: { type: Array, default: () => [] },
 		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
+		allValues: Object,
+		template: Object,
 	},
 	emits: ["update:modelValue"],
 	computed: {
@@ -65,6 +70,23 @@ export default {
 		example() {
 			// hide example text since config ui doesnt use go duration format (e.g. 5m)
 			return this.Type === "Duration" ? undefined : this.Example;
+		},
+		isVisible() {
+			// Fields without dependencies are always visible
+			if (!this.Dependencies || this.Dependencies.length === 0) {
+				return true;
+			}
+
+			// Create a param-like object for checkDependencies
+			const param = {
+				Name: this.Name,
+				Required: this.Required,
+				Advanced: false,
+				Deprecated: this.Deprecated,
+				Dependencies: this.Dependencies,
+			};
+
+			return checkDependencies(param, this.allValues ?? {}, this.template ?? null);
 		},
 	},
 };
