@@ -49,8 +49,7 @@ func TestPlan(t *testing.T) {
 
 	{
 		// filter rates to [now, now] window - should return empty
-		filteredRates := filterRates(rates, clock.Now(), clock.Now())
-		plan := p.plan(filteredRates, time.Hour, clock.Now())
+		plan := p.plan(filterRates(rates, clock.Now(), clock.Now()), time.Hour, clock.Now())
 		assert.Empty(t, plan)
 	}
 
@@ -119,8 +118,7 @@ func TestPlan(t *testing.T) {
 		t.Log(tc.desc)
 		clock.Set(tc.now)
 		// filter rates to [now, target] window as caller would do
-		filteredRates := filterRates(rates, tc.now, tc.target)
-		plan := p.plan(filteredRates, tc.duration, tc.target)
+		plan := p.plan(filterRates(rates, tc.now, tc.target), tc.duration, tc.target)
 
 		assert.Equalf(t, tc.planStart.UTC(), Start(plan).UTC(), "case %d start", i)
 		assert.Equalf(t, tc.duration, Duration(plan), "case %d duration", i)
