@@ -231,7 +231,9 @@ func resolveLocation(base *url.URL, location string) (*url.URL, error) {
 }
 
 func parseAuthLocation(u *url.URL) (url.Values, error) {
-	u.RawQuery = u.Fragment
+	if u.Fragment != "" {
+		u.RawQuery = u.Fragment
+	}
 
 	if errStr := u.Query().Get("error"); errStr != "" {
 		return nil, errors.New(errStr)
