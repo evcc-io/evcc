@@ -127,12 +127,3 @@ func trimSlot(slot *api.Rate, excess time.Duration, trimEnd bool) {
 		slot.End = slot.Start
 	}
 }
-
-// normalizeTZ converts time t to the timezone of reference (or UTC) and truncates to seconds
-func normalizeTZ(t, reference time.Time) time.Time {
-	loc := reference.Location()
-	if loc == nil {
-		loc = time.UTC
-	}
-	return t.In(loc).Truncate(time.Second)
-}

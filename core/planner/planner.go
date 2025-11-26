@@ -156,8 +156,8 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	if len(res) == 0 {
 		return api.Rates{
 			api.Rate{
-				Start: normalizeTZ(start, start),
-				End:   normalizeTZ(end, start),
+				Start: start.Truncate(time.Second),
+				End:   end.Truncate(time.Second),
 			},
 		}
 	}
@@ -166,7 +166,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	// required for scenarios where current time is before first available rate
 	if res[0].Start.After(start) {
 		res = slices.Insert(res, 0, api.Rate{
-			Start: normalizeTZ(start, res[0].Start),
+			Start: start.Truncate(time.Second),
 			End:   res[0].Start,
 		})
 	}
@@ -176,7 +176,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	if last := res[len(res)-1]; last.End.Before(end) {
 		res = append(res, api.Rate{
 			Start: last.End,
-			End:   normalizeTZ(end, last.End),
+			End:   end.Truncate(time.Second),
 		})
 	}
 
