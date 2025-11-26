@@ -79,6 +79,8 @@ COPY packaging/docker/bin/* /app/
 EXPOSE 5353/udp
 # EEBus
 EXPOSE 4712/tcp
+# mDNS
+EXPOSE 5353/udp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger
