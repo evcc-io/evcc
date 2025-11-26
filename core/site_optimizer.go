@@ -514,7 +514,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minL
   }
 }
 
-// TODO remove once (using) smart cost limit becaomes obsolete			
+ // TODO: remove once smart cost limit usage becomes obsolete
 func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
 	costLimit := lp.GetSmartCostLimit()
 	if costLimit == nil {
