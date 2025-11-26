@@ -19,6 +19,10 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
+    help:
+      en: Can be found in Home Assistant UI under Settings -> System -> General -> Name. Used to identify your instance via mDNS.
+      de: Kann in der Home Assistant UI unter Einstellungen -> System -> Allgemein -> Name gefunden werden. Wird verwendet, um die Instanz via mDNS zu identifizieren.
+    example: Home
     service: homeassistant/homes
     required: true
   - name: soc
