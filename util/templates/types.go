@@ -189,6 +189,7 @@ type Param struct {
 	Preset      string       `json:"-"`          // Reference a predefined set of params
 	Required    bool         `json:",omitempty"` // cli if the user has to provide a non empty value
 	Mask        bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
+	Private     bool         `json:",omitempty"` // value should be redacted in bug reports, e.g. email, locations, ...
 	Advanced    bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
 	Deprecated  bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default     string       `json:",omitempty"` // default value if no user value is provided in the configuration
@@ -236,6 +237,10 @@ func (p *Param) IsAdvanced() bool {
 
 func (p *Param) IsMasked() bool {
 	return p.Mask
+}
+
+func (p *Param) IsPrivate() bool {
+	return p.Private
 }
 
 func (p *Param) IsRequired() bool {

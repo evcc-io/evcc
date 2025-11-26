@@ -22,8 +22,8 @@ func init() {
 func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
-		_URI         string `mapstructure:"uri"`   // TODO deprecated
-		_Token       string `mapstructure:"token"` // TODO deprecated
+		URI_         string `mapstructure:"uri"`   // TODO deprecated
+		Token_       string `mapstructure:"token"` // TODO deprecated
 		Home         string
 		Enable       string
 		Power        string

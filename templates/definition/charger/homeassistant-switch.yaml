@@ -1,9 +1,6 @@
 template: homeassistant-switch
 products:
   - brand: Home Assistant
-    description:
-      de: Schalter
-      en: Switch
 group: switchsockets
 requirements:
   evcc: ["skiptest"]
@@ -19,8 +16,12 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    default: Home
+    help:
+      en: Can be found in Home Assistant UI under Settings -> System -> General -> Name. Used to identify your instance via mDNS.
+      de: Kann in der Home Assistant UI unter Einstellungen -> System -> Allgemein -> Name gefunden werden. Wird verwendet, um die Instanz via mDNS zu identifizieren.
+    example: Home
     service: homeassistant/homes
+    required: true
   - name: switch
     description:
       de: Entity ID des schaltbaren Geräts

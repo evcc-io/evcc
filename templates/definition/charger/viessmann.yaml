@@ -162,7 +162,7 @@ render: |
       source: viessmann
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
-      gateway: {{ .gateway_serial }}
+      gateway_serial: {{ .gateway_serial }}
     jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
@@ -184,7 +184,7 @@ render: |
             source: viessmann
             clientid: {{ .clientid }}
             redirecturi: {{ .redirecturi }}
-            gateway: {{ .gateway_serial }}
+            gateway_serial: {{ .gateway_serial }}
           body: >
             { }
       - case: 3 # boost
@@ -198,7 +198,7 @@ render: |
             source: viessmann
             clientid: {{ .clientid }}
             redirecturi: {{ .redirecturi }}
-            gateway: {{ .gateway_serial }}
+            gateway_serial: {{ .gateway_serial }}
           body: >
             { }
       - case: 1 # dimm

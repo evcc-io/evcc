@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"net/url"
 
 	"github.com/cenkalti/backoff/v4"
 )
@@ -41,6 +42,25 @@ type ErrLoginRequired struct {
 
 func (err *ErrLoginRequired) Error() string {
 	return "login required"
+}
+
+// ErrUrl indicates that the error contains an extractable URL
+type ErrUrl struct {
+	err string
+	url *url.URL
+}
+
+// UrlError creates an error message containing an url
+func UrlError(err string, url *url.URL) *ErrUrl {
+	return &ErrUrl{err, url}
+}
+
+func (err *ErrUrl) Error() string {
+	return err.err
+}
+
+func (err *ErrUrl) URL() *url.URL {
+	return err.url
 }
 
 // ErrAsleep indicates that vehicle is asleep. Caller may chose to wake up the vehicle and retry.

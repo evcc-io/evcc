@@ -59,7 +59,7 @@ require (
 	github.com/hasura/go-graphql-client v0.15.0
 	github.com/holoplot/go-evdev v0.0.0-20240306072622-217e18f17db1
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/insomniacslk/tapo v1.0.1
+	github.com/insomniacslk/tapo v1.0.2
 	github.com/itchyny/gojq v0.12.17
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jeremywohl/flatten v1.0.1

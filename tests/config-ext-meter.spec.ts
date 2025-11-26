@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
   editorClear,
@@ -9,17 +9,32 @@ import {
 } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
+const CONFIG_BASICS = "basics.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
-test.beforeEach(async () => {
-  await start(CONFIG_GRID_ONLY);
-});
-test.afterEach(async () => {
-  await stop();
-});
+async function createExtMeter(page: Page, title: string, power: string) {
+  const modal = page.getByTestId("meter-modal");
+
+  await page.getByRole("button", { name: "Add additional meter" }).click();
+  await expectModalVisible(modal);
+  await modal.getByRole("button", { name: "Add regular consumer" }).click();
+  await modal.getByLabel("Title").fill(title);
+  await modal.getByLabel("Usage").selectOption("battery");
+  await modal.getByLabel("Manufacturer").selectOption("Demo battery");
+  await modal.getByLabel("Power").fill(power);
+  await modal.getByRole("button", { name: "Save" }).click();
+  await expectModalHidden(modal);
+}
 
 test.describe("ext meter", async () => {
+  test.beforeEach(async () => {
+    await start(CONFIG_GRID_ONLY);
+  });
+  test.afterEach(async () => {
+    await stop();
+  });
+
   test("template-based ext meter", async ({ page }) => {
     await page.goto("/#/config");
     await enableExperimental(page, false);
@@ -159,5 +174,51 @@ test.describe("ext meter", async () => {
     await restart(CONFIG_GRID_ONLY);
     await page.reload();
     await expect(page.getByTestId("ext")).toHaveCount(0);
+  });
+});
+
+test.describe("ext meter order", async () => {
+  test.beforeEach(async () => {
+    await start(CONFIG_BASICS);
+  });
+  test.afterEach(async () => {
+    await stop();
+  });
+
+  test("ensure order is preserved", async ({ page }) => {
+    await page.goto("/#/config");
+    await enableExperimental(page, false);
+    await expect(page.getByTestId("ext")).toHaveCount(0);
+
+    // Create meters
+    await createExtMeter(page, "Meter 1", "10");
+    await createExtMeter(page, "Meter 2", "20");
+    await createExtMeter(page, "Meter 3", "30");
+
+    // Verify order in config UI
+    const extMeters = page.getByTestId("ext");
+    await expect(extMeters).toHaveCount(3);
+    await expect(extMeters.nth(0)).toContainText("Meter 1");
+    await expect(extMeters.nth(1)).toContainText("Meter 2");
+    await expect(extMeters.nth(2)).toContainText("Meter 3");
+
+    // Restart and check order is preserved in both UIs
+    await restart(CONFIG_BASICS);
+
+    // Check config UI
+    await page.goto("/#/config");
+    await expect(extMeters).toHaveCount(3);
+    await expect(extMeters.nth(0)).toContainText("Meter 1");
+    await expect(extMeters.nth(1)).toContainText("Meter 2");
+    await expect(extMeters.nth(2)).toContainText("Meter 3");
+
+    // Verify order in main UI consumer dropdown
+    await page.goto("/#/");
+    await page.getByTestId("energyflow").click();
+    await page.getByRole("button", { name: "Consumption" }).click();
+    const consumers = await page.getByTestId("energyflow-entry-consumer");
+    await expect(consumers.nth(0)).toContainText("Meter 1");
+    await expect(consumers.nth(1)).toContainText("Meter 2");
+    await expect(consumers.nth(2)).toContainText("Meter 3");
   });
 });
