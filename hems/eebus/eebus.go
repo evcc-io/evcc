@@ -196,6 +196,8 @@ func (c *EEBus) run() error {
 		// LPC-914/1
 		if c.consumptionLimit != nil && c.consumptionLimit.IsActive {
 			c.log.WARN.Println("active consumption limit")
+			c.mux.RLock()
+			defer c.mux.RUnlock()
 			c.setStatusAndLimit(StatusLimited, c.consumptionLimit.Value)
 		}
 
@@ -203,6 +205,8 @@ func (c *EEBus) run() error {
 		// limit updated?
 		if !c.consumptionLimit.IsActive {
 			c.log.WARN.Println("inactive consumption limit")
+			c.mux.RLock()
+			defer c.mux.RUnlock()
 			c.setStatusAndLimit(StatusUnlimited, 0)
 			break
 		}
@@ -214,6 +218,8 @@ func (c *EEBus) run() error {
 			c.consumptionLimit = nil
 
 			c.log.DEBUG.Println("limit duration exceeded- return to normal")
+			c.mux.RLock()
+			defer c.mux.RUnlock()
 			c.setStatusAndLimit(StatusUnlimited, 0)
 		}
 
@@ -221,6 +227,8 @@ func (c *EEBus) run() error {
 		// LPC-914/2
 		if d := c.failsafeDuration; heartbeatErr == nil || time.Since(c.statusUpdated) > d {
 			c.log.DEBUG.Println("heartbeat returned and failsafe duration exceeded- return to normal")
+			c.mux.RLock()
+			defer c.mux.RUnlock()
 			c.setStatusAndLimit(StatusUnlimited, 0)
 		}
 	}
