@@ -89,7 +89,13 @@
 			:required="required"
 			:autocomplete="masked || datalistId ? 'off' : null"
 		/>
-		<button v-if="showClearButton" type="button" class="form-control-clear" @click="value = ''">
+		<button
+			v-if="showClearButton"
+			type="button"
+			class="form-control-clear"
+			:aria-label="$t('config.general.clear')"
+			@click="value = ''"
+		>
 			&times;
 		</button>
 		<datalist v-if="showDatalist" :id="datalistId">

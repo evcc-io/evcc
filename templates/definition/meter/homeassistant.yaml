@@ -1,14 +1,11 @@
 template: homeassistant
 products:
   - brand: Home Assistant
-    description:
-      de: Meter
-      en: Meter
 group: generic
 requirements:
   description:
-    en: Requires a running Home Assistant instance with suitable sensor entities. All values are Home Assistant entity IDs (e.g. sensor.*)
-    de: Erfordert eine laufende Home Assistant Instanz mit passenden Sensor-Entitäten. Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*)
+    en: Requires a running Home Assistant instance with suitable sensor entities. All values are Home Assistant entity IDs (e.g. `sensor.*`)
+    de: Erfordert eine laufende Home Assistant Instanz mit passenden Sensor-Entitäten. Alle Werte sind Home Assistant Entity IDs (z.B. `sensor.*`)
 auth:
   type: homeassistant
   params: [home]
@@ -23,7 +20,6 @@ params:
     description:
       de: Home Assistant Instanz
       en: Home Assistant Instance
-    default: Home
     service: homeassistant/homes
     required: true
   - name: power
