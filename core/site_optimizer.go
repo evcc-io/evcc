@@ -488,7 +488,7 @@ func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minLen int) {
 	goal, socBased := lp.GetPlanGoal()
 	if goal <= 0 {
-	return
+		return
 	}
 
 	// Convert to Wh
