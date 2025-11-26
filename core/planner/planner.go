@@ -114,7 +114,7 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 			if slot.Start.Before(windowEnd) {
 				// trim end if necessary
 				if slot.End.After(windowEnd) {
-					slot.End = windowEnd.Truncate(time.Second)
+					slot.End = windowEnd
 				}
 
 				// only add slots with valid duration
@@ -156,8 +156,8 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	if len(res) == 0 {
 		return api.Rates{
 			api.Rate{
-				Start: start.Truncate(time.Second),
-				End:   end.Truncate(time.Second),
+				Start: start,
+				End:   end,
 			},
 		}
 	}
@@ -166,7 +166,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	// required for scenarios where current time is before first available rate
 	if res[0].Start.After(start) {
 		res = slices.Insert(res, 0, api.Rate{
-			Start: start.Truncate(time.Second),
+			Start: start,
 			End:   res[0].Start,
 		})
 	}
@@ -176,7 +176,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	if last := res[len(res)-1]; last.End.Before(end) {
 		res = append(res, api.Rate{
 			Start: last.End,
-			End:   end.Truncate(time.Second),
+			End:   end,
 		})
 	}
 
@@ -188,9 +188,11 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 		return nil
 	}
 
+	now := t.clock.Now().Truncate(time.Second)
+
 	latestStart := targetTime.Add(-requiredDuration)
-	if latestStart.Before(t.clock.Now()) {
-		latestStart = t.clock.Now()
+	if latestStart.Before(now) {
+		latestStart = now
 		targetTime = latestStart.Add(requiredDuration)
 	}
 
@@ -238,7 +240,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 	}
 
 	// filter rates to planning window early for performance
-	rates = filterRates(rates, t.clock.Now(), targetTime)
+	rates = filterRates(rates, now, targetTime)
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
@@ -264,7 +266,6 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 		// check if available tariff slots span is sufficient for sliding window algorithm
 		// verify that actual tariff data covers enough duration (may have gaps or start late)
 		if len(rates) > 0 {
-			now := t.clock.Now()
 			start := rates[0].Start
 			if start.Before(now) {
 				start = now

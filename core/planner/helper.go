@@ -97,14 +97,14 @@ func isValidSlot(slot api.Rate) bool {
 // adjustSlotStart trims slot start to the given time if it starts before
 func adjustSlotStart(slot *api.Rate, start time.Time) {
 	if slot.Start.Before(start) {
-		slot.Start = start.Truncate(time.Second)
+		slot.Start = start
 	}
 }
 
 // adjustSlotEnd trims slot end to the given time if it extends beyond
 func adjustSlotEnd(slot *api.Rate, end time.Time) {
 	if slot.End.After(end) {
-		slot.End = end.Truncate(time.Second)
+		slot.End = end
 	}
 }
 
@@ -117,9 +117,9 @@ func trimSlot(slot *api.Rate, excess time.Duration, trimEnd bool) {
 	}
 
 	if trimEnd {
-		slot.End = slot.End.Add(-excess).Truncate(time.Second)
+		slot.End = slot.End.Add(-excess)
 	} else {
-		slot.Start = slot.Start.Add(excess).Truncate(time.Second)
+		slot.Start = slot.Start.Add(excess)
 	}
 
 	// Ensure slot remains valid - if trimming would create invalid slot, make it zero-duration
