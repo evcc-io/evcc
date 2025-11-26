@@ -32,6 +32,7 @@ func Duration(plan api.Rates) time.Duration {
 	var duration time.Duration
 	for _, slot := range plan {
 		slotDuration := slot.End.Sub(slot.Start)
+		// defensive: skip invalid slots (should not occur if filters work correctly)
 		if slotDuration > 0 {
 			duration += slotDuration
 		}
@@ -45,8 +46,9 @@ func AverageCost(plan api.Rates) float64 {
 	var duration time.Duration
 	for _, slot := range plan {
 		slotDuration := slot.End.Sub(slot.Start)
+		// defensive: skip invalid slots (should not occur if filters work correctly)
 		if slotDuration <= 0 {
-			continue // Skip invalid slots
+			continue
 		}
 		duration += slotDuration
 		cost += float64(slotDuration) * slot.Value
@@ -111,9 +113,8 @@ func adjustSlotEnd(slot *api.Rate, end time.Time) {
 // trimSlot trims excess duration from a slot
 // trimEnd: true = trim end (prefer early start), false = trim start (prefer late start)
 func trimSlot(slot *api.Rate, excess time.Duration, trimEnd bool) {
-	// Ignore invalid excess values
 	if excess < 0 {
-		return
+		panic("trimSlot: excess must not be negative")
 	}
 
 	if trimEnd {

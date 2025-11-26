@@ -45,7 +45,8 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 		adjustSlotStart(&slot, start)
 		adjustSlotEnd(&slot, end)
 
-		// only add slots with valid duration
+		// adjustSlot* can create invalid slots (e.g. when start >= slot.End or end <= slot.Start)
+		// filter these out to prevent zero-duration or negative-duration slots
 		if isValidSlot(slot) {
 			result = append(result, slot)
 		}
@@ -73,7 +74,8 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			requiredDuration = 0
 		}
 
-		// only add slots with valid duration
+		// trimSlot can create zero-duration slots (End == Start) when over-trimming
+		// skip these to avoid invalid plans
 		if !isValidSlot(slot) {
 			continue
 		}
@@ -117,11 +119,8 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 					slot.End = windowEnd
 				}
 
-				// only add slots with valid duration
-				if isValidSlot(slot) {
-					window = append(window, slot)
-					duration += slot.End.Sub(slot.Start)
-				}
+				window = append(window, slot)
+				duration += slot.End.Sub(slot.Start)
 			}
 		}
 
