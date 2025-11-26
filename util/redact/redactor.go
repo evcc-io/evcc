@@ -1,7 +1,5 @@
 package redact
 
-//go:generate go run redact_gen.go
-
 import (
 	"fmt"
 	"maps"
@@ -57,11 +55,10 @@ func String(src string) string {
 func Map(src map[string]any) map[string]any {
 	res := maps.Clone(src)
 	for k := range res {
-		if !slices.ContainsFunc(configRedactSecrets, func(s string) bool {
+		if slices.ContainsFunc(configRedactSecrets, func(s string) bool {
 			return strings.EqualFold(k, s)
 		}) {
 			res[k] = "*****"
-			break
 		}
 	}
 	return res
