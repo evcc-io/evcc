@@ -3,9 +3,11 @@ package eebus
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
+	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -30,6 +32,7 @@ type EEBus struct {
 	statusUpdated time.Time
 
 	consumptionLimit *ucapi.LoadLimit // LPC-041
+	productionLimit  *ucapi.LoadLimit
 	failsafeLimit    float64
 	failsafeDuration time.Duration
 
@@ -40,6 +43,8 @@ type EEBus struct {
 type Limits struct {
 	ContractualConsumptionNominalMax    float64
 	ConsumptionLimit                    float64
+	ContractualProductionNominalMax     float64
+	ProductionLimit                     float64
 	FailsafeConsumptionActivePowerLimit float64
 	FailsafeDurationMinimum             time.Duration
 }
@@ -106,6 +111,11 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 			IsChangeable: true,
 		},
 
+		productionLimit: &ucapi.LoadLimit{
+			Value:        limits.ProductionLimit,
+			IsChangeable: true,
+		},
+
 		failsafeLimit:    limits.FailsafeConsumptionActivePowerLimit,
 		failsafeDuration: limits.FailsafeDurationMinimum,
 	}
@@ -144,21 +154,53 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
-	// set initial values
-	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
+	// set LPC initial values
+	if scenarioSupported(c.cs.CsLPCInterface, 1) {
+		if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
+			c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
+		}
 	}
-	if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
-		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
+	if scenarioSupported(c.cs.CsLPCInterface, 2) {
+		if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
+			c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
+		}
+		if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+		}
 	}
-	if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
-		c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
+	if scenarioSupported(c.cs.CsLPCInterface, 4) {
+		if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+			c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
+		}
 	}
-	if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
-		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+
+	// set LPP initial values
+	if scenarioSupported(c.cs.CsLPPInterface, 1) {
+		if err := c.cs.CsLPPInterface.SetProductionLimit(*c.productionLimit); err != nil {
+			c.log.ERROR.Println("CS LPP SetProductionLimit:", err)
+		}
+	}
+	if scenarioSupported(c.cs.CsLPPInterface, 2) {
+		if err := c.cs.CsLPPInterface.SetFailsafeProductionActivePowerLimit(c.failsafeLimit, true); err != nil {
+			c.log.ERROR.Println("CS LPP SetFailsafeProductionActivePowerLimit:", err)
+		}
+		if err := c.cs.CsLPPInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPP SetFailsafeDurationMinimum:", err)
+		}
+	}
+	if scenarioSupported(c.cs.CsLPPInterface, 4) {
+		if err := c.cs.CsLPPInterface.SetProductionNominalMax(limits.ContractualProductionNominalMax); err != nil {
+			c.log.ERROR.Println("CS LPP SetProductionNominalMax:", err)
+		}
 	}
 
 	return c, nil
+}
+
+func scenarioSupported(uu eebusapi.UseCaseInterface, uc uint) bool {
+	return slices.ContainsFunc(uu.RemoteEntitiesScenarios(), func(res eebusapi.RemoteEntityScenarios) bool {
+		return slices.Contains(res.Scenarios, uc)
+	})
 }
 
 func (c *EEBus) Run() {
