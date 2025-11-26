@@ -172,7 +172,8 @@ func (c *EEBus) Run() {
 // TODO check state machine against spec
 func (c *EEBus) run() error {
 	c.mux.RLock()
-	defer c.mux.RUnlock()
+c.mux.Lock()
+defer c.mux.Unlock()
 
 	c.log.TRACE.Println("status:", c.status)
 
