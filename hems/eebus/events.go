@@ -125,7 +125,6 @@ func (c *EEBus) writeApprovalRequired() {
 		defer c.mux.Unlock()
 
 		c.consumptionLimit = &limit
-
 	}
 }
 
