@@ -34,10 +34,6 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 
 // filterRates filters rates to the given time window and optionally adjusts boundary slots
 func filterRates(rates api.Rates, start, end time.Time) api.Rates {
-	if len(rates) == 0 {
-		return nil
-	}
-
 	var result api.Rates
 	for _, r := range rates {
 		// skip slots completely outside window
@@ -96,16 +92,12 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 // findContinuousWindow finds the cheapest continuous window of slots for the given duration.
 // - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates.
-func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
-	if len(validRates) == 0 {
-		return nil
-	}
-
+func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
 	bestCost := math.MaxFloat64
 	var bestWindow api.Rates
 
-	for i := range validRates {
-		windowEnd := validRates[i].Start.Add(effectiveDuration)
+	for i := range rates {
+		windowEnd := rates[i].Start.Add(effectiveDuration)
 
 		if windowEnd.After(targetTime) {
 			break
@@ -115,12 +107,12 @@ func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration t
 		var window api.Rates
 		var duration time.Duration
 
-		for j := i; j < len(validRates) && duration < effectiveDuration; j++ {
-			slot := validRates[j]
+		for j := i; j < len(rates) && duration < effectiveDuration; j++ {
+			slot := rates[j]
 
-			// Slot partially or completely within window?
+			// slot partially or completely within window?
 			if slot.Start.Before(windowEnd) {
-				// Trim end if necessary
+				// trim end if necessary
 				if slot.End.After(windowEnd) {
 					slot.End = windowEnd.Truncate(time.Second)
 				}
@@ -133,7 +125,7 @@ func (t *Planner) findContinuousWindow(validRates api.Rates, effectiveDuration t
 			}
 		}
 
-		// Only consider complete windows
+		// only consider complete windows
 		if duration < effectiveDuration {
 			continue
 		}

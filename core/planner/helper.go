@@ -109,14 +109,14 @@ func adjustSlotEnd(slot *api.Rate, end time.Time) {
 }
 
 // trimSlot trims excess duration from a slot
-// isSingle: true = trim end (prefer early start), false = trim start (prefer late start)
-func trimSlot(slot *api.Rate, excess time.Duration, isSingle bool) {
+// trimEnd: true = trim end (prefer early start), false = trim start (prefer late start)
+func trimSlot(slot *api.Rate, excess time.Duration, trimEnd bool) {
 	// Ignore invalid excess values
 	if excess < 0 {
 		return
 	}
 
-	if isSingle {
+	if trimEnd {
 		slot.End = slot.End.Add(-excess).Truncate(time.Second)
 	} else {
 		slot.Start = slot.Start.Add(excess).Truncate(time.Second)
