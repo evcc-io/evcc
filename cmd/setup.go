@@ -990,6 +990,11 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 		}
 	}
 
+	// prevent panic
+	if conf == nil {
+		return nil
+	}
+
 	for _, cfg := range *conf {
 		var mode modbus.ReadOnlyMode
 		mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
