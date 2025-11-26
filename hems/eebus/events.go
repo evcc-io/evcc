@@ -122,10 +122,8 @@ func (c *EEBus) writeApprovalRequired() {
 		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 
 		c.mux.Lock()
-		func() {
-			defer c.mux.Unlock()
-			c.consumptionLimit = &limit
-		}()
+		c.consumptionLimit = &limit
+		c.mux.Unlock()
 	}
 }
 
