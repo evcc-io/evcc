@@ -116,7 +116,7 @@ func (c *EEBus) writeApprovalRequired() {
 		c.log.DEBUG.Println("CS LPC PendingConsumptionLimit:", msg, limit)
 		if limit.Value < 0 {
 			c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, false, "negative limit")
-			return
+			continue
 		}
 
 		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
