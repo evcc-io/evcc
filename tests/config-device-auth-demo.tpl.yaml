@@ -20,6 +20,7 @@ params:
     description:
       de: Token
       en: Token
+    mask: false
   - name: power
     description:
       de: Leistung
