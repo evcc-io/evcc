@@ -43,6 +43,7 @@ params:
     choice: ["https", "http"]
     default: https
   - name: user
+    private: true
     description:
       de: Benutzerkonto
       en: Username
@@ -76,6 +77,7 @@ params:
     usages: ["pv"]
     advanced: true
   - name: vin
+    private: true
     description:
       de: Fahrzeugidentifikationsnummer
       en: Vehicle Identification Number
@@ -247,6 +249,7 @@ params:
 
   - name: ski
     required: true
+    private: true
     description:
       en: Subject Key Identifier (SKI)
       de: Identifikationsschlüssel (SKI)
@@ -254,16 +257,18 @@ params:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
   - name: uri
+    private: true
     description:
       generic: URI
     help:
       en: HTTP(S) address
       de: HTTP(S) Adresse
   - name: url
+    private: true
     description:
       generic: URL
   - name: ain
-    mask: true
+    private: true
     example: "307788992233"
     description:
       en: Actor Identification Number (AIN)
@@ -340,12 +345,15 @@ params:
     advanced: true
 
   - name: accesstoken
+    mask: true
     description:
       generic: Access token
   - name: refreshtoken
+    mask: true
     description:
       generic: Refresh token
   - name: serial
+    private: true
     description:
       en: Serial
       de: Seriennummer
@@ -360,9 +368,11 @@ params:
     description:
       generic: Client ID
   - name: clientsecret
+    mask: true
     description:
       generic: Client Secret
   - name: token
+    mask: true
     description:
       generic: Token
   - name: interval
@@ -370,13 +380,16 @@ params:
       de: Intervall
       en: Interval
   - name: mac
+    private: true
     description:
       en: MAC Address
       de: MAC Adresse
   - name: pin
+    mask: true
     description:
       generic: PIN
   - name: serial_number
+    private: true
     description:
       en: Serial Number
       de: Seriennummer
@@ -384,9 +397,11 @@ params:
     description:
       generic: Watchdog
   - name: uuid
+    private: true
     description:
       generic: UUID
   - name: zip
+    private: true
     description:
       en: ZIP code
       de: Postleitzahl
@@ -420,12 +435,14 @@ params:
       de: Temperaturquelle
       en: Temperature source
   - name: lat
+    private: true
     description:
       en: Latitude
       de: Breitengrad
     type: float
     example: 55.7351
   - name: lon
+    private: true
     description:
       en: Longitude
       de: Längengrad
@@ -601,6 +618,7 @@ presets:
         en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary! (Uses OCPP RemoteStartTransaction)
     - name: idtag
       advanced: true
+      private: true
       type: string
       description:
         en: Authentication token

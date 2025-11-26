@@ -35,13 +35,13 @@ test.describe("config device auth", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
 
     // step 1: auth view
+    await expect(meterModal.getByLabel("Region")).toBeVisible();
     await expect(meterModal.getByLabel("Server")).toBeVisible();
-    await expect(meterModal.getByLabel("Token")).toBeVisible();
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Save" })).not.toBeVisible();
-    await meterModal.getByLabel("Server").selectOption("EU");
-    await meterModal.getByLabel("Token").fill("test-token-123");
+    await meterModal.getByLabel("Region").selectOption("EU");
+    await meterModal.getByLabel("Server").fill("my.server.org");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
     await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
 
@@ -51,8 +51,8 @@ test.describe("config device auth", async () => {
     });
 
     // step 2: show regular device form
-    await expect(meterModal.getByLabel("Server")).toHaveValue("EU");
-    await expect(meterModal.getByLabel("Token")).toHaveValue("test-token-123");
+    await expect(meterModal.getByLabel("Region")).toHaveValue("EU");
+    await expect(meterModal.getByLabel("Server")).toHaveValue("my.server.org");
     await expect(meterModal.getByLabel("Power")).toBeVisible();
     await meterModal.getByLabel("Power").fill("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -69,8 +69,8 @@ test.describe("config device auth", async () => {
     // re-open meter for editing
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
-    await expect(meterModal.getByLabel("Server")).toHaveValue("EU");
-    await expect(meterModal.getByLabel("Token")).toHaveValue("test-token-123");
+    await expect(meterModal.getByLabel("Region")).toHaveValue("EU");
+    await expect(meterModal.getByLabel("Server")).toHaveValue("my.server.org");
     await expect(meterModal.getByLabel("Power")).toHaveValue("5000");
     await expect(meterModal.getByRole("button", { name: "Prepare connection" })).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -84,8 +84,8 @@ test.describe("config device auth", async () => {
     // re-open meter for editing after restart, auth status as to be reestablished
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
-    await expect(meterModal.getByLabel("Server")).toHaveValue("EU");
-    await expect(meterModal.getByLabel("Token")).toHaveValue("test-token-123");
+    await expect(meterModal.getByLabel("Region")).toHaveValue("EU");
+    await expect(meterModal.getByLabel("Server")).toHaveValue("my.server.org");
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
     // note: prepare connection step is auto-executed, since all required fields (server, token) are already present
     await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
