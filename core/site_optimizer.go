@@ -486,35 +486,35 @@ func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 }
 
 func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minLen int) {
-  goal, socBased := lp.GetPlanGoal()
-  if goal <= 0 {
-    return
-  }
+	goal, socBased := lp.GetPlanGoal()
+	if goal <= 0 {
+	return
+	}
 
-  // Convert to Wh
-  if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
-    goal *= vehicle.Capacity() * 10
-  } else {
-    goal *= 1000 // Wh
-  }
+	// Convert to Wh
+	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
+		goal *= vehicle.Capacity() * 10
+	} else {
+		goal *= 1000 // Wh
+	}
 
-  ts := lp.EffectivePlanTime()
-  if ts.IsZero() {
-    return
-  }
+	ts := lp.EffectivePlanTime()
+	if ts.IsZero() {
+		return
+	}
 
-  // TODO precise slot placement
-  slot := int(time.Until(ts) / tariff.SlotDuration)
-  if slot >= 0 && slot < minLen {
-    bat.SGoal = make([]float32, minLen)
-    bat.SGoal[slot] = float32(goal)
-	bat.SMax = max(bat.SMax, float32(goal))
-  } else {
-    site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
-  }
+	// TODO precise slot placement
+	slot := int(time.Until(ts) / tariff.SlotDuration)
+	if slot >= 0 && slot < minLen {
+		bat.SGoal = make([]float32, minLen)
+		bat.SGoal[slot] = float32(goal)
+		bat.SMax = max(bat.SMax, float32(goal))
+	} else {
+		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	}
 }
 
- // TODO: remove once smart cost limit usage becomes obsolete
+// TODO: remove once smart cost limit usage becomes obsolete
 func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
 	costLimit := lp.GetSmartCostLimit()
 	if costLimit == nil {
