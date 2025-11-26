@@ -182,6 +182,7 @@
 									:power="c.power"
 									:powerUnit="powerUnit"
 									icon="vehicle"
+									data-testid="energyflow-entry-consumer"
 									:iconProps="{ names: [c.icon || 'generic'] }"
 								/>
 							</template>

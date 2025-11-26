@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/evcc-io/evcc/util/redact"
 )
 
 func TestUnwrap(t *testing.T) {
@@ -23,17 +25,17 @@ func TestRedact(t *testing.T) {
 	sponsortoken: geheim
 	user: geheim
 	password: geheim
-	secret: geheim
+	clientsecret: geheim
 	token:
-		access: geheim
-		refresh: geheim
+		accesstoken: geheim
+		refreshtoken: geheim
 	pin: geheim
 	mac: geheim
-	secret: geheim # comment
-	secret : geheim
+	clientsecret: geheim # comment
+	clientsecret : geheim
 	`
 
-	if res := redact(secret); strings.Contains(res, "geheim") || !strings.Contains(res, "public") {
+	if res := redact.String(secret); strings.Contains(res, "geheim") || !strings.Contains(res, "public") {
 		t.Errorf("secret exposed: %v", res)
 	}
 }

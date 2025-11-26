@@ -83,6 +83,7 @@ export default {
 		disableRemove: Boolean,
 		noButtons: Boolean,
 		transformReadValues: Function,
+		transformWriteValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
 		storeValuesInArray: Boolean,
@@ -134,8 +135,11 @@ export default {
 			this.saving = true;
 			this.error = "";
 			try {
-				const values = this.trimValues(this.values);
-				const res = await api[this.saveMethod](this.endpoint, values, {
+				const trimmedValues = this.trimValues(deepClone(this.values));
+				const payload = this.transformWriteValues
+					? this.transformWriteValues(trimmedValues)
+					: trimmedValues;
+				const res = await api[this.saveMethod](this.endpoint, payload, {
 					validateStatus: (code) => [200, 202, 400].includes(code),
 				});
 				if (res.status === 200 || res.status === 202) {
