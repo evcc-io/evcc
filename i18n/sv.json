@@ -489,6 +489,7 @@
         "backup": {
           "action": "Download backup...",
           "confirmationButton": "Download backup",
+          "confirmationText": "Ladda hem databasfilen.",
           "description": "Säkerhetskopiera dina data. Denna fil används för att återställa data i händelse av en systemkrasch.",
           "title": "Säkerhetskopia"
         },
@@ -1169,6 +1170,7 @@
     "cleanTitle": "Laddar grön el från nätet",
     "co2Label": "CO₂ utsläpp",
     "co2Limit": "CO₂ gräns",
+    "enable": "Aktivera begränsning",
     "loadpointDescription": "Aktiverar tillfällig snabbladdning i sol-läge.",
     "modalTitle": "Smartladdning elnät",
     "none": "ingen",
