@@ -100,7 +100,7 @@
     "vue-eslint-parser": "^10.2.0",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.1.5",
-    "wait-on": "^9.0.1"
+    "wait-on": "^9.0.1",
     "ws": "^8.18.3"
   }
 }
