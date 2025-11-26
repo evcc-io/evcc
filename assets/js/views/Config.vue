@@ -748,11 +748,13 @@ export default defineComponent({
 			const response = await api.get("/config/loadpoints");
 			this.loadpoints = response.data || [];
 		},
-		getMetersByNames(names: string[] | null) {
+		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
 				return [];
 			}
-			return this.meters.filter((m) => names.includes(m.name));
+			return names
+				.map((name) => this.meters.find((m) => m.name === name))
+				.filter((m): m is ConfigMeter => m !== undefined);
 		},
 		getMeterById(id?: number) {
 			if (!id || !this.meters) {
