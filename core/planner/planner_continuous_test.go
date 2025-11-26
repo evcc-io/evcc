@@ -425,10 +425,6 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	assert.False(t, lastSlot.End.After(targetTime),
 		"plan must not extend beyond target")
 
-	// Plan must finish at or before target time
-	assert.True(t, lastSlot.End.Before(targetTime) || lastSlot.End.Equal(targetTime),
-		"plan must finish at or before target time")
-
 	// Total duration must equal required duration
 	assert.Equal(t, requiredDuration, Duration(plan), "plan duration must match required")
 
@@ -441,9 +437,9 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	plan = planner.Plan(requiredDurationShort, targetTime, 0, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
-	lastSlotShort := plan[len(plan)-1]
 
 	// Plan must not extend beyond target
+	lastSlotShort := plan[len(plan)-1]
 	assert.False(t, lastSlotShort.End.After(targetTime),
 		"plan must not extend beyond target")
 
@@ -459,9 +455,9 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	plan = planner.Plan(requiredDurationMedium, targetTime, 0, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
-	lastSlotMedium := plan[len(plan)-1]
 
 	// Plan must not extend beyond target
+	lastSlotMedium := plan[len(plan)-1]
 	assert.False(t, lastSlotMedium.End.After(targetTime),
 		"plan must not extend beyond target")
 

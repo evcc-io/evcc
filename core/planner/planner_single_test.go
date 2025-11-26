@@ -95,7 +95,6 @@ func TestContinuous_WindowWithPastRates(t *testing.T) {
 
 	// Critical assertion: plan must not start in the past
 	assert.False(t, plan[0].Start.Before(now), "plan must not start in the past")
-	assert.GreaterOrEqual(t, plan[0].Start.Unix(), now.Unix(), "plan start must be >= now")
 
 	// Plan should find the cheapest 2-hour window in the future
 	// Expected: 1h-3h (two slots with prices 0.09 and 0.10)
@@ -185,7 +184,6 @@ func TestContinuous_WindowRatesSpanningPastAndFuture(t *testing.T) {
 
 	// Critical: plan must start at or after now, even if cheaper rates existed in the past
 	assert.False(t, plan[0].Start.Before(now), "plan must not start in the past")
-	assert.GreaterOrEqual(t, plan[0].Start.Unix(), now.Unix(), "plan start must be >= now")
 
 	// Should find cheapest 2-hour window starting from now or later
 	// Expected: 1h-3h window (two slots with prices 0.08 and 0.09)
@@ -233,7 +231,6 @@ func TestContinuous_WindowRatesStartInFuture(t *testing.T) {
 
 	// Plan must not start in the past
 	assert.False(t, plan[0].Start.Before(now), "plan must not start in the past")
-	assert.GreaterOrEqual(t, plan[0].Start.Unix(), now.Unix(), "plan start must be >= now")
 
 	// Should find cheapest 2-hour window within available rates
 	// Expected: 2h-4h window (two slots with prices 0.08 and 0.09)
