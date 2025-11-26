@@ -72,13 +72,6 @@ func TestAverageCost(t *testing.T) {
 	require.Equal(t, 0.0, AverageCost(api.Rates{{Start: now, End: now, Value: 10}}))
 }
 
-func TestIsValidSlot(t *testing.T) {
-	now := time.Now()
-	require.True(t, isValidSlot(api.Rate{Start: now, End: now.Add(time.Hour)}))
-	require.False(t, isValidSlot(api.Rate{Start: now, End: now}))
-	require.False(t, isValidSlot(api.Rate{Start: now.Add(time.Hour), End: now}))
-}
-
 func TestStartEnd(t *testing.T) {
 	now := time.Now()
 	plan := api.Rates{

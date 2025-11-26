@@ -32,7 +32,7 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 	return p
 }
 
-// filterRates filters rates to the given time window and optionally adjusts boundary slots
+// filterRates filters rates to the given time window and adjusts boundary slots
 func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 	var result api.Rates
 	for _, r := range rates {
@@ -41,15 +41,26 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 			continue
 		}
 
-		slot := r
-		adjustSlotStart(&slot, start)
-		adjustSlotEnd(&slot, end)
-
-		// adjustSlot* can create invalid slots (e.g. when start >= slot.End or end <= slot.Start)
-		// filter these out to prevent zero-duration or negative-duration slots
-		if isValidSlot(slot) {
-			result = append(result, slot)
+		// calculate adjusted bounds
+		adjustedStart := r.Start
+		if adjustedStart.Before(start) {
+			adjustedStart = start
 		}
+
+		adjustedEnd := r.End
+		if adjustedEnd.After(end) {
+			adjustedEnd = end
+		}
+
+		// skip if adjustment would create invalid slot
+		if !adjustedEnd.After(adjustedStart) {
+			continue
+		}
+
+		slot := r
+		slot.Start = adjustedStart
+		slot.End = adjustedEnd
+		result = append(result, slot)
 	}
 
 	return result
@@ -65,27 +76,21 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 	// rates are already filtered by caller, so slots are guaranteed to be relevant
 
 	for _, slot := range rates {
-		slotDuration := slot.End.Sub(slot.Start)
-		requiredDuration -= slotDuration
-
-		// slot covers more than we need, so shorten it
-		if requiredDuration < 0 {
-			trimSlot(&slot, -requiredDuration, !(IsFirst(slot, plan) && len(plan) > 0))
-			requiredDuration = 0
+		if requiredDuration <= 0 {
+			break
 		}
 
-		// trimSlot can create zero-duration slots (End == Start) when over-trimming
-		// skip these to avoid invalid plans
-		if !isValidSlot(slot) {
-			continue
+		slotDuration := slot.End.Sub(slot.Start)
+
+		// slot covers more than we need, so shorten it
+		if slotDuration > requiredDuration {
+			trimSlot(&slot, slotDuration-requiredDuration, !(IsFirst(slot, plan) && len(plan) > 0))
+			requiredDuration = 0
+		} else {
+			requiredDuration -= slotDuration
 		}
 
 		plan = append(plan, slot)
-
-		// we found all necessary slots
-		if requiredDuration == 0 {
-			break
-		}
 	}
 
 	return plan
