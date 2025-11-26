@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/samber/lo"
 )
 
 var (
@@ -41,9 +42,7 @@ func redactableParams() []string {
 		}
 	}
 
-	// sort and deduplicate
-	slices.Sort(params)
-	return slices.Compact(params)
+	return lo.Uniq(params)
 }
 
 // String redacts a configuration string by replacing sensitive values with *****
