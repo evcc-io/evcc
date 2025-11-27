@@ -32,7 +32,18 @@ func getHomes(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	jsonWrite(w, slices.Sorted(maps.Keys(instances)))
+	type entry struct {
+		Key string `json:"key"`
+		Val string `json:"val"`
+	}
+
+	var res []entry
+
+	for _, k := range slices.Sorted(maps.Keys(instances)) {
+		res = append(res, entry{k, instances[k]})
+	}
+
+	jsonWrite(w, res)
 }
 
 func getEntities(w http.ResponseWriter, req *http.Request) {
