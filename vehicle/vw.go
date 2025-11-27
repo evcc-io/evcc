@@ -13,19 +13,18 @@ import (
 
 // https://github.com/TA2k/ioBroker.vw-connect
 
-// ID is an api.Vehicle implementation for ID cars
-type ID struct {
+// VW is an api.Vehicle implementation for ID cars
+type VW struct {
 	*embed
 	*id.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("vw", NewIDFromConfig)
-	registry.Add("id", NewIDFromConfig)
+	registry.Add("vw", NewVWFromConfig)
 }
 
-// NewIDFromConfig creates a new vehicle
-func NewIDFromConfig(other map[string]any) (api.Vehicle, error) {
+// NewVWFromConfig creates a new vehicle
+func NewVWFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -44,11 +43,11 @@ func NewIDFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	v := &ID{
+	v := &VW{
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
 
 	q, err := vwidentity.LoginWithAuthURL(log, id.LoginURL, id.AuthParams, cc.User, cc.Password)
 	if err != nil {
