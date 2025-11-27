@@ -28,7 +28,7 @@ func New(log *util.Logger) *Service {
 	}
 }
 
-func (v *Service) Exchange(q url.Values) (*oauth2.Token, error) {
+func (v *Service) Exchange(q url.Values) (*Token, error) {
 	if err := urlvalues.Require(q, "state", "id_token", "access_token", "code"); err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (v *Service) Exchange(q url.Values) (*oauth2.Token, error) {
 		"authorizationCode": q.Get("code"),
 	}
 
-	var res oauth2.Token
+	var res Token
 
 	req, err := request.New(http.MethodPost, Endpoint.AuthURL, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
@@ -52,8 +52,7 @@ func (v *Service) Exchange(q url.Values) (*oauth2.Token, error) {
 	return &res, err
 }
 
-// RefreshToken implements oauth.TokenRefresher
-func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Service) Refresh(token *Token) (*Token, error) {
 	body := url.Values{
 		"grant_type":    []string{"refresh_token"},
 		"refresh_token": []string{token.RefreshToken},
@@ -78,10 +77,17 @@ func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	return &res, err
+	t := Token(res)
+	return &t, err
+}
+
+// RefreshToken implements oauth.TokenRefresher
+func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	res, err := v.Refresh((*Token)(token))
+	return (*oauth2.Token)(res), err
 }
 
 // TokenSource creates a refreshing oauth2 token source
-func (v *Service) TokenSource(token *oauth2.Token) oauth2.TokenSource {
-	return oauth.RefreshTokenSource(token, v)
+func (v *Service) TokenSource(token *Token) oauth2.TokenSource {
+	return oauth.RefreshTokenSource((*oauth2.Token)(token), v)
 }
