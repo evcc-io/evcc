@@ -38,7 +38,6 @@ func getHomes(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var res []entry
-
 	for _, k := range slices.Sorted(maps.Keys(instances)) {
 		res = append(res, entry{k, instances[k]})
 	}
