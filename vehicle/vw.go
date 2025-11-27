@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
-	"github.com/evcc-io/evcc/vehicle/vw/id"
+	"github.com/evcc-io/evcc/vehicle/vw/weconnect"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -16,7 +16,7 @@ import (
 // VW is an api.Vehicle implementation for ID cars
 type VW struct {
 	*embed
-	*id.Provider // provides the api implementations
+	*weconnect.Provider // provides the api implementations
 }
 
 func init() {
@@ -49,7 +49,7 @@ func NewVWFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
 
-	q, err := vwidentity.LoginWithAuthURL(log, id.LoginURL, id.AuthParams, cc.User, cc.Password)
+	q, err := vwidentity.LoginWithAuthURL(log, weconnect.LoginURL, weconnect.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -60,19 +60,19 @@ func NewVWFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := id.NewAPI(log, apps.TokenSource(token))
+	api := weconnect.NewAPI(log, apps.TokenSource(token))
 	api.Client.Timeout = cc.Timeout
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v id.Vehicle) (string, error) {
+		func(v weconnect.Vehicle) (string, error) {
 			return v.VIN, nil
 		},
 	)
 
 	if err == nil {
 		v.fromVehicle(vehicle.Nickname, 0)
-		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
+		v.Provider = weconnect.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err
