@@ -506,7 +506,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minL
 	// TODO precise slot placement
 	slot := int(time.Until(ts) / tariff.SlotDuration)
 	if slot >= 0 && slot < minLen {
-		bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
+		bat.SGoal = make([]float32, minLen)
 		bat.SGoal[slot] = float32(goal)
 		bat.SMax = max(bat.SMax, float32(goal))
 	} else {
@@ -533,7 +533,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 	maxPower := lp.EffectiveMaxPower()
 
 	if demand == nil {
-		demand = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
+		demand = make([]float32, minLen)
 	}
 
 	for i := 0; i < maxLen; i++ {
