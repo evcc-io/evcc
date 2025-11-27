@@ -2,6 +2,8 @@ package tariff
 
 import (
 	"context"
+	"errors"
+	"net"
 	"slices"
 	"sync"
 	"time"
@@ -16,10 +18,11 @@ import (
 
 type Tibber struct {
 	*embed
-	log    *util.Logger
-	homeID string
-	client *tibber.Client
-	data   *util.Monitor[api.Rates]
+	log         *util.Logger
+	homeID      string
+	client      *tibber.Client
+	data        *util.Monitor[api.Rates]
+	lastUpdated time.Time
 }
 
 var _ api.Tariff = (*Tibber)(nil)
@@ -92,9 +95,19 @@ func (t *Tibber) run(done chan error) {
 			defer cancel()
 			return t.client.Query(ctx, &res, v)
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
-
-			t.log.ERROR.Println(err)
+			// if we ran into a timeout, reuse the existing data
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
+				if time.Since(t.lastUpdated) < 36*time.Hour {
+					t.log.ERROR.Println("Timeout retrieving Tibber data - using last cached rates")
+				} else {
+					t.log.ERROR.Println("Timeout retrieving Tibber data and no fallback present - propagating error")
+					once.Do(func() { done <- err })
+				}
+			} else {
+				once.Do(func() { done <- err })
+				t.log.ERROR.Println(err)
+			}
 			continue
 		}
 
@@ -102,6 +115,7 @@ func (t *Tibber) run(done chan error) {
 		data := append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
 
 		mergeRates(t.data, data)
+		t.lastUpdated = time.Now()
 		once.Do(func() { close(done) })
 	}
 }
