@@ -153,13 +153,15 @@ type Loadpoint struct {
 	planActive       bool          // charge plan exists and has a currently active slot
 
 	// cached state
-	status         api.ChargeStatus // Charger status
-	chargePower    float64          // Charging power
-	chargeCurrents []float64        // Phase currents
-	connectedTime  time.Time        // Time when vehicle was connected
-	pvTimer        time.Time        // PV enabled/disable timer
-	phaseTimer     time.Time        // 1p3p switch timer
-	wakeUpTimer    *Timer           // Vehicle wake-up timeout
+	status              api.ChargeStatus // Charger status
+	chargePower         float64          // Charging power
+	chargeCurrents      []float64        // Phase currents
+	connectedTime       time.Time        // Time when vehicle was connected
+	pvTimer             time.Time        // PV enable/disable timer
+	pvTimerEvaluated    time.Time        // PV enable/disable timer last evaluation timestamp
+	phaseTimer          time.Time        // 1p3p switch timer
+	phaseTimerEvaluated time.Time        // 1p3p switch timer last evaluation timestamp
+	wakeUpTimer         *Timer           // Vehicle wake-up timeout
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -1363,11 +1365,17 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
-	// reset timer to disabled state
 	if !waiting && !lp.phaseTimer.IsZero() {
-		lp.resetPhaseTimer()
+		// increase delay
+		lp.phaseTimer = lp.phaseTimer.Add(2 * lp.clock.Since(lp.phaseTimerEvaluated))
+
+		// reset timer to disabled state if the delay would be too long
+		if lp.phaseTimer.After(lp.clock.Now()) {
+			lp.resetPhaseTimer()
+		}
 	}
 
+	lp.phaseTimerEvaluated = lp.clock.Now()
 	return 0
 }
 
@@ -1498,12 +1506,18 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			if elapsed > time.Second {
 				lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.GetDisableDelay() - elapsed).Round(time.Second))
 			}
-		} else {
-			// reset timer
-			lp.resetPVTimer("disable")
+		} else if !lp.pvTimer.IsZero() {
+			// increase delay
+			lp.pvTimer = lp.pvTimer.Add(2 * lp.clock.Since(lp.pvTimerEvaluated))
+
+			// reset timer if the delay would be too long
+			if lp.pvTimer.After(lp.clock.Now()) {
+				lp.resetPVTimer("disable")
+			}
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
+		lp.pvTimerEvaluated = lp.clock.Now()
 		return minCurrent
 	}
 
@@ -1534,12 +1548,18 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			if elapsed > time.Second {
 				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
 			}
-		} else {
-			// reset timer
-			lp.resetPVTimer("enable")
+		} else if !lp.pvTimer.IsZero() {
+			// increase delay
+			lp.pvTimer = lp.pvTimer.Add(2 * lp.clock.Since(lp.pvTimerEvaluated))
+
+			// reset timer if the delay would be too long
+			if lp.pvTimer.After(lp.clock.Now()) {
+				lp.resetPVTimer("enable")
+			}
 		}
 
 		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
+		lp.pvTimerEvaluated = lp.clock.Now()
 		return 0
 	}
 
