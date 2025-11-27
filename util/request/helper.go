@@ -1,11 +1,8 @@
 package request
 
 import (
-	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -84,19 +81,6 @@ func (r *Helper) DoJSON(req *http.Request, res any) error {
 		return err
 	}
 	defer resp.Body.Close()
-
-	buf := &bytes.Buffer{}
-	tmpReader := io.TeeReader(resp.Body, buf)
-
-	data, err := io.ReadAll(tmpReader)
-	if err != nil {
-		// handle
-	}
-
-	fmt.Printf("payload:\n%s\n", data)
-
-	// if something else still needs the reader, hand it the buffered copy
-	resp.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 
 	if resp.StatusCode == http.StatusNoContent {
 		return nil
