@@ -2,6 +2,7 @@ package homeassistant
 
 import (
 	"encoding/json"
+	"errors"
 	"maps"
 	"net/http"
 	"slices"
@@ -25,6 +26,11 @@ func init() {
 func getHomes(w http.ResponseWriter, req *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
+
+	if len(instances) == 0 {
+		jsonError(w, http.StatusPreconditionFailed, errors.New("no instances found"))
+		return
+	}
 
 	jsonWrite(w, slices.Sorted(maps.Keys(instances)))
 }
