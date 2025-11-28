@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -24,6 +25,8 @@ type OAuth struct {
 	log     *util.Logger
 	oc      *oauth2.Config
 	token   *oauth2.Token
+	name    string
+	devices []string
 	subject string
 	cv      string
 	ctx     context.Context
@@ -73,7 +76,7 @@ func init() {
 
 func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Name          string
+		Name, Device  string
 		oauth2.Config `mapstructure:",squash"`
 	}
 
@@ -81,12 +84,12 @@ func NewOauthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 		return nil, err
 	}
 
-	return NewOauth(ctx, cc.Name, &cc.Config)
+	return NewOauth(ctx, cc.Name, cc.Device, &cc.Config)
 }
 
 var _ api.AuthProvider = (*OAuth)(nil)
 
-func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
+func NewOauth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...oauthOption) (oauth2.TokenSource, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
 	}
@@ -97,24 +100,32 @@ func NewOauth(ctx context.Context, name string, oc *oauth2.Config, opts ...oauth
 	// hash oauth2 config
 	h := sha256.Sum256(fmt.Append(nil, oc))
 	hash := hex.EncodeToString(h[:])[:8]
-	subject := name + " (" + hash + ")"
+	subject := oc.ClientID + "-" + hash
 
 	// reuse instance
 	if instance := getInstance(subject); instance != nil {
+		if device != "" {
+			instance.devices = append(instance.devices, device)
+		}
 		return instance, nil
 	}
 
 	log := util.NewLogger("oauth-" + hash)
 
-	if ctx.Value(oauth2.HTTPClient) == nil {
+	if client, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); client == nil || !ok {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 	}
 
 	o := &OAuth{
-		subject: subject,
 		oc:      oc,
 		log:     log,
 		ctx:     ctx,
+		subject: subject,
+		name:    name,
+	}
+
+	if device != "" {
+		o.devices = append(o.devices, device)
 	}
 
 	for _, opt := range opts {
@@ -177,7 +188,8 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 	token, err := o.oc.TokenSource(o.ctx, o.token).Token()
 	if err != nil {
 		// force logout
-		if strings.Contains(err.Error(), "invalid_grant") && settings.Exists(o.subject) {
+		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
+			o.token = nil
 			o.onlineC <- false
 			settings.Delete(o.subject)
 		}
@@ -278,7 +290,6 @@ func (o *OAuth) Logout() error {
 	defer o.mu.Unlock()
 
 	o.token = nil
-
 	o.onlineC <- false
 
 	return nil
@@ -286,7 +297,10 @@ func (o *OAuth) Logout() error {
 
 // DisplayName implements api.AuthProvider.
 func (o *OAuth) DisplayName() string {
-	return o.subject
+	if len(o.devices) > 0 {
+		return fmt.Sprintf("%s (%s)", o.name, strings.Join(o.devices, ", "))
+	}
+	return o.name
 }
 
 // Authenticated implements api.AuthProvider.

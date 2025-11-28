@@ -1,4 +1,5 @@
 template: energinet-price
+covers: ["energinet"]
 products:
   - brand: Energinet
 requirements:
@@ -21,10 +22,10 @@ render: |
     jq: |
       [.records[]
         | {
-          start: (.TimeUTC[0:13] + ":00:00Z"),
-          end: (.TimeUTC[0:13]
-                | strptime("%Y-%m-%dT%H")
-                | mktime + 3600
+          start: .TimeUTC + "Z",
+          end: (.TimeUTC
+                | strptime("%Y-%m-%dT%H:%M:%S")
+                | mktime + 900
                 | strftime("%Y-%m-%dT%H:%M:%SZ")),
           value: .DayAheadPriceDKK / 1e3
         }

@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "CoarseCurrentIntegratedDeviceHeatingCacheableOfflineRetryableWelcomeCharge"
+const _FeatureName = "CoarseCurrentIntegratedDeviceHeatingCacheableOfflineRetryableStreamingWelcomeCharge"
 
-var _FeatureIndex = [...]uint8{0, 13, 29, 36, 45, 52, 61, 74}
+var _FeatureIndex = [...]uint8{0, 13, 29, 36, 45, 52, 61, 70, 83}
 
-const _FeatureLowerName = "coarsecurrentintegrateddeviceheatingcacheableofflineretryablewelcomecharge"
+const _FeatureLowerName = "coarsecurrentintegrateddeviceheatingcacheableofflineretryablestreamingwelcomecharge"
 
 func (i Feature) String() string {
 	i -= 1
@@ -31,10 +31,11 @@ func _FeatureNoOp() {
 	_ = x[Cacheable-(4)]
 	_ = x[Offline-(5)]
 	_ = x[Retryable-(6)]
-	_ = x[WelcomeCharge-(7)]
+	_ = x[Streaming-(7)]
+	_ = x[WelcomeCharge-(8)]
 }
 
-var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, Heating, Cacheable, Offline, Retryable, WelcomeCharge}
+var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, Heating, Cacheable, Offline, Retryable, Streaming, WelcomeCharge}
 
 var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureName[0:13]:       CoarseCurrent,
@@ -49,8 +50,10 @@ var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureLowerName[45:52]: Offline,
 	_FeatureName[52:61]:      Retryable,
 	_FeatureLowerName[52:61]: Retryable,
-	_FeatureName[61:74]:      WelcomeCharge,
-	_FeatureLowerName[61:74]: WelcomeCharge,
+	_FeatureName[61:70]:      Streaming,
+	_FeatureLowerName[61:70]: Streaming,
+	_FeatureName[70:83]:      WelcomeCharge,
+	_FeatureLowerName[70:83]: WelcomeCharge,
 }
 
 var _FeatureNames = []string{
@@ -60,7 +63,8 @@ var _FeatureNames = []string{
 	_FeatureName[36:45],
 	_FeatureName[45:52],
 	_FeatureName[52:61],
-	_FeatureName[61:74],
+	_FeatureName[61:70],
+	_FeatureName[70:83],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.

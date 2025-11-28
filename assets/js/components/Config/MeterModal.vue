@@ -1,7 +1,7 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		ref="deviceModalBase"
+		v-model:external-template="selectedTemplate"
 		modal-id="meterModal"
 		device-type="meter"
 		:fade="fade"
@@ -9,7 +9,6 @@
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
-		:is-yaml-input-type="isYamlInput"
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
 		:on-template-change="handleTemplateChange"
@@ -17,7 +16,8 @@
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
 		:preserve-on-template-change="preserveFields"
-		:usage="meterType || undefined"
+		:usage="templateUsage"
+		:on-configuration-loaded="onConfigurationLoaded"
 		@added="handleAdded"
 		@updated="$emit('updated')"
 		@removed="handleRemoved"
@@ -39,17 +39,13 @@
 			<p v-if="hasDescription" class="mt-0 mb-4">
 				{{ $t(`config.${meterType}.description`) }}
 			</p>
-			<div v-if="meterType === 'ext'" class="alert alert-warning mb-4" role="alert">
-				<strong>Work in Progress:</strong> This feature is not yet available.
-			</div>
 		</template>
 
 		<template #before-template="{ values }">
 			<FormRow
 				v-if="hasDeviceTitle"
 				id="meterParamDeviceTitle"
-				label="Title"
-				help="Will be displayed in the user interface"
+				:label="$t('config.meter.titleLabel')"
 			>
 				<PropertyField
 					id="meterParamDeviceTitle"
@@ -60,7 +56,11 @@
 					required
 				/>
 			</FormRow>
-			<FormRow v-if="hasDeviceIcon" id="meterParamDeviceIcon" label="Icon">
+			<FormRow
+				v-if="hasDeviceIcon"
+				id="meterParamDeviceIcon"
+				:label="$t('config.icon.label')"
+			>
 				<PropertyField
 					id="meterParamDeviceIcon"
 					v-model="values.deviceIcon"
@@ -69,6 +69,20 @@
 					type="String"
 					class="me-2"
 					required
+				/>
+			</FormRow>
+			<FormRow
+				v-if="meterType === 'ext'"
+				id="meterParamExtMeterUsage"
+				:label="$t('config.meter.usage.label')"
+			>
+				<PropertyField
+					id="meterParamExtMeterUsage"
+					v-model="extMeterUsage"
+					:choice="extMeterUsageOptions"
+					:required="!!extMeterUsage"
+					:disabled="!isNew"
+					@change="extMeterUsageChanged"
 				/>
 			</FormRow>
 		</template>
@@ -82,7 +96,7 @@ import PropertyField from "./PropertyField.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
-import { ConfigType, type SelectedMeterType } from "@/types/evcc";
+import { ConfigType, type MeterType, type MeterTemplateUsage } from "@/types/evcc";
 import type { ModalFade } from "../Helper/GenericModal.vue";
 import {
 	type DeviceValues,
@@ -90,9 +104,9 @@ import {
 	type Product,
 	type TemplateParam,
 	type ApiData,
-	type TemplateType,
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
+import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -108,7 +122,7 @@ const CUSTOM_FIELDS = ["usage", "modbus"];
 
 const defaultIcons: Record<string, string> = {
 	aux: "smartconsumer",
-	ext: "meter",
+	ext: "generic",
 };
 
 export default defineComponent({
@@ -121,21 +135,17 @@ export default defineComponent({
 	},
 	props: {
 		id: Number,
-		type: {
-			type: String as () => SelectedMeterType | undefined,
-			default: undefined,
-		},
-		typeChoices: {
-			type: Array as () => string[],
-			default: () => ["pv", "battery", "aux", "ext"],
-		},
+		type: { type: String as PropType<MeterType>, default: null },
+		typeChoices: { type: Array as () => MeterType[], default: () => [] },
 		fade: String as PropType<ModalFade>,
 		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {
 		return {
-			selectedType: null as string | null,
+			selectedType: null as MeterType | null,
+			extMeterUsage: "charge" as MeterTemplateUsage,
+			selectedTemplate: null as string | null,
 			iconChoices: ICONS,
 			initialValues,
 			customFields: CUSTOM_FIELDS,
@@ -153,9 +163,20 @@ export default defineComponent({
 			}
 			return this.$t(`config.${this.meterType}.titleEdit`);
 		},
-		meterType(): Exclude<TemplateType, "vehicle" | "charger"> | null {
-			// @ts-expect-error either this.type or this.selectedType is given
+		meterType(): MeterType | null {
 			return this.type || this.selectedType;
+		},
+		templateUsage(): MeterTemplateUsage | undefined {
+			if (!this.meterType) return undefined;
+
+			// For ext meters, the user selects the template usage explicitly
+			// For other meter types, the meter type IS the template usage
+			if (this.meterType === "ext") {
+				return this.extMeterUsage;
+			}
+			// For non-ext meters, meterType directly maps to template usage
+			// (grid->grid, pv->pv, battery->battery, charge->charge, aux->aux)
+			return this.meterType;
 		},
 		hasDeviceTitle(): boolean {
 			return ["pv", "battery", "aux", "ext"].includes(this.meterType || "");
@@ -169,9 +190,21 @@ export default defineComponent({
 		isNew(): boolean {
 			return this.id === undefined;
 		},
+		extMeterUsageOptions() {
+			return ["grid", "pv", "battery", "charge", "aux"].map((key) => ({
+				name: this.$t(`config.meter.usage.${key}`),
+				key,
+			}));
+		},
 	},
 	methods: {
-		selectType(type: string) {
+		onConfigurationLoaded(values: DeviceValues) {
+			// Restore extMeterUsage when editing an existing ext meter
+			if (this.meterType === "ext" && values.usage) {
+				this.extMeterUsage = values.usage;
+			}
+		},
+		selectType(type: MeterType) {
 			this.selectedType = type;
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
@@ -193,7 +226,9 @@ export default defineComponent({
 			const filtered = params.filter(
 				(p) =>
 					!CUSTOM_FIELDS.includes(p.Name) &&
-					(p.Usages && this.meterType ? p.Usages.includes(this.meterType) : true)
+					(p.Usages && this.templateUsage
+						? p.Usages.includes(this.templateUsage as any)
+						: true)
 			);
 
 			// Make capacity non-advanced for battery meters
@@ -206,26 +241,32 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData, values: DeviceValues): ApiData {
 			if (values.type === ConfigType.Template) {
-				data["usage"] = this.meterType || undefined;
+				// Set the template usage (what the template should do)
+				// For ext meters: user-selected usage (grid, pv, battery, charge, aux)
+				// For other meters: meterType itself is the usage
+				data.usage = this.templateUsage;
 			}
 			return data;
 		},
-		isYamlInput(type: ConfigType): boolean {
-			return type === ConfigType.Custom;
-		},
-		async handleTemplateChange(e: Event, values: DeviceValues) {
+		handleTemplateChange(e: Event, values: DeviceValues) {
+			console.log("[MeterModal] handleTemplateChange", { e, values });
 			const value = (e.target as HTMLSelectElement).value;
 			if (value === ConfigType.Custom) {
-				const defaultYaml = await import("./defaultYaml/meter.yaml?raw");
 				values.type = ConfigType.Custom;
-				values.yaml = defaultYaml.default;
+				values.yaml = defaultMeterYaml;
+				console.log("[MeterModal] set type/yaml", { type: values.type, yaml: values.yaml });
 			}
 		},
 		applyCustomDefaults(_template: Template | null, values: DeviceValues) {
-			// Apply default icon when template is loaded
-			if (this.meterType && !values["deviceIcon"]) {
-				values["deviceIcon"] = defaultIcons[this.meterType] || "";
+			// Apply default icon when template is loaded or meter type is selected
+			if (this.meterType && !values.deviceIcon) {
+				values.deviceIcon = defaultIcons[this.meterType] || "";
 			}
+		},
+		extMeterUsageChanged() {
+			// When ext meter usage changes, reset template selection to force user to reselect
+			// This triggers product reload via effectiveUsage computed property change
+			this.selectedTemplate = null;
 		},
 		handleAdded(name: string) {
 			this.$emit("added", this.meterType, name);
@@ -235,6 +276,7 @@ export default defineComponent({
 		},
 		handleClose() {
 			this.selectedType = null;
+			this.extMeterUsage = "charge";
 			this.$emit("close");
 		},
 	},

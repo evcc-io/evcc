@@ -118,7 +118,7 @@
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
-      "vehicleLimitSoc": "Vehicle limit",
+      "vehicleLimitSoc": "Charge limit",
       "yes": "yes"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Smart consumer",
       "batteryStorage": "Battery storage",
+      "consumer": "Consumer",
       "solarSystem": "Solar system"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Can be used for load management or statistics purposes.",
-      "titleAdd": "Add External Meter",
-      "titleEdit": "Edit External Meter"
+      "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
+      "titleAdd": "Add Consumer Meter",
+      "titleEdit": "Edit Consumer Meter"
     },
     "form": {
       "danger": "Danger",
@@ -196,7 +197,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "change"
+      "change": "change",
+      "label": "Icon"
     },
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
@@ -344,13 +346,22 @@
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "ext": "Add external meter",
+        "ext": "Add regular consumer",
         "pv": "Add solar meter"
       },
       "save": "Save",
       "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
+      "titleLabel": "Title",
+      "usage": {
+        "aux": "Self-regulating consumer meter",
+        "battery": "Battery meter",
+        "charge": "Charger meter",
+        "grid": "Grid meter",
+        "label": "Usage",
+        "pv": "Solar meter"
+      },
       "validateSave": "Validate & save"
     },
     "modbus": {
@@ -658,6 +669,7 @@
     "about": "About",
     "authProviders": {
       "confirmLogout": "Are you sure you want to disconnect {title}?",
+      "loggedOut": "Successfully logged out",
       "title": "Authorization Status"
     },
     "blog": "Blog",

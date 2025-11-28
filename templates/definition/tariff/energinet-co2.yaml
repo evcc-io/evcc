@@ -22,19 +22,18 @@ render: |
     uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now
     jq: |
       [.records[]
+        | (.Minutes5UTC | strptime("%Y-%m-%dT%H:%M:%S") | mktime) as $epoch
+        | (($epoch / 900 | floor) * 900) as $start_epoch
         | {
-          start: (.Minutes5UTC[0:13] + ":00:00Z"),
-          end: (.Minutes5UTC[0:13] 
-                | strptime("%Y-%m-%dT%H") 
-                | mktime + 3600 
-                | strftime("%Y-%m-%dT%H:%M:%SZ")),
+          start: ($start_epoch | strftime("%Y-%m-%dT%H:%M:%SZ")),
+          end:   (($start_epoch + 900) | strftime("%Y-%m-%dT%H:%M:%SZ")),
           value: .CO2Emission
         }
       ]
       | group_by(.start)
       | map({
           start: .[0].start,
-          end: .[0].end,
+          end:   .[0].end,
           value: (map(.value) | add / length)
         })
       | tostring
