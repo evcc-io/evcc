@@ -59,6 +59,6 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 		},
 	}
 
-	// TODO: decide if uri as identifier is fine
+	// TODO: decide if uri as device name is fine
 	return auth.NewOAuth(ctx, "HomeAssistant", uri, &oc)
 }
