@@ -96,7 +96,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 
 	v := &Bluelink{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle, cc.Cache),
 	}
 
 	return v, nil

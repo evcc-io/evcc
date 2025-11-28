@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-type BluelinkVehicleStatus interface {
+type BluelinkVehicleStatusLatest interface {
 	Updated() (time.Time, error)
 	SoC() (float64, error)
 	Status() (api.ChargeStatus, error)
@@ -15,10 +15,6 @@ type BluelinkVehicleStatus interface {
 	Range() (int64, error)
 	Climater() (bool, error)
 	GetLimitSoc() (int64, error)
-}
-
-type BluelinkVehicleStatusLatest interface {
-	BluelinkVehicleStatus() BluelinkVehicleStatus
 	Odometer() (float64, error)
 	Position() (float64, float64, error)
 }
@@ -168,8 +164,32 @@ func (d VehicleStatus) GetLimitSoc() (int64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-func (d StatusLatestResponse) BluelinkVehicleStatus() BluelinkVehicleStatus {
-	return d.ResMsg.VehicleStatusInfo.VehicleStatus
+func (d StatusLatestResponse) Updated() (time.Time, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
+}
+
+func (d StatusLatestResponse) SoC() (float64, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.SoC()
+}
+
+func (d StatusLatestResponse) Status() (api.ChargeStatus, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Status()
+}
+
+func (d StatusLatestResponse) FinishTime() (time.Time, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.FinishTime()
+}
+
+func (d StatusLatestResponse) Range() (int64, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Range()
+}
+
+func (d StatusLatestResponse) Climater() (bool, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Climater()
+}
+
+func (d StatusLatestResponse) GetLimitSoc() (int64, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.GetLimitSoc()
 }
 
 func (d StatusLatestResponse) Odometer() (float64, error) {
@@ -277,10 +297,6 @@ type VehicleStatusCCS struct {
 			}
 		}
 	}
-}
-
-func (d StatusLatestResponseCCS) BluelinkVehicleStatus() BluelinkVehicleStatus {
-	return d
 }
 
 func (d StatusLatestResponseCCS) Updated() (time.Time, error) {
