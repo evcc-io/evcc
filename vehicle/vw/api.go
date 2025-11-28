@@ -23,6 +23,8 @@ type API struct {
 	brand, country string
 	baseURI        string
 	statusURI      string
+	log            *util.Logger
+	ts             oauth2.TokenSource
 }
 
 // NewAPI creates a new api client
@@ -32,6 +34,8 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource, brand, country string) *API
 		brand:   brand,
 		country: country,
 		baseURI: DefaultBaseURI,
+		log:     log,
+		ts:      ts,
 	}
 
 	v.Client.Transport = &oauth2.Transport{
@@ -42,30 +46,102 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource, brand, country string) *API
 	return v
 }
 
-// HomeRegion updates the home region for the given vehicle
-func (v *API) HomeRegion(vin string) error {
-	var res HomeRegion
-	uri := fmt.Sprintf("%s/cs/vds/v1/vehicles/%s/homeRegion", RegionAPI, vin)
-
-	err := v.GetJSON(uri, &res)
+// doWithRetry executes a function and retries once on HTTP 400 error after forcing token refresh
+func (v *API) doWithRetry(fn func() error) error {
+	err := fn()
 	if err == nil {
-		if api := res.HomeRegion.BaseURI.Content; strings.HasPrefix(api, "https://mal-3a.prd.eu.dp.vwg-connect.com") {
-			api = "https://fal" + strings.TrimPrefix(api, "https://mal")
-			api = strings.TrimSuffix(api, "/api") + "/fs-car"
-			v.baseURI = api
+		return nil
+	}
+
+	// Check if it's a 400 error
+	var se *request.StatusError
+	if errors.As(err, &se) && se.StatusCode() == http.StatusBadRequest {
+		v.log.DEBUG.Printf("VW API returned 400 (Bad Request), attempting token refresh")
+
+		// Force a new token request - the TokenSource will handle refresh
+		if _, tokenErr := v.ts.Token(); tokenErr != nil {
+			v.log.WARN.Printf("VW token refresh failed: %v", tokenErr)
+			return fmt.Errorf("token refresh after 400 error failed: %w", tokenErr)
 		}
-	} else if res.Error != nil {
-		err = res.Error.Error()
+
+		v.log.DEBUG.Println("VW token refreshed, retrying API call")
+
+		// Retry the operation once
+		if retryErr := fn(); retryErr == nil {
+			return nil
+		} else {
+			v.log.DEBUG.Printf("VW API retry after token refresh also failed: %v", retryErr)
+			return retryErr
+		}
 	}
 
 	return err
 }
 
+// logAPIError logs detailed error information for debugging
+func (v *API) logAPIError(err error, operation string) {
+	if err == nil {
+		return
+	}
+
+	var se *request.StatusError
+	if errors.As(err, &se) {
+		resp := se.Response()
+		v.log.DEBUG.Printf("VW API %s failed: status=%d (%s), url=%s",
+			operation,
+			se.StatusCode(),
+			http.StatusText(se.StatusCode()),
+			resp.Request.URL.String(),
+		)
+
+		// Log specific guidance for common errors
+		switch se.StatusCode() {
+		case http.StatusBadRequest:
+			v.log.WARN.Printf("VW API 400 error in %s - possible token expiration or invalid request", operation)
+		case http.StatusUnauthorized:
+			v.log.WARN.Printf("VW API 401 error in %s - authentication failed", operation)
+		case http.StatusTooManyRequests:
+			v.log.WARN.Printf("VW API 429 error in %s - rate limit exceeded", operation)
+		}
+	} else {
+		v.log.DEBUG.Printf("VW API %s failed: %v", operation, err)
+	}
+}
+
+// HomeRegion updates the home region for the given vehicle
+func (v *API) HomeRegion(vin string) error {
+	return v.doWithRetry(func() error {
+		var res HomeRegion
+		uri := fmt.Sprintf("%s/cs/vds/v1/vehicles/%s/homeRegion", RegionAPI, vin)
+
+		err := v.GetJSON(uri, &res)
+		if err == nil {
+			if api := res.HomeRegion.BaseURI.Content; strings.HasPrefix(api, "https://mal-3a.prd.eu.dp.vwg-connect.com") {
+				api = "https://fal" + strings.TrimPrefix(api, "https://mal")
+				api = strings.TrimSuffix(api, "/api") + "/fs-car"
+				v.baseURI = api
+			}
+		} else {
+			v.logAPIError(err, "HomeRegion")
+			if res.Error != nil {
+				err = res.Error.Error()
+			}
+		}
+
+		return err
+	})
+}
+
 // RolesRights implements the /rolesrights/operationlist response
-func (v *API) RolesRights(vin string) (RolesRights, error) {
-	var res RolesRights
-	uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
-	err := v.GetJSON(uri, &res)
+func (v *API) RolesRights(vin string) (res RolesRights, err error) {
+	err = v.doWithRetry(func() error {
+		uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
+		if apiErr := v.GetJSON(uri, &res); apiErr != nil {
+			v.logAPIError(apiErr, "RolesRights")
+			return apiErr
+		}
+		return nil
+	})
 	return res, err
 }
 
@@ -82,91 +158,116 @@ func (v *API) ServiceURI(vin, service string, rr RolesRights) (uri string) {
 }
 
 // Status implements the /status response
-func (v *API) Status(vin string) (StatusResponse, error) {
-	var res StatusResponse
-	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s/status", RegionAPI, vin)
-	if v.statusURI != "" {
-		uri = v.statusURI
-	}
-
-	headers := map[string]string{
-		"Accept":        request.JSONContent,
-		"X-App-Name":    "foo", // required
-		"X-App-Version": "foo", // required
-	}
-
-	req, err := request.New(http.MethodGet, uri, nil, headers)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	if se := new(request.StatusError); errors.As(err, &se) {
-		var rr RolesRights
-		rr, err = v.RolesRights(vin)
-
-		if err == nil {
-			if uri = v.ServiceURI(vin, StatusService, rr); uri == "" {
-				err = fmt.Errorf("%s not found", StatusService)
-			}
+func (v *API) Status(vin string) (res StatusResponse, err error) {
+	err = v.doWithRetry(func() error {
+		uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s/status", RegionAPI, vin)
+		if v.statusURI != "" {
+			uri = v.statusURI
 		}
 
-		if err == nil {
-			if strings.HasSuffix(uri, fmt.Sprintf("%s/", vin)) {
-				uri += "status"
+		headers := map[string]string{
+			"Accept":        request.JSONContent,
+			"X-App-Name":    "foo", // required
+			"X-App-Version": "foo", // required
+		}
+
+		req, reqErr := request.New(http.MethodGet, uri, nil, headers)
+		if reqErr != nil {
+			return reqErr
+		}
+
+		apiErr := v.DoJSON(req, &res)
+
+		if se := new(request.StatusError); errors.As(apiErr, &se) {
+			var rr RolesRights
+			rr, apiErr = v.RolesRights(vin)
+
+			if apiErr == nil {
+				if uri = v.ServiceURI(vin, StatusService, rr); uri == "" {
+					apiErr = fmt.Errorf("%s not found", StatusService)
+				}
 			}
 
-			if req, err = request.New(http.MethodGet, uri, nil, headers); err == nil {
-				if err = v.DoJSON(req, &res); err == nil {
-					v.statusURI = uri
+			if apiErr == nil {
+				if strings.HasSuffix(uri, fmt.Sprintf("%s/", vin)) {
+					uri += "status"
+				}
+
+				if req, apiErr = request.New(http.MethodGet, uri, nil, headers); apiErr == nil {
+					if apiErr = v.DoJSON(req, &res); apiErr == nil {
+						v.statusURI = uri
+					}
 				}
 			}
 		}
-	}
+
+		if apiErr != nil {
+			v.logAPIError(apiErr, "Status")
+		}
+
+		return apiErr
+	})
 
 	return res, err
 }
 
 // Charger implements the /charger response
-func (v *API) Charger(vin string) (ChargerResponse, error) {
-	var res ChargerResponse
-	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", v.baseURI, v.brand, v.country, vin)
-	err := v.GetJSON(uri, &res)
-	if err != nil && res.Error != nil {
-		err = res.Error.Error()
-	}
+func (v *API) Charger(vin string) (res ChargerResponse, err error) {
+	err = v.doWithRetry(func() error {
+		uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", v.baseURI, v.brand, v.country, vin)
+		if apiErr := v.GetJSON(uri, &res); apiErr != nil {
+			v.logAPIError(apiErr, "Charger")
+			if res.Error != nil {
+				return res.Error.Error()
+			}
+			return apiErr
+		}
+		return nil
+	})
 	return res, err
 }
 
 // Climater implements the /climater response
-func (v *API) Climater(vin string) (ClimaterResponse, error) {
-	var res ClimaterResponse
-	uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", v.baseURI, v.brand, v.country, vin)
-	err := v.GetJSON(uri, &res)
-	if err != nil && res.Error != nil {
-		err = res.Error.Error()
-	}
+func (v *API) Climater(vin string) (res ClimaterResponse, err error) {
+	err = v.doWithRetry(func() error {
+		uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", v.baseURI, v.brand, v.country, vin)
+		if apiErr := v.GetJSON(uri, &res); apiErr != nil {
+			v.logAPIError(apiErr, "Climater")
+			if res.Error != nil {
+				return res.Error.Error()
+			}
+			return apiErr
+		}
+		return nil
+	})
 	return res, err
 }
 
 // Position implements the /position response
-func (v *API) Position(vin string) (PositionResponse, error) {
-	var res PositionResponse
-	uri := fmt.Sprintf("%s/bs/cf/v1/%s/%s/vehicles/%s/position", v.baseURI, v.brand, v.country, vin)
+func (v *API) Position(vin string) (res PositionResponse, err error) {
+	err = v.doWithRetry(func() error {
+		uri := fmt.Sprintf("%s/bs/cf/v1/%s/%s/vehicles/%s/position", v.baseURI, v.brand, v.country, vin)
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":        request.JSONContent,
-		"Content-type":  "application/vnd.vwg.mbb.carfinderservice_v1_0_0+json",
-		"X-App-Name":    "foo", // required
-		"X-App-Version": "foo", // required
+		req, reqErr := request.New(http.MethodGet, uri, nil, map[string]string{
+			"Accept":        request.JSONContent,
+			"Content-type":  "application/vnd.vwg.mbb.carfinderservice_v1_0_0+json",
+			"X-App-Name":    "foo", // required
+			"X-App-Version": "foo", // required
+		})
+
+		if reqErr != nil {
+			return reqErr
+		}
+
+		if apiErr := v.DoJSON(req, &res); apiErr != nil {
+			v.logAPIError(apiErr, "Position")
+			if res.Error != nil {
+				return res.Error.Error()
+			}
+			return apiErr
+		}
+		return nil
 	})
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	if err != nil && res.Error != nil {
-		err = res.Error.Error()
-	}
-
 	return res, err
 }
 
@@ -190,23 +291,30 @@ var actionDefinitions = map[string]actionDefinition{
 
 // Action implements vehicle actions
 func (v *API) Action(vin, action, value string) error {
-	def := actionDefinitions[action]
+	return v.doWithRetry(func() error {
+		def := actionDefinitions[action]
 
-	uri := fmt.Sprintf("%s/bs/%s/v1/%s/%s/vehicles/%s/%s", v.baseURI, action, v.brand, v.country, vin, def.appendix)
-	body := "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><action><type>" + value + "</type></action>"
+		uri := fmt.Sprintf("%s/bs/%s/v1/%s/%s/vehicles/%s/%s", v.baseURI, action, v.brand, v.country, vin, def.appendix)
+		body := "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><action><type>" + value + "</type></action>"
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(body), map[string]string{
-		"Content-type": def.contentType,
-	})
+		req, reqErr := request.New(http.MethodPost, uri, strings.NewReader(body), map[string]string{
+			"Content-type": def.contentType,
+		})
 
-	if err == nil {
+		if reqErr != nil {
+			return reqErr
+		}
+
 		var resp *http.Response
+		var err error
 		if resp, err = v.Do(req); err == nil {
 			resp.Body.Close()
+		} else {
+			v.logAPIError(err, fmt.Sprintf("Action(%s,%s)", action, value))
 		}
-	}
 
-	return err
+		return err
+	})
 }
 
 // Any implements any api response
