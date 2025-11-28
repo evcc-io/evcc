@@ -17,6 +17,7 @@ type BluelinkVehicleStatusLatest interface {
 	GetLimitSoc() (int64, error)
 	Odometer() (float64, error)
 	Position() (float64, float64, error)
+	Capacity() (float64, error)
 }
 
 type VehiclesResponse struct {
@@ -207,6 +208,10 @@ func (d StatusLatestResponse) Position() (float64, float64, error) {
 	return 0, 0, api.ErrNotAvailable
 }
 
+func (d StatusLatestResponse) Capacity() (float64, error) {
+	return 0, api.ErrNotAvailable
+}
+
 type StatusLatestResponseCCS struct {
 	RetCode string
 	ResCode string
@@ -366,4 +371,15 @@ func (d StatusLatestResponseCCS) Position() (float64, float64, error) {
 		return d.ResMsg.State.Vehicle.Location.GeoCoord.Latitude, d.ResMsg.State.Vehicle.Location.GeoCoord.Longitude, nil
 	}
 	return 0, 0, api.ErrNotAvailable
+}
+
+func (d StatusLatestResponseCCS) Capacity() (float64, error) {
+	if d.ResMsg.State.Vehicle.Green != nil {
+		// Convert from Kilo Joules to kWh: 1 kWh = 3,600kJ
+		capacityKWh := d.ResMsg.State.Vehicle.Green.BatteryManagement.BatteryCapacity.Value / 3600
+		if capacityKWh > 0 {
+			return capacityKWh, nil
+		}
+	}
+	return 0, api.ErrNotAvailable
 }

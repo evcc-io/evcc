@@ -14,8 +14,8 @@ import (
 
 const (
 	VehiclesURL         = "vehicles"
-	StatusLatestURL     = "vehicles/%s/status/latest"
-	StatusLatestURLCCS2 = "vehicles/%s/ccs2/carstatus/latest"
+	StatusURL           = "vehicles/%s/status"                // Fresh fetch from vehicle (older API)
+	StatusLatestURLCCS2 = "vehicles/%s/ccs2/carstatus/latest" // Newer API (2024+ vehicles with ccOS)
 )
 
 const (
@@ -82,7 +82,7 @@ func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error)
 	}
 
 	var res StatusLatestResponse
-	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vid))
 	err := v.GetJSON(uri, &res)
 	if err == nil && res.RetCode != resOK {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)

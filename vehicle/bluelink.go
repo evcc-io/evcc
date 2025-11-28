@@ -99,5 +99,13 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 		Provider: bluelink.NewProvider(api, vehicle, cc.Cache),
 	}
 
+	// Set title and capacity from API if not user-configured
+	var capacity float64
+	if res, err := api.StatusLatest(vehicle); err == nil {
+		capacity, _ = res.Capacity()
+	}
+
+	v.fromVehicle(vehicle.VehicleName, capacity)
+
 	return v, nil
 }
