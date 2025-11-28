@@ -171,8 +171,8 @@ func (c *EEBus) Run() {
 
 // TODO check state machine against spec
 func (c *EEBus) run() error {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	c.log.TRACE.Println("status:", c.status)
 
@@ -219,7 +219,7 @@ func (c *EEBus) run() error {
 
 	case StatusFailsafe:
 		// LPC-914/2
-		if d := c.failsafeDuration; heartbeatErr == nil && time.Since(c.statusUpdated) > d {
+		if d := c.failsafeDuration; heartbeatErr == nil || time.Since(c.statusUpdated) > d {
 			c.log.DEBUG.Println("heartbeat returned and failsafe duration exceeded- return to normal")
 			c.setStatusAndLimit(StatusUnlimited, 0)
 		}

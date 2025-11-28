@@ -25,8 +25,8 @@ func init() {
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed   `mapstructure:",squash"`
-		_URI    string `mapstructure:"uri"`   // TODO deprecated
-		_Token  string `mapstructure:"token"` // TODO deprecated
+		URI_    string `mapstructure:"uri"`   // TODO deprecated
+		Token_  string `mapstructure:"token"` // TODO deprecated
 		Home    string
 		Sensors struct {
 			Soc        string // required
