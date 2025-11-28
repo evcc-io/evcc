@@ -61,8 +61,6 @@ func NewEcoFlowPowerOceanFromConfig(other map[string]interface{}) (api.Meter, er
 	}
 	// Validate connection and fail if it doesn't work
 	if err := m.validateConnection(); err != nil {
-		log := util.NewLogger("ecoflow-powerocean").Redact(cc.AccessKey, cc.SecretKey)
-		log.ERROR.Printf("connection test failed: %v", err)
 		return nil, fmt.Errorf("ecoflow-powerocean connection failed: %w", err)
 	}
 

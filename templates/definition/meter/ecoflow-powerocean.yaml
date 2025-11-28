@@ -24,34 +24,21 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-    description:
-      generic: Usage type
-    help:
-      en: |
-        Select the type of measurement:
-        - grid: Grid power consumption/feed-in
-        - pv: Solar panel power generation
-        - battery: Battery power and state of charge
-      de: |
-        Wählen Sie den Messungstyp:
-        - grid: Netzstrom Verbrauch/Einspeisung
-        - pv: Solarmodule Stromerzeugung
-        - battery: Batterie Leistung und Ladezustand
-  - name: accessKey
+  - name: accesskey
     required: true
     description:
       generic: Access Key
     help:
       en: Access Key from EcoFlow Developer Console
       de: Access Key aus der EcoFlow Developer Console
-  - name: secretKey
+  - name: secretkey
     required: true
     description:
       generic: Secret Key
     help:
       en: Secret Key from EcoFlow Developer Console
       de: Secret Key aus der EcoFlow Developer Console
-  - name: deviceId
+  - name: deviceid
     required: true
     description:
       generic: Device ID
@@ -63,8 +50,8 @@ params:
     advanced: true
 render: |
   type: ecoflow-powerocean
-  accessKey: {{ .accessKey }}
-  secretKey: {{ .secretKey }}
-  deviceId: {{ .deviceId }}
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  deviceid: {{ .deviceid }}
   usage: {{ .usage }}
   cache: {{ .cache }}
