@@ -1524,8 +1524,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			// lp.log.DEBUG.Println("pv disable timer: keep enabled")
 			lp.pvTimerEvaluated = now
 			return max(minCurrent, targetCurrent)
-		}
-		else {
+		} else {
 			now := lp.clock.Now()
 	
 			// kick off enable sequence
