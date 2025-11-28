@@ -551,7 +551,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 
 	// setup OCPP server
 	if err == nil {
-		configureOCPP(&conf.Ocpp)
+		configureOCPP(&conf.Ocpp, conf.Network.ExternalUrl)
 	}
 
 	// setup EEBus server
@@ -782,8 +782,8 @@ func configureMDNS(conf globalconfig.Network) error {
 }
 
 // setup OCPP
-func configureOCPP(cfg *ocpp.Config) {
-	ocpp.Init(*cfg)
+func configureOCPP(cfg *ocpp.Config, externalUrl string) {
+	ocpp.Init(*cfg, externalUrl)
 }
 
 // setup EEBus

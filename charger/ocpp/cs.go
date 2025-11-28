@@ -71,7 +71,7 @@ func (cs *CS) status() status {
 
 	return status{
 		Port:        port,
-		ExternalUrl: externalUrl,
+		ExternalUrl: ExternalUrl(),
 		Stations:    stations,
 	}
 }

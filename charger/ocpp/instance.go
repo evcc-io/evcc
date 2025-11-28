@@ -1,7 +1,10 @@
 package ocpp
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,8 +20,7 @@ import (
 )
 
 type Config struct {
-	Port        int    `json:"port"`
-	ExternalUrl string `json:"externalUrl,omitempty" yaml:",omitempty"`
+	Port int `json:"port"`
 }
 
 var (
@@ -41,10 +43,28 @@ func Port() int {
 	return port
 }
 
+// ExternalUrl returns the auto-generated OCPP external URL based on network external URL
+func ExternalUrl() string {
+	if externalUrl == "" {
+		return ""
+	}
+
+	u, err := url.Parse(externalUrl)
+	if err != nil {
+		return ""
+	}
+
+	// Replace protocol: http -> ws, https -> wss
+	u.Scheme = strings.Replace(u.Scheme, "http", "ws", 1)
+	u.Host = fmt.Sprintf("%s:%d", strings.Split(u.Host, ":")[0], 8887)
+
+	return u.String()
+}
+
 // Init initializes the OCPP server
-func Init(cfg Config) {
+func Init(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
-	externalUrl = cfg.ExternalUrl
+	externalUrl = networkExternalUrl
 }
 
 func Instance() *CS {
