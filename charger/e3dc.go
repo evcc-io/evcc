@@ -112,71 +112,85 @@ func (wb *E3dc) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return b[0]^(1<<4) == 0, err
+	// WB_EXTERN_DATA_ALG byte structure (tested 2025-11-28):
+	// Byte 2, Bit 6: 0 = enabled, 1 = disabled (abort active)
+	// Example: b[2] = 4 (0b00000100) -> enabled
+	//          b[2] = 68 (0b01000100) -> disabled (bit 6 set)
+	enabled := b[2]&(1<<6) == 0
+	fmt.Printf("Enabled() -> b[2]=%d, enabled=%v\n", b[2], enabled)
+	return enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *E3dc) Enable(enable bool) error {
-	return wb.maxCurrent(wb.current, enable)
+	// WB_REQ_SET_ABORT_CHARGING controls charging:
+	//   true  = abort/stop charging
+	//   false = allow/resume charging
+	abort := !enable
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_SET_ABORT_CHARGING, abort),
+	}))
+
+	fmt.Printf("Enable() -> enable=%v, abort=%v, res=%+v, err=%v\n", enable, abort, res, err)
+	return err
 }
 
 // Status implements the api.Charger interface
 func (wb *E3dc) Status() (api.ChargeStatus, error) {
-	status := api.StatusNone
-
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
-		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALL, nil),
+		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil),
 	}))
 	if err != nil {
-		return status, err
+		return api.StatusNone, err
 	}
-	fmt.Printf("%+v\n", res)
 
 	wb_data, err := rscpContainer(*res, 2)
 	if err != nil {
-		return status, err
+		return api.StatusNone, err
 	}
 
-	wb_ext_data_all, err := rscpContainer(wb_data[1], 2)
+	wb_ext_data_alg, err := rscpContainer(wb_data[1], 2)
 	if err != nil {
-		return status, err
+		return api.StatusNone, err
 	}
 
-	b, err := rscpBytes(wb_ext_data_all[1])
+	b, err := rscpBytes(wb_ext_data_alg[1])
 	if err != nil {
-		return status, err
+		return api.StatusNone, err
 	}
 
+	// WB_EXTERN_DATA_ALG byte 2 contains charging state bits:
+	//   Bit 2 (0x04): wallbox available, no vehicle connected
+	//   Bit 3 (0x08): vehicle connected
+	//   Bit 5 (0x20): charging active
+	//   Bit 6 (0x40): charging paused/inhibited
+	//
+	// Tested values (2025-11-28):
+	//   StatusA (no car):      b[2] =  4 (0b00000100) - bit 2 set
+	//   StatusB (paused):      b[2] = 72 (0b01001000) - bits 3,6 set
+	//   StatusC (charging):    b[2] = 40 (0b00101000) - bits 3,5 set
 	switch {
-	case b[3] == 1:
-		status = api.StatusC
-	case b[4] == 1:
-		status = api.StatusB
+	case b[2]&0x20 != 0: // bit 5: charging active
+		return api.StatusC, nil
+	case b[2]&0x08 != 0: // bit 3: vehicle connected
+		return api.StatusB, nil
 	default:
-		status = api.StatusA
+		return api.StatusA, nil
 	}
-
-	return status, nil
 }
 
-func (wb *E3dc) maxCurrent(current byte, enable bool) error {
-	data := []rscp.Message{
-		*rscp.NewMessage(rscp.WB_EXTERN_DATA, []byte{0x02, current, 0, 0, cast.ToUint8(!enable), 0}),
-	}
+func (wb *E3dc) maxCurrent(current int64) error {
+	// WB_REQ_SET_MAX_CHARGE_CURRENT sets the charging current limit in Ampere
+	// Supported range: 6-32A in 1A steps (UChar8)
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_SET_MAX_CHARGE_CURRENT, uint8(current)),
+	}))
 
-	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_SET_EXTERN, data))
-	return err
-}
+	fmt.Printf("maxCurrent() -> current=%dA, res=%+v, err=%v\n", current, res, err)
 
-// MaxCurrent implements the api.Charger interface
-func (wb *E3dc) MaxCurrent(current int64) error {
-	enabled, err := wb.Enabled()
-	if err != nil {
-		return err
-	}
-
-	err = wb.maxCurrent(byte(current), enabled)
 	if err == nil {
 		wb.current = byte(current)
 	}
@@ -184,33 +198,231 @@ func (wb *E3dc) MaxCurrent(current int64) error {
 	return err
 }
 
-// var _ api.Meter = (*E3dc)(nil)
+// MaxCurrent implements the api.Charger interface
+func (wb *E3dc) MaxCurrent(current int64) error {
+	return wb.maxCurrent(current)
+}
 
-// // CurrentPower implements the api.Meter interface
-// func (wb *E3dc) CurrentPower() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
+var _ api.Meter = (*E3dc)(nil)
 
-// var _ api.ChargeRater = (*E3dc)(nil)
+// CurrentPower implements the api.Meter interface
+func (wb *E3dc) CurrentPower() (float64, error) {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L1, nil),
+		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L2, nil),
+		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L3, nil),
+	}))
+	if err != nil {
+		return 0, err
+	}
 
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (wb *E3dc) ChargedEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
+	wb_data, err := rscpContainer(*res, 4)
+	if err != nil {
+		return 0, err
+	}
 
-// var _ api.MeterEnergy = (*E3dc)(nil)
+	var power float64
+	for i := 1; i <= 3; i++ {
+		p, err := rscpFloat64(wb_data[i])
+		if err != nil {
+			return 0, err
+		}
+		power += p
+	}
 
-// // TotalEnergy implements the api.MeterEnergy interface
-// func (wb *E3dc) TotalEnergy() (float64, error) {
-// 	return 0, api.ErrNotAvailable
-// }
+	fmt.Printf("CurrentPower() -> %.1f W\n", power)
+	return power, nil
+}
 
-// var _ api.PhaseCurrents = (*E3dc)(nil)
+var _ api.MeterEnergy = (*E3dc)(nil)
 
-// // Currents implements the api.PhaseCurrents interface
-// func (wb *E3dc) Currents() (float64, float64, float64, error) {
-// 	return 0, 0, 0, api.ErrNotAvailable
-// }
+// TotalEnergy implements the api.MeterEnergy interface
+//
+// E3DC stores wallbox energy in two separate counters that must be added:
+//   - DB_TEC_WALLBOX_ENERGYALL: Historical energy stored in the database (persisted)
+//   - WB_ENERGY_ALL: Energy since last database sync (volatile, resets on sync)
+//
+// The sum of both values matches the total energy shown in the E3DC portal.
+// Testing showed: DB_TEC (8319 kWh) + WB_ENERGY (699 kWh) = 9018 kWh ≈ Portal (9019 kWh)
+func (wb *E3dc) TotalEnergy() (float64, error) {
+	// Query both energy sources in parallel
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.DB_REQ_TEC_WALLBOX_VALUES, nil))
+	if err != nil {
+		return 0, err
+	}
+
+	// Parse DB_TEC_WALLBOX_VALUES response
+	// Structure: DB_TEC_WALLBOX_VALUES -> DB_TEC_WALLBOX_VALUES -> []DB_TEC_WALLBOX_VALUE
+	// Each DB_TEC_WALLBOX_VALUE contains: DB_TEC_WALLBOX_INDEX, DB_TEC_WALLBOX_ENERGYALL, DB_TEC_WALLBOX_WB_ENERGY_SOLAR
+	outer, err := rscpContainer(*res, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	inner, err := rscpContainer(outer[0], 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// Find the wallbox with matching index
+	var dbEnergy float64
+	for _, wbValue := range inner {
+		wbData, err := rscpContainer(wbValue, 3)
+		if err != nil {
+			continue
+		}
+
+		idx, err := rscpUint8(wbData[0])
+		if err != nil || idx != wb.id {
+			continue
+		}
+
+		dbEnergy, err = rscpFloat64(wbData[1])
+		if err != nil {
+			return 0, err
+		}
+		break
+	}
+
+	// Query WB_ENERGY_ALL for energy since last DB sync
+	res, err = wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_ENERGY_ALL, nil),
+	}))
+	if err != nil {
+		return 0, err
+	}
+
+	wb_data, err := rscpContainer(*res, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	wbEnergy, err := rscpFloat64(wb_data[1])
+	if err != nil {
+		return 0, err
+	}
+
+	// Sum both counters and convert Wh to kWh
+	totalWh := dbEnergy + wbEnergy
+	kWh := totalWh / 1000.0
+	fmt.Printf("TotalEnergy() -> DB_TEC=%.0f Wh + WB=%.0f Wh = %.0f Wh -> %.3f kWh\n", dbEnergy, wbEnergy, totalWh, kWh)
+	return kWh, nil
+}
+
+var _ api.PhasePowers = (*E3dc)(nil)
+
+// Powers implements the api.PhasePowers interface
+func (wb *E3dc) Powers() (float64, float64, float64, error) {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L1, nil),
+		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L2, nil),
+		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L3, nil),
+	}))
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	wb_data, err := rscpContainer(*res, 4)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	p1, err := rscpFloat64(wb_data[1])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	p2, err := rscpFloat64(wb_data[2])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	p3, err := rscpFloat64(wb_data[3])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	fmt.Printf("Powers() -> L1=%.1f W, L2=%.1f W, L3=%.1f W\n", p1, p2, p3)
+	return p1, p2, p3, nil
+}
+
+var _ api.PhaseCurrents = (*E3dc)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *E3dc) Currents() (float64, float64, float64, error) {
+	// E3DC doesn't provide current directly, calculate from power
+	// Assume 230V nominal voltage
+	p1, p2, p3, err := wb.Powers()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	const voltage = 230.0
+	i1 := p1 / voltage
+	i2 := p2 / voltage
+	i3 := p3 / voltage
+
+	fmt.Printf("Currents() -> L1=%.2f A, L2=%.2f A, L3=%.2f A\n", i1, i2, i3)
+	return i1, i2, i3, nil
+}
+
+var _ api.PhaseGetter = (*E3dc)(nil)
+
+// GetPhases implements the api.PhaseGetter interface
+func (wb *E3dc) GetPhases() (int, error) {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_PM_ACTIVE_PHASES, nil),
+	}))
+	if err != nil {
+		return 0, err
+	}
+
+	wb_data, err := rscpContainer(*res, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	// WB_PM_ACTIVE_PHASES returns bitmask: bit0=L1, bit1=L2, bit2=L3
+	phaseMask, err := rscpUint8(wb_data[1])
+	if err != nil {
+		return 0, err
+	}
+
+	// Count active phases from bitmask
+	phases := 0
+	if phaseMask&0x01 != 0 {
+		phases++
+	}
+	if phaseMask&0x02 != 0 {
+		phases++
+	}
+	if phaseMask&0x04 != 0 {
+		phases++
+	}
+
+	fmt.Printf("GetPhases() -> mask=0x%02x, phases=%d\n", phaseMask, phases)
+	return phases, nil
+}
+
+var _ api.CurrentLimiter = (*E3dc)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (wb *E3dc) GetMinMaxCurrent() (float64, float64, error) {
+	// E3DC wallbox supports 6-32A per phase (Type 2)
+	return 6, 32, nil
+}
+
+var _ api.CurrentGetter = (*E3dc)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *E3dc) GetMaxCurrent() (float64, error) {
+	// Return cached current value
+	return float64(wb.current), nil
+}
 
 // var _ api.Identifier = (*E3dc)(nil)
 
@@ -264,6 +476,18 @@ func rscpBytes(msg rscp.Message) ([]byte, error) {
 			return nil, errors.New("invalid response")
 		}
 		return b, nil
+	})
+}
+
+func rscpFloat64(msg rscp.Message) (float64, error) {
+	return rscpValue(msg, func(data any) (float64, error) {
+		return cast.ToFloat64E(data)
+	})
+}
+
+func rscpUint8(msg rscp.Message) (uint8, error) {
+	return rscpValue(msg, func(data any) (uint8, error) {
+		return cast.ToUint8E(data)
 	})
 }
 
