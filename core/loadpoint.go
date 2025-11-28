@@ -1476,9 +1476,11 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
 	if mode == api.ModePV {
+		now := lp.clock.Now()
+
 		if lp.enabled {
-			now := lp.clock.Now()
-			projectedSitePower := sitePower - Voltage * (effectiveCurrent - max(minCurrent, targetCurrent)) * float64(activePhases)
+			currentReduction := effectiveCurrent - max(minCurrent, targetCurrent)
+			projectedSitePower := sitePower - Voltage * currentReduction * float64(activePhases)
 
 			if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
 				// calculate site power after a phase switch from activePhases phases -> 1 phase
@@ -1524,49 +1526,47 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			// lp.log.DEBUG.Println("pv disable timer: keep enabled")
 			lp.pvTimerEvaluated = now
 			return max(minCurrent, targetCurrent)
-		} else {
-			now := lp.clock.Now()
+		}
 
-			// kick off enable sequence
-			if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
-				(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-				lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
+		// kick off enable sequence
+		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
+			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
 
-				if lp.pvTimer.IsZero() {
-					lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
-					lp.pvTimer = now
-				}
-
-				lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
-
-				elapsed := now.Sub(lp.pvTimer)
-				if elapsed >= lp.GetEnableDelay() {
-					lp.log.DEBUG.Println("pv enable timer elapsed")
-
-					// reset timer to prevent immediate charger re-disabling
-					lp.resetPVTimer()
-
-					return minCurrent
-				}
-
-				// suppress duplicate log message after timer started
-				if elapsed > time.Second {
-					lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
-				}
-			} else if !lp.pvTimer.IsZero() {
-				// increase delay
-				lp.pvTimer = lp.pvTimer.Add(2 * now.Sub(lp.pvTimerEvaluated))
-
-				// reset timer if the delay would be too long
-				if lp.pvTimer.After(now) {
-					lp.resetPVTimer("enable")
-				}
+			if lp.pvTimer.IsZero() {
+				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
+				lp.pvTimer = now
 			}
 
-			// lp.log.DEBUG.Println("pv enable timer: keep disabled")
-			lp.pvTimerEvaluated = now
-			return 0
+			lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
+
+			elapsed := now.Sub(lp.pvTimer)
+			if elapsed >= lp.GetEnableDelay() {
+				lp.log.DEBUG.Println("pv enable timer elapsed")
+
+				// reset timer to prevent immediate charger re-disabling
+				lp.resetPVTimer()
+
+				return minCurrent
+			}
+
+			// suppress duplicate log message after timer started
+			if elapsed > time.Second {
+				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
+			}
+		} else if !lp.pvTimer.IsZero() {
+			// increase delay
+			lp.pvTimer = lp.pvTimer.Add(2 * now.Sub(lp.pvTimerEvaluated))
+
+			// reset timer if the delay would be too long
+			if lp.pvTimer.After(now) {
+				lp.resetPVTimer("enable")
+			}
 		}
+
+		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
+		lp.pvTimerEvaluated = now
+		return 0
 	}
 
 	// reset timer to disabled state
