@@ -1478,12 +1478,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	if mode == api.ModePV {
 		if lp.enabled {
 			now := lp.clock.Now()
-			projectedSitePower := sitePower - Voltage * (effectiveCurrent - max(minCurrent, targetCurrent)) * activePhases
+			projectedSitePower := sitePower - Voltage * (effectiveCurrent - max(minCurrent, targetCurrent)) * float64(activePhases)
 	
 			if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
 				// calculate site power after a phase switch from activePhases phases -> 1 phase
 				// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
-				projectedSitePower -= Voltage * minCurrent * (activePhases-1)
+				projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 			}
 	
 			// kick off disable sequence
