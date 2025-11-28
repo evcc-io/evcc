@@ -175,7 +175,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS.SetUpdated(func() {
 		valueChan <- util.Param{Key: keys.Ocpp, Val: ocpp.Status()}
 	})
-	log.INFO.Printf("OCPP listening at ws://127.0.0.1:%d/<stationId>", ocpp.Port())
+	log.INFO.Printf("OCPP local:    ws://127.0.0.1:%d/<stationId>", ocpp.Port())
+	if ocpp.ExternalUrl() != "" {
+		log.INFO.Printf("OCPP external: %s/<stationId>", ocpp.ExternalUrl())
+	}
 
 	// value cache
 	cache := util.NewParamCache()
@@ -192,7 +195,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	log.INFO.Printf("UI listening at http://127.0.0.1:%d", conf.Network.Port)
+	log.INFO.Printf("UI local:      http://127.0.0.1:%d", conf.Network.Port)
+	if conf.Network.ExternalUrl != "" {
+		log.INFO.Printf("UI external:   %s", conf.Network.ExternalURL())
+	}
 
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
