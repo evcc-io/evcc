@@ -22,10 +22,23 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, home string) (*Connection, error) {
+func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
+	inst := &proxyInstance{
+		home: home,
+		uri:  uri,
+	}
+
+	if home != "" {
+		log.WARN.Printf("using deprecated 'home' parameter '%s', please use 'uri' instead", home)
+	}
+
+	if uri == "" && home == "" {
+		return nil, errors.New("missing uri or home parameter")
+	}
+
 	c := &Connection{
 		Helper:   request.NewHelper(log),
-		instance: &proxyInstance{home: home},
+		instance: inst,
 	}
 
 	// Set up authentication headers

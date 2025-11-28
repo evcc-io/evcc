@@ -19,22 +19,31 @@ func init() {
 
 func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Home string
+		URI  string
+		Home string // TODO deprecate, backward compatibility (v0.210.x)
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	uri := instanceUriByName(cc.Home)
-	if uri == "" {
-		return nil, fmt.Errorf("unknown instance: %s", cc.Home)
+	uri := cc.URI
+
+	if uri == "" && cc.Home != "" {
+		uri = instanceUriByName(cc.Home)
+		if uri == "" {
+			return nil, fmt.Errorf("unknown instance: %s", cc.Home)
+		}
 	}
 
-	return NewHomeAssistant(cc.Home, uri)
+	if uri == "" {
+		return nil, fmt.Errorf("missing uri parameter")
+	}
+
+	return NewHomeAssistant(uri)
 }
 
-func NewHomeAssistant(home, uri string) (oauth2.TokenSource, error) {
+func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 	extUrl := network.Config().ExternalURL()
 	redirectUri := extUrl + network.CallbackPath
 
@@ -50,5 +59,6 @@ func NewHomeAssistant(home, uri string) (oauth2.TokenSource, error) {
 		},
 	}
 
-	return auth.NewOAuth(ctx, "HomeAssistant", home, &oc)
+	// TODO: decide if uri as identifier is fine
+	return auth.NewOAuth(ctx, "HomeAssistant", uri, &oc)
 }
