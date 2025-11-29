@@ -38,10 +38,6 @@ func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error
 		}
 	}
 
-	if uri == "" {
-		return nil, fmt.Errorf("missing uri parameter")
-	}
-
 	return NewHomeAssistant(uri)
 }
 
@@ -61,7 +57,7 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 		},
 	}
 
-	// use host as device name
+	// validate url
 	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
