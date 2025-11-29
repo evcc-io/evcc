@@ -16,12 +16,14 @@ type HomeWizardBattery struct {
 	p1MeterAPI   *battery.API
 	batteryAPIs  []*battery.API
 	batteryCount int
+	capacity     float64 // optional user-provided capacity in kWh
 }
 
 func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Host      string
 		Token     string
+		Capacity  float64 // optional capacity in kWh
 		Batteries []struct {
 			Host  string
 			Token string
@@ -39,6 +41,7 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 
 	m := &HomeWizardBattery{
 		p1MeterAPI: battery.NewAPI(cc.Host, cc.Token),
+		capacity:   cc.Capacity,
 	}
 
 	// Initialize battery APIs
@@ -48,9 +51,12 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 
 	m.batteryCount = len(m.batteryAPIs)
 
-	if m.batteryCount > 0 {
-		util.NewLogger("homewizard-battery").INFO.Printf("configured %d battery device(s)", m.batteryCount)
+	// Require at least one battery for this meter type
+	if m.batteryCount == 0 {
+		return nil, fmt.Errorf("no batteries configured - homewizard-battery requires at least one battery")
 	}
+
+	util.NewLogger("homewizard-battery").INFO.Printf("configured %d battery device(s)", m.batteryCount)
 
 	return m, nil
 }
@@ -70,11 +76,6 @@ var _ api.Battery = (*HomeWizardBattery)(nil)
 
 // Soc implements the api.Battery interface
 func (m *HomeWizardBattery) Soc() (float64, error) {
-	// If no batteries are configured, return 0
-	if len(m.batteryAPIs) == 0 {
-		return 0, nil
-	}
-
 	// Fetch SoC from all batteries in parallel
 	type result struct {
 		soc float64
@@ -121,6 +122,12 @@ var _ api.BatteryCapacity = (*HomeWizardBattery)(nil)
 
 // Capacity implements the api.BatteryCapacity interface
 func (m *HomeWizardBattery) Capacity() float64 {
+	// If user provided capacity, use that
+	if m.capacity > 0 {
+		return m.capacity
+	}
+
+	// Otherwise calculate based on battery count (each HWE-BAT is 2.47 kWh)
 	const batteryCapacity = 2.47 // kWh - HWE-BAT capacity
 	return batteryCapacity * float64(m.batteryCount)
 }

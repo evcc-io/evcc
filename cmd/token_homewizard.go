@@ -225,7 +225,7 @@ func pairDevicesParallel(devices []battery.DiscoveredDevice, name string) []pair
 	for i := range devices {
 		statuses[i] = &deviceStatus{
 			device: devices[i],
-			status: "waiting...",
+			status: "initializing...",
 		}
 		fmt.Printf("[%d] %s: %s\n", i+1, statuses[i].device.Host, statuses[i].status)
 	}
@@ -245,7 +245,7 @@ func pairDevicesParallel(devices []battery.DiscoveredDevice, name string) []pair
 				statusMu.Lock()
 				defer statusMu.Unlock()
 				status.attempt = attempt
-				status.status = fmt.Sprintf("attempt %d/36...", attempt)
+				status.status = fmt.Sprintf("waiting for button press (attempt %d/36)...", attempt)
 				updateStatusLine(idx, status, totalLines)
 			})
 
@@ -300,6 +300,7 @@ func pairDeviceWithContext(ctx context.Context, host, name string, onAttempt fun
 
 	helper := request.NewHelper(util.NewLogger("homewizard"))
 	helper.Client.Transport = transport.Insecure()
+
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 

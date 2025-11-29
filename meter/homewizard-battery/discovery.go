@@ -3,7 +3,9 @@ package battery
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/libp2p/zeroconf/v2"
@@ -61,8 +63,8 @@ func DiscoverDevices(ctx context.Context, onDevice func(DiscoveredDevice)) error
 				continue
 			}
 
-			// Extract resolvable hostname (removing .local. suffix if present)
-			host := strings.TrimSuffix(entry.HostName, ".local.")
+			// Resolve the best hostname or IP address to use
+			host := resolveHost(entry.HostName, entry.AddrIPv4, log)
 
 			device := DiscoveredDevice{
 				Instance: entry.Instance,
@@ -95,4 +97,54 @@ func extractProductType(txtRecords []string) string {
 		}
 	}
 	return ""
+}
+
+// resolveHost attempts to find a resolvable hostname or IP address
+// Tries: hostname with .local, hostname without .local, then falls back to IPv4 address
+func resolveHost(hostname string, ipv4Addrs []net.IP, log *util.Logger) string {
+	// Remove trailing dot if present
+	hostname = strings.TrimSuffix(hostname, ".")
+
+	// Try resolving with .local suffix first (if not already present)
+	hostnameWithLocal := hostname
+	if !strings.HasSuffix(hostname, ".local") {
+		hostnameWithLocal = hostname + ".local"
+	}
+
+	if tryResolve(hostnameWithLocal, log) {
+		log.TRACE.Printf("hostname %s is resolvable", hostnameWithLocal)
+		return hostnameWithLocal
+	}
+
+	// Try without .local suffix
+	hostnameWithoutLocal := strings.TrimSuffix(hostname, ".local")
+	if hostnameWithoutLocal != hostnameWithLocal && tryResolve(hostnameWithoutLocal, log) {
+		log.TRACE.Printf("hostname %s is resolvable", hostnameWithoutLocal)
+		return hostnameWithoutLocal
+	}
+
+	// Fall back to IPv4 address if available
+	if len(ipv4Addrs) > 0 {
+		ip := ipv4Addrs[0].String()
+		log.DEBUG.Printf("hostname %s not resolvable, using IPv4 address %s", hostname, ip)
+		return ip
+	}
+
+	// Last resort: return original hostname
+	log.DEBUG.Printf("hostname %s not resolvable and no IPv4 address, using original hostname", hostname)
+	return hostnameWithoutLocal
+}
+
+// tryResolve attempts to resolve a hostname with a short timeout
+func tryResolve(hostname string, log *util.Logger) bool {
+	resolver := &net.Resolver{}
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	_, err := resolver.LookupHost(ctx, hostname)
+	if err != nil {
+		log.TRACE.Printf("failed to resolve %s: %v", hostname, err)
+		return false
+	}
+	return true
 }

@@ -1,0 +1,80 @@
+template: homewizard-battery
+products:
+  - brand: HomeWizard
+    description:
+      generic: Plug-In Battery
+      de: Plug-In Batterie
+requirements:
+  description:
+    en: |
+      Requires HomeWizard Wi-Fi P1 Meter (HWE-P1) and one or more Plug-In Batteries (HWE-BAT).
+
+      **Setup Instructions:**
+
+      1. Run `evcc token homewizard` to automatically discover and pair all devices on your network
+      2. The command will:
+         - Scan your network for HomeWizard P1 meter and batteries (max 10 seconds)
+         - Show all discovered devices
+         - Prompt you to press the pairing button on ALL devices
+         - Pair all devices simultaneously and generate tokens
+         - Output the complete YAML configuration
+      3. Copy the generated configuration to your evcc.yaml file
+
+      The token command handles all the complexity - you don't need to manually configure hosts, tokens, or batteries.
+    de: |
+      Benötigt HomeWizard Wi-Fi P1 Meter (HWE-P1) und eine oder mehrere Plug-In Batterien (HWE-BAT).
+
+      **Einrichtungsanleitung:**
+
+      1. Führen Sie `evcc token homewizard` aus, um automatisch alle Geräte in Ihrem Netzwerk zu erkennen und zu koppeln
+      2. Der Befehl wird:
+         - Ihr Netzwerk nach HomeWizard P1-Zähler und Batterien scannen (max. 10 Sekunden)
+         - Alle gefundenen Geräte anzeigen
+         - Sie auffordern, die Kopplungstaste auf ALLEN Geräten zu drücken
+         - Alle Geräte gleichzeitig koppeln und Tokens generieren
+         - Die vollständige YAML-Konfiguration ausgeben
+      3. Kopieren Sie die generierte Konfiguration in Ihre evcc.yaml Datei
+
+      Der Token-Befehl übernimmt die gesamte Komplexität - Sie müssen Hosts, Tokens oder Batterien nicht manuell konfigurieren.
+params:
+  - name: host
+    description:
+      en: P1 Meter hostname or IP
+      de: P1-Zähler Hostname oder IP
+    help:
+      en: Run `evcc token homewizard` to discover
+      de: Führen Sie `evcc token homewizard` aus
+    required: true
+  - name: token
+    description:
+      en: P1 Meter authentication token
+      de: P1-Zähler Authentifizierungstoken
+    help:
+      en: Run `evcc token homewizard` to generate
+      de: Führen Sie `evcc token homewizard` aus
+    required: true
+    mask: true
+  - name: batteries
+    description:
+      en: List of batteries
+      de: Liste der Batterien
+    help:
+      en: At least one battery required. Run `evcc token homewizard` to generate complete config with all batteries.
+      de: Mindestens eine Batterie erforderlich. Führen Sie `evcc token homewizard` aus für vollständige Konfiguration.
+    required: true
+  - name: capacity
+    description:
+      en: Total battery capacity (kWh)
+      de: Batteriekapazität (kWh)
+    help:
+      en: Optional. Auto-calculated as 2.47 kWh per battery if not specified
+      de: Optional. Automatisch als 2,47 kWh pro Batterie berechnet
+    advanced: true
+render: |
+  type: homewizard-battery
+  host: {{ .host }}
+  token: {{ .token }}
+  batteries: # Run `evcc token homewizard` to generate this section
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
