@@ -1,10 +1,12 @@
 package vw
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -46,8 +48,33 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource, brand, country string) *API
 	return v
 }
 
+// ensureValidToken checks if token is valid and refreshes if needed
+func (v *API) ensureValidToken(ctx context.Context) error {
+	token, err := v.ts.Token()
+	if err != nil {
+		return fmt.Errorf("failed to get token: %w", err)
+	}
+
+	// Check if token is expired or will expire within 5 minutes
+	if token.Expiry.IsZero() || time.Now().Add(5*time.Minute).After(token.Expiry) {
+		v.log.DEBUG.Println("VW token expired or expiring soon, refreshing proactively")
+		// Force token refresh by requesting new token
+		if _, err := v.ts.Token(); err != nil {
+			return fmt.Errorf("proactive token refresh failed: %w", err)
+		}
+		v.log.DEBUG.Println("VW token refreshed successfully")
+	}
+
+	return nil
+}
+
 // doWithRetry executes a function and retries once on HTTP 400 error after forcing token refresh
-func (v *API) doWithRetry(fn func() error) error {
+func (v *API) doWithRetry(ctx context.Context, fn func() error) error {
+	// Proactively ensure token is valid before making API call
+	if err := v.ensureValidToken(ctx); err != nil {
+		v.log.WARN.Printf("VW token validation failed: %v", err)
+	}
+
 	err := fn()
 	if err == nil {
 		return nil
@@ -110,7 +137,7 @@ func (v *API) logAPIError(err error, operation string) {
 
 // HomeRegion updates the home region for the given vehicle
 func (v *API) HomeRegion(vin string) error {
-	return v.doWithRetry(func() error {
+	return v.doWithRetry(context.Background(), func() error {
 		var res HomeRegion
 		uri := fmt.Sprintf("%s/cs/vds/v1/vehicles/%s/homeRegion", RegionAPI, vin)
 
@@ -134,7 +161,7 @@ func (v *API) HomeRegion(vin string) error {
 
 // RolesRights implements the /rolesrights/operationlist response
 func (v *API) RolesRights(vin string) (res RolesRights, err error) {
-	err = v.doWithRetry(func() error {
+	err = v.doWithRetry(context.Background(), func() error {
 		uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
 		if apiErr := v.GetJSON(uri, &res); apiErr != nil {
 			v.logAPIError(apiErr, "RolesRights")
@@ -159,7 +186,7 @@ func (v *API) ServiceURI(vin, service string, rr RolesRights) (uri string) {
 
 // Status implements the /status response
 func (v *API) Status(vin string) (res StatusResponse, err error) {
-	err = v.doWithRetry(func() error {
+	err = v.doWithRetry(context.Background(), func() error {
 		uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s/status", RegionAPI, vin)
 		if v.statusURI != "" {
 			uri = v.statusURI
@@ -213,7 +240,7 @@ func (v *API) Status(vin string) (res StatusResponse, err error) {
 
 // Charger implements the /charger response
 func (v *API) Charger(vin string) (res ChargerResponse, err error) {
-	err = v.doWithRetry(func() error {
+	err = v.doWithRetry(context.Background(), func() error {
 		uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", v.baseURI, v.brand, v.country, vin)
 		if apiErr := v.GetJSON(uri, &res); apiErr != nil {
 			v.logAPIError(apiErr, "Charger")
@@ -229,7 +256,7 @@ func (v *API) Charger(vin string) (res ChargerResponse, err error) {
 
 // Climater implements the /climater response
 func (v *API) Climater(vin string) (res ClimaterResponse, err error) {
-	err = v.doWithRetry(func() error {
+	err = v.doWithRetry(context.Background(), func() error {
 		uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", v.baseURI, v.brand, v.country, vin)
 		if apiErr := v.GetJSON(uri, &res); apiErr != nil {
 			v.logAPIError(apiErr, "Climater")
@@ -245,7 +272,7 @@ func (v *API) Climater(vin string) (res ClimaterResponse, err error) {
 
 // Position implements the /position response
 func (v *API) Position(vin string) (res PositionResponse, err error) {
-	err = v.doWithRetry(func() error {
+	err = v.doWithRetry(context.Background(), func() error {
 		uri := fmt.Sprintf("%s/bs/cf/v1/%s/%s/vehicles/%s/position", v.baseURI, v.brand, v.country, vin)
 
 		req, reqErr := request.New(http.MethodGet, uri, nil, map[string]string{
@@ -291,7 +318,7 @@ var actionDefinitions = map[string]actionDefinition{
 
 // Action implements vehicle actions
 func (v *API) Action(vin, action, value string) error {
-	return v.doWithRetry(func() error {
+	return v.doWithRetry(context.Background(), func() error {
 		def := actionDefinitions[action]
 
 		uri := fmt.Sprintf("%s/bs/%s/v1/%s/%s/vehicles/%s/%s", v.baseURI, action, v.brand, v.country, vin, def.appendix)
