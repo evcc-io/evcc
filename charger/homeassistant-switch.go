@@ -20,15 +20,15 @@ func init() {
 }
 
 func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		embed        `mapstructure:",squash"`
 		URI          string
 		Token_       string `mapstructure:"token"` // TODO deprecated
-		Home         string // TODO deprecated, backward compatibility (v0.210.x)
+		Home         string // TODO deprecated
 		Enable       string
 		Power        string
 		StandbyPower float64
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
