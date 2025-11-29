@@ -397,14 +397,14 @@
       "description": "Vissa Modbus-enheter stöder endast en eller ett fåtal anslutningar. evcc kan fungera som en proxy, vilket möjliggör samtidig åtkomst för flera klienter (hemautomation, skript etc.).",
       "device": "Enhet",
       "option": {
-        "deny": "error",
+        "deny": "fel",
         "false": "nej",
         "true": "tyst"
       },
       "readonly": {
         "help": {
           "deny": "Skrivåtkomst är blockerat med ett Modbus fel.",
-          "false": "Skrivåtkomst vidarebefodras.",
+          "false": "Skrivåtkomst vidarebefordras.",
           "true": "Skrivåtkomst är blockerad utan respons."
         },
         "label": "Skrivskyddat"
@@ -433,7 +433,7 @@
     "network": {
       "descriptionExternalUrl": "Adress för andra enheter som vill ansluta till evcc och för automatisk identifiering av evcc-appen.",
       "descriptionHost": "Används för att tillkännage evcc i ditt lokala nätverk.",
-      "descriptionInternalUrl": "Lokal nätverksaddress för evcc.",
+      "descriptionInternalUrl": "Lokal nätverksadress för evcc.",
       "descriptionPort": "Port för webinterface och API. Uppdatera webläsarens URL om du ändrar detta.",
       "descriptionSchema": "Påverkar endast hur URLer skapas. Val av HTTPS kommer ej att aktivera kryptering.",
       "labelExternalUrl": "Extern URL",
