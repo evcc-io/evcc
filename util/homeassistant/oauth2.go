@@ -3,6 +3,7 @@ package homeassistant
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 
 	"github.com/evcc-io/evcc/plugin/auth"
@@ -66,5 +67,10 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 		return nil, err
 	}
 
-	return auth.NewOAuth(ctx, "HomeAssistant", u.Host, &oc)
+	host := u.Host
+	if h, _, err := net.SplitHostPort(u.Host); err == nil {
+		host = h
+	}
+
+	return auth.NewOAuth(ctx, "HomeAssistant", host, &oc)
 }
