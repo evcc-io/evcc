@@ -158,6 +158,9 @@
     },
     "general": {
       "applyAndClose": "Aplicar e fechar",
+      "authPerform": "Se conectar a {provider}",
+      "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
+      "authPrepare": "Preparar a ligação",
       "cancel": "Cancelar",
       "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",

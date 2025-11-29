@@ -154,11 +154,15 @@
       "danger": "Fara",
       "deprecated": "utfasad",
       "example": "Exempel",
-      "optional": "valfri"
+      "optional": "valfritt"
     },
     "general": {
       "applyAndClose": "Använd & stäng",
+      "authPerform": "Anslut med {provider}",
+      "authPerformHint": "Kommer att öppnas i en ny flik. Kom tillbaka hit för att fortsätta.",
+      "authPrepare": "Förbered anslutning",
       "cancel": "Avbryt",
+      "clear": "Rensa",
       "close": "Stäng",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
@@ -167,7 +171,7 @@
       "dragHandle": "Senarelägga",
       "dragItem": "Går att senarelägga: {title}",
       "dragList": "Sorterbar lista",
-      "experimental": "Experimentell",
+      "experimental": "Experimentella funktioner",
       "forceSave": "Spara ändå",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
@@ -388,7 +392,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Tillåt flera klienter till en Modbus-enhet.",
+      "add": "Lägg till proxyanslutning",
+      "connection": "Anslutning #{number}",
+      "description": "Vissa Modbus-enheter stöder endast en eller ett fåtal anslutningar. evcc kan fungera som en proxy, vilket möjliggör samtidig åtkomst för flera klienter (hemautomation, skript etc.).",
+      "device": "Enhet",
+      "option": {
+        "deny": "fel",
+        "false": "nej",
+        "true": "tyst"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Skrivåtkomst är blockerat med ett Modbus fel.",
+          "false": "Skrivåtkomst vidarebefordras.",
+          "true": "Skrivåtkomst är blockerad utan respons."
+        },
+        "label": "Skrivskyddat"
+      },
+      "sourcePortHelp": "Port för inkommande anslutningar måste vara tillgänglig.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -406,14 +427,18 @@
       "labelPassword": "Lösenord",
       "labelTopic": "Ämne",
       "labelUser": "Användarnamn",
-      "publishing": "Publicerar",
+      "publishing": "Publicera",
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Använd .local suffix för att aktivera mDNS. Relevant för upptäckt av mobilappen och vissa OCPP-laddare.",
+      "descriptionExternalUrl": "Adress för andra enheter som vill ansluta till evcc och för automatisk identifiering av evcc-appen.",
+      "descriptionHost": "Används för att tillkännage evcc i ditt lokala nätverk.",
+      "descriptionInternalUrl": "Lokal nätverksadress för evcc.",
       "descriptionPort": "Port för webinterface och API. Uppdatera webläsarens URL om du ändrar detta.",
       "descriptionSchema": "Påverkar endast hur URLer skapas. Val av HTTPS kommer ej att aktivera kryptering.",
-      "labelHost": "Värdnamn",
+      "labelExternalUrl": "Extern URL",
+      "labelHost": "mDNS Värdnamn",
+      "labelInternalUrl": "Intern URL",
       "labelPort": "Port",
       "labelSchema": "Schema",
       "title": "Nätverk"
@@ -447,7 +472,7 @@
     },
     "section": {
       "additionalMeter": "Ytterligare mätare",
-      "general": "Allmänna",
+      "general": "Allmänna inställningar",
       "grid": "Elnät",
       "integrations": "Integrationer",
       "loadpoints": "Laddare & värmekällor",
@@ -478,6 +503,7 @@
       "labelToken": "Sponsor-token",
       "title": "Sponsor",
       "tokenRequired": "Du måste ange en sponsortoken innan du kan lägga till detta fordon.",
+      "tokenRequiredFeature": "Denna funktion kräver en sponsor token.",
       "tokenRequiredLearnMore": "Läs mer.",
       "tokenRequiredShort": "Ingen sponsor-token konfigurerad.",
       "trialToken": "Testtoken",
@@ -519,7 +545,7 @@
         "title": "Säkerhetskopiera & återställ"
       },
       "logs": "Loggar",
-      "restart": "Omstart",
+      "restart": "Starta om",
       "restartRequiredDescription": "Starta om för att de nya inställningarna ska börja gälla.",
       "restartRequiredMessage": "Inställningar ändrade.",
       "restartingDescription": "Vänligen vänta…",
@@ -701,7 +727,7 @@
       "disclaimer": "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten.",
       "modalTitle": "Är du säker på att du vill starta om?"
     },
-    "restartButton": "Omstart",
+    "restartButton": "Starta om",
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
   },
@@ -1002,9 +1028,10 @@
   "offline": {
     "configurationError": "Fel under uppstart. Kontrollera din konfiguration och starta om.",
     "message": "Inte ansluten till en server.",
-    "restart": "Omstart",
+    "restart": "Starta om",
     "restartNeeded": "Krävs för att spara ändringar.",
-    "restarting": "Servern är strax tillbaka."
+    "restarting": "Servern är strax tillbaka.",
+    "starting": "Startar server..."
   },
   "passwordModal": {
     "description": "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in.",
@@ -1122,7 +1149,7 @@
       "label": "Helskärmsläge"
     },
     "hiddenFeatures": {
-      "label": "Experimentella",
+      "label": "Experimentella funktioner",
       "value": "Visa experimentella UI-funktioner."
     },
     "language": {
@@ -1193,6 +1220,7 @@
     "configuration": "Konfiguration",
     "description": "Kontrollera din konfigurationsfil. Om felmeddelandet inte hjälper, kontrollera {0}.",
     "discussions": "GitHub-diskussioner",
+    "editConfiguration": "Redigera konfiguration",
     "fixAndRestart": "Vänligen åtgärda problemet och starta om servern.",
     "hint": "Observera: Det kan också vara så att du har en felaktig enhet (växelriktare, mätare, ...). Kontrollera dina nätverksanslutningar.",
     "lineError": "Fel i {0}.",

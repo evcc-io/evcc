@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,7 @@ func TestOAuth(t *testing.T) {
 		return t
 	}
 
-	ts, err := NewOAuth(context.TODO(), "foo", "bar", &oauth2.Config{
+	ts, err := NewOAuth(t.Context(), "foo", "bar", &oauth2.Config{
 		ClientID: "baz",
 	}, WithTokenStorerOption(storer))
 	require.NoError(t, err)

@@ -158,6 +158,9 @@
     },
     "general": {
       "applyAndClose": "Ota käyttöön ja sulje",
+      "authPerform": "Yhdistä {provider}:lla",
+      "authPerformHint": "Avaa uuden välilehden. Palaa tänne jatkaaksesi.",
+      "authPrepare": "Valmistele yhteys",
       "cancel": "Peruuta",
       "close": "Sulje",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",

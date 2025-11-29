@@ -158,6 +158,9 @@
     },
     "general": {
       "applyAndClose": "Uwennen & Zoumaachen",
+      "authPerform": "Mat {provider} verbannen",
+      "authPerformHint": "Mécht een neien Tab op. Duerno hei weidermaachen.",
+      "authPrepare": "Verbindung virbereeden",
       "cancel": "Ofbriechen",
       "close": "Zoumaachen",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
