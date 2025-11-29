@@ -3,6 +3,7 @@ package homeassistant
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
@@ -59,6 +60,11 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 		},
 	}
 
-	// TODO: decide if uri as device name is fine
-	return auth.NewOAuth(ctx, "HomeAssistant", uri, &oc)
+	// use host as device name
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	return auth.NewOAuth(ctx, "HomeAssistant", u.Host, &oc)
 }
