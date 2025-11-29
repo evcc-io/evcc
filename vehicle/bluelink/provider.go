@@ -11,6 +11,7 @@ import (
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
 	statusG func() (BluelinkVehicleStatusLatest, error)
+	refresh func() error
 }
 
 // NewProvider creates a new BlueLink API
@@ -19,6 +20,7 @@ func NewProvider(api *API, vehicle Vehicle, cache time.Duration) *Provider {
 		statusG: util.Cached(func() (BluelinkVehicleStatusLatest, error) {
 			return api.StatusLatest(vehicle)
 		}, cache),
+		refresh: func() error { return api.Refresh(vehicle) },
 	}
 	return impl
 }
@@ -110,4 +112,12 @@ func (v *Provider) Position() (float64, float64, error) {
 		return 0, 0, err
 	}
 	return res.Position()
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	// Triggers refresh from vehicle
+	return v.refresh()
 }
