@@ -33,7 +33,7 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 func getEntities(w http.ResponseWriter, req *http.Request) {
 	uri := req.URL.Query().Get("uri")
 	if uri == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing uri parameter"))
+		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
 		return
 	}
 

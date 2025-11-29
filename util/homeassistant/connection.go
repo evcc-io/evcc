@@ -33,7 +33,7 @@ func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
 	}
 
 	if uri == "" && home == "" {
-		return nil, errors.New("missing uri or home parameter")
+		return nil, errors.New("missing either uri or home")
 	}
 
 	c := &Connection{
