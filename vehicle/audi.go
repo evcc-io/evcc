@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
-	"github.com/evcc-io/evcc/vehicle/vw/id"
+	"github.com/evcc-io/evcc/vehicle/vw/weconnect"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -20,12 +20,11 @@ import (
 // Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
 	*embed
-	*id.Provider // provides the api implementations
+	*weconnect.Provider // provides the api implementations
 }
 
 func init() {
 	registry.Add("audi", NewAudiFromConfig)
-	registry.Add("etron", NewAudiFromConfig)
 }
 
 // NewAudiFromConfig creates a new vehicle
@@ -82,11 +81,11 @@ func NewAudiFromConfig(other map[string]any) (api.Vehicle, error) {
 	)
 
 	if err == nil {
-		api := id.NewAPI(log, its)
+		api := weconnect.NewAPI(log, its)
 		api.Client.Timeout = cc.Timeout
 
 		v.fromVehicle(vehicle.Nickname, 0)
-		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
+		v.Provider = weconnect.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err
