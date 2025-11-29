@@ -799,11 +799,14 @@ func configureEEBus(conf *eebus.Config) error {
 
 // setup messaging
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
-	// migrate settings
 	if settings.Exists(keys.Messaging) {
-		*conf = globalconfig.Messaging{}
-		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
+		// TODO: delete if not needed any more
+		if err := migrateYamlToJson[globalconfig.Messaging](keys.Messaging); err != nil {
 			return nil, err
+		}
+
+		if err := settings.Json(keys.Messaging, &conf); err != nil {
+			return nil, fmt.Errorf("failed to read messaging setting: %w", err)
 		}
 	}
 
