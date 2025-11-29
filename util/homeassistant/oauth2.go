@@ -22,7 +22,7 @@ func init() {
 func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
 		URI  string
-		Home string // TODO deprecate, backward compatibility (v0.210.x)
+		Home string // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
