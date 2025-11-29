@@ -74,7 +74,7 @@ export interface State {
   sponsor?: Sponsor;
   eebus?: any;
   modbusproxy?: ModbusProxy[];
-  messaging?: any;
+  messaging?: Messaging;
   interval?: number;
   circuits?: Record<string, Circuit>;
   siteTitle?: string;
@@ -402,6 +402,31 @@ export interface ModbusProxySettings {
   device?: string;
   baudrate?: MODBUS_BAUDRATE;
   comset?: MODBUS_COMSET;
+}
+
+export interface Messaging {
+  events?: Record<MESSAGING_EVENTS, MessagingEvent>;
+  services?: MessagingService[];
+}
+
+export enum MESSAGING_EVENTS {
+  START = "start",
+  STOP = "stop",
+  CONNECT = "connect",
+  DISCONNECT = "disconnect",
+  SOC = "soc",
+  GUEST = "guest",
+  ASLEEP = "asleep",
+}
+
+export interface MessagingEvent {
+  title: string;
+  msg: string;
+}
+
+export interface MessagingService {
+  type: string;
+  other: any;
 }
 
 export interface Notification {
