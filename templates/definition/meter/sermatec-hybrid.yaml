@@ -44,6 +44,7 @@ render: |
         address: 0x4005 # PV2 power
         type: holding
         decode: int16
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -70,4 +71,5 @@ render: |
       address: 0x3003 # Battery SOC
       type: holding
       decode: uint16
+  capacity: {{ .capacity }} # kWh
   {{- end }}
