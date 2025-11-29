@@ -136,13 +136,14 @@ type DB struct {
 }
 
 type Messaging struct {
-	Events   map[string]MessagingEventTemplate
-	Services []config.Typed
+	Events   map[string]MessagingEventTemplate `json:"events"`
+	Services []config.Typed                    `json:"services"`
 }
 
 // MessagingEventTemplate is the push message configuration for an event
 type MessagingEventTemplate struct {
-	Title, Msg string
+	Title string `json:"title"`
+	Msg   string `json:"msg"`
 }
 
 func (c Messaging) Configured() bool {
