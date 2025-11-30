@@ -41,7 +41,7 @@ func instanceNameByUri(uri string) string {
 func addInstance(name, uri string) {
 	mu.Lock()
 	defer mu.Unlock()
-	instances[name] = uri
+	instances[name] = strings.TrimRight(uri, "/")
 }
 
 func scan() {
