@@ -23,7 +23,7 @@ type KWHMeasurement struct {
 	PowerL3W float64 `json:"power_l3_w"` // 3-phase only
 
 	// Voltage measurements
-	VoltageV   float64 `json:"voltage_v"`   // 1-phase
+	VoltageV   float64 `json:"voltage_v"`    // 1-phase
 	VoltageL1V float64 `json:"voltage_l1_v"` // 3-phase
 	VoltageL2V float64 `json:"voltage_l2_v"` // 3-phase
 	VoltageL3V float64 `json:"voltage_l3_v"` // 3-phase
