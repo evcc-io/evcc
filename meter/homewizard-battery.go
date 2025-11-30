@@ -2,6 +2,7 @@ package meter
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	battery "github.com/evcc-io/evcc/meter/homewizard-battery"
@@ -17,6 +18,8 @@ type HomeWizardBattery struct {
 	batteryAPIs  []*battery.API
 	batteryCount int
 	capacity     float64 // optional user-provided capacity in kWh
+	statusG      util.Cacheable[battery.Status]
+	socG         util.Cacheable[float64]
 }
 
 func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
@@ -24,11 +27,14 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 		Host      string
 		Token     string
 		Capacity  float64 // optional capacity in kWh
+		Cache     time.Duration
 		Batteries []struct {
 			Host  string
 			Token string
 		}
-	}{}
+	}{
+		Cache: time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -56,6 +62,55 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("no batteries configured - homewizard-battery requires at least one battery")
 	}
 
+	// Cache battery status (power from P1 meter)
+	m.statusG = util.ResettableCached(func() (battery.Status, error) {
+		return m.p1MeterAPI.GetBatteries()
+	}, cc.Cache)
+
+	// Cache SoC (averaged from all batteries)
+	m.socG = util.ResettableCached(func() (float64, error) {
+		type result struct {
+			soc float64
+			err error
+			idx int
+		}
+
+		results := make(chan result, len(m.batteryAPIs))
+
+		// Fetch SoC from all batteries in parallel
+		for i, batteryAPI := range m.batteryAPIs {
+			go func(idx int, api *battery.API) {
+				data, err := api.GetMeasurement()
+				if err != nil {
+					results <- result{err: err, idx: idx}
+					return
+				}
+				results <- result{soc: data.StateOfChargePct, idx: idx}
+			}(i, batteryAPI)
+		}
+
+		// Collect results
+		totalSoc := 0.0
+		successCount := 0
+		log := util.NewLogger("homewizard-battery")
+
+		for range len(m.batteryAPIs) {
+			res := <-results
+			if res.err != nil {
+				log.ERROR.Printf("failed to get SoC from battery %d: %v", res.idx+1, res.err)
+				continue
+			}
+			totalSoc += res.soc
+			successCount++
+		}
+
+		if successCount == 0 {
+			return 0, fmt.Errorf("failed to get SoC from any battery")
+		}
+
+		return totalSoc / float64(successCount), nil
+	}, cc.Cache)
+
 	util.NewLogger("homewizard-battery").INFO.Printf("configured %d battery device(s)", m.batteryCount)
 
 	return m, nil
@@ -63,59 +118,19 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 
 // CurrentPower implements the api.Meter interface
 func (m *HomeWizardBattery) CurrentPower() (float64, error) {
-	// Get combined battery power from P1 meter
-	batteries, err := m.p1MeterAPI.GetBatteries()
+	status, err := m.statusG.Get()
 	if err != nil {
 		return 0, err
 	}
 	// Invert the battery power, because HW reports negative = discharging and positive = charging
-	return -1 * batteries.PowerW, nil
+	return -1 * status.PowerW, nil
 }
 
 var _ api.Battery = (*HomeWizardBattery)(nil)
 
 // Soc implements the api.Battery interface
 func (m *HomeWizardBattery) Soc() (float64, error) {
-	// Fetch SoC from all batteries in parallel
-	type result struct {
-		soc float64
-		err error
-		idx int
-	}
-
-	results := make(chan result, len(m.batteryAPIs))
-
-	for i, batteryAPI := range m.batteryAPIs {
-		go func(idx int, api *battery.API) {
-			data, err := api.GetMeasurement()
-			if err != nil {
-				results <- result{err: err, idx: idx}
-				return
-			}
-			results <- result{soc: data.StateOfChargePct, idx: idx}
-		}(i, batteryAPI)
-	}
-
-	// Collect results
-	totalSoc := 0.0
-	successCount := 0
-	log := util.NewLogger("homewizard-battery")
-
-	for i := 0; i < len(m.batteryAPIs); i++ {
-		res := <-results
-		if res.err != nil {
-			log.ERROR.Printf("failed to get SoC from battery %d: %v", res.idx+1, res.err)
-			continue
-		}
-		totalSoc += res.soc
-		successCount++
-	}
-
-	if successCount == 0 {
-		return 0, fmt.Errorf("failed to get SoC from any battery")
-	}
-
-	return totalSoc / float64(successCount), nil
+	return m.socG.Get()
 }
 
 var _ api.BatteryCapacity = (*HomeWizardBattery)(nil)
@@ -137,5 +152,12 @@ var _ api.BatteryController = (*HomeWizardBattery)(nil)
 // SetBatteryMode implements the api.BatteryController interface
 func (m *HomeWizardBattery) SetBatteryMode(mode api.BatteryMode) error {
 	// Battery mode is controlled through the P1 meter
-	return m.p1MeterAPI.SetBatteryMode(mode)
+	if err := m.p1MeterAPI.SetBatteryMode(mode); err != nil {
+		return err
+	}
+
+	// Reset cache after mode change
+	m.statusG.Reset()
+
+	return nil
 }

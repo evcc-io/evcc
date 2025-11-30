@@ -1,4 +1,4 @@
-package battery
+package cmd
 
 import (
 	"context"

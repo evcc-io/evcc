@@ -70,6 +70,15 @@ params:
       en: Optional. Auto-calculated as 2.47 kWh per battery if not specified
       de: Optional. Automatisch als 2,47 kWh pro Batterie berechnet
     advanced: true
+  - name: cache
+    description:
+      en: API cache duration
+      de: API Cache Zeitraum
+    help:
+      en: Cache duration for API responses
+      de: Cache-Dauer für API-Antworten
+    advanced: true
+    default: 1s
 render: |
   type: homewizard-battery
   host: {{ .host }}
@@ -77,4 +86,7 @@ render: |
   batteries: # Run `evcc token homewizard` to generate this section
   {{- if .capacity }}
   capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .cache }}
+  cache: {{ .cache }}
   {{- end }}

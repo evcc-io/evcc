@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	battery "github.com/evcc-io/evcc/meter/homewizard-battery"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -19,7 +18,7 @@ import (
 type pairedDevice struct {
 	Host  string
 	Token string
-	Type  battery.DeviceType
+	Type  DeviceType
 }
 
 var homeWizardCmd = &cobra.Command{
@@ -103,7 +102,7 @@ func (s *discoverySpinner) stop() {
 	s.active = false
 }
 
-func printDiscoveredDevice(count int, device battery.DiscoveredDevice) {
+func printDiscoveredDevice(count int, device DiscoveredDevice) {
 	fmt.Printf("  %d. %s (%s) at %s\n", count, device.Instance, device.Type, device.Host)
 }
 
@@ -125,22 +124,22 @@ func confirmDevicesFound() bool {
 	return true
 }
 
-func discoverInteractively(timeoutSec int) []battery.DiscoveredDevice {
+func discoverInteractively(timeoutSec int) []DiscoveredDevice {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSec)*time.Second)
 	defer cancel()
 
-	deviceChan := make(chan battery.DiscoveredDevice, 10)
+	deviceChan := make(chan DiscoveredDevice, 10)
 	done := make(chan struct{})
 
 	// Start discovery
 	go func() {
-		battery.DiscoverDevices(ctx, func(device battery.DiscoveredDevice) {
+		DiscoverDevices(ctx, func(device DiscoveredDevice) {
 			deviceChan <- device
 		})
 		close(done)
 	}()
 
-	devices := make([]battery.DiscoveredDevice, 0)
+	devices := make([]DiscoveredDevice, 0)
 	spinner := newSpinner()
 	spinnerTicker := time.NewTicker(100 * time.Millisecond)
 	defer spinnerTicker.Stop()
@@ -191,14 +190,14 @@ func discoverInteractively(timeoutSec int) []battery.DiscoveredDevice {
 }
 
 type deviceStatus struct {
-	device  battery.DiscoveredDevice
+	device  DiscoveredDevice
 	status  string
 	attempt int
 	token   string
 	err     error
 }
 
-func pairDevicesParallel(devices []battery.DiscoveredDevice, name string) []pairedDevice {
+func pairDevicesParallel(devices []DiscoveredDevice, name string) []pairedDevice {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
@@ -357,9 +356,9 @@ func printHomeWizardMultiConfig(devices []pairedDevice) {
 	batteries := make([]pairedDevice, 0)
 
 	for i := range devices {
-		if devices[i].Type == battery.DeviceTypeP1Meter {
+		if devices[i].Type == DeviceTypeP1Meter {
 			p1Meter = &devices[i]
-		} else if devices[i].Type == battery.DeviceTypeBattery {
+		} else if devices[i].Type == DeviceTypeBattery {
 			batteries = append(batteries, devices[i])
 		}
 	}
