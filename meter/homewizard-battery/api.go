@@ -14,7 +14,6 @@ import (
 // API is the HomeWizard Battery API client
 type API struct {
 	*request.Helper
-	log   *util.Logger
 	host  string
 	token string
 }
@@ -23,20 +22,19 @@ type API struct {
 func NewAPI(host, token string) *API {
 	log := util.NewLogger("homewizard-battery").Redact(token)
 
-	api := &API{
+	a := &API{
 		Helper: request.NewHelper(log),
-		log:    log,
 		host:   host,
 		token:  token,
 	}
 
 	// Use insecure HTTPS transport for self-signed certificates
-	api.Client.Transport = transport.Insecure()
+	a.Client.Transport = transport.Insecure()
 
 	// Set timeout for unreachable devices
-	api.Client.Timeout = 10 * time.Second
+	a.Client.Timeout = 10 * time.Second
 
-	return api
+	return a
 }
 
 // apiRequest creates an HTTP request with proper headers
@@ -62,10 +60,6 @@ func (a *API) apiRequest(method, endpoint string, body any) (*http.Request, erro
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	a.log.TRACE.Printf("Request: %s %s", method, uri)
-	a.log.TRACE.Printf("Headers: Authorization=Bearer <redacted>, X-Api-Version=2, Content-Type=%s, Accept=%s",
-		req.Header.Get("Content-Type"), req.Header.Get("Accept"))
-
 	return req, nil
 }
 
@@ -75,17 +69,12 @@ func (a *API) GetDeviceInfo() (DeviceInfo, error) {
 
 	req, err := a.apiRequest(http.MethodGet, "/api", nil)
 	if err != nil {
-		a.log.ERROR.Printf("failed to create device info request: %v", err)
 		return res, err
 	}
 
 	if err := a.DoJSON(req, &res); err != nil {
-		a.log.ERROR.Printf("failed to get device info: %v", err)
 		return res, err
 	}
-
-	a.log.DEBUG.Printf("device info: %s (%s) - firmware %s, API %s",
-		res.ProductName, res.ProductType, res.FirmwareVersion, res.APIVersion)
 
 	return res, nil
 }
@@ -96,12 +85,10 @@ func (a *API) GetMeasurement() (Measurement, error) {
 
 	req, err := a.apiRequest(http.MethodGet, "/api/measurement", nil)
 	if err != nil {
-		a.log.ERROR.Printf("failed to create measurement request: %v", err)
 		return res, err
 	}
 
 	if err := a.DoJSON(req, &res); err != nil {
-		a.log.ERROR.Printf("failed to get measurement: %v", err)
 		return res, err
 	}
 
@@ -114,12 +101,10 @@ func (a *API) GetBatteries() (Status, error) {
 
 	req, err := a.apiRequest(http.MethodGet, "/api/batteries", nil)
 	if err != nil {
-		a.log.ERROR.Printf("failed to create batteries request: %v", err)
 		return res, err
 	}
 
 	if err := a.DoJSON(req, &res); err != nil {
-		a.log.ERROR.Printf("failed to get batteries: %v", err)
 		return res, err
 	}
 
@@ -140,8 +125,6 @@ func (a *API) SetBatteryMode(mode api.BatteryMode) error {
 		return fmt.Errorf("unsupported battery mode: %v", mode)
 	}
 
-	a.log.DEBUG.Printf("setting battery mode: %s -> %s", mode, hwMode)
-
 	reqBody := struct {
 		Mode string `json:"mode"`
 	}{
@@ -150,18 +133,13 @@ func (a *API) SetBatteryMode(mode api.BatteryMode) error {
 
 	req, err := a.apiRequest(http.MethodPut, "/api/batteries", reqBody)
 	if err != nil {
-		a.log.ERROR.Printf("failed to create battery mode request: %v", err)
 		return err
 	}
-
-	a.log.DEBUG.Printf("PUT https://%s/api/batteries with mode=%s", a.host, hwMode)
 
 	var res Status
 	if err := a.DoJSON(req, &res); err != nil {
-		a.log.ERROR.Printf("failed to set battery mode: %v", err)
 		return err
 	}
 
-	a.log.DEBUG.Printf("battery mode set successfully to: %s", res.Mode)
 	return nil
 }
