@@ -26,6 +26,22 @@ params:
       de: Geräte-Authentifizierungstoken
     required: true
     mask: true
+  - name: usage
+    description:
+      en: Meter usage type
+      de: Zählerverwendungstyp
+    help:
+      en: |
+        PV: Solar production (inverts power, production shows as negative)
+        Grid: Grid monitoring (no inversion, import = positive, export = negative)
+      de: |
+        PV: Solarproduktion (invertiert Leistung, Produktion zeigt negativ)
+        Grid: Netzmessung (keine Invertierung, Import = positiv, Export = negativ)
+    type: choice
+    default: pv
+    values:
+      - pv
+      - grid
   - name: timeout
     description:
       en: Connection timeout
@@ -36,6 +52,9 @@ render: |
   type: homewizard-kwh
   host: {{ .host }}
   token: {{ .token }}
+  {{- if ne .usage "pv" }}
+  usage: {{ .usage }}
+  {{- end }}
   {{- if .timeout }}
   timeout: {{ .timeout }}
   {{- end }}

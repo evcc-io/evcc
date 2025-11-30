@@ -17,14 +17,17 @@ func init() {
 type HomeWizardKWH struct {
 	log    *util.Logger
 	device *v2.KWHDevice
+	usage  string // "pv" or "grid"
 }
 
 func NewHomeWizardKWHFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Host    string
 		Token   string
+		Usage   string
 		Timeout time.Duration
 	}{
+		Usage:   "pv",
 		Timeout: 30 * time.Second,
 	}
 
@@ -40,6 +43,7 @@ func NewHomeWizardKWHFromConfig(other map[string]any) (api.Meter, error) {
 	m := &HomeWizardKWH{
 		log:    util.NewLogger("homewizard-kwh"),
 		device: v2.NewKWHDevice(cc.Host, cc.Token, cc.Timeout),
+		usage:  cc.Usage,
 	}
 
 	// Start device connection
@@ -71,8 +75,13 @@ func (m *HomeWizardKWH) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	// Invert sign for PV (same logic as existing homewizard meter)
-	return -1 * measurement.PowerW, nil
+
+	// Invert power for PV (production shows as negative)
+	// Don't invert for grid (import = positive, export = negative)
+	if m.usage == "pv" {
+		return -1 * measurement.PowerW, nil
+	}
+	return measurement.PowerW, nil
 }
 
 var _ api.MeterEnergy = (*HomeWizardKWH)(nil)
