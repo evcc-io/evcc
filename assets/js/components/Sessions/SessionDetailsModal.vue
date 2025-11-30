@@ -80,7 +80,7 @@
 								)
 							}}
 							<div v-if="session.chargeDuration">
-								{{ fmtDurationNs(session.chargeDuration) }}
+								{{ fmtDuration(session.chargeDuration) }}
 								(~{{ fmtW(avgPower) }})
 							</div>
 						</td>
@@ -194,8 +194,7 @@ export default defineComponent({
 			return this.session.chargedEnergy * 1e3;
 		},
 		avgPower() {
-			const hours = this.session.chargeDuration / 1e9 / 3600;
-			return this.chargedEnergy / hours;
+			return this.chargedEnergy / (this.session.chargeDuration / 3600);
 		},
 		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
