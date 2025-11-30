@@ -2,8 +2,8 @@ template: homewizard-v2-p1
 products:
   - brand: HomeWizard
     description:
-      generic: P1 Meter (HWE-P1)
-      de: P1-Zähler (HWE-P1)
+      generic: Wi-Fi P1 Meter (v2)
+      de: Wi-Fi P1-Zähler (v2)
 requirements:
   description:
     en: |

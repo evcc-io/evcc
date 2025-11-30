@@ -2,8 +2,8 @@ template: homewizard-v2-kwh
 products:
   - brand: HomeWizard
     description:
-      generic: kWh Meter (HWE-KWH1/3)
-      de: kWh-Zähler (HWE-KWH1/3)
+      generic: kWh Meter (v2)
+      de: kWh-Zähler (v2)
 requirements:
   description:
     en: |
