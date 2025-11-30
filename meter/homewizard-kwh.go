@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	v2 "github.com/evcc-io/evcc/meter/homewizard-v2"
 	"github.com/evcc-io/evcc/util"
+	"github.com/mluiten/evcc-homewizard-v2/device"
 )
 
 func init() {
@@ -16,7 +16,7 @@ func init() {
 // HomeWizardKWH implements the api.Meter interface for kWh meters
 type HomeWizardKWH struct {
 	log    *util.Logger
-	device *v2.KWHDevice
+	device *device.KWHDevice
 	usage  string // "pv" or "grid"
 }
 
@@ -28,7 +28,7 @@ func NewHomeWizardKWHFromConfig(other map[string]any) (api.Meter, error) {
 		Timeout time.Duration
 	}{
 		Usage:   "pv",
-		Timeout: 30 * time.Second,
+		Timeout: device.DefaultTimeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -42,24 +42,13 @@ func NewHomeWizardKWHFromConfig(other map[string]any) (api.Meter, error) {
 
 	m := &HomeWizardKWH{
 		log:    util.NewLogger("homewizard-kwh"),
-		device: v2.NewKWHDevice(cc.Host, cc.Token, cc.Timeout),
+		device: device.NewKWHDevice(cc.Host, cc.Token, cc.Timeout),
 		usage:  cc.Usage,
 	}
 
-	// Start device connection
-	errC := make(chan error, 1)
-	m.device.Start(errC)
-
-	// Wait for connection or timeout
-	select {
-	case err := <-errC:
-		if err != nil {
-			m.device.Stop()
-			return nil, fmt.Errorf("connecting to device: %w", err)
-		}
-	case <-time.After(cc.Timeout):
-		m.device.Stop()
-		return nil, fmt.Errorf("connection timeout")
+	// Start device connection and wait for it to succeed
+	if err := m.device.StartAndWait(cc.Timeout); err != nil {
+		return nil, err
 	}
 
 	m.log.INFO.Printf("configured kWh meter at %s", cc.Host)

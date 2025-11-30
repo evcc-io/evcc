@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	v2 "github.com/evcc-io/evcc/meter/homewizard-v2"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/mluiten/evcc-homewizard-v2/device"
 )
 
 func init() {
@@ -18,9 +18,9 @@ func init() {
 // HomeWizardBattery implements the api.Meter interface for battery devices
 type HomeWizardBattery struct {
 	log            *util.Logger
-	device         *v2.BatteryDevice
+	device         *device.BatteryDevice
 	controllerName string
-	controller     *v2.P1Device
+	controller     *device.P1Device
 	controllerOnce sync.Once
 	capacity       float64
 	maxCharge      float64 // Maximum charge power in W
@@ -37,9 +37,9 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 		MaxDischarge float64
 		Timeout      time.Duration
 	}{
-		Timeout:      30 * time.Second,
-		MaxCharge:    800, // Default 800W charge limit for HWE-BAT
-		MaxDischarge: 800, // Default 800W discharge limit for HWE-BAT
+		Timeout:      device.DefaultTimeout,
+		MaxCharge:    device.DefaultMaxCharge,
+		MaxDischarge: device.DefaultMaxDischarge,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -57,27 +57,16 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 
 	m := &HomeWizardBattery{
 		log:            util.NewLogger("homewizard-battery"),
-		device:         v2.NewBatteryDevice(cc.Host, cc.Token, cc.Timeout),
+		device:         device.NewBatteryDevice(cc.Host, cc.Token, cc.Timeout),
 		controllerName: cc.Controller,
 		capacity:       cc.Capacity,
 		maxCharge:      cc.MaxCharge,
 		maxDischarge:   cc.MaxDischarge,
 	}
 
-	// Start device connection
-	errC := make(chan error, 1)
-	m.device.Start(errC)
-
-	// Wait for connection or timeout
-	select {
-	case err := <-errC:
-		if err != nil {
-			m.device.Stop()
-			return nil, fmt.Errorf("connecting to device: %w", err)
-		}
-	case <-time.After(cc.Timeout):
-		m.device.Stop()
-		return nil, fmt.Errorf("connection timeout")
+	// Start device connection and wait for it to succeed
+	if err := m.device.StartAndWait(cc.Timeout); err != nil {
+		return nil, err
 	}
 
 	m.log.INFO.Printf("configured battery at %s with controller: %s", cc.Host, cc.Controller)
@@ -86,17 +75,10 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 // getController resolves the controller P1 meter (lazy initialization to avoid timing issues)
-func (m *HomeWizardBattery) getController() (*v2.P1Device, error) {
+func (m *HomeWizardBattery) getController() (*device.P1Device, error) {
 	var err error
 
 	m.controllerOnce.Do(func() {
-		// Debug: List all available meters
-		allMeters := config.Meters().Devices()
-		m.log.DEBUG.Printf("looking for controller '%s', available meters: %d", m.controllerName, len(allMeters))
-		for _, dev := range allMeters {
-			m.log.DEBUG.Printf("  - meter: %s (type: %T)", dev.Config().Name, dev.Instance())
-		}
-
 		// Look up controller meter from registry
 		dev, lookupErr := config.Meters().ByName(m.controllerName)
 		if lookupErr != nil {
@@ -172,9 +154,8 @@ func (m *HomeWizardBattery) Capacity() float64 {
 		return m.capacity
 	}
 
-	// Default HWE-BAT capacity
-	const batteryCapacity = 2.47 // kWh - HWE-BAT capacity
-	return batteryCapacity
+	// Use default HWE-BAT capacity from device
+	return m.device.DefaultCapacity()
 }
 
 var _ api.BatteryController = (*HomeWizardBattery)(nil)
