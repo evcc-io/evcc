@@ -1,17 +1,16 @@
 package loginapps
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag/cariad"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -79,16 +78,7 @@ func (v *Service) Refresh(token *Token) (*Token, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	if err == nil {
-		var claims jwt.RegisteredClaims
-		if _, _, parseErr := jwt.NewParser().ParseUnverified(res.AccessToken, &claims); parseErr != nil {
-			err = fmt.Errorf("parse access token: %w", parseErr)
-		} else if claims.ExpiresAt == nil {
-			err = fmt.Errorf("access token missing exp claim")
-		} else {
-			res.Expiry = claims.ExpiresAt.Time
-		}
-	}
+	res.Expiry = time.Now().Add(time.Duration(res.ExpiresIn) * time.Second)
 
 	t := Token(res)
 	return &t, err
