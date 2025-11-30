@@ -38,7 +38,7 @@ render: |
     source: http
     timeout: 5s
     cache: 24h
-    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ if eq (now.Local | date "MST") "CEST" }}{{ now.UTC | date "2006-01-02T22:00:00Z" }}{{ else }}{{ now.UTC | date "2006-01-02T23:00:00Z" }}{{ end }}&window_end={{ if eq (now.Local | date "MST") "CEST" }}{{ dateModify "24h" (now.UTC) | date "2006-01-02T22:00:00Z" }}{{ else }}{{ dateModify "24h" (now.UTC) | date "2006-01-02T23:00:00Z" }}{{ end }}
+    uri: uri: https://api.pstryk.pl/integrations/pricing/?resolution=hour&window_start={{ (dateModify "-24h" now) | dateInZone "2006-01-02" "Europe/Warsaw" }}T{{ if eq (now.Local | date "MST") "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}&window_end={{ if lt (now | dateInZone "15" "Europe/Warsaw") "13" }}{{ now | dateInZone "2006-01-02" "Europe/Warsaw" }}{{ else }}{{ (dateModify "+24h" now) | dateInZone "2006-01-02" "Europe/Warsaw" }}{{ end }}T{{ if eq (now.Local | date "MST") "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}
     headers:
       Authorization: {{ .token }}
       Accept: application/json
