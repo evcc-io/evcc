@@ -37,7 +37,7 @@ var acceptable = []string{
 	"eebus not configured",                                                 // EEBus
 	"missing token",                                                        // HomeAssistant
 	"missing host or token - run 'evcc token homewizard'",                  // HomeWizard Battery
-	"missing host or token - run 'evcc token homewizard-v2'",               // HomeWizard P1/KWH
+	"missing host or token - run 'evcc token homewizard'",                 // HomeWizard P1/KWH
 	"battery requires controller parameter (P1 meter name)",                // HomeWizard Battery
 }
 

@@ -1,0 +1,41 @@
+template: homewizard-v2-kwh
+products:
+  - brand: HomeWizard
+    description:
+      generic: kWh Meter (HWE-KWH1/3)
+      de: kWh-Zähler (HWE-KWH1/3)
+requirements:
+  description:
+    en: |
+      kWh Meter for PV monitoring using WebSocket API v2.
+
+      **Setup:** Run `evcc token homewizard` to discover and pair devices
+    de: |
+      kWh-Zähler für PV-Messung mit WebSocket API v2.
+
+      **Einrichtung:** Führen Sie `evcc token homewizard` aus
+params:
+  - name: host
+    description:
+      en: Device hostname or IP
+      de: Gerätehostname oder IP
+    required: true
+  - name: token
+    description:
+      en: Device authentication token
+      de: Geräte-Authentifizierungstoken
+    required: true
+    mask: true
+  - name: timeout
+    description:
+      en: Connection timeout
+      de: Verbindungs-Timeout
+    advanced: true
+    default: 30s
+render: |
+  type: homewizard-kwh
+  host: {{ .host }}
+  token: {{ .token }}
+  {{- if .timeout }}
+  timeout: {{ .timeout }}
+  {{- end }}

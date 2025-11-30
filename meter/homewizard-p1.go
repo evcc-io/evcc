@@ -34,7 +34,7 @@ func NewHomeWizardP1FromConfig(other map[string]any) (api.Meter, error) {
 
 	// Validate required parameters
 	if cc.Host == "" || cc.Token == "" {
-		return nil, fmt.Errorf("missing host or token - run 'evcc token homewizard-v2'")
+		return nil, fmt.Errorf("missing host or token - run 'evcc token homewizard'")
 	}
 
 	m := &HomeWizardP1{

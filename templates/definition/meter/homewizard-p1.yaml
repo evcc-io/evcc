@@ -1,41 +1,13 @@
-template: homewizard-p1
+template: homewizard
 products:
   - brand: HomeWizard
     description:
-      generic: P1 Meter (HWE-P1)
-      de: P1-Zähler (HWE-P1)
-requirements:
-  description:
-    en: |
-      P1 Meter for grid monitoring using WebSocket API v2.
-
-      **Setup:** Run `evcc token homewizard-v2` to discover and pair devices
-    de: |
-      P1-Zähler für Netzmessung mit WebSocket API v2.
-
-      **Einrichtung:** Führen Sie `evcc token homewizard-v2` aus
+      generic: Wi-Fi P1 Meter
 params:
+  - name: usage
+    choice: ["grid"]
   - name: host
-    description:
-      en: Device hostname or IP
-      de: Gerätehostname oder IP
-    required: true
-  - name: token
-    description:
-      en: Device authentication token
-      de: Geräte-Authentifizierungstoken
-    required: true
-    mask: true
-  - name: timeout
-    description:
-      en: Connection timeout
-      de: Verbindungs-Timeout
-    advanced: true
-    default: 30s
 render: |
-  type: homewizard-p1
-  host: {{ .host }}
-  token: {{ .token }}
-  {{- if .timeout }}
-  timeout: {{ .timeout }}
-  {{- end }}
+  type: homewizard
+  uri: http://{{ .host }}
+  usage: {{ .usage }}
