@@ -70,7 +70,19 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 		powers = m.Powers
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil, nil), nil
+	// decorate battery controller
+	var setBatteryMode func(api.BatteryMode) error
+	if m, ok := m.(api.BatteryController); ok {
+		setBatteryMode = m.SetBatteryMode
+	}
+
+	// decorate battery limiter
+	var getPowerLimits func() (charge, discharge float64)
+	if m, ok := m.(api.BatteryPowerLimiter); ok {
+		getPowerLimits = m.GetPowerLimits
+	}
+
+	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, getPowerLimits, setBatteryMode, nil), nil
 }
 
 type MovingAverage struct {

@@ -15,9 +15,10 @@ import (
 type DeviceType string
 
 const (
-	DeviceTypeP1Meter DeviceType = "p1meter"
-	DeviceTypeBattery DeviceType = "battery"
-	DeviceTypeUnknown DeviceType = "unknown"
+	DeviceTypeP1Meter  DeviceType = "p1meter"
+	DeviceTypeKWHMeter DeviceType = "kwhmeter"
+	DeviceTypeBattery  DeviceType = "battery"
+	DeviceTypeUnknown  DeviceType = "unknown"
 )
 
 // DiscoveredDevice represents a discovered HomeWizard device
@@ -55,6 +56,8 @@ func DiscoverDevices(ctx context.Context, onDevice func(DiscoveredDevice)) error
 			switch productType {
 			case "HWE-P1":
 				deviceType = DeviceTypeP1Meter
+			case "HWE-KWH1", "HWE-KWH3":
+				deviceType = DeviceTypeKWHMeter
 			case "HWE-BAT":
 				deviceType = DeviceTypeBattery
 			default:
