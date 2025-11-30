@@ -30,7 +30,6 @@ var homeWizardCmd = &cobra.Command{
 
 func init() {
 	tokenCmd.AddCommand(homeWizardCmd)
-	homeWizardCmd.Flags().String("host", "", "Device hostname or IP (optional - will auto-discover if not provided)")
 	homeWizardCmd.Flags().StringP("name", "n", "evcc", "Product name for pairing")
 	homeWizardCmd.Flags().Int("timeout", 10, "Discovery timeout in seconds")
 }
@@ -39,7 +38,6 @@ func runHomeWizardToken(cmd *cobra.Command, args []string) {
 	// Parse log levels to enable debug/trace logging if requested
 	parseLogLevels()
 
-	host := cmd.Flag("host").Value.String()
 	name := cmd.Flag("name").Value.String()
 	timeout, _ := cmd.Flags().GetInt("timeout")
 
@@ -49,30 +47,17 @@ func runHomeWizardToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal("Invalid name: must be 1-40 characters (a-z, A-Z, 0-9, -, _, \\, /, #, spaces)")
 	}
 
-	var devices []battery.DiscoveredDevice
+	// Discovery mode - always discover all devices
+	fmt.Println("HomeWizard Device Discovery")
+	fmt.Println("===========================")
+	fmt.Println()
+	fmt.Printf("Scanning network (max %ds)...\n", timeout)
+	fmt.Println()
 
-	if host != "" {
-		// Single device mode
-		if regexp.MustCompile(`^https?://`).MatchString(host) {
-			log.FATAL.Fatal("Host should not contain http:// or https:// prefix")
-		}
+	devices := discoverInteractively(timeout)
 
-		devices = []battery.DiscoveredDevice{
-			{Host: host, Type: battery.DeviceTypeUnknown},
-		}
-	} else {
-		// Discovery mode
-		fmt.Println("HomeWizard Device Discovery")
-		fmt.Println("===========================")
-		fmt.Println()
-		fmt.Printf("Scanning network (max %ds)...\n", timeout)
-		fmt.Println()
-
-		devices = discoverInteractively(timeout)
-
-		if len(devices) == 0 {
-			log.FATAL.Fatal("No HomeWizard devices found on network 😞")
-		}
+	if len(devices) == 0 {
+		log.FATAL.Fatal("No HomeWizard devices found on network 😞")
 	}
 
 	fmt.Println()
