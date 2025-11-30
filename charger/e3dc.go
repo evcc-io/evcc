@@ -1,21 +1,10 @@
 package charger
 
-// LICENSE
-
-// Copyright (c) 2025 evcc, premultiply
-
-// This module is NOT covered by the MIT license. All rights reserved.
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// DEVELOPMENT STATUS:
+// - Tested with E3DC Multi Connect II Wallbox (FW 7.0.6.0/1.0.3.0)
+// - Individual RSCP calls verified, full evcc integration pending
+// - Phase switching (1p3p): E3DC handles ramping internally (tested)
+// - Requires testing with additional E3DC systems before production use
 
 import (
 	"errors"
@@ -443,34 +432,31 @@ func (wb *E3dc) GetMaxCurrent() (float64, error) {
 var _ api.ChargeRater = (*E3dc)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-// Returns the energy charged in the current/last session in kWh
+// Returns the energy charged in the current session in kWh
 func (wb *E3dc) ChargedEnergy() (float64, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
-		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
-		*rscp.NewMessage(rscp.WB_REQ_PM_ENERGY_L1, nil),
-		*rscp.NewMessage(rscp.WB_REQ_PM_ENERGY_L2, nil),
-		*rscp.NewMessage(rscp.WB_REQ_PM_ENERGY_L3, nil),
-	}))
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil))
 	if err != nil {
 		return 0, err
 	}
 
-	wbData, err := rscpContainer(*res, 4)
+	sessionData, err := rscpContainer(*res, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	var energy float64
-	for i := 1; i <= 3; i++ {
-		e, err := rscpFloat64(wbData[i])
-		if err != nil {
-			return 0, err
+	// Find WB_SESSION_CHARGED_ENERGY in session data
+	for _, msg := range sessionData {
+		if msg.Tag == rscp.WB_SESSION_CHARGED_ENERGY {
+			energy, err := rscpFloat64(msg)
+			if err != nil {
+				return 0, err
+			}
+			return energy / 1000.0, nil // Wh -> kWh
 		}
-		energy += e
 	}
 
-	// Convert Wh to kWh
-	return energy / 1000.0, nil
+	// No active session
+	return 0, nil
 }
 
 var _ api.ChargeTimer = (*E3dc)(nil)
