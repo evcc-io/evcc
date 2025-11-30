@@ -406,7 +406,7 @@ export interface ModbusProxySettings {
 
 export interface Messaging {
   events?: Record<MESSAGING_EVENTS, MessagingEvent>;
-  services?: MessagingService[];
+  services?: MessagingServices[];
 }
 
 export enum MESSAGING_EVENTS {
@@ -424,9 +424,64 @@ export interface MessagingEvent {
   msg: string;
 }
 
-export interface MessagingService {
-  type: string;
-  other: any;
+export enum MESSAGING_SERVICE_TYPE {
+  PUSHOVER = "pushover",
+  TELEGRAM = "telegram",
+  EMAIL = "email",
+  SHOUT = "shout",
+  NTFY = "ntfy",
+  CUSTOM = "custom",
+}
+
+export type MessagingServices =
+  | MessagingServicePushover
+  | MessagingServiceTelegram
+  | MessagingServiceEmail
+  | MessagingServiceShout
+  | MessagingServiceNfty
+  | MessagingServiceCustom;
+
+export interface MessagingServicePushover {
+  type: MESSAGING_SERVICE_TYPE.PUSHOVER;
+  other: {
+    app: string;
+    recipients: string[];
+    devices: string[];
+  };
+}
+export interface MessagingServiceTelegram {
+  type: MESSAGING_SERVICE_TYPE.TELEGRAM;
+  other: {
+    token: string;
+    chats: number[];
+  };
+}
+export interface MessagingServiceEmail {
+  type: MESSAGING_SERVICE_TYPE.EMAIL;
+  other: {
+    uri: string;
+  };
+}
+export interface MessagingServiceShout {
+  type: MESSAGING_SERVICE_TYPE.SHOUT;
+  other: { uri: string };
+}
+export interface MessagingServiceNfty {
+  type: MESSAGING_SERVICE_TYPE.NTFY;
+  other: { uri: string; priority?: string; tags: string };
+}
+export interface MessagingServiceCustom {
+  type: MESSAGING_SERVICE_TYPE.CUSTOM;
+  other: {
+    encoding?: MessagingServiceCustomEncoding;
+    send: any;
+  };
+}
+export enum MessagingServiceCustomEncoding {
+  JSON = "json",
+  CSV = "csv",
+  TSV = "tsv",
+  TITLE = "title",
 }
 
 export interface Notification {
