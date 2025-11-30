@@ -30,6 +30,8 @@ params:
       de: Geräte-Authentifizierungstoken
     required: true
     mask: true
+  - name: usage
+    choice: [ "battery" ]
   - name: controller
     description:
       en: P1 meter name for battery control

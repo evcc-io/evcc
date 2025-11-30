@@ -27,6 +27,7 @@ params:
     required: true
     mask: true
   - name: usage
+    choice: ["pv", "charge"]
     description:
       en: Meter usage type
       de: Zählerverwendungstyp
@@ -37,11 +38,6 @@ params:
       de: |
         PV: Solarproduktion (invertiert Leistung, Produktion zeigt negativ)
         Grid: Netzmessung (keine Invertierung, Import = positiv, Export = negativ)
-    type: choice
-    default: pv
-    values:
-      - pv
-      - grid
   - name: timeout
     description:
       en: Connection timeout
@@ -52,9 +48,7 @@ render: |
   type: homewizard-kwh
   host: {{ .host }}
   token: {{ .token }}
-  {{- if ne .usage "pv" }}
   usage: {{ .usage }}
-  {{- end }}
   {{- if .timeout }}
   timeout: {{ .timeout }}
   {{- end }}

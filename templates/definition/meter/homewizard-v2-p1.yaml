@@ -20,6 +20,8 @@ params:
       en: Device hostname or IP
       de: Gerätehostname oder IP
     required: true
+  - name: usage
+    choice: ["grid"]
   - name: token
     description:
       en: Device authentication token
