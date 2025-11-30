@@ -73,8 +73,6 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
 	var plan api.Rates
 
-	// rates are already filtered by caller, so slots are guaranteed to be relevant
-
 	for _, slot := range rates {
 		if requiredDuration <= 0 {
 			break
@@ -170,32 +168,25 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 	return window
 }
 
-// Plan creates a continuous emergency charging plan
-// ratest must be sorted by time
+// continuousPlan creates a continuous emergency charging plan
 func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
-	// filter and adjust rates to time window
 	res := filterRates(rates, start, end)
 
 	if len(res) == 0 {
-		return api.Rates{
-			api.Rate{
-				Start: start,
-				End:   end,
-			},
-		}
+		return []api.Rate{{
+			Start: start,
+			End:   end,
+		}}
 	}
 
-	// prepend missing slot if rates don't start at plan start
-	// required for scenarios where current time is before first available rate
+	// prepend missing slot
 	if res[0].Start.After(start) {
 		res = slices.Insert(res, 0, api.Rate{
 			Start: start,
 			End:   res[0].Start,
 		})
 	}
-
-	// append missing slot if rates don't extend to plan end
-	// required for scenarios where target time is after last available rate
+	// append missing slot
 	if last := res[len(res)-1]; last.End.Before(end) {
 		res = append(res, api.Rate{
 			Start: last.End,
@@ -239,13 +230,16 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 		return simplePlan
 	}
 
-	// consume remaining time if total time until target is insufficient; regardless of tariff data availability
+	// consume remaining time
 	if t.clock.Until(targetTime) <= requiredDuration {
 		return continuousPlan(rates, latestStart, targetTime)
 	}
 
+	// rates are by default sorted by date, oldest to newest
+	last := rates[len(rates)-1].End
+
 	// reduce planning horizon to available rates
-	if last := rates[len(rates)-1].End; targetTime.After(last) {
+	if targetTime.After(last) {
 		// there is enough time for charging after end of current rates
 		durationAfterRates := targetTime.Sub(last)
 		if durationAfterRates >= requiredDuration {
@@ -322,32 +316,28 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondition time.Duration) (api.Rates, api.Rates) {
 	preCondStart := targetTime.Add(-precondition)
 
-	var chargingRates, precond api.Rates
+	var res, precond api.Rates
 
-	// Split rates into charging and precondition periods
 	for _, r := range rates {
 		if !r.End.After(preCondStart) {
-			chargingRates = append(chargingRates, r)
+			res = append(res, r)
 			continue
 		}
 		precond = append(precond, r)
 	}
 
-	// Use filterRates to trim the precondition window exactly
 	precond = filterRates(precond, preCondStart, targetTime)
 
-	// If we don't have enough duration, extend from chargingRates
 	var total time.Duration
 	for _, p := range precond {
 		total += p.End.Sub(p.Start)
 	}
 
 	if deficit := precondition - total; deficit > 0 {
-		// Prepend slots from chargingRates to fill the gap
 		extendStart := preCondStart.Add(-deficit)
-		extension := filterRates(chargingRates, extendStart, preCondStart)
+		extension := filterRates(res, extendStart, preCondStart)
 		precond = append(extension, precond...)
 	}
 
-	return chargingRates, precond
+	return res, precond
 }
