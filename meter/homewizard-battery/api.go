@@ -3,6 +3,7 @@ package battery
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -31,6 +32,9 @@ func NewAPI(host, token string) *API {
 
 	// Use insecure HTTPS transport for self-signed certificates
 	api.Client.Transport = transport.Insecure()
+
+	// Set timeout for unreachable devices
+	api.Client.Timeout = 10 * time.Second
 
 	return api
 }
