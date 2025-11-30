@@ -26,7 +26,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		Token_   string `mapstructure:"token"` // TODO deprecated
-		Home     string // TODO deprecated, backward compatibility (v0.210.x)
+		Home     string // TODO deprecated
 		Power    string
 		Energy   string
 		Currents []string
