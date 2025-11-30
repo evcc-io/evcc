@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 var (
@@ -63,12 +66,7 @@ func (e *StatusError) StatusCode() int {
 
 // HasStatus returns true if the response's status code matches any of the given codes
 func (e *StatusError) HasStatus(codes ...int) bool {
-	for _, code := range codes {
-		if e.resp.StatusCode == code {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(codes, e.resp.StatusCode)
 }
 
 // ResponseError turns an HTTP status code into an error
@@ -89,7 +87,7 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return b, &StatusError{resp: resp}
+		return b, backoff.Permanent(&StatusError{resp: resp})
 	}
 
 	return b, nil

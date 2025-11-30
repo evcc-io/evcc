@@ -23,46 +23,73 @@ params:
   - name: l1currentuuid
     advanced: true
     description:
+      de: Strom in Phase 1
+      en: Current on phase 1
+    help:
       de: Die vzlogger Kanal uuid für Strom in Phase 1 (OBIS Code 31.7.0)
       en: The vzlogger channel uuid for current on phase 1 (OBIS Code 31.7.0)
   - name: l2currentuuid
     advanced: true
     description:
+      de: Strom in Phase 2
+      en: Current on phase 2
+    help:
       de: Die vzlogger Kanal uuid für Strom in Phase 2 (OBIS Code 51.7.0)
       en: The vzlogger channel uuid for current on phase 2 (OBIS Code 51.7.0)
   - name: l3currentuuid
     advanced: true
     description:
+      de: Strom in Phase 3
+      en: Current on phase 3
+    help:
       de: Die vzlogger Kanal uuid für Strom in Phase 3 (OBIS Code 71.7.0)
       en: The vzlogger channel uuid for current on phase 3 (OBIS Code 71.7.0)
   - name: l1poweruuid
     advanced: true
     description:
+      de: Leistung in Phase 1
+      en: Power on phase 1
+    help:
       de: Die vzlogger Kanal uuid für Leistung in Phase 1 (OBIS Code 36.7.0)
       en: The vzlogger channel uuid for power on phase 1 (OBIS Code 36.7.0)
   - name: l2poweruuid
     advanced: true
     description:
+      de: Leistung in Phase 2
+      en: Power on phase 2
+    help:
       de: Die vzlogger Kanal uuid für Leistung in Phase 2 (OBIS Code 56.7.0)
       en: The vzlogger channel uuid for power on phase 2 (OBIS Code 56.7.0)
   - name: l3poweruuid
     advanced: true
     description:
+      de: Leistung in Phase 3
+      en: Power on phase 3
+    help:
       de: Die vzlogger Kanal uuid für Leistung in Phase 3 (OBIS Code 76.7.0)
       en: The vzlogger channel uuid for power on phase 3 (OBIS Code 76.7.0)
   - name: l1voltageuuid
     advanced: true
     description:
+      de: Spannung in Phase 1
+      en: Voltage on phase 1
+    help:
       de: Die vzlogger Kanal uuid für Spannung in Phase 1 (OBIS Code 32.7.0)
       en: The vzlogger channel uuid for voltage on phase 1 (OBIS Code 32.7.0)
   - name: l2voltageuuid
     advanced: true
     description:
+      de: Spannung in Phase 2
+      en: Voltage on phase 2
+    help:
       de: Die vzlogger Kanal uuid für Spannung in Phase 2 (OBIS Code 52.7.0)
       en: The vzlogger channel uuid for voltage on phase 2 (OBIS Code 52.7.0)
   - name: l3voltageuuid
     advanced: true
     description:
+      de: Spannung in Phase 3
+      en: Voltage on phase 3
+    help:
       de: Die vzlogger Kanal uuid für Spannung in Phase 3 (OBIS Code 72.7.0)
       en: The vzlogger channel uuid for voltage on phase 3 (OBIS Code 72.7.0)
   - name: cache
@@ -73,7 +100,7 @@ render: |
   power: # power reading
     source: http # use http plugin
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .uuid) }}) | .tuples[0][1] # parse response json
+    jq: .data[] | select(.uuid=="{{ unquote .uuid }}") | .tuples[0][1] # parse response json
     cache: {{ .cache }}
     {{- if .scale }}
     scale: {{ .scale }}
@@ -82,44 +109,44 @@ render: |
   currents:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l1currentuuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l1currentuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l2currentuuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l2currentuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3currentuuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l3currentuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   {{ end -}}
   {{ if and .l1poweruuid .l2poweruuid .l3poweruuid -}}
   powers:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l1poweruuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l1poweruuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l2poweruuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l2poweruuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3poweruuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l3poweruuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   {{ end -}}
   {{ if and .l1voltageuuid .l2voltageuuid .l3voltageuuid -}}
   voltages:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l1voltageuuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l1voltageuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l2voltageuuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l2voltageuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3voltageuuid) }}) | .tuples[0][1]
+    jq: .data[] | select(.uuid=="{{ unquote .l3voltageuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
   {{ end -}}

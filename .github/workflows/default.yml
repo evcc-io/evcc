@@ -10,14 +10,20 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: ubuntu-24.04
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
         with:
-          cache: false
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false # avoid cache thrashing
         id: go
 
       - uses: actions/cache@v4
@@ -39,21 +45,24 @@ jobs:
       - name: Docs
         run: make docs
 
-      - name: Toml
-        run: make toml
-
       - name: Porcelain
         run: make porcelain
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
         with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
           cache: false
         id: go
 
@@ -67,7 +76,7 @@ jobs:
             ${{ runner.os }}-go-build-
             ${{ runner.os }}-go-
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -79,13 +88,19 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
         with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
           cache: false
         id: go
 
@@ -104,13 +119,19 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
         with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
           cache: false # avoid cache thrashing
         id: go
 
@@ -127,19 +148,27 @@ jobs:
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
-          args: --out-format=colored-line-number --timeout 5m
+          version: v2.5.0
+          args: --timeout 5m
+
+      - name: License
+        run: make license
 
   ui:
     name: UI
-    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -153,10 +182,15 @@ jobs:
       - name: Test
         run: make test-ui
 
+      - name: License
+        run: make license-ui
+
       - name: Build UI
         run: make ui
 
       - name: Cache dist
+        # avoid cache thrashing by nightly
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         uses: actions/cache/save@v4
         id: cache-dist
         with:
@@ -169,13 +203,20 @@ jobs:
 
   integration:
     name: Integration
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm-16
+
+    permissions:
+      contents: read
+      actions: write
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
         with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
           cache: false
         id: go
 
@@ -189,7 +230,7 @@ jobs:
             ${{ runner.os }}-go-integration-
             ${{ runner.os }}-go-
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -200,13 +241,32 @@ jobs:
       - name: Build Go
         run: make build
 
-      - name: Install Playwright
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install Playwright (browsers + deps)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright (deps only)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run tests
         run: npx playwright test
+        timeout-minutes: 20
+        env:
+          TZ: Europe/Berlin
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           name: playwright-report

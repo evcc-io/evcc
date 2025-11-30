@@ -16,16 +16,14 @@ params:
       de: Der ModbusTCP Server muss aktiviert sein.
   - name: capacity
     advanced: true
+  - name: maxchargepower
+    default: 4200
   - name: watchdog
     type: duration
     default: 60s
     advanced: true
   - name: chargepower
-    default: 4200 # W
-    advanced: true
-    help:
-      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt
-      en: Maximum charging power for forced charging of the battery in Watt
+    deprecated: true
 render: |
   type: custom
   power:
@@ -80,7 +78,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -98,7 +96,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -138,7 +136,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -187,7 +185,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -196,7 +194,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

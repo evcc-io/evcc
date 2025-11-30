@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/security"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -104,4 +105,23 @@ func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest)
 	}
 
 	return res, nil
+}
+
+func (cs *CS) OnSecurityEventNotification(id string, request *security.SecurityEventNotificationRequest) (*security.SecurityEventNotificationResponse, error) {
+	// Acknowledge any security event
+	return &security.SecurityEventNotificationResponse{}, nil
+}
+
+func (cs *CS) OnSignCertificate(id string, request *security.SignCertificateRequest) (*security.SignCertificateResponse, error) {
+	// Reject any certificate signing request
+	return &security.SignCertificateResponse{
+		Status: types.GenericStatusRejected,
+	}, nil
+}
+
+func (cs *CS) OnCertificateSigned(id string, request *security.CertificateSignedRequest) (*security.CertificateSignedResponse, error) {
+	// Acknowledge any certificate
+	return &security.CertificateSignedResponse{
+		Status: security.CertificateSignedStatusAccepted,
+	}, nil
 }

@@ -1,0 +1,58 @@
+template: solarprognose
+deprecated: true
+products:
+  - brand: Solarprognose
+requirements:
+  description:
+    en: "[solarprognose.de](https://www.solarprognose.de) can be used for free (but donations are welcome). An user account is required."
+    de: "[solarprognose.de](https://www.solarprognose.de) kann kostenlos verwendet werden (Spenden sind allerdings willkommen). Ein Benutzer-Account ist notwendig."
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: token
+    description:
+      en: Access Token from User Profile
+      de: Zugriffs-Schlüssel aus Benutzer-Profil
+    advanced: true
+  - name: item
+    choice: ["location", "plant", "inverter", "module_field"]
+    description:
+      en: Item type to be queried.
+      de: Elementtyp, der abgefragt werden soll.
+    help:
+      en: Item and id/token are only required if more than one location is configured or if a specific item is to be queried. Otherwise, the API returns the data for the first location. See also https://www.solarprognose.de/web/en-en/solarprediction/page/api
+      de: Item und id/token werden nur benötigt, wenn mehr als ein Standort konfiguriert ist oder ein bestimmtes Element abgefragt werden soll. Ansonsten gibt die API die Daten für den ersten Standort zurück. Siehe auch https://www.solarprognose.de/web/de-de/solarprediction/page/api
+    advanced: true
+  - name: id
+    description:
+      en: Unique ID of the item to be queried
+      de: Eindeutige ID des abzufragenden Elements
+    advanced: true
+  - name: uniquetoken
+    description:
+      en: Unique token of the item to be queried
+      de: Eindeutiger Schlüssel des abzufragenden Elements
+    advanced: true
+  - name: algorithm
+    choice: ["mosmix", "own-v1", "clearsky"]
+    description:
+      en: Forecasting Algorithm (mosmix, own-v1 or clearsky)
+      de: Prognosealgorithmus (mosmix, own-v1 oder clearsky)
+    advanced: true
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: solar
+  forecast:
+    source: http
+    # Base URL with required params (format, type, algorithm, access token), then optional item-based parameters
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}
+    jq: |
+      [ .data | to_entries.[] | {
+        "start": (.key | tonumber | strftime("%FT%TZ") ),
+        "end": (.key | tonumber + 3600 | strftime("%FT%TZ")  ) ,
+        "value": (.value.[0]*1000) # returned value unit is always kW
+      } ] | tostring
+  interval: {{ .interval }}

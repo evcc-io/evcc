@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -15,7 +16,10 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-var ErrBatteryNotConfigured = errors.New("battery not configured")
+var (
+	ErrBatteryNotConfigured       = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+)
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -26,13 +30,9 @@ func isConfigurable(ref string) bool {
 
 // filterConfigurable filters configurable meters
 func filterConfigurable(ref []string) []string {
-	var res []string
-	for _, r := range ref {
-		if isConfigurable(r) {
-			res = append(res, r)
-		}
-	}
-	return res
+	return lo.Filter(ref, func(ref string, _ int) bool {
+		return isConfigurable(ref)
+	})
 }
 
 // GetTitle returns the title
@@ -114,6 +114,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 
 	site.Meters.AuxMetersRef = ref
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
+// GetExtMeterRefs returns the ExtMeterRef
+func (site *Site) GetExtMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ExtMetersRef
+}
+
+// SetExtMeterRefs sets the ExtMeterRef
+func (site *Site) SetExtMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ExtMetersRef = ref
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
 // Loadpoints returns the loadpoints as api interfaces
@@ -283,6 +299,10 @@ func (site *Site) GetBatteryDischargeControl() bool {
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
 	site.Lock()
 	defer site.Unlock()
 
@@ -301,8 +321,12 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	return site.batteryGridChargeLimit
 }
 
-func (site *Site) SetBatteryGridChargeLimit(val *float64) {
+func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
 
 	site.Lock()
 	defer site.Unlock()
@@ -318,4 +342,70 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
+
+	return nil
+}
+
+// GetBatteryMode returns the battery mode
+func (site *Site) GetBatteryMode() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryMode
+}
+
+// GetBatteryModeExternal returns the external battery mode
+func (site *Site) GetBatteryModeExternal() api.BatteryMode {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryModeExternal
+}
+
+// SetBatteryModeExternal sets the external battery mode
+func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) error {
+	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	disable := mode == api.BatteryUnknown
+
+	if mode != site.batteryModeExternal {
+		site.batteryModeExternal = mode
+		site.publish(keys.BatteryModeExternal, mode)
+
+		// start watchdog if not running
+		if !disable && site.batteryModeExternalTimer.IsZero() {
+			go func() {
+				for range time.Tick(time.Second) {
+					if site.batteryModeWatchdogExpired() {
+						return
+					}
+				}
+			}()
+		}
+	}
+
+	// reset timer
+	if !disable {
+		site.batteryModeExternalTimer = time.Now()
+	}
+
+	return nil
+}
+
+func (site *Site) batteryModeWatchdogExpired() bool {
+	site.RLock()
+	elapsed := time.Since(site.batteryModeExternalTimer)
+	site.RUnlock()
+
+	if elapsed > time.Minute && !site.batteryModeExternalTimer.IsZero() {
+		site.SetBatteryModeExternal(api.BatteryUnknown)
+		return true
+	}
+
+	return false
 }

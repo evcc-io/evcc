@@ -1,9 +1,9 @@
 <template>
 	<div class="root position-relative">
-		<div class="chart position-relative">
+		<div class="chart position-relative" :class="{ 'chart--with-target': targetText }">
 			<div
 				v-for="(slot, index) in slots"
-				:key="slot.start"
+				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -22,12 +22,14 @@
 				@mouseup="hoverSlot(null)"
 				@click="selectSlot(index)"
 			>
-				<div class="slot-bar" :style="priceStyle(slot.price)">
-					<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
-				</div>
+				<div
+					class="slot-bar"
+					:style="valueStyle(slot.value)"
+					:class="{ unknown: slot.value === undefined && avgValue }"
+				></div>
 				<div class="slot-label">
-					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						slot.startHour
+					<span v-if="slot.start.getMinutes() === 0">{{
+						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
@@ -52,82 +54,75 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/arrowright";
+import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
-import formatter from "../../mixins/formatter.js";
-import { CO2_TYPE } from "../../units.js";
+import formatter from "@/mixins/formatter";
+import type { Slot } from "@/types/evcc";
+const BAR_WIDTH = 8;
 
-const BAR_WIDTH = 20;
-
-export default {
+export default defineComponent({
 	name: "TariffChart",
 	components: {
 		PlanEndIcon,
 	},
 	mixins: [formatter],
 	props: {
-		slots: Array,
-		targetText: String,
-		targetOffset: Number,
+		slots: { type: Array as PropType<Slot[]>, default: () => [] },
+		targetText: [String, null],
+		targetOffset: { type: Number, default: 0 },
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
 		return {
-			activeIndex: null,
+			activeIndex: null as number | null,
 			startTime: new Date(),
-			longPressTimer: null,
+			longPressTimer: undefined as number | undefined,
 			isLongPress: false,
 		};
 	},
 	computed: {
-		priceInfo() {
+		valueInfo() {
 			let max = Number.MIN_VALUE;
 			let min = 0;
 			this.slots
-				.map((s) => s.price)
-				.filter((price) => price !== undefined)
-				.forEach((price) => {
-					max = Math.max(max, price);
-					min = Math.min(min, price);
+				.map((s) => s.value)
+				.filter((value) => value !== undefined)
+				.forEach((value) => {
+					max = Math.max(max, value);
+					min = Math.min(min, value);
 				});
 			return { min, range: max - min };
 		},
 		targetLeft() {
-			const fullHours = Math.floor(this.targetOffset);
-			const hourFraction = this.targetOffset - fullHours;
-			return `${fullHours * BAR_WIDTH + 4 + hourFraction * 12}px`;
+			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
 		},
 		targetNearlyOutOfRange() {
-			return this.targetOffset > this.slots.length - 4;
+			return this.targetOffset > this.slots.length - 8;
 		},
 		targetOutOfRange() {
 			return this.targetOffset > this.slots.length;
 		},
-		avgPrice() {
+		avgValue() {
 			let sum = 0;
 			let count = 0;
 			this.slots.forEach((s) => {
-				if (s.price !== undefined) {
-					sum += s.price;
+				if (s.value !== undefined) {
+					sum += s.value;
 					count++;
 				}
 			});
 			return sum / count;
 		},
-		isCo2() {
-			return this.unit === CO2_TYPE;
-		},
-		activeSlot() {
-			return this.slots[this.activeIndex];
-		},
 	},
 	methods: {
-		hoverSlot(index) {
+		hoverSlot(index: number | null) {
 			this.activeIndex = index;
 			this.$emit("slot-hovered", index);
 		},
-		selectSlot(index) {
+		selectSlot(index: number) {
 			if (this.isLongPress) {
 				this.isLongPress = false;
 				return;
@@ -136,7 +131,7 @@ export default {
 				this.$emit("slot-selected", index);
 			}
 		},
-		showWeekday(index) {
+		showWeekday(index: number) {
 			const slot = this.slots[index];
 			if (!slot) {
 				return false;
@@ -146,31 +141,34 @@ export default {
 					return false;
 				}
 			}
-			if (slot.startHour === 0) {
+			if (slot.start.getHours() === 0 && slot.start.getMinutes() === 0) {
 				return true;
 			}
 			return false;
 		},
-		priceStyle(price) {
-			const value = price === undefined ? this.avgPrice : price;
+		valueStyle(value: number | undefined) {
+			const val = value === undefined ? this.avgValue : value;
 			const height =
-				value !== undefined && !isNaN(value)
-					? `${10 + (90 / this.priceInfo.range) * (value - this.priceInfo.min)}%`
-					: "75%";
+				value !== undefined && !isNaN(val)
+					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
+					: "50%";
 			return { height };
 		},
-		startLongPress(index) {
+		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {
 				this.isLongPress = true;
 				this.hoverSlot(index);
-			}, 300);
+			}, 300) as unknown as number;
 		},
 		cancelLongPress() {
 			clearTimeout(this.longPressTimer);
 			this.hoverSlot(null);
 		},
+		formatHour(hour: number) {
+			return is12hFormat() ? hour % 12 : hour;
+		},
 	},
-};
+});
 </script>
 
 <style scoped>
@@ -180,7 +178,10 @@ export default {
 	overflow-x: auto;
 	align-items: flex-end;
 	overflow-y: none;
-	padding-bottom: 55px;
+	padding-bottom: 35px;
+}
+.chart--with-target {
+	padding-bottom: 57px;
 }
 .target-inline {
 	height: 130px;
@@ -220,7 +221,7 @@ export default {
 }
 .slot {
 	text-align: center;
-	padding: 4px;
+	padding: 2px;
 	height: 100%;
 	display: flex;
 	justify-content: flex-end;
@@ -230,24 +231,14 @@ export default {
 	transition-property: opacity, background, color;
 	transition-duration: var(--evcc-transition-fast);
 	transition-timing-function: ease-in;
-	width: 20px;
+	width: 8px;
 	flex-grow: 0;
 	flex-shrink: 0;
-}
-@media (max-width: 991px) {
-	.chart {
-		overflow-x: auto;
-	}
-}
-@media (min-width: 992px) {
-	.chart {
-		overflow-x: hidden;
-	}
 }
 .slot-bar {
 	background-clip: content-box !important;
 	background: var(--bs-gray-light);
-	border-radius: 8px;
+	border-radius: 2px;
 	width: 100%;
 	align-items: center;
 	display: flex;
@@ -255,12 +246,15 @@ export default {
 	color: var(--bs-white);
 	transition: height var(--evcc-transition-fast) ease-in;
 }
+.slot-bar.unknown {
+	opacity: 0.33;
+}
 .slot-label {
 	color: var(--bs-gray-light);
 	line-height: 1.1;
 	position: absolute;
 	top: 100%;
-	left: -50%;
+	left: -100%;
 	width: 200%;
 	text-align: center;
 }
@@ -281,9 +275,6 @@ export default {
 }
 .slot.warning .slot-label {
 	color: var(--bs-warning);
-}
-.unknown {
-	margin: 0 -0.5rem;
 }
 .slot.hovered {
 	opacity: 1;

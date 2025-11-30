@@ -9,13 +9,13 @@ endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
-LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
+LD_FLAGS := -X github.com/evcc-io/evcc/util.Version=$(VERSION) -X github.com/evcc-io/evcc/util.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
-DOCKER_IMAGE := evcc/evcc
-DOCKER_TAG := testing
-PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
+DOCKER_IMAGE ?= evcc/evcc
+DOCKER_TAG ?= testing
+PLATFORM ?= linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
 GOK_DIR := packaging/gokrazy
@@ -53,15 +53,30 @@ docs::
 
 lint::
 	golangci-lint run
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -category "-omitzero" -c 0 ./...
+
+modernize:
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test -category "-omitzero" -fix ./...
 
 lint-ui::
 	npm run lint
 
+license::
+	go run github.com/google/go-licenses/v2@latest check \
+	--ignore github.com/cespare/xxhash \
+	--ignore github.com/coder/websocket \
+	--ignore github.com/cronokirby/saferith \
+	--ignore github.com/modern-go/reflect2 \
+	--ignore github.com/prometheus/client_golang \
+	--ignore golang.org/x \
+	--allowed_licenses=MIT,Apache-2.0,BSD-0-Clause,BSD-2-Clause,BSD-3-Clause,LGPL-2.1,EPL-2.0,MPL-2.0 \
+	./...
+
+license-ui::
+	npm run license
+
 test-ui::
 	npm test
-
-toml::
-	go run packaging/toml.go
 
 test::
 	@echo "Running testsuite"

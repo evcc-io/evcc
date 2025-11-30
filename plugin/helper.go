@@ -3,18 +3,20 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"math"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
 // setFormattedValue formats a message template or returns the value formatted as %v if the message template is empty
-func setFormattedValue(message, param string, v interface{}) (string, error) {
+func setFormattedValue(message, param string, v any) (string, error) {
 	if message == "" {
 		return fmt.Sprintf("%v", v), nil
 	}
 
-	return util.ReplaceFormatted(message, map[string]interface{}{
+	return util.ReplaceFormatted(message, map[string]any{
 		param: v,
 	})
 }
@@ -41,4 +43,13 @@ func contextLogger(ctx context.Context, log *util.Logger) *util.Logger {
 	}
 
 	return log
+}
+
+// parseFloat rejects NaN and Inf values
+func parseFloat(payload string) (float64, error) {
+	f, err := strconv.ParseFloat(payload, 64)
+	if err == nil && (math.IsNaN(f) || math.IsInf(f, 0)) {
+		return 0, fmt.Errorf("invalid float value: %s", payload)
+	}
+	return f, err
 }

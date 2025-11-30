@@ -22,6 +22,10 @@ type API interface {
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
 	SetBatteryMeterRefs([]string)
+	GetAuxMeterRefs() []string
+	SetAuxMeterRefs([]string)
+	GetExtMeterRefs() []string
+	SetExtMeterRefs([]string)
 
 	// circuits
 	GetCircuit() api.Circuit
@@ -41,7 +45,7 @@ type API interface {
 	// GetBatteryGridChargeLimit get the grid charge limit
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
-	SetBatteryGridChargeLimit(limit *float64)
+	SetBatteryGridChargeLimit(limit *float64) error
 
 	//
 	// power and energy
@@ -63,4 +67,13 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+
+	//
+	// battery control external
+	//
+
+	// GetBatteryModeExternal returns the external battery mode
+	GetBatteryModeExternal() api.BatteryMode
+	// SetBatteryModeExternal sets the external battery mode
+	SetBatteryModeExternal(api.BatteryMode) error
 }

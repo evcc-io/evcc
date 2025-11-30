@@ -4,7 +4,7 @@
 			v-for="m in modes"
 			:key="m"
 			type="button"
-			class="btn flex-grow-1 flex-shrink-1"
+			class="btn flex-grow-1 flex-shrink-1 text-truncate-xs-only"
 			:class="{ active: isActive(m) }"
 			tabindex="0"
 			@click="setTargetMode(m)"
@@ -14,44 +14,49 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { CHARGE_MODE } from "@/types/evcc";
+import { defineComponent } from "vue";
+
+const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+
+export default defineComponent({
 	name: "Mode",
 	props: {
 		mode: String,
 		pvPossible: Boolean,
-		hasSmartCost: Boolean,
+		smartCostAvailable: Boolean,
 	},
 	emits: ["updated"],
 
 	computed: {
-		modes: function () {
+		modes(): CHARGE_MODE[] {
 			if (this.pvPossible) {
-				return ["off", "pv", "minpv", "now"];
+				return [OFF, PV, MINPV, NOW];
 			}
-			if (this.hasSmartCost) {
-				return ["off", "pv", "now"];
+			if (this.smartCostAvailable) {
+				return [OFF, PV, NOW];
 			}
-			return ["off", "now"];
+			return [OFF, NOW];
 		},
 	},
 	methods: {
-		label: function (mode) {
+		label(mode: CHARGE_MODE) {
 			// rename pv mode to smart for non-pv and dynamic tariffs scenarios
 			// TODO: rollout smart name for everyting later
-			if (mode === "pv" && !this.pvPossible && this.hasSmartCost) {
+			if (mode === PV && !this.pvPossible && this.smartCostAvailable) {
 				return this.$t("main.mode.smart");
 			}
 			return this.$t(`main.mode.${mode}`);
 		},
-		isActive: function (mode) {
+		isActive(mode: CHARGE_MODE) {
 			return this.mode === mode;
 		},
-		setTargetMode: function (mode) {
+		setTargetMode(mode: CHARGE_MODE) {
 			this.$emit("updated", mode);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
@@ -71,6 +76,12 @@ export default {
 	color: var(--evcc-default-text);
 	border: none;
 }
+@media (max-width: 576px) {
+	.btn {
+		padding: 0.1em 0.2em;
+	}
+}
+
 .btn:hover {
 	color: var(--evcc-gray);
 }

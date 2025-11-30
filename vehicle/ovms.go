@@ -33,7 +33,7 @@ func init() {
 }
 
 // NewOVMSFromConfig creates a new vehicle
-func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewOvmsFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                             `mapstructure:",squash"`
 		User, Password, VehicleID, Server string
@@ -231,11 +231,4 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 func (v *Ovms) Position() (float64, float64, error) {
 	res, err := v.locationG()
 	return res.Latitude, res.Longitude, err
-}
-
-var _ api.VehicleClimater = (*Ovms)(nil)
-
-func (v *Ovms) Climater() (bool, error) {
-	res, err := v.chargeG()
-	return res.Climater > 0, err
 }

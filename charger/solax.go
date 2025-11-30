@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -31,8 +31,9 @@ import (
 
 // Solax charger implementation
 type Solax struct {
-	log  *util.Logger
-	conn *modbus.Connection
+	log        *util.Logger
+	conn       *modbus.Connection
+	isLegacyHw bool
 }
 
 const (
@@ -58,11 +59,20 @@ const (
 )
 
 func init() {
-	registry.AddCtx("solax", NewSolaxFromConfig)
+	registry.AddCtx("solax", NewSolaxG1FromConfig)
+	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
+}
+
+func NewSolaxG1FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	return NewSolaxFromConfig(ctx, other, true)
+}
+
+func NewSolaxG2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	return NewSolaxFromConfig(ctx, other, false)
 }
 
 // NewSolaxFromConfig creates a Solax charger from generic config
-func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSolaxFromConfig(ctx context.Context, other map[string]any, isLegacyHw bool) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}
@@ -71,11 +81,11 @@ func NewSolaxFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, isLegacyHw)
 }
 
 // NewSolax creates Solax charger
-func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8) (api.Charger, error) {
+func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, isLegacyHw bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
 	if err != nil {
 		return nil, err
@@ -89,8 +99,9 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	conn.Logger(log.TRACE)
 
 	wb := &Solax{
-		log:  log,
-		conn: conn,
+		log:        log,
+		conn:       conn,
+		isLegacyHw: isLegacyHw,
 	}
 
 	return wb, err
@@ -196,7 +207,11 @@ func (wb *Solax) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 10, err
+	if wb.isLegacyHw {
+		return float64(binary.BigEndian.Uint32(b)) / 10, err
+	}
+
+	return float64(encoding.Uint32LswFirst(b)) / 10, err
 }
 
 var _ api.PhaseCurrents = (*Solax)(nil)

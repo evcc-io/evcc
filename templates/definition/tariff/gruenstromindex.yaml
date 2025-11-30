@@ -17,5 +17,6 @@ params:
       en: "Token for accessing the API from https://console.corrently.io"
 render: |
   type: grünstromindex
+  features: ["cacheable"]
   zip: {{ .zip }}
   token: {{ .token }}

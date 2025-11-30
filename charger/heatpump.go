@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -43,7 +43,7 @@ func init() {
 //go:generate go tool decorate -f decorateHeatpump -b *Heatpump -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
 
 // NewHeatpumpFromConfig creates heatpump configurable charger from generic config
-func NewHeatpumpFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMaxPower             plugin.Config
@@ -148,11 +148,13 @@ func (wb *Heatpump) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Heatpump) MaxCurrent(current int64) error {
-	return wb.MaxCurrentEx(float64(current))
+	return wb.MaxCurrentMillis(float64(current))
 }
 
+var _ api.ChargerEx = (*Heatpump)(nil)
+
 // MaxCurrent implements the api.Charger interface
-func (wb *Heatpump) MaxCurrentEx(current float64) error {
+func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	phases := 1
 	if wb.lp != nil {
 		phases = wb.lp.GetPhases()

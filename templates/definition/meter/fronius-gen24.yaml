@@ -7,6 +7,12 @@ products:
     description:
       generic: Primo GEN24 Plus
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zu nutzen darf der Energiekosten-Assistent (ECA) im Fronius Solar.web nicht aktiviert sein. (Fronius Solar.web->Einstellungen->Betriebsmodus->Eigenverbrauch)
+    en: |
+      To use active charge control, the Energy Cost Assistant (ECA) must not be activated in Fronius Solar.web. (Fronius Solar.web -> Settings -> Operating Mode -> Self-Consumption)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -22,21 +28,29 @@ params:
       de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
     usages: ["grid"]
   - name: integer
+    description:
+      generic: Integer
     deprecated: true
   - name: maxacpower
   - name: maxchargerate
     advanced: true
   - name: capacity
     advanced: true
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
 render: |
   type: custom
-  # sunspec model 203 (int+sf)/ 213 (float) meter
+  # sunspec model 20x (int+sf)/ 21x (float) meter
   {{- if eq .usage "grid" }}
   power:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
+      - 201:W
+      - 211:W
       - 203:W
       - 213:W
   energy:
@@ -44,6 +58,8 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     value:
+      - 201:TotWhImp
+      - 211:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
@@ -52,18 +68,24 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:AphA
+        - 211:AphA
         - 203:AphA
         - 213:AphA
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:AphB
+        - 211:AphB
         - 203:AphB
         - 213:AphB
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:AphC
+        - 211:AphC
         - 203:AphC
         - 213:AphC
   voltages:
@@ -71,18 +93,24 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:PhVphA
+        - 211:PhVphA
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:PhVphB
+        - 211:PhVphB
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:PhVphC
+        - 211:PhVphC
         - 203:PhVphC
         - 213:PhVphC
   powers:
@@ -90,18 +118,24 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:WphA
+        - 211:WphA
         - 203:WphA
         - 213:WphA
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:WphB
+        - 211:WphB
         - 203:WphB
         - 213:WphB
     - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: {{ .id }}
       value:
+        - 201:WphC
+        - 211:WphC
         - 203:WphC
         - 213:WphC
   {{- end }}
@@ -221,4 +255,6 @@ render: |
             id: 1
             value: 124:0:OutWRte
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

@@ -3,14 +3,19 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
@@ -39,8 +44,18 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
+
+	log := util.NewLogger("httpd")
+
+	// log all requests
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.TRACE.Printf("%s %s", r.Method, r.URL.Path)
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	// websocket
 	router.HandleFunc("/ws", socketHandler(hub))
@@ -61,10 +76,25 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 		})
 	})
 
-	static.HandleFunc("/", indexHandler())
+	if customCssFile != "" {
+		log.WARN.Printf("❗ using custom CSS: %s", customCssFile)
+		if _, err := os.Stat(customCssFile); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom CSS file does not exist: %s", customCssFile)
+		}
+		static.HandleFunc("/custom.css", func(w http.ResponseWriter, r *http.Request) {
+			// disable caching
+			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+			http.ServeFile(w, r, customCssFile)
+		})
+	}
+
+	static.HandleFunc("/", indexHandler(customCssFile != ""))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
+
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
@@ -100,40 +130,37 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	))
 
 	// site api
+	smartCostLimit := func(lp loadpoint.API, limit *float64) {
+		lp.SetSmartCostLimit(limit)
+	}
+	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) {
+		lp.SetSmartFeedInPriorityLimit(limit)
+	}
+
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"batterygridcharge":       {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
-		"batterygridchargedelete": {"DELETE", "/batterygridchargelimit", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
+		"batterygridcharge":       {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
+		"batterygridchargedelete": {"DELETE", "/batterygridchargelimit", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
+		"batterymode":             {"POST", "/batterymode/{value:[a-z]+}", updateBatteryMode(site)},
+		"batterymodedelete":       {"DELETE", "/batterymode", updateBatteryMode(site)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
-		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site)},
+		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
+		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
+		"smartfeedin":             {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
+		"smartfeedindelete":       {"DELETE", "/smartfeedinprioritylimit", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
-		"telemetry":               {"GET", "/settings/telemetry", getHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
 	for _, r := range routes {
 		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
-
-	// config ui (secured)
-	configApi := api.PathPrefix("/config").Subrouter()
-
-	// TODO clarify location of site config
-	configRoutes := map[string]route{
-		"site":       {"GET", "/site", siteHandler(site)},
-		"updatesite": {"PUT", "/site", updateSiteHandler(site)},
-	}
-
-	for _, r := range configRoutes {
-		configApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// vehicle api
@@ -161,29 +188,30 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
-			"mode":                 {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
-			"limitsoc":             {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
-			"limitenergy":          {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
-			"mincurrent":           {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
-			"maxcurrent":           {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
-			"phases":               {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhasesConfigured, lp.GetPhasesConfigured)},
-			"plan":                 {"GET", "/plan", planHandler(lp)},
-			"staticPlanPreview":    {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
-			"repeatingPlanPreview": {"GET", "/plan/repeating/preview/{soc:[0-9]+}/{weekdays:[0-6,]+}/{time:[0-2][0-9]:[0-5][0-9]}/{tz:[a-zA-Z0-9_./:-]+}", repeatingPlanPreviewHandler(lp)},
-			"planenergy":           {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},
-			"planenergy2":          {"DELETE", "/plan/energy", planRemoveHandler(lp)},
-			"vehicle":              {"POST", "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
-			"vehicle2":             {"DELETE", "/vehicle", vehicleRemoveHandler(lp)},
-			"vehicleDetect":        {"PATCH", "/vehicle", vehicleDetectHandler(lp)},
-			"remotedemand":         {"POST", "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
-			"enableThreshold":      {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
-			"enableDelay":          {"POST", "/enable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetEnableDelay), lp.GetEnableDelay)},
-			"disableThreshold":     {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
-			"disableDelay":         {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
-			"smartCost":            {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartCostDelete":      {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"priority":             {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
-			"batteryBoost":         {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
+			"mode":                      {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
+			"limitsoc":                  {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
+			"limitenergy":               {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
+			"mincurrent":                {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
+			"maxcurrent":                {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
+			"phases":                    {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhasesConfigured, lp.GetPhasesConfigured)},
+			"plan":                      {"GET", "/plan", planHandler(lp)},
+			"staticPlanPreview":         {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
+			"repeatingPlanPreview":      {"GET", "/plan/repeating/preview/{soc:[0-9]+}/{weekdays:[0-6,]+}/{time:[0-2][0-9]:[0-5][0-9]}/{tz:[a-zA-Z0-9_./:-]+}", repeatingPlanPreviewHandler(lp)},
+			"planenergy":                {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},
+			"planenergy2":               {"DELETE", "/plan/energy", planRemoveHandler(lp)},
+			"vehicle":                   {"POST", "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
+			"vehicle2":                  {"DELETE", "/vehicle", vehicleRemoveHandler(lp)},
+			"vehicleDetect":             {"PATCH", "/vehicle", vehicleDetectHandler(lp)},
+			"enableThreshold":           {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
+			"enableDelay":               {"POST", "/enable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetEnableDelay), lp.GetEnableDelay)},
+			"disableThreshold":          {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
+			"disableDelay":              {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
+			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
+			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
+			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
+			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 		}
 
 		for _, r := range routes {
@@ -193,7 +221,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -203,6 +231,17 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
+
+	if site == nil {
+		// If site is nil, create a new empty site. Settings will be loaded during this process and
+		// site meter references and title can be updated using APIs.
+		var err error
+		site, err = core.NewSiteFromConfig(nil)
+		if err != nil {
+			// should not happen
+			panic(err)
+		}
+	}
 
 	{ // /api
 		routes := map[string]route{
@@ -235,15 +274,17 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 		api.Use(ensureAuthHandler(auth))
 
 		routes := map[string]route{
+			"auth":               {"POST", "/auth", authHandler},
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
 			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
+			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
 			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
 			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
@@ -253,12 +294,11 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:       func() (any, any) { return map[string]any{}, eebus.Config{} },
-			keys.Hems:        func() (any, any) { return map[string]any{}, config.Typed{} },
-			keys.Tariffs:     func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
-			keys.Messaging:   func() (any, any) { return map[string]any{}, globalconfig.Messaging{} },       // has default
-			keys.ModbusProxy: func() (any, any) { return []map[string]any{}, []globalconfig.ModbusProxy{} }, // slice
-			keys.Circuits:    func() (any, any) { return []map[string]any{}, []config.Named{} },             // slice
+			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
+			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
+			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
+			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
+			keys.Circuits:  func() (any, any) { return []map[string]any{}, []config.Named{} },       // slice
 		} {
 			other, struc := fun()
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
@@ -268,16 +308,28 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network: func() any { return new(globalconfig.Network) }, // has default
-			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
-			keys.Influx:  func() any { return new(globalconfig.Influx) },
+			keys.Network:     func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:        func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
+			keys.Shm:         func() any { return new(shm.Config) },
+			keys.Influx:      func() any { return new(globalconfig.Influx) },
 		} {
-			// routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, valueChan, fun())}
 		}
 
 		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// services
+		api.PathPrefix("/service").Handler(http.StripPrefix("/api/config/service", service.Handler()))
+
+		// site
+		for _, r := range map[string]route{
+			"site":       {"GET", "/site", siteHandler(site)},
+			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 
@@ -299,9 +351,12 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.P
 
 		// system api
 		routes := map[string]route{
-			"log":      {"GET", "/log", logHandler},
-			"logareas": {"GET", "/log/areas", logAreasHandler},
-			"reset":    {"POST", "/reset", resetHandler},
+			"log":        {"GET", "/log", logHandler},
+			"logareas":   {"GET", "/log/areas", logAreasHandler},
+			"clearcache": {"DELETE", "/cache", clearCacheHandler},
+			"backup":     {"POST", "/backup", getBackup(auth)},
+			"restore":    {"POST", "/restore", restoreDatabase(auth, shutdown)},
+			"reset":      {"POST", "/reset", resetDatabase(auth, shutdown)},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)

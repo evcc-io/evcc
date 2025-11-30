@@ -17,7 +17,7 @@ func Types() []string {
 }
 
 // NewFromConfig creates tariff from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Tariff, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err
@@ -25,8 +25,13 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		err = fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
+		return nil, fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
 	}
 
-	return v, err
+	// check slot length
+	if rr, err := v.Rates(); err == nil && len(rr) > 0 && rr[0].End.Sub(rr[0].Start) == SlotDuration {
+		return v, nil
+	}
+
+	return &SlotWrapper{Tariff: v}, nil
 }

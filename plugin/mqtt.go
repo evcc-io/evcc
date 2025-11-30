@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewMqttPluginFromConfig creates Mqtt provider
-func NewMqttPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		mqtt.Config       `mapstructure:",squash"`
 		Topic, Payload    string // Payload only applies to setters
@@ -130,7 +130,8 @@ func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
 			return err
 		}
 
-		return m.client.Publish(m.topic, m.retained, payload)
+		m.client.Publish(m.topic, m.retained, payload)
+		return nil
 	}, nil
 }
 
@@ -144,7 +145,8 @@ func (m *Mqtt) FloatSetter(param string) (func(float64) error, error) {
 			return err
 		}
 
-		return m.client.Publish(m.topic, m.retained, payload)
+		m.client.Publish(m.topic, m.retained, payload)
+		return nil
 	}, nil
 }
 
@@ -158,7 +160,8 @@ func (m *Mqtt) BoolSetter(param string) (func(bool) error, error) {
 			return err
 		}
 
-		return m.client.Publish(m.topic, m.retained, payload)
+		m.client.Publish(m.topic, m.retained, payload)
+		return nil
 	}, nil
 }
 
@@ -172,6 +175,7 @@ func (m *Mqtt) StringSetter(param string) (func(string) error, error) {
 			return err
 		}
 
-		return m.client.Publish(m.topic, m.retained, payload)
+		m.client.Publish(m.topic, m.retained, payload)
+		return nil
 	}, nil
 }

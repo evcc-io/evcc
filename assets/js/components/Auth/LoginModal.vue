@@ -2,39 +2,16 @@
 	<GenericModal
 		id="loginModal"
 		:title="$t('loginModal.title')"
-		size="sm"
+		:size="modalSize"
 		data-testid="login-modal"
 		@open="open"
 		@closed="closed"
 	>
-		<form v-if="modalVisible" @submit.prevent="login">
-			<div class="mb-4">
-				<label for="loginPassword" class="col-form-label">
-					<div class="w-100">
-						<span class="label">{{ $t("loginModal.password") }}</span>
-					</div>
-				</label>
-				<input
-					id="loginPassword"
-					ref="password"
-					v-model="password"
-					class="form-control"
-					autocomplete="current-password"
-					type="password"
-					required
-				/>
-			</div>
-
-			<p v-if="error" class="text-danger my-4">{{ $t("loginModal.error") }}{{ error }}</p>
-			<a
-				v-if="iframeHint"
-				class="text-muted my-4 d-block text-center"
-				:href="evccUrl"
-				target="_blank"
-				data-testid="login-iframe-hint"
-			>
-				{{ $t("loginModal.iframeHint") }}
-			</a>
+		<div v-if="demoMode" class="alert alert-warning" role="alert">
+			{{ $t("loginModal.demoMode") }}
+		</div>
+		<form v-else-if="modalVisible" @submit.prevent="login">
+			<PasswordInput v-model:password="password" :error="error" :iframe-hint="iframeHint" />
 
 			<button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
 				<span
@@ -57,16 +34,21 @@
 	</GenericModal>
 </template>
 
-<script>
+<script lang="ts">
 import GenericModal from "../Helper/GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
-import api from "../../api.js";
-import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth.js";
-import { docsPrefix } from "../../i18n.js";
+import api from "@/api";
+import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
+import { docsPrefix } from "@/i18n";
+import { defineComponent } from "vue";
+import PasswordInput from "./PasswordInput.vue";
 
-export default {
+export default defineComponent({
 	name: "LoginModal",
-	components: { GenericModal },
+	components: { GenericModal, PasswordInput },
+	props: {
+		demoMode: Boolean,
+	},
 	data: () => {
 		return {
 			modalVisible: false,
@@ -81,8 +63,8 @@ export default {
 		resetUrl() {
 			return `${docsPrefix()}/docs/faq#password-reset`;
 		},
-		evccUrl() {
-			return window.location.href;
+		modalSize() {
+			return this.demoMode ? "md" : "sm";
 		},
 	},
 	methods: {
@@ -98,11 +80,11 @@ export default {
 			this.iframeHint = false;
 		},
 		focus() {
-			console.log(this.$refs.password);
-			this.$refs.password.focus();
+			console.log(this.$refs["password"]);
+			this.$refs["password"]?.focus();
 		},
 		closeModal() {
-			Modal.getOrCreateInstance(document.getElementById("loginModal")).hide();
+			Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement).hide();
 		},
 		async login() {
 			this.loading = true;
@@ -110,7 +92,7 @@ export default {
 			try {
 				const data = { password: this.password };
 				const res = await api.post("/auth/login", data, {
-					validateStatus: (code) => [200, 401].includes(code),
+					validateStatus: (code) => [200, 401, 403].includes(code),
 				});
 				this.resetHint = false;
 				this.iframeHint = false;
@@ -134,15 +116,20 @@ export default {
 					this.error = this.$t("loginModal.invalid");
 					this.resetHint = true;
 				}
+				if (res.status === 403) {
+					this.error = this.$t("loginModal.demoMode");
+				}
 			} catch (err) {
 				console.error(err);
-				this.error = err.message;
+				if (err instanceof Error) {
+					this.error = err.message;
+				}
 			} finally {
 				this.loading = false;
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 form {

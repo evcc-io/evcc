@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,7 +9,7 @@ import (
 )
 
 func TestACPower(t *testing.T) {
-	m, err := NewConfigurableFromConfig(context.TODO(), map[string]any{
+	m, err := NewConfigurableFromConfig(t.Context(), map[string]any{
 		"capacity": 23,
 		"soc": map[string]any{
 			"source": "const",

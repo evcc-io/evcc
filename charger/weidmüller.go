@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023-2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -58,7 +58,7 @@ func init() {
 }
 
 // NewWeidmüllerFromConfig creates a Weidmüller charger from generic config
-func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWeidmüllerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -70,7 +70,7 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{})
 	return NewWeidmüller(ctx, cc.URI, cc.ID)
 }
 
-//go:generate decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewWeidmüller creates Weidmüller charger
 func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {

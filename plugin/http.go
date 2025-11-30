@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/plugin/pipeline"
@@ -14,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gregjones/httpcache"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
@@ -25,6 +25,7 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	pipeline    *pipeline.Pipeline
+	mu          *sync.Mutex
 }
 
 func init() {
@@ -33,13 +34,8 @@ func init() {
 
 var mc = httpcache.NewMemoryCache()
 
-// Auth is the authorization config
-type Auth struct {
-	Type, User, Password string
-}
-
 // NewHTTPPluginFromConfig creates a HTTP provider
-func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -80,18 +76,21 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 
 	p.getter = defaultGetters(p, cc.Scale)
 
-	var err error
-	if cc.Auth.Type != "" {
-		_, err = p.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+	if cc.Auth.Type != "" || cc.Auth.Source != "" {
+		transport, err := cc.Auth.Transport(ctx, log, p.Client.Transport)
+		if err != nil {
+			return nil, err
+		}
+		p.Client.Transport = transport
 	}
 
-	if err == nil {
-		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(log, cc.Settings)
-		p = p.WithPipeline(pipe)
+	pipe, err := pipeline.New(log, cc.Settings)
+	if err != nil {
+		return nil, err
 	}
+	p.pipeline = pipe
 
-	return p, err
+	return p, nil
 }
 
 // NewHTTP create HTTP provider
@@ -116,6 +115,11 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 			}),
 			Base: p.Client.Transport,
 		}
+
+		// for cached requests enforce single inflight GET
+		if method == http.MethodGet {
+			p.mu = muForKey(p.url)
+		}
 	}
 
 	// ignore the self signed certificate
@@ -128,7 +132,12 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 
 // WithBody adds request body
 func (p *HTTP) WithBody(body string) *HTTP {
-	p.body = body
+	if body != "" {
+		p.body = body
+		if p.method == http.MethodGet {
+			p.method = http.MethodPost
+		}
+	}
 	return p
 }
 
@@ -136,28 +145,6 @@ func (p *HTTP) WithBody(body string) *HTTP {
 func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
 	p.headers = headers
 	return p
-}
-
-// WithPipeline adds a processing pipeline
-func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
-	p.pipeline = pipeline
-	return p
-}
-
-// WithAuth adds authorized transport
-func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
-	switch strings.ToLower(typ) {
-	case "basic":
-		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
-	case "bearer":
-		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
-	case "digest":
-		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
-	default:
-		return nil, fmt.Errorf("unknown auth type '%s'", typ)
-	}
-
-	return p, nil
 }
 
 // request executes the configured request or returns the cached value
@@ -190,6 +177,11 @@ var _ Getters = (*HTTP)(nil)
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
+		if p.mu != nil {
+			p.mu.Lock()
+			defer p.mu.Unlock()
+		}
+
 		url, err := setFormattedValue(p.url, "", "")
 		if err != nil {
 			return "", err
@@ -205,7 +197,7 @@ func (p *HTTP) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-func (p *HTTP) set(param string, val interface{}) error {
+func (p *HTTP) set(param string, val any) error {
 	url, err := setFormattedValue(p.url, param, val)
 	if err != nil {
 		return err

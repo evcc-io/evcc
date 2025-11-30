@@ -159,6 +159,10 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 	return res, err
 }
 
+func (v *API) ChargeNow(vin, pin string) (ActionResponse, error) {
+	return v.Action(vin, pin, "ev/chargenow", "CNOW")
+}
+
 func (v *API) UpdateSchedule(vin, pin string, schedules []Schedule) (ActionResponse, error) {
 	var res ActionResponse
 

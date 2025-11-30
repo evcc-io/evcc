@@ -3,11 +3,11 @@
 		id="hemsModal"
 		:title="$t('config.hems.title')"
 		:description="$t('config.hems.description')"
-		docs="/docs/reference/configuration/hems"
+		docs="/docs/features/14a-enwg-steuve"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/hems"
 		removeKey="hems"
-		size="md"
+		data-testid="hems-modal"
 		@changed="$emit('changed')"
 	/>
 </template>

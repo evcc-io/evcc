@@ -1,0 +1,32 @@
+template: volttime
+products:
+  - brand: Volt Time
+    description:
+      generic: Source
+  - brand: Volt Time
+    description:
+      generic: Source 2
+  - brand: Volt Time
+    description:
+      generic: Source 2s
+  - brand: Volt Time
+    description:
+      generic: One
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: token
+    required: true
+    help:
+      de: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
+      en: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
+  - name: serial_number
+    required: true
+    help:
+      de: Seriennummer (z. B. 1008621)
+      en: Serial number (e.g. 1008621)
+render: |
+  type: plugchoice
+  token: {{ .token }}  
+  identity: {{ if .serial_number }}VT_{{ .serial_number }}{{ end }}
+  connector: 1

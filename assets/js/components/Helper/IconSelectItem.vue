@@ -19,8 +19,10 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
 	name: "IconSelectItem",
 	props: {
 		value: String,
@@ -30,7 +32,7 @@ export default {
 		hideLabelOnMobile: Boolean,
 	},
 	emits: ["click"],
-};
+});
 </script>
 
 <style scoped>

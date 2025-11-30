@@ -77,18 +77,18 @@ func TestSyncChargerCurrentsByGetter(t *testing.T) {
 		cg.EXPECT().GetMaxCurrent().Return(tc.actualCurrent, nil).MaxTimes(1)
 
 		lp := &Loadpoint{
-			log:           util.NewLogger("foo"),
-			bus:           evbus.New(),
-			clock:         clock.New(),
-			charger:       charger,
-			status:        api.StatusC,
-			enabled:       true,
-			phases:        3,
-			chargeCurrent: tc.lpCurrent,
+			log:            util.NewLogger("foo"),
+			bus:            evbus.New(),
+			clock:          clock.New(),
+			charger:        charger,
+			status:         api.StatusC,
+			enabled:        true,
+			phases:         3,
+			offeredCurrent: tc.lpCurrent,
 		}
 
 		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.outCurrent, lp.chargeCurrent)
+		assert.Equal(t, tc.outCurrent, lp.offeredCurrent)
 	}
 }
 
@@ -120,12 +120,12 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 			status:         api.StatusC,
 			enabled:        true,
 			phases:         3,
-			chargeCurrent:  tc.lpCurrent,
+			offeredCurrent: tc.lpCurrent,
 			chargeCurrents: []float64{tc.actualCurrent, 0, 0},
 		}
 
 		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.outCurrent, lp.chargeCurrent)
+		assert.Equal(t, tc.outCurrent, lp.offeredCurrent)
 	}
 }
 

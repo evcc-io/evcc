@@ -5,7 +5,19 @@ products:
       generic: CHARX
   - brand: LadeFoxx
     description:
-      generic: EvLoad, Mikro 2.0
+      generic: EvLoad
+  - brand: LadeFoxx
+    description:
+      generic: Mikro 2.0
+  - brand: Veton
+    description:
+      generic: One
+  - brand: Veton
+    description:
+      generic: Two
+  - brand: Veton
+    description:
+      generic: Wall
 params:
   - name: modbus
     choice: ["tcpip"]

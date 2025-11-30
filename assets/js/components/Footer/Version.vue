@@ -125,14 +125,15 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
-import api from "../../api.js";
+import api from "@/api";
 import Logo from "./Logo.vue";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "Version",
 	components: { Logo },
 	props: {
@@ -144,17 +145,17 @@ export default {
 		uploadMessage: String,
 		uploadProgress: Number,
 	},
-	data: function () {
+	data() {
 		return {
 			updateStarted: false,
 			updateStatus: "",
 		};
 	},
 	computed: {
-		githubHashUrl: function () {
+		githubHashUrl() {
 			return `https://github.com/evcc-io/evcc/commit/${this.commit}`;
 		},
-		newVersionAvailable: function () {
+		newVersionAvailable() {
 			return (
 				this.available && // available version already computed?
 				this.installed != "[[.Version]]" && // go template parsed?
@@ -164,7 +165,7 @@ export default {
 		},
 	},
 	methods: {
-		update: async function () {
+		async update() {
 			try {
 				await api.post("update");
 				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart");
@@ -173,17 +174,19 @@ export default {
 				this.updateStatus = `${this.$t("footer.version.modalUpdateStatusStart")} ${e}`;
 			}
 		},
-		releaseNotesUrl: function (version) {
+		releaseNotesUrl(version?: string) {
 			return version == "0.0.0"
 				? `https://github.com/evcc-io/evcc/releases`
 				: `https://github.com/evcc-io/evcc/releases/tag/${version}`;
 		},
 		openModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("updateModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("updateModal") as HTMLElement
+			);
 			modal.show();
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

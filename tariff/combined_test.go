@@ -28,7 +28,7 @@ func TestCombined(t *testing.T) {
 		return api.Rate{
 			Start: clock.Now().Add(time.Duration(start) * time.Hour),
 			End:   clock.Now().Add(time.Duration(start+1) * time.Hour),
-			Price: val,
+			Value: val,
 		}
 	}
 

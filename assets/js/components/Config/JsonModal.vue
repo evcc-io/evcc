@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" :title="title" @open="open">
+	<GenericModal ref="modal" :title="title" :size="size" @open="open">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -21,6 +21,7 @@
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
 				>
 					<button
+						v-if="!disableCancel"
 						type="button"
 						class="btn btn-link text-muted btn-cancel"
 						data-bs-dismiss="modal"
@@ -64,9 +65,10 @@
 
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
-import api from "../../api";
-import { docsPrefix } from "../../i18n";
-import store from "../../store";
+import api from "@/api";
+import { docsPrefix } from "@/i18n";
+import store from "@/store";
+import deepClone from "@/utils/deepClone";
 
 export default {
 	name: "JsonModal",
@@ -77,11 +79,15 @@ export default {
 		errorMessage: String,
 		docs: String,
 		endpoint: String,
+		disableCancel: Boolean,
 		disableRemove: Boolean,
 		noButtons: Boolean,
 		transformReadValues: Function,
+		transformWriteValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
+		storeValuesInArray: Boolean,
+		size: { type: String },
 	},
 	emits: ["changed", "open"],
 	data() {
@@ -89,8 +95,8 @@ export default {
 			saving: false,
 			removing: false,
 			error: "",
-			values: {},
-			serverValues: {},
+			values: this.storeValuesInArray ? [] : {},
+			serverValues: this.storeValuesInArray ? [] : {},
 		};
 	},
 	computed: {
@@ -119,13 +125,21 @@ export default {
 			if (this.transformReadValues) {
 				this.serverValues = this.transformReadValues(this.serverValues);
 			}
-			this.values = { ...this.serverValues };
+			// Handle null/undefined values when expecting an array or object
+			if (this.serverValues == null) {
+				this.serverValues = this.storeValuesInArray ? [] : {};
+			}
+			this.values = deepClone(this.serverValues);
 		},
 		async save() {
 			this.saving = true;
 			this.error = "";
 			try {
-				const res = await api[this.saveMethod](this.endpoint, this.values, {
+				const trimmedValues = this.trimValues(deepClone(this.values));
+				const payload = this.transformWriteValues
+					? this.transformWriteValues(trimmedValues)
+					: trimmedValues;
+				const res = await api[this.saveMethod](this.endpoint, payload, {
 					validateStatus: (code) => [200, 202, 400].includes(code),
 				});
 				if (res.status === 200 || res.status === 202) {
@@ -158,6 +172,21 @@ export default {
 				console.error(e);
 			}
 			this.removing = false;
+		},
+		trimValues(values) {
+			if (Array.isArray(values)) {
+				for (let index = 0; index < values.length; index++) {
+					values[index] = this.trimValues(values[index]);
+				}
+				return values;
+			} else {
+				return Object.fromEntries(
+					Object.entries(values).map(([key, value]) => [
+						key,
+						typeof value === "string" ? value.trim() : value,
+					])
+				);
+			}
 		},
 	},
 };

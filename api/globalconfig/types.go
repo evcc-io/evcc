@@ -1,15 +1,18 @@
 package globalconfig
 
 import (
-	"fmt"
+	"encoding/json"
 	"net"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/plugin/mqtt"
-	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -20,6 +23,7 @@ type All struct {
 	SponsorToken string
 	Plant        string // telemetry plant id
 	Telemetry    bool
+	Mcp          bool
 	Metrics      bool
 	Profile      bool
 	Levels       map[string]string
@@ -32,12 +36,13 @@ type All struct {
 	Influx       Influx
 	EEBus        eebus.Config
 	HEMS         Hems
+	SHM          shm.Config
 	Messaging    Messaging
 	Meters       []config.Named
 	Chargers     []config.Named
 	Vehicles     []config.Named
 	Tariffs      Tariffs
-	Site         map[string]interface{}
+	Site         map[string]any
 	Loadpoints   []config.Named
 	Circuits     []config.Named
 }
@@ -53,9 +58,9 @@ type Go struct {
 }
 
 type ModbusProxy struct {
-	Port            int
-	ReadOnly        string `yaml:",omitempty" json:",omitempty"`
-	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:",omitempty"`
+	Port            int    `json:"port"`
+	ReadOnly        string `yaml:",omitempty" json:"readonly,omitempty"`
+	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:"settings,omitempty"`
 }
 
 var _ api.Redactor = (*Hems)(nil)
@@ -72,6 +77,13 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
+func masked(s any) string {
+	if s != "" {
+		return "***"
+	}
+	return ""
+}
+
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string `json:"topic"`
@@ -79,19 +91,18 @@ type Mqtt struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (m Mqtt) Redacted() any {
-	// TODO add masked password
-	return struct {
-		Broker   string `json:"broker"`
-		Topic    string `json:"topic"`
-		User     string `json:"user,omitempty"`
-		ClientID string `json:"clientID,omitempty"`
-		Insecure bool   `json:"insecure,omitempty"`
-	}{
-		Broker:   m.Broker,
-		Topic:    m.Topic,
-		User:     m.User,
-		ClientID: m.ClientID,
-		Insecure: m.Insecure,
+	return Mqtt{
+		Config: mqtt.Config{
+			Broker:     m.Broker,
+			User:       m.User,
+			Password:   masked(m.Password),
+			ClientID:   m.ClientID,
+			Insecure:   m.Insecure,
+			CaCert:     masked(m.CaCert),
+			ClientCert: masked(m.ClientCert),
+			ClientKey:  masked(m.ClientKey),
+		},
+		Topic: m.Topic,
 	}
 }
 
@@ -108,18 +119,13 @@ type Influx struct {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (c Influx) Redacted() any {
-	// TODO add masked password
-	return struct {
-		URL      string `json:"url"`
-		Database string `json:"database"`
-		Org      string `json:"org"`
-		User     string `json:"user"`
-		Insecure bool   `json:"insecure"`
-	}{
+	return Influx{
 		URL:      c.URL,
 		Database: c.Database,
+		Token:    masked(c.Token),
 		Org:      c.Org,
 		User:     c.User,
+		Password: masked(c.Password),
 		Insecure: c.Insecure,
 	}
 }
@@ -130,8 +136,13 @@ type DB struct {
 }
 
 type Messaging struct {
-	Events   map[string]push.EventTemplateConfig
+	Events   map[string]MessagingEventTemplate
 	Services []config.Typed
+}
+
+// MessagingEventTemplate is the push message configuration for an event
+type MessagingEventTemplate struct {
+	Title, Msg string
 }
 
 func (c Messaging) Configured() bool {
@@ -148,18 +159,45 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema string `json:"schema"`
-	Host   string `json:"host"`
-	Port   int    `json:"port"`
+	Schema_     string `json:"schema,omitempty" mapstructure:"schema"` // TODO deprecated
+	ExternalUrl string `json:"externalUrl"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
 }
 
 func (c Network) HostPort() string {
-	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
-		return c.Host
+	host := "localhost"
+	if h, err := os.Hostname(); err == nil {
+		host = h
 	}
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	if ips := util.LocalIPs(); len(ips) > 0 {
+		host = ips[0].IP.String()
+	}
+	if c.Port == 80 {
+		return host
+	}
+	return net.JoinHostPort(host, strconv.Itoa(c.Port))
 }
 
-func (c Network) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
+func (c Network) InternalURL() string {
+	return "http://" + c.HostPort()
+}
+
+func (c Network) ExternalURL() string {
+	if c.ExternalUrl != "" {
+		return strings.TrimRight(c.ExternalUrl, "/")
+	}
+	return c.InternalURL()
+}
+
+// MarshalJSON includes the computed InternalUrl field in JSON output
+func (c Network) MarshalJSON() ([]byte, error) {
+	type networkAlias Network
+	return json.Marshal(struct {
+		networkAlias
+		InternalUrl string `json:"internalUrl"`
+	}{
+		networkAlias: networkAlias(c),
+		InternalUrl:  c.InternalURL(),
+	})
 }

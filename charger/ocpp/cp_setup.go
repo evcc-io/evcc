@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration) error {
+func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -159,6 +159,11 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
 	}
 
+	if forcePowerCtrl {
+		cp.ChargingRateUnit = types.ChargingRateUnitWatts
+		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
+	}
+
 	return nil
 }
 
@@ -169,7 +174,7 @@ func (cp *CP) HasMeasurement(val types.Measurand) bool {
 
 func (cp *CP) tryMeasurands(measurands string, key string) []string {
 	var accepted []string
-	for _, m := range strings.Split(measurands, ",") {
+	for m := range strings.SplitSeq(measurands, ",") {
 		if err := cp.ChangeConfigurationRequest(key, m); err == nil {
 			accepted = append(accepted, m)
 		}

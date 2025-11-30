@@ -1,0 +1,117 @@
+template: demo-dynamic-grid
+products:
+  - description:
+      de: Demo Börsenpreis
+      en: Demo Market Price
+requirements:
+  description:
+    de: Zu Demonstrationszwecken. Simuliert dynamische Strompreise ähnlich EPEX Spotmarkt mit typischen Tagesmustern.
+    en: For demonstration purposes. Simulates dynamic electricity prices similar to EPEX spot market with typical daily patterns.
+  evcc: ["skiptest"]
+group: price
+params:
+  - name: min
+    type: float
+    default: 0.10
+    description:
+      en: Minimum price
+      de: Minimaler Preis
+    help:
+      en: Lowest price, typically at noon (can be negative)
+      de: Niedrigster Preis, typisch zur Mittagszeit (kann negativ sein)
+  - name: max
+    type: float
+    default: 0.39
+    description:
+      en: Maximum price
+      de: Maximaler Preis
+    help:
+      en: Highest price, typically in the evening
+      de: Höchster Preis, typisch am Abend
+  - name: noise
+    type: float
+    default: 0.01
+    description:
+      en: Price variation
+      de: Preisschwankung
+    help:
+      en: Random variation per slot (±value)
+      de: Zufällige Schwankung pro Slot (±Wert)
+    advanced: true
+  - name: interval
+    deprecated: true
+
+render: |
+  type: custom
+  forecast:
+    source: js
+    script: |
+      // Generate deterministic dynamic grid prices for 3 days in 15-minute slots
+      // Pattern repeats every 3 days for predictability
+      var now = new Date();
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      var rates = [];
+      var minPrice = parseFloat({{ .min }});
+      var maxPrice = parseFloat({{ .max }});
+      var priceRange = maxPrice - minPrice;
+      var noiseAmount = parseFloat({{ .noise }});
+
+      // Generate 15-minute slots for 3 days
+      var slotMinutes = 15;
+      var slotDuration = slotMinutes * 60 * 1000;
+      var slotsPerHour = 60 / slotMinutes;
+      var slotsPerDay = 24 * slotsPerHour;
+
+      function getDailyFactor(hour) {
+        if (hour < 5) {
+          return 0.30; // Night: 30%
+        } else if (hour < 7) {
+          var t = (hour - 5) / 2;
+          return 0.30 + 0.20 * t; // Morning ramp: 30% to 50%
+        } else if (hour < 9) {
+          var t = (hour - 7) / 2;
+          return 0.50 + 0.15 * Math.sin(Math.PI * t); // Morning peak: up to 65%
+        } else if (hour < 12) {
+          var t = (hour - 9) / 3;
+          return 0.50 - 0.50 * Math.pow(t, 1.5); // Drop to 0% (solar)
+        } else if (hour < 17) {
+          var t = (hour - 12) / 5;
+          return 0.45 * Math.pow(t, 0.8); // Recovery: 0% to 45%
+        } else if (hour < 20) {
+          var distance = Math.abs(hour - 19);
+          var spike = Math.exp(-Math.pow(distance / 0.8, 2));
+          return 0.45 + 0.55 * spike; // Evening spike: peak at 19h
+        } else {
+          var t = (hour - 20) / 4;
+          return 0.45 - 0.15 * t; // Decline: 45% to 30%
+        }
+      }
+
+      function getSlotNoise(day, slot) {
+        var totalSlot = day * slotsPerDay + slot;
+        var n = Math.sin(totalSlot * 12.9898) * 43758.5453;
+        return ((n - Math.floor(n)) * 2 - 1) * noiseAmount;
+      }
+
+      for (var day = 0; day < 3; day++) {
+        for (var slot = 0; slot < slotsPerDay; slot++) {
+          var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
+          var hour = slot / slotsPerHour;
+
+          // Calculate base price from smooth pattern
+          var baseFactor = getDailyFactor(hour);
+          var basePrice = minPrice + priceRange * baseFactor;
+
+          // Add independent pseudo-random noise to each slot
+          var noise = getSlotNoise(day, slot);
+          var price = basePrice + noise;
+
+          rates.push({
+            start: time.toISOString(),
+            end: new Date(time.getTime() + slotDuration).toISOString(),
+            value: Math.round(price * 1000) / 1000 // Round to 3 decimal places
+          });
+        }
+      }
+
+      JSON.stringify(rates);

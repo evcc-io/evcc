@@ -5,6 +5,10 @@ products:
       de: Smart Energy Hybrid-Wechselrichter
       en: Smart Energy Hybrid Inverter
 capabilities: ["battery-control"]
+requirements:
+  description:
+    en: When using active battery control by evcc, the 'Forecast-based Charging' function in the SMA portal must not be active. Otherwise, conflicts may arise when controlling the battery.
+    de: Bei der Nutzung der aktiven Speichersteuerung durch evcc darf die Funktion 'Prognosebasierten Laden' im SMA Portal nicht aktiv sein. Ansonsten kann es zu Konflikten bei der Steuerung des Speichers kommen.
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -19,18 +23,15 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+    default: 4200
   - name: watchdog
     type: duration
     default: 60s
     advanced: true
     usages: ["battery"]
   - name: chargepower
-    default: 4200 # W
-    advanced: true
-    help:
-      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt
-      en: Maximum charging power for forced charging of the battery in Watt
-    usages: ["battery"]
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -79,13 +80,19 @@ render: |
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 30773 # SMA Modbus Profile: DcMs.Watt [1]
+          address: 30773 # SMA Modbus Profile: DcMs.Watt [0]
           type: holding
           decode: int32nan
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 30961 # SMA Modbus Profile: DcMs.Watt [2]
+          address: 30961 # SMA Modbus Profile: DcMs.Watt [1]
+          type: holding
+          decode: int32nan
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 30967 # SMA Modbus Profile: DcMs.Watt [2]
           type: holding
           decode: int32nan
   energy:
@@ -160,7 +167,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -178,7 +185,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -218,7 +225,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -267,7 +274,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -276,7 +283,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .chargepower }}
+            value: {{ .maxchargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

@@ -2,10 +2,12 @@ package push
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 )
@@ -16,11 +18,6 @@ type Event struct {
 	Event     string
 }
 
-// EventTemplateConfig is the push message configuration for an event
-type EventTemplateConfig struct {
-	Title, Msg string
-}
-
 type Vehicles interface {
 	// ByName returns a single vehicle adapter by name
 	ByName(string) (vehicle.API, error)
@@ -28,14 +25,14 @@ type Vehicles interface {
 
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	definitions map[string]EventTemplateConfig
+	definitions map[string]globalconfig.MessagingEventTemplate
 	sender      []Messenger
 	cache       *util.ParamCache
 	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
@@ -62,7 +59,7 @@ func (h *Hub) Add(sender Messenger) {
 
 // apply applies the event template to the content to produce the actual message
 func (h *Hub) apply(ev Event, tmpl string) (string, error) {
-	attr := make(map[string]interface{})
+	attr := make(map[string]any)
 
 	// loadpoint id
 	if ev.Loadpoint != nil {
@@ -72,7 +69,14 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	// get all values from cache
 	for _, p := range h.cache.All() {
 		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
-			attr[p.Key] = p.Val
+			val := p.Val
+
+			// resolve pointers (https://github.com/evcc-io/evcc/issues/24688)
+			if rv := reflect.ValueOf(p.Val); rv.Kind() == reflect.Pointer && !rv.IsNil() {
+				val = rv.Elem().Interface()
+			}
+
+			attr[p.Key] = val
 		}
 	}
 
@@ -81,10 +85,10 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 		if v, err := h.vehicles.ByName(name); err == nil {
 			attr["vehicleLimitSoc"] = v.GetLimitSoc()
 			attr["vehicleMinSoc"] = v.GetMinSoc()
-			attr["vehiclePlanTime"], attr["vehiclePlanSoc"] = v.GetPlanSoc()
+			attr["vehiclePlanTime"], _, attr["vehiclePlanSoc"] = v.GetPlanSoc()
 
 			instance := v.Instance()
-			attr["vehicleTitle"] = instance.Title()
+			attr["vehicleTitle"] = instance.GetTitle()
 			attr["vehicleIcon"] = instance.Icon()
 			attr["vehicleCapacity"] = instance.Capacity()
 		}

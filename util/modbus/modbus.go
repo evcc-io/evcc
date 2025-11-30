@@ -33,12 +33,14 @@ type TcpSettings struct {
 
 // Settings contains the ModBus settings
 type Settings struct {
-	ID                  uint8  `json:",omitempty" yaml:",omitempty"`
-	SubDevice           int    `json:",omitempty" yaml:",omitempty"`
-	URI, Device, Comset string `json:",omitempty" yaml:",omitempty"`
-	Baudrate            int    `json:",omitempty" yaml:",omitempty"`
-	UDP                 bool   `json:",omitempty" yaml:",omitempty"`
-	RTU                 *bool  `json:",omitempty" yaml:",omitempty"`
+	ID        uint8  `json:"id,omitempty" yaml:",omitempty"`
+	SubDevice int    `json:"subdevice,omitempty" yaml:",omitempty"`
+	URI       string `json:"uri,omitempty" yaml:",omitempty"`
+	Device    string `json:"device,omitempty" yaml:",omitempty"`
+	Comset    string `json:"comset,omitempty" yaml:",omitempty"`
+	Baudrate  int    `json:"baudrate,omitempty" yaml:",omitempty"`
+	UDP       bool   `json:"udp,omitempty" yaml:",omitempty"`
+	RTU       *bool  `json:"rtu,omitempty" yaml:",omitempty"`
 }
 
 // Protocol identifies the wire format from the RTU setting
@@ -172,11 +174,29 @@ func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*met
 	switch proto {
 	case Udp:
 		return registeredConnection(ctx, uri, proto, meters.NewRTUOverUDP(uri))
+
 	case Rtu:
-		return registeredConnection(ctx, uri, proto, meters.NewRTUOverTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewRTUOverTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
+
 	case Ascii:
-		return registeredConnection(ctx, uri, proto, meters.NewASCIIOverTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewASCIIOverTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
+
 	default:
-		return registeredConnection(ctx, uri, proto, meters.NewTCP(uri))
+		// use retry outside of grid-x/modbus
+		conn := meters.NewTCP(uri)
+		conn.Handler.LinkRecoveryTimeout = 0
+		conn.Handler.ProtocolRecoveryTimeout = 0
+
+		return registeredConnection(ctx, uri, proto, conn)
 	}
 }

@@ -1,12 +1,15 @@
 <template>
-	<div class="mode-group border d-inline-flex" :class="{ large, transparent }" role="group">
+	<div class="mode-group border d-inline-flex" :class="{ large, transparent }" role="radiogroup">
 		<button
 			v-for="(option, i) in options"
-			:id="i === 0 ? id : null"
+			:id="i === 0 ? id : undefined"
 			:key="option.value"
 			type="button"
+			role="radio"
+			:aria-checked="optionSelected(option)"
+			:aria-label="optionLabel(option)"
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
-			:class="{ active: option.value === modelValue, 'btn--equal': equalWidth }"
+			:class="{ active: optionSelected(option), 'btn--equal': equalWidth }"
 			:disabled="option.disabled"
 			:data-testid="`${id}-${option.value}`"
 			tabindex="0"
@@ -17,19 +20,34 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import type { SelectOption } from "@/types/evcc";
+import { defineComponent, type PropType } from "vue";
+
+export default defineComponent({
 	name: "SelectGroup",
 	props: {
 		id: String,
-		options: Array,
-		modelValue: [Number, String, Boolean],
+		options: Array as PropType<SelectOption<string | number>[]>,
+		modelValue: [Number, String, Boolean, null],
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,
+		ariaLabel: String,
 	},
 	emits: ["update:modelValue"],
-};
+	methods: {
+		optionSelected(option: SelectOption<string | number>) {
+			return (
+				option.value === this.modelValue ||
+				(this.modelValue === null && option.value === "")
+			);
+		},
+		optionLabel(option: SelectOption<string | number>) {
+			return this.ariaLabel ? `${this.ariaLabel}: ${option.name}` : option.name;
+		},
+	},
+});
 </script>
 
 <style scoped>

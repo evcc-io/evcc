@@ -2,14 +2,27 @@ template: sax
 products:
   - brand: SAX
     description:
-      generic: Homespeicher
+      generic: SAX Power Home (Plus)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Für Batteriesteuerung müssen die Register 40044/40045 (43/44) vom techn. Support freigeschaltet werden. Hierzu ist die Seriennummer des Gerätes notwendig.
+    en: |
+      For battery control, registers 40044/40045 (43/44) must be enabled by technical support. The device's serial number is required for this.
 params:
   - name: usage
     choice: ["grid", "battery"]
   - name: modbus
     choice: ["tcpip"]
-    port: 3600
+    port: 502
     id: 64
+  - name: capacity
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 240s
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -34,7 +47,7 @@ render: |
       {{- include "modbus" . | indent 4 }}
       # register details
       register:
-        address: 47 # Leistung P vom Speicher. (Messwert)
+        address: 47 # Leistung P[W] des Speichers 
         type: holding
         decode: uint16
     - source: const
@@ -44,32 +57,37 @@ render: |
     {{- include "modbus" . | indent 2 }}
     # register details
     register:
-      address: 46 # SOC vom Speicher (Messwert)
+      address: 46 # SOC[%] des Speichers 
       type: holding
       decode: uint16
   batterymode:
-    source: switch
-    switch:
-    - case: 1 # normal
-      set:
-        source: const
-        value: 4600 # W
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal mode with maximum discharge of 4600W
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 43 # Leistungsgrenzwert für Entladung
-            type: writesingle
-            decode: uint16
-    - case: 2 # hold
-      set:
-        source: const
-        value: 0 # W
+          source: const
+          value: 4600
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43 # 2Bh battery discharging power [W]
+              type: writemultiple
+              encoding: uint16
+      - case: 2 # holding mode puts discharge to 0W
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 43 # Leistungsgrenzwert für Entladung
-            type: writesingle
-            decode: uint16
+          source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43 # 2Bh battery discharging power [W]
+              type: writemultiple
+              encoding: uint16
+  capacity: {{ .capacity }} # kWh
   {{- end }}

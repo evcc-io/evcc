@@ -17,25 +17,29 @@
 	</div>
 </template>
 
-<script>
-import formatter from "../../mixins/formatter.js";
+<script lang="ts">
+import formatter from "@/mixins/formatter";
 import { TRIAL } from "./Sponsor.vue";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "SponsorTokenExpires",
 	mixins: [formatter],
 	props: {
 		expiresSoon: Boolean,
 		expiresAt: String,
 		name: String,
+		fromYaml: Boolean,
 	},
 	computed: {
 		inXDays() {
-			return this.fmtTimeAgo(new Date(this.expiresAt) - new Date());
+			return this.expiresAt
+				? this.fmtTimeAgo(new Date(this.expiresAt).getTime() - new Date().getTime())
+				: "";
 		},
 		isTrial() {
 			return this.name === TRIAL;
 		},
 	},
-};
+});
 </script>

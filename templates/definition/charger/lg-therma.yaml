@@ -1,0 +1,106 @@
+template: lg-therma
+products:
+  - brand: LG
+    description:
+      generic: Therma V R290 Monobloc (SG Ready)
+group: heating
+requirements:
+  description:
+    de: |
+      Modbus Verbindung zur LG Therma V Wärmepumpe.
+      Funktioniert über SG Ready Energiezustände für intelligente Steuerung.
+      Inneneinheit/Fernbedienung in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Signaltyp" > auf "Modbus" einstellen.
+      Da die interne Energiemessung zu hohe Werte anzeigt ist eine externe Energiemessung empfohlen.
+      Werkseinstellung Modbus Addresse(HEX) = 21 (33).
+      Modbus Register sind im Installationshandbuch zu finden (Adresse jeweils ohne die führende Ziffer und -1).
+      Informationen zu den Energiezuständen finden sich auch im Installationshandbuch.
+      Die Energiezustände 6 und 7 können an der Inneneinheit in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Definition der Energiezustände" angepasst werden.
+      Wenn die interne Energiemessung nicht funktioniert (nicht jedes Model unterstützt das Register), dann setze die Energiemessung auf "Nein".
+    en: |
+      Modbus connection to LG Therma V heat pump.
+      Uses SG Ready energy states for intelligent control.
+      Set the indoor unit in the installer settings > "Connectivity" > "Energy state" > "ESS use type" > to "Modbus".
+      Since the internal power measurement shows to high values, an external power measurement is suggested.
+      Factory setting Modbus (HEX) = 21 (33).
+      Modbus registers can be found within the installation manual (address without the leading number and -1).
+      Information on the energy state can be found within the installation manual. 
+      Energy states 6 and 7 can be adapted at the indoor unit in the installer settings > "Connectivity" > "Energy state" >"Energy state definition".
+      If the internal power measurement does not work (not all models support this register), please set energy metering to "false".
+params:
+  - name: modbus
+    choice: ["rs485"]
+    id: 33
+  - name: tempsource
+    required: true
+    type: choice
+    choice: ["water_tank", "water_inlet"]
+    default: water_tank
+    description:
+      de: DHW Warmwassertank- oder Wassereinlasstemperatur
+      en: DHW warm water tank or inlet flow temperature
+  - name: energystate
+    required: true
+    type: choice
+    choice: ["SGReady", "IndividualEnergystate"]
+    default: SGReady
+    description:
+      de: SGReady oder anpassbare Energiezustände 6 und 7
+      en: SGReady states or modifyable energy state 6 and 7
+  - name: haspower
+    required: true
+    type: bool
+    default: true
+    description:
+      de: Interne Energiemessung
+      en: Internal energy metering
+render: |
+  type: sgready
+  setmode:
+    source: map
+    values:
+      1: {{ if eq .energystate "SGReady" -}} 1 {{ else if eq .energystate "IndividualEnergystate" -}} 7 {{ else }} 1 {{- end }} # 1 Erzwungen Aus, 7 Energiesparmodus # Energiesparen
+      2: 2 # Normalbetrieb
+      3: {{ if eq .energystate "SGReady" -}} 3 {{ else if eq .energystate "IndividualEnergystate" -}} 6 {{ else }} 3 {{- end }} # 3 Ein-Empfehlung, 6 Ein-Empfehlung Schritt 1 # Boost
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9
+        type: writeholdings
+        encoding: uint16
+  getmode:
+    source: map
+    values:
+      0: 2 # Auslieferzustand gesetzt
+      1: 1 # Erzwungen Aus
+      2: 2 # Normalbetrieb
+      3: 3 # Ein-Empfehlung
+      4: 3 # Ein-Befehl
+      5: 3 # Ein-Befehl (anpassbar)
+      6: 3 # Ein-Empfehlung (anpassbar)
+      7: 1 # Energiesparmodus
+      8: 1 # Superenergiesparmodus
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9
+        type: holding
+        encoding: uint16
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    scale: 0.1
+    register:
+      address:  {{ if eq .tempsource "water_inlet" -}} 2 {{ else }} 5 {{- end }} # 5 DHW Tank Temperatur, 2 Wassereinlasstemperatur
+      type: input
+      encoding: uint16
+  {{- if eq .haspower "true" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35
+      type: input
+      encoding: uint16
+  {{- end }}

@@ -18,7 +18,7 @@ type KebaResult struct {
 	Addr, Serial string
 }
 
-func KEBAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func KEBAHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := KEBAHandler{
 		Timeout: 5 * timeout,
 	}

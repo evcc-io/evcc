@@ -30,101 +30,86 @@
 		</LabelAndValue>
 
 		<Teleport to="body">
-			<div
+			<GenericModal
 				:id="modalId"
 				ref="modal"
-				class="modal fade text-dark modal-xl"
-				data-bs-backdrop="true"
-				tabindex="-1"
-				role="dialog"
-				aria-hidden="true"
+				:title="modalTitle"
+				size="xl"
 				data-testid="charging-plan-modal"
+				@open="modalVisible"
+				@closed="modalInvisible"
 			>
-				<div class="modal-dialog modal-dialog-centered" role="document">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title">
-								{{ $t("main.chargingPlan.modalTitle")
-								}}<span v-if="socBasedPlanning && vehicle"
-									>: {{ vehicle.title }}</span
-								>
-							</h5>
-							<button
-								type="button"
-								class="btn-close"
-								data-bs-dismiss="modal"
-								aria-label="Close"
-							></button>
-						</div>
-						<div class="modal-body pt-2">
-							<ul class="nav nav-tabs">
-								<li class="nav-item">
-									<a
-										class="nav-link"
-										:class="{ active: departureTabActive }"
-										href="#"
-										@click.prevent="showDeatureTab"
-									>
-										{{ $t("main.chargingPlan.departureTab") }}
-									</a>
-								</li>
-								<li class="nav-item">
-									<a
-										class="nav-link"
-										:class="{ active: arrivalTabActive }"
-										href="#"
-										@click.prevent="showArrivalTab"
-									>
-										{{ $t("main.chargingPlan.arrivalTab") }}
-									</a>
-								</li>
-							</ul>
-							<div v-if="isModalVisible">
-								<ChargingPlansSettings
-									v-if="departureTabActive"
-									v-bind="chargingPlansSettingsProps"
-									@static-plan-updated="updateStaticPlan"
-									@static-plan-removed="removeStaticPlan"
-									@repeating-plans-updated="updateRepeatingPlans"
-								/>
-								<ChargingPlanArrival
-									v-if="arrivalTabActive"
-									v-bind="chargingPlanArrival"
-									@minsoc-updated="setMinSoc"
-									@limitsoc-updated="setLimitSoc"
-								/>
-							</div>
-						</div>
+				<div class="pt-2">
+					<ul class="nav nav-tabs">
+						<li class="nav-item">
+							<a
+								class="nav-link"
+								:class="{ active: departureTabActive }"
+								href="#"
+								@click.prevent="showDeatureTab"
+							>
+								{{ $t("main.chargingPlan.departureTab") }}
+							</a>
+						</li>
+						<li class="nav-item">
+							<a
+								class="nav-link"
+								:class="{ active: arrivalTabActive }"
+								href="#"
+								@click.prevent="showArrivalTab"
+							>
+								{{ $t("main.chargingPlan.arrivalTab") }}
+							</a>
+						</li>
+					</ul>
+					<div v-if="isModalVisible">
+						<ChargingPlansSettings
+							v-if="departureTabActive"
+							v-bind="chargingPlansSettingsProps"
+							@static-plan-updated="updateStaticPlan"
+							@static-plan-removed="removeStaticPlan"
+							@repeating-plans-updated="updateRepeatingPlans"
+						/>
+						<ChargingPlanArrival
+							v-if="arrivalTabActive"
+							v-bind="chargingPlanArrival"
+							@minsoc-updated="setMinSoc"
+							@limitsoc-updated="setLimitSoc"
+						/>
 					</div>
 				</div>
-			</div>
+			</GenericModal>
 		</Teleport>
 	</div>
 </template>
 
-<script>
-import Modal from "bootstrap/js/dist/modal";
+<script lang="ts">
+import GenericModal from "../Helper/GenericModal.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import PlansSettings from "./PlansSettings.vue";
 import Arrival from "./Arrival.vue";
 
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api from "../../api.js";
-import { optionStep, fmtEnergy } from "../../utils/energyOptions.js";
-
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
+import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
+import { defineComponent, type PropType } from "vue";
+import type { CURRENCY, Timeout, Vehicle } from "@/types/evcc";
+import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types";
+import type { Forecast } from "@/types/evcc.ts";
 const ONE_MINUTE = 60 * 1000;
 
-export default {
+export default defineComponent({
 	name: "ChargingPlan",
 	components: {
+		GenericModal,
 		LabelAndValue,
 		ChargingPlansSettings: PlansSettings,
 		ChargingPlanArrival: Arrival,
 	},
 	mixins: [formatter, collector],
 	props: {
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		disabled: Boolean,
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
@@ -136,28 +121,30 @@ export default {
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planPrecondition: { type: Number, default: 0 },
 		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostType: String,
 		socBasedPlanning: Boolean,
 		socBasedCharging: Boolean,
 		socPerKwh: Number,
-		vehicle: Object,
+		vehicle: Object as PropType<Vehicle>,
 		capacity: Number,
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
+		vehicleNotReachable: Boolean,
+		forecast: Object as PropType<Forecast>,
 	},
-	data: function () {
+	data() {
 		return {
-			modal: null,
 			isModalVisible: false,
 			activeTab: "departure",
 			targetTimeLabel: "",
-			interval: null,
+			interval: null as Timeout,
 		};
 	},
 	computed: {
-		buttonColor: function () {
+		buttonColor(): string {
 			if (this.planTimeUnreachable) {
 				return "text-warning";
 			}
@@ -166,47 +153,70 @@ export default {
 			}
 			return "evcc-default-text";
 		},
-		minSoc: function () {
+		minSoc(): number | undefined {
 			return this.vehicle?.minSoc;
 		},
-		limitSoc: function () {
+		limitSoc(): number | undefined {
 			return this.vehicle?.limitSoc;
 		},
-		staticPlan: function () {
+		staticPlan(): StaticPlan | null {
 			if (this.socBasedPlanning) {
-				return this.vehicle?.plan;
+				const plan = this.vehicle?.plan as StaticSocPlan;
+				if (plan) {
+					return {
+						soc: plan.soc,
+						time: new Date(plan.time),
+						precondition: plan.precondition,
+					};
+				}
+				return null;
 			}
 			if (this.planEnergy && this.planTime) {
-				return { energy: this.planEnergy, time: this.planTime };
+				return {
+					energy: this.planEnergy,
+					time: new Date(this.planTime),
+					precondition: this.planPrecondition,
+				};
 			}
 			return null;
 		},
-		repeatingPlans: function () {
-			if (this.vehicle?.repeatingPlans.length > 0) {
+		repeatingPlans(): RepeatingPlan[] {
+			if (
+				this.vehicle &&
+				this.vehicle.repeatingPlans &&
+				this.vehicle.repeatingPlans.length > 0
+			) {
 				return [...this.vehicle.repeatingPlans];
 			}
 			return [];
 		},
-		enabled: function () {
-			return this.effectivePlanTime;
+		enabled(): boolean {
+			return !!this.effectivePlanTime;
 		},
-		modalId: function () {
+		modalId(): string {
 			return `chargingPlanModal_${this.id}`;
 		},
-		departureTabActive: function () {
+		modalTitle(): string {
+			const baseTitle = this.$t("main.chargingPlan.modalTitle");
+			if (this.socBasedPlanning && this.vehicle) {
+				return `${baseTitle}: ${this.vehicle.title}`;
+			}
+			return baseTitle;
+		},
+		departureTabActive(): boolean {
 			return this.activeTab === "departure";
 		},
-		arrivalTabActive: function () {
+		arrivalTabActive(): boolean {
 			return this.activeTab === "arrival";
 		},
-		chargingPlansSettingsProps: function () {
+		chargingPlansSettingsProps(): any {
 			return this.collectProps(PlansSettings);
 		},
-		chargingPlanArrival: function () {
+		chargingPlanArrival(): any {
 			return this.collectProps(Arrival);
 		},
-		targetSocLabel: function () {
-			if (this.socBasedPlanning) {
+		targetSocLabel(): string {
+			if (this.socBasedPlanning && this.effectivePlanSoc) {
 				return this.fmtPercentage(this.effectivePlanSoc);
 			}
 			return fmtEnergy(
@@ -216,55 +226,43 @@ export default {
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
-		apiVehicle: function () {
+		apiVehicle(): string {
 			return `vehicles/${this.vehicle?.name}/`;
 		},
-		apiLoadpoint: function () {
+		apiLoadpoint(): string {
 			return `loadpoints/${this.id}/`;
 		},
 	},
 	watch: {
-		effectivePlanTime() {
+		effectivePlanTime(): void {
 			this.updateTargetTimeLabel();
 		},
 		"$i18n.locale": {
-			handler() {
+			handler(): void {
 				this.updateTargetTimeLabel();
 			},
 		},
 	},
-	mounted() {
-		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.checkUnsavedOnClose);
+	mounted(): void {
 		this.interval = setInterval(this.updateTargetTimeLabel, ONE_MINUTE);
 		this.updateTargetTimeLabel();
 	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.checkUnsavedOnClose);
-		clearInterval(this.interval);
+	unmounted(): void {
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
 	},
 	methods: {
-		checkUnsavedOnClose: function () {
-			const $applyButton = this.$refs.modal.querySelector("[data-testid=plan-apply]");
-			if ($applyButton) {
-				if (confirm(this.$t("main.chargingPlan.unsavedChanges"))) {
-					$applyButton.click();
-				}
-			}
-		},
-		modalVisible: function () {
+		modalVisible(): void {
 			this.isModalVisible = true;
 		},
-		modalInvisible: function () {
+		modalInvisible(): void {
 			this.isModalVisible = false;
 		},
-		openModal() {
+		openModal(): void {
 			this.showDeatureTab();
-			this.modal.show();
+			const modalRef = this.$refs["modal"] as any;
+			modalRef?.open();
 		},
 		openPlanModal(arrivalTab = false) {
 			if (arrivalTab) {
@@ -272,45 +270,51 @@ export default {
 			} else {
 				this.showDeatureTab();
 			}
-			this.modal.show();
+			const modalRef = this.$refs["modal"] as any;
+			modalRef?.open();
 		},
-		updateTargetTimeLabel: function () {
-			if (!this.effectivePlanTime) return "";
+		updateTargetTimeLabel(): void {
+			if (!this.effectivePlanTime) return;
 			const targetDate = new Date(this.effectivePlanTime);
 			this.targetTimeLabel = this.fmtAbsoluteDate(targetDate);
 		},
-		showDeatureTab: function () {
+		showDeatureTab(): void {
 			this.activeTab = "departure";
 		},
-		showArrivalTab: function () {
+		showArrivalTab(): void {
 			this.activeTab = "arrival";
 		},
-		updateStaticPlan: function ({ soc, time, energy }) {
-			const timeISO = time.toISOString();
+		updateStaticPlan(plan: StaticPlan): void {
+			const timeISO = plan.time.toISOString();
+			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
 			if (this.socBasedPlanning) {
-				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
+				const p = plan as StaticSocPlan;
+				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });
 			} else {
-				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
+				const p = plan as StaticEnergyPlan;
+				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null, {
+					params,
+				});
 			}
 		},
-		removeStaticPlan: function () {
+		removeStaticPlan(): void {
 			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
 		},
-		updateRepeatingPlans: function (plans) {
-			api.post(`${this.apiVehicle}plan/repeating`, { plans });
+		updateRepeatingPlans(plans: RepeatingPlan[]): void {
+			api.post(`${this.apiVehicle}plan/repeating`, plans);
 		},
-		setMinSoc: function (soc) {
+		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);
 		},
-		setLimitSoc: function (soc) {
+		setLimitSoc(soc: number): void {
 			api.post(`${this.apiVehicle}limitsoc/${soc}`);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

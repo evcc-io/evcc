@@ -10,12 +10,12 @@ import (
 type Rate struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
-	Price float64   `json:"price"`
+	Value float64   `json:"value"`
 }
 
 // IsZero returns is the rate is the zero value
 func (r Rate) IsZero() bool {
-	return r.Start.IsZero() && r.End.IsZero() && r.Price == 0
+	return r.Start.IsZero() && r.End.IsZero() && r.Value == 0
 }
 
 // Rates is a slice of (future) tariff rates
@@ -47,7 +47,9 @@ func (rr Rates) At(ts time.Time) (Rate, error) {
 	return Rate{}, ErrNotAvailable
 }
 
-// MarshalMQTT implements server.MQTTMarshaler
-func (r Rates) MarshalMQTT() ([]byte, error) {
+var _ BytesMarshaler = (*Rates)(nil)
+
+// MarshalBytes implements server.BytesMarshaler
+func (r Rates) MarshalBytes() ([]byte, error) {
 	return json.Marshal(r)
 }

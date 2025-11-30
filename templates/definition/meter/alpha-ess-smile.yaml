@@ -21,12 +21,8 @@ params:
   - name: capacity
     advanced: true
   - name: minsoc
-    default: 20
-    type: int
     advanced: true
   - name: maxsoc
-    default: 95
-    type: int
     advanced: true
   - name: maxacpower
 render: |
@@ -120,7 +116,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 144 # 0x90 Total energy feed to Grid (PV)
+      address: 16 # 0x10 Total energy feed to Grid (Grid Meter)
       type: holding
       decode: uint32
     scale: 0.01

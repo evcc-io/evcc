@@ -51,17 +51,19 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/cablecharge";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import Modal from "bootstrap/js/dist/modal";
-import VehicleIcon from "../VehicleIcon/index.js";
+import VehicleIcon from "../VehicleIcon";
 import Options from "./Options.vue";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
-import collector from "../../mixins/collector.js";
+import collector from "@/mixins/collector";
+import { defineComponent, type PropType } from "vue";
+import type { SelectOption, Vehicle } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "VehicleTitle",
 	components: { VehicleOptions: Options, VehicleIcon, Sync, CloudOffline },
 	mixins: [collector],
@@ -72,14 +74,14 @@ export default {
 		vehicleNotReachable: Boolean,
 		icon: String,
 		vehicleName: String,
-		vehicles: { type: Array, default: () => [] },
+		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
 		title: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
-	data: function () {
+	data() {
 		return {
-			refreshTooltip: null,
-			notReachableTooltip: null,
+			refreshTooltip: null as Tooltip | null,
+			notReachableTooltip: null as Tooltip | null,
 		};
 	},
 	computed: {
@@ -101,26 +103,32 @@ export default {
 			}
 			return this.$t("main.vehicle.none");
 		},
+		vehicleOptions(): SelectOption<string>[] {
+			return this.vehicles.map((v) => ({
+				name: v.name,
+				value: v.title,
+			}));
+		},
 		vehicleKnown() {
 			return !!this.vehicleName;
 		},
 		showOptions() {
 			return this.vehicleKnown || this.vehicles.length;
 		},
-		vehicleOptionsProps: function () {
+		vehicleOptionsProps() {
 			return this.collectProps(Options);
 		},
 	},
 	watch: {
-		iconType: function () {
+		iconType() {
 			this.initTooltip();
 		},
 	},
-	mounted: function () {
+	mounted() {
 		this.initTooltip();
 	},
 	methods: {
-		changeVehicle(name) {
+		changeVehicle(name: string) {
 			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
@@ -130,21 +138,23 @@ export default {
 			this.$nextTick(() => {
 				this.refreshTooltip?.dispose();
 				this.notReachableTooltip?.dispose();
-				if (this.$refs.refresh) {
-					this.refreshTooltip = new Tooltip(this.$refs.refresh);
+				if (this.$refs["refresh"]) {
+					this.refreshTooltip = new Tooltip(this.$refs["refresh"]);
 				}
-				if (this.$refs.notReachable) {
-					this.notReachableTooltip = new Tooltip(this.$refs.notReachable);
+				if (this.$refs["notReachable"]) {
+					this.notReachableTooltip = new Tooltip(this.$refs["notReachable"]);
 				}
 			});
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 			this.initTooltip();
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

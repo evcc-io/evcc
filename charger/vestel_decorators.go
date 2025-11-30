@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateVestel(base *Vestel, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateVestel(base *Vestel, phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error)) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case identifier == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseGetter == nil && phaseSwitcher != nil:
+	case identifier == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Vestel
 			api.PhaseSwitcher
@@ -22,7 +22,7 @@ func decorateVestel(base *Vestel, phaseSwitcher func(int) error, phaseGetter fun
 			},
 		}
 
-	case phaseGetter != nil && phaseSwitcher != nil:
+	case identifier == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Vestel
 			api.PhaseGetter
@@ -36,9 +36,62 @@ func decorateVestel(base *Vestel, phaseSwitcher func(int) error, phaseGetter fun
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
+
+	case identifier != nil && phaseSwitcher == nil:
+		return &struct {
+			*Vestel
+			api.Identifier
+		}{
+			Vestel: base,
+			Identifier: &decorateVestelIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case identifier != nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Vestel
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Vestel: base,
+			Identifier: &decorateVestelIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateVestelPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Vestel
+			api.Identifier
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Vestel: base,
+			Identifier: &decorateVestelIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseGetter: &decorateVestelPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateVestelPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateVestelIdentifierImpl struct {
+	identifier func() (string, error)
+}
+
+func (impl *decorateVestelIdentifierImpl) Identify() (string, error) {
+	return impl.identifier()
 }
 
 type decorateVestelPhaseGetterImpl struct {

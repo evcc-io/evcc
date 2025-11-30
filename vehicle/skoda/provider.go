@@ -128,7 +128,10 @@ var _ api.SocLimiter = (*Provider)(nil)
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.chargerG()
 	if err == nil {
-		return int64(res.Settings.TargetStateOfChargeInPercent), nil
+		if res.Settings.TargetStateOfChargeInPercent == nil {
+			return 0, api.ErrNotAvailable
+		}
+		return int64(*res.Settings.TargetStateOfChargeInPercent), nil
 	}
 
 	return 0, err

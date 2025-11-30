@@ -9,12 +9,12 @@ import (
 // Wrapper wraps an api.Tariff to capture initialization errors
 type Wrapper struct {
 	typ    string
-	config map[string]interface{}
+	config map[string]any
 	err    error
 }
 
 // NewWrapper creates an offline tariff wrapper
-func NewWrapper(typ string, other map[string]interface{}, err error) api.Tariff {
+func NewWrapper(typ string, other map[string]any, err error) api.Tariff {
 	v := &Wrapper{
 		typ:    typ,
 		config: other,
@@ -25,7 +25,7 @@ func NewWrapper(typ string, other map[string]interface{}, err error) api.Tariff 
 }
 
 // WrappedConfig indicates a device with wrapped configuration
-func (v *Wrapper) WrappedConfig() (string, map[string]interface{}) {
+func (v *Wrapper) WrappedConfig() (string, map[string]any) {
 	return v.typ, v.config
 }
 

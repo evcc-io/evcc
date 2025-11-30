@@ -9,7 +9,7 @@
 			data-testid="topnavigation-button"
 		>
 			<span
-				v-if="showBadge"
+				v-if="showRootBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
 				:class="badgeClass"
 			>
@@ -61,7 +61,7 @@
 			<li>
 				<router-link class="dropdown-item" to="/config" active-class="active">
 					<span
-						v-if="showBadge"
+						v-if="showConfigBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
 						:class="badgeClass"
 					></span>
@@ -73,11 +73,16 @@
 					{{ $t("log.title") }}
 				</router-link>
 			</li>
+
+			<li v-if="optimizeAvailable">
+				<router-link class="dropdown-item" to="/optimize" active-class="active">
+					Optimize 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
-				<li><hr class="dropdown-divider" /></li>
 				<li>
-					<h6 class="dropdown-header">{{ $t("header.login") }}</h6>
+					<h6 class="dropdown-header">{{ $t("header.authProviders.title") }}</h6>
 				</li>
 				<li v-for="l in providerLogins" :key="l.title">
 					<button
@@ -86,14 +91,13 @@
 						@click="handleProviderAuthorization(l)"
 					>
 						<span
-							v-if="!l.loggedIn"
 							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
-							:class="badgeClass"
+							:class="l.authenticated ? 'bg-success' : 'bg-warning'"
 						></span>
 						{{ l.title }}
-						{{ $t(l.loggedIn ? "main.provider.logout" : "main.provider.login") }}
 					</button>
 				</li>
+				<li><hr class="dropdown-divider" /></li>
 			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
@@ -123,68 +127,63 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import Dropdown from "bootstrap/js/dist/dropdown";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
-import collector from "../../mixins/collector.js";
-import { logout, isLoggedIn, openLoginModal } from "../Auth/auth.js";
-import baseAPI from "./baseapi.js";
-import { isApp, sendToApp } from "../../utils/native.js";
-import { isUserConfigError } from "../../utils/fatal.js";
+import collector from "@/mixins/collector";
+import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
+import { baseApi } from "@/api";
+import { isApp, sendToApp } from "@/utils/native";
+import { isUserConfigError } from "@/utils/fatal";
+import { defineComponent, type PropType } from "vue";
+import type { FatalError, Sponsor, AuthProviders, EvOpt } from "@/types/evcc";
+import type { Provider as Provider } from "./types";
 
-export default {
+export default defineComponent({
 	name: "TopNavigation",
 	mixins: [collector],
 	props: {
-		vehicleLogins: {
-			type: Object,
-			default: () => {
-				return {};
-			},
-		},
-		sponsor: {
-			type: Object,
-			default: () => {
-				return {};
-			},
-		},
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
 		battery: Array,
-		fatal: Object,
+		evopt: { type: Object as PropType<EvOpt>, required: false },
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
 		return {
 			isApp: isApp(),
+			dropdown: null as Dropdown | null,
 		};
 	},
 	computed: {
-		batteryConfigured: function () {
+		batteryConfigured() {
 			return this.battery?.length;
 		},
-		logoutCount() {
-			return this.providerLogins.filter((login) => !login.loggedIn).length;
-		},
-		providerLogins() {
-			return Object.entries(this.vehicleLogins).map(([k, v]) => ({
-				title: k,
-				loggedIn: v.authenticated,
-				loginPath: v.uri + "/login",
-				logoutPath: v.uri + "/logout",
+		providerLogins(): Provider[] {
+			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
+				title,
+				authenticated,
+				loginPath: "providerauth/login?id=" + id,
+				logoutPath: "providerauth/logout?id=" + id,
 			}));
 		},
 		loginRequired() {
-			return this.logoutCount > 0;
+			return Object.values(this.authProviders).some((p) => !p.authenticated);
 		},
-		showBadge() {
+		showConfigBadge() {
 			const userConfigError = isUserConfigError(this.fatal);
-			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
+			return this.sponsor.expiresSoon || userConfigError;
+		},
+		showRootBadge() {
+			return this.loginRequired || this.showConfigBadge;
 		},
 		badgeClass() {
-			if (this.fatal?.error) {
+			if (this.fatal.length > 0) {
 				return "bg-danger";
 			}
 			return "bg-warning";
@@ -196,6 +195,9 @@ export default {
 			const { grid, solar, co2 } = this.forecast || {};
 			return grid || solar || co2;
 		},
+		optimizeAvailable() {
+			return !!this.evopt && this.$hiddenFeatures();
+		},
 		showLogout() {
 			return isLoggedIn();
 		},
@@ -205,37 +207,70 @@ export default {
 		if (!$el) {
 			return;
 		}
-		this.dropdown = new Dropdown(document.getElementById("topNavigatonDropdown"));
+		this.dropdown = new Dropdown(
+			document.getElementById("topNavigatonDropdown") as HTMLElement
+		);
 	},
 	unmounted() {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		handleProviderAuthorization: async function (provider) {
-			if (!provider.loggedIn) {
-				baseAPI.post(provider.loginPath).then(function (response) {
-					window.location.href = response.data.loginUri;
-				});
+		async handleProviderAuthorization(provider: Provider) {
+			const { title, authenticated, loginPath, logoutPath } = provider;
+			if (!authenticated) {
+				try {
+					const response = await baseApi.get(loginPath, {
+						validateStatus: (code) => [200, 400].includes(code),
+					});
+					if (response.status === 200) {
+						window.location.href = response.data?.loginUri;
+					} else {
+						alert(`Failed to login: ${response.data?.error}`);
+					}
+				} catch (error: any) {
+					console.error(error);
+					alert("Unexpected login error: " + error.message);
+				}
 			} else {
-				baseAPI.post(provider.logoutPath);
+				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
+					try {
+						const response = await baseApi.get(logoutPath, {
+							validateStatus: (code) => [200, 400, 500].includes(code),
+						});
+						if (response.status === 200) {
+							alert(this.$t("header.authProviders.loggedOut"));
+						} else {
+							alert(`Failed to logout: ${response.data?.error}`);
+						}
+					} catch (error: any) {
+						console.error(error);
+						alert(`Unexpected logout error: ${error.response?.data}`);
+					}
+				}
 			}
 		},
 		openSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("globalSettingsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("globalSettingsModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal")
+				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("forecastModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openNativeSettings() {
@@ -249,7 +284,7 @@ export default {
 			this.$router.push({ path: "/" });
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .menu-button {

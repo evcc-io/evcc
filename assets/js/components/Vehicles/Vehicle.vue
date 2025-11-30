@@ -67,9 +67,9 @@
 	</div>
 </template>
 
-<script>
-import collector from "../../mixins/collector.js";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
+<script lang="ts">
+import collector from "@/mixins/collector.ts";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import Title from "./Title.vue";
 import Soc from "./Soc.vue";
@@ -77,9 +77,11 @@ import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
-import { distanceUnit, distanceValue } from "../../units.js";
+import { distanceUnit, distanceValue } from "@/units.ts";
+import { defineComponent, type PropType } from "vue";
+import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Vehicle",
 	components: {
 		VehicleTitle: Title,
@@ -92,7 +94,7 @@ export default {
 	},
 	mixins: [collector, formatter],
 	props: {
-		chargedEnergy: Number,
+		chargedEnergy: { type: Number, default: 0 },
 		charging: Boolean,
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
@@ -107,16 +109,18 @@ export default {
 		id: [String, Number],
 		integratedDevice: Boolean,
 		limitEnergy: Number,
-		mode: String,
+		mode: String as PropType<CHARGE_MODE>,
 		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
+		forecast: Object as PropType<Forecast>,
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,
 		planProjectedEnd: String,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planPrecondition: Number,
 		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
@@ -125,16 +129,20 @@ export default {
 		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String,
+		smartFeedInPriorityLimit: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,
-		vehicle: Object,
+		tariffFeedIn: Number,
+		vehicle: Object as PropType<Vehicle>,
 		vehicleDetectionActive: Boolean,
 		vehicleName: String,
-		vehicleRange: Number,
+		vehicleRange: { type: Number, default: 0 },
 		vehicles: Array,
-		vehicleSoc: Number,
+		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
 	},
@@ -151,31 +159,31 @@ export default {
 		};
 	},
 	computed: {
-		title: function () {
+		title() {
 			return this.vehicle?.title || "";
 		},
-		capacity: function () {
+		capacity() {
 			return this.vehicle?.capacity || 0;
 		},
-		icon: function () {
+		icon() {
 			return this.vehicle?.icon || "";
 		},
-		minSoc: function () {
+		minSoc() {
 			return this.vehicle?.minSoc || 0;
 		},
-		vehicleSocProps: function () {
+		vehicleSocProps() {
 			return this.collectProps(Soc);
 		},
-		vehicleStatus: function () {
+		vehicleStatus() {
 			return this.collectProps(Status);
 		},
-		vehicleTitleProps: function () {
+		vehicleTitleProps() {
 			return this.collectProps(Title);
 		},
-		chargingPlan: function () {
+		chargingPlan() {
 			return this.collectProps(ChargingPlan);
 		},
-		formattedSoc: function () {
+		formattedSoc() {
 			if (!this.vehicleSoc) {
 				return "--";
 			}
@@ -184,74 +192,81 @@ export default {
 			}
 			return this.fmtPercentage(this.vehicleSoc);
 		},
-		vehicleSocTitle: function () {
+		vehicleSocTitle() {
 			if (this.heating) {
 				return this.$t("main.vehicle.temp");
 			}
 			return this.$t("main.vehicle.vehicleSoc");
 		},
-		range: function () {
+		range() {
 			return distanceValue(this.vehicleRange);
 		},
-		rangeUnit: function () {
+		rangeUnit() {
 			return distanceUnit();
 		},
-		rangePerSoc: function () {
+		rangePerSoc() {
 			if (this.vehicleSoc > 10 && this.range) {
 				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
 			}
-			return null;
+			return undefined;
 		},
-		socPerKwh: function () {
+		socPerKwh() {
 			if (this.capacity > 0) {
 				return 100 / this.capacity;
 			}
-			return null;
+			return 0;
 		},
-		chargedSoc: function () {
+		chargedSoc() {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
 			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
-		chargingPlanDisabled: function () {
-			return ["off", "now"].includes(this.mode);
+		chargingPlanDisabled() {
+			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
-		smartCostDisabled: function () {
-			return ["off", "now"].includes(this.mode);
+		smartCostDisabled() {
+			return this.chargingPlanDisabled;
+		},
+		smartFeedInPriorityDisabled() {
+			return this.chargingPlanDisabled;
 		},
 	},
 	watch: {
-		effectiveLimitSoc: function () {
+		effectiveLimitSoc() {
 			this.displayLimitSoc = this.effectiveLimitSoc;
 		},
 	},
 	methods: {
-		limitSocDrag: function (limitSoc) {
+		limitSocDrag(limitSoc: number) {
 			this.displayLimitSoc = limitSoc;
 		},
-		limitSocUpdated: function (limitSoc) {
+		limitSocUpdated(limitSoc: number) {
 			this.displayLimitSoc = limitSoc;
 			this.$emit("limit-soc-updated", limitSoc);
 		},
-		limitEnergyUpdated: function (limitEnergy) {
+		limitEnergyUpdated(limitEnergy: number) {
 			this.$emit("limit-energy-updated", limitEnergy);
 		},
-		changeVehicle(name) {
+		changeVehicle(name: string) {
 			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
 		},
-		fmtEnergy(value) {
+		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openPlanModal() {
-			this.$refs.chargingPlan.openPlanModal();
+			(
+				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
+			)?.openPlanModal();
 		},
 		openMinSocSettings() {
-			this.$refs.chargingPlan.openPlanModal(true);
+			(
+				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
+			)?.openPlanModal(true);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

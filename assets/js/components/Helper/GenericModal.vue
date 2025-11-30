@@ -6,7 +6,7 @@
 			:class="classes"
 			tabindex="-1"
 			role="dialog"
-			aria-hidden="true"
+			:aria-hidden="isModalVisible ? 'false' : 'true'"
 			:data-bs-backdrop="uncloseable ? 'static' : 'true'"
 			:data-bs-keyboard="uncloseable ? 'false' : 'true'"
 			:data-testid="dataTestid"
@@ -34,21 +34,25 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
+import { defineComponent, type PropType } from "vue";
 
-export default {
+export type ModalFade = "left" | "right" | undefined;
+
+export default defineComponent({
 	name: "GenericModal",
 	props: {
 		id: String,
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
-		fade: String,
+		fade: String as PropType<ModalFade>,
 		size: String,
+		autofocus: { type: Boolean, default: true },
 	},
-	emits: ["open", "opened", "close", "closed"],
-	data: function () {
+	emits: ["open", "opened", "close", "closed", "visibilitychange"],
+	data() {
 		return {
 			isModalVisible: false,
 		};
@@ -75,45 +79,65 @@ export default {
 		},
 	},
 	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal.addEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
+		this.$refs["modal"]?.addEventListener("show.bs.modal", this.handleShow);
+		this.$refs["modal"]?.addEventListener("shown.bs.modal", this.handleShown);
+		this.$refs["modal"]?.addEventListener("hide.bs.modal", this.handleHide);
+		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.handleHidden);
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
 	},
 	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal?.removeEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.handleShow);
+		this.$refs["modal"]?.removeEventListener("shown.bs.modal", this.handleShown);
+		this.$refs["modal"]?.removeEventListener("hide.bs.modal", this.handleHide);
+		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 	},
 	methods: {
 		handleShow() {
+			console.log(this.dataTestid, "> show");
 			this.$emit("open");
 		},
 		handleShown() {
+			console.log(this.dataTestid, "> shown");
 			this.$emit("opened");
-			// focus first input or select
-			this.$nextTick(() => {
-				const firstInput = this.$refs.modalBody.querySelector("input, select, button");
-				if (firstInput) {
-					firstInput.focus();
-				}
-			});
+			// focus first input or select if autofocus is enabled
+			if (this.autofocus) {
+				this.$nextTick(() => {
+					const firstInput =
+						this.$refs["modalBody"]?.querySelector("input, select, button");
+					if (firstInput instanceof HTMLElement) {
+						firstInput.focus();
+					}
+				});
+			}
 			this.isModalVisible = true;
 		},
 		handleHide() {
+			console.log(this.dataTestid, "> hide");
 			this.$emit("close");
 		},
 		handleHidden() {
+			console.log(this.dataTestid, "> hidden");
 			this.$emit("closed");
 			this.isModalVisible = false;
 		},
 		open() {
-			Modal.getOrCreateInstance(this.$refs.modal).show();
+			const modal = this.$refs["modal"] as HTMLElement;
+			// @ts-expect-error bs internal
+			console.log(this.dataTestid, "> open", modal._isShown);
+			Modal.getOrCreateInstance(modal).show();
 		},
 		close() {
-			Modal.getOrCreateInstance(this.$refs.modal).hide();
+			const modal = this.$refs["modal"] as HTMLElement;
+			// @ts-expect-error bs internal
+			console.log(this.dataTestid, "> close", modal._isShown);
+			Modal.getOrCreateInstance(modal).hide();
+		},
+		handleVisibilityChange() {
+			if (document.visibilityState === "visible" && this.isModalVisible) {
+				this.$emit("visibilitychange");
+			}
 		},
 	},
-};
+});
 </script>

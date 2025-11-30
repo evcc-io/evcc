@@ -1,9 +1,12 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
+			<div
+				class="d-flex justify-content-between align-items-center my-3 my-md-4"
+				data-testid="header"
+			>
 				<h1 class="d-block my-0">
-					<span v-if="!isInitialSetup">
+					<span v-if="!setupRequired">
 						{{ siteTitle || "evcc" }}
 					</span>
 				</h1>
@@ -16,14 +19,26 @@
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
-			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
+			<HemsWarning :circuits="circuits" />
+			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
-			<div v-if="fatal" class="flex-grow-1 align-items-center d-flex justify-content-center">
-				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
+			<div
+				v-if="hasFatalError"
+				class="flex-grow-1 align-items-center d-flex justify-content-center"
+			>
+				<div class="d-flex flex-column align-items-center mb-5 gap-4 mx-4 text-center">
+					<h1 class="text-gray fs-4 my-0">{{ $t("startupError.title") }}</h1>
+					<p v-for="fatalText in fatalTexts" :key="fatalText" class="text-break my-0">
+						{{ fatalText }}
+					</p>
+					<router-link class="btn btn-secondary" to="/config">
+						{{ $t("startupError.editConfiguration") }}
+					</router-link>
+				</div>
 			</div>
 			<div
-				v-else-if="isInitialSetup"
+				v-else-if="setupRequired"
 				class="flex-grow-1 d-flex align-items-center justify-content-center p-3"
 			>
 				<div
@@ -44,76 +59,98 @@
 			<Loadpoints
 				v-else-if="loadpoints.length > 0"
 				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="loadpoints"
+				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"
 				:smartCostType="smartCostType"
+				:smartCostAvailable="smartCostAvailable"
+				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
+				:tariffFeedIn="tariffFeedIn"
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
-				:selectedIndex="selectedLoadpointIndex"
-				@index-changed="selectedLoadpointChanged"
+				:forecast="forecast"
+				:selectedId="selectedLoadpointId"
+				@id-changed="selectedLoadpointChanged"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
 import Navigation from "../Top/Navigation.vue";
 import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
+import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
+import { defineComponent, type PropType } from "vue";
+import type {
+	AuthProviders,
+	BatteryMeter,
+	Meter,
+	CURRENCY,
+	Forecast,
+	Notification,
+	Circuit,
+	SMART_COST_TYPE,
+	Sponsor,
+	FatalError,
+	EvOpt,
+} from "@/types/evcc";
+import store from "@/store";
+import type { Grid } from "./types";
 
-export default {
+export default defineComponent({
 	name: "Site",
 	components: {
 		Loadpoints,
 		Energyflow,
 		Footer,
+		HemsWarning,
 		Notifications,
 		TopNavigation: Navigation,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
 	props: {
-		loadpoints: Array,
-		selectedLoadpointIndex: Number,
+		selectedLoadpointId: String,
 
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
+		setupRequired: Boolean,
 
 		// details
 		gridConfigured: Boolean,
-		grid: Object,
+		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
-		pv: Array,
+		pv: { type: Array as PropType<Meter[]>, default: () => [] },
+		aux: { type: Array as PropType<Meter[]>, default: () => [] },
+		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: Array,
+		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
 		vehicles: Object,
-
-		auth: Object,
-
-		currency: String,
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY> },
 		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
@@ -128,52 +165,50 @@ export default {
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
-		sponsor: { type: Object, default: () => ({}) },
-		smartCostType: String,
-		fatal: Object,
-		forecast: Object,
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
+		smartFeedInPriorityAvailable: Boolean,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
+		forecast: Object as PropType<Forecast>,
+		circuits: Object as PropType<Record<string, Circuit>>,
+		telemetry: Boolean,
+		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
-		batteryConfigured: function () {
+		loadpoints() {
+			return store.uiLoadpoints.value || [];
+		},
+		orderedVisibleLoadpoints() {
+			return this.loadpoints.filter((lp) => lp.visible);
+		},
+		batteryConfigured() {
 			return this.battery?.length > 0;
 		},
-		pvConfigured: function () {
+		pvConfigured() {
 			return this.pv?.length > 0;
 		},
-		gridPower: function () {
+		gridPower() {
 			return this.grid?.power || 0;
 		},
-		energyflow: function () {
+		energyflow() {
 			return this.collectProps(Energyflow);
 		},
-		loadpointTitles: function () {
-			return this.loadpoints.map((lp) => lp.title);
+		loadpointTitles() {
+			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
 		},
-		loadpointsCompact: function () {
-			return this.loadpoints.map((lp) => {
-				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
-				const icon = lp.chargerIcon || vehicleIcon || "car";
-				const charging = lp.charging;
-				const power = lp.chargePower || 0;
-				return { icon, charging, power };
-			});
-		},
-		vehicleList: function () {
+		vehicleList() {
 			const vehicles = this.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
-		topNavigation: function () {
-			const vehicleLogins = this.auth ? this.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation) };
+		topNavigation() {
+			return this.collectProps(Navigation);
 		},
-		showParkingLot: function () {
+		showParkingLot() {
 			// work in progess
 			return false;
 		},
-		isInitialSetup: function () {
-			return this.loadpoints.length === 0;
-		},
-		footer: function () {
+		footer() {
 			return {
 				version: {
 					installed: window.evcc.version,
@@ -190,16 +225,25 @@ export default {
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
+					telemetry: this.telemetry,
 				},
 			};
 		},
-	},
-	methods: {
-		selectedLoadpointChanged(index) {
-			this.$router.push({ query: { lp: index + 1 } });
+		hasFatalError() {
+			return this.fatal.length > 0;
+		},
+		fatalTexts() {
+			return this.fatal.map(({ error, class: errorClass }) =>
+				errorClass ? `${errorClass}: ${error}` : error
+			);
 		},
 	},
-};
+	methods: {
+		selectedLoadpointChanged(id: string | undefined) {
+			this.$router.push({ query: { lp: id } });
+		},
+	},
+});
 </script>
 <style scoped>
 .site {
@@ -210,9 +254,6 @@ export default {
 	flex-grow: 1;
 	z-index: 1;
 }
-.fatal {
-}
-
 .configure-button:not(:active):not(:hover),
 .welcome-icons {
 	animation: colorTransition 10s infinite alternate;

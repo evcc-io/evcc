@@ -8,13 +8,14 @@
 	</button>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/adjust";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "LoadpointSettingsButton",
 	props: {
 		id: [String, Number],
 	},
-};
+});
 </script>

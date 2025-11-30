@@ -58,15 +58,12 @@ import Chart from "./Chart.vue";
 import TypeSelect from "./TypeSelect.vue";
 import Details from "./Details.vue";
 import ActiveSlot from "./ActiveSlot.vue";
-import {
-	type PriceSlot,
-	type TimeseriesEntry,
-	type Forecast,
-	ForecastType,
-	adjustedSolar,
-} from "../../utils/forecast.ts";
-import formatter from "../../mixins/formatter";
-import settings from "../../settings";
+
+import formatter from "@/mixins/formatter";
+import settings from "@/settings";
+import type { CURRENCY, Forecast } from "@/types/evcc";
+import { ForecastType, adjustedSolar } from "@/utils/forecast";
+import type { ForecastSlot, TimeseriesEntry } from "./types";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {
@@ -79,12 +76,12 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
-		currency: { type: String },
+		currency: { type: String as PropType<CURRENCY> },
 	},
-	data: function (): {
+	data(): {
 		isModalVisible: boolean;
 		selectedType: ForecastType;
-		selectedSlot: PriceSlot | TimeseriesEntry | null;
+		selectedSlot: ForecastSlot | TimeseriesEntry | null;
 	} {
 		return {
 			isModalVisible: false,
@@ -117,7 +114,7 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		isModalVisible: function (newVal) {
+		isModalVisible(newVal) {
 			if (newVal) {
 				this.updateSelectedType();
 			}
@@ -133,7 +130,7 @@ export default defineComponent({
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		updateSlot(slot: PriceSlot | TimeseriesEntry | null) {
+		updateSlot(slot: ForecastSlot | TimeseriesEntry | null) {
 			this.selectedSlot = slot;
 		},
 		updateSelectedType() {
@@ -148,7 +145,7 @@ export default defineComponent({
 			// fallback to first available type
 			this.selectedType =
 				Object.values(ForecastType).find((type) => availableTypes[type]) ||
-				Object.values(ForecastType)[0];
+				Object.values(ForecastType)[0]!;
 		},
 		changeAdjusted() {
 			settings.solarAdjusted = !settings.solarAdjusted;

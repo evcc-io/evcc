@@ -15,7 +15,7 @@ func init() {
 }
 
 // NewErrorFromConfig creates error provider
-func NewErrorFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewErrorFromConfig(other map[string]any) (Plugin, error) {
 	var cc struct {
 		Error string
 	}

@@ -12,7 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 func init() {
 	ConfigDefaults.Load()
 
-	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
+	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
 		load(class)
@@ -64,7 +64,7 @@ func register(class Class, tmpl Template) error {
 }
 
 func fromBytes(b []byte) (Template, error) {
-	// panic if template definition contains unknown fields
+	// error on unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
 
@@ -77,18 +77,13 @@ func fromBytes(b []byte) (Template, error) {
 		TemplateDefinition: definition,
 	}
 
-	err := tmpl.ResolvePresets()
-	if err == nil {
-		err = tmpl.ResolveGroup()
-	}
-	if err == nil {
-		err = tmpl.UpdateParamsWithDefaults()
-	}
-	if err == nil {
-		err = tmpl.Validate()
+	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.Validate} {
+		if err := f(); err != nil {
+			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
+		}
 	}
 
-	return tmpl, err
+	return tmpl, nil
 }
 
 func load(class Class) {

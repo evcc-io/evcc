@@ -11,8 +11,8 @@ RUN npm ci
 
 # build ui
 COPY Makefile .
-COPY .*.js ./
 COPY *.js ./
+COPY *.ts *.mts ./
 COPY assets assets
 COPY i18n i18n
 
@@ -20,7 +20,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -40,6 +40,7 @@ RUN go mod download
 # install tools
 COPY Makefile .
 COPY cmd/decorate/ cmd/decorate/
+COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
 RUN make install
 
@@ -61,7 +62,7 @@ RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.20
+FROM alpine:3.22
 
 WORKDIR /app
 
@@ -78,6 +79,8 @@ COPY packaging/docker/bin/* /app/
 EXPOSE 5353/udp
 # EEBus
 EXPOSE 4712/tcp
+# mDNS
+EXPOSE 5353/udp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger

@@ -35,3 +35,4 @@ render: |
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
+  features: ["streaming"]

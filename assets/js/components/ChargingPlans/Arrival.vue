@@ -11,7 +11,7 @@
 					:id="formId('minsoc')"
 					v-model.number="selectedMinSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedCharging"
+					:disabled="arrivalDisabled"
 					@change="changeMinSoc"
 				>
 					<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
@@ -38,7 +38,7 @@
 					:id="formId('limitsoc')"
 					v-model.number="selectedLimitSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedCharging"
+					:disabled="arrivalDisabled"
 					@change="changeLimitSoc"
 				>
 					<option v-for="soc in limitSocOptions" :key="soc.value" :value="soc.value">
@@ -51,7 +51,7 @@
 			</small>
 		</div>
 	</div>
-	<div v-if="!socBasedCharging" class="mx-2 small text-muted">
+	<div v-if="arrivalDisabled" class="mx-2 small text-muted">
 		<strong class="text-evcc">
 			{{ $t("main.loadpointSettings.disclaimerHint") }}
 		</strong>
@@ -59,11 +59,13 @@
 	</div>
 </template>
 
-<script>
-import { distanceUnit } from "../../units.js";
-import formatter from "../../mixins/formatter.js";
+<script lang="ts">
+import { distanceUnit } from "@/units";
+import formatter from "@/mixins/formatter";
+import type { SelectOption } from "@/types/evcc";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "ChargingPlanArrival",
 	mixins: [formatter],
 	props: {
@@ -71,51 +73,55 @@ export default {
 		minSoc: { type: Number, default: 0 },
 		limitSoc: { type: Number, default: 0 },
 		vehicleName: String,
+		vehicleNotReachable: Boolean,
 		socBasedCharging: Boolean,
 		rangePerSoc: Number,
 	},
 	emits: ["minsoc-updated", "limitsoc-updated"],
-	data: function () {
+	data() {
 		return { selectedMinSoc: this.minSoc, selectedLimitSoc: this.limitSoc };
 	},
 	computed: {
-		minSocOptions() {
+		minSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 95 with a step of 5
 			return Array.from(Array(20).keys())
 				.map((i) => i * 5)
 				.map(this.socOption);
 		},
-		limitSocOptions() {
+		limitSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 100 with a step of 5
 			return Array.from(Array(21).keys())
 				.map((i) => i * 5)
 				.map(this.socOption);
 		},
+		arrivalDisabled(): boolean {
+			return !(this.socBasedCharging || this.vehicleNotReachable);
+		},
 	},
 	watch: {
-		minSoc: function (value) {
+		minSoc(value: number): void {
 			this.selectedMinSoc = value;
 		},
-		limitSoc: function (value) {
+		limitSoc(value: number): void {
 			this.selectedLimitSoc = value;
 		},
 	},
 	methods: {
-		socOption: function (soc) {
+		socOption(soc: number): SelectOption<number> {
 			return {
 				value: soc,
 				name: soc === 0 ? "---" : this.fmtSocOption(soc, this.rangePerSoc, distanceUnit()),
 			};
 		},
-		formId: function (name) {
+		formId(name: string): string {
 			return `chargingplan_${this.id}_${name}`;
 		},
-		changeMinSoc: function () {
+		changeMinSoc(): void {
 			this.$emit("minsoc-updated", this.selectedMinSoc);
 		},
-		changeLimitSoc: function () {
+		changeLimitSoc(): void {
 			this.$emit("limitsoc-updated", this.selectedLimitSoc);
 		},
 	},
-};
+});
 </script>

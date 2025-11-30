@@ -26,16 +26,24 @@ type API interface {
 	// references
 	//
 
-	// GetCharger returns the loadpoint charger
-	GetChargerName() string
-	// GetMeter returns the loadpoint meter
-	GetMeterName() string
-	// GetCircuitName returns the loadpoint circuit name
-	GetCircuitName() string
+	// GetChargerRef returns the loadpoint charger
+	GetChargerRef() string
+	// SetChargerRef sets the loadpoint charger
+	SetChargerRef(string)
+	// GetMeterRef returns the loadpoint meter
+	GetMeterRef() string
+	// SetMeterRef sets the loadpoint meter
+	SetMeterRef(string)
+	// GetCircuitRef returns the loadpoint circuit
+	GetCircuitRef() string
+	// SetCircuitRef sets the loadpoint circuit
+	SetCircuitRef(string)
 	// GetCircuit returns the loadpoint circuit
 	GetCircuit() api.Circuit
-	// GetDefaultVehicle returns the loadpoint default vehicle
-	GetDefaultVehicle() string
+	// GetDefaultVehicleRef returns the loadpoint default vehicle
+	GetDefaultVehicleRef() string
+	// SetDefaultVehicleRef sets the loadpoint default vehicle
+	SetDefaultVehicleRef(string)
 
 	//
 	// settings
@@ -90,6 +98,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// EffectiveLimitSoc returns the effective session limit soc
+	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id
 	EffectivePlanId() int
 	// EffectivePlanTime returns the effective plan time
@@ -106,17 +116,19 @@ type API interface {
 	//
 
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() (time.Time, float64)
+	GetPlanEnergy() (time.Time, time.Duration, float64)
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(time.Time, float64) error
+	SetPlanEnergy(time.Time, time.Duration, float64) error
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
+	// GetPlanPreCondDuration returns the precondition duration
+	GetPlanPreCondDuration() time.Duration
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration time.Duration) api.Rates
+	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
@@ -150,17 +162,18 @@ type API interface {
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
 
-	// RemoteControl sets remote status demand
-	RemoteControl(string, RemoteDemand)
-
 	//
 	// smart grid charging
 	//
 
-	// GetSmartChargingActive determines if smart charging is active
+	// GetSmartCostLimit return the smart cost limit
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
 	SetSmartCostLimit(limit *float64)
+	// GetSmartFeedInPriorityLimit return the smart feed-in limit
+	GetSmartFeedInPriorityLimit() *float64
+	// SetSmartFeedInPriorityLimit sets the smart feed-in limit
+	SetSmartFeedInPriorityLimit(limit *float64)
 
 	//
 	// power and energy
@@ -183,7 +196,7 @@ type API interface {
 	IsFastChargingActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
-	// GetRemainingEnergy is the remaining charge energy in Wh
+	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
 
 	//
@@ -196,4 +209,6 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
+	// GetSoc returns the last vehicle or charger soc in %
+	GetSoc() float64
 }

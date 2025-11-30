@@ -72,7 +72,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance&daily=sunrise,sunset&forecast_days=3&timezone=auto&timeformat=unixtime
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=5&timezone=GMT&timeformat=unixtime
     jq: |
       def alphatemp: {{ .alphatemp }}; # temperature coefficient
       def rossmodel: {{ .rossmodel }}; # cooling type
@@ -94,24 +94,24 @@ render: |
         else
           e
         end;
-      .hourly as $h
+      .minutely_15 as $h
       | .daily as $d
       | [ range(0; ($h.time | length))
           | . as $i
           | $h.time[$i] as $time
-          | ($i / 24 | floor) as $day
+          | ($i / 96 | floor) as $day
           | {
-              start: (($time - 3600) | todateiso8601),
-              end: ($time | todateiso8601),
-              price: (
+              start: ($time | todateiso8601),
+              end: (($time + 900) | todateiso8601),
+              value: (
                 kwp
-                * ($h.global_tilted_irradiance[$i] / 1000)
+                * ($h.global_tilted_irradiance_instant[$i] / 1000)
                 * (1 + ( alphatemp *
                       (
                         ( ($h.temperature_2m[$i]
                             + ($h.temperature_2m[$i-1] // $h.temperature_2m[$i])
                           ) / 2)
-                        + ($h.global_tilted_irradiance[$i] / 800.0) * rossmodel - 25.0
+                        + $h.global_tilted_irradiance_instant[$i] * rossmodel - 25.0
                       )
                     ))
                 * (1 - calculate_damping($time;

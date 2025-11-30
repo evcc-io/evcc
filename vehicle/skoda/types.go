@@ -62,7 +62,7 @@ type ChargerResponse struct {
 type SettingsResponse struct {
 	AutoUnlockPlugWhenCharged    string `json:"autoUnlockPlugWhenCharged"`
 	MaxChargeCurrentAc           string `json:"maxChargeCurrentAc"`
-	TargetStateOfChargeInPercent int    `json:"targetStateOfChargeInPercent"`
+	TargetStateOfChargeInPercent *int   `json:"targetStateOfChargeInPercent"`
 }
 
 // ChargerResponse is the /v2/air-conditioning/<vin> api

@@ -2,7 +2,7 @@ template: vaillant
 products:
   - brand: Vaillant
     description:
-      generic: SensoNET (SG Ready)
+      generic: SensoNET (API)
 group: heating
 requirements:
   # evcc: ["sponsorship"]
@@ -12,21 +12,39 @@ requirements:
 params:
   - name: user
   - name: password
+  - name: realm
+    type: choice
+    choice: [DE, AT]
+    default: DE
+    description:
+      de: Region
+      en: Region
   - name: zone
     type: int
-    help:
-      de: Id der Boostzone
-      en: Boost zone id
+    description:
+      de: ID der Boostzone
+      en: Boost zone ID
   - name: setpoint
     type: float
-    help:
+    description:
       de: Boost Temperatur
-      en: Boost temperature setpoint
+      en: Boost temperature
+  - name: system
+    description:
+      de: Name der Anlage
+      en: Name of the system
+    help:
+      de: Notwendig falls mehrere Anlagen im Account vorhanden sind
+      en: Required if multiple systems are present in the account
   - name: phases
     deprecated: true
 render: |
   type: vaillant
   user: {{ .user }}
   password: {{ .password }}
+  realm: {{ if eq .realm "AT" -}} vaillant-austria-b2c {{- end }}
+  {{- if .system }}
+  system: {{ .system }}
+  {{- end }}
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}

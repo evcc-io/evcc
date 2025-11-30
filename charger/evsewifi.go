@@ -30,7 +30,7 @@ func init() {
 //go:generate go tool decorate -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
-func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Meter struct {
@@ -47,13 +47,13 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	wb, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"), cc.Cache)
 	if err != nil {
-		return wb, err
+		return nil, err
 	}
 
 	// auto-detect capabilities
 	params, err := wb.paramG.Get()
 	if err != nil {
-		return wb, err
+		return nil, err
 	}
 
 	if !params.AlwaysActive {
@@ -71,34 +71,32 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		wb.hires = true
 	}
 
-	// decorate Charger with Meter
-	var currentPower func() (float64, error)
+	// decorate meter
+	var (
+		power, energy      func() (float64, error)
+		currents, voltages func() (float64, float64, float64, error)
+	)
+
 	if cc.Meter.Power {
-		currentPower = wb.currentPower
+		power = wb.currentPower
 	}
 
-	// decorate Charger with MeterEnergy
-	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
+		energy = wb.totalEnergy
 	}
 
-	// decorate Charger with PhaseCurrents
-	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
 		currents = wb.currents
 	}
 
-	// decorate Charger with PhaseVoltages
-	var voltages func() (float64, float64, float64, error)
 	if cc.Meter.Voltages {
 		voltages = wb.voltages
 	}
 
-	// decorate Charger with MaxCurrentEx
-	var maxCurrentEx func(float64) error
+	// decorate Charger with MaxCurrentMillis
+	var maxCurrentMillis func(float64) error
 	if wb.hires {
-		maxCurrentEx = wb.maxCurrentEx
+		maxCurrentMillis = wb.maxCurrentMillis
 		wb.current = 100 * wb.current
 	}
 
@@ -108,7 +106,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateEVSE(wb, currentPower, totalEnergy, currents, voltages, maxCurrentEx, identify), nil
+	return decorateEVSE(wb, power, energy, currents, voltages, maxCurrentMillis, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -208,8 +206,8 @@ func (wb *EVSEWifi) MaxCurrent(current int64) error {
 	return err
 }
 
-// maxCurrentEx implements the api.ChargerEx interface
-func (wb *EVSEWifi) maxCurrentEx(current float64) error {
+// maxCurrentMillis implements the api.ChargerEx interface
+func (wb *EVSEWifi) maxCurrentMillis(current float64) error {
 	wb.current = int64(100 * current)
 	uri := fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, wb.current)
 	return wb.get(uri)

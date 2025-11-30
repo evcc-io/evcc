@@ -74,7 +74,7 @@ render: |
       address: 30344 # E-Total
       type: holding
       decode: uint32
-    scale: 0.1
+    scale: 0.01
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

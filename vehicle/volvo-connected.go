@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"context"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,19 +17,18 @@ type VolvoConnected struct {
 }
 
 func init() {
-	registry.Add("volvo-connected", NewVolvoConnectedFromConfig)
+	registry.AddCtx("volvo-connected", NewVolvoConnectedFromConfig)
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed          `mapstructure:",squash"`
-		User, Password string
-		VIN            string
-		// ClientID, ClientSecret string
-		// Sandbox                bool
-		VccApiKey string
-		Cache     time.Duration
+		embed       `mapstructure:",squash"`
+		VIN         string
+		VccApiKey   string
+		Credentials ClientCredentials
+		RedirectUri string
+		Cache       time.Duration
 	}{
 		Cache: interval,
 	}
@@ -36,48 +37,32 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
+	if cc.VccApiKey == "" {
+		return nil, errors.New("missing vccapikey")
 	}
 
-	// if cc.ClientID == "" && cc.ClientSecret == "" {
-	// 	return nil, errors.New("missing credentials")
-	// }
+	if cc.VIN == "" {
+		return nil, errors.New("missing vin")
+	}
 
-	// var options []VolvoConnected.IdentityOptions
+	if err := cc.Credentials.Error(); err != nil {
+		return nil, err
+	}
 
-	// TODO Load tokens from a persistence storage and use those during startup
-	// e.g. persistence.Load("key")
-	// if tokens != nil {
-	// 	options = append(options, VolvoConnected.WithToken(&oauth2.Token{
-	// 		AccessToken:  tokens.Access,
-	// 		RefreshToken: tokens.Refresh,
-	// 		Expiry:       tokens.Expiry,
-	// 	}))
-	// }
+	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, cc.VccApiKey)
 
-	log := util.NewLogger("volvo-cc").Redact(cc.User, cc.Password, cc.VIN, cc.VccApiKey)
-
-	// identity, err := connected.NewIdentity(log, cc.ClientID, cc.ClientSecret)
-	identity, err := connected.NewIdentity(log)
+	oc := connected.OAuthConfig(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	ts, err := connected.NewOAuth(oc, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}
 
-	ts, err := identity.Login(cc.User, cc.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	// api := connected.NewAPI(log, identity, cc.Sandbox)
-	api := connected.NewAPI(log, ts, cc.VccApiKey)
-
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	api := connected.NewAPI(log, cc.VccApiKey, ts)
 
 	v := &VolvoConnected{
 		embed:    &cc.embed,
-		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
+		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
 	}
 
-	return v, err
+	return v, nil
 }

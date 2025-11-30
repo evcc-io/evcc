@@ -18,9 +18,12 @@ params:
   - name: port
     deprecated: true
   - name: wakeup_alt
+    description:
+      en: Alternative wakeup code
+      de: Alternativer Wakeup-Code
     help:
-      de: alternativer wakeup-Code; könnte zu erhöhter Entladung der 12V-Batterie führen.
-      en: alternative wakeup-code; could lead to increased discharge of the 12V battery.
+      de: Kann zu erhöhter Entladung der 12V-Batterie führen.
+      en: Can lead to increased discharge of the 12V battery.
     default: false
     advanced: true
 render: |

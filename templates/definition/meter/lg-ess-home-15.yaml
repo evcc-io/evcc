@@ -20,9 +20,12 @@ params:
   - name: registration
     advanced: true
     example: "DE200..."
+    description:
+      en: Registration ID
+      de: Registriernummer
     help:
-      en: Registration id of the LG ESS HOME inverter.
-      de: Registriernummer des LG ESS HOME Wechselrichters.
+      en: ID of the LG ESS HOME inverter.
+      de: Nummer des LG ESS HOME Wechselrichters.
   - name: capacity
     advanced: true
   # battery control

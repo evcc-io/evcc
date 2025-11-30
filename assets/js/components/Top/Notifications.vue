@@ -41,7 +41,7 @@
 								class="d-flex justify-content-end mt-3"
 								:title="fmtAbsoluteDate(msg.time)"
 							>
-								{{ fmtTimeAgo(msg.time - new Date()) }}
+								{{ fmtTimeAgo(msg.time.getTime() - new Date().getTime()) }}
 							</small>
 							<p class="d-flex align-items-baseline">
 								<shopicon-regular-exclamationtriangle
@@ -86,37 +86,46 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/exclamationtriangle";
-import formatter from "../../mixins/formatter.js";
+import formatter from "@/mixins/formatter";
+import { defineComponent, type PropType } from "vue";
+import type { Notification, Timeout } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Notifications",
 	mixins: [formatter],
 	props: {
-		notifications: Array,
-		loadpointTitles: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
+		loadpointTitles: { type: Array as PropType<string[]>, default: () => [] },
+	},
+	data() {
+		return {
+			interval: null as Timeout,
+		};
 	},
 	computed: {
-		iconVisible: function () {
+		iconVisible() {
 			return this.notifications.length > 0;
 		},
-		iconClass: function () {
+		iconClass() {
 			return this.notifications.find((m) => m.level === "error")
 				? "text-danger"
 				: "text-warning";
 		},
 	},
-	created: function () {
+	created() {
 		this.interval = setInterval(() => {
 			this.$forceUpdate();
 		}, 10 * 1000);
 	},
-	unmounted: function () {
-		clearTimeout(this.interval);
+	unmounted() {
+		if (this.interval) {
+			clearTimeout(this.interval);
+		}
 	},
 	methods: {
-		message({ message, lp }) {
+		message({ message, lp }: { message: string | string[]; lp?: number }) {
 			const lines = Array.isArray(message) ? message : [message];
 			if (lp) {
 				// add loadpoint title to first line
@@ -124,9 +133,9 @@ export default {
 			}
 			return lines;
 		},
-		clear: function () {
+		clear() {
 			window.app?.clear();
 		},
 	},
-};
+});
 </script>

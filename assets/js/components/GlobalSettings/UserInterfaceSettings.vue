@@ -22,7 +22,7 @@
 				class="form-select form-select-sm w-75"
 			>
 				<option value="">{{ $t("settings.language.auto") }}</option>
-				<option v-for="option in languageOptions" :key="option" :value="option.value">
+				<option v-for="option in languageOptions" :key="option.value" :value="option.value">
 					{{ option.name }}
 				</option>
 			</select>
@@ -39,11 +39,40 @@
 						name: $t(`settings.unit.${value}`),
 					}))
 				"
+				:aria-label="$t('settings.unit.label')"
 				equal-width
 			/>
 		</FormRow>
-		<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
-			<TelemetrySettings :sponsorActive="!!sponsor.name" class="mt-1 mb-0" />
+		<FormRow id="settingsTimeFormat" :label="$t('settings.time.label')">
+			<SelectGroup
+				id="settingsTimeFormat"
+				v-model="timeFormat"
+				class="w-75"
+				transparent
+				:options="
+					TIME_FORMATS.map((value) => ({
+						value,
+						name: $t(`settings.time.${value}h`),
+					}))
+				"
+				:aria-label="$t('settings.time.label')"
+				equal-width
+			/>
+		</FormRow>
+		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
+			<LoadpointOrderSettings :loadpoints="loadpoints" />
+		</FormRow>
+		<FormRow v-if="fullscreenAvailable" :label="$t('settings.fullscreen.label')">
+			<button
+				v-if="fullscreenActive"
+				class="btn btn-sm btn-outline-secondary"
+				@click="exitFullscreen"
+			>
+				{{ $t("settings.fullscreen.exit") }}
+			</button>
+			<button v-else class="btn btn-sm btn-outline-secondary" @click="enterFullscreen">
+				{{ $t("settings.fullscreen.enter") }}
+			</button>
 		</FormRow>
 		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
 			<div class="form-check form-switch my-1">
@@ -61,51 +90,49 @@
 				</div>
 			</div>
 		</FormRow>
-		<FormRow v-if="fullscreenAvailable" :label="$t('settings.fullscreen.label')">
-			<button
-				v-if="fullscreenActive"
-				class="btn btn-sm btn-outline-secondary"
-				@click="exitFullscreen"
-			>
-				{{ $t("settings.fullscreen.exit") }}
-			</button>
-			<button v-else class="btn btn-sm btn-outline-secondary" @click="enterFullscreen">
-				{{ $t("settings.fullscreen.enter") }}
-			</button>
-		</FormRow>
+		<div class="small text-muted mb-3">
+			{{ $t("settings.deviceInfo") }}
+		</div>
 	</div>
 </template>
 
-<script>
-import TelemetrySettings from "../TelemetrySettings.vue";
+<script lang="ts">
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import LoadpointOrderSettings from "./LoadpointOrderSettings.vue";
 import {
 	getLocalePreference,
 	setLocalePreference,
 	LOCALES,
 	removeLocalePreference,
-} from "../../i18n.js";
-import { getThemePreference, setThemePreference, THEMES } from "../../theme.js";
-import { getUnits, setUnits, UNITS } from "../../units.js";
-import { getHiddenFeatures, setHiddenFeatures } from "../../featureflags.js";
-import { isApp } from "../../utils/native.js";
+} from "@/i18n.ts";
+import { getThemePreference, setThemePreference } from "@/theme.ts";
+import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
+import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
+import { isApp } from "@/utils/native";
+import { defineComponent, type PropType } from "vue";
+import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
 
-export default {
+const TIME_12H = "12";
+const TIME_24H = "24";
+
+export default defineComponent({
 	name: "UserInterfaceSettings",
-	components: { TelemetrySettings, FormRow, SelectGroup },
+	components: { FormRow, SelectGroup, LoadpointOrderSettings },
 	props: {
-		sponsor: Object,
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
-	data: function () {
+	data() {
 		return {
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",
 			unit: getUnits(),
+			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
 			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
-			THEMES,
-			UNITS,
+			THEMES: Object.values(THEME),
+			UNITS: Object.values(LENGTH_UNIT),
+			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
 	},
 	computed: {
@@ -114,19 +141,23 @@ export default {
 				return { value: key, name: value[1] };
 			});
 			// sort by name
-			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
+			locales.sort((a, b) => ((a.name || "") < (b.name || "") ? -1 : 1));
 			return locales;
 		},
 		fullscreenAvailable: () => {
 			const isSupported = document.fullscreenEnabled;
 			const isPwa =
-				navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
+				(navigator as any).standalone ||
+				window.matchMedia("(display-mode: standalone)").matches;
 			return isSupported && !isPwa && !isApp();
 		},
 	},
 	watch: {
 		unit(value) {
 			setUnits(value);
+		},
+		timeFormat(value) {
+			set12hFormat(value === TIME_12H);
 		},
 		theme(value) {
 			setThemePreference(value);
@@ -135,8 +166,9 @@ export default {
 			setHiddenFeatures(value);
 		},
 		language(value) {
-			const i18n = this.$root.$i18n;
-			if (value) {
+			const i18n = this.$root?.$i18n;
+			if (!i18n) return;
+			else if (value) {
 				setLocalePreference(i18n, value);
 			} else {
 				removeLocalePreference(i18n);
@@ -150,6 +182,7 @@ export default {
 		document.removeEventListener("fullscreenchange", this.fullscreenChange);
 	},
 	methods: {
+		isApp,
 		enterFullscreen() {
 			document.documentElement.requestFullscreen();
 		},
@@ -160,5 +193,5 @@ export default {
 			this.fullscreenActive = !!document.fullscreenElement;
 		},
 	},
-};
+});
 </script>

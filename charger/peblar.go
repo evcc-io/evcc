@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 evcc
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -74,7 +74,7 @@ func init() {
 //go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
-func NewPeblarFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPeblarFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -122,7 +122,7 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
-	return decoratePeblar(wb, phasesS, phasesG), err
+	return decoratePeblar(wb, phasesS, phasesG), nil
 }
 
 // Status implements the api.Charger interface

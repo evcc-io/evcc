@@ -40,9 +40,17 @@ type UnitRates struct {
 	Results  []Rate `json:"results"`
 }
 
+// RatePaymentMethodDirectDebit is set when the rate only applies when the customer is paying with Direct Debit.
+const RatePaymentMethodDirectDebit = "DIRECT_DEBIT"
+
+// RatePaymentMethodNotDirectDebit is set when the rate only applies when the customer is paying with
+// any payment means that ISN'T Direct Debit (say, pre-payment meters)
+const RatePaymentMethodNotDirectDebit = "NON_DIRECT_DEBIT"
+
 type Rate struct {
 	ValidityStart     time.Time `json:"valid_from"`
 	ValidityEnd       time.Time `json:"valid_to"`
 	PriceInclusiveTax float64   `json:"value_inc_vat"`
 	PriceExclusiveTax float64   `json:"value_exc_vat"`
+	PaymentMethod     string    `json:"payment_method"`
 }

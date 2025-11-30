@@ -2,7 +2,7 @@ template: phoenix-ev-ser
 products:
   - brand: Phoenix Contact
     description:
-      generic: EV-SER (Modbus RTU)
+      generic: EV-SER
 params:
   - name: modbus
     choice: ["rs485"]

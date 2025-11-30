@@ -39,20 +39,20 @@ func (v *dummy) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *dummy) GetPlanSoc() (time.Time, int) {
-	return time.Time{}, 0
+func (v *dummy) GetPlanSoc() (time.Time, time.Duration, int) {
+	return time.Time{}, 0, 0
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *dummy) SetPlanSoc(ts time.Time, soc int) error {
+func (v *dummy) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
 	return nil
 }
 
 // SetRepeatingPlans stores every repeating plan
-func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+func (v *dummy) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	return nil
 }
 
-func (v *dummy) GetRepeatingPlans() []api.RepeatingPlanStruct {
-	return []api.RepeatingPlanStruct{}
+func (v *dummy) GetRepeatingPlans() []api.RepeatingPlan {
+	return nil
 }

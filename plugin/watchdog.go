@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -13,7 +15,8 @@ type watchdogPlugin struct {
 	mu      sync.Mutex
 	ctx     context.Context
 	log     *util.Logger
-	reset   *string
+	reset   []string
+	initial *string
 	set     Config
 	timeout time.Duration
 	cancel  func()
@@ -24,9 +27,10 @@ func init() {
 }
 
 // NewWatchDogFromConfig creates watchDog provider
-func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Reset   *string
+		Reset   []string
+		Initial *string
 		Set     Config
 		Timeout time.Duration
 	}
@@ -39,6 +43,7 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]interface{}) (P
 		ctx:     ctx,
 		log:     contextLogger(ctx, util.NewLogger("watchdog")),
 		reset:   cc.Reset,
+		initial: cc.Initial,
 		set:     cc.Set,
 		timeout: cc.Timeout,
 	}
@@ -61,9 +66,10 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogPlugin, set func(T) error, reset *T) func(T) error {
+func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
 	return func(val T) error {
 		o.mu.Lock()
+		defer o.mu.Unlock()
 
 		// stop wdt on new write
 		if o.cancel != nil {
@@ -72,16 +78,17 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset *T) func(T
 		}
 
 		// start wdt on non-reset value
-		if reset == nil || val != *reset {
+		if !slices.Contains(reset, val) {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
 
 			go o.wdt(ctx, func() error {
+				o.mu.Lock()
+				defer o.mu.Unlock()
+
 				return set(val)
 			})
 		}
-
-		o.mu.Unlock()
 
 		return set(val)
 	}
@@ -95,16 +102,30 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
-	var reset *int64
+	var reset []int64
 	if o.reset != nil {
-		val, err := strconv.ParseInt(*o.reset, 10, 64)
+		for _, v := range o.reset {
+			val, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			reset = append(reset, val)
+		}
+	}
+
+	res := setter(o, set, reset)
+	if o.initial != nil {
+		val, err := strconv.ParseInt(*o.initial, 10, 64)
 		if err != nil {
 			return nil, err
 		}
-		reset = &val
+
+		if err := res(val); err != nil {
+			return nil, err
+		}
 	}
 
-	return setter(o, set, reset), nil
+	return res, nil
 }
 
 var _ FloatSetter = (*watchdogPlugin)(nil)
@@ -115,16 +136,30 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		return nil, err
 	}
 
-	var reset *float64
+	var reset []float64
 	if o.reset != nil {
-		val, err := strconv.ParseFloat(*o.reset, 64)
+		for _, v := range o.reset {
+			val, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				return nil, err
+			}
+			reset = append(reset, val)
+		}
+	}
+
+	res := setter(o, set, reset)
+	if o.initial != nil {
+		val, err := strconv.ParseFloat(*o.initial, 64)
 		if err != nil {
 			return nil, err
 		}
-		reset = &val
+
+		if err := res(val); err != nil {
+			return nil, err
+		}
 	}
 
-	return setter(o, set, reset), nil
+	return res, nil
 }
 
 var _ BoolSetter = (*watchdogPlugin)(nil)
@@ -135,14 +170,28 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		return nil, err
 	}
 
-	var reset *bool
-	if o.reset != nil {
-		val, err := strconv.ParseBool(*o.reset)
+	var reset []bool
+	if len(o.reset) > 1 {
+		return nil, fmt.Errorf("more than one boolean reset value")
+	} else if len(o.reset) == 1 {
+		val, err := strconv.ParseBool(o.reset[0])
 		if err != nil {
 			return nil, err
 		}
-		reset = &val
+		reset = append(reset, val)
 	}
 
-	return setter(o, set, reset), nil
+	res := setter(o, set, reset)
+	if o.initial != nil {
+		val, err := strconv.ParseBool(*o.initial)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := res(val); err != nil {
+			return nil, err
+		}
+	}
+
+	return res, nil
 }

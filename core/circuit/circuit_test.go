@@ -23,6 +23,7 @@ func circuitTests() []circuitTest {
 		{0, 0, 0, 0, 0, 0}, // =
 		{0, 0, 0, 0, 1, 1}, // +
 		{0, 0, 0, 0, 2, 1}, // +
+		{0, 0, 0, 1, 1, 1}, // =
 
 		// circuit 1 loaded
 		{0, 1, 0, 0, 0, 0}, // =
@@ -39,6 +40,9 @@ func circuitTests() []circuitTest {
 		{0, 2, 0, 2, 3, 1}, // +
 		{0, 2, 0, 2, 1, 1}, // -
 
+		{0, 1.1, 0, 2, 1, 1}, // -
+		{0, 1.1, 0, 1, 0, 0}, // -
+
 		// parent loaded
 		{1, 0, 0, 0, 0, 0}, // =
 		{1, 0, 0, 0, 1, 0}, // +
@@ -53,6 +57,12 @@ func circuitTests() []circuitTest {
 		{2, 0, 0, 2, 2, 1}, // =
 		{2, 0, 0, 2, 3, 1}, // +
 		{2, 0, 0, 2, 1, 1}, // -
+
+		{1.1, 0, 0, 2, 1, 1}, // -
+		{1.1, 0, 0, 1, 0, 0}, // -
+
+		// negative load
+		{-1, -1, 0, 0, 2, 2}, // +
 	}
 }
 
@@ -128,4 +138,14 @@ func TestCircuitCurrents(t *testing.T) {
 
 		ctrl.Finish()
 	}
+}
+
+func TestWrapCycleDetection(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	pc, _ := New(log, "root", 0, 0, nil, 0)
+	lpc, _ := New(log, "lpc", 0, 0, nil, 0)
+
+	require.NoError(t, lpc.setParent(pc))
+	require.Error(t, pc.Wrap(lpc))
 }

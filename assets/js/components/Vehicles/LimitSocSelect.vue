@@ -19,24 +19,25 @@
 	</LabelAndValue>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import { distanceUnit } from "../../units.js";
-import formatter from "../../mixins/formatter.js";
+import { distanceUnit } from "@/units";
+import formatter from "@/mixins/formatter";
 
-export default {
+export default defineComponent({
 	name: "LimitSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		limitSoc: Number,
+		limitSoc: { type: Number, default: 0 },
 		rangePerSoc: Number,
 		heating: Boolean,
 	},
 	emits: ["limit-soc-updated"],
 	computed: {
-		options: function () {
+		options() {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += this.step) {
 				const text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
@@ -44,36 +45,39 @@ export default {
 			}
 			return result;
 		},
-		step: function () {
+		step() {
 			return this.heating ? 1 : 5;
 		},
-		title: function () {
+		title() {
 			return this.heating
 				? this.$t("main.vehicle.tempLimit")
 				: this.$t("main.vehicle.targetSoc");
 		},
-		estimatedTargetRange: function () {
+		estimatedTargetRange() {
 			return this.estimatedRange(this.limitSoc);
 		},
 	},
 	methods: {
-		change: function (e) {
-			return this.$emit("limit-soc-updated", parseInt(e.target.value, 10));
+		change(e: Event) {
+			return this.$emit(
+				"limit-soc-updated",
+				parseInt((e.target as HTMLSelectElement).value, 10)
+			);
 		},
-		estimatedRange: function (soc) {
+		estimatedRange(soc: number) {
 			if (this.rangePerSoc) {
 				return Math.round(soc * this.rangePerSoc);
 			}
 			return null;
 		},
-		formatSoc: function (value) {
+		formatSoc(value: number) {
 			return this.heating ? this.fmtTemperature(value) : this.fmtPercentage(value);
 		},
-		formatKm: function (value) {
+		formatKm(value: number) {
 			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

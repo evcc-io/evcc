@@ -1,8 +1,9 @@
-template: homecharge
+template: ocpp-homecharge
+covers: ["homecharge"]
 products:
   - brand: Homecharge
     description:
-      generic: Homecharger HC11L, HC22L
+      generic: Homecharger
 requirements:
   description:
     de: |

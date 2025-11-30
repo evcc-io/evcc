@@ -5,7 +5,7 @@ products:
       generic: kWh Meter
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["pv", "charge"]
   - name: host
 render: |
   type: homewizard

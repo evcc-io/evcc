@@ -10,6 +10,7 @@ import (
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/security"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
@@ -30,8 +31,8 @@ func Instance() *CS {
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 		dispatcher.SetTimeout(Timeout)
 
-		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile)
-		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []interface{}) *ocpp.Error {
+		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile)
+		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []any) *ocpp.Error {
 			log.ERROR.Printf("%v (%s)", err, rawMessage)
 			return nil
 		})
@@ -49,6 +50,7 @@ func Instance() *CS {
 		ocppj.SetLogger(instance)
 
 		cs.SetCoreHandler(instance)
+		cs.SetSecurityHandler(instance)
 		cs.SetNewChargePointHandler(instance.NewChargePoint)
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 

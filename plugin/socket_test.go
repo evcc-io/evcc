@@ -13,7 +13,7 @@ import (
 )
 
 func TestSockePlugin(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second*10)
 	defer cancel()
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

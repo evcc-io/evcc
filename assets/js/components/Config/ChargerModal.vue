@@ -1,62 +1,27 @@
 <template>
-	<GenericModal
-		id="chargerModal"
-		:title="modalTitle"
-		data-testid="charger-modal"
+	<DeviceModalBase
+		:id="id"
+		modal-id="chargerModal"
+		device-type="charger"
 		:fade="fade"
-		@open="open"
-		@close="close"
+		:is-sponsor="isSponsor"
+		:modal-title="modalTitle"
+		:provide-template-options="provideTemplateOptions"
+		:initial-values="initialValues"
+		:is-type-deprecated="isTypeDeprecated"
+		:is-yaml-input-type="isYamlInput"
+		:transform-api-data="transformApiData"
+		:filter-template-params="filterTemplateParams"
+		:on-template-change="handleTemplateChange"
+		:apply-custom-defaults="applyCustomDefaults"
+		:custom-fields="customFields"
+		:get-product-name="getProductName"
+		@added="$emit('added', $event)"
+		@updated="$emit('updated')"
+		@removed="$emit('removed')"
+		@close="$emit('close')"
 	>
-		<form ref="form" class="container mx-0 px-0">
-			<FormRow id="chargerTemplate" :label="$t('config.charger.template')">
-				<select
-					v-if="isNew"
-					id="chargerTemplate"
-					ref="templateSelect"
-					v-model="templateName"
-					class="form-select w-100"
-					@change="templateChanged"
-				>
-					<option value="">---</option>
-					<optgroup :label="$t('config.charger.generic')">
-						<option
-							v-for="option in genericOptions"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-					</optgroup>
-					<optgroup :label="$t('config.charger.chargers')">
-						<option
-							v-for="option in chargerOptions"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-					</optgroup>
-					<optgroup :label="$t('config.charger.switchsocket')">
-						<option
-							v-for="option in switchSocketOptions"
-							:key="option.name"
-							:value="option.template"
-						>
-							{{ option.name }}
-						</option>
-					</optgroup>
-				</select>
-				<input
-					v-else
-					type="text"
-					:value="productName"
-					disabled
-					class="form-control w-100"
-				/>
-			</FormRow>
-			<p v-if="loadingTemplate">Loading ...</p>
-			<SponsorTokenRequired v-if="sponsorTokenRequired" />
-			<Markdown v-if="description" :markdown="description" class="my-4" />
+		<template #after-template-info>
 			<FormRow
 				v-if="ocppUrl"
 				id="chargerOcppUrl"
@@ -65,379 +30,227 @@
 			>
 				<input type="text" class="form-control border" :value="ocppUrl" readonly />
 			</FormRow>
-
-			<Modbus
-				v-if="modbus"
-				v-model:modbus="values.modbus"
-				v-model:id="values.id"
-				v-model:host="values.host"
-				v-model:port="values.port"
-				v-model:device="values.device"
-				v-model:baudrate="values.baudrate"
-				v-model:comset="values.comset"
-				:defaultId="modbus.ID"
-				:defaultComset="modbus.Comset"
-				:defaultBaudrate="modbus.Baudrate"
-				:defaultPort="modbus.Port"
-				:capabilities="modbusCapabilities"
-			/>
-			<PropertyEntry
-				v-for="param in normalParams"
-				:id="`chargerParam${param.Name}`"
-				:key="param.Name"
-				v-bind="param"
-				v-model="values[param.Name]"
-			/>
-
-			<PropertyCollapsible>
-				<template v-if="advancedParams.length" #advanced>
-					<PropertyEntry
-						v-for="param in advancedParams"
-						:id="`chargerParam${param.Name}`"
-						:key="param.Name"
-						v-bind="param"
-						v-model="values[param.Name]"
-					/>
-				</template>
-			</PropertyCollapsible>
-
-			<TestResult
-				v-if="templateName"
-				:success="testSuccess"
-				:failed="testFailed"
-				:unknown="testUnknown"
-				:running="testRunning"
-				:result="testResult"
-				:error="testError"
-				@test="testManually"
-			/>
-
-			<div v-if="templateName" class="my-4 d-flex justify-content-between">
-				<button
-					v-if="isDeletable"
-					type="button"
-					class="btn btn-link text-danger"
-					@click.prevent="remove"
-				>
-					{{ $t("config.general.delete") }}
-				</button>
-				<button
-					v-else
-					type="button"
-					class="btn btn-link text-muted"
-					data-bs-dismiss="modal"
-					tabindex="0"
-				>
-					{{ $t("config.general.cancel") }}
-				</button>
-				<button
-					type="submit"
-					class="btn btn-primary"
-					:disabled="testRunning || saving || sponsorTokenRequired"
-					tabindex="0"
-					@click.prevent="isNew ? create() : update()"
-				>
-					<span
-						v-if="saving"
-						class="spinner-border spinner-border-sm"
-						role="status"
-						aria-hidden="true"
-					></span>
-					{{
-						testUnknown ? $t("config.general.validateSave") : $t("config.general.save")
-					}}
-				</button>
-			</div>
-		</form>
-	</GenericModal>
+		</template>
+	</DeviceModalBase>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
-import PropertyEntry from "./PropertyEntry.vue";
-import PropertyCollapsible from "./PropertyCollapsible.vue";
-import TestResult from "./TestResult.vue";
-import api from "../../api";
-import test from "./mixins/test";
-import Modbus from "./Modbus.vue";
-import GenericModal from "../Helper/GenericModal.vue";
-import Markdown from "./Markdown.vue";
-import SponsorTokenRequired from "./SponsorTokenRequired.vue";
-const initialValues = { type: "template" };
+import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
+import { ConfigType } from "@/types/evcc";
+import type { ModalFade } from "../Helper/GenericModal.vue";
+import {
+	type DeviceValues,
+	type Template,
+	type Product,
+	type TemplateParam,
+	type ApiData,
+	customChargerName,
+} from "./DeviceModal";
+import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
+import customChargerYaml from "./defaultYaml/customCharger.yaml?raw";
+import customHeaterYaml from "./defaultYaml/customHeater.yaml?raw";
+import heatpumpYaml from "./defaultYaml/heatpump.yaml?raw";
+import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
+import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
+import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
+import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
+import { LOADPOINT_TYPE, type LoadpointType } from "@/types/evcc";
 
-function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const initialValues = {
+	type: ConfigType.Template,
+	icon: undefined,
+	deviceProduct: undefined,
+	yaml: undefined,
+	template: null,
+};
 
 const CUSTOM_FIELDS = ["modbus"];
 
-export default {
+export default defineComponent({
 	name: "ChargerModal",
 	components: {
 		FormRow,
-		PropertyEntry,
-		GenericModal,
-		Modbus,
-		TestResult,
-		PropertyCollapsible,
-		Markdown,
-		SponsorTokenRequired,
+		DeviceModalBase,
 	},
-	mixins: [test],
 	props: {
 		id: Number,
-		name: String,
-		fade: String,
+		loadpointType: { type: String as PropType<LoadpointType>, default: null },
+		fade: String as PropType<ModalFade>,
 		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {
 		return {
-			isModalVisible: false,
-			templates: [],
-			products: [],
-			templateName: null,
-			template: null,
-			saving: false,
-			selectedType: null,
-			loadingTemplate: false,
-			values: { ...initialValues },
+			initialValues,
+			customFields: CUSTOM_FIELDS,
+			currentTemplate: null as Template | null,
+			currentValues: {} as DeviceValues,
 		};
 	},
 	computed: {
-		modalTitle() {
+		modalTitle(): string {
 			if (this.isNew) {
-				return this.$t(`config.charger.titleAdd`);
+				return this.$t(`config.charger.titleAdd.${this.loadpointType}`);
 			}
-			return this.$t(`config.charger.titleEdit`);
+			return this.$t(`config.charger.titleEdit.${this.loadpointType}`);
 		},
-		chargerOptions() {
-			return this.products.filter((p) => !p.group);
+		isNew(): boolean {
+			return this.id === undefined;
 		},
-		genericOptions() {
-			return this.products.filter((p) => p.group === "generic");
+		isHeating(): boolean {
+			return this.loadpointType === LOADPOINT_TYPE.HEATING;
 		},
-		switchSocketOptions() {
-			return this.products.filter((p) => p.group === "switchsockets");
-		},
-		templateParams() {
-			const params = this.template?.Params || [];
-			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
-		},
-		normalParams() {
-			return this.templateParams.filter((p) => !p.Advanced);
-		},
-		advancedParams() {
-			return this.templateParams.filter((p) => p.Advanced);
-		},
-		modbus() {
-			const params = this.template?.Params || [];
-			return params.find((p) => p.Name === "modbus");
-		},
-		modbusCapabilities() {
-			return this.modbus?.Choice || [];
-		},
-		ocppUrl() {
+		ocppUrl(): string | null {
 			const isOcpp =
-				this.templateParams.some((p) => p.Name === "connector") &&
-				this.templateParams.some((p) => p.Name === "stationid");
-			if (isOcpp) {
-				return `ws://${window.location.hostname}:8887`;
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "connector") &&
+				this.currentTemplate?.Params.some((p: TemplateParam) => p.Name === "stationid");
+			if (isOcpp && this.currentValues) {
+				return `ws://${window.location.hostname}:8887/${this.currentValues.stationid || ""}`;
 			}
 			return null;
 		},
-		modbusDefaults() {
-			const { ID, Comset, Baudrate, Port } = this.modbus || {};
-			return {
-				id: ID,
-				comset: Comset,
-				baudrate: Baudrate,
-				port: Port,
-			};
-		},
-		description() {
-			return this.template?.Requirements?.Description;
-		},
-		productName() {
-			return this.values.deviceProduct || this.templateName;
-		},
-		sponsorTokenRequired() {
-			const list = this.template?.Requirements?.EVCC || [];
-			return list.includes("sponsorship") && !this.isSponsor;
-		},
-		apiData() {
-			return {
-				template: this.templateName,
-				...this.modbusDefaults,
-				...this.values,
-			};
-		},
-		isNew() {
-			return this.id === undefined;
-		},
-		isDeletable() {
-			return !this.isNew;
-		},
 	},
-	watch: {
-		isModalVisible(visible) {
-			if (visible) {
-				this.templateName = null;
-				this.reset();
-				this.loadProducts();
-				if (this.id !== undefined) {
-					this.loadConfiguration();
+	methods: {
+		provideTemplateOptions(products: Product[]): TemplateGroup[] {
+			const result: TemplateGroup[] = [];
+
+			if (this.isHeating) {
+				result.push({
+					label: "generic",
+					options: [
+						...products.filter((p) => p.group === "heatinggeneric"),
+						...[
+							ConfigType.Custom,
+							ConfigType.SgReadyRelay,
+							ConfigType.SgReady,
+							ConfigType.Heatpump,
+							ConfigType.SwitchSocket,
+						].map((type) =>
+							customTemplateOption(this.$t(customChargerName(type, true)), type)
+						),
+					],
+				});
+				result.push({
+					label: "heatingdevices",
+					options: products.filter((p) => p.group === "heating"),
+				});
+			} else {
+				result.push({
+					label: "generic",
+					options: [
+						...products.filter((p) => p.group === "generic"),
+						...[ConfigType.Custom, ConfigType.SwitchSocket].map((type) =>
+							customTemplateOption(this.$t(customChargerName(type, false)), type)
+						),
+					],
+				});
+				result.push({
+					label: "chargers",
+					options: products.filter((p) => !p.group),
+				});
+			}
+
+			result.push({
+				label: "switchsockets",
+				options: products.filter((p) => p.group === "switchsockets"),
+			});
+
+			return result;
+		},
+		filterTemplateParams(params: TemplateParam[]): TemplateParam[] {
+			// HACK: soft-require stationid. Can be removed once https://github.com/evcc-io/evcc/pull/22115 is merged
+			const filtered = params.map((p) => {
+				if (p.Name === "stationid") {
+					return { ...p, Required: true };
+				}
+				return p;
+			});
+
+			return filtered.filter(
+				(p) =>
+					!CUSTOM_FIELDS.includes(p.Name) &&
+					(p.Usages ? p.Usages.includes("charger") : true)
+			);
+		},
+		transformApiData(data: ApiData): ApiData {
+			if (data.type && this.isYamlInput(data.type)) {
+				// Icon is extracted from yaml on GET for UI purpose only. Don't write it back.
+				delete data.icon;
+			}
+			return data;
+		},
+		isYamlInput(type: ConfigType): boolean {
+			return [
+				ConfigType.Custom,
+				ConfigType.Heatpump,
+				ConfigType.SwitchSocket,
+				ConfigType.SgReady,
+				ConfigType.SgReadyRelay,
+				ConfigType.SgReadyBoost, // deprecated
+			].includes(type);
+		},
+		isTypeDeprecated(type: ConfigType): boolean {
+			return type === ConfigType.SgReadyBoost;
+		},
+		handleTemplateChange(e: Event, values: DeviceValues) {
+			const value = (e.target as HTMLSelectElement).value as ConfigType;
+			if (this.isYamlInput(value)) {
+				values.type = value;
+				values.yaml = this.defaultYaml(value);
+			}
+		},
+		applyCustomDefaults(template: Template | null, values: DeviceValues) {
+			// Store template and values for ocppUrl computation
+			this.currentTemplate = template;
+			this.currentValues = values;
+
+			if (this.isHeating) {
+				// enable heating and integrated device params if exist
+				const hasParam = (name: string) => template?.Params.some((p) => p.Name === name);
+				["heating", "integrateddevice"].forEach((param) => {
+					if (hasParam(param) && values[param] === undefined) {
+						values[param] = true;
+					}
+				});
+				// default heater icon
+				if (hasParam("icon") && values.icon === undefined) {
+					values.icon = "heater";
 				}
 			}
 		},
-		templateName() {
-			this.loadTemplate();
+		defaultYaml(type: ConfigType): string {
+			switch (type) {
+				case ConfigType.Custom:
+					return this.isHeating ? customHeaterYaml : customChargerYaml;
+				case ConfigType.Heatpump:
+					return heatpumpYaml;
+				case ConfigType.SwitchSocket:
+					return this.isHeating ? switchsocketHeaterYaml : switchsocketChargerYaml;
+				case ConfigType.SgReady:
+					return sgreadyYaml;
+				case ConfigType.SgReadyRelay:
+					return sgreadyRelayYaml;
+				default: // template
+					return "";
+			}
 		},
-		values: {
-			handler() {
-				this.resetTest();
-			},
-			deep: true,
+		getProductName(values: DeviceValues, templateName: string | null): string {
+			// For YAML input types, return the translated custom name
+			if (values.type && this.isYamlInput(values.type)) {
+				return this.$t(customChargerName(values.type, this.isHeating));
+			}
+			// For template types, use the standard logic (deviceProduct or templateName)
+			return values.deviceProduct || templateName || "";
 		},
 	},
-	methods: {
-		reset() {
-			this.values = { ...initialValues };
-			this.resetTest();
-		},
-		async loadConfiguration() {
-			try {
-				const charger = (await api.get(`config/devices/charger/${this.id}`)).data.result;
-				this.values = charger.config;
-				// convert structure to flat list
-				// TODO: adjust GET response to match POST/PUT formats
-				this.values.type = charger.type;
-				this.values.deviceProduct = charger.deviceProduct;
-				this.applyDefaultsFromTemplate();
-				this.templateName = this.values.template;
-			} catch (e) {
-				console.error(e);
-			}
-		},
-		async loadProducts() {
-			if (!this.isModalVisible) {
-				return;
-			}
-			try {
-				const opts = { params: { lang: this.$i18n?.locale } };
-				this.products = (await api.get("config/products/charger", opts)).data.result;
-			} catch (e) {
-				console.error(e);
-			}
-		},
-		async loadTemplate() {
-			this.template = null;
-			if (!this.templateName) return;
-			this.loadingTemplate = true;
-			try {
-				const opts = {
-					params: {
-						lang: this.$i18n?.locale,
-						name: this.templateName,
-					},
-				};
-				const result = await api.get("config/templates/charger", opts);
-				this.template = result.data.result;
-				this.applyDefaultsFromTemplate();
-			} catch (e) {
-				console.error(e);
-			}
-			this.loadingTemplate = false;
-		},
-		applyDefaultsFromTemplate() {
-			const params = this.template?.Params || [];
-			params
-				.filter((p) => p.Default && !this.values[p.Name])
-				.forEach((p) => {
-					this.values[p.Name] = p.Default;
-				});
-		},
-		async create() {
-			// persist selected template product
-			if (this.template) {
-				const select = this.$refs.templateSelect;
-				const name = select.options[select.selectedIndex].text;
-				this.values.deviceProduct = name;
-			}
-
-			if (this.testUnknown) {
-				const success = await this.test(this.testCharger);
-				if (!success) return;
-				await sleep(100);
-			}
-			this.saving = true;
-			try {
-				const response = await api.post("config/devices/charger", this.apiData);
-				const { name } = response.data.result;
-				this.$emit("added", name);
-				this.$emit("updated");
-				this.close();
-			} catch (e) {
-				this.handleCreateError(e);
-			}
-			this.saving = false;
-		},
-		async testManually() {
-			await this.test(this.testCharger);
-		},
-		async testCharger() {
-			let url = "config/test/charger";
-			if (!this.isNew) {
-				url += `/merge/${this.id}`;
-			}
-			return await api.post(url, this.apiData, { timeout: this.testTimeout });
-		},
-		async update() {
-			if (this.testUnknown) {
-				const success = await this.test(this.testCharger);
-				if (!success) return;
-				await sleep(250);
-			}
-			this.saving = true;
-			try {
-				await api.put(`config/devices/charger/${this.id}`, this.apiData);
-				this.$emit("updated");
-				this.close();
-			} catch (e) {
-				this.handleUpdateError(e);
-			}
-			this.saving = false;
-		},
-		async remove() {
-			try {
-				await api.delete(`config/devices/charger/${this.id}`);
-				this.$emit("removed", this.name);
-				this.$emit("updated");
-				this.close();
-			} catch (e) {
-				this.handleRemoveError(e);
-			}
-		},
-		open() {
-			this.isModalVisible = true;
-		},
-		close() {
-			this.$emit("close");
-			this.isModalVisible = false;
-		},
-		templateChanged() {
-			this.reset();
-		},
-	},
-};
+});
 </script>
 <style scoped>
 .container {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.addButton {
-	min-height: auto;
 }
 </style>

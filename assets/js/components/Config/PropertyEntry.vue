@@ -3,19 +3,22 @@
 		:id="id"
 		:optional="!Required"
 		:deprecated="Deprecated"
-		:label="Description || `[${Name}]`"
-		:help="Description === Help ? undefined : Help"
-		:example="Example"
+		:label="label"
+		:help="help"
+		:example="example"
 	>
 		<PropertyField
 			:id="id"
 			v-model="value"
+			class="me-2"
 			:masked="Mask"
 			:property="Name"
 			:type="Type"
-			class="me-2"
+			:unit="Unit"
 			:required="Required"
 			:choice="Choice"
+			:service-values="serviceValues"
+			:label="label"
 		/>
 	</FormRow>
 </template>
@@ -37,8 +40,10 @@ export default {
 		Help: String,
 		Example: String,
 		Type: String,
+		Unit: String,
 		Mask: Boolean,
 		Choice: Array,
+		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
@@ -50,6 +55,16 @@ export default {
 			set(value) {
 				this.$emit("update:modelValue", value);
 			},
+		},
+		label() {
+			return this.Description || `[${this.Name}]`;
+		},
+		help() {
+			return this.Description === this.Help ? undefined : this.Help;
+		},
+		example() {
+			// hide example text since config ui doesnt use go duration format (e.g. 5m)
+			return this.Type === "Duration" ? undefined : this.Example;
 		},
 	},
 };

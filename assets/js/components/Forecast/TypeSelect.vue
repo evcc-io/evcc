@@ -21,7 +21,7 @@ import { defineComponent } from "vue";
 import IconSelectItem from "../Helper/IconSelectItem.vue";
 import IconSelectGroup from "../Helper/IconSelectGroup.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
-import { ForecastType } from "../../utils/forecast.ts";
+import { ForecastType } from "@/utils/forecast";
 
 export default defineComponent({
 	name: "ForecastTypeSelect",
@@ -40,9 +40,9 @@ export default defineComponent({
 		},
 		availableTypes() {
 			return {
-				[ForecastType.Solar]: !!this.forecast.solar,
-				[ForecastType.Price]: !!this.forecast.grid,
-				[ForecastType.Co2]: !!this.forecast.co2,
+				[ForecastType.Solar]: !!this.forecast["solar"],
+				[ForecastType.Price]: !!this.forecast["grid"],
+				[ForecastType.Co2]: !!this.forecast["co2"],
 			};
 		},
 		typeIcons() {

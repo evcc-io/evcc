@@ -3,10 +3,12 @@ __debug_bin*
 !.vscode/extensions.json
 .cache
 .DS_store
+*.db
 *.gz
 *.py
 *.log
 *.json
+!i18n/*.json
 !.devcontainer/devcontainer.json
 *.yaml
 !templates/**/*.yaml
@@ -16,6 +18,7 @@ __debug_bin*
 !package*.json
 !evcc.dist.yaml
 !tests/**/*.evcc.yaml
+!tests/**/*.tpl.yaml
 !tsconfig.json
 /templates/docs
 evcc
@@ -43,3 +46,5 @@ asset-stats.html
 /playwright/.cache/
 .gitpod.yml
 /evcc.db
+/tsconfig.tsbuildinfo
+*storybook.log

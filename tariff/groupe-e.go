@@ -24,17 +24,13 @@ func init() {
 	registry.Add("groupe-e", NewGroupeEFromConfig)
 }
 
-func NewGroupeEFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewGroupeEFromConfig(other map[string]any) (api.Tariff, error) {
 	t := &GroupeE{
 		log:  util.NewLogger("groupe-e"),
 		data: util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *GroupeE) run(done chan error) {
@@ -66,7 +62,7 @@ func (t *GroupeE) run(done chan error) {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
-				Price: r.VarioPlus / 1e2, // Rp/kWh
+				Value: r.VarioPlus / 1e2, // Rp/kWh
 			}
 			data = append(data, ar)
 		}

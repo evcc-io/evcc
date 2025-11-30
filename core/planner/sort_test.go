@@ -13,15 +13,15 @@ import (
 func testRates(clock clock.Clock) api.Rates {
 	return api.Rates{
 		{
-			Price: 2,
+			Value: 2,
 			Start: clock.Now().Add(2 * time.Hour),
 		},
 		{
-			Price: 2,
+			Value: 2,
 			Start: clock.Now(),
 		},
 		{
-			Price: 1,
+			Value: 1,
 			Start: clock.Now().Add(time.Hour),
 		},
 	}

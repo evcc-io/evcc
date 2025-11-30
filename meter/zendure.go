@@ -19,9 +19,12 @@ type Zendure struct {
 	conn  *zendure.Connection
 }
 
+//go:generate go tool decorate -f decorateZendure -b *Zendure -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+
 // NewZendureFromConfig creates a Zendure meter from generic config
-func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
+		batteryCapacity                `mapstructure:",squash"`
 		Usage, Account, Serial, Region string
 		Timeout                        time.Duration
 	}{
@@ -43,7 +46,13 @@ func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
 		conn:  conn,
 	}
 
-	return c, err
+	// decorate battery
+	var soc func() (float64, error)
+	if cc.Usage == "battery" {
+		soc = c.soc
+	}
+
+	return decorateZendure(c, soc, cc.batteryCapacity.Decorator()), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -63,8 +72,8 @@ func (c *Zendure) CurrentPower() (float64, error) {
 	}
 }
 
-// Soc implements the api.Battery interface
-func (c *Zendure) Soc() (float64, error) {
+// soc implements the api.Battery interface
+func (c *Zendure) soc() (float64, error) {
 	res, err := c.conn.Data()
 	if err != nil {
 		return 0, err

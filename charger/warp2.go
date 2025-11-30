@@ -39,7 +39,7 @@ func init() {
 //go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewWarpFromConfig creates a new configurable charger
-func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		mqtt.Config   `mapstructure:",squash"`
 		Topic         string
@@ -85,7 +85,7 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), err
+	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), nil
 }
 
 // NewWarp2 creates a new configurable charger

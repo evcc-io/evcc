@@ -81,27 +81,48 @@ func TestNextPlan(t *testing.T) {
 
 	for _, tc := range []struct {
 		planId int
+		soc    int
 		plans  []plan
 	}{
-		{1, []plan{
+		{1, 0, []plan{
 			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
 			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
 		}},
-		{1, []plan{
+		{0, 20, []plan{
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+		}},
+		{1, 0, []plan{
 			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 20},
 			{Id: 2, End: clock.Now().Add(9 * time.Hour), Soc: 20},
 		}},
-		{2, []plan{
+		{2, 0, []plan{
 			{Id: 2, End: clock.Now().Add(8 * time.Hour), Soc: 20},
 			{Id: 1, End: clock.Now().Add(9 * time.Hour), Soc: 20},
 		}},
-		{2, []plan{
+		{2, 0, []plan{
 			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
 			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 60},
 		}},
+		{1, 5, []plan{
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+		}},
+		{2, 15, []plan{
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+		}},
 	} {
+		lp.vehicleSoc = float64(tc.soc)
+
 		res := lp.nextActivePlan(1e4, tc.plans)
-		require.NotNil(t, res)
+
+		if tc.planId == 0 {
+			require.Nil(t, res, tc)
+			continue
+		}
+
+		require.NotNil(t, res, tc)
 		assert.Equal(t, tc.planId, res.Id)
 	}
 }

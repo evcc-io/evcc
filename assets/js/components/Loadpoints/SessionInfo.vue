@@ -8,9 +8,12 @@
 					data-testid="sessionInfoSelect"
 					@change="selectOption($event.target.value)"
 				>
-					<span class="text-decoration-underline" data-testid="sessionInfoLabel">
+					<div
+						class="text-decoration-underline text-truncate-xs-only"
+						data-testid="sessionInfoLabel"
+					>
 						{{ label }}
-					</span>
+					</div>
 				</CustomSelect>
 			</template>
 			<template #value>
@@ -23,13 +26,15 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
-import formatter from "../../mixins/formatter.js";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import { getSessionInfo, setSessionInfo } from "./sessionInfo.js";
+import formatter from "@/mixins/formatter";
+import { getLoadpointSessionInfo, setLoadpointSessionInfo } from "@/uiLoadpoints";
+import type { CURRENCY, SelectOption, SessionInfoKey } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "LoadpointSessionInfo",
 	components: {
 		LabelAndValue,
@@ -37,51 +42,61 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		id: Number,
+		id: String,
 		sessionCo2PerKWh: { type: Number, default: 0 },
 		sessionPricePerKWh: { type: Number, default: 0 },
 		sessionPrice: { type: Number, default: 0 },
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		sessionSolarPercentage: { type: Number, default: 0 },
-		chargeRemainingDurationInterpolated: Number,
+		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
 		tariffCo2: Number,
 		tariffGrid: Number,
 	},
 	data() {
 		return {
-			selectedKey: getSessionInfo(this.id),
+			selectedKey: this.id ? getLoadpointSessionInfo(this.id) : undefined,
 		};
 	},
 	computed: {
-		options: function () {
+		options(): Array<{
+			key: SessionInfoKey;
+			value: string;
+			valueSm?: string;
+			available?: boolean;
+		}> {
 			const result = [
 				{
-					key: "remaining",
+					key: "remaining" as const,
 					value: this.fmtDuration(this.chargeRemainingDurationInterpolated),
 					available: this.chargeRemainingDurationInterpolated > 0,
 				},
 				{
-					key: "duration",
+					key: "finished" as const,
+					value: this.fmtHourMinute(this.finishTime),
+					available: this.chargeRemainingDurationInterpolated > 0,
+				},
+				{
+					key: "duration" as const,
 					value: this.fmtDuration(this.chargeDurationInterpolated),
 				},
 				{
-					key: "solar",
+					key: "solar" as const,
 					value: this.solarFormatted,
 				},
 				{
-					key: "avgPrice",
+					key: "avgPrice" as const,
 					value: this.fmtAvgPrice(this.sessionPricePerKWh),
 					valueSm: this.fmtAvgPriceShort(this.sessionPricePerKWh),
 					available: this.tariffGrid !== undefined,
 				},
 				{
-					key: "price",
+					key: "price" as const,
 					value: this.priceFormatted,
 					available: this.tariffGrid !== undefined,
 				},
 				{
-					key: "co2",
+					key: "co2" as const,
 					value: this.fmtCo2Medium(this.sessionCo2PerKWh),
 					valueSm: this.fmtCo2Short(this.sessionCo2PerKWh),
 					available: this.tariffCo2 !== undefined,
@@ -90,10 +105,10 @@ export default {
 			// only show options that are available
 			return result.filter(({ available }) => available === undefined || available);
 		},
-		optionKeys() {
+		optionKeys(): SessionInfoKey[] {
 			return this.options.map((option) => option.key);
 		},
-		selectOptions() {
+		selectOptions(): SelectOption<SessionInfoKey>[] {
 			return this.optionKeys.map((key) => ({
 				name: this.$t(`main.loadpoint.${key}`),
 				value: key,
@@ -105,16 +120,24 @@ export default {
 			);
 		},
 		label() {
-			return this.$t(`main.loadpoint.${this.selectedOption.key}`);
+			return this.$t(`main.loadpoint.${this.selectedOption?.key || ""}`);
 		},
 		value() {
-			return this.selectedOption.value;
+			return this.selectedOption?.value;
 		},
 		valueSm() {
-			return this.selectedOption.valueSm;
+			return this.selectedOption?.valueSm;
 		},
 		showSm() {
 			return this.valueSm !== undefined;
+		},
+		finishTime() {
+			const remainingSeconds = this.chargeRemainingDurationInterpolated;
+			const now = new Date();
+			if (remainingSeconds > 0) {
+				return new Date(now.getTime() + remainingSeconds * 1000);
+			}
+			return now;
 		},
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);
@@ -126,26 +149,28 @@ export default {
 		},
 	},
 	methods: {
-		fmtAvgPrice(value) {
+		fmtAvgPrice(value: number) {
 			return this.fmtPricePerKWh(value, this.currency, false);
 		},
-		fmtAvgPriceShort(value) {
+		fmtAvgPriceShort(value: number) {
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		nextSessionInfo() {
-			const index = this.optionKeys.indexOf(this.selectedKey);
+			const index = this.selectedKey ? this.optionKeys.indexOf(this.selectedKey) : -1;
 			this.selectedKey = this.optionKeys[index + 1] || this.optionKeys[0];
 			this.presist();
 		},
-		selectOption(value) {
+		selectOption(value: SessionInfoKey) {
 			this.selectedKey = value;
 			this.presist();
 		},
 		presist() {
-			setSessionInfo(this.id, this.selectedKey);
+			if (this.selectedKey && this.id) {
+				setLoadpointSessionInfo(this.id, this.selectedKey);
+			}
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

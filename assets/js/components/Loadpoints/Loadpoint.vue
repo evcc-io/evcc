@@ -24,6 +24,7 @@
 			</div>
 		</div>
 		<LoadpointSettingsModal
+			:id="id"
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
@@ -54,7 +55,7 @@
 						:label="$t('main.loadpoint.power')"
 						:value="chargePower"
 						:valueFmt="fmtPower"
-						class="mb-2 text-nowrap"
+						class="mb-2 text-nowrap text-truncate-xs-only"
 						align="start"
 					/>
 					<shopicon-regular-lightning
@@ -72,7 +73,8 @@
 			<LabelAndValue
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtEnergy(chargedEnergy)"
+				:value="chargedEnergy"
+				:valueFmt="fmtEnergy"
 				align="center"
 			/>
 			<LoadpointSessionInfo v-bind="sessionInfoProps" />
@@ -90,28 +92,39 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/adjust";
-import api from "../../api.js";
+import api from "@/api";
 import Mode from "./Mode.vue";
-import Vehicle from "../Vehicles/Vehicle.vue";
+import VehicleComponent from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
-import formatter, { POWER_UNIT } from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import collector from "@/mixins/collector.js";
 import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
-import VehicleIcon from "../VehicleIcon/index.js";
+import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import smartCostAvailable from "../../utils/smartCostAvailable.js";
 import Modal from "bootstrap/js/dist/modal";
+import { defineComponent, type PropType } from "vue";
+import type {
+	CHARGE_MODE,
+	PHASES,
+	PHASE_ACTION,
+	PV_ACTION,
+	CHARGER_STATUS_REASON,
+	Timeout,
+	Vehicle,
+	Forecast,
+	SMART_COST_TYPE,
+} from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Loadpoint",
 	components: {
 		Mode,
-		Vehicle,
+		Vehicle: VehicleComponent,
 		Phases,
 		LabelAndValue,
 		LoadpointSettingsButton: SettingsButton,
@@ -121,33 +134,33 @@ export default {
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: Number,
+		id: { type: String, required: true },
 		single: Boolean,
 
 		// main
 		title: String,
-		mode: String,
+		mode: String as PropType<CHARGE_MODE>,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
-		remoteDisabled: Boolean,
+		remoteDisabled: String,
 		remoteDisabledSource: String,
-		chargeDuration: Number,
+		chargeDuration: { type: Number, default: 0 },
 		charging: Boolean,
 		batteryBoost: Boolean,
 		batteryConfigured: Boolean,
 
 		// session
 		sessionEnergy: Number,
-		sessionCo2PerKWh: Number,
-		sessionPricePerKWh: Number,
-		sessionPrice: Number,
+		sessionCo2PerKWh: Number as PropType<number | null>,
+		sessionPricePerKWh: Number as PropType<number | null>,
+		sessionPrice: Number as PropType<number | null>,
 		sessionSolarPercentage: Number,
 
 		// charger
-		chargerStatusReason: String,
+		chargerStatusReason: String as PropType<CHARGER_STATUS_REASON | null>,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
-		chargerIcon: String,
+		chargerIcon: String as PropType<string | null>,
 
 		// vehicle
 		connected: Boolean,
@@ -155,29 +168,30 @@ export default {
 		enabled: Boolean,
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
-		vehicleSoc: Number,
+		vehicleSoc: { type: Number, default: 0 },
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleLimitSoc: Number,
-		vehicles: Array,
+		vehicles: Array as PropType<Vehicle[]>,
 		planActive: Boolean,
-		planProjectedStart: String,
-		planProjectedEnd: String,
-		planOverrun: Number,
+		planProjectedStart: String as PropType<string | null>,
+		planProjectedEnd: String as PropType<string | null>,
+		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
-		planTime: String,
-		effectivePlanTime: String,
+		planPrecondition: Number,
+		planTime: String as PropType<string | null>,
+		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
 
 		// details
-		vehicleClimaterActive: Boolean,
+		vehicleClimaterActive: Boolean as PropType<boolean | null>,
 		vehicleWelcomeActive: Boolean,
-		chargePower: Number,
-		chargedEnergy: Number,
-		chargeRemainingDuration: Number,
+		chargePower: { type: Number, default: 0 },
+		chargedEnergy: { type: Number, default: 0 },
+		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information
 		phasesConfigured: Number,
@@ -186,28 +200,37 @@ export default {
 		chargerSinglePhase: Boolean,
 		minCurrent: Number,
 		maxCurrent: Number,
-		chargeCurrent: Number,
+		offeredCurrent: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeRemainingEnergy: Number,
-		phaseAction: String,
-		phaseRemaining: Number,
-		pvRemaining: Number,
-		pvAction: String,
-		smartCostLimit: { type: Number, default: null },
-		smartCostType: String,
+		phaseAction: String as PropType<PHASE_ACTION>,
+		phaseRemaining: { type: Number, default: 0 },
+		pvRemaining: { type: Number, default: 0 },
+		pvAction: String as PropType<PV_ACTION>,
+		smartCostLimit: { type: Number as PropType<number | null>, default: null },
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		smartCostActive: Boolean,
-		smartCostNextStart: String,
+		smartCostNextStart: String as PropType<string | null>,
+		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },
+		smartFeedInPriorityAvailable: Boolean,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String as PropType<string | null>,
 		tariffGrid: Number,
+		tariffFeedIn: Number,
 		tariffCo2: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {
-			tickerHandler: null,
+			tickerHandler: null as Timeout,
 			phaseRemainingInterpolated: this.phaseRemaining,
 			pvRemainingInterpolated: this.pvRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
@@ -215,71 +238,76 @@ export default {
 		};
 	},
 	computed: {
-		vehicle: function () {
+		vehicle() {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
-		vehicleTitle: function () {
+		vehicleTitle() {
 			return this.vehicle?.title;
 		},
-		loadpointTitle: function () {
+		loadpointTitle() {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
-		integratedDevice: function () {
+		integratedDevice() {
 			return this.chargerFeatureIntegratedDevice;
 		},
-		heating: function () {
+		heating() {
 			return this.chargerFeatureHeating;
 		},
-		phasesProps: function () {
+		phasesProps() {
 			return this.collectProps(Phases);
 		},
-		modeProps: function () {
+		modeProps() {
 			return this.collectProps(Mode);
 		},
-		sessionInfoProps: function () {
+		sessionInfoProps() {
 			return this.collectProps(SessionInfo);
 		},
-		settingsModal: function () {
+		settingsModal() {
 			return this.collectProps(SettingsModal);
 		},
-		vehicleProps: function () {
-			return this.collectProps(Vehicle);
+		vehicleProps() {
+			return this.collectProps(VehicleComponent);
 		},
-		showChargingIndicator: function () {
+		showChargingIndicator() {
 			return this.charging && this.chargePower > 0;
 		},
-		vehicleKnown: function () {
+		vehicleKnown() {
 			return !!this.vehicleName;
 		},
-		vehicleHasSoc: function () {
+		vehicleHasSoc() {
 			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
 		},
-		vehicleNotReachable: function () {
+		vehicleNotReachable() {
 			// online vehicle that was not reachable at startup
 			const features = this.vehicle?.features || [];
 			return features.includes("Offline") && features.includes("Retryable");
 		},
-		planTimeUnreachable: function () {
+		planTimeUnreachable() {
 			// 1 minute tolerance
 			return this.planOverrun > 60;
 		},
-		socBasedCharging: function () {
+		socBasedCharging() {
 			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
-		socBasedPlanning: function () {
-			return this.socBasedCharging && this.vehicle?.capacity > 0;
+		socBasedPlanning() {
+			return this.socBasedCharging && this.vehicle?.capacity && this.vehicle?.capacity > 0;
 		},
-		pvPossible: function () {
+		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
-		hasSmartCost: function () {
-			return smartCostAvailable(this.smartCostType);
-		},
-		batteryBoostAvailable: function () {
+		batteryBoostAvailable() {
 			return this.batteryConfigured && this.$hiddenFeatures();
 		},
-		batteryBoostActive: function () {
-			return this.batteryBoost && this.charging && !["off", "now"].includes(this.mode);
+		batteryBoostActive() {
+			return (
+				this.batteryBoost &&
+				this.charging &&
+				this.mode &&
+				!["off", "now"].includes(this.mode)
+			);
+		},
+		plannerForecast() {
+			return this.forecast?.planner;
 		},
 	},
 	watch: {
@@ -300,7 +328,9 @@ export default {
 		this.tickerHandler = setInterval(this.tick, 1000);
 	},
 	unmounted() {
-		clearInterval(this.tickerHandler);
+		if (this.tickerHandler) {
+			clearInterval(this.tickerHandler);
+		}
 	},
 	methods: {
 		tick() {
@@ -317,50 +347,50 @@ export default {
 				this.chargeRemainingDurationInterpolated--;
 			}
 		},
-		apiPath: function (func) {
+		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
 		},
-		setTargetMode: function (mode) {
+		setTargetMode(mode: CHARGE_MODE) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setLimitSoc: function (soc) {
+		setLimitSoc(soc: number) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);
 		},
-		setLimitEnergy: function (kWh) {
+		setLimitEnergy(kWh: number) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
-		setMaxCurrent: function (maxCurrent) {
+		setMaxCurrent(maxCurrent: number) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
 		},
-		setMinCurrent: function (minCurrent) {
+		setMinCurrent(minCurrent: number) {
 			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
 		},
-		setPhasesConfigured: function (phases) {
+		setPhasesConfigured(phases: PHASES) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		changeVehicle(name) {
+		changeVehicle(name: string) {
 			api.post(this.apiPath("vehicle") + `/${name}`);
 		},
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));
 		},
-		setBatteryBoost: function (batteryBoost) {
+		setBatteryBoost(batteryBoost: boolean) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
 		},
-		fmtPower(value) {
+		fmtPower(value: number) {
 			return this.fmtW(value, POWER_UNIT.AUTO);
 		},
-		fmtEnergy(value) {
+		fmtEnergy(value: number) {
 			return this.fmtWh(value, POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById(`loadpointSettingsModal_${this.id}`)
+				document.getElementById(`loadpointSettingsModal_${this.id}`) as HTMLElement
 			);
 			modal.show();
 		},
 	},
-};
+});
 </script>
 
 <style scoped>
@@ -372,7 +402,9 @@ export default {
 
 .details > div {
 	flex-grow: 1;
+	flex-shrink: 1;
 	flex-basis: 0;
+	min-width: 0;
 }
 .details > div:nth-child(2) {
 	text-align: center;

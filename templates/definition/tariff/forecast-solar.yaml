@@ -28,9 +28,6 @@ params:
     example: 0,0,15,30,45,60,60,60,45,30,15,0
     advanced: true
   - name: apikey
-    description:
-      en: API key
-      de: API-Key
     advanced: true
   - name: interval
     default: 1h
@@ -38,6 +35,7 @@ params:
 render: |
   type: custom
   tariff: solar
+  features: ["cacheable"]
   forecast:
     source: http
     uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ end }}
@@ -45,6 +43,6 @@ render: |
       [ .result.watts | to_entries.[] | {
         "start": (.key | strptime("%FT%T%z") | strftime("%FT%TZ")),
         "end":   (.key | strptime("%FT%T%z") | mktime+3600 | strftime("%FT%TZ")),
-        "price": .value
+        "value": .value
       } ] | tostring
   interval: {{ .interval }}

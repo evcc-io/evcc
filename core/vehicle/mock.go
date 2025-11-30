@@ -70,12 +70,13 @@ func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
 }
 
 // GetPlanSoc mocks base method.
-func (m *MockAPI) GetPlanSoc() (time.Time, int) {
+func (m *MockAPI) GetPlanSoc() (time.Time, time.Duration, int) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanSoc")
 	ret0, _ := ret[0].(time.Time)
-	ret1, _ := ret[1].(int)
-	return ret0, ret1
+	ret1, _ := ret[1].(time.Duration)
+	ret2, _ := ret[2].(int)
+	return ret0, ret1, ret2
 }
 
 // GetPlanSoc indicates an expected call of GetPlanSoc.
@@ -85,10 +86,10 @@ func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 }
 
 // GetRepeatingPlans mocks base method.
-func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlanStruct {
+func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlan {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepeatingPlans")
-	ret0, _ := ret[0].([]api.RepeatingPlanStruct)
+	ret0, _ := ret[0].([]api.RepeatingPlan)
 	return ret0
 }
 
@@ -151,21 +152,21 @@ func (mr *MockAPIMockRecorder) SetMinSoc(soc any) *gomock.Call {
 }
 
 // SetPlanSoc mocks base method.
-func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
+func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 time.Duration, arg2 int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPlanSoc", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetPlanSoc", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetPlanSoc indicates an expected call of SetPlanSoc.
-func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1, arg2)
 }
 
 // SetRepeatingPlans mocks base method.
-func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlanStruct) error {
+func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlan) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetRepeatingPlans", arg0)
 	ret0, _ := ret[0].(error)

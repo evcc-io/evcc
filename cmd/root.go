@@ -16,10 +16,12 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/mcp"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -37,13 +39,13 @@ const (
 )
 
 var (
-	log         = util.NewLogger("main")
-	cfgFile     string
-	cfgDatabase string
-
-	ignoreEmpty = ""                                      // ignore empty keys
-	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
-	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+	log           = util.NewLogger("main")
+	cfgFile       string
+	cfgDatabase   string
+	customCssFile string
+	ignoreEmpty   = ""                                      // ignore empty keys
+	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 
 	viper *vpr.Viper
 
@@ -54,12 +56,18 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "evcc",
 	Short:   "evcc - open source solar charging",
-	Version: server.FormattedVersion(),
+	Version: util.FormattedVersion(),
 	Run:     runRoot,
 }
 
 func init() {
 	viper = vpr.NewWithOptions(vpr.ExperimentalBindStruct())
+
+	viper.SetEnvPrefix("evcc")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv() // read in environment variables that match
+
+	util.LogLevel("info", nil)
 
 	cobra.OnInitialize(initConfig)
 
@@ -67,10 +75,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
+	rootCmd.PersistentFlags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
 	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
+	rootCmd.PersistentFlags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -81,6 +91,9 @@ func init() {
 
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
+
+	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
+	bind(rootCmd, "mcp")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 }
@@ -105,14 +118,6 @@ func initConfig() {
 	if cfgDatabase != "" {
 		viper.Set("Database.Dsn", cfgDatabase)
 	}
-
-	viper.SetEnvPrefix("evcc")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// print version
-	util.LogLevel("info", nil)
-	log.INFO.Printf("evcc %s", server.FormattedVersion())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -126,15 +131,21 @@ func Execute() {
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
+	// print version
+	log.INFO.Printf("evcc %s", util.FormattedVersion())
+
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
-		log.INFO.Println("missing config file - switching into demo mode")
+	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
+		log.INFO.Println("switching into demo mode as requested through the --demo flag")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		err = wrapErrorWithClass(ClassConfigFile, cfgErr)
+		if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); cfgErr != nil {
+			// evcc.yaml found, might have errors
+			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
+		}
 	}
 
 	// setup environment
@@ -147,7 +158,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("listening at :%d", conf.Network.Port)
+	// configure plugin external url
+	if err == nil {
+		// network configuration complete, start dependent services like HomeAssistant discovery
+		network.Start(conf.Network)
+	}
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -160,7 +175,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+
+	// start serving in background, watch for “routine‐only” errors
+	go func() {
+		if err := wrapFatalError(httpd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
+			log.FATAL.Println(err)
+			os.Exit(1)
+		}
+	}()
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+
+	// publish to UI
+	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
+
+	// signal ui listening
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -172,15 +202,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
 
-	// publish to UI
-	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
-
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
 
 	// setup telemetry
 	if err == nil {
-		telemetry.Create(conf.Plant)
+		telemetry.Create(conf.Plant, valueChan)
 		if conf.Telemetry {
 			err = telemetry.Enable(true)
 		}
@@ -217,6 +244,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				keys.TariffGrid,
 				keys.TariffPriceHome,
 				keys.TariffPriceLoadpoints,
+				keys.TariffSolar,
 				keys.ChargedEnergy,
 				keys.ChargeRemainingEnergy)
 			go influx.Run(site, dedupe.Pipe(
@@ -225,11 +253,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// signal restart
-	valueChan <- util.Param{Key: keys.Startup, Val: true}
+	// signal devices initialized
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
+	// show onboarding UI
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || len(site.Loadpoints()) == 0}
 
 	// setup mqtt publisher
-	if err == nil && conf.Mqtt.Broker != "" {
+	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
 		var mqtt *server.MQTT
 		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
 		if err == nil {
@@ -238,13 +268,30 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// announce on mDNS
-	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
-		err = configureMDNS(conf.Network)
+	if err == nil {
+		if err := configureMDNS(conf.Network); err != nil {
+			log.WARN.Println("mDNS:", err)
+		}
+	}
+
+	// start SHM server
+	if err == nil {
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, conf.Network.ExternalURL(), site, httpd))
 	}
 
 	// start HEMS server
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site, httpd))
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
+	}
+
+	// setup MCP
+	if viper.GetBool("mcp") {
+		router := httpd.Router()
+
+		var handler http.Handler
+		if handler, err = mcp.NewHandler(router); err == nil {
+			router.PathPrefix("/mcp").Handler(handler)
+		}
 	}
 
 	// setup messaging
@@ -257,6 +304,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
 	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
@@ -264,6 +312,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
+
+	// publish system infos
+	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
+	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -278,37 +331,30 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		// exit code 1 on error
-		os.Exit(cast.ToInt(err != nil))
-	}()
-
 	// allow web access for vehicles
-	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
+	configureAuth(httpd.Router(), valueChan)
 
-	auth := auth.New()
+	authObject := auth.New()
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
-		auth.Disable()
+		authObject.SetAuthMode(auth.Disabled)
+		valueChan <- util.Param{Key: keys.AuthDisabled, Val: true}
 	}
 
-	httpd.RegisterSystemHandler(valueChan, cache, auth, func() {
+	if ok, _ := cmd.Flags().GetBool(flagDemoMode); ok {
+		log.WARN.Println("Authentication is locked in demo mode. Login-features are disabled.")
+		authObject.SetAuthMode(auth.Locked)
+		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
+	}
+
+	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	})
+	}, viper.ConfigFileUsed())
 
 	// show and check version, reduce api load during development
-	if server.Version != server.DevVersion {
-		valueChan <- util.Param{Key: keys.Version, Val: server.FormattedVersion()}
+	if util.Version != util.DevVersion {
 		go updater.Run(log, httpd, valueChan)
 	}
 
@@ -326,9 +372,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		// improve error message
-		err = wrapFatalError(err)
-		valueChan <- util.Param{Key: keys.Fatal, Val: err}
+		if uw, ok := err.(interface{ Unwrap() []error }); ok {
+			valueChan <- util.Param{Key: keys.Fatal, Val: uw.Unwrap()}
+		} else {
+			valueChan <- util.Param{Key: keys.Fatal, Val: []error{wrapFatalError(err)}}
+		}
 
 		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)
@@ -343,5 +391,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
+	// wait for shutdown
+	<-stopC
+
+	select {
+	case <-shutdownDoneC(): // wait for shutdown
+	case <-time.After(conf.Interval):
+	}
+
+	// exit code 1 on error
+	os.Exit(cast.ToInt(err != nil))
 }
