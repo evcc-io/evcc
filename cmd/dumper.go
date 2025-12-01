@@ -150,14 +150,14 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := v.(api.BatterySocLimiter); ok {
 		min, max := v.GetSocLimits()
-		fmt.Fprintf(w, "Min SoC:\t%.0f%%\t\t\n", min)
-		fmt.Fprintf(w, "Max SoC:\t%.0f%%\t\t\n", max)
+		fmt.Fprintf(w, "Min soc:\t%.0f%%\t\t\n", min)
+		fmt.Fprintf(w, "Max soc:\t%.0f%%\t\t\n", max)
 	}
 
 	if v, ok := v.(api.BatteryPowerLimiter); ok {
 		charge, discharge := v.GetPowerLimits()
-		fmt.Fprintf(w, "Charge Power:\t%.0fW\t\t\n", charge)
-		fmt.Fprintf(w, "Discharge Power:\t%.0fW\t\t\n", discharge)
+		fmt.Fprintf(w, "Charge power:\t%.0fW\t\t\n", charge)
+		fmt.Fprintf(w, "Discharge power:\t%.0fW\t\t\n", discharge)
 	}
 
 	if v, ok := v.(api.MaxACPowerGetter); ok {
