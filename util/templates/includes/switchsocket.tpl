@@ -9,13 +9,15 @@ features:
 {{- if $heatingSet }}
 - heating
 {{- end }}
+{{- if .features }}
 {{- range .features }}
-{{- if and (ne . "integrateddevice") (ne . "heating") }}
+{{- if eq . "integrateddevice" }}{{ if not $integrateddeviceSet }}
 - {{ . }}
-{{- else if and (eq . "integrateddevice") (not $integrateddeviceSet) }}
+{{- end }}{{ else if eq . "heating" }}{{ if not $heatingSet }}
 - {{ . }}
-{{- else if and (eq . "heating") (not $heatingSet) }}
+{{- end }}{{ else }}
 - {{ . }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if .icon }}
