@@ -468,16 +468,23 @@ export interface MessagingServiceShout {
 }
 export interface MessagingServiceNfty {
   type: MESSAGING_SERVICE_TYPE.NTFY;
-  other: { uri: string; priority?: string; tags: string };
+  other: { uri: string; priority?: MESSAGING_SERVICE_NFTY_PRIORITY; tags?: string };
+}
+export enum MESSAGING_SERVICE_NFTY_PRIORITY {
+  MAX = "max",
+  HIGH = "high",
+  DEFAULT = "default",
+  LOW = "low",
+  min = "min",
 }
 export interface MessagingServiceCustom {
   type: MESSAGING_SERVICE_TYPE.CUSTOM;
   other: {
-    encoding?: MessagingServiceCustomEncoding;
+    encoding?: MESSAGING_SERVICE_CUSTOM_ENCODING;
     send: any;
   };
 }
-export enum MessagingServiceCustomEncoding {
+export enum MESSAGING_SERVICE_CUSTOM_ENCODING {
   JSON = "json",
   CSV = "csv",
   TSV = "tsv",
