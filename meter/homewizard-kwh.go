@@ -13,21 +13,21 @@ func init() {
 	registry.Add("homewizard-kwh", NewHomeWizardKWHFromConfig)
 }
 
-// HomeWizardKWH implements the api.Meter interface for kWh meters
+// HomeWizardKWH is a wrapper for kWh meters using the common HomeWizardMeter base
 type HomeWizardKWH struct {
-	log    *util.Logger
-	device *device.KWHDevice
-	usage  string // "pv" or "grid"
+	*HomeWizardMeter
 }
 
 func NewHomeWizardKWHFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Host    string
 		Token   string
-		Usage   string
+		Usage   string // "pv" or "grid"
+		Phases  int    // 1 or 3
 		Timeout time.Duration
 	}{
 		Usage:   "pv",
+		Phases:  3,
 		Timeout: device.DefaultTimeout,
 	}
 
@@ -40,46 +40,29 @@ func NewHomeWizardKWHFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("missing host or token - run 'evcc token homewizard'")
 	}
 
-	m := &HomeWizardKWH{
-		log:    util.NewLogger("homewizard-kwh"),
-		device: device.NewKWHDevice(cc.Host, cc.Token, cc.Timeout),
-		usage:  cc.Usage,
+	// Validate phases
+	if cc.Phases != 1 && cc.Phases != 3 {
+		return nil, fmt.Errorf("invalid phases value %d: must be 1 or 3", cc.Phases)
 	}
 
+	log := util.NewLogger("homewizard-kwh")
+	kwhDevice := device.NewKWHMeterDevice(cc.Host, cc.Token, cc.Timeout)
+
 	// Start device connection and wait for it to succeed
-	if err := m.device.StartAndWait(cc.Timeout); err != nil {
+	if err := kwhDevice.StartAndWait(cc.Timeout); err != nil {
 		return nil, err
 	}
 
-	m.log.INFO.Printf("configured kWh meter at %s", cc.Host)
+	log.INFO.Printf("configured kWh meter at %s (%d-phase, usage=%s)", cc.Host, cc.Phases, cc.Usage)
+
+	m := &HomeWizardKWH{
+		HomeWizardMeter: &HomeWizardMeter{
+			log:    log,
+			device: kwhDevice,
+			usage:  cc.Usage,
+			phases: cc.Phases,
+		},
+	}
 
 	return m, nil
-}
-
-var _ api.Meter = (*HomeWizardKWH)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (m *HomeWizardKWH) CurrentPower() (float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-
-	// Invert power for PV (production shows as negative)
-	// Don't invert for grid (import = positive, export = negative)
-	if m.usage == "pv" {
-		return -1 * measurement.PowerW, nil
-	}
-	return measurement.PowerW, nil
-}
-
-var _ api.MeterEnergy = (*HomeWizardKWH)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *HomeWizardKWH) TotalEnergy() (float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-	return measurement.EnergyImportkWh, nil
 }

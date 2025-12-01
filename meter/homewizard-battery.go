@@ -19,7 +19,7 @@ func init() {
 type HomeWizardBattery struct {
 	log            *util.Logger
 	device         *device.BatteryDevice
-	controller     *device.P1Device
+	controller     *device.P1MeterDevice
 	controllerOnce sync.Once
 	capacity       float64
 	maxCharge      float64 // Maximum charge power in W
@@ -68,7 +68,7 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 // getController resolves the controller P1 meter (lazy initialization to avoid timing issues)
-func (m *HomeWizardBattery) getController() (*device.P1Device, error) {
+func (m *HomeWizardBattery) getController() (*device.P1MeterDevice, error) {
 	var err error
 
 	m.controllerOnce.Do(func() {
@@ -88,7 +88,8 @@ func (m *HomeWizardBattery) getController() (*device.P1Device, error) {
 			return
 		}
 
-		m.controller = controllerP1.device
+		// Store P1MeterDevice for battery control
+		m.controller = controllerP1.p1MeterDevice
 		m.log.DEBUG.Printf("resolved controller: %s", m.controller.Host())
 	})
 
@@ -117,35 +118,21 @@ var _ api.Meter = (*HomeWizardBattery)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (m *HomeWizardBattery) CurrentPower() (float64, error) {
-	// Get power directly from battery device
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-	// Invert the battery power, because HW reports negative = discharging and positive = charging
-	return -1 * measurement.PowerW, nil
+	return m.device.GetPower()
 }
 
 var _ api.MeterEnergy = (*HomeWizardBattery)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (m *HomeWizardBattery) TotalEnergy() (float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-	return measurement.EnergyImportkWh, nil
+	return m.device.GetTotalEnergy()
 }
 
 var _ api.Battery = (*HomeWizardBattery)(nil)
 
 // Soc implements the api.Battery interface
 func (m *HomeWizardBattery) Soc() (float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-	return measurement.StateOfChargePct, nil
+	return m.device.GetSoc()
 }
 
 var _ api.BatteryCapacity = (*HomeWizardBattery)(nil)
@@ -189,7 +176,7 @@ func (m *HomeWizardBattery) SetBatteryMode(mode api.BatteryMode) error {
 
 	m.log.INFO.Printf("converted to HomeWizard mode: %s", hwMode)
 
-	// Set battery mode via controller P1 meter
+	// Set battery mode via controller P1 meter's wrapper method
 	if err := controller.SetBatteryMode(hwMode); err != nil {
 		m.log.ERROR.Printf("failed to set battery mode: %v", err)
 		return err

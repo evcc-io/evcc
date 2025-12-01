@@ -13,18 +13,20 @@ func init() {
 	registry.Add("homewizard-p1", NewHomeWizardP1FromConfig)
 }
 
-// HomeWizardP1 implements the api.Meter interface for P1 meters
+// HomeWizardP1 is a wrapper for P1 meters using the common HomeWizardMeter base
 type HomeWizardP1 struct {
-	log    *util.Logger
-	device *device.P1Device
+	*HomeWizardMeter
+	p1MeterDevice *device.P1MeterDevice // Keep reference for battery control
 }
 
 func NewHomeWizardP1FromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Host    string
 		Token   string
+		Phases  int // 1 or 3
 		Timeout time.Duration
 	}{
+		Phases:  3,
 		Timeout: device.DefaultTimeout,
 	}
 
@@ -37,61 +39,37 @@ func NewHomeWizardP1FromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("missing host or token - run 'evcc token homewizard'")
 	}
 
-	m := &HomeWizardP1{
-		log:    util.NewLogger("homewizard-p1"),
-		device: device.NewP1Device(cc.Host, cc.Token, cc.Timeout),
+	// Validate phases
+	if cc.Phases != 1 && cc.Phases != 3 {
+		return nil, fmt.Errorf("invalid phases value %d: must be 1 or 3", cc.Phases)
 	}
 
+	log := util.NewLogger("homewizard-p1")
+
+	// Create P1MeterDevice (includes battery control)
+	p1MeterDevice := device.NewP1MeterDevice(cc.Host, cc.Token, cc.Timeout)
+
 	// Start device connection and wait for it to succeed
-	if err := m.device.StartAndWait(cc.Timeout); err != nil {
+	if err := p1MeterDevice.StartAndWait(cc.Timeout); err != nil {
 		return nil, err
 	}
 
-	m.log.INFO.Printf("configured P1 meter at %s", cc.Host)
+	log.INFO.Printf("configured P1 meter at %s (%d-phase)", cc.Host, cc.Phases)
+
+	m := &HomeWizardP1{
+		HomeWizardMeter: &HomeWizardMeter{
+			log:    log,
+			device: p1MeterDevice,
+			usage:  "grid", // P1 meters are always grid meters
+			phases: cc.Phases,
+		},
+		p1MeterDevice: p1MeterDevice,
+	}
 
 	return m, nil
 }
 
-var _ api.Meter = (*HomeWizardP1)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (m *HomeWizardP1) CurrentPower() (float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-	return measurement.PowerW, nil
-}
-
-var _ api.MeterEnergy = (*HomeWizardP1)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *HomeWizardP1) TotalEnergy() (float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, err
-	}
-	return measurement.EnergyImportT1kWh + measurement.EnergyImportT2kWh, nil
-}
-
-var _ api.PhaseCurrents = (*HomeWizardP1)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (m *HomeWizardP1) Currents() (float64, float64, float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	return measurement.CurrentL1A, measurement.CurrentL2A, measurement.CurrentL3A, nil
-}
-
-var _ api.PhaseVoltages = (*HomeWizardP1)(nil)
-
-// Voltages implements the api.PhaseVoltages interface
-func (m *HomeWizardP1) Voltages() (float64, float64, float64, error) {
-	measurement, err := m.device.GetMeasurement()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	return measurement.VoltageL1V, measurement.VoltageL2V, measurement.VoltageL3V, nil
+// SetBatteryMode sets battery mode via P1 meter (for battery controller)
+func (m *HomeWizardP1) SetBatteryMode(mode string) error {
+	return m.p1MeterDevice.SetBatteryMode(mode)
 }

@@ -20,14 +20,25 @@ params:
       en: Device hostname or IP
       de: Gerätehostname oder IP
     required: true
-  - name: usage
-    choice: ["grid"]
   - name: token
     description:
       en: Device authentication token
       de: Geräte-Authentifizierungstoken
     required: true
     mask: true
+  - name: phases
+    choice: [1, 3]
+    description:
+      en: Number of phases
+      de: Anzahl der Phasen
+    help:
+      en: |
+        1: Single-phase P1 meter
+        3: Three-phase P1 meter (most common)
+      de: |
+        1: Einphasiger P1-Zähler
+        3: Dreiphasiger P1-Zähler (am häufigsten)
+    default: 3
   - name: timeout
     description:
       en: Connection timeout
@@ -38,6 +49,7 @@ render: |
   type: homewizard-p1
   host: {{ .host }}
   token: {{ .token }}
+  phases: {{ .phases }}
   {{- if .timeout }}
   timeout: {{ .timeout }}
   {{- end }}

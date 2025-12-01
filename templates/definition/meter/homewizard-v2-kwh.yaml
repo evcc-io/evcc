@@ -26,18 +26,34 @@ params:
       de: Geräte-Authentifizierungstoken
     required: true
     mask: true
+  - name: phases
+    choice: [1, 3]
+    description:
+      en: Number of phases
+      de: Anzahl der Phasen
+    help:
+      en: |
+        1: Single-phase meter (HWE-KWH1)
+        3: Three-phase meter (HWE-KWH3)
+      de: |
+        1: Einphasiger Zähler (HWE-KWH1)
+        3: Dreiphasiger Zähler (HWE-KWH3)
+    default: 3
   - name: usage
-    choice: ["pv", "charge"]
+    choice: ["pv", "grid", "charge"]
     description:
       en: Meter usage type
       de: Zählerverwendungstyp
     help:
       en: |
-        PV: Solar production (inverts power, production shows as negative)
-        Grid: Grid monitoring (no inversion, import = positive, export = negative)
+        pv: Solar production (inverts power, production shows as positive)
+        grid: Grid monitoring (no inversion, import = positive, export = negative)
+        charge: Charge monitoring
       de: |
-        PV: Solarproduktion (invertiert Leistung, Produktion zeigt negativ)
-        Grid: Netzmessung (keine Invertierung, Import = positiv, Export = negativ)
+        pv: Solarproduktion (invertiert Leistung, Produktion zeigt positiv)
+        grid: Netzmessung (keine Invertierung, Import = positiv, Export = negativ)
+        charge: Lademessung
+    default: pv
   - name: timeout
     description:
       en: Connection timeout
@@ -48,6 +64,7 @@ render: |
   type: homewizard-kwh
   host: {{ .host }}
   token: {{ .token }}
+  phases: {{ .phases }}
   usage: {{ .usage }}
   {{- if .timeout }}
   timeout: {{ .timeout }}
