@@ -7,6 +7,9 @@ features:
 {{- if and .heating (ne .heating "false") }}
 - heating
 {{- end }}
+{{- range .features }}
+- {{ . }}
+{{- end }}
 {{- if .icon }}
 icon: {{ .icon }}
 {{- end }}

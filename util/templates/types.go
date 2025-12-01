@@ -76,7 +76,7 @@ const (
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
 var predefinedTemplateProperties = append(
-	[]string{"type", "template", "name"},
+	[]string{"type", "template", "name", "icon", "features"},
 	append(ModbusParams, ModbusConnectionTypes...)...,
 )
 
