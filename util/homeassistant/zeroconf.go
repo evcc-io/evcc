@@ -25,10 +25,23 @@ func instanceUriByName(name string) string {
 	return instances[name]
 }
 
+func instanceNameByUri(uri string) string {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for n, u := range instances {
+		if uri == u {
+			return n
+		}
+	}
+
+	return ""
+}
+
 func addInstance(name, uri string) {
 	mu.Lock()
 	defer mu.Unlock()
-	instances[name] = uri
+	instances[name] = strings.TrimRight(uri, "/")
 }
 
 func scan() {
