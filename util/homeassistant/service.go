@@ -2,6 +2,7 @@ package homeassistant
 
 import (
 	"encoding/json"
+	"errors"
 	"maps"
 	"net/http"
 	"slices"
@@ -16,28 +17,27 @@ var log = util.NewLogger("homeassistant")
 
 func init() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /homes", getHomes)
-	mux.HandleFunc("GET /homes/{home}/entities", getEntities)
+	mux.HandleFunc("GET /instances", getInstances)
+	mux.HandleFunc("GET /entities", getEntities)
 
 	service.Register("homeassistant", mux)
 }
 
-func getHomes(w http.ResponseWriter, req *http.Request) {
+func getInstances(w http.ResponseWriter, req *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	jsonWrite(w, slices.Sorted(maps.Keys(instances)))
+	jsonWrite(w, slices.Sorted(maps.Values(instances)))
 }
 
 func getEntities(w http.ResponseWriter, req *http.Request) {
-	home := req.PathValue("home")
-
-	if instanceUriByName(home) == "" {
-		w.WriteHeader(http.StatusBadRequest)
+	uri := req.URL.Query().Get("uri")
+	if uri == "" {
+		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
 		return
 	}
 
-	conn, _ := NewConnection(log, home)
+	conn, _ := NewConnection(log, uri, "")
 	res, err := conn.GetStates()
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)

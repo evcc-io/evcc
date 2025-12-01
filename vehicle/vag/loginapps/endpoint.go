@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -76,6 +77,8 @@ func (v *Service) Refresh(token *Token) (*Token, error) {
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
+
+	res.Expiry = time.Now().Add(time.Duration(res.ExpiresIn) * time.Second)
 
 	t := Token(res)
 	return &t, err

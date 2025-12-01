@@ -158,6 +158,9 @@
     },
     "general": {
       "applyAndClose": "Toepassen & sluiten",
+      "authPerform": "Verbonden met {provider}",
+      "authPerformHint": "Wordt in een nieuw tabblad geopend. Ga terug naar deze pagina om verder te gaan.",
+      "authPrepare": "Verbinding voorbereiden",
       "cancel": "Annuleren",
       "close": "Sluiten",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
