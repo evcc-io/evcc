@@ -1,19 +1,14 @@
-package meter
+package homewizard
 
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/mluiten/evcc-homewizard-v2/device"
 )
-
-func init() {
-	registry.Add("homewizard-battery", NewHomeWizardBatteryFromConfig)
-}
 
 // HomeWizardBattery implements the api.Meter interface for battery devices
 type HomeWizardBattery struct {
@@ -26,16 +21,12 @@ type HomeWizardBattery struct {
 	maxDischarge   float64 // Maximum discharge power in W
 }
 
-func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
+func NewHomeWizardBatteryFromConfig(common Config, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		Host         string
-		Token        string
 		Capacity     float64
 		MaxCharge    float64
 		MaxDischarge float64
-		Timeout      time.Duration
 	}{
-		Timeout:      device.DefaultTimeout,
 		MaxCharge:    device.DefaultMaxCharge,
 		MaxDischarge: device.DefaultMaxDischarge,
 	}
@@ -44,25 +35,20 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	// Validate required parameters
-	if cc.Host == "" || cc.Token == "" {
-		return nil, fmt.Errorf("missing host or token - run 'evcc token homewizard'")
-	}
-
 	m := &HomeWizardBattery{
 		log:          util.NewLogger("homewizard-battery"),
-		device:       device.NewBatteryDevice(cc.Host, cc.Token, cc.Timeout),
+		device:       device.NewBatteryDevice(common.Host, common.Token, common.Timeout),
 		capacity:     cc.Capacity,
 		maxCharge:    cc.MaxCharge,
 		maxDischarge: cc.MaxDischarge,
 	}
 
 	// Start device connection and wait for it to succeed
-	if err := m.device.StartAndWait(cc.Timeout); err != nil {
+	if err := m.device.StartAndWait(common.Timeout); err != nil {
 		return nil, err
 	}
 
-	m.log.INFO.Printf("configured battery at %s", cc.Host)
+	m.log.INFO.Printf("configured battery at %s", common.Host)
 
 	return m, nil
 }
@@ -73,7 +59,7 @@ func (m *HomeWizardBattery) getController() (*device.P1MeterDevice, error) {
 
 	m.controllerOnce.Do(func() {
 		// Look up controller meter from registry
-		dev, lookupErr := FindP1Device(config.Meters().Devices())
+		dev, lookupErr := findP1Device(config.Meters().Devices())
 		if lookupErr != nil {
 			err = fmt.Errorf("controller meter not found: %w", lookupErr)
 			return
@@ -84,12 +70,12 @@ func (m *HomeWizardBattery) getController() (*device.P1MeterDevice, error) {
 		// Controller must be a HomeWizardP1 meter
 		controllerP1, ok := controllerMeter.(*HomeWizardP1)
 		if !ok {
-			err = fmt.Errorf("expected meter '%s' to be a homewizard-p1 meter (got %T)", dev.Config().Name, controllerMeter)
+			err = fmt.Errorf("expected meter '%s' to be a homewizard-v2 P1 meter (got %T)", dev.Config().Name, controllerMeter)
 			return
 		}
 
 		// Store P1MeterDevice for battery control
-		m.controller = controllerP1.p1MeterDevice
+		m.controller = controllerP1.device
 		m.log.DEBUG.Printf("resolved controller: %s", m.controller.Host())
 	})
 
@@ -104,10 +90,14 @@ func (m *HomeWizardBattery) getController() (*device.P1MeterDevice, error) {
 	return m.controller, nil
 }
 
-func FindP1Device[T any](in []config.Device[T]) (config.Device[T], error) {
+func findP1Device[T any](in []config.Device[T]) (config.Device[T], error) {
 	for _, d := range in {
-		if d.Config().Type == "homewizard-p1" {
-			return d, nil
+		if d.Config().Type == "homewizard-v2" {
+			// Check if instance is a P1 meter by converting to interface{} first
+			instance := d.Instance()
+			if _, ok := any(instance).(*HomeWizardP1); ok {
+				return d, nil
+			}
 		}
 	}
 

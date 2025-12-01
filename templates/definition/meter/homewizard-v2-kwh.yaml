@@ -40,7 +40,7 @@ params:
         3: Dreiphasiger Zähler (HWE-KWH3)
     default: 3
   - name: usage
-    choice: ["pv", "grid", "charge"]
+    choice: ["pv", "charge"]
     description:
       en: Meter usage type
       de: Zählerverwendungstyp
@@ -61,7 +61,7 @@ params:
     advanced: true
     default: 30s
 render: |
-  type: homewizard-kwh
+  type: homewizard-v2
   host: {{ .host }}
   token: {{ .token }}
   phases: {{ .phases }}

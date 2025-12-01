@@ -46,7 +46,8 @@ params:
     advanced: true
     default: 30s
 render: |
-  type: homewizard-p1
+  type: homewizard-v2
+  usage: grid
   host: {{ .host }}
   token: {{ .token }}
   phases: {{ .phases }}

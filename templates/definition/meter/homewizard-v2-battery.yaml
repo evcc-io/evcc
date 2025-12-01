@@ -11,13 +11,13 @@ requirements:
 
       **Setup:** Run `evcc token homewizard --host={{host}}` to discover and pair devices
 
-      **Note:** Requires a `homewizard-p1` meter (grid) for battery control
+      **Note:** Requires a `homewizard-v2` P1 meter (usage: grid) for battery control
     de: |
       Batteriegerät für SoC und Leistungsmessung mit WebSocket API v2.
 
       **Einrichtung:** Führen Sie `evcc token homewizard --host={{host}}` aus
 
-      **Hinweis:** Benötigt einen `homewizard-p1` Zähler (Netz) für Batteriesteuerung
+      **Hinweis:** Benötigt einen `homewizard-v2` P1-Zähler (Verwendung: grid) für Batteriesteuerung
 params:
   - name: host
     description:
@@ -76,7 +76,8 @@ params:
     advanced: true
     default: 30s
 render: |
-  type: homewizard-battery
+  type: homewizard-v2
+  usage: battery
   host: {{ .host }}
   token: {{ .token }}
   {{- if .capacity }}
