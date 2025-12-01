@@ -249,4 +249,6 @@ render: |
               type: writemultiple
               decode: int32s  
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
