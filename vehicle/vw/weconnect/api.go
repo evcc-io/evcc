@@ -1,4 +1,4 @@
-package id
+package weconnect
 
 import (
 	"fmt"
