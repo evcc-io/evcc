@@ -67,16 +67,14 @@
 						></span>
 					</div>
 				</div>
-				<div
-					class="col-12 col-md-6 pe-md-5 pb-4 d-flex flex-column justify-content-between"
-				>
+				<div class="col-12 col-md-6 pe-md-5 pb-4 d-flex flex-column">
 					<div class="d-flex justify-content-between align-items-baseline mb-4">
 						<h3 class="m-0">In</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
 						</span>
 					</div>
-					<div>
+					<div class="d-flex flex-column justify-content-between flex-grow-1">
 						<EnergyflowEntry
 							v-if="pvPossible"
 							:name="$t('main.energyflow.pvProduction')"
@@ -105,193 +103,197 @@
 								/>
 							</template>
 						</EnergyflowEntry>
-						<EnergyflowEntry
-							v-if="batteryConfigured"
-							:name="batteryDischargeLabel"
-							icon="battery"
-							:power="batteryDischarge"
-							:powerUnit="powerUnit"
-							:iconProps="{
-								hold: batteryHold,
-								soc: batterySoc,
-								gridCharge: batteryGridChargeActive,
-							}"
-							:details="batterySoc"
-							:detailsFmt="batteryFmt"
-							:expanded="batteryExpanded"
-							detailsClickable
-							data-testid="energyflow-entry-batterydischarge"
-							@details-clicked="openBatterySettingsModal"
-							@toggle="toggleBattery"
-						>
-							<template v-if="batteryGridChargeLimitSet" #subline>
-								<div class="d-none d-md-block">&nbsp;</div>
-							</template>
-							<template v-if="battery.length > 1" #expanded>
-								<EnergyflowEntry
-									v-for="(b, index) in battery"
-									:key="index"
-									:name="b.title || genericBatteryTitle(index)"
-									:details="b.soc"
-									:detailsFmt="batteryFmt"
-									:power="dischargePower(b.power)"
-									:powerUnit="powerUnit"
-								/>
-							</template>
-						</EnergyflowEntry>
-						<EnergyflowEntry
-							:key="`grid-${showCo2}`"
-							:name="$t('main.energyflow.gridImport')"
-							icon="powersupply"
-							:power="gridImport"
-							:powerUnit="powerUnit"
-							:details="detailsValue(tariffGrid, tariffCo2)"
-							:detailsFmt="detailsFmt"
-							:detailsClickable="hasPriceAndCo2"
-							data-testid="energyflow-entry-gridimport"
-							@details-clicked="toggleCo2"
-						/>
+						<div>
+							<EnergyflowEntry
+								v-if="batteryConfigured"
+								:name="batteryDischargeLabel"
+								icon="battery"
+								:power="batteryDischarge"
+								:powerUnit="powerUnit"
+								:iconProps="{
+									hold: batteryHold,
+									soc: batterySoc,
+									gridCharge: batteryGridChargeActive,
+								}"
+								:details="batterySoc"
+								:detailsFmt="batteryFmt"
+								:expanded="batteryExpanded"
+								detailsClickable
+								data-testid="energyflow-entry-batterydischarge"
+								@details-clicked="openBatterySettingsModal"
+								@toggle="toggleBattery"
+							>
+								<template v-if="batteryGridChargeLimitSet" #subline>
+									<div class="d-none d-md-block">&nbsp;</div>
+								</template>
+								<template v-if="battery.length > 1" #expanded>
+									<EnergyflowEntry
+										v-for="(b, index) in battery"
+										:key="index"
+										:name="b.title || genericBatteryTitle(index)"
+										:details="b.soc"
+										:detailsFmt="batteryFmt"
+										:power="dischargePower(b.power)"
+										:powerUnit="powerUnit"
+									/>
+								</template>
+							</EnergyflowEntry>
+							<EnergyflowEntry
+								:key="`grid-${showCo2}`"
+								:name="$t('main.energyflow.gridImport')"
+								icon="powersupply"
+								:power="gridImport"
+								:powerUnit="powerUnit"
+								:details="detailsValue(tariffGrid, tariffCo2)"
+								:detailsFmt="detailsFmt"
+								:detailsClickable="hasPriceAndCo2"
+								data-testid="energyflow-entry-gridimport"
+								@details-clicked="toggleCo2"
+							/>
+						</div>
 					</div>
 				</div>
-				<div
-					class="col-12 col-md-6 ps-md-5 pb-4 d-flex flex-column justify-content-between"
-				>
+				<div class="col-12 col-md-6 ps-md-5 pb-4 d-flex flex-column">
 					<div class="d-flex justify-content-between align-items-baseline mb-4">
 						<h3 class="m-0">Out</h3>
 						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
 						</span>
 					</div>
-					<div>
-						<EnergyflowEntry
-							v-if="pvPossible"
-							:key="`home-${showCo2}`"
-							:name="$t('main.energyflow.homePower')"
-							icon="home"
-							:power="homePower"
-							:powerUnit="powerUnit"
-							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
-							:detailsFmt="detailsFmt"
-							:detailsClickable="hasPriceAndCo2"
-							data-testid="energyflow-entry-home"
-							:expanded="consumersExpanded"
-							@details-clicked="toggleCo2"
-							@toggle="toggleConsumers"
-						>
-							<template v-if="consumers.length > 0" #expanded>
-								<EnergyflowEntry
-									v-for="(c, index) in consumers"
-									:key="index"
-									:name="c.title || genericConsumerTitle(index)"
-									:power="c.power"
-									:powerUnit="powerUnit"
-									icon="vehicle"
-									data-testid="energyflow-entry-consumer"
-									:iconProps="{ names: [c.icon || 'generic'] }"
-								/>
-							</template>
-						</EnergyflowEntry>
-						<EnergyflowEntry
-							:key="`loadpoints-${showCo2}`"
-							:name="loadpointsLabel"
-							icon="vehicle"
-							:iconProps="{ names: vehicleIcons }"
-							:power="loadpointsPower"
-							:powerUnit="powerUnit"
-							:details="
-								activeLoadpointsCount
-									? detailsValue(tariffPriceLoadpoints, tariffCo2Loadpoints)
-									: undefined
-							"
-							:detailsFmt="detailsFmt"
-							:detailsClickable="hasPriceAndCo2"
-							data-testid="energyflow-entry-loadpoints"
-							:expanded="loadpointsExpanded"
-							@details-clicked="toggleCo2"
-							@toggle="toggleLoadpoints"
-						>
-							<template v-if="activeLoadpointsCount > 0" #expanded>
-								<EnergyflowEntry
-									v-for="lp in activeLoadpoints"
-									:key="lp.id"
-									:name="lp.displayTitle"
-									:power="lp.chargePower"
-									:powerUnit="powerUnit"
-									icon="vehicle"
-									:iconProps="{ names: [lp.icon] }"
-									:details="lp.vehicleSoc || undefined"
-									:detailsFmt="
-										lp.chargerFeatureHeating
-											? fmtLoadpointTemp
-											: fmtLoadpointSoc
-									"
-								/>
-							</template>
-						</EnergyflowEntry>
-						<EnergyflowEntry
-							v-if="batteryConfigured"
-							:name="batteryChargeLabel"
-							icon="battery"
-							:power="batteryCharge"
-							:powerUnit="powerUnit"
-							:iconProps="{
-								hold: batteryHold,
-								soc: batterySoc,
-								gridCharge: batteryGridChargeActive,
-							}"
-							:details="batterySoc"
-							:detailsFmt="batteryFmt"
-							:expanded="batteryExpanded"
-							detailsClickable
-							@details-clicked="openBatterySettingsModal"
-							@toggle="toggleBattery"
-						>
-							<template v-if="batteryGridChargeLimitSet" #subline>
-								<button
-									type="button"
-									class="btn-reset d-flex justify-content-between text-start pe-4"
-									@click.stop="openBatterySettingsModal"
-								>
-									<span v-if="batteryGridChargeActive">
-										{{ $t("main.energyflow.batteryGridChargeActive") }}
-										<span class="text-nowrap"
-											>(≤ <u>{{ batteryGridChargeLimitFmt }}</u
-											>)</span
-										>
-									</span>
-									<span v-else>
-										{{ $t("main.energyflow.batteryGridChargeLimit") }}
-										<span class="text-nowrap"
-											>≤ <u>{{ batteryGridChargeLimitFmt }}</u></span
-										>
-									</span>
-								</button>
-							</template>
-							<template v-if="battery.length > 1" #expanded>
-								<EnergyflowEntry
-									v-for="(b, index) in battery"
-									:key="index"
-									:name="b.title || genericBatteryTitle(index)"
-									:details="b.soc"
-									:detailsFmt="batteryFmt"
-									:power="chargePower(b.power)"
-									:powerUnit="powerUnit"
-								/>
-							</template>
-						</EnergyflowEntry>
-						<EnergyflowEntry
-							v-if="pvPossible"
-							:key="`export-${showCo2}`"
-							:name="$t('main.energyflow.pvExport')"
-							icon="powersupply"
-							:power="pvExport"
-							:powerUnit="powerUnit"
-							:details="detailsValue(-tariffFeedIn)"
-							:detailsFmt="detailsFmt"
-							:detailsClickable="hasPriceAndCo2"
-							data-testid="energyflow-entry-gridexport"
-							@details-clicked="toggleCo2"
-						/>
+					<div class="d-flex flex-column justify-content-between flex-grow-1">
+						<div>
+							<EnergyflowEntry
+								v-if="pvPossible"
+								:key="`home-${showCo2}`"
+								:name="$t('main.energyflow.homePower')"
+								icon="home"
+								:power="homePower"
+								:powerUnit="powerUnit"
+								:details="detailsValue(tariffPriceHome, tariffCo2Home)"
+								:detailsFmt="detailsFmt"
+								:detailsClickable="hasPriceAndCo2"
+								data-testid="energyflow-entry-home"
+								:expanded="consumersExpanded"
+								@details-clicked="toggleCo2"
+								@toggle="toggleConsumers"
+							>
+								<template v-if="consumers.length > 0" #expanded>
+									<EnergyflowEntry
+										v-for="(c, index) in consumers"
+										:key="index"
+										:name="c.title || genericConsumerTitle(index)"
+										:power="c.power"
+										:powerUnit="powerUnit"
+										icon="vehicle"
+										data-testid="energyflow-entry-consumer"
+										:iconProps="{ names: [c.icon || 'generic'] }"
+									/>
+								</template>
+							</EnergyflowEntry>
+							<EnergyflowEntry
+								:key="`loadpoints-${showCo2}`"
+								:name="loadpointsLabel"
+								icon="vehicle"
+								:iconProps="{ names: vehicleIcons }"
+								:power="loadpointsPower"
+								:powerUnit="powerUnit"
+								:details="
+									activeLoadpointsCount
+										? detailsValue(tariffPriceLoadpoints, tariffCo2Loadpoints)
+										: undefined
+								"
+								:detailsFmt="detailsFmt"
+								:detailsClickable="hasPriceAndCo2"
+								data-testid="energyflow-entry-loadpoints"
+								:expanded="loadpointsExpanded"
+								@details-clicked="toggleCo2"
+								@toggle="toggleLoadpoints"
+							>
+								<template v-if="activeLoadpointsCount > 0" #expanded>
+									<EnergyflowEntry
+										v-for="lp in activeLoadpoints"
+										:key="lp.id"
+										:name="lp.displayTitle"
+										:power="lp.chargePower"
+										:powerUnit="powerUnit"
+										icon="vehicle"
+										:iconProps="{ names: [lp.icon] }"
+										:details="lp.vehicleSoc || undefined"
+										:detailsFmt="
+											lp.chargerFeatureHeating
+												? fmtLoadpointTemp
+												: fmtLoadpointSoc
+										"
+									/>
+								</template>
+							</EnergyflowEntry>
+						</div>
+						<div>
+							<EnergyflowEntry
+								v-if="batteryConfigured"
+								:name="batteryChargeLabel"
+								icon="battery"
+								:power="batteryCharge"
+								:powerUnit="powerUnit"
+								:iconProps="{
+									hold: batteryHold,
+									soc: batterySoc,
+									gridCharge: batteryGridChargeActive,
+								}"
+								:details="batterySoc"
+								:detailsFmt="batteryFmt"
+								:expanded="batteryExpanded"
+								detailsClickable
+								@details-clicked="openBatterySettingsModal"
+								@toggle="toggleBattery"
+							>
+								<template v-if="batteryGridChargeLimitSet" #subline>
+									<button
+										type="button"
+										class="btn-reset d-flex justify-content-between text-start pe-4"
+										@click.stop="openBatterySettingsModal"
+									>
+										<span v-if="batteryGridChargeActive">
+											{{ $t("main.energyflow.batteryGridChargeActive") }}
+											<span class="text-nowrap"
+												>(≤ <u>{{ batteryGridChargeLimitFmt }}</u
+												>)</span
+											>
+										</span>
+										<span v-else>
+											{{ $t("main.energyflow.batteryGridChargeLimit") }}
+											<span class="text-nowrap"
+												>≤ <u>{{ batteryGridChargeLimitFmt }}</u></span
+											>
+										</span>
+									</button>
+								</template>
+								<template v-if="battery.length > 1" #expanded>
+									<EnergyflowEntry
+										v-for="(b, index) in battery"
+										:key="index"
+										:name="b.title || genericBatteryTitle(index)"
+										:details="b.soc"
+										:detailsFmt="batteryFmt"
+										:power="chargePower(b.power)"
+										:powerUnit="powerUnit"
+									/>
+								</template>
+							</EnergyflowEntry>
+							<EnergyflowEntry
+								v-if="pvPossible"
+								:key="`export-${showCo2}`"
+								:name="$t('main.energyflow.pvExport')"
+								icon="powersupply"
+								:power="pvExport"
+								:powerUnit="powerUnit"
+								:details="detailsValue(-tariffFeedIn)"
+								:detailsFmt="detailsFmt"
+								:detailsClickable="hasPriceAndCo2"
+								data-testid="energyflow-entry-gridexport"
+								@details-clicked="toggleCo2"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
