@@ -266,7 +266,7 @@ import collector from "@/mixins/collector.js";
 import api from "@/api";
 import settings from "@/settings";
 import { defineComponent, type PropType } from "vue";
-import type { BatteryMeter, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
+import type { Battery, SelectOption, CURRENCY, Forecast } from "@/types/evcc";
 import { SMART_COST_TYPE } from "@/types/evcc";
 
 export default defineComponent({
@@ -276,10 +276,9 @@ export default defineComponent({
 	props: {
 		bufferSoc: { type: Number, default: 100 },
 		prioritySoc: { type: Number, default: 0 },
-		batterySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
-		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
+		battery: { type: Object as PropType<Battery> },
 		batteryGridChargeLimit: { type: Number, default: null },
 		smartCostAvailable: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
@@ -300,6 +299,12 @@ export default defineComponent({
 		usageTabActive() {
 			return !this.gridTabActive;
 		},
+		batterySoc() {
+			return this.battery?.soc ?? 0;
+		},
+		batteryDevices() {
+			return this.battery?.devices ?? [];
+		},
 		priorityOptions() {
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
@@ -312,7 +317,7 @@ export default defineComponent({
 			return options;
 		},
 		controllable() {
-			return this.battery.some(({ controllable }) => controllable);
+			return this.batteryDevices.some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
 			return this.controllable && this.isModalVisible && this.smartCostAvailable;
@@ -368,13 +373,13 @@ export default defineComponent({
 			return this.prioritySoc;
 		},
 		batteryDetails() {
-			if (!Array.isArray(this.battery)) {
+			if (!this.batteryDevices.length) {
 				return;
 			}
-			return this.battery
+			const multipleBatteries = this.batteryDevices.length > 1;
+			return this.batteryDevices
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc = 0, capacity }) => {
-					const multipleBatteries = this.battery.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
 						POWER_UNIT.KW,

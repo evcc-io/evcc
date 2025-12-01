@@ -7,7 +7,11 @@
 		></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
-		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
+		<BatterySettingsModal
+			v-if="batteryModalAvailabe"
+			v-bind="batterySettingsProps"
+			:battery="state.battery"
+		/>
 		<ForecastModal v-bind="forecastModalProps" />
 		<HelpModal />
 		<PasswordModal />
@@ -69,7 +73,7 @@ export default defineComponent({
 			return store.state.version;
 		},
 		batteryModalAvailabe() {
-			return store.state.battery?.length;
+			return store.state.battery?.devices.length;
 		},
 		showRoutes() {
 			return this.state.startupCompleted;
