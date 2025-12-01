@@ -150,7 +150,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.5.0
+          version: latest
           args: --timeout 5m
 
       - name: License
