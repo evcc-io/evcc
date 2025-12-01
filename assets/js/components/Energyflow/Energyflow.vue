@@ -140,14 +140,16 @@
 							</template>
 						</EnergyflowEntry>
 						<EnergyflowEntry
+							:key="`grid-${showCo2}`"
 							:name="$t('main.energyflow.gridImport')"
 							icon="powersupply"
 							:power="gridImport"
 							:powerUnit="powerUnit"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
+							:detailsClickable="hasPriceAndCo2"
 							data-testid="energyflow-entry-gridimport"
+							@details-clicked="toggleCo2"
 						/>
 					</div>
 				</div>
@@ -163,15 +165,17 @@
 					<div>
 						<EnergyflowEntry
 							v-if="pvPossible"
+							:key="`home-${showCo2}`"
 							:name="$t('main.energyflow.homePower')"
 							icon="home"
 							:power="homePower"
 							:powerUnit="powerUnit"
 							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
+							:detailsClickable="hasPriceAndCo2"
 							data-testid="energyflow-entry-home"
 							:expanded="consumersExpanded"
+							@details-clicked="toggleCo2"
 							@toggle="toggleConsumers"
 						>
 							<template v-if="consumers.length > 0" #expanded>
@@ -188,6 +192,7 @@
 							</template>
 						</EnergyflowEntry>
 						<EnergyflowEntry
+							:key="`loadpoints-${showCo2}`"
 							:name="loadpointsLabel"
 							icon="vehicle"
 							:iconProps="{ names: vehicleIcons }"
@@ -199,11 +204,10 @@
 									: undefined
 							"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="
-								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
-							"
+							:detailsClickable="hasPriceAndCo2"
 							data-testid="energyflow-entry-loadpoints"
 							:expanded="loadpointsExpanded"
+							@details-clicked="toggleCo2"
 							@toggle="toggleLoadpoints"
 						>
 							<template v-if="activeLoadpointsCount > 0" #expanded>
@@ -277,14 +281,16 @@
 						</EnergyflowEntry>
 						<EnergyflowEntry
 							v-if="pvPossible"
+							:key="`export-${showCo2}`"
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
 							:powerUnit="powerUnit"
 							:details="detailsValue(-tariffFeedIn)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
+							:detailsClickable="hasPriceAndCo2"
 							data-testid="energyflow-entry-gridexport"
+							@details-clicked="toggleCo2"
 						/>
 					</div>
 				</div>
@@ -356,6 +362,21 @@ export default defineComponent({
 		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
 	},
 	computed: {
+		showCo2() {
+			if (this.hasCo2 && !this.hasPrice) {
+				return true;
+			}
+			return settings.energyflowCo2;
+		},
+		hasPrice() {
+			return this.tariffGrid !== undefined;
+		},
+		hasCo2() {
+			return this.tariffCo2 !== undefined;
+		},
+		hasPriceAndCo2() {
+			return this.hasPrice && this.hasCo2;
+		},
 		gridImport() {
 			return Math.max(0, this.gridPower);
 		},
@@ -434,14 +455,14 @@ export default defineComponent({
 		fmtLoadpointTemp() {
 			return (temp: number) => this.fmtTemperature(temp);
 		},
-		co2Available() {
+		smartCostCo2() {
 			return this.smartCostType === SMART_COST_TYPE.CO2;
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
 		batteryGridChargeNow() {
-			if (this.co2Available) {
+			if (this.smartCostCo2) {
 				return this.fmtCo2Short(this.tariffCo2);
 			}
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
@@ -455,7 +476,7 @@ export default defineComponent({
 			if (!this.batteryGridChargeLimitSet) {
 				return;
 			}
-			if (this.co2Available) {
+			if (this.smartCostCo2) {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);
 			}
 			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
@@ -532,27 +553,16 @@ export default defineComponent({
 		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
-		detailsTooltip(price?: number, co2?: number) {
-			const result = [];
-			if (co2 !== undefined) {
-				result.push(`${this.fmtCo2Long(co2)}`);
-			}
-			if (price !== undefined) {
-				result.push(`${this.fmtPricePerKWh(price, this.currency)}`);
-			}
-			return result;
-		},
 		detailsValue(price?: number, co2?: number) {
-			if (this.co2Available) {
-				return co2;
-			}
-			return price;
+			return this.showCo2 ? co2 : price;
 		},
 		detailsFmt(value: number) {
-			if (this.co2Available) {
-				return this.fmtCo2Short(value);
-			}
-			return this.fmtPricePerKWh(value, this.currency, true);
+			return this.showCo2
+				? this.fmtCo2Short(value)
+				: this.fmtPricePerKWh(value, this.currency, true);
+		},
+		toggleCo2() {
+			settings.energyflowCo2 = !settings.energyflowCo2;
 		},
 		forecastFmt(value: number) {
 			if (typeof value !== "number") return "";
