@@ -19,7 +19,6 @@ func init() {
 type HomeWizardBattery struct {
 	log            *util.Logger
 	device         *device.BatteryDevice
-	controllerName string
 	controller     *device.P1Device
 	controllerOnce sync.Once
 	capacity       float64
@@ -31,7 +30,6 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Host         string
 		Token        string
-		Controller   string
 		Capacity     float64
 		MaxCharge    float64
 		MaxDischarge float64
@@ -51,17 +49,12 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("missing host or token - run 'evcc token homewizard'")
 	}
 
-	if cc.Controller == "" {
-		return nil, fmt.Errorf("battery requires controller parameter (P1 meter name)")
-	}
-
 	m := &HomeWizardBattery{
-		log:            util.NewLogger("homewizard-battery"),
-		device:         device.NewBatteryDevice(cc.Host, cc.Token, cc.Timeout),
-		controllerName: cc.Controller,
-		capacity:       cc.Capacity,
-		maxCharge:      cc.MaxCharge,
-		maxDischarge:   cc.MaxDischarge,
+		log:          util.NewLogger("homewizard-battery"),
+		device:       device.NewBatteryDevice(cc.Host, cc.Token, cc.Timeout),
+		capacity:     cc.Capacity,
+		maxCharge:    cc.MaxCharge,
+		maxDischarge: cc.MaxDischarge,
 	}
 
 	// Start device connection and wait for it to succeed
@@ -69,7 +62,7 @@ func NewHomeWizardBatteryFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	m.log.INFO.Printf("configured battery at %s with controller: %s", cc.Host, cc.Controller)
+	m.log.INFO.Printf("configured battery at %s", cc.Host)
 
 	return m, nil
 }
@@ -80,9 +73,9 @@ func (m *HomeWizardBattery) getController() (*device.P1Device, error) {
 
 	m.controllerOnce.Do(func() {
 		// Look up controller meter from registry
-		dev, lookupErr := config.Meters().ByName(m.controllerName)
+		dev, lookupErr := FindP1Device(config.Meters().Devices())
 		if lookupErr != nil {
-			err = fmt.Errorf("controller meter '%s' not found: %w", m.controllerName, lookupErr)
+			err = fmt.Errorf("controller meter not found: %w", lookupErr)
 			return
 		}
 
@@ -91,12 +84,12 @@ func (m *HomeWizardBattery) getController() (*device.P1Device, error) {
 		// Controller must be a HomeWizardP1 meter
 		controllerP1, ok := controllerMeter.(*HomeWizardP1)
 		if !ok {
-			err = fmt.Errorf("controller '%s' must be a homewizard-p1 meter (got %T)", m.controllerName, controllerMeter)
+			err = fmt.Errorf("expected meter '%s' to be a homewizard-p1 meter (got %T)", dev.Config().Name, controllerMeter)
 			return
 		}
 
 		m.controller = controllerP1.device
-		m.log.DEBUG.Printf("resolved controller: %s (%s)", m.controllerName, m.controller.Host())
+		m.log.DEBUG.Printf("resolved controller: %s", m.controller.Host())
 	})
 
 	if err != nil {
@@ -108,6 +101,16 @@ func (m *HomeWizardBattery) getController() (*device.P1Device, error) {
 	}
 
 	return m.controller, nil
+}
+
+func FindP1Device[T any](in []config.Device[T]) (config.Device[T], error) {
+	for _, d := range in {
+		if d.Config().Type == "homewizard-p1" {
+			return d, nil
+		}
+	}
+
+	return nil, fmt.Errorf("cannot find any HomeWizard P1 devices; configure one before adding the battery")
 }
 
 var _ api.Meter = (*HomeWizardBattery)(nil)
@@ -184,7 +187,7 @@ func (m *HomeWizardBattery) SetBatteryMode(mode api.BatteryMode) error {
 		return fmt.Errorf("unsupported battery mode: %v", mode)
 	}
 
-	m.log.INFO.Printf("converted to HomeWizard mode: %s (controller: %s)", hwMode, m.controllerName)
+	m.log.INFO.Printf("converted to HomeWizard mode: %s", hwMode)
 
 	// Set battery mode via controller P1 meter
 	if err := controller.SetBatteryMode(hwMode); err != nil {

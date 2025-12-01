@@ -31,22 +31,15 @@ params:
     required: true
     mask: true
   - name: usage
-    choice: [ "battery" ]
-  - name: controller
-    description:
-      en: P1 meter name for battery control
-      de: P1-Zähler Name für Batteriesteuerung
-    help:
-      en: Name of the grid meter (must be homewizard-p1 type)
-      de: Name des Netzzählers (muss vom Typ homewizard-p1 sein)
-    required: true
+    choice: ["battery"]
   - name: capacity
+    example: 2.47
     description:
       en: Battery capacity (kWh)
       de: Batteriekapazität (kWh)
     help:
       en: Optional. Defaults to 2.47 kWh (HWE-BAT capacity)
-      de: Optional. Standard ist 2,47 kWh (HWE-BAT Kapazität)
+      de: Optional. Standard ist 2.47 kWh (HWE-BAT Kapazität)
     advanced: true
   - name: maxcharge
     description:
@@ -86,7 +79,6 @@ render: |
   type: homewizard-battery
   host: {{ .host }}
   token: {{ .token }}
-  controller: {{ .controller }}
   {{- if .capacity }}
   capacity: {{ .capacity }}
   {{- end }}
