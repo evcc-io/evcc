@@ -15,12 +15,13 @@ import (
 
 // Provider is an api.Vehicle implementation for PSA cars
 type Provider struct {
-	batteryG func() (kamereon.Response, error)
-	cockpitG func() (kamereon.Response, error)
-	hvacG    func() (kamereon.Response, error)
-	wakeup   func() (kamereon.Response, error)
-	position func() (kamereon.Response, error)
-	action   func(action string) (kamereon.Response, error)
+	batteryG   func() (kamereon.Response, error)
+	cockpitG   func() (kamereon.Response, error)
+	socLevelsG func() (kamereon.Response, error)
+	hvacG      func() (kamereon.Response, error)
+	wakeup     func() (kamereon.Response, error)
+	position   func() (kamereon.Response, error)
+	action     func(action string) (kamereon.Response, error)
 }
 
 // NewProvider creates a vehicle api provider
@@ -31,6 +32,9 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 		}, cache),
 		cockpitG: util.Cached(func() (kamereon.Response, error) {
 			return api.Cockpit(accountID, vin)
+		}, cache),
+		socLevelsG: util.Cached(func() (kamereon.Response, error) {
+			return api.SocLevels(accountID, vin)
 		}, cache),
 		hvacG: util.Cached(func() (kamereon.Response, error) {
 			return api.Hvac(accountID, vin)
@@ -114,6 +118,19 @@ func (v *Provider) Odometer() (float64, error) {
 
 	if res.Data.Attributes.TotalMileage != nil {
 		return *res.Data.Attributes.TotalMileage, nil
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.socLevelsG()
+
+	if err == nil && res.SocTarget != nil {
+		return int64(*res.SocTarget), nil
 	}
 
 	return 0, api.ErrNotAvailable

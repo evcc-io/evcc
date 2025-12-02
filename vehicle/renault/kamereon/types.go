@@ -10,6 +10,8 @@ type Response struct {
 	AccessToken  string    // /commerce/v1/accounts/%s/kamereon/token
 	VehicleLinks []Vehicle // /commerce/v1/accounts/%s/vehicles
 	Data         Data      // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/vX/cars/%s/...
+	SocMin       *int      // /commerce/v1/accounts/%s/kamereon/kcm/vX/vehicles/%s/ev/soc-levels
+	SocTarget    *int      // /commerce/v1/accounts/%s/kamereon/kcm/vX/vehicles/%s/ev/soc-levels
 }
 
 type Account struct {
