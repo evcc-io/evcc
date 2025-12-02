@@ -340,9 +340,9 @@
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
-      "yaml": "Devices from evcc.yaml are not editable.",
+      "welcomeBannerText": "Start with creating a **charger or heater**. If you don't have a real charger yet, choose a **demo charger**.",
       "welcomeBannerTitle": "Let's configure your system!",
-      "welcomeBannerText": "Start with creating a **charger or heater**. If you don't have a real charger yet, choose a **demo charger**."
+      "yaml": "Devices from evcc.yaml are not editable."
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
