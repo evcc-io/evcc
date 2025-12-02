@@ -23,7 +23,7 @@
 						Events
 					</a>
 				</li>
-				<li v-for="n in Object.values(MESSAGING_SERVICE_TYPE)" class="nav-item">
+				<li v-for="n in Object.values(MESSAGING_SERVICE_TYPE)" :key="n" class="nav-item">
 					<a
 						class="nav-link text-capitalize"
 						:class="{ active: activeServiceTab === n }"
@@ -141,22 +141,24 @@
 							</FormRow>
 						</div>
 						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.EMAIL">
-							<FormRow
-								v-for="p in EMAIL_PROPERTY"
-								:id="'messagingServiceEmail' + p"
-								:label="p"
-								:help="$t('config.messaging.email.' + p.toLowerCase())"
-							>
-								<PropertyField
+							<div v-for="p in EMAIL_PROPERTY" :key="p">
+								<FormRow
 									:id="'messagingServiceEmail' + p"
-									:model-value="decodeEmail(s.other.uri)[p] ?? ''"
-									@update:model-value="
-										(e) => (s.other.uri = changeEmailValue(s.other.uri, p, e))
-									"
-									type="String"
-									required
-								/>
-							</FormRow>
+									:label="p"
+									:help="$t('config.messaging.email.' + p.toLowerCase())"
+								>
+									<PropertyField
+										:id="'messagingServiceEmail' + p"
+										:model-value="decodeEmail(s.other.uri)[p] ?? ''"
+										type="String"
+										required
+										@update:model-value="
+											(e) =>
+												(s.other.uri = changeEmailValue(s.other.uri, p, e))
+										"
+									/>
+								</FormRow>
+							</div>
 						</div>
 						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.SHOUT">
 							<FormRow
@@ -181,6 +183,8 @@
 								<PropertyField
 									id="messagingServiceNftyHost"
 									:model-value="decodeNfty(s.other.uri)[NFTY_PROPERTY.HOST]"
+									type="String"
+									required
 									@update:model-value="
 										(e) =>
 											(s.other.uri = changeNftyValue(
@@ -189,8 +193,6 @@
 												e
 											))
 									"
-									type="String"
-									required
 								/>
 							</FormRow>
 							<FormRow
@@ -203,6 +205,9 @@
 									:model-value="
 										decodeNfty(s.other.uri)[NFTY_PROPERTY.TOPICS].split(',')
 									"
+									property="topics"
+									type="List"
+									required
 									@update:model-value="
 										(e) =>
 											(s.other.uri = changeNftyValue(
@@ -211,9 +216,6 @@
 												e
 											))
 									"
-									property="topics"
-									type="List"
-									required
 								/>
 							</FormRow>
 							<FormRow
@@ -241,9 +243,9 @@
 								<PropertyField
 									id="messagingServiceNftyTags"
 									:model-value="s.other.tags?.split(',')"
-									@update:model-value="(e: string[]) => (s.other.tags = e.join())"
 									property="tags"
 									type="List"
+									@update:model-value="(e: string[]) => (s.other.tags = e.join())"
 								/>
 							</FormRow>
 						</div>
@@ -264,7 +266,7 @@
 									@update:model-value="(e) => (s.other.encoding = e)"
 								/>
 							</FormRow>
-							<YamlEntry type="messaging" v-model="s.other.send"></YamlEntry>
+							<YamlEntry v-model="s.other.send" type="messaging"></YamlEntry>
 						</div>
 					</div>
 
@@ -293,12 +295,7 @@
 				/>
 				<button
 					type="button"
-					class="d-flex btn btn-sm align-items-center gap-2 mb-5"
-					:class="
-						values.services?.length === 0
-							? 'btn-secondary mt-5'
-							: 'btn-outline-secondary border-0 evcc-gray'
-					"
+					class="d-flex btn btn-sm align-items-center gap-2 mb-5 btn-outline-secondary border-0 evcc-gray"
 					data-testid="networkconnection-add"
 					tabindex="0"
 					@click="addMessaging(values.services)"
@@ -316,6 +313,7 @@ import {
 	MESSAGING_EVENTS,
 	MESSAGING_SERVICE_TYPE,
 	MESSAGING_SERVICE_NFTY_PRIORITY,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	type Messaging,
 	type MessagingServices,
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
@@ -361,12 +359,12 @@ export default {
 	},
 	methods: {
 		decodeEmail(uri: string) {
-			var hostname = "";
-			var port = "";
-			var username = "";
-			var password = "";
-			var from = "";
-			var to = "";
+			let hostname = "";
+			let port = "";
+			let username = "";
+			let password = "";
+			let from = "";
+			let to = "";
 
 			try {
 				const url = new URL(uri.replace(/^smtp/, "http"));
@@ -378,7 +376,9 @@ export default {
 				password = url.password;
 				from = params.get("fromAddress") ?? from;
 				to = params.get("toAddresses") ?? to;
-			} catch (error) {}
+			} catch (e) {
+				console.warn(e);
+			}
 
 			return {
 				[EMAIL_PROPERTY.HOST]: hostname,
@@ -390,19 +390,21 @@ export default {
 			};
 		},
 		changeEmailValue(uri: string, p: EMAIL_PROPERTY, v: string) {
-			var d = this.decodeEmail(uri);
+			const d = this.decodeEmail(uri);
 			d[p] = v;
 			return `smtp://${d[EMAIL_PROPERTY.USER]}:${d[EMAIL_PROPERTY.PASSWORD]}@${d[EMAIL_PROPERTY.HOST]}:${d[EMAIL_PROPERTY.PORT]}/?fromAddress=${d[EMAIL_PROPERTY.FROM]}&toAddresses=${d[EMAIL_PROPERTY.TO]}`;
 		},
 		decodeNfty(uri: string) {
-			var hostname = "";
-			var pathname = "";
+			let hostname = "";
+			let pathname = "";
 
 			try {
 				const url = new URL(uri);
 				hostname = url.hostname;
 				pathname = url.pathname.replace("/", "");
-			} catch (e) {}
+			} catch (e) {
+				console.warn(e);
+			}
 
 			return {
 				[NFTY_PROPERTY.HOST]: hostname,
@@ -410,7 +412,7 @@ export default {
 			};
 		},
 		changeNftyValue(uri: string, p: NFTY_PROPERTY, v: string) {
-			var d = this.decodeNfty(uri);
+			const d = this.decodeNfty(uri);
 			d[p] = v;
 			return `https://${d[NFTY_PROPERTY.HOST]}/${d[NFTY_PROPERTY.TOPICS]}`;
 		},
@@ -419,7 +421,7 @@ export default {
 				return;
 			}
 
-			var s = {} as MessagingServices;
+			let s = {} as MessagingServices;
 
 			switch (this.activeServiceTab) {
 				case MESSAGING_SERVICE_TYPE.PUSHOVER:
