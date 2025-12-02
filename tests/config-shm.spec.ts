@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, enableExperimental } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -18,7 +18,6 @@ test.describe("SHM", () => {
   test("configure SHM with validation and persistence", async ({ page }) => {
     await start(CONFIG);
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const shmCard = page.getByTestId("shm");
 

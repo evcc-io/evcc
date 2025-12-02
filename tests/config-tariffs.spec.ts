@@ -1,12 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-  editorClear,
-  editorPaste,
-} from "./utils";
+import { expectModalHidden, expectModalVisible, editorClear, editorPaste } from "./utils";
 
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
 
@@ -17,15 +11,10 @@ test.afterEach(async () => {
   await stop();
 });
 
-async function goToConfig(page: Page) {
-  await page.goto("/#/config");
-  await enableExperimental(page);
-}
-
 test.describe("tariffs", async () => {
   test("tariffs not configured", async ({ page }) => {
     await start();
-    await goToConfig(page);
+    await page.goto("/#/config");
 
     await expect(page.getByTestId("tariffs")).not.toBeVisible();
     await expect(page.getByTestId("add-tariffs")).toBeVisible();
@@ -33,7 +22,7 @@ test.describe("tariffs", async () => {
 
   test("tariffs via ui", async ({ page }) => {
     await start();
-    await goToConfig(page);
+    await page.goto("/#/config");
 
     await page.getByTestId("add-tariffs").click();
     const modal = await page.getByTestId("tariffs-modal");
@@ -86,7 +75,6 @@ grid:
   test("tariffs from evcc.yaml", async ({ page }) => {
     await start(CONFIG_WITH_TARIFFS);
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();
     await expect(page.getByTestId("tariffs")).toContainText(

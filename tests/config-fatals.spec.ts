@@ -1,13 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  enableExperimental,
-  addDemoCharger,
-  newLoadpoint,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, addDemoCharger, newLoadpoint } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -21,7 +15,6 @@ test.describe("fatal config handling", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // create meter
     await page.getByRole("button", { name: "Add solar or battery" }).click();
@@ -61,7 +54,6 @@ test.describe("fatal config handling", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const lpModal = page.getByTestId("loadpoint-modal");
 
@@ -124,7 +116,6 @@ test.describe("fatal config handling", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
