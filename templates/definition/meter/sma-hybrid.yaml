@@ -35,6 +35,14 @@ params:
 render: |
   type: custom
   {{- if eq .usage "grid" }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30581 # SMA Modbus Profile: Metering.GridMs.TotWhIn
+      type: holding
+      decode: int32nan
+    scale: 0.001
   power:
     source: calc
     add:
@@ -47,68 +55,81 @@ render: |
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 32341 # SMA Modbus Profile: Metering.GridMs.TotWOut
+          address: 30867 # SMA Modbus Profile: Metering.GridMs.TotWOut
           type: input
           decode: int32nan
         scale: -1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30581 # SMA Modbus Profile: Metering.GridMs.TotWhIn
-      type: holding
-      decode: int32nan
-    scale: 0.001
+  powers:
+    - source: calc
+      add:
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31265 # SMA Modbus Profile: Metering.GridMs.WIn.phsA # Power drawn from grid phase L1, unsigned, zero if no consumption
+            type: input
+            decode: uint32nan
+          scale: 1
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31259 # SMA Modbus Profile: Metering.GridMs.W.phsA # Power grid feeding L1, unsigned, zero if no feeding
+            type: input
+            decode: uint32nan
+          scale: -1
+    - source: calc
+      add:
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31267 # SMA Modbus Profile: Metering.GridMs.WIn.phsB # Power drawn from grid phase L2, unsigned, zero if no consumption
+            type: input
+            decode: uint32nan
+          scale: 1
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31261 # SMA Modbus Profile: Metering.GridMs.W.phsB # Power grid feeding L2, unsigned, zero if no feeding
+            type: input
+            decode: uint32nan
+          scale: -1
+    - source: calc
+      add:
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31269 # SMA Modbus Profile: Metering.GridMs.WIn.phsC # Power drawn from grid phase L3, unsigned, zero if no consumption
+            type: input
+            decode: uint32nan
+          scale: 1
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 31263 # SMA Modbus Profile: Metering.GridMs.W.phsC # Power grid feeding L3, unsigned, zero if no feeding
+            type: input
+            decode: uint32nan
+          scale: -1
   currents:
-    - source: calc
-      add:
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 30977 # SMA Modbus Profile: GridMs.A.phsA # Netzstrom Phase L1
-            type: input
-            decode: int32nan
-          scale: 0.001
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 31435 # SMA Modbus Profile: Metering.GridMs.A.phsA # Ausgangsstrom Netzeinspeisung Phase L1
-            type: input
-            decode: int32nan
-          scale: -0.001
-    - source: calc
-      add:
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 30979 # SMA Modbus Profile: GridMs.A.phsB # Netzstrom Phase L2
-            type: input
-            decode: int32nan
-          scale: 0.001
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 31437 # SMA Modbus Profile: Metering.GridMs.A.phsB # Ausgangsstrom Netzeinspeisung Phase L2
-            type: input
-            decode: int32nan
-          scale: -0.001
-    - source: calc
-      add:
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 30981 # SMA Modbus Profile: GridMs.A.phsC # Netzstrom Phase L3
-            type: input
-            decode: int32nan
-          scale: 0.001
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 31439 # SMA Modbus Profile: Metering.GridMs.A.phsC # Ausgangsstrom Netzeinspeisung Phase L3
-            type: input
-            decode: int32nan
-          scale: -0.001
-    
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31435 # SMA Modbus Profile: Metering.GridMs.A.phsA # Grid current phase L1, unsigned (independent of flow direction)
+        type: input
+        decode: int32nan
+      scale: 0.001
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31437 # SMA Modbus Profile: Metering.GridMs.A.phsB # Grid current phase L2, unsigned (independent of flow direction)
+        type: input
+        decode: int32nan
+      scale: 0.001
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 31439 # SMA Modbus Profile: Metering.GridMs.A.phsC # Grid current phase L3, unsigned (independent of flow direction)
+        type: input
+        decode: int32nan
+      scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
