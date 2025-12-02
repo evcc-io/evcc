@@ -36,7 +36,6 @@
 			:text="sponsorStatus.title"
 			:text-class="sponsorStatus.textClass"
 			modal-id="sponsorModal"
-			experimental
 		>
 			<template #text-prefix>
 				<span
@@ -53,7 +52,6 @@
 			:label="$t('config.network.title')"
 			:text="networkStatus"
 			modal-id="networkModal"
-			experimental
 		/>
 
 		<GeneralConfigEntry
@@ -62,7 +60,6 @@
 			:label="$t('config.control.title')"
 			:text="controlStatus"
 			modal-id="controlModal"
-			experimental
 		/>
 		<TitleModal ref="titleModal" @changed="load" />
 	</div>
