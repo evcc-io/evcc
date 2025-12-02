@@ -116,10 +116,11 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
 
 export async function loadServiceValues(path: string) {
   try {
-    const response = await api.get(`/config/service/${path}`);
-    return response.data as string[];
-  } catch (e) {
-    console.error(e);
+    const response = await api.get(`/config/service/${path}`, {
+      validateStatus: (status) => status >= 200 && status < 500,
+    });
+    return (response.data as string[]) || [];
+  } catch {
     return [];
   }
 }
@@ -169,7 +170,10 @@ export const fetchServiceValues = async (
         return;
       }
       const url = endpoint.url(params);
-      result[endpoint.name] = await loadServiceValues(url);
+      const data = await loadServiceValues(url);
+      if (data) {
+        result[endpoint.name] = data;
+      }
     })
   );
 

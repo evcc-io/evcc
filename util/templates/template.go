@@ -62,6 +62,11 @@ func (t *Template) Validate() error {
 			continue
 		}
 
+		// Validate that a param cannot be both masked and private
+		if p.Mask && p.Private {
+			return fmt.Errorf("param %s: 'mask' and 'private' cannot be used together. Use 'mask' for sensitive data like passwords/tokens that should be hidden in UI. Use 'private' for personal data like emails/locations that should only be redacted from bug reports", p.Name)
+		}
+
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
 		}

@@ -403,8 +403,8 @@ github.com/influxdata/influxdb-client-go/v2 v2.14.0/go.mod h1:Ahpm3QXKMJslpXl3If
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf h1:7JTmneyiNEwVBOHSjoMxiWAqB992atOeepeFYegn5RU=
 github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf/go.mod h1:xaLFMmpvUxqXtVkUJfg9QmT88cDaCJ3ZKgdZ78oO8Qo=
-github.com/insomniacslk/tapo v1.0.1 h1:W7K/1SXR8fvCNqY1Qg+GB3ELUjsHAqXtBjBjes7aRQ0=
-github.com/insomniacslk/tapo v1.0.1/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
+github.com/insomniacslk/tapo v1.0.2 h1:o2Bz941/Kp3LEjO5kvBbAE9Z4z9BcQMXRols3QkTnI0=
+github.com/insomniacslk/tapo v1.0.2/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
 github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808 h1:BVD0pRpDWgbzkPYACLLPomriAnUGVfFdFoxs7aCLJkY=
 github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808/go.mod h1:Z4EVr4bVv9LZbbje9xyZEyOLpdCOmCvr5S9BJtrdTfw=
 github.com/itchyny/gojq v0.12.17 h1:8av8eGduDb5+rvEdaOO+zQUjA04MS0m3Ps8HiD+fceg=

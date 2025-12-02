@@ -49,14 +49,6 @@ func unwrap(err error) (res []string) {
 	return
 }
 
-func redact(src string) string {
-	return util.RedactConfigString(src)
-}
-
-func redactMap(src map[string]any) map[string]any {
-	return util.RedactConfigMap(src)
-}
-
 // fatal logs a fatal error and runs shutdown functions before terminating
 func fatal(err error) {
 	log.FATAL.Println(err)

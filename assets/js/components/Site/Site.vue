@@ -20,7 +20,7 @@
 				</div>
 			</div>
 			<HemsWarning :circuits="circuits" />
-			<Energyflow v-if="!setupRequired" v-bind="energyflow" />
+			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div

@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/util/test"
@@ -20,7 +19,7 @@ func TestEEBus(t *testing.T) {
 		"timeout": "10s",
 	}
 
-	if _, err := NewFromConfig(context.TODO(), "eebus", values); err != nil && !test.Acceptable(err, acceptable) {
+	if _, err := NewFromConfig(t.Context(), "eebus", values); err != nil && !test.Acceptable(err, acceptable) {
 		t.Error(err)
 	}
 
@@ -31,7 +30,7 @@ func TestEEBus(t *testing.T) {
 		"timeout": "10s",
 	}
 
-	if _, err := NewFromConfig(context.TODO(), "eebus", valuesNoUsage); err != nil && !test.Acceptable(err, acceptable) {
+	if _, err := NewFromConfig(t.Context(), "eebus", valuesNoUsage); err != nil && !test.Acceptable(err, acceptable) {
 		t.Error(err)
 	}
 }

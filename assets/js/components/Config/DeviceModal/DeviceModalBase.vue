@@ -55,7 +55,28 @@
 							:service-values="serviceValues[param.Name]"
 						/>
 						<p v-if="authError" class="text-danger">{{ authError }}</p>
-						<div class="d-flex justify-content-end">
+
+						<div class="my-4 d-flex justify-content-between align-items-baseline">
+							<!-- delete / cancel -->
+							<button
+								v-if="isDeletable"
+								type="button"
+								class="btn btn-link text-danger"
+								tabindex="0"
+								@click.prevent="handleRemove"
+							>
+								{{ $t("config.general.delete") }}
+							</button>
+							<button
+								v-else
+								type="button"
+								class="btn btn-link text-muted"
+								data-bs-dismiss="modal"
+								tabindex="0"
+							>
+								{{ $t("config.general.cancel") }}
+							</button>
+							<!-- perform auth -->
 							<div
 								v-if="authProviderUrl"
 								class="d-flex flex-column align-items-end gap-2"
@@ -177,6 +198,7 @@ import {
 	createDeviceUtils,
 	fetchServiceValues,
 } from "./index";
+import deepEqual from "@/utils/deepEqual";
 
 const CUSTOM_FIELDS = ["modbus"];
 
@@ -470,6 +492,17 @@ export default defineComponent({
 			// update on auth state change
 			this.updateServiceValues();
 		},
+		serviceValues: {
+			handler(newValue, oldValue) {
+				// Apply defaults only for specific params whose service values changed
+				Object.keys(newValue).forEach((paramName) => {
+					if (!deepEqual(newValue[paramName], oldValue[paramName])) {
+						this.applyServiceDefault(paramName);
+					}
+				});
+			},
+			deep: true,
+		},
 	},
 	methods: {
 		reset() {
@@ -701,6 +734,15 @@ export default defineComponent({
 			this.serviceValuesTimer = setTimeout(async () => {
 				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
 			}, 500);
+		},
+		applyServiceDefault(paramName: string) {
+			// Auto-apply single service value when field is empty and required
+			const values = this.serviceValues[paramName];
+			const param = this.templateParams.find((p) => p.Name === paramName);
+			// Only auto-apply if exactly one value is returned, field is empty, and field is required
+			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+				this.values[paramName] = values[0];
+			}
 		},
 	},
 });
