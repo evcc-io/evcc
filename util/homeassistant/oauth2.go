@@ -55,8 +55,9 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 		ClientID:    extUrl,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  uri + "/auth/authorize",
-			TokenURL: uri + "/auth/token",
+			AuthURL:   uri + "/auth/authorize",
+			TokenURL:  uri + "/auth/token",
+			AuthStyle: oauth2.AuthStyleInParams,
 		},
 	}
 
