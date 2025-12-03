@@ -54,7 +54,7 @@ func (a *Handler) run(paramC chan<- util.Param) {
 		res := make(map[string]*AuthProvider)
 		for id, provider := range a.providers {
 			res[provider.DisplayName()] = &AuthProvider{
-				ID:            url.QueryEscape(id),
+				ID:            id,
 				Authenticated: provider.Authenticated(),
 			}
 		}
