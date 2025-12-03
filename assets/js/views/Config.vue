@@ -3,6 +3,11 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
+				<AuthSuccessBanner
+					v-if="callbackCompleted"
+					:provider-id="callbackCompleted"
+					:auth-providers="authProviders"
+				/>
 				<WelcomeBanner v-if="loadpointsRequired" />
 				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
@@ -437,6 +442,7 @@ type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 
 export default defineComponent({
@@ -453,6 +459,7 @@ export default defineComponent({
 		EebusIcon,
 		EebusModal,
 		ExperimentalBanner,
+		AuthSuccessBanner,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -523,6 +530,12 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		callbackCompleted() {
+			return this.$route.query["callbackCompleted"] as string | undefined;
+		},
+		authProviders() {
+			return store.state?.authProviders;
+		},
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
 		},

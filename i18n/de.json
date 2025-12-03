@@ -697,6 +697,7 @@
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
       "loggedOut": "Erfolgreich abgemeldet",
+      "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
       "title": "Autorisierungsstatus"
     },
     "blog": "Blog",
