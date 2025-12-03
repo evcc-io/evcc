@@ -182,5 +182,5 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/#/config?callbackCompleted="+url.QueryEscape(id), http.StatusFound)
 }
