@@ -195,7 +195,13 @@ export default defineComponent({
 			return this.collectProps(Energyflow);
 		},
 		loadpointTitles() {
-			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
+			// Use original loadpoints order from state (not reordered uiLoadpoints)
+			// because error messages use the original index from the backend
+			const vehicles = this.vehicles || {};
+			return (store.state.loadpoints || []).map((lp) => {
+				const vehicle = vehicles[lp.vehicleName];
+				return vehicle?.title || lp.title || "Charging point";
+			});
 		},
 		vehicleList() {
 			const vehicles = this.vehicles || {};
