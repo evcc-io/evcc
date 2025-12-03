@@ -35,10 +35,10 @@ func getRedirectUri(w http.ResponseWriter, req *http.Request) {
 
 	if uri == "" {
 		// referer
-		if referer, err := url.Parse(req.Header.Get("Referer")); err == nil && referer.Host != "localhost" && referer.Host != "127.0.0.1" {
-			referer.Path = ""
-			referer.RawQuery = ""
-			uri = referer.String()
+		if referer, err := url.Parse(req.Header.Get("Referer")); err == nil {
+			if referer.Host != "localhost" && referer.Host != "127.0.0.1" && referer.Scheme != "" && referer.Host != "" {
+				uri = referer.Scheme + "://" + referer.Host
+			}
 		}
 	}
 
