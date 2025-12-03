@@ -312,8 +312,3 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
 	return queryRCT(id, m.conn.QueryInt32)
 }
-
-// queryUint8 adds retry logic of recoverable errors to QueryUint8
-func (m *RCT) queryUint8(id rct.Identifier) (uint8, error) {
-	return queryRCT(id, m.conn.QueryUint8)
-}
