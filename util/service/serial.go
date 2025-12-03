@@ -3,6 +3,9 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/server/service"
 	serialports "go.bug.st/serial"
@@ -15,12 +18,19 @@ func init() {
 	service.Register("serial", mux)
 }
 
+var (
+	once  sync.Once
+	ports []string
+)
+
 func getSerialPorts(w http.ResponseWriter, req *http.Request) {
-	ports, err := serialports.GetPortsList()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	once.Do(func() {
+		ports = strings.Split(os.Getenv("EVCC_SERIAL_PORTS"), ",")
+
+		if len(ports) == 0 {
+			ports, _ = serialports.GetPortsList()
+		}
+	})
 
 	json.NewEncoder(w).Encode(ports)
 }
