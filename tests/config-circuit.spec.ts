@@ -1,12 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  enableExperimental,
-  expectModalVisible,
-  expectModalHidden,
-  editorClear,
-  editorPaste,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
 
@@ -21,7 +15,6 @@ test.describe("circuit", async () => {
     await start(CONFIG_YAML);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText(["Power", "1.0 kW"].join(""));
@@ -43,7 +36,6 @@ test.describe("circuit", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // add grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();

@@ -1,5 +1,12 @@
 <template>
-	<div class="root round-box" :class="{ 'round-box--error': error }">
+	<div
+		class="root"
+		:class="{
+			'round-box': !unconfigured,
+			'round-box--error': error,
+			'root--unconfigured': unconfigured,
+		}"
+	>
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
@@ -13,7 +20,7 @@
 			<button
 				ref="tooltip"
 				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
+				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 edit-button"
 				:class="{ 'opacity-25': !editable }"
 				data-bs-toggle="tooltip"
 				data-bs-html="true"
@@ -42,6 +49,7 @@ export default {
 		title: String,
 		editable: Boolean,
 		error: Boolean,
+		unconfigured: Boolean,
 	},
 	emits: ["edit"],
 	data() {
@@ -96,8 +104,25 @@ export default {
 	padding: 1rem 1.5rem;
 	min-height: 8rem;
 }
+.root--unconfigured {
+	background: none;
+	border: 1px solid var(--evcc-gray-50);
+	transition: border-color var(--evcc-transition-fast) linear;
+}
+.root--unconfigured:hover {
+	border-color: var(--evcc-default-text);
+}
+.root--unconfigured :deep(.value),
+.root--unconfigured :deep(.label) {
+	color: var(--evcc-gray) !important;
+	font-weight: normal !important;
+}
 .icon:empty {
 	display: none;
+}
+.edit-button {
+	/* transparent button, right align icon */
+	margin-right: -0.5rem;
 }
 .divide {
 	margin-left: -1.5rem;

@@ -1,12 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  editorClear,
-  editorPaste,
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-} from "./utils";
+import { editorClear, editorPaste, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
 
@@ -24,7 +18,6 @@ test.describe("vehicles", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -83,7 +76,6 @@ test.describe("vehicles", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -120,7 +112,6 @@ test.describe("vehicles", async () => {
     await start(CONFIG_WITH_VEHICLE);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -142,7 +133,6 @@ test.describe("vehicles", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     await page.getByTestId("add-vehicle").click();
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -181,7 +171,6 @@ test.describe("vehicles", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     await page.getByTestId("add-vehicle").click();
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -214,7 +203,6 @@ test.describe("vehicles", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await page.getByTestId("add-vehicle").click();
     const modal = page.getByTestId("vehicle-modal");

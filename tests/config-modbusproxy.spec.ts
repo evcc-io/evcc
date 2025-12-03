@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import { expectModalVisible, enableExperimental, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -15,7 +15,6 @@ test.describe("modbusproxy", async () => {
   test("modbusproxy not configured", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const modbusproxyCard = page.getByTestId("modbusproxy");
 
@@ -26,7 +25,6 @@ test.describe("modbusproxy", async () => {
   test("modbusproxy via ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // add connection
     const modbusproxyCard = page.getByTestId("modbusproxy");
@@ -92,7 +90,6 @@ test.describe("modbusproxy", async () => {
   test("modbusproxy via db (yaml to json migration)", async ({ page }) => {
     await start(undefined, CONFIG_MODBUSPROXY_MIGRATE);
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const modbusproxyCard = page.getByTestId("modbusproxy");
     await expect(modbusproxyCard).toContainText(["Amount", "3"].join(""));

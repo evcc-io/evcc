@@ -5,7 +5,6 @@ import {
   expectModalHidden,
   editorClear,
   editorPaste,
-  enableExperimental,
   addDemoCharger,
   newLoadpoint,
 } from "./utils";
@@ -33,7 +32,6 @@ test.describe("HEMS", () => {
     await start(CONFIG);
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // configure circuits
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
