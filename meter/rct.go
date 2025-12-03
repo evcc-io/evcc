@@ -41,7 +41,6 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 		batterySocLimits `mapstructure:",squash"`
 		Uri, Usage       string
 		MaxChargePower   int
-		Battery          int
 		Capacity         float64
 		Capacity2        float64
 		ExternalPower    bool
