@@ -86,9 +86,9 @@
 						@click="newMeter('grid')"
 					/>
 					<DeviceCard
-						v-if="tariffTags"
 						:title="$t('config.tariffs.title')"
 						editable
+						:unconfigured="isUnconfigured(tariffTags)"
 						:error="hasClassError('tariff')"
 						data-testid="tariffs"
 						@edit="openModal('tariffsModal')"
@@ -100,12 +100,6 @@
 							<DeviceTags :tags="tariffTags" />
 						</template>
 					</DeviceCard>
-					<NewDeviceButton
-						v-else
-						:title="$t('config.main.addTariffs')"
-						data-testid="add-tariffs"
-						@click="openModal('tariffsModal')"
-					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
 				<div class="p-0 config-list">
@@ -556,7 +550,7 @@ export default defineComponent({
 		selectedChargerName() {
 			return this.getChargerById(this.selectedChargerId)?.name;
 		},
-		tariffTags() {
+		tariffTags(): DeviceTags {
 			const { currency, tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
 			if (
 				tariffGrid === undefined &&
@@ -564,7 +558,7 @@ export default defineComponent({
 				tariffCo2 === undefined &&
 				tariffSolar === undefined
 			) {
-				return null;
+				return { configured: { value: false } };
 			}
 			const tags = {
 				currency: {},

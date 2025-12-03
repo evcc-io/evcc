@@ -16,15 +16,15 @@ test.describe("tariffs", async () => {
     await start();
     await page.goto("/#/config");
 
-    await expect(page.getByTestId("tariffs")).not.toBeVisible();
-    await expect(page.getByTestId("add-tariffs")).toBeVisible();
+    await expect(page.getByTestId("tariffs")).toBeVisible();
+    await expect(page.getByTestId("tariffs")).toContainText(["Configured", "no"].join(""));
   });
 
   test("tariffs via ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
 
-    await page.getByTestId("add-tariffs").click();
+    await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("tariffs-modal");
     await expectModalVisible(modal);
     await page.waitForLoadState("networkidle");
