@@ -431,14 +431,6 @@ params:
       de: Längengrad
     type: float
     example: 9.1275
-  - name: battery
-    default: 1
-    type: choice
-    description:
-      en: Battery number
-      de: Batteriespeichernummer
-    choice: [1, 2]
-    usages: ["battery"]
 
 presets:
   vehicle-base:

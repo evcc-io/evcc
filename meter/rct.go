@@ -19,11 +19,9 @@ import (
 
 // RCT implements the api.Meter interface
 type RCT struct {
-	conn              *rct.Connection // connection with the RCT device
-	usage             string          // grid, pv, battery
-	externalPower     bool            // whether to query external power
-	battery           int             // battery number
-	numberOfBatteries uint8           // number of batteries connected to inverter
+	conn          *rct.Connection // connection with the RCT device
+	usage         string          // grid, pv, battery
+	externalPower bool            // whether to query external power
 }
 
 var (
@@ -40,11 +38,12 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity  `mapstructure:",squash"`
 		batterySocLimits `mapstructure:",squash"`
 		Uri, Usage       string
 		MaxChargePower   int
 		Battery          int
+		Capacity         float64
+		Capacity2        float64
 		ExternalPower    bool
 		Cache            time.Duration
 	}{
@@ -64,11 +63,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.MaxChargePower, cc.Battery, cc.Cache, cc.ExternalPower, cc.batteryCapacity.Decorator())
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.MaxChargePower, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2)
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, maxchargepower int, battery int, cache time.Duration, externalPower bool, capacity func() float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, maxchargepower int, cache time.Duration, externalPower bool, capacity float64, capacity2 float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -94,7 +93,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		usage:         strings.ToLower(usage),
 		conn:          conn,
 		externalPower: externalPower,
-		battery:       battery,
 	}
 
 	// decorate api.MeterEnergy
@@ -106,18 +104,34 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	// decorate api.Battery
 	var batterySoc func() (float64, error)
 	var batterySocLimiter func() (float64, float64)
+	var batteryCapacity func() float64
 	var batteryMode func(api.BatteryMode) error
 
 	if usage == "battery" {
-		n, err := m.queryUint8(rct.PowerMngNBatteries)
+		batterySoc = func() (float64, error) {
+			soc, err := m.queryFloat(rct.BatterySoC)
 
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return 0, err
+			}
+
+			if capacity2 != 0 {
+				soc2, err := m.queryFloat(rct.BatteryPlaceholder0Soc)
+
+				sc := soc * capacity
+				sc2 := soc2 * capacity2
+				c := capacity + capacity2
+
+				return ((sc + sc2) / c) * 100, err
+			}
+
+			return soc * 100, err
 		}
-
-		m.numberOfBatteries = n
-		batterySoc = m.batterySoc
 		batterySocLimiter = batterySocLimits.Decorator()
+
+		if capacity != 0 {
+			batteryCapacity = func() float64 { return capacity }
+		}
 
 		batteryMode = func(mode api.BatteryMode) error {
 			if mode != api.BatteryNormal {
@@ -178,7 +192,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, batterySocLimiter, batteryMode, capacity), nil
+	return decorateRCT(m, totalEnergy, batterySoc, batterySocLimiter, batteryMode, batteryCapacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {
@@ -221,32 +235,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 		return a + b + c, err
 
 	case "battery":
-		if m.numberOfBatteries == 1 {
-			return m.queryFloat(rct.BatteryPowerW)
-		}
-
-		idCurrent, idVoltage := rct.BatteryCurrent, rct.BatteryVoltage
-
-		if m.battery == 2 {
-			idCurrent, idVoltage = rct.BatteryPlaceholder0Current, rct.BatteryPlaceholder0Voltage
-		}
-
-		var eg errgroup.Group
-		var current, voltage float64
-
-		eg.Go(func() error {
-			var err error
-			current, err = m.queryFloat(idCurrent)
-			return err
-		})
-		eg.Go(func() error {
-			var err error
-			voltage, err = m.queryFloat(idVoltage)
-			return err
-		})
-
-		err := eg.Wait()
-		return current * voltage, err
+		return m.queryFloat(rct.BatteryPowerW)
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
@@ -295,32 +284,12 @@ func (m *RCT) totalEnergy() (float64, error) {
 		})
 
 		err := eg.Wait()
-		totalWh := (in - out) / 1000
 
-		if m.numberOfBatteries == 2 {
-			totalWh *= 0.5
-		}
-
-		return totalWh, err
+		return (in - out) / 1000, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
-}
-
-// batterySoc implements the api.Battery interface
-func (m *RCT) batterySoc() (float64, error) {
-	var soc float64
-	var err error
-	id := rct.BatterySoC
-
-	if m.battery == 2 {
-		id = rct.BatteryPlaceholder0Soc
-	}
-
-	soc, err = m.queryFloat(id)
-
-	return soc * 100, err
 }
 
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {

@@ -12,6 +12,13 @@ params:
     baudrate: 9600
     id: 247
   - name: battery
+    default: 1
+    type: choice
+    description:
+      en: Battery number
+      de: Batteriespeichernummer
+    choice: [1, 2]
+    usages: ["battery"]
   - name: capacity
     advanced: true
   - name: maxacpower
