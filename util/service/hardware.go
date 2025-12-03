@@ -13,9 +13,9 @@ import (
 
 func init() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", getSerialPorts)
+	mux.HandleFunc("GET /serial", getSerialPorts)
 
-	service.Register("serial", mux)
+	service.Register("hardware", mux)
 }
 
 var (
