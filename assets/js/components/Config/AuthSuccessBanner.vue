@@ -17,7 +17,6 @@ export default defineComponent({
 	computed: {
 		providerName() {
 			for (const [name, provider] of Object.entries(this.authProviders)) {
-				console.log(provider.id, this.providerId);
 				if (provider.id === this.providerId) {
 					return name;
 				}
