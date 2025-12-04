@@ -112,11 +112,6 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if uri == "" {
-		jsonError(w, http.StatusInternalServerError, "couldn't obtain login uri")
-		return
-	}
-
 	res := loginResponse{
 		LoginUri: uri,
 	}
