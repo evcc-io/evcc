@@ -18,8 +18,9 @@ type errorResponse struct {
 }
 
 type loginResponse struct {
-	LoginUri string `json:"loginUri"`
-	Code     string `json:"code,omitempty"`
+	LoginUri string     `json:"loginUri"`
+	Code     string     `json:"code,omitempty"`
+	Expiry   *time.Time `json:"expiry,omitempty"`
 }
 
 // jsonWrite writes a JSON response
@@ -105,7 +106,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
-	uri, code, err := provider.Login(encryptedState)
+	uri, da, err := provider.Login(encryptedState)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
 		return
@@ -116,10 +117,21 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonWrite(w, loginResponse{
+	res := loginResponse{
 		LoginUri: uri,
-		Code:     code,
-	})
+	}
+
+	if da != nil {
+		res.Expiry = &da.Expiry
+		if da.VerificationURIComplete != "" {
+			res.LoginUri = da.VerificationURIComplete
+		} else {
+			res.LoginUri = da.VerificationURI
+			res.Code = da.UserCode
+		}
+	}
+
+	jsonWrite(w, res)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {

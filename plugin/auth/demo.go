@@ -46,14 +46,14 @@ func (o *demo) Token() (*oauth2.Token, error) {
 	return o.token, nil
 }
 
-func (o *demo) Login(_ string) (string, error) {
+func (o *demo) Login(_ string) (string, *oauth2.DeviceAuthResponse, error) {
 	// for demo, immediately authenticate without requiring external flow
 	o.token = &oauth2.Token{
 		AccessToken: "demo-token",
 		Expiry:      time.Now().Add(24 * time.Hour),
 	}
 	// TODO use network settings after https://github.com/evcc-io/evcc/pull/25141
-	return "http://localhost:7070/providerauth/callback", nil
+	return "http://localhost:7070/providerauth/callback", nil, nil
 }
 
 func (o *demo) Logout() error {
