@@ -13,7 +13,7 @@
 				<div class="d-flex">
 					<Notifications
 						:notifications="notifications"
-						:loadpointTitles="loadpointTitles"
+						:loadpoints="loadpoints"
 						class="me-2"
 					/>
 					<TopNavigation v-bind="topNavigation" />
@@ -193,15 +193,6 @@ export default defineComponent({
 		},
 		energyflow() {
 			return this.collectProps(Energyflow);
-		},
-		loadpointTitles() {
-			// Use original loadpoints order from state (not reordered uiLoadpoints)
-			// because error messages use the original index from the backend
-			const vehicles = this.vehicles || {};
-			return (store.state.loadpoints || []).map((lp) => {
-				const vehicle = vehicles[lp.vehicleName];
-				return vehicle?.title || lp.title || "Charging point";
-			});
 		},
 		vehicleList() {
 			const vehicles = this.vehicles || {};
