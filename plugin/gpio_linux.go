@@ -37,15 +37,15 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, fmt.Errorf("failed to open GPIO: %w", err)
 	}
 
-	res := &gpio{
+	p := &gpio{
 		pin: rpio.Pin(cc.Pin),
 	}
 
-	res.pin.Input()
+	p.pin.Input()
 
-	go res.run(ctx)
+	go p.run(ctx)
 
-	return &res, nil
+	return &p, nil
 }
 
 func (p *gpio) run(ctx context.Context) {
@@ -55,7 +55,7 @@ func (p *gpio) run(ctx context.Context) {
 			rpio.Close()
 
 		case <-tick:
-			val := rpio.Pin(p.pin).Read()
+			val := p.pin.Read()
 
 			p.mu.Lock()
 			p.active = val != rpio.Low
