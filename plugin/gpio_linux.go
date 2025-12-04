@@ -58,8 +58,6 @@ func (p *gpio) BoolGetter() (func() (bool, error), error) {
 		}
 		defer rpio.Close()
 
-		val := p.pin.Read()
-
-		return val != rpio.Low, nil
+		return p.pin.Read() != rpio.Low, nil
 	}, nil
 }
