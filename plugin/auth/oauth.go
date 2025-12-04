@@ -220,7 +220,7 @@ func (o *OAuth) HandleCallback(params url.Values) error {
 }
 
 // Login implements api.AuthProvider.
-func (o *OAuth) Login(state string) (string, error) {
+func (o *OAuth) Login(state string) (string, string, error) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -229,7 +229,7 @@ func (o *OAuth) Login(state string) (string, error) {
 	if o.deviceFlow {
 		da, err := o.oc.DeviceAuth(o.ctx, oauth2.S256ChallengeOption(o.cv))
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		go func() {
@@ -248,14 +248,18 @@ func (o *OAuth) Login(state string) (string, error) {
 			o.updateToken(token)
 		}()
 
-		return da.VerificationURIComplete, nil
+		if da.VerificationURIComplete != "" {
+			return da.VerificationURIComplete, "", nil
+		}
+
+		return da.VerificationURI, da.UserCode, nil
 	}
 
 	if o.oc.Endpoint.AuthURL == "" {
-		return "", errors.New("missing auth url")
+		return "", "", errors.New("missing auth url")
 	}
 
-	return o.oc.AuthCodeURL(state, oauth2.S256ChallengeOption(o.cv)), nil
+	return o.oc.AuthCodeURL(state, oauth2.S256ChallengeOption(o.cv)), "", nil
 }
 
 // Logout implements api.AuthProvider.

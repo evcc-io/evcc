@@ -19,6 +19,7 @@ type errorResponse struct {
 
 type loginResponse struct {
 	LoginUri string `json:"loginUri"`
+	Code     string `json:"code,omitempty"`
 }
 
 // jsonWrite writes a JSON response
@@ -104,13 +105,21 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
-	uri, err := provider.Login(encryptedState)
+	uri, code, err := provider.Login(encryptedState)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	jsonWrite(w, loginResponse{LoginUri: uri})
+	if uri == "" {
+		jsonError(w, http.StatusInternalServerError, "couldn't obtain login uri")
+		return
+	}
+
+	jsonWrite(w, loginResponse{
+		LoginUri: uri,
+		Code:     code,
+	})
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
