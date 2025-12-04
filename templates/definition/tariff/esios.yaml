@@ -24,12 +24,12 @@ params:
     required: true
   - name: region
     description:
-      generic: "Retrieve 1 out of 5 regions from the API."
+      generic: "Select 1 out of 5 regions for grid tariff. For feedin tariff always region = España"
     help:
-      en: Península, Canarias, Baleares, Ceuta, Melilla
+      en: Península, Canarias, Baleares, Ceuta, Melilla (grid) - España (feedin)
     example: Península
     type: choice
-    choice: ["Península", "Canarias", "Baleares", "Ceuta", "Melilla"]
+    choice: ["Península", "Canarias", "Baleares", "Ceuta", "Melilla", "España"]
     required: true
   - preset: tariff-base
 render: |
