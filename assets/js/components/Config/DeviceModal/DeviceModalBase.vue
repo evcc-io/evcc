@@ -39,11 +39,13 @@
 					:type="deviceType"
 					:error-line="test.errorLine"
 				/>
-
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<SponsorTokenRequired v-if="sponsorTokenRequired" />
-					<Markdown v-if="description" :markdown="description" class="my-4" />
+
+					<slot name="template-description">
+						<Markdown v-if="description" :markdown="description" class="my-4" />
+					</slot>
 
 					<div v-if="authRequired">
 						<PropertyEntry
@@ -108,47 +110,48 @@
 					</div>
 					<div v-else>
 						<slot name="after-template-info" :values="values"></slot>
+						<div v-if="!hideTemplateFields">
+							<Modbus
+								v-if="modbus"
+								v-model:modbus="values['modbus']"
+								v-model:id="values['id']"
+								v-model:host="values['host']"
+								v-model:port="values['port']"
+								v-model:device="values['device']"
+								v-model:baudrate="values['baudrate']"
+								v-model:comset="values['comset']"
+								:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
+								:defaultComset="modbus.Comset"
+								:defaultBaudrate="modbus.Baudrate"
+								:defaultPort="modbus.Port"
+								:capabilities="modbusCapabilities"
+							/>
 
-						<Modbus
-							v-if="modbus"
-							v-model:modbus="values['modbus']"
-							v-model:id="values['id']"
-							v-model:host="values['host']"
-							v-model:port="values['port']"
-							v-model:device="values['device']"
-							v-model:baudrate="values['baudrate']"
-							v-model:comset="values['comset']"
-							:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
-							:defaultComset="modbus.Comset"
-							:defaultBaudrate="modbus.Baudrate"
-							:defaultPort="modbus.Port"
-							:capabilities="modbusCapabilities"
-						/>
+							<PropertyEntry
+								v-for="param in normalParams"
+								:id="`${deviceType}Param${param.Name}`"
+								:key="param.Name"
+								v-bind="param"
+								v-model="values[param.Name]"
+								:service-values="serviceValues[param.Name]"
+							/>
 
-						<PropertyEntry
-							v-for="param in normalParams"
-							:id="`${deviceType}Param${param.Name}`"
-							:key="param.Name"
-							v-bind="param"
-							v-model="values[param.Name]"
-							:service-values="serviceValues[param.Name]"
-						/>
-
-						<PropertyCollapsible>
-							<template v-if="advancedParams.length" #advanced>
-								<PropertyEntry
-									v-for="param in advancedParams"
-									:id="`${deviceType}Param${param.Name}`"
-									:key="param.Name"
-									v-bind="param"
-									v-model="values[param.Name]"
-									:service-values="serviceValues[param.Name]"
-								/>
-							</template>
-							<template v-if="$slots['collapsible-more']" #more>
-								<slot name="collapsible-more" :values="values"></slot>
-							</template>
-						</PropertyCollapsible>
+							<PropertyCollapsible>
+								<template v-if="advancedParams.length" #advanced>
+									<PropertyEntry
+										v-for="param in advancedParams"
+										:id="`${deviceType}Param${param.Name}`"
+										:key="param.Name"
+										v-bind="param"
+										v-model="values[param.Name]"
+										:service-values="serviceValues[param.Name]"
+									/>
+								</template>
+								<template v-if="$slots['collapsible-more']" #more>
+									<slot name="collapsible-more" :values="values"></slot>
+								</template>
+							</PropertyCollapsible>
+						</div>
 					</div>
 				</div>
 
@@ -257,6 +260,8 @@ export default defineComponent({
 		onConfigurationLoaded: Function as PropType<(values: DeviceValues) => void>,
 		// Optional: external template selection control (for parent to reset template)
 		externalTemplate: String as PropType<string | null>,
+		// Optional: hide template fields
+		hideTemplateFields: { type: Boolean, default: false },
 	},
 	emits: ["added", "updated", "removed", "close", "template-changed", "update:externalTemplate"],
 	data() {
@@ -375,7 +380,10 @@ export default defineComponent({
 			return !this.isNew;
 		},
 		showActions() {
-			return (this.templateName && !this.authRequired) || this.showYamlInput;
+			return (
+				((this.templateName && !this.authRequired) || this.showYamlInput) &&
+				!this.hideTemplateFields
+			);
 		},
 		showYamlInput() {
 			return this.isYamlInputTypeByValue(this.values.type);

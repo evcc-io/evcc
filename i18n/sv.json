@@ -40,7 +40,7 @@
       "chargers": "Elbilsladdare",
       "generic": "Generisk integration",
       "heatingdevices": "Värmeenheter",
-      "ocppHelp": "Kopiera in denna adress i din laddkonfiguration.",
+      "ocppHelp": "Kopiera denna URL till din laddares konfiguration. Kontrollera tillverkarens manual för detaljer. Laddaren kommer automatiskt att lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
