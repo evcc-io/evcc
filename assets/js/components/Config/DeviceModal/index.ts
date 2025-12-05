@@ -78,13 +78,6 @@ export type AuthCheckResponse = {
   authId?: string;
 };
 
-export type ProviderLoginResponse = {
-  loginUri?: string;
-  code?: string;
-  expiry?: string;
-  error?: string;
-};
-
 export function handleError(e: any, msg: string) {
   console.error(e);
   let message = msg;
@@ -253,21 +246,6 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return { success: false, error: "unexpected error" };
   }
 
-  async function getAuthProviderUrl(authId: string): Promise<ProviderLoginResponse> {
-    try {
-      const url = `providerauth/login?id=${encodeURIComponent(authId)}`;
-      const { status, data } = await baseApi.get<ProviderLoginResponse>(url, {
-        validateStatus: (code) => [200, 400].includes(code),
-      });
-      if (status === 200) {
-        return data;
-      }
-      throw new Error(data?.error ?? "unknown error");
-    } catch (error) {
-      throw new Error((error as Error).message ?? "unknown error");
-    }
-  }
-
   return {
     test,
     update,
@@ -278,6 +256,5 @@ export function createDeviceUtils(deviceType: DeviceType) {
     loadTemplate,
     loadServiceValues,
     checkAuth,
-    getAuthProviderUrl,
   };
 }
