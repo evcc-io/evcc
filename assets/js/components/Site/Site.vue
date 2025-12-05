@@ -13,7 +13,7 @@
 				<div class="d-flex">
 					<Notifications
 						:notifications="notifications"
-						:loadpointTitles="loadpointTitles"
+						:loadpoints="loadpoints"
 						class="me-2"
 					/>
 					<TopNavigation v-bind="topNavigation" />
@@ -193,9 +193,6 @@ export default defineComponent({
 		},
 		energyflow() {
 			return this.collectProps(Energyflow);
-		},
-		loadpointTitles() {
-			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
 		},
 		vehicleList() {
 			const vehicles = this.vehicles || {};
