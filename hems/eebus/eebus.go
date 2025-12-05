@@ -210,7 +210,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc_root api.Circu
 }
 
 func (c *EEBus) Run() {
-
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 
@@ -273,7 +272,6 @@ func (c *EEBus) run() error {
 			c.setLimit(c.consumptionLimit.Value, true)
 			c.setLPPStatusAndLimit(StatusLimited, 0, false)
 		} else if c.consumptionLimit.IsActive && c.productionLimit.IsActive {
-
 			// both limits active - senceless, but possible
 			c.log.WARN.Println("active consumption limit, active production limit")
 			c.setLimit(c.consumptionLimit.Value, true)
