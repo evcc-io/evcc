@@ -57,7 +57,7 @@ type HvacStatus struct {
 }
 
 type Cockpit struct {
-	TotalMileage *int `json:"totalMileage"`
+	TotalMileage *float64 `json:"totalMileage"`
 }
 
 type SocLevels struct {

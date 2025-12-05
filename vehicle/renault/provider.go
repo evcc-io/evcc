@@ -124,7 +124,7 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 
 	if res.TotalMileage != nil {
-		return float64(*res.TotalMileage), nil
+		return *res.TotalMileage, nil
 	}
 
 	return 0, api.ErrNotAvailable
