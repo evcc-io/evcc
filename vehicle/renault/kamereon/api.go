@@ -84,11 +84,7 @@ func (v *API) Vehicles(accountID string) ([]Vehicle, error) {
 func (v *API) BatteryStatus(accountID string, vin string) (BatteryStatus, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.keys.Target, accountID, vin)
 
-	var res struct {
-		Data struct {
-			Attributes BatteryStatus `json:"attributes"`
-		} `json:"data"`
-	}
+	var res DataEnvelope[BatteryStatus]
 	err := v.GetJSON(uri, &res)
 
 	return res.Data.Attributes, err
@@ -97,11 +93,7 @@ func (v *API) BatteryStatus(accountID string, vin string) (BatteryStatus, error)
 func (v *API) HvacStatus(accountID string, vin string) (HvacStatus, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.keys.Target, accountID, vin)
 
-	var res struct {
-		Data struct {
-			Attributes HvacStatus `json:"attributes"`
-		} `json:"data"`
-	}
+	var res DataEnvelope[HvacStatus]
 	err := v.GetJSON(uri, &res)
 
 	return res.Data.Attributes, err
@@ -110,11 +102,7 @@ func (v *API) HvacStatus(accountID string, vin string) (HvacStatus, error) {
 func (v *API) Cockpit(accountID string, vin string) (Cockpit, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/cockpit", v.keys.Target, accountID, vin)
 
-	var res struct {
-		Data struct {
-			Attributes Cockpit `json:"attributes"`
-		} `json:"data"`
-	}
+	var res DataEnvelope[Cockpit]
 	err := v.GetJSON(uri, &res)
 
 	return res.Data.Attributes, err
@@ -132,11 +120,7 @@ func (v *API) SocLevels(accountID string, vin string) (SocLevels, error) {
 func (v *API) Position(accountID string, vin string) (Position, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/location", v.keys.Target, accountID, vin)
 
-	var res struct {
-		Data struct {
-			Attributes Position `json:"attributes"`
-		} `json:"data"`
-	}
+	var res DataEnvelope[Position]
 	err := v.GetJSON(uri, &res)
 
 	return res.Data.Attributes, err

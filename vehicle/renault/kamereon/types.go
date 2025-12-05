@@ -80,6 +80,12 @@ type ChargeActionAttributes struct {
 	Action string `json:"action"`
 }
 
+type DataEnvelope[T any] struct {
+	Data struct {
+		Attributes T `json:"attributes"`
+	} `json:"data"`
+}
+
 type EvSettingsRequest struct {
 	LastSettingsUpdateTimestamp    string  `json:"lastSettingsUpdateTimestamp"`
 	DelegatedActivated             bool    `json:"delegatedActivated"`
