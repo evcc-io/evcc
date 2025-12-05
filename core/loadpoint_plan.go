@@ -84,7 +84,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
 		continuous, precondition, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
 
-	return lp.planner.Plan(requiredDuration, targetTime, precondition, continuous)
+	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }
 
 // plannerActive checks if the charging plan has a currently active slot
