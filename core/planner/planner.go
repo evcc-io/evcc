@@ -32,40 +32,6 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 	return p
 }
 
-// filterRates filters rates to the given time window and adjusts boundary slots
-func filterRates(rates api.Rates, start, end time.Time) api.Rates {
-	var result api.Rates
-	for _, r := range rates {
-		// skip slots completely outside window
-		if !r.End.After(start) || !r.Start.Before(end) {
-			continue
-		}
-
-		// calculate adjusted bounds
-		adjustedStart := r.Start
-		if adjustedStart.Before(start) {
-			adjustedStart = start
-		}
-
-		adjustedEnd := r.End
-		if adjustedEnd.After(end) {
-			adjustedEnd = end
-		}
-
-		// skip if adjustment would create invalid slot
-		if !adjustedEnd.After(adjustedStart) {
-			continue
-		}
-
-		slot := r
-		slot.Start = adjustedStart
-		slot.End = adjustedEnd
-		result = append(result, slot)
-	}
-
-	return result
-}
-
 // plan creates a lowest-cost plan or required duration.
 // It MUST already be established that:
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
@@ -166,6 +132,40 @@ func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.D
 	}
 
 	return window
+}
+
+// filterRates filters rates to the given time window and adjusts boundary slots
+func filterRates(rates api.Rates, start, end time.Time) api.Rates {
+	var result api.Rates
+	for _, r := range rates {
+		// skip slots completely outside window
+		if !r.End.After(start) || !r.Start.Before(end) {
+			continue
+		}
+
+		// calculate adjusted bounds
+		adjustedStart := r.Start
+		if adjustedStart.Before(start) {
+			adjustedStart = start
+		}
+
+		adjustedEnd := r.End
+		if adjustedEnd.After(end) {
+			adjustedEnd = end
+		}
+
+		// skip if adjustment would create invalid slot
+		if !adjustedEnd.After(adjustedStart) {
+			continue
+		}
+
+		slot := r
+		slot.Start = adjustedStart
+		slot.End = adjustedEnd
+		result = append(result, slot)
+	}
+
+	return result
 }
 
 // continuousPlan creates a continuous emergency charging plan
