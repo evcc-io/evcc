@@ -136,7 +136,16 @@ var _ api.SocLimiter = (*Provider)(nil)
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.socLevelsG()
 
-	if err == nil && res.SocTarget != nil {
+	// Check if endpoint is unavailable
+	if se := new(request.StatusError); errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+		return 0, api.ErrNotAvailable
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	if res.SocTarget != nil {
 		return int64(*res.SocTarget), nil
 	}
 
