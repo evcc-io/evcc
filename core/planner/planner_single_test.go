@@ -36,7 +36,7 @@ func TestContinuous_SinglePlanWindow(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(2*time.Hour, now.Add(6*time.Hour), 0, true)
+	plan := p.Plan(2*time.Hour, 0, now.Add(6*time.Hour), true)
 
 	require.Len(t, plan, 2)
 	assert.Equal(t, rates[2].Start, plan[0].Start)
@@ -76,7 +76,7 @@ func TestContinuous_WindowWithPastRates(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, targetTime, 0, true)
+	plan := p.Plan(requiredDuration, 0, targetTime, true)
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -115,7 +115,7 @@ func TestContinuous_WindowAllRatesInPast(t *testing.T) {
 	targetTime := now.Add(3 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, targetTime, 0, true) // continuous mode
+	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	// When all rates are in the past and target is in future, expect nil plan
 	assert.Empty(t, plan, "plan should be nil when all rates are in the past")
@@ -156,7 +156,7 @@ func TestContinuous_WindowRatesSpanningPastAndFuture(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, targetTime, 0, true) // continuous mode
+	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -201,7 +201,7 @@ func TestContinuous_WindowRatesStartInFuture(t *testing.T) {
 	targetTime := now.Add(5 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, targetTime, 0, true) // continuous mode
+	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -245,7 +245,7 @@ func TestContinuous_WindowLateChargingPreference(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, targetTime, 0, true) // continuous mode
+	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)

@@ -1,7 +1,6 @@
 package planner
 
 import (
-	"math"
 	"slices"
 	"time"
 
@@ -60,83 +59,10 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 	return plan
 }
 
-// findContinuousWindow finds the cheapest continuous window of slots for the given duration.
-// - rates are filtered to [now, targetTime] window by caller
-// Returns the selected rates.
-func (t *Planner) findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
-	bestCost := math.MaxFloat64
-	bestStartIndex := -1
-
-	for i := range rates {
-		windowEnd := rates[i].Start.Add(effectiveDuration)
-
-		if windowEnd.After(targetTime) {
-			break
-		}
-
-		// Calculate cost and duration for this window (without building the array)
-		var cost float64
-		var duration time.Duration
-
-		for j := i; j < len(rates) && duration < effectiveDuration; j++ {
-			slot := rates[j]
-
-			// slot partially or completely within window?
-			if slot.Start.Before(windowEnd) {
-				// calculate trimmed end if necessary
-				slotEnd := slot.End
-				if slotEnd.After(windowEnd) {
-					slotEnd = windowEnd
-				}
-
-				slotDur := slotEnd.Sub(slot.Start)
-				duration += slotDur
-				cost += float64(slotDur) * slot.Value
-			}
-		}
-
-		// only consider complete windows
-		if duration < effectiveDuration {
-			continue
-		}
-
-		// Prefer later start if equal cost
-		if cost <= bestCost {
-			bestCost = cost
-			bestStartIndex = i
-		}
-	}
-
-	// No valid window found
-	if bestStartIndex == -1 {
-		return nil
-	}
-
-	// Build the best window only once
-	windowEnd := rates[bestStartIndex].Start.Add(effectiveDuration)
-	var window api.Rates
-	var duration time.Duration
-
-	for j := bestStartIndex; j < len(rates) && duration < effectiveDuration; j++ {
-		slot := rates[j]
-
-		if slot.Start.Before(windowEnd) {
-			// trim end if necessary
-			if slot.End.After(windowEnd) {
-				slot.End = windowEnd
-			}
-
-			window = append(window, slot)
-			duration += slot.End.Sub(slot.Start)
-		}
-	}
-
-	return window
-}
-
 // filterRates filters rates to the given time window and adjusts boundary slots
 func filterRates(rates api.Rates, start, end time.Time) api.Rates {
-	var result api.Rates
+	res := make(api.Rates, 0, len(rates))
+
 	for _, r := range rates {
 		// skip slots completely outside window
 		if !r.End.After(start) || !r.Start.Before(end) {
@@ -162,10 +88,10 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 		slot := r
 		slot.Start = adjustedStart
 		slot.End = adjustedEnd
-		result = append(result, slot)
+		res = append(res, slot)
 	}
 
-	return result
+	return res
 }
 
 // continuousPlan creates a continuous emergency charging plan
@@ -197,7 +123,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, precondition time.Duration, continuous bool) api.Rates {
+func (t *Planner) Plan(requiredDuration time.Duration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
@@ -298,7 +224,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, pre
 			}
 		}
 		// find cheapest continuous window
-		plan = t.findContinuousWindow(rates, requiredDuration, targetTime)
+		plan = findContinuousWindow(rates, requiredDuration, targetTime)
 	} else {
 		// find cheapest combination of slots
 		slices.SortStableFunc(rates, sortByCost)
