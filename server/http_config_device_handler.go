@@ -14,6 +14,8 @@ import (
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -71,6 +73,9 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Hems:
+		res, err = devicesConfig(class, config.Hems(), hidePrivate)
 	}
 
 	if err != nil {
@@ -191,6 +196,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
+
+	case templates.Hems:
+		res, err = deviceConfig(class, id, config.Hems(), hidePrivate)
 	}
 
 	if err != nil {
@@ -247,6 +255,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Hems:
+		err = api.ErrNotAvailable
 	}
 
 	if err != nil {
@@ -272,62 +283,69 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 }
 
 // newDeviceHandler creates a new device by class
-func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 
-	class, err := templates.ClassString(vars["class"])
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
+		class, err := templates.ClassString(vars["class"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		req, err := decodeDeviceConfig(r.Body)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		var conf *config.Config
+		ctx, cancel, done := startDeviceTimeout()
+
+		force := r.URL.Query().Get("force") == "true"
+
+		switch class {
+		case templates.Charger:
+			conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers(), force)
+
+		case templates.Meter:
+			conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters(), force)
+
+		case templates.Vehicle:
+			conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
+
+		case templates.Circuit:
+			conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
+				return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
+			}, config.Circuits(), force)
+
+		case templates.Hems:
+			conf, err = newDevice(ctx, class, req, func(ctx context.Context, typ string, other map[string]any) (hemsapi.API, error) {
+				return hems.NewFromConfig(ctx, typ, other, site)
+			}, config.Hems(), force)
+		}
+
+		if err != nil {
+			cancel()
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// prevent context from being cancelled
+		close(done)
+
+		setConfigDirty()
+
+		res := struct {
+			ID   int    `json:"id"`
+			Name string `json:"name"`
+		}{
+			ID:   conf.ID,
+			Name: config.NameForID(conf.ID),
+		}
+
+		jsonWrite(w, res)
 	}
-
-	req, err := decodeDeviceConfig(r.Body)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	var conf *config.Config
-	ctx, cancel, done := startDeviceTimeout()
-
-	force := r.URL.Query().Get("force") == "true"
-
-	switch class {
-	case templates.Charger:
-		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers(), force)
-
-	case templates.Meter:
-		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters(), force)
-
-	case templates.Vehicle:
-		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
-
-	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
-			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits(), force)
-	}
-
-	if err != nil {
-		cancel()
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	// prevent context from being cancelled
-	close(done)
-
-	setConfigDirty()
-
-	res := struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
-	}{
-		ID:   conf.ID,
-		Name: config.NameForID(conf.ID),
-	}
-
-	jsonWrite(w, res)
 }
 
 func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) error {
@@ -348,65 +366,72 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 }
 
 // updateDeviceHandler updates database device's configuration by class
-func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func updateDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 
-	class, err := templates.ClassString(vars["class"])
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
+		class, err := templates.ClassString(vars["class"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		req, err := decodeDeviceConfig(r.Body)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx, cancel, done := startDeviceTimeout()
+
+		force := r.URL.Query().Get("force") == "true"
+
+		switch class {
+		case templates.Charger:
+			err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers(), force)
+
+		case templates.Meter:
+			err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters(), force)
+
+		case templates.Vehicle:
+			err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
+
+		case templates.Circuit:
+			err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
+				return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
+			}, config.Circuits(), force)
+
+		case templates.Hems:
+			err = updateDevice(ctx, id, class, req, func(ctx context.Context, typ string, other map[string]any) (hemsapi.API, error) {
+				return hems.NewFromConfig(ctx, typ, other, site)
+			}, config.Hems(), force)
+		}
+
+		setConfigDirty()
+
+		if err != nil {
+			cancel()
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// prevent context from being cancelled
+		close(done)
+
+		res := struct {
+			ID int `json:"id"`
+		}{
+			ID: id,
+		}
+
+		jsonWrite(w, res)
 	}
-
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	req, err := decodeDeviceConfig(r.Body)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	ctx, cancel, done := startDeviceTimeout()
-
-	force := r.URL.Query().Get("force") == "true"
-
-	switch class {
-	case templates.Charger:
-		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers(), force)
-
-	case templates.Meter:
-		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters(), force)
-
-	case templates.Vehicle:
-		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
-
-	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
-			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits(), force)
-	}
-
-	setConfigDirty()
-
-	if err != nil {
-		cancel()
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	// prevent context from being cancelled
-	close(done)
-
-	res := struct {
-		ID int `json:"id"`
-	}{
-		ID: id,
-	}
-
-	jsonWrite(w, res)
 }
 
 func configurableDevice[T any](name string, h config.Handler[T]) (config.ConfigurableDevice[T], error) {
@@ -533,6 +558,9 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetCircuitRef("")
 				}
 			}
+
+		case templates.Hems:
+			err = deleteDevice(id, config.Hems())
 		}
 
 		setConfigDirty()
@@ -602,6 +630,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
+		err = api.ErrNotAvailable
+
+	case templates.Hems:
 		err = api.ErrNotAvailable
 	}
 
