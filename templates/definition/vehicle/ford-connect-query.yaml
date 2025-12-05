@@ -7,22 +7,22 @@ params:
     description:
       generic: FordConnect Query Client ID
     help:
-      de: Einrichtung unter https://developer.ford.com/apis/fordconnect-query
-      en: Setup at https://developer.ford.com/apis/fordconnect-query
+      de: Einrichtung unter https://developer.ford.com/developer-eu
+      en: Setup at https://developer.ford.com/developer-eu
     required: true
   - name: clientsecret
     description:
       generic: FordConnect Query Client Secret
     help:
-      de: Einrichtung unter https://developer.ford.com/apis/fordconnect-query
-      en: Setup at https://developer.ford.com/apis/fordconnect-query
+      de: Einrichtung unter https://developer.ford.com/developer-eu
+      en: Setup at https://developer.ford.com/developer-eu
     required: true
   - name: redirecturi
     description:
       generic: FordConnect Query Redirect URL
     help:
-      de: Einrichtung unter https://developer.ford.com/apis/fordconnect-query
-      en: Setup at https://developer.ford.com/apis/fordconnect-query
+      de: Einrichtung unter https://developer.ford.com/developer-eu
+      en: Setup at https://developer.ford.com/developer-eu
     service: auth/redirecturi
     required: true
   - name: vin

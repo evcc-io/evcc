@@ -1,4 +1,5 @@
 template: ford-connect
+deprecated: true
 products:
   - brand: Ford (Legacy FordConnect)
 params:
