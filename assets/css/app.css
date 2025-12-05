@@ -564,8 +564,12 @@ input::-webkit-datetime-edit {
 }
 input.form-control:disabled,
 input.form-control:read-only,
+textarea.form-control:disabled,
+textarea.form-control:read-only,
 .dark input.form-control:disabled,
-.dark input.form-control:read-only {
+.dark input.form-control:read-only,
+.dark textarea.form-control:disabled,
+.dark textarea.form-control:read-only {
 	background-color: var(--evcc-gray-10);
 	color: var(--bs-default-text);
 	opacity: 1;

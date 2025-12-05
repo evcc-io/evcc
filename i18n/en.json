@@ -164,6 +164,8 @@
       "cancel": "Cancel",
       "clear": "Clear",
       "close": "Close",
+      "copied": "Copied!",
+      "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",

@@ -164,6 +164,8 @@
       "cancel": "Abbrechen",
       "clear": "Löschen",
       "close": "Schließen",
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",

@@ -55,33 +55,39 @@
 							:service-values="serviceValues[param.Name]"
 						/>
 
-						<FormRow
-							v-if="authCode"
-							:id="`${deviceType}AuthCode`"
-							:label="$t('header.authProviders.authCode')"
-							:help="
-								$t('header.authProviders.authCodeHelp', {
-									duration: authCodeValidityDuration,
-								})
-							"
-						>
-							<input
+						<div v-if="authCode">
+							<hr class="my-5" />
+
+							<FormRow
 								:id="`${deviceType}AuthCode`"
-								type="text"
-								class="form-control form-control-lg border-success font-monospace"
-								:value="authCode"
-								readonly
-							/>
-						</FormRow>
+								:label="$t('header.authProviders.authCode')"
+								:help="
+									$t('header.authProviders.authCodeHelp', {
+										duration: authCodeValidityDuration,
+									})
+								"
+							>
+								<input
+									:id="`${deviceType}AuthCode`"
+									type="text"
+									class="form-control fs-2 border font-monospace"
+									:value="authCode"
+									readonly
+								/>
+								<CopyLink :text="authCode" />
+							</FormRow>
+						</div>
 
 						<p v-if="authError" class="text-danger">{{ authError }}</p>
 
-						<div class="my-4 d-flex justify-content-between align-items-baseline">
+						<div
+							class="my-4 d-flex align-items-stretch justify-content-sm-between align-items-sm-baseline flex-column-reverse flex-sm-row gap-2"
+						>
 							<!-- delete / cancel -->
 							<button
 								v-if="isDeletable"
 								type="button"
-								class="btn btn-link text-danger"
+								class="btn btn-link text-danger align-self-start"
 								tabindex="0"
 								@click.prevent="handleRemove"
 							>
@@ -90,7 +96,7 @@
 							<button
 								v-else
 								type="button"
-								class="btn btn-link text-muted"
+								class="btn btn-link text-muted align-self-start"
 								data-bs-dismiss="modal"
 								tabindex="0"
 							>
@@ -99,7 +105,7 @@
 							<!-- perform auth -->
 							<div
 								v-if="authProviderUrl"
-								class="d-flex flex-column align-items-end gap-2"
+								class="d-flex flex-column align-items-sm-end gap-2"
 							>
 								<a :href="authProviderUrl" target="_blank" class="btn btn-primary">
 									{{
@@ -108,7 +114,9 @@
 										})
 									}}
 								</a>
-								<small>{{ $t("config.general.authPerformHint") }}</small>
+								<small class="d-block">{{
+									$t("config.general.authPerformHint")
+								}}</small>
 							</div>
 							<button
 								v-else
@@ -201,6 +209,7 @@ import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
+import CopyLink from "../../Helper/CopyLink.vue";
 import { initialTestState, performTest } from "../utils/test";
 import sleep from "@/utils/sleep";
 import { extractDomain } from "@/utils/extractDomain";
@@ -237,6 +246,7 @@ export default defineComponent({
 		SponsorTokenRequired,
 		TemplateSelector,
 		YamlEntry,
+		CopyLink,
 	},
 	mixins: [formatter],
 	props: {
