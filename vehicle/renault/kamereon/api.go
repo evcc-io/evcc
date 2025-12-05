@@ -142,46 +142,36 @@ func (v *API) Position(accountID string, vin string) (Position, error) {
 	return res.Data.Attributes, err
 }
 
-func (v *API) DoAction(uri string, data any, res any) error {
-	resContainer := map[string]any{
-		"data": res,
-	}
-
-	reqData := map[string]any{
-		"data": data,
-	}
-
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqData))
-
-	if err != nil {
-		return err
-	}
-
-	err = v.DoJSON(req, &resContainer)
-
-	return err
-}
-
 func (v *API) WakeUp(accountID string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Target, accountID, vin)
 
-	data := ChargeAction{
-		Type: "ChargePauseResume",
-		Attributes: ChargeActionAttributes{
-			Action: ActionResume,
+	reqBody := map[string]any{
+		"data": ChargeAction{
+			Type: "ChargePauseResume",
+			Attributes: ChargeActionAttributes{
+				Action: ActionResume,
+			},
 		},
 	}
 
-	var res ChargeAction
-	err := v.DoAction(uri, data, &res)
+	var res struct {
+		Data ChargeAction `json:"data"`
+	}
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqBody))
 
-	return res, err
+	if err != nil {
+		return ChargeAction{}, err
+	}
+
+	err = v.DoJSON(req, &res)
+
+	return res.Data, err
 }
 
 func (v *API) WakeUpMy24(accountID string, vin string) (EvSettingsResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/ev/settings", v.keys.Target, accountID, vin)
 
-	data := EvSettingsRequest{
+	reqBody := EvSettingsRequest{
 		LastSettingsUpdateTimestamp: "2025-04-24T12:41:41.823Z",
 		DelegatedActivated:          false,
 		ChargeModeRq:                "SCHEDULED",
@@ -191,7 +181,7 @@ func (v *API) WakeUpMy24(accountID string, vin string) (EvSettingsResponse, erro
 		Programs:                    []any{},
 	}
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data))
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqBody))
 
 	if err != nil {
 		return EvSettingsResponse{}, err
@@ -206,15 +196,25 @@ func (v *API) WakeUpMy24(accountID string, vin string) (EvSettingsResponse, erro
 func (v *API) ChargeAction(accountID, action string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.keys.Target, accountID, vin)
 
-	data := ChargeAction{
-		Type: "ChargingStart",
-		Attributes: ChargeActionAttributes{
-			Action: action,
+	reqBody := map[string]any{
+		"data": ChargeAction{
+			Type: "ChargingStart",
+			Attributes: ChargeActionAttributes{
+				Action: action,
+			},
 		},
 	}
 
-	var res ChargeAction
-	err := v.DoAction(uri, data, &res)
+	var res struct {
+		Data ChargeAction `json:"data"`
+	}
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqBody))
 
-	return res, err
+	if err != nil {
+		return ChargeAction{}, err
+	}
+
+	err = v.DoJSON(req, &res)
+
+	return res.Data, err
 }

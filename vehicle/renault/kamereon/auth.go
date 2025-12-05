@@ -34,7 +34,11 @@ func (rt *AuthDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	resp, err := rt.executeRequest(req)
 
-	if resp.StatusCode == http.StatusUnauthorized {
+	if err == nil && resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		// Drain and close response body
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+
 		// Try reauthenticating
 		if err := rt.Login(); err != nil {
 			return nil, err
