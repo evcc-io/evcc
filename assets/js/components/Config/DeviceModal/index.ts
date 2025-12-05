@@ -1,6 +1,6 @@
 import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
-import api, { baseApi } from "@/api";
+import api from "@/api";
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 export type Product = {
