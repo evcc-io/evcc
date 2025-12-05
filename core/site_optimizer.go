@@ -536,7 +536,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 		demand = make([]float32, minLen)
 	}
 
-	for i := 0; i < maxLen; i++ {
+	for i := range maxLen {
 		if grid[i].Value <= *costLimit {
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
