@@ -3,8 +3,6 @@ package eebus
 import (
 	"context"
 	"errors"
-
-	//"slices"
 	"sync"
 	"time"
 
