@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	ActionStart = "start"
-	ActionStop  = "stop"
+	ActionStart  = "start"
+	ActionStop   = "stop"
+	ActionResume = "resume"
 )
 
 type API struct {
@@ -167,7 +168,7 @@ func (v *API) WakeUp(accountID string, vin string) (ChargeAction, error) {
 	data := ChargeAction{
 		Type: "ChargePauseResume",
 		Attributes: ChargeActionAttributes{
-			Action: "resume",
+			Action: ActionResume,
 		},
 	}
 

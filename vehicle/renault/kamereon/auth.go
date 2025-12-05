@@ -1,6 +1,8 @@
 package kamereon
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 
 	"github.com/evcc-io/evcc/vehicle/renault/gigya"
@@ -15,6 +17,42 @@ type AuthDecorator struct {
 }
 
 func (rt *AuthDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Buffer request body for potential retries
+	var (
+		bodyBuffer []byte
+		err        error
+	)
+	if req.Body != nil {
+		bodyBuffer, err = io.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		_ = req.Body.Close()
+
+		req.Body = io.NopCloser(bytes.NewReader(bodyBuffer))
+	}
+
+	resp, err := rt.executeRequest(req)
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		// Try reauthenticating
+		if err := rt.Login(); err != nil {
+			return nil, err
+		}
+
+		// Reset request body
+		if bodyBuffer != nil {
+			req.Body = io.NopCloser(bytes.NewReader(bodyBuffer))
+		}
+
+		// Retry the request
+		resp, err = rt.executeRequest(req)
+	}
+
+	return resp, err
+}
+
+func (rt *AuthDecorator) executeRequest(req *http.Request) (*http.Response, error) {
 	// Set required headers
 	req.Header.Set("content-type", "application/vnd.api+json")
 	req.Header.Set("x-gigya-id_token", rt.Identity.Token)
@@ -25,16 +63,10 @@ func (rt *AuthDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
 	q.Set("country", "DE")
 	req.URL.RawQuery = q.Encode()
 
-	resp, err := rt.Base.RoundTrip(req)
-	if err == nil {
-		return resp, nil
+	base := rt.Base
+	if base == nil {
+		base = http.DefaultTransport
 	}
 
-	// Try reauthenticating
-	if err := rt.Login(); err != nil {
-		return resp, err
-	}
-
-	// Retry the request
-	return rt.Base.RoundTrip(req)
+	return base.RoundTrip(req)
 }
