@@ -48,6 +48,11 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 				_, err = api.WakeUpMy24(accountID, vin)
 			default:
 				_, err = api.WakeUp(accountID, vin)
+
+				// Check if default wakeup is unsupported
+				if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusForbidden {
+					_, err = api.WakeUpMy24(accountID, vin)
+				}
 			}
 			return err
 		},
