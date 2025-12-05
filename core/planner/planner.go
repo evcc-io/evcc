@@ -61,7 +61,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 
 // filterRates filters rates to the given time window and adjusts boundary slots
 func filterRates(rates api.Rates, start, end time.Time) api.Rates {
-	res := make(api.Rates, 0, len(rates))
+	res := make(api.Rates, 0, len(rates)+2)
 
 	for _, r := range rates {
 		// slot before continuous plan
