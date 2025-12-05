@@ -1,0 +1,39 @@
+template: zendure-solarflow
+products:
+  - brand: Zendure
+    description:
+      generic: Solarflow 800 Pro
+params:
+  - name: usage
+    choice: ["pv", "battery", "grid"]
+  - name: host
+  - name: capacity
+    default: 1.92 # kWh
+  - name: maxacpower
+    default: 800 # W
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.solarInputPower
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.packInputPower - .properties.outputPackPower
+  soc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.electricLevel
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.energyPower
+  {{- end }}
