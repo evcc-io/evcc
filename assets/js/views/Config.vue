@@ -177,6 +177,10 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 					<div class="p-0 config-list">
+						<AuthProvidersCard
+							:providers="authProviders"
+							@auth-request="handleProviderAuthRequest"
+						/>
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -374,6 +378,7 @@
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
+				<AuthProviderModal :provider="authProvider" />
 			</div>
 		</div>
 	</div>
@@ -444,6 +449,8 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import AuthProviderModal from "../components/Top/AuthProviderModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -486,6 +493,8 @@ export default defineComponent({
 		VehicleModal,
 		WelcomeBanner,
 		PasswordModal,
+		AuthProvidersCard,
+		AuthProviderModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -524,6 +533,7 @@ export default defineComponent({
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
+			authProvider: null as any,
 		};
 	},
 	head() {
@@ -1062,6 +1072,17 @@ export default defineComponent({
 			const charger = this.chargers.find((c) => c.name === chargerName);
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
+		},
+		handleProviderAuthRequest(provider: any) {
+			// Set the provider data for the modal
+			this.authProvider = provider;
+			// Open the modal
+			this.$nextTick(() => {
+				const modal = Modal.getOrCreateInstance(
+					document.getElementById("authProviderModal") as HTMLElement
+				);
+				modal.show();
+			});
 		},
 	},
 });

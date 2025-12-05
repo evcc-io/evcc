@@ -1,4 +1,19 @@
 {
+  "authProviders": {
+    "authCode": "Authentication Code",
+    "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
+    "buttonConnect": "Connect to {provider}",
+    "buttonDisconnect": "Disconnect",
+    "confirmLogout": "Are you sure you want to disconnect {title}?",
+    "connect": "connect",
+    "disconnect": "disconnect",
+    "loggedOut": "Successfully logged out",
+    "logoutFailed": "Failed to logout",
+    "modalDescriptionLogin": "Authenticate with {provider} to access your data.",
+    "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
+    "success": "Authorization with {title} was successful. You can now close this tab.",
+    "title": "Authorization Status"
+  },
   "batterySettings": {
     "batteryLevel": "Battery level",
     "bufferStart": {
@@ -696,21 +711,6 @@
   },
   "header": {
     "about": "About",
-    "authProviders": {
-      "authCode": "Authentication Code",
-      "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
-      "buttonConnect": "Connect to {provider}",
-      "buttonDisconnect": "Disconnect",
-      "confirmLogout": "Are you sure you want to disconnect {title}?",
-      "loggedOut": "Successfully logged out",
-      "logoutFailed": "Failed to logout",
-      "modalDescriptionLogin": "Authenticate with {provider} to access your data.",
-      "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
-      "modalTitleLogin": "Connect to {provider}",
-      "modalTitleLogout": "Disconnect {provider}",
-      "success": "Authorization with {title} was successful. You can now close this tab.",
-      "title": "Authorization Status"
-    },
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",

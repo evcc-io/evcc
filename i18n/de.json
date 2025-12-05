@@ -1,4 +1,19 @@
 {
+  "authProviders": {
+    "authCode": "Autorisierungscode",
+    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "buttonConnect": "Mit {provider} verbinden",
+    "buttonDisconnect": "Trennen",
+    "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+    "connect": "verbinden",
+    "disconnect": "trennen",
+    "loggedOut": "Erfolgreich abgemeldet",
+    "logoutFailed": "Abmeldung fehlgeschlagen",
+    "modalDescriptionLogin": "Authentifiziere dich mit {provider}, um auf deine Daten zuzugreifen.",
+    "modalDescriptionLogout": "Dies trennt dein {provider}-Konto und entfernt den Zugriff auf dessen Daten.",
+    "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
+    "title": "Autorisierungsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Ladestand der Batterie",
     "bufferStart": {
@@ -696,14 +711,6 @@
   },
   "header": {
     "about": "Über",
-    "authProviders": {
-      "authCode": "Autorisierungscode",
-      "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
-      "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
-      "loggedOut": "Erfolgreich abgemeldet",
-      "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
-      "title": "Autorisierungsstatus"
-    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",

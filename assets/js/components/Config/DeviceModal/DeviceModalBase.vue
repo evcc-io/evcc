@@ -60,9 +60,9 @@
 
 							<FormRow
 								:id="`${deviceType}AuthCode`"
-								:label="$t('header.authProviders.authCode')"
+								:label="$t('authProviders.authCode')"
 								:help="
-									$t('header.authProviders.authCodeHelp', {
+									$t('authProviders.authCodeHelp', {
 										duration: authCodeValidityDuration,
 									})
 								"

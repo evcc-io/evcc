@@ -11,7 +11,7 @@
 			<template v-if="!isAuthenticated">
 				<p class="mb-4">
 					{{
-						$t("header.authProviders.modalDescriptionLogin", {
+						$t("authProviders.modalDescriptionLogin", {
 							provider: providerTitle,
 						})
 					}}
@@ -22,9 +22,9 @@
 					<hr class="my-4" />
 					<FormRow
 						id="authProviderCode"
-						:label="$t('header.authProviders.authCode')"
+						:label="$t('authProviders.authCode')"
 						:help="
-							$t('header.authProviders.authCodeHelp', {
+							$t('authProviders.authCodeHelp', {
 								duration: codeValidityDuration,
 							})
 						"
@@ -53,7 +53,7 @@
 					<div v-if="auth.providerUrl" class="d-flex flex-column align-items-end gap-2">
 						<a :href="auth.providerUrl" target="_blank" class="btn btn-primary">
 							{{
-								$t("header.authProviders.buttonConnect", {
+								$t("authProviders.buttonConnect", {
 									provider: providerDomain,
 								})
 							}}
@@ -84,7 +84,7 @@
 			<template v-else>
 				<p class="mb-4">
 					{{
-						$t("header.authProviders.modalDescriptionLogout", {
+						$t("authProviders.modalDescriptionLogout", {
 							provider: providerTitle,
 						})
 					}}
@@ -111,7 +111,7 @@
 							role="status"
 							aria-hidden="true"
 						></span>
-						{{ $t("header.authProviders.buttonDisconnect") }}
+						{{ $t("authProviders.buttonDisconnect") }}
 					</button>
 				</div>
 			</template>
@@ -160,10 +160,7 @@ export default defineComponent({
 			return this.provider?.authenticated || false;
 		},
 		modalTitle(): string {
-			const titleKey = !this.isAuthenticated
-				? "header.authProviders.modalTitleLogin"
-				: "header.authProviders.modalTitleLogout";
-			return this.$t(titleKey, { provider: this.providerTitle });
+			return this.providerTitle;
 		},
 		providerTitle(): string {
 			return this.provider?.title || "Unknown";
@@ -222,7 +219,7 @@ export default defineComponent({
 					modal?.hide();
 				}
 			} else {
-				this.logoutError = result.error || this.$t("header.authProviders.logoutFailed");
+				this.logoutError = result.error || this.$t("authProviders.logoutFailed");
 			}
 			this.logoutLoading = false;
 		},

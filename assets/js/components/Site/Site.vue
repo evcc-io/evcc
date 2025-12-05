@@ -16,10 +16,7 @@
 						:loadpoints="loadpoints"
 						class="me-2"
 					/>
-					<TopNavigation
-						v-bind="topNavigation"
-						@provider-auth-request="handleProviderAuthRequest"
-					/>
+					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
 			<HemsWarning :circuits="circuits" />
@@ -114,7 +111,6 @@ import type { Grid } from "./types";
 
 export default defineComponent({
 	name: "Site",
-	emits: ["provider-auth-request"],
 	components: {
 		Loadpoints,
 		Energyflow,
@@ -242,10 +238,6 @@ export default defineComponent({
 	methods: {
 		selectedLoadpointChanged(id: string | undefined) {
 			this.$router.push({ query: { lp: id } });
-		},
-		handleProviderAuthRequest(provider: any) {
-			// Bubble event up to App.vue
-			this.$emit("provider-auth-request", provider);
 		},
 	},
 });
