@@ -64,8 +64,13 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 	res := make(api.Rates, 0, len(rates))
 
 	for _, r := range rates {
-		// skip slots completely outside window
-		if !r.End.After(start) || !r.Start.Before(end) {
+		// slot before continuous plan
+		if !r.End.After(start) {
+			continue
+		}
+
+		// slot after continuous plan
+		if !r.Start.Before(end) {
 			continue
 		}
 
