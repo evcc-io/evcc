@@ -38,17 +38,17 @@ func (v *Vehicle) Available() error {
 }
 
 type BatteryStatus struct {
-	Timestamp          string   `json:"timestamp"`
-	ChargingStatus     float32  `json:"chargingStatus"`
-	InstantaneousPower int      `json:"instantaneousPower"`
-	RangeHvacOff       int      `json:"rangeHvacOff"`
-	BatteryAutonomy    int      `json:"batteryAutonomy"`
-	BatteryLevel       *float64 `json:"batteryLevel"`
-	BatteryTemperature int      `json:"batteryTemperature"`
-	PlugStatus         int      `json:"plugStatus"`
-	LastUpdateTime     string   `json:"lastUpdateTime"`
-	ChargePower        int      `json:"chargePower"`
-	RemainingTime      *int     `json:"chargingRemainingTime"`
+	Timestamp          string  `json:"timestamp"`
+	ChargingStatus     float32 `json:"chargingStatus"`
+	InstantaneousPower int     `json:"instantaneousPower"`
+	RangeHvacOff       int     `json:"rangeHvacOff"`
+	BatteryAutonomy    int     `json:"batteryAutonomy"`
+	BatteryLevel       *int    `json:"batteryLevel"`
+	BatteryTemperature int     `json:"batteryTemperature"`
+	PlugStatus         int     `json:"plugStatus"`
+	LastUpdateTime     string  `json:"lastUpdateTime"`
+	ChargePower        int     `json:"chargePower"`
+	RemainingTime      *int    `json:"chargingRemainingTime"`
 }
 
 type HvacStatus struct {

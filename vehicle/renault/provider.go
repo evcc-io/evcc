@@ -79,7 +79,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	return *res.BatteryLevel, nil
+	return float64(*res.BatteryLevel), nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
