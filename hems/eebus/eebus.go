@@ -10,6 +10,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
@@ -17,6 +19,10 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 )
+
+func init() {
+	config.Registry.AddCtx("eebus", NewFromConfig)
+}
 
 type EEBus struct {
 	mux sync.RWMutex
@@ -58,7 +64,7 @@ type Limits struct {
 }
 
 // NewFromConfig creates an EEBus HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (hems.API, error) {
 	cc := struct {
 		Ski         string
 		Limits      `mapstructure:",squash"`

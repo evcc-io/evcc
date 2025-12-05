@@ -7,7 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/hems"
-	reg "github.com/evcc-io/evcc/util/registry"
+	reg "github.com/evcc-io/evcc/hems/registry"
 )
 
 var Registry = reg.New[hems.API]("hems")
