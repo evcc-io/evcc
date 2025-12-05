@@ -6,6 +6,8 @@ const hemspro = "hemspro"
 
 // checkHemsPro checks if the hardware is a supported HEMS Pro device and returns sponsor subject
 func checkHemsPro() string {
+	// TODO i2c validation
+
 	if false {
 		return hemspro
 	}
