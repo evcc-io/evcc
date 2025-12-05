@@ -42,7 +42,7 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 
 	p.pin.Input()
 
-	return &p, nil
+	return p, nil
 }
 
 var _ BoolGetter = (*gpio)(nil)
