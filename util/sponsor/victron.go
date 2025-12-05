@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const victron = "victron"
+
 // checkVictron checks if the hardware is a supported victron device and returns sponsor subject
 func checkVictron() string {
 	vd, err := victronDeviceInfo()
