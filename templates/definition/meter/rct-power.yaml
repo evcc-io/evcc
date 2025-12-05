@@ -12,7 +12,14 @@ params:
     allinone: true
   - name: host
   - name: capacity
-    advanced: true
+  - name: capacity2
+    unit: kWh
+    description:
+      de: Akkukapazität der zweiten Batterie
+      en: Battery capacity of the second battery
+    example: 50
+    type: float
+    usages: ["battery"]
   # battery control
   - name: minsoc
     type: int
@@ -42,6 +49,7 @@ render: |
   usage: {{ .usage }}
   cache: {{ .cache }}
   capacity: {{ .capacity }} # kWh
+  capacity2: {{ .capacity2 }} # kWh
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
   maxchargepower: {{ .maxchargepower }}
