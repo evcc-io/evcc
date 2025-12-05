@@ -59,7 +59,11 @@
 							v-if="authCode"
 							:id="`${deviceType}AuthCode`"
 							:label="$t('header.authProviders.authCode')"
-							:help="$t('header.authProviders.authCodeHelp', { duration: authCodeValidityDuration })"
+							:help="
+								$t('header.authProviders.authCodeHelp', {
+									duration: authCodeValidityDuration,
+								})
+							"
 						>
 							<input
 								:id="`${deviceType}AuthCode`"
