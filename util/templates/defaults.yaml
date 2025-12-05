@@ -706,7 +706,7 @@ modbus:
       help:
         de: USB-RS485 Gerätename
         en: USB-RS485 device name
-      service: hardware/serial
+      service: hardware/serial # not actually used
       example: /dev/ttyUSB0
     - name: baudrate
       description:
