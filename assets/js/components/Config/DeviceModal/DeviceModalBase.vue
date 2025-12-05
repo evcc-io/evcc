@@ -54,6 +54,22 @@
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
 						/>
+
+						<FormRow
+							v-if="authCode"
+							:id="`${deviceType}AuthCode`"
+							:label="$t('header.authProviders.authCode')"
+							:help="$t('header.authProviders.authCodeHelp', { duration: authCodeValidityDuration })"
+						>
+							<input
+								:id="`${deviceType}AuthCode`"
+								type="text"
+								class="form-control form-control-lg border-success font-monospace"
+								:value="authCode"
+								readonly
+							/>
+						</FormRow>
+
 						<p v-if="authError" class="text-danger">{{ authError }}</p>
 
 						<div class="my-4 d-flex justify-content-between align-items-baseline">
@@ -174,6 +190,7 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal, { type ModalFade } from "../../Helper/GenericModal.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
+import FormRow from "../FormRow.vue";
 import Modbus from "./Modbus.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
@@ -199,6 +216,7 @@ import {
 	fetchServiceValues,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
+import formatter from "@/mixins/formatter";
 
 const CUSTOM_FIELDS = ["modbus"];
 
@@ -208,6 +226,7 @@ export default defineComponent({
 		GenericModal,
 		PropertyEntry,
 		PropertyCollapsible,
+		FormRow,
 		Modbus,
 		DeviceModalActions,
 		Markdown,
@@ -215,6 +234,7 @@ export default defineComponent({
 		TemplateSelector,
 		YamlEntry,
 	},
+	mixins: [formatter],
 	props: {
 		deviceType: { type: String as PropType<DeviceType>, required: true },
 		id: Number as PropType<number | undefined>,
@@ -270,6 +290,8 @@ export default defineComponent({
 			authLoading: false,
 			authError: null as string | null,
 			authProviderUrl: null as string | null,
+			authCode: null as string | null,
+			authExpiry: null as Date | null,
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -390,6 +412,7 @@ export default defineComponent({
 			return this.template?.Auth && !this.authOk;
 		},
 		authValuesMissing() {
+			console.log("authValuesMissing", this.authValues);
 			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
 		},
 		authValues() {
@@ -404,6 +427,14 @@ export default defineComponent({
 		},
 		authProviderDomain() {
 			return this.authProviderUrl ? extractDomain(this.authProviderUrl) : null;
+		},
+		authCodeValidityDuration() {
+			if (!this.authExpiry) return null;
+			const seconds = Math.max(
+				0,
+				Math.floor((this.authExpiry.getTime() - new Date().getTime()) / 1000)
+			);
+			return this.fmtDurationLong(seconds);
 		},
 	},
 	watch: {
@@ -573,6 +604,8 @@ export default defineComponent({
 		resetAuthStatus() {
 			this.authOk = false;
 			this.authProviderUrl = null;
+			this.authCode = null;
+			this.authExpiry = null;
 			this.authError = null;
 			this.authLoading = false;
 		},
@@ -613,7 +646,10 @@ export default defineComponent({
 			// trigger external login flow
 			try {
 				this.authLoading = true;
-				this.authProviderUrl = await this.device.getAuthProviderUrl(authId);
+				const response = await this.device.getAuthProviderUrl(authId);
+				this.authProviderUrl = response.loginUri || null;
+				this.authCode = response.code || null;
+				this.authExpiry = response.expiry ? new Date(response.expiry) : null;
 				this.authLoading = false;
 			} catch (e) {
 				console.error("performAuthLogin failed", e);

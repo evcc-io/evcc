@@ -695,6 +695,8 @@
   "header": {
     "about": "About",
     "authProviders": {
+      "authCode": "Authentication Code",
+      "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
       "confirmLogout": "Are you sure you want to disconnect {title}?",
       "loggedOut": "Successfully logged out",
       "success": "Authorization with {title} was successful. You can now close this tab.",

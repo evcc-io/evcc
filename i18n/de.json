@@ -695,6 +695,8 @@
   "header": {
     "about": "Über",
     "authProviders": {
+      "authCode": "Autorisierungscode",
+      "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
       "loggedOut": "Erfolgreich abgemeldet",
       "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
