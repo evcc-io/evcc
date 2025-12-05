@@ -25,7 +25,7 @@ export const initialAuthState = (): AuthState => ({
   expiry: null,
 });
 
-export const performAuthLogin = async (state: AuthState, providerId: string) => {
+export const prepareAuthLogin = async (state: AuthState, providerId: string) => {
   try {
     state.loading = true;
     state.error = null;
@@ -45,7 +45,7 @@ export const performAuthLogin = async (state: AuthState, providerId: string) => 
       return { success: false, error: state.error };
     }
   } catch (e: any) {
-    console.error("performAuthLogin failed", e);
+    console.error("prepareAuthLogin failed", e);
     state.error = e.message || "Unexpected login error";
     return { success: false, error: state.error };
   } finally {
@@ -68,5 +68,36 @@ export const performAuthLogout = async (providerId: string) => {
   } catch (e: any) {
     console.error("performAuthLogout failed", e);
     return { success: false, error: e.message || "Unexpected logout error" };
+  }
+};
+
+// Device authentication utilities (used in DeviceModalBase)
+export type DeviceAuthResponse = {
+  success: boolean;
+  authId?: string;
+  loginUri?: string;
+  code?: string;
+  expiry?: string;
+  error?: string;
+};
+
+export const prepareAuthRedirect = async (state: AuthState, authId: string) => {
+  try {
+    state.loading = true;
+    state.error = null;
+
+    const url = `providerauth/redirect?id=${encodeURIComponent(authId)}`;
+    const { data } = await baseApi.get<ProviderLoginResponse>(url);
+
+    state.providerUrl = data.loginUri || null;
+    state.code = data.code || null;
+    state.expiry = data.expiry ? new Date(data.expiry) : null;
+    return { success: true, data };
+  } catch (e: any) {
+    console.error("prepareAuthRedirect failed", e);
+    state.error = e.message || "Unexpected login error";
+    return { success: false, error: state.error };
+  } finally {
+    state.loading = false;
   }
 };

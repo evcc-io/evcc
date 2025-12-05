@@ -179,6 +179,7 @@
 					<div class="p-0 config-list">
 						<AuthProvidersCard
 							:providers="authProviders"
+							data-testid="auth-providers"
 							@auth-request="handleProviderAuthRequest"
 						/>
 						<DeviceCard

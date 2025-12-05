@@ -55,30 +55,16 @@
 							:service-values="serviceValues[param.Name]"
 						/>
 
-						<div v-if="authCode">
+						<div v-if="auth.code">
 							<hr class="my-5" />
-
-							<FormRow
+							<AuthCodeDisplay
 								:id="`${deviceType}AuthCode`"
-								:label="$t('authProviders.authCode')"
-								:help="
-									$t('authProviders.authCodeHelp', {
-										duration: authCodeValidityDuration,
-									})
-								"
-							>
-								<input
-									:id="`${deviceType}AuthCode`"
-									type="text"
-									class="form-control fs-2 border font-monospace"
-									:value="authCode"
-									readonly
-								/>
-								<CopyLink :text="authCode" />
-							</FormRow>
+								:code="auth.code"
+								:expiry="auth.expiry"
+							/>
 						</div>
 
-						<p v-if="authError" class="text-danger">{{ authError }}</p>
+						<p v-if="auth.error" class="text-danger">{{ auth.error }}</p>
 
 						<div
 							class="my-4 d-flex align-items-stretch justify-content-sm-between align-items-sm-baseline flex-column-reverse flex-sm-row gap-2"
@@ -103,35 +89,11 @@
 								{{ $t("config.general.cancel") }}
 							</button>
 							<!-- perform auth -->
-							<div
-								v-if="authProviderUrl"
-								class="d-flex flex-column align-items-sm-end gap-2"
-							>
-								<a :href="authProviderUrl" target="_blank" class="btn btn-primary">
-									{{
-										$t("config.general.authPerform", {
-											provider: authProviderDomain,
-										})
-									}}
-								</a>
-								<small class="d-block">{{
-									$t("config.general.authPerformHint")
-								}}</small>
-							</div>
-							<button
-								v-else
-								class="btn btn-outline-primary"
-								:disabled="authLoading"
-								@click.prevent="checkAuthStatus"
-							>
-								<span
-									v-if="authLoading"
-									class="spinner-border spinner-border-sm me-2"
-									role="status"
-									aria-hidden="true"
-								></span>
-								{{ $t("config.general.authPrepare") }}
-							</button>
+							<AuthConnectButton
+								:provider-url="auth.providerUrl ?? undefined"
+								:loading="auth.loading"
+								@prepare="checkAuthStatus"
+							/>
 						</div>
 					</div>
 					<div v-else>
@@ -202,17 +164,17 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal, { type ModalFade } from "../../Helper/GenericModal.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
-import FormRow from "../FormRow.vue";
 import Modbus from "./Modbus.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
-import CopyLink from "../../Helper/CopyLink.vue";
+import AuthCodeDisplay from "../AuthCodeDisplay.vue";
+import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
+import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
-import { extractDomain } from "@/utils/extractDomain";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
 import {
@@ -229,7 +191,6 @@ import {
 	fetchServiceValues,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
-import formatter from "@/mixins/formatter";
 
 const CUSTOM_FIELDS = ["modbus"];
 
@@ -239,16 +200,15 @@ export default defineComponent({
 		GenericModal,
 		PropertyEntry,
 		PropertyCollapsible,
-		FormRow,
 		Modbus,
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,
 		TemplateSelector,
 		YamlEntry,
-		CopyLink,
+		AuthCodeDisplay,
+		AuthConnectButton,
 	},
-	mixins: [formatter],
 	props: {
 		deviceType: { type: String as PropType<DeviceType>, required: true },
 		id: Number as PropType<number | undefined>,
@@ -300,12 +260,7 @@ export default defineComponent({
 			templateName: null as string | null,
 			template: null as Template | null,
 			saving: false,
-			authOk: false,
-			authLoading: false,
-			authError: null as string | null,
-			authProviderUrl: null as string | null,
-			authCode: null as string | null,
-			authExpiry: null as Date | null,
+			auth: initialAuthState(),
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -423,7 +378,7 @@ export default defineComponent({
 			return this.isTypeDeprecated && this.isTypeDeprecated(this.values.type);
 		},
 		authRequired() {
-			return this.template?.Auth && !this.authOk;
+			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
 			console.log("authValuesMissing", this.authValues);
@@ -438,17 +393,6 @@ export default defineComponent({
 				},
 				{} as Record<string, any>
 			);
-		},
-		authProviderDomain() {
-			return this.authProviderUrl ? extractDomain(this.authProviderUrl) : null;
-		},
-		authCodeValidityDuration() {
-			if (!this.authExpiry) return null;
-			const seconds = Math.max(
-				0,
-				Math.floor((this.authExpiry.getTime() - new Date().getTime()) / 1000)
-			);
-			return this.fmtDurationLong(seconds);
 		},
 	},
 	watch: {
@@ -616,12 +560,7 @@ export default defineComponent({
 			this.loadingTemplate = false;
 		},
 		resetAuthStatus() {
-			this.authOk = false;
-			this.authProviderUrl = null;
-			this.authCode = null;
-			this.authExpiry = null;
-			this.authError = null;
-			this.authLoading = false;
+			this.auth = initialAuthState();
 		},
 		async checkAuthStatus() {
 			this.resetAuthStatus();
@@ -641,36 +580,22 @@ export default defineComponent({
 
 			const { type } = this.template.Auth;
 			const values = this.authValues;
-			this.authLoading = true;
+			this.auth.loading = true;
 			const result = await this.device.checkAuth(type, values);
-			this.authLoading = false;
+			this.auth.loading = false;
 			if (result.success) {
 				// login already exists
-				this.authError = null;
-				this.authOk = true;
+				this.auth.error = null;
+				this.auth.ok = true;
 			} else if (result.authId) {
-				// todo, save form field state and restore on callback
-				await this.performAuthLogin(result.authId);
+				await this.prepareAuthLogin(result.authId);
 			} else {
 				// something else failed
-				this.authError = result.error ?? "unknown error";
+				this.auth.error = result.error ?? "unknown error";
 			}
 		},
-		async performAuthLogin(authId: string) {
-			// trigger external login flow
-			try {
-				this.authLoading = true;
-				const response = await this.device.getAuthProviderUrl(authId);
-				this.authProviderUrl = response.loginUri || null;
-				this.authCode = response.code || null;
-				this.authExpiry = response.expiry ? new Date(response.expiry) : null;
-				this.authLoading = false;
-			} catch (e) {
-				console.error("performAuthLogin failed", e);
-				this.authError = (e as any).message;
-			} finally {
-				this.authLoading = false;
-			}
+		async prepareAuthLogin(authId: string) {
+			await prepareAuthLogin(this.auth, authId);
 		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {

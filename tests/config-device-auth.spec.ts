@@ -43,7 +43,7 @@ test.describe("config device auth", async () => {
     await meterModal.getByLabel("Region").selectOption("EU");
     await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
-    await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
     await expect(meterModal.getByLabel("Authentication Code")).not.toBeVisible();
 
     // we dont navigate to localhost, just trigger ui update because demo auth state is already established
@@ -89,7 +89,7 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
     // note: prepare connection step is auto-executed, since all required fields are already present
-    await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
   });
 
@@ -112,7 +112,7 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByLabel("Authentication Code")).toHaveValue("12AB345");
     await expect(meterModal).toContainText("Valid for");
     await expect(meterModal).toContainText("Copy this code");
-    await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
   });
 
   test("error region shows auth error", async ({ page }) => {
@@ -129,9 +129,7 @@ test.describe("config device auth", async () => {
 
     await expect(meterModal).toContainText("region not supported");
     await expect(meterModal.getByRole("button", { name: "Prepare connection" })).toBeVisible();
-    await expect(
-      meterModal.getByRole("link", { name: "Connect with localhost" })
-    ).not.toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).not.toBeVisible();
     await expect(meterModal.getByLabel("Authentication Code")).not.toBeVisible();
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
 

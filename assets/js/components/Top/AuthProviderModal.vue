@@ -20,63 +20,30 @@
 				<!-- Auth code display (device flow) -->
 				<div v-if="auth.code">
 					<hr class="my-4" />
-					<FormRow
+					<AuthCodeDisplay
 						id="authProviderCode"
-						:label="$t('authProviders.authCode')"
-						:help="
-							$t('authProviders.authCodeHelp', {
-								duration: codeValidityDuration,
-							})
-						"
-					>
-						<input
-							id="authProviderCode"
-							type="text"
-							class="form-control fs-2 border font-monospace"
-							:value="auth.code"
-							readonly
-						/>
-						<CopyLink :text="auth.code" />
-					</FormRow>
+						:code="auth.code"
+						:expiry="auth.expiry"
+					/>
 				</div>
 
 				<!-- Error display -->
 				<p v-if="auth.error" class="text-danger mt-3">{{ auth.error }}</p>
 
 				<!-- Action buttons -->
-				<div class="mt-4 d-flex justify-content-between align-items-center">
+				<div
+					class="my-4 d-flex align-items-stretch justify-content-sm-between align-items-sm-baseline flex-column-reverse flex-sm-row gap-2"
+				>
 					<button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">
 						{{ $t("config.general.cancel") }}
 					</button>
 
-					<!-- Connect to provider button (when URL is available) -->
-					<div v-if="auth.providerUrl" class="d-flex flex-column align-items-end gap-2">
-						<a :href="auth.providerUrl" target="_blank" class="btn btn-primary">
-							{{
-								$t("authProviders.buttonConnect", {
-									provider: providerDomain,
-								})
-							}}
-						</a>
-						<small class="d-block">{{ $t("config.general.authPerformHint") }}</small>
-					</div>
-
-					<!-- Prepare authentication button -->
-					<button
-						v-else
-						type="button"
-						class="btn btn-outline-primary"
-						:disabled="auth.loading"
-						@click="prepareAuthentication"
-					>
-						<span
-							v-if="auth.loading"
-							class="spinner-border spinner-border-sm me-2"
-							role="status"
-							aria-hidden="true"
-						></span>
-						{{ $t("config.general.authPrepare") }}
-					</button>
+					<!-- Authentication buttons -->
+					<AuthConnectButton
+						:provider-url="auth.providerUrl ?? undefined"
+						:loading="auth.loading"
+						@prepare="prepareAuthentication"
+					/>
 				</div>
 			</template>
 
@@ -94,7 +61,9 @@
 				<p v-if="logoutError" class="text-danger mt-3">{{ logoutError }}</p>
 
 				<!-- Action buttons -->
-				<div class="mt-4 d-flex justify-content-between align-items-center">
+				<div
+					class="my-4 d-flex align-items-stretch justify-content-sm-between align-items-sm-baseline flex-column-reverse flex-sm-row gap-2"
+				>
 					<button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">
 						{{ $t("config.general.cancel") }}
 					</button>
@@ -123,25 +92,22 @@
 import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
 import GenericModal from "../Helper/GenericModal.vue";
-import FormRow from "../Config/FormRow.vue";
-import CopyLink from "../Helper/CopyLink.vue";
+import AuthCodeDisplay from "../Config/AuthCodeDisplay.vue";
+import AuthConnectButton from "../Config/AuthConnectButton.vue";
 import {
 	initialAuthState,
-	performAuthLogin,
+	prepareAuthLogin,
 	performAuthLogout,
 } from "../Config/utils/authProvider";
-import { extractDomain } from "@/utils/extractDomain";
-import formatter from "@/mixins/formatter";
 import type { Provider } from "./types";
 
 export default defineComponent({
 	name: "AuthProviderModal",
 	components: {
 		GenericModal,
-		FormRow,
-		CopyLink,
+		AuthCodeDisplay,
+		AuthConnectButton,
 	},
-	mixins: [formatter],
 	props: {
 		provider: {
 			type: Object as PropType<Provider | null>,
@@ -168,17 +134,6 @@ export default defineComponent({
 		providerId(): string {
 			return this.provider?.id || "";
 		},
-		providerDomain(): string | null {
-			return this.auth.providerUrl ? extractDomain(this.auth.providerUrl) : null;
-		},
-		codeValidityDuration(): string | null {
-			if (!this.auth.expiry) return null;
-			const seconds = Math.max(
-				0,
-				Math.floor((this.auth.expiry.getTime() - new Date().getTime()) / 1000)
-			);
-			return this.fmtDurationLong(seconds);
-		},
 	},
 	watch: {
 		provider(newProvider) {
@@ -198,11 +153,7 @@ export default defineComponent({
 		},
 		async prepareAuthentication() {
 			if (!this.providerId) return;
-
-			const result = await performAuthLogin(this.auth, this.providerId);
-			if (!result.success) {
-				console.error("Authentication preparation failed:", result.error);
-			}
+			await prepareAuthLogin(this.auth, this.providerId);
 		},
 		async performLogout() {
 			if (!this.providerId) return;
