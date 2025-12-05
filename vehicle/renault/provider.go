@@ -137,7 +137,8 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.socLevelsG()
 
 	// Check if endpoint is unavailable
-	if se := new(request.StatusError); errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	var se *request.StatusError
+	if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -178,7 +179,8 @@ func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
-	if se := new(request.StatusError); errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	var se *request.StatusError
+	if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return false, api.ErrNotAvailable
 	}
 
