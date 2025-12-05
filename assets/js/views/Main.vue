@@ -3,6 +3,7 @@
 		:notifications="notifications"
 		v-bind="state"
 		:selected-loadpoint-index="selectedLoadpointIndex"
+		@provider-auth-request="$emit('provider-auth-request', $event)"
 	/>
 </template>
 

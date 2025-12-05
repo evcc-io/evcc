@@ -4,12 +4,14 @@
 			v-if="showRoutes"
 			:notifications="notifications"
 			:offline="offline"
+			@provider-auth-request="handleProviderAuthRequest"
 		></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<ForecastModal v-bind="forecastModalProps" />
 		<HelpModal />
+		<AuthProviderModal ref="authProviderModal" :provider="authProvider" />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
@@ -25,6 +27,8 @@ import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
+import AuthProviderModal from "../components/Top/AuthProviderModal.vue";
+import Modal from "bootstrap/js/dist/modal";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
 
@@ -45,6 +49,7 @@ export default defineComponent({
 		HelpModal,
 		BatterySettingsModal,
 		ForecastModal,
+		AuthProviderModal,
 		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
@@ -59,6 +64,7 @@ export default defineComponent({
 			reconnectTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
+			authProvider: null as any,
 		};
 	},
 	head() {
@@ -204,6 +210,17 @@ export default defineComponent({
 		},
 		reload() {
 			window.location.reload();
+		},
+		handleProviderAuthRequest(provider: any) {
+			// Set the provider data for the modal
+			this.authProvider = provider;
+			// Open the modal
+			this.$nextTick(() => {
+				const modal = Modal.getOrCreateInstance(
+					document.getElementById("authProviderModal") as HTMLElement
+				);
+				modal.show();
+			});
 		},
 	},
 });

@@ -136,7 +136,6 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import { baseApi } from "@/api";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
@@ -154,6 +153,7 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
+	emits: ["provider-auth-request"],
 	data() {
 		return {
 			isApp: isApp(),
@@ -168,8 +168,7 @@ export default defineComponent({
 			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
 				title,
 				authenticated,
-				loginPath: "providerauth/login?id=" + id,
-				logoutPath: "providerauth/logout?id=" + id,
+				id,
 			}));
 		},
 		loginRequired() {
@@ -215,39 +214,9 @@ export default defineComponent({
 		this.dropdown?.dispose();
 	},
 	methods: {
-		async handleProviderAuthorization(provider: Provider) {
-			const { title, authenticated, loginPath, logoutPath } = provider;
-			if (!authenticated) {
-				try {
-					const response = await baseApi.get(loginPath, {
-						validateStatus: (code) => [200, 400].includes(code),
-					});
-					if (response.status === 200) {
-						window.location.href = response.data?.loginUri;
-					} else {
-						alert(`Failed to login: ${response.data?.error}`);
-					}
-				} catch (error: any) {
-					console.error(error);
-					alert("Unexpected login error: " + error.message);
-				}
-			} else {
-				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
-					try {
-						const response = await baseApi.get(logoutPath, {
-							validateStatus: (code) => [200, 400, 500].includes(code),
-						});
-						if (response.status === 200) {
-							alert(this.$t("header.authProviders.loggedOut"));
-						} else {
-							alert(`Failed to logout: ${response.data?.error}`);
-						}
-					} catch (error: any) {
-						console.error(error);
-						alert(`Unexpected logout error: ${error.response?.data}`);
-					}
-				}
-			}
+		handleProviderAuthorization(provider: Provider) {
+			// Emit event to parent components
+			this.$emit("provider-auth-request", provider);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
