@@ -32,10 +32,7 @@ func Duration(plan api.Rates) time.Duration {
 	var duration time.Duration
 	for _, slot := range plan {
 		slotDuration := slot.End.Sub(slot.Start)
-		// defensive: skip invalid slots
-		if slotDuration > 0 {
-			duration += slotDuration
-		}
+		duration += slotDuration
 	}
 	return duration
 }
