@@ -38,6 +38,7 @@ export default defineComponent({
 	data() {
 		return {
 			authProvider: null as Provider | null,
+			isUnmounted: false,
 		};
 	},
 	computed: {
@@ -51,13 +52,17 @@ export default defineComponent({
 			return store.state?.authProviders || {};
 		},
 	},
+	unmounted() {
+		this.isUnmounted = true;
+	},
 	methods: {
 		openAuthModal(provider: Provider) {
 			this.authProvider = provider;
 			this.$nextTick(() => {
-				const modal = Modal.getOrCreateInstance(
-					document.getElementById("authProviderModal") as HTMLElement
-				);
+				if (this.isUnmounted) return;
+				const modalElement = document.getElementById("authProviderModal");
+				if (!modalElement) return;
+				const modal = Modal.getOrCreateInstance(modalElement);
 				modal?.show();
 			});
 		},
