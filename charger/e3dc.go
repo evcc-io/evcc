@@ -609,6 +609,88 @@ func (wb *E3dc) Phases1p3p(phases int) error {
 	return err
 }
 
+var _ api.Diagnosis = (*E3dc)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *E3dc) Diagnose() {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_DEVICE_NAME, nil),
+		*rscp.NewMessage(rscp.WB_REQ_FIRMWARE_VERSION, nil),
+		*rscp.NewMessage(rscp.WB_REQ_MAX_CHARGE_CURRENT, nil),
+		*rscp.NewMessage(rscp.WB_REQ_LOWER_CURRENT_LIMIT, nil),
+		*rscp.NewMessage(rscp.WB_REQ_UPPER_CURRENT_LIMIT, nil),
+		*rscp.NewMessage(rscp.WB_REQ_NUMBER_PHASES, nil),
+		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
+		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
+		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil),
+	}))
+	if err != nil {
+		fmt.Printf("\tError: %v\n", err)
+		return
+	}
+
+	wbData, err := rscpContainer(*res, 10)
+	if err != nil {
+		fmt.Printf("\tError: %v\n", err)
+		return
+	}
+
+	if name, err := rscpString(wbData[1]); err == nil {
+		fmt.Printf("\tDevice:\t%s\n", name)
+	}
+	if fw, err := rscpString(wbData[2]); err == nil {
+		fmt.Printf("\tFirmware:\t%s\n", fw)
+	}
+	if current, err := rscpFloat64(wbData[3]); err == nil {
+		fmt.Printf("\tMax current:\t%.0fA\n", current)
+	}
+	if minI, err := rscpFloat64(wbData[4]); err == nil {
+		if maxI, err := rscpFloat64(wbData[5]); err == nil {
+			fmt.Printf("\tCurrent limits:\t%.0f-%.0fA\n", minI, maxI)
+		}
+	}
+	if phases, err := rscpUint8(wbData[6]); err == nil {
+		fmt.Printf("\tPhases:\t%d\n", phases)
+	}
+	if sunMode, err := rscpValue(wbData[7], func(data any) (bool, error) {
+		if val, ok := data.(bool); ok {
+			return val, nil
+		}
+		return false, errors.New("invalid type")
+	}); err == nil {
+		fmt.Printf("\tSun mode:\t%t\n", sunMode)
+	}
+	if autoPhase, err := rscpValue(wbData[8], func(data any) (bool, error) {
+		if val, ok := data.(bool); ok {
+			return val, nil
+		}
+		return false, errors.New("invalid type")
+	}); err == nil {
+		fmt.Printf("\tAuto phase switch:\t%t\n", autoPhase)
+	}
+	if extData, err := rscpContainer(wbData[9], 2); err == nil {
+		if b, err := rscpBytes(extData[1]); err == nil && len(b) >= 3 {
+			status := b[2]
+			var state string
+			switch {
+			case status&0b00100000 != 0:
+				state = "C (charging)"
+			case status&0b00001000 != 0:
+				state = "B (connected)"
+			case status&0b00000100 != 0:
+				state = "A (available)"
+			default:
+				state = "unknown"
+			}
+			enabled := status&0b01000000 == 0
+			fmt.Printf("\tStatus:\t%s\n", state)
+			fmt.Printf("\tEnabled:\t%t\n", enabled)
+			fmt.Printf("\tStatus bits:\t%08b\n", status)
+		}
+	}
+}
+
 // rscpError extracts error messages from RSCP responses
 func rscpError(msg ...rscp.Message) error {
 	var errs []error
