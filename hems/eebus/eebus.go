@@ -67,10 +67,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 			ConsumptionLimit:                    0,
 			FailsafeConsumptionActivePowerLimit: 4200,
 			FailsafeDurationMinimum:             2 * time.Hour,
-			ProductionNominalMax:                24800, // e.g. for bidirectional chargers, home batteries, pv inverters
-			ProductionLimit:                     0,
-			FailsafeProductionActivePowerLimit:  4200,
-			ProductionFailsafeDurationMinimum:   2 * time.Hour,
+			// ProductionNominalMax:                24800, // e.g. for bidirectional chargers, home batteries, pv inverters
+			ProductionLimit:                    0,
+			FailsafeProductionActivePowerLimit: 4200,
+			ProductionFailsafeDurationMinimum:  2 * time.Hour,
 		},
 		Interval: 10 * time.Second,
 	}
@@ -229,7 +229,7 @@ func (c *EEBus) run() error {
 	if heartbeatErr != nil && c.status != StatusFailsafe {
 		// LPC-914/2
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
-		c.setStatusAndLimit(StatusFailsafe, c.failsafeLimit, true)
+		c.setLPCStatusAndLimit(StatusFailsafe, c.failsafeLimit, true)
 		c.setLPPStatusAndLimit(StatusFailsafe, c.productionfailsafeLimit, true)
 
 		return nil
@@ -245,7 +245,7 @@ func (c *EEBus) run() error {
 		// LPC-914/1
 		if c.consumptionLimit != nil && c.consumptionLimit.IsActive {
 			c.log.WARN.Println("active consumption limit")
-			c.setStatusAndLimit(StatusLimited, c.consumptionLimit.Value, true)
+			c.setLPCStatusAndLimit(StatusLimited, c.consumptionLimit.Value, true)
 		}
 
 		if c.productionLimit != nil && c.productionLimit.IsActive {
@@ -258,21 +258,21 @@ func (c *EEBus) run() error {
 		// limit updated?
 		if !c.consumptionLimit.IsActive && !c.productionLimit.IsActive {
 			c.log.WARN.Println("inactive consumption limit, inactive production limit")
-			c.setStatusAndLimit(StatusUnlimited, 0, false)
+			c.setLPCStatusAndLimit(StatusUnlimited, 0, false)
 			c.setLPPStatusAndLimit(StatusUnlimited, 0, false)
 			// break
 		} else if !c.consumptionLimit.IsActive && c.productionLimit.IsActive {
 			c.log.WARN.Println("inactive consumption limit, active production limit")
-			c.setStatusAndLimit(StatusLimited, c.consumptionLimit.Value, false)
+			c.setLPCStatusAndLimit(StatusLimited, c.consumptionLimit.Value, false)
 			c.setLPPLimit(-1*c.productionLimit.Value, true)
 		} else if c.consumptionLimit.IsActive && !c.productionLimit.IsActive {
 			c.log.WARN.Println("active consumption limit, inactive production limit")
-			c.setLimit(c.consumptionLimit.Value, true)
+			c.setLPCLimit(c.consumptionLimit.Value, true)
 			c.setLPPStatusAndLimit(StatusLimited, 0, false)
 		} else if c.consumptionLimit.IsActive && c.productionLimit.IsActive {
 			// both limits active - senceless, but possible
 			c.log.WARN.Println("active consumption limit, active production limit")
-			c.setLimit(c.consumptionLimit.Value, true)
+			c.setLPCLimit(c.consumptionLimit.Value, true)
 			c.setLPPLimit(-1*c.productionLimit.Value, true)
 		}
 
@@ -281,7 +281,7 @@ func (c *EEBus) run() error {
 			c.consumptionLimit.IsActive = false
 
 			c.log.DEBUG.Println("consumption limit duration exceeded- return to normal")
-			c.setLimit(0, false)
+			c.setLPCLimit(0, false)
 		}
 
 		if d := c.productionLimit.Duration; d > 0 && time.Since(c.PstatusUpdated) > d {
@@ -299,7 +299,7 @@ func (c *EEBus) run() error {
 
 		if cExceeded {
 			c.log.DEBUG.Println("Consumption failsafe duration exceeded- returned to normal")
-			c.setLimit(0, false)
+			c.setLPCLimit(0, false)
 		}
 
 		if pExceeded {
@@ -309,7 +309,7 @@ func (c *EEBus) run() error {
 
 		if heartbeatErr == nil {
 			c.log.DEBUG.Println("heartbeat returned leaving failsafe mode")
-			c.setStatusAndLimit(StatusUnlimited, 0, false)
+			c.setLPCStatusAndLimit(StatusUnlimited, 0, false)
 			c.setLPPStatusAndLimit(StatusUnlimited, 0, false)
 		}
 	}
@@ -317,14 +317,14 @@ func (c *EEBus) run() error {
 	return nil
 }
 
-func (c *EEBus) setStatusAndLimit(status status, limit float64, dimmed bool) {
+func (c *EEBus) setLPCStatusAndLimit(status status, limit float64, dimmed bool) {
 	c.status = status
 	c.CstatusUpdated = time.Now()
 
-	c.setLimit(limit, dimmed)
+	c.setLPCLimit(limit, dimmed)
 }
 
-func (c *EEBus) setLimit(limit float64, dimmed bool) {
+func (c *EEBus) setLPCLimit(limit float64, dimmed bool) {
 	c.lpc_root.Dim(dimmed)
 	c.lpc_root.SetMaxPower(limit)
 }
