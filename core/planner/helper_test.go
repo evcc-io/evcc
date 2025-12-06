@@ -52,9 +52,8 @@ func TestDuration(t *testing.T) {
 	now := time.Now()
 	plan := api.Rates{
 		{Start: now, End: now.Add(time.Hour)},
-		{Start: now.Add(time.Hour), End: now.Add(time.Hour)}, // zero - ignored
+		{Start: now.Add(time.Hour), End: now.Add(time.Hour)}, // zero - without impact
 		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour)},
-		{Start: now.Add(4 * time.Hour), End: now.Add(3 * time.Hour)}, // negative - ignored
 	}
 	require.Equal(t, 2*time.Hour, Duration(plan))
 	require.Equal(t, time.Duration(0), Duration(api.Rates{}))

@@ -77,7 +77,7 @@ const (
 	ChargeRemainingEnergy   = "chargeRemainingEnergy"   // charge remaining energy
 
 	// plan
-  Plan               = "plan"               // charge plan time slots
+	Plan               = "plan"               // charge plan time slots
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
