@@ -1,12 +1,9 @@
 package kamereon
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -16,8 +13,9 @@ import (
 )
 
 const (
-	ActionStart = "start"
-	ActionStop  = "stop"
+	ActionStart  = "start"
+	ActionStop   = "stop"
+	ActionResume = "resume"
 )
 
 type API struct {
@@ -27,70 +25,43 @@ type API struct {
 	login    func() error
 }
 
-func New(log *util.Logger, keys keys.ConfigServer, identity *gigya.Identity, login func() error) *API {
-	return &API{
+func NewAPI(log *util.Logger, keys keys.ConfigServer, identity *gigya.Identity, login func() error) *API {
+	v := &API{
 		Helper:   request.NewHelper(log),
 		keys:     keys,
 		identity: identity,
 		login:    login,
 	}
+
+	v.Client.Transport = &AuthDecorator{
+		Login:    v.login,
+		Keys:     v.keys,
+		Identity: v.identity,
+		Base:     v.Client.Transport,
+	}
+
+	return v
 }
 
-func (v *API) request_(uri string, body io.Reader) (Response, error) {
-	params := url.Values{"country": []string{"DE"}}
-	headers := map[string]string{
-		"content-type":     "application/vnd.api+json",
-		"x-gigya-id_token": v.identity.Token,
-		"apikey":           v.keys.APIKey,
-	}
-
-	method := http.MethodGet
-	if body != nil {
-		method = http.MethodPost
-	}
-
-	var res Response
-	req, err := request.New(method, uri+"?"+params.Encode(), body, headers)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return res, err
-}
-
-func (v *API) request(uri string, body io.Reader) (Response, error) {
-	if body != nil {
-		b, err := io.ReadAll(body)
-		if err != nil {
-			return Response{}, err
-		}
-		// read from buffer
-		body = bytes.NewReader(b)
-	}
-
-	res, err := v.request_(uri, body)
-	// repeat auth if error
-	if err != nil {
-		if err = v.login(); err == nil {
-			if body != nil {
-				// rewind body
-				body.(*bytes.Reader).Seek(0, io.SeekStart)
-			}
-			res, err = v.request_(uri, body)
-		}
-	}
-
-	return res, err
-}
-
-func (v *API) Person(personID, brand string) (string, error) {
+func (v *API) Accounts(personID string) ([]Account, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.keys.Target, personID)
-	res, err := v.request(uri, nil)
+
+	var res struct {
+		Accounts []Account `json:"accounts"`
+	}
+	err := v.GetJSON(uri, &res)
+
+	return res.Accounts, err
+}
+
+func (v *API) AccountID(personID, brand string) (string, error) {
+	accounts, err := v.Accounts(personID)
+
 	if err != nil {
 		return "", err
 	}
 
-	for _, account := range res.Accounts {
+	for _, account := range accounts {
 		if strings.Contains(strings.ToLower(account.AccountType), strings.ToLower(brand)) {
 			return account.AccountID, nil
 		}
@@ -101,47 +72,90 @@ func (v *API) Person(personID, brand string) (string, error) {
 
 func (v *API) Vehicles(accountID string) ([]Vehicle, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.keys.Target, accountID)
-	res, err := v.request(uri, nil)
+
+	var res struct {
+		VehicleLinks []Vehicle `json:"vehicleLinks"`
+	}
+	err := v.GetJSON(uri, &res)
+
 	return res.VehicleLinks, err
 }
 
-// Battery provides battery-status api response
-func (v *API) Battery(accountID string, vin string) (Response, error) {
+func (v *API) BatteryStatus(accountID string, vin string) (BatteryStatus, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.keys.Target, accountID, vin)
-	return v.request(uri, nil)
+
+	var res DataEnvelope[BatteryStatus]
+	err := v.GetJSON(uri, &res)
+
+	return res.Data.Attributes, err
 }
 
-// Hvac provides hvac-status api response
-func (v *API) Hvac(accountID string, vin string) (Response, error) {
+func (v *API) HvacStatus(accountID string, vin string) (HvacStatus, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.keys.Target, accountID, vin)
-	return v.request(uri, nil)
+
+	var res DataEnvelope[HvacStatus]
+	err := v.GetJSON(uri, &res)
+
+	return res.Data.Attributes, err
 }
 
-// Cockpit provides cockpit api response
-func (v *API) Cockpit(accountID string, vin string) (Response, error) {
+func (v *API) Cockpit(accountID string, vin string) (Cockpit, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/cockpit", v.keys.Target, accountID, vin)
-	return v.request(uri, nil)
+
+	var res DataEnvelope[Cockpit]
+	err := v.GetJSON(uri, &res)
+
+	return res.Data.Attributes, err
 }
 
-func (v *API) WakeUp(accountID string, vin string) (Response, error) {
+func (v *API) SocLevels(accountID string, vin string) (SocLevels, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/ev/soc-levels", v.keys.Target, accountID, vin)
+
+	var res SocLevels
+	err := v.GetJSON(uri, &res)
+
+	return res, err
+}
+
+func (v *API) Position(accountID string, vin string) (Position, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/location", v.keys.Target, accountID, vin)
+
+	var res DataEnvelope[Position]
+	err := v.GetJSON(uri, &res)
+
+	return res.Data.Attributes, err
+}
+
+func (v *API) WakeUp(accountID string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Target, accountID, vin)
 
-	data := map[string]any{
-		"data": map[string]any{
-			"type": "ChargePauseResume",
-			"attributes": map[string]any{
-				"action": "resume",
+	reqBody := map[string]any{
+		"data": ChargeAction{
+			Type: "ChargePauseResume",
+			Attributes: ChargeActionAttributes{
+				Action: ActionResume,
 			},
 		},
 	}
 
-	return v.request(uri, request.MarshalJSON(data))
+	var res struct {
+		Data ChargeAction `json:"data"`
+	}
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqBody))
+
+	if err != nil {
+		return ChargeAction{}, err
+	}
+
+	err = v.DoJSON(req, &res)
+
+	return res.Data, err
 }
 
-func (v *API) WakeUpMY24(accountID string, vin string) (Response, error) {
+func (v *API) WakeUpMy24(accountID string, vin string) (EvSettingsResponse, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/ev/settings", v.keys.Target, accountID, vin)
 
-	data := EvSettingsRequest{
+	reqBody := EvSettingsRequest{
 		LastSettingsUpdateTimestamp: "2025-04-24T12:41:41.823Z",
 		DelegatedActivated:          false,
 		ChargeModeRq:                "SCHEDULED",
@@ -151,25 +165,40 @@ func (v *API) WakeUpMY24(accountID string, vin string) (Response, error) {
 		Programs:                    []any{},
 	}
 
-	return v.request(uri, request.MarshalJSON(data))
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqBody))
+
+	if err != nil {
+		return EvSettingsResponse{}, err
+	}
+
+	var res EvSettingsResponse
+	err = v.DoJSON(req, &res)
+
+	return res, err
 }
 
-func (v *API) Position(accountID string, vin string) (Response, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/location", v.keys.Target, accountID, vin)
-	return v.request(uri, nil)
-}
-
-func (v *API) Action(accountID, action string, vin string) (Response, error) {
+func (v *API) ChargeAction(accountID, action string, vin string) (ChargeAction, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.keys.Target, accountID, vin)
 
-	data := map[string]any{
-		"data": map[string]any{
-			"type": "ChargingStart",
-			"attributes": map[string]any{
-				"action": action,
+	reqBody := map[string]any{
+		"data": ChargeAction{
+			Type: "ChargingStart",
+			Attributes: ChargeActionAttributes{
+				Action: action,
 			},
 		},
 	}
 
-	return v.request(uri, request.MarshalJSON(data))
+	var res struct {
+		Data ChargeAction `json:"data"`
+	}
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(reqBody))
+
+	if err != nil {
+		return ChargeAction{}, err
+	}
+
+	err = v.DoJSON(req, &res)
+
+	return res.Data, err
 }

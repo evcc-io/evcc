@@ -15,41 +15,53 @@ import (
 
 // Provider is an api.Vehicle implementation for PSA cars
 type Provider struct {
-	batteryG func() (kamereon.Response, error)
-	cockpitG func() (kamereon.Response, error)
-	hvacG    func() (kamereon.Response, error)
-	wakeup   func() (kamereon.Response, error)
-	position func() (kamereon.Response, error)
-	action   func(action string) (kamereon.Response, error)
+	batteryStatusG func() (kamereon.BatteryStatus, error)
+	cockpitG       func() (kamereon.Cockpit, error)
+	socLevelsG     func() (kamereon.SocLevels, error)
+	hvacG          func() (kamereon.HvacStatus, error)
+	wakeup         func() error
+	position       func() (kamereon.Position, error)
+	chargeAction   func(action string) (kamereon.ChargeAction, error)
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, cache time.Duration) *Provider {
 	impl := &Provider{
-		batteryG: util.Cached(func() (kamereon.Response, error) {
-			return api.Battery(accountID, vin)
+		batteryStatusG: util.Cached(func() (kamereon.BatteryStatus, error) {
+			return api.BatteryStatus(accountID, vin)
 		}, cache),
-		cockpitG: util.Cached(func() (kamereon.Response, error) {
+		cockpitG: util.Cached(func() (kamereon.Cockpit, error) {
 			return api.Cockpit(accountID, vin)
 		}, cache),
-		hvacG: util.Cached(func() (kamereon.Response, error) {
-			return api.Hvac(accountID, vin)
+		socLevelsG: util.Cached(func() (kamereon.SocLevels, error) {
+			return api.SocLevels(accountID, vin)
 		}, cache),
-		wakeup: func() (kamereon.Response, error) {
+		hvacG: util.Cached(func() (kamereon.HvacStatus, error) {
+			return api.HvacStatus(accountID, vin)
+		}, cache),
+		wakeup: func() error {
+			var err error
 			switch wakeupMode {
 			case "alternative":
-				return api.Action(accountID, kamereon.ActionStart, vin)
+				_, err = api.ChargeAction(accountID, kamereon.ActionStart, vin)
 			case "MY24":
-				return api.WakeUpMY24(accountID, vin)
+				_, err = api.WakeUpMy24(accountID, vin)
 			default:
-				return api.WakeUp(accountID, vin)
+				_, err = api.WakeUp(accountID, vin)
+
+				// Check if default wakeup is unsupported
+				var se *request.StatusError
+				if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+					_, err = api.WakeUpMy24(accountID, vin)
+				}
 			}
+			return err
 		},
-		position: func() (kamereon.Response, error) {
+		position: func() (kamereon.Position, error) {
 			return api.Position(accountID, vin)
 		},
-		action: func(action string) (kamereon.Response, error) {
-			return api.Action(accountID, action, vin)
+		chargeAction: func(action string) (kamereon.ChargeAction, error) {
+			return api.ChargeAction(accountID, action, vin)
 		},
 	}
 	return impl
@@ -59,16 +71,16 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	res, err := v.batteryG()
+	res, err := v.batteryStatusG()
 	if err != nil {
 		return 0, err
 	}
 
-	if res.Data.Attributes.BatteryLevel == nil {
+	if res.BatteryLevel == nil {
 		return 0, api.ErrNotAvailable
 	}
 
-	return float64(*res.Data.Attributes.BatteryLevel), nil
+	return float64(*res.BatteryLevel), nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -77,12 +89,12 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	res, err := v.batteryG()
+	res, err := v.batteryStatusG()
 	if err == nil {
-		if res.Data.Attributes.PlugStatus == 1 {
+		if res.PlugStatus == 1 {
 			status = api.StatusB
 		}
-		if res.Data.Attributes.ChargingStatus >= 1.0 {
+		if res.ChargingStatus >= 1.0 {
 			status = api.StatusC
 		}
 	}
@@ -94,10 +106,10 @@ var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	res, err := v.batteryG()
+	res, err := v.batteryStatusG()
 
 	if err == nil {
-		return int64(res.Data.Attributes.BatteryAutonomy), nil
+		return int64(res.BatteryAutonomy), nil
 	}
 
 	return 0, err
@@ -112,8 +124,31 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if res.Data.Attributes.TotalMileage != nil {
-		return *res.Data.Attributes.TotalMileage, nil
+	if res.TotalMileage != nil {
+		return *res.TotalMileage, nil
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.socLevelsG()
+
+	// Check if endpoint is unavailable
+	var se *request.StatusError
+	if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+		return 0, api.ErrNotAvailable
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	if res.SocTarget != nil {
+		return int64(*res.SocTarget), nil
 	}
 
 	return 0, api.ErrNotAvailable
@@ -123,16 +158,16 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.batteryG()
+	res, err := v.batteryStatusG()
 
 	if err == nil {
-		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
+		timestamp, err := time.Parse(time.RFC3339, res.Timestamp)
 
-		if res.Data.Attributes.RemainingTime == nil {
+		if res.RemainingTime == nil {
 			return time.Time{}, api.ErrNotAvailable
 		}
 
-		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
+		return timestamp.Add(time.Duration(*res.RemainingTime) * time.Minute), err
 	}
 
 	return time.Time{}, err
@@ -145,12 +180,13 @@ func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
-	if se := new(request.StatusError); errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	var se *request.StatusError
+	if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return false, api.ErrNotAvailable
 	}
 
 	if err == nil {
-		state := strings.ToLower(res.Data.Attributes.HvacStatus)
+		state := strings.ToLower(res.HvacStatus)
 		if state == "" {
 			return false, api.ErrNotAvailable
 		}
@@ -166,8 +202,7 @@ var _ api.Resurrector = (*Provider)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
-	_, err := v.wakeup()
-	return err
+	return v.wakeup()
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)
@@ -176,7 +211,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.position()
 	if err == nil {
-		return res.Data.Attributes.Latitude, res.Data.Attributes.Longitude, nil
+		return res.Latitude, res.Longitude, nil
 	}
 
 	return 0, 0, err
@@ -187,6 +222,6 @@ var _ api.ChargeController = (*Provider)(nil)
 // ChargeEnable implements the api.ChargeController interface
 func (v *Provider) ChargeEnable(enable bool) error {
 	action := map[bool]string{true: kamereon.ActionStart, false: kamereon.ActionStop}
-	_, err := v.action(action[enable])
+	_, err := v.chargeAction(action[enable])
 	return err
 }

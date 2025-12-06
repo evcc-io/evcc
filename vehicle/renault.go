@@ -72,12 +72,12 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle,
 		return nil, err
 	}
 
-	api := kamereon.New(log, keys.Kamereon, identity, func() error {
+	api := kamereon.NewAPI(log, keys.Kamereon, identity, func() error {
 		return identity.Login(cc.User, cc.Password)
 	})
 	api.Client.Timeout = cc.Timeout
 
-	accountID, err := api.Person(identity.PersonID, brand)
+	accountID, err := api.AccountID(identity.PersonID, brand)
 	if err != nil {
 		return nil, err
 	}
