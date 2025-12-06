@@ -80,25 +80,6 @@
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
-			<template v-if="providerLogins.length > 0">
-				<li>
-					<h6 class="dropdown-header">{{ $t("header.authProviders.title") }}</h6>
-				</li>
-				<li v-for="l in providerLogins" :key="l.title">
-					<button
-						type="button"
-						class="dropdown-item"
-						@click="handleProviderAuthorization(l)"
-					>
-						<span
-							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
-							:class="l.authenticated ? 'bg-success' : 'bg-warning'"
-						></span>
-						{{ l.title }}
-					</button>
-				</li>
-				<li><hr class="dropdown-divider" /></li>
-			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
 					<span>{{ $t("header.needHelp") }}</span>
@@ -136,12 +117,10 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import { baseApi } from "@/api";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, AuthProviders, EvOpt } from "@/types/evcc";
-import type { Provider as Provider } from "./types";
+import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -164,23 +143,15 @@ export default defineComponent({
 		batteryConfigured() {
 			return this.battery?.length;
 		},
-		providerLogins(): Provider[] {
-			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
-				title,
-				authenticated,
-				loginPath: "providerauth/login?id=" + id,
-				logoutPath: "providerauth/logout?id=" + id,
-			}));
-		},
 		loginRequired() {
 			return Object.values(this.authProviders).some((p) => !p.authenticated);
 		},
 		showConfigBadge() {
 			const userConfigError = isUserConfigError(this.fatal);
-			return this.sponsor.expiresSoon || userConfigError;
+			return this.sponsor.expiresSoon || userConfigError || this.loginRequired;
 		},
 		showRootBadge() {
-			return this.loginRequired || this.showConfigBadge;
+			return this.showConfigBadge;
 		},
 		badgeClass() {
 			if (this.fatal.length > 0) {
@@ -215,40 +186,6 @@ export default defineComponent({
 		this.dropdown?.dispose();
 	},
 	methods: {
-		async handleProviderAuthorization(provider: Provider) {
-			const { title, authenticated, loginPath, logoutPath } = provider;
-			if (!authenticated) {
-				try {
-					const response = await baseApi.get(loginPath, {
-						validateStatus: (code) => [200, 400].includes(code),
-					});
-					if (response.status === 200) {
-						window.location.href = response.data?.loginUri;
-					} else {
-						alert(`Failed to login: ${response.data?.error}`);
-					}
-				} catch (error: any) {
-					console.error(error);
-					alert("Unexpected login error: " + error.message);
-				}
-			} else {
-				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
-					try {
-						const response = await baseApi.get(logoutPath, {
-							validateStatus: (code) => [200, 400, 500].includes(code),
-						});
-						if (response.status === 200) {
-							alert(this.$t("header.authProviders.loggedOut"));
-						} else {
-							alert(`Failed to logout: ${response.data?.error}`);
-						}
-					} catch (error: any) {
-						console.error(error);
-						alert(`Unexpected logout error: ${error.response?.data}`);
-					}
-				}
-			}
-		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("globalSettingsModal") as HTMLElement

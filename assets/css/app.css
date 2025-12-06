@@ -564,8 +564,12 @@ input::-webkit-datetime-edit {
 }
 input.form-control:disabled,
 input.form-control:read-only,
+textarea.form-control:disabled,
+textarea.form-control:read-only,
 .dark input.form-control:disabled,
-.dark input.form-control:read-only {
+.dark input.form-control:read-only,
+.dark textarea.form-control:disabled,
+.dark textarea.form-control:read-only {
 	background-color: var(--evcc-gray-10);
 	color: var(--bs-default-text);
 	opacity: 1;
@@ -701,11 +705,29 @@ html.app .modal-dialog {
 }
 
 .dark .round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-danger);
+	border: 1px solid var(--bs-danger);
+}
+
+.dark .round-box--error .tags * {
+	color: var(--bs-danger) !important;
+}
+
+.round-box--warning {
 	box-shadow: 0 0 0.5rem var(--bs-warning);
 	border: 1px solid var(--bs-warning);
 }
 
-.dark .round-box--error .tags * {
+.round-box--warning .tags * {
+	color: var(--bs-warning-text-emphasis) !important;
+}
+
+.dark .round-box--warning {
+	box-shadow: 0 0 0.5rem var(--bs-warning);
+	border: 1px solid var(--bs-warning);
+}
+
+.dark .round-box--warning .tags * {
 	color: var(--bs-warning) !important;
 }
 

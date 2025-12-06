@@ -1,6 +1,6 @@
 <template>
 	<div class="alert alert-success my-4 pb-0" role="alert" data-testid="auth-success-banner">
-		<p>{{ $t("header.authProviders.success", { title: providerName }) }}</p>
+		<p>{{ $t("authProviders.success", { title: providerName }) }}</p>
 	</div>
 </template>
 
