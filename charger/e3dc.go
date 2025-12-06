@@ -32,18 +32,28 @@ import (
 	"github.com/spf13/cast"
 )
 
-// E3dc charger implementation using RSCP protocol
+// E3dc charger implementation using RSCP protocol.
+// Communicates with the E3DC Hauskraftwerk via TCP connection.
 type E3dc struct {
-	log  *util.Logger
-	conn *rscp.Client
-	id   uint8
+	log  *util.Logger // Logger instance for debug/warning output
+	conn *rscp.Client // RSCP client connection to E3DC system
+	id   uint8        // Wallbox index (0 = first wallbox, 1 = second, etc.)
 }
 
 func init() {
 	registry.AddCtx("e3dc-rscp", NewE3dcFromConfig)
 }
 
-// NewE3dcFromConfig creates an E3DC charger from generic config
+// NewE3dcFromConfig creates an E3DC charger from generic config.
+// Called by evcc's charger registry when type "e3dc-rscp" is configured.
+//
+// Configuration parameters:
+//   - uri: IP:Port of E3DC system (default port 5033)
+//   - user: E3DC portal username
+//   - password: E3DC portal password
+//   - key: RSCP encryption key (configured in E3DC Hauskraftwerk settings)
+//   - id: Wallbox index (0 = first wallbox)
+//   - timeout: Connection timeout (optional)
 func NewE3dcFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Uri      string
@@ -131,12 +141,7 @@ func (wb *E3dc) checkConfiguration() {
 	}
 
 	// Check and disable sun mode - evcc needs to control charging
-	if sunMode, err := rscpValue(wbData[1], func(data any) (bool, error) {
-		if val, ok := data.(bool); ok {
-			return val, nil
-		}
-		return false, errors.New("invalid type")
-	}); err == nil && sunMode {
+	if sunMode, err := rscpBool(wbData[1]); err == nil && sunMode {
 		wb.log.WARN.Println("wallbox sun mode is enabled - disabling for evcc control")
 		if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 			*rscp.NewMessage(rscp.WB_INDEX, wb.id),
@@ -147,18 +152,23 @@ func (wb *E3dc) checkConfiguration() {
 	}
 
 	// Warn about auto phase switching - user may want to keep it for non-evcc use
-	if autoPhase, err := rscpValue(wbData[2], func(data any) (bool, error) {
-		if val, ok := data.(bool); ok {
-			return val, nil
-		}
-		return false, errors.New("invalid type")
-	}); err == nil && autoPhase {
+	if autoPhase, err := rscpBool(wbData[2]); err == nil && autoPhase {
 		wb.log.WARN.Println("wallbox auto phase switching is enabled - disable in E3DC portal if you want evcc to control 1p/3p switching")
 	}
 }
 
-// getExternDataAlg retrieves the WB_EXTERN_DATA_ALG status byte array
+// getExternDataAlg retrieves the WB_EXTERN_DATA_ALG status byte array.
+// This is the primary source for wallbox status information.
+//
+// Returns a byte array where:
+//   - Byte 0: Unknown
+//   - Byte 1: Number of phases (1 or 3)
+//   - Byte 2: Status flags (see Status() and Enabled() for bit definitions)
+//   - Byte 3: Max charge current in Ampere
+//
+// Used by Status() and Enabled() to determine charging state.
 func (wb *E3dc) getExternDataAlg() ([]byte, error) {
+	// RSCP request pattern: WB_REQ_DATA container with WB_INDEX + request tags
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil),
@@ -167,11 +177,13 @@ func (wb *E3dc) getExternDataAlg() ([]byte, error) {
 		return nil, err
 	}
 
+	// Response structure: WB_DATA[WB_INDEX, WB_EXTERN_DATA_ALG[WB_INDEX, ByteArray]]
 	wbData, err := rscpContainer(*res, 2)
 	if err != nil {
 		return nil, err
 	}
 
+	// WB_EXTERN_DATA_ALG is itself a container with index and data
 	wbExtDataAlg, err := rscpContainer(wbData[1], 2)
 	if err != nil {
 		return nil, err
@@ -242,7 +254,8 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// MaxCurrent implements the api.Charger interface
+// MaxCurrent implements the api.Charger interface.
+// Sets the maximum charging current in Ampere (whole numbers only, 6-32A typical range).
 func (wb *E3dc) MaxCurrent(current int64) error {
 	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
@@ -297,6 +310,7 @@ func (wb *E3dc) TotalEnergy() (float64, error) {
 
 	// Find the wallbox with matching index
 	var dbEnergy float64
+	var found bool
 	for _, wbValue := range inner {
 		wbData, err := rscpContainer(wbValue, 3)
 		if err != nil {
@@ -312,7 +326,12 @@ func (wb *E3dc) TotalEnergy() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
+		found = true
 		break
+	}
+
+	if !found {
+		wb.log.WARN.Printf("wallbox index %d not found in DB_TEC_WALLBOX_VALUES - total energy may be inaccurate", wb.id)
 	}
 
 	// Query WB_ENERGY_ALL for energy since last DB sync
@@ -338,7 +357,9 @@ func (wb *E3dc) TotalEnergy() (float64, error) {
 	return (dbEnergy + wbEnergy) / 1000.0, nil
 }
 
-// powers returns the charging power for each individual phase in watts
+// powers returns the charging power for each individual phase in watts.
+// Used internally by CurrentPower() and Currents().
+// Returns (L1, L2, L3) power values - unused phases return 0.
 func (wb *E3dc) powers() (float64, float64, float64, error) {
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
@@ -350,11 +371,13 @@ func (wb *E3dc) powers() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
+	// Response: WB_DATA[WB_INDEX, WB_PM_POWER_L1, WB_PM_POWER_L2, WB_PM_POWER_L3]
 	wbData, err := rscpContainer(*res, 4)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
+	// Extract power values (index 0 is WB_INDEX, 1-3 are the power values)
 	p1, err := rscpFloat64(wbData[1])
 	if err != nil {
 		return 0, 0, 0, err
@@ -478,7 +501,9 @@ func (wb *E3dc) GetMaxCurrent() (float64, error) {
 	return current, nil
 }
 
-// getSessionData retrieves the session data container
+// getSessionData retrieves the session data container from WB_REQ_SESSION.
+// Returns all session-related messages (energy, time, RFID, etc.).
+// If no vehicle is connected, returns only WB_INDEX with no session data.
 func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil))
 	if err != nil {
@@ -488,29 +513,41 @@ func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
 	return rscpContainer(*res, 1)
 }
 
+// sessionMessage finds a specific tag in the WB_SESSION response data.
+// Used by ChargedEnergy, ChargeDuration, and Identify to extract session values.
+// Returns (message, true, nil) if found, (empty, false, nil) if no active session,
+// or (empty, false, error) on communication failure.
+func (wb *E3dc) sessionMessage(tag rscp.Tag) (rscp.Message, bool, error) {
+	sessionData, err := wb.getSessionData()
+	if err != nil {
+		return rscp.Message{}, false, err
+	}
+
+	for _, msg := range sessionData {
+		if msg.Tag == tag {
+			return msg, true, nil
+		}
+	}
+
+	return rscp.Message{}, false, nil
+}
+
 var _ api.ChargeRater = (*E3dc)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 // Returns the energy charged in the current session from WB_SESSION_CHARGED_ENERGY
 func (wb *E3dc) ChargedEnergy() (float64, error) {
-	sessionData, err := wb.getSessionData()
+	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_CHARGED_ENERGY)
+	if err != nil || !found {
+		return 0, err
+	}
+
+	energy, err := rscpFloat64(msg)
 	if err != nil {
 		return 0, err
 	}
 
-	// Find WB_SESSION_CHARGED_ENERGY in session data
-	for _, msg := range sessionData {
-		if msg.Tag == rscp.WB_SESSION_CHARGED_ENERGY {
-			energy, err := rscpFloat64(msg)
-			if err != nil {
-				return 0, err
-			}
-			return energy / 1000.0, nil // Wh -> kWh
-		}
-	}
-
-	// No active session
-	return 0, nil
+	return energy / 1000.0, nil // Wh -> kWh
 }
 
 var _ api.ChargeTimer = (*E3dc)(nil)
@@ -518,25 +555,18 @@ var _ api.ChargeTimer = (*E3dc)(nil)
 // ChargeDuration implements the api.ChargeTimer interface
 // Returns the active charging duration from WB_SESSION_ACTIVE_CHARGE_TIME
 func (wb *E3dc) ChargeDuration() (time.Duration, error) {
-	sessionData, err := wb.getSessionData()
+	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_ACTIVE_CHARGE_TIME)
+	if err != nil || !found {
+		return 0, err
+	}
+
+	// Session time is in milliseconds (Uint64)
+	ms, err := rscpUint64(msg)
 	if err != nil {
 		return 0, err
 	}
 
-	// Find WB_SESSION_ACTIVE_CHARGE_TIME in session data
-	for _, msg := range sessionData {
-		if msg.Tag == rscp.WB_SESSION_ACTIVE_CHARGE_TIME {
-			// Session time is in milliseconds (Uint64)
-			ms, err := rscpFloat64(msg)
-			if err != nil {
-				return 0, err
-			}
-			return time.Duration(ms) * time.Millisecond, nil
-		}
-	}
-
-	// No active session
-	return 0, nil
+	return time.Duration(ms) * time.Millisecond, nil
 }
 
 var _ api.Identifier = (*E3dc)(nil)
@@ -544,20 +574,12 @@ var _ api.Identifier = (*E3dc)(nil)
 // Identify implements the api.Identifier interface
 // Returns the RFID tag ID from WB_SESSION_AUTH_DATA if a session is active
 func (wb *E3dc) Identify() (string, error) {
-	sessionData, err := wb.getSessionData()
-	if err != nil {
+	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_AUTH_DATA)
+	if err != nil || !found {
 		return "", err
 	}
 
-	// Find WB_SESSION_AUTH_DATA in session data
-	for _, msg := range sessionData {
-		if msg.Tag == rscp.WB_SESSION_AUTH_DATA {
-			return rscpString(msg)
-		}
-	}
-
-	// No active session or no RFID used
-	return "", nil
+	return rscpString(msg)
 }
 
 var _ api.PhaseSwitcher = (*E3dc)(nil)
@@ -585,13 +607,7 @@ func (wb *E3dc) Phases1p3p(phases int) error {
 		return err
 	}
 
-	autoPhaseSwitch, err := rscpValue(wbData[1], func(data any) (bool, error) {
-		val, ok := data.(bool)
-		if !ok {
-			return false, errors.New("invalid auto phase switch response")
-		}
-		return val, nil
-	})
+	autoPhaseSwitch, err := rscpBool(wbData[1])
 	if err != nil {
 		return err
 	}
@@ -611,7 +627,9 @@ func (wb *E3dc) Phases1p3p(phases int) error {
 
 var _ api.Diagnosis = (*E3dc)(nil)
 
-// Diagnose implements the api.Diagnosis interface
+// Diagnose implements the api.Diagnosis interface.
+// Outputs wallbox information for debugging via evcc's "evcc charger" command.
+// Shows device name, firmware, current limits, phase config, and status flags.
 func (wb *E3dc) Diagnose() {
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
@@ -653,20 +671,10 @@ func (wb *E3dc) Diagnose() {
 	if phases, err := rscpUint8(wbData[6]); err == nil {
 		fmt.Printf("\tPhases:\t%d\n", phases)
 	}
-	if sunMode, err := rscpValue(wbData[7], func(data any) (bool, error) {
-		if val, ok := data.(bool); ok {
-			return val, nil
-		}
-		return false, errors.New("invalid type")
-	}); err == nil {
+	if sunMode, err := rscpBool(wbData[7]); err == nil {
 		fmt.Printf("\tSun mode:\t%t\n", sunMode)
 	}
-	if autoPhase, err := rscpValue(wbData[8], func(data any) (bool, error) {
-		if val, ok := data.(bool); ok {
-			return val, nil
-		}
-		return false, errors.New("invalid type")
-	}); err == nil {
+	if autoPhase, err := rscpBool(wbData[8]); err == nil {
 		fmt.Printf("\tAuto phase switch:\t%t\n", autoPhase)
 	}
 	if extData, err := rscpContainer(wbData[9], 2); err == nil {
@@ -691,7 +699,20 @@ func (wb *E3dc) Diagnose() {
 	}
 }
 
-// rscpError extracts error messages from RSCP responses
+// ===========================================================================
+// RSCP Helper Functions
+// ===========================================================================
+// These functions handle the parsing of RSCP protocol responses.
+// RSCP messages contain typed values that need to be extracted and validated.
+//
+// Typical usage pattern:
+//   1. Send request via wb.conn.Send()
+//   2. Parse response container via rscpContainer()
+//   3. Extract typed values via rscpFloat64(), rscpBool(), rscpString(), etc.
+// ===========================================================================
+
+// rscpError extracts error messages from RSCP responses.
+// RSCP uses a special Error datatype to indicate failures (e.g., ERR_ACCESS_DENIED).
 func rscpError(msg ...rscp.Message) error {
 	var errs []error
 	for _, m := range msg {
@@ -702,7 +723,9 @@ func rscpError(msg ...rscp.Message) error {
 	return errors.Join(errs...)
 }
 
-// rscpContainer extracts and validates a container message
+// rscpContainer extracts and validates a container message.
+// RSCP containers hold multiple sub-messages (like WB_DATA holding WB_INDEX + values).
+// The length parameter specifies minimum expected sub-messages.
 func rscpContainer(msg rscp.Message, length int) ([]rscp.Message, error) {
 	if err := rscpError(msg); err != nil {
 		return nil, err
@@ -724,7 +747,8 @@ func rscpContainer(msg rscp.Message, length int) ([]rscp.Message, error) {
 	return res, nil
 }
 
-// rscpBytes extracts a byte array from an RSCP message
+// rscpBytes extracts a byte array from an RSCP message.
+// Used for WB_EXTERN_DATA_ALG which contains status flags as raw bytes.
 func rscpBytes(msg rscp.Message) ([]byte, error) {
 	return rscpValue(msg, func(data any) ([]byte, error) {
 		b, ok := data.([]uint8)
@@ -735,28 +759,54 @@ func rscpBytes(msg rscp.Message) ([]byte, error) {
 	})
 }
 
-// rscpFloat64 extracts a float64 value from an RSCP message
+// rscpFloat64 extracts a float64 value from an RSCP message.
+// Used for power (W), energy (Wh), and current (A) values.
+// Handles automatic type conversion from RSCP's various numeric types.
 func rscpFloat64(msg rscp.Message) (float64, error) {
 	return rscpValue(msg, func(data any) (float64, error) {
 		return cast.ToFloat64E(data)
 	})
 }
 
-// rscpUint8 extracts a uint8 value from an RSCP message
+// rscpUint8 extracts a uint8 value from an RSCP message.
+// Used for WB_INDEX, WB_NUMBER_PHASES, and similar small integer values.
 func rscpUint8(msg rscp.Message) (uint8, error) {
 	return rscpValue(msg, func(data any) (uint8, error) {
 		return cast.ToUint8E(data)
 	})
 }
 
-// rscpString extracts a string value from an RSCP message
+// rscpString extracts a string value from an RSCP message.
+// Used for WB_DEVICE_NAME, WB_FIRMWARE_VERSION, WB_SESSION_AUTH_DATA (RFID), etc.
 func rscpString(msg rscp.Message) (string, error) {
 	return rscpValue(msg, func(data any) (string, error) {
 		return cast.ToStringE(data)
 	})
 }
 
-// rscpValue is a generic helper for extracting typed values from RSCP messages
+// rscpBool extracts a bool value from an RSCP message.
+// Used for WB_SUN_MODE_ACTIVE, WB_AUTO_PHASE_SWITCH_ENABLED, etc.
+func rscpBool(msg rscp.Message) (bool, error) {
+	return rscpValue(msg, func(data any) (bool, error) {
+		b, ok := data.(bool)
+		if !ok {
+			return false, errors.New("invalid response")
+		}
+		return b, nil
+	})
+}
+
+// rscpUint64 extracts a uint64 value from an RSCP message.
+// Used for WB_SESSION_ACTIVE_CHARGE_TIME (milliseconds), etc.
+func rscpUint64(msg rscp.Message) (uint64, error) {
+	return rscpValue(msg, func(data any) (uint64, error) {
+		return cast.ToUint64E(data)
+	})
+}
+
+// rscpValue is a generic helper for extracting typed values from RSCP messages.
+// Takes a conversion function that transforms the raw value to the desired type.
+// First checks for RSCP errors, then applies the conversion function.
 func rscpValue[T any](msg rscp.Message, fun func(any) (T, error)) (T, error) {
 	var zero T
 	if err := rscpError(msg); err != nil {
