@@ -40,6 +40,12 @@ levels:
   cache: error
   db: error
 
+# otel:
+#   enabled: true # enable OpenTelemetry
+#   endpoint: "localhost:4317"  # OTLP endpoint (gRPC)
+#   protocol: "grpc"             # "grpc" or "http"
+#   insecure: false              # Set to true for insecure connections
+
 # modbus proxy for allowing external programs to reuse the evcc modbus connection
 # each entry will start a proxy instance at the given port speaking Modbus TCP and
 # relaying to the given modbus downstream device (either TCP or RTU, RS485 or TCP)

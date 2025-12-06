@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/otel"
 )
 
 type All struct {
@@ -45,6 +46,7 @@ type All struct {
 	Site         map[string]any
 	Loadpoints   []config.Named
 	Circuits     []config.Named
+	Otel         otel.Config
 }
 
 type Javascript struct {
