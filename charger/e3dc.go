@@ -177,7 +177,16 @@ func (wb *E3dc) getExternDataAlg() ([]byte, error) {
 		return nil, err
 	}
 
-	return rscpBytes(wbExtDataAlg[1])
+	b, err := rscpBytes(wbExtDataAlg[1])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(b) < 3 {
+		return nil, fmt.Errorf("invalid WB_EXTERN_DATA_ALG length: %d", len(b))
+	}
+
+	return b, nil
 }
 
 // Enabled implements the api.Charger interface
