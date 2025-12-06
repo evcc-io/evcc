@@ -814,11 +814,12 @@
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
       "planNumber": "Plán {number}",
-      "preconditionDescription": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
-      "preconditionLong": "Odložené nabíjení",
-      "preconditionOptionAll": "všechen",
-      "preconditionOptionNo": "ne",
-      "preconditionShort": "Odložené nabíjení",
+      "precondition": {
+        "description": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
+        "label": "Odložené nabíjení",
+        "optionAll": "všechen",
+        "optionNo": "ne"
+      },
       "remove": "Odebrat",
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",

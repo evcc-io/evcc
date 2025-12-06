@@ -683,11 +683,12 @@
       "modalTitle": "மின்சேர்வி திட்டம்",
       "none": "எதுவுமில்லை",
       "planNumber": "திட்டம் {number}",
-      "preconditionDescription": "பேட்டரி முன்நிபந்தனைக்கு புறப்படுவதற்கு முன் {duration} சார்ஜ் செய்யவும்.",
-      "preconditionLong": "தாமதமாக சார்சிங்",
-      "preconditionOptionAll": "எல்லாம்",
-      "preconditionOptionNo": "இல்லை",
-      "preconditionShort": "தாமதமாக",
+      "precondition": {
+        "description": "பேட்டரி முன்நிபந்தனைக்கு புறப்படுவதற்கு முன் {duration} சார்ஜ் செய்யவும்.",
+        "label": "தாமதமாக சார்சிங்",
+        "optionAll": "எல்லாம்",
+        "optionNo": "இல்லை"
+      },
       "remove": "அகற்று",
       "repeating": "மறுநிகழ்தல்",
       "repeatingPlans": "மறுநிகழ்வு திட்டங்கள்",
