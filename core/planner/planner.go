@@ -59,8 +59,8 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 	return plan
 }
 
-// filterRates filters rates to the given time window and adjusts boundary slots
-func filterRates(rates api.Rates, start, end time.Time) api.Rates {
+// clampRates filters rates to the given time window and adjusts boundary slots
+func clampRates(rates api.Rates, start, end time.Time) api.Rates {
 	res := make(api.Rates, 0, len(rates)+2)
 
 	for _, r := range rates {
@@ -101,7 +101,7 @@ func filterRates(rates api.Rates, start, end time.Time) api.Rates {
 
 // continuousPlan creates a continuous emergency charging plan
 func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
-	res := filterRates(rates, start, end)
+	res := clampRates(rates, start, end)
 
 	if len(res) == 0 {
 		return []api.Rate{{
@@ -188,7 +188,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, precondition time.Duratio
 	}
 
 	// filter rates to planning window early for performance
-	rates = filterRates(rates, now, targetTime)
+	rates = clampRates(rates, now, targetTime)
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
@@ -257,7 +257,7 @@ func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondit
 		precond = append(precond, r)
 	}
 
-	precond = filterRates(precond, preCondStart, targetTime)
+	precond = clampRates(precond, preCondStart, targetTime)
 
 	var total time.Duration
 	for _, p := range precond {
@@ -266,7 +266,7 @@ func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondit
 
 	if deficit := precondition - total; deficit > 0 {
 		extendStart := preCondStart.Add(-deficit)
-		extension := filterRates(res, extendStart, preCondStart)
+		extension := clampRates(res, extendStart, preCondStart)
 		precond = append(extension, precond...)
 	}
 
