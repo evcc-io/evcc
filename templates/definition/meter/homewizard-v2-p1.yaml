@@ -1,0 +1,55 @@
+template: homewizard-v2-p1
+products:
+  - brand: HomeWizard
+    description:
+      generic: Wi-Fi P1 Meter (v2)
+      de: Wi-Fi P1-Zähler (v2)
+requirements:
+  description:
+    en: |
+      P1 Meter for grid monitoring using WebSocket API v2.
+
+      **Setup:** Run `evcc token homewizard` to discover and pair devices
+    de: |
+      P1-Zähler für Netzmessung mit WebSocket API v2.
+
+      **Einrichtung:** Führen Sie `evcc token homewizard` aus
+params:
+  - name: host
+    description:
+      en: Device hostname or IP
+      de: Gerätehostname oder IP
+    required: true
+  - name: token
+    description:
+      en: Device authentication token
+      de: Geräte-Authentifizierungstoken
+    required: true
+    mask: true
+  - name: phases
+    choice: [1, 3]
+    description:
+      en: Number of phases
+      de: Anzahl der Phasen
+    help:
+      en: |
+        1: Single-phase P1 meter
+        3: Three-phase P1 meter (most common)
+      de: |
+        1: Einphasiger P1-Zähler
+        3: Dreiphasiger P1-Zähler (am häufigsten)
+    default: 3
+  - name: timeout
+    description:
+      en: Connection timeout
+      de: Verbindungs-Timeout
+    advanced: true
+    default: 30s
+render: |
+  type: homewizard-p1
+  host: {{ .host }}
+  token: {{ .token }}
+  phases: {{ .phases }}
+  {{- if .timeout }}
+  timeout: {{ .timeout }}
+  {{- end }}

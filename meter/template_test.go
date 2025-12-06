@@ -35,6 +35,8 @@ var acceptable = []string{
 	"missing config values: username, password, key",                       // E3DC
 	"eebus not configured",                                                 // EEBus
 	"missing token",                                                        // HomeAssistant
+	"missing host or token - run 'evcc token homewizard'",                  // HomeWizard V2
+	"battery requires controller parameter (P1 meter name)",                // HomeWizard Battery
 }
 
 func TestTemplates(t *testing.T) {

@@ -110,6 +110,9 @@
 /templates/definition/meter/homematic.yaml @thierolm
 /templates/definition/meter/homewizard-kwh.yaml @Rido @thierolm
 /templates/definition/meter/homewizard-p1.yaml @thierolm
+/templates/definition/meter/homewizard-v2-p1.yaml @mluiten
+/templates/definition/meter/homewizard-v2-kwh.yaml @mluiten
+/templates/definition/meter/homewizard-v2-battery.yaml @mluiten
 /templates/definition/meter/hoymiles-ahoydtu.yaml @Starquake
 /templates/definition/meter/hoymiles-opendtu.yaml @Starquake @xerion3800
 /templates/definition/meter/huawei-emma.yaml @Mungg1818 @VolkerK62
