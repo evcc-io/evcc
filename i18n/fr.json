@@ -162,6 +162,7 @@
       "authPerformHint": "Va s’ouvrir dans un nouvel onglet. Revenez ici pour continuer.",
       "authPrepare": "Préparer la connexion",
       "cancel": "Annuler",
+      "clear": "Effacer",
       "close": "Fermer",
       "customHelp": "Créer un appareil sur mesure en utilisant le système de plugins d’evcc.",
       "customOption": "Appareil sur mesure",
