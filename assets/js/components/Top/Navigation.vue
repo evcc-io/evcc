@@ -9,7 +9,7 @@
 			data-testid="topnavigation-button"
 		>
 			<span
-				v-if="showRootBadge"
+				v-if="showConfigBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
 				:class="badgeClass"
 			>
@@ -143,15 +143,9 @@ export default defineComponent({
 		batteryConfigured() {
 			return this.battery?.length;
 		},
-		loginRequired() {
-			return Object.values(this.authProviders).some((p) => !p.authenticated);
-		},
 		showConfigBadge() {
 			const userConfigError = isUserConfigError(this.fatal);
-			return this.sponsor.expiresSoon || userConfigError || this.loginRequired;
-		},
-		showRootBadge() {
-			return this.showConfigBadge;
+			return this.sponsor.expiresSoon || userConfigError;
 		},
 		badgeClass() {
 			if (this.fatal.length > 0) {

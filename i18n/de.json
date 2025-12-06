@@ -9,7 +9,7 @@
     "disconnect": "trennen",
     "loggedOut": "Erfolgreich abgemeldet",
     "logoutFailed": "Abmeldung fehlgeschlagen",
-    "modalDescriptionLogin": "Authentifiziere dich mit {provider}, um auf deine Daten zuzugreifen.",
+    "modalDescriptionLogin": "Schließe die Authentifizierung ab, um eine Verbindung mit {provider} herzustellen.",
     "modalDescriptionLogout": "Dies trennt dein {provider}-Konto und entfernt den Zugriff auf dessen Daten.",
     "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
     "title": "Autorisierungsstatus"

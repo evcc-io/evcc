@@ -9,7 +9,7 @@
     "disconnect": "disconnect",
     "loggedOut": "Successfully logged out",
     "logoutFailed": "Failed to logout",
-    "modalDescriptionLogin": "Authenticate with {provider} to access your data.",
+    "modalDescriptionLogin": "Complete the authentication process to establish connection with {provider}.",
     "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
     "success": "Authorization with {title} was successful. You can now close this tab.",
     "title": "Authorization Status"

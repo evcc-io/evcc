@@ -1,0 +1,70 @@
+<template>
+	<div class="d-flex">
+		<Notifications :notifications="notifications" :loadpoints="loadpoints" class="me-2" />
+		<AuthIndicator
+			:auth-providers="authProviders"
+			class="me-2"
+			@auth-required="openAuthModal"
+		/>
+		<TopNavigation v-bind="topNavigation" />
+		<AuthProviderModal :provider="authProvider" />
+	</div>
+</template>
+
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
+import Modal from "bootstrap/js/dist/modal";
+import Navigation from "./Navigation.vue";
+import Notifications from "./Notifications.vue";
+import AuthIndicator from "./AuthIndicator.vue";
+import AuthProviderModal from "./AuthProviderModal.vue";
+import type { Provider } from "./types";
+import type { Notification } from "@/types/evcc";
+import collector from "@/mixins/collector";
+import store from "@/store";
+
+export default defineComponent({
+	name: "TopNavigationArea",
+	components: {
+		TopNavigation: Navigation,
+		Notifications,
+		AuthIndicator,
+		AuthProviderModal,
+	},
+	mixins: [collector],
+	props: {
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
+	},
+	data() {
+		return {
+			authProvider: null as Provider | null,
+		};
+	},
+	computed: {
+		topNavigation(): any {
+			return this.collectProps(Navigation, store.state);
+		},
+		loadpoints() {
+			return store.uiLoadpoints.value || [];
+		},
+		authProviders() {
+			return store.state?.authProviders || {};
+		},
+	},
+	methods: {
+		openAuthModal(provider: Provider) {
+			this.authProvider = provider;
+			this.$nextTick(() => {
+				const modal = Modal.getOrCreateInstance(
+					document.getElementById("authProviderModal") as HTMLElement
+				);
+				modal?.show();
+			});
+		},
+		// Public method for imperative calls (e.g., from Config page)
+		requestAuthProvider(provider: Provider) {
+			this.openAuthModal(provider);
+		},
+	},
+});
+</script>

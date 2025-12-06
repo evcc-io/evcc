@@ -1,7 +1,11 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader :title="$t('config.main.title')" />
+			<TopHeader
+				ref="header"
+				:title="$t('config.main.title')"
+				:notifications="notifications"
+			/>
 			<div class="wrapper pb-5">
 				<AuthSuccessBanner
 					v-if="callbackCompleted"
@@ -379,7 +383,6 @@
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
-				<AuthProviderModal :provider="authProvider" />
 			</div>
 		</div>
 	</div>
@@ -429,7 +432,7 @@ import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import type {
 	Circuit,
 	ConfigCharger,
@@ -442,6 +445,7 @@ import type {
 	MeterType,
 	SiteConfig,
 	DeviceType,
+	Notification,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -451,7 +455,7 @@ import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
-import AuthProviderModal from "../components/Top/AuthProviderModal.vue";
+import type { Provider } from "../components/Top/types";
 
 export default defineComponent({
 	name: "Config",
@@ -495,12 +499,11 @@ export default defineComponent({
 		WelcomeBanner,
 		PasswordModal,
 		AuthProvidersCard,
-		AuthProviderModal,
 	},
 	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -534,7 +537,6 @@ export default defineComponent({
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
-			authProvider: null as any,
 		};
 	},
 	head() {
@@ -1074,16 +1076,9 @@ export default defineComponent({
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
 		},
-		handleProviderAuthRequest(provider: any) {
-			// Set the provider data for the modal
-			this.authProvider = provider;
-			// Open the modal
-			this.$nextTick(() => {
-				const modal = Modal.getOrCreateInstance(
-					document.getElementById("authProviderModal") as HTMLElement
-				);
-				modal.show();
-			});
+		handleProviderAuthRequest(provider: Provider) {
+			const header = this.$refs["header"] as InstanceType<typeof Header> | undefined;
+			header?.requestAuthProvider(provider);
 		},
 	},
 });

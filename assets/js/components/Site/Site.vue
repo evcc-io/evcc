@@ -10,14 +10,7 @@
 						{{ siteTitle || "evcc" }}
 					</span>
 				</h1>
-				<div class="d-flex">
-					<Notifications
-						:notifications="notifications"
-						:loadpoints="loadpoints"
-						class="me-2"
-					/>
-					<TopNavigation v-bind="topNavigation" />
-				</div>
+				<TopNavigationArea :notifications="notifications" />
 			</div>
 			<HemsWarning :circuits="circuits" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
@@ -83,8 +76,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import Navigation from "../Top/Navigation.vue";
-import Notifications from "../Top/Notifications.vue";
+import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
@@ -116,8 +108,7 @@ export default defineComponent({
 		Energyflow,
 		Footer,
 		HemsWarning,
-		Notifications,
-		TopNavigation: Navigation,
+		TopNavigationArea,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -197,9 +188,6 @@ export default defineComponent({
 		vehicleList() {
 			const vehicles = this.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
-		},
-		topNavigation() {
-			return this.collectProps(Navigation);
 		},
 		showParkingLot() {
 			// work in progess
