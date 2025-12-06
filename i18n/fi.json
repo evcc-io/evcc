@@ -162,6 +162,7 @@
       "authPerformHint": "Avaa uuden välilehden. Palaa tänne jatkaaksesi.",
       "authPrepare": "Valmistele yhteys",
       "cancel": "Peruuta",
+      "clear": "Tyhjennä",
       "close": "Sulje",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
       "customOption": "Itsemääritelty laite",
@@ -512,14 +513,14 @@
     "system": {
       "backupRestore": {
         "backup": {
-          "action": "Ladataan varmuuskopiota...",
+          "action": "Lataa varmuuskopiotiedosto...",
           "confirmationButton": "Lataa varmuuskopio",
           "confirmationText": "Lataa tietokantatiedosto.",
           "description": "Varmuuskopioi tietosi. Tätä tiedostoa voidaan käyttää palauttamaan tietosi järjestelmävirheen jälkeen.",
           "title": "Varmuuskopio"
         },
         "cancel": "Peruuta",
-        "description": "Varmuuskopioi, palauta ja nollaa tietosi. Hyödyllinen jos haluat siirtää tietosi toiseen järjestelmään.",
+        "description": "Varmuuskopioi, palauta ja nollaa tietosi. Toiminnoista on hyötyä, jos haluat siirtää tietosi toiseen järjestelmään.",
         "note": "Huomioi: Kaikki ylläolevat toiminnut vaikuttavat vain tietokannassa oleviin tietoihin. evcc.yaml-tiedoston määrittelyt pysyvät muuttumattomina.",
         "reset": {
           "action": "Nollaa...",
@@ -698,6 +699,7 @@
     "authProviders": {
       "confirmLogout": "Oletko varma, että haluat poistaa yhteyden {title}?",
       "loggedOut": "Kirjauduttu ulos onnistuneesti",
+      "success": "{title}-tunnistautuminen onnistui. Voit sulkea tämän välilehden.",
       "title": "Autentikointivaltuutuksen tila"
     },
     "blog": "Blogi",
