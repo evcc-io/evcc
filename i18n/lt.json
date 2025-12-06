@@ -700,6 +700,7 @@
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
       "loggedOut": "Sėkmingai atsijungta",
+      "success": "Autorizacija su {title} sėkminga. Galite uždaryti šį skirtuką.",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",

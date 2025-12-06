@@ -162,6 +162,7 @@
       "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
       "authPrepare": "Preparar a ligação",
       "cancel": "Cancelar",
+      "clear": "Apagar",
       "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
