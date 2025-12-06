@@ -43,10 +43,6 @@ func AverageCost(plan api.Rates) float64 {
 	var duration time.Duration
 	for _, slot := range plan {
 		slotDuration := slot.End.Sub(slot.Start)
-		// defensive: skip invalid slots
-		if slotDuration <= 0 {
-			continue
-		}
 		duration += slotDuration
 		cost += float64(slotDuration) * slot.Value
 	}
