@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/spf13/cobra"
@@ -56,6 +57,8 @@ func runConfigDelete(cmd *cobra.Command, args []string) {
 		deleteDevice[api.Tariff](c)
 	case templates.Circuit:
 		deleteDevice[api.Circuit](c)
+	case templates.Hems:
+		deleteDevice[hems.API](c)
 	case templates.Loadpoint:
 		deleteDevice[loadpoint.API](c)
 	}
