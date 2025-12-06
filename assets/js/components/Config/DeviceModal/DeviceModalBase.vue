@@ -508,6 +508,7 @@ export default defineComponent({
 		reset() {
 			this.values = { ...this.initialValues } as DeviceValues;
 			this.test = initialTestState();
+			this.resetAuthStatus();
 		},
 		async loadConfiguration() {
 			try {
@@ -572,6 +573,8 @@ export default defineComponent({
 		resetAuthStatus() {
 			this.authOk = false;
 			this.authProviderUrl = null;
+			this.authError = null;
+			this.authLoading = false;
 		},
 		async checkAuthStatus() {
 			this.resetAuthStatus();
