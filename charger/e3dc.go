@@ -100,6 +100,9 @@ var e3dcOnce sync.Once
 func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, id uint8) (*E3dc, error) {
 	log := util.NewLogger("e3dc")
 
+	// Configure RSCP library logging to use evcc's TRACE level.
+	// Setting DebugLevel ensures we get detailed RSCP protocol output,
+	// but routing to TRACE.Writer() means it only appears when evcc is in trace mode.
 	e3dcOnce.Do(func() {
 		rscp.Log.SetLevel(logrus.DebugLevel)
 		rscp.Log.SetOutput(log.TRACE.Writer())
@@ -141,19 +144,51 @@ func (wb *E3dc) checkConfiguration() {
 	}
 
 	// Check and disable sun mode - evcc needs to control charging
+	// Note: Sun mode is also checked in ensureSunModeDisabled() on every control command
+	// because the user could re-enable it in the E3DC portal at any time
 	if sunMode, err := rscpBool(wbData[1]); err == nil && sunMode {
 		wb.log.WARN.Println("wallbox sun mode is enabled - disabling for evcc control")
-		if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
-			*rscp.NewMessage(rscp.WB_INDEX, wb.id),
-			*rscp.NewMessage(rscp.WB_REQ_SET_SUN_MODE_ACTIVE, false),
-		})); err != nil {
-			wb.log.ERROR.Printf("failed to disable sun mode: %v", err)
-		}
+		wb.disableSunMode()
 	}
 
 	// Warn about auto phase switching - user may want to keep it for non-evcc use
+	// Note: We only warn here; the actual check happens in Phases1p3p() because
+	// the user could change this setting in the E3DC portal at any time
 	if autoPhase, err := rscpBool(wbData[2]); err == nil && autoPhase {
 		wb.log.WARN.Println("wallbox auto phase switching is enabled - disable in E3DC portal if you want evcc to control 1p/3p switching")
+	}
+}
+
+// disableSunMode sends the command to disable sun mode
+func (wb *E3dc) disableSunMode() {
+	if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_SET_SUN_MODE_ACTIVE, false),
+	})); err != nil {
+		wb.log.ERROR.Printf("failed to disable sun mode: %v", err)
+	}
+}
+
+// ensureSunModeDisabled checks if sun mode is active and disables it.
+// Called before control commands (Enable, MaxCurrent) because the user could
+// re-enable sun mode in the E3DC portal at any time without restarting evcc.
+func (wb *E3dc) ensureSunModeDisabled() {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
+	}))
+	if err != nil {
+		return
+	}
+
+	wbData, err := rscpContainer(*res, 2)
+	if err != nil {
+		return
+	}
+
+	if sunMode, err := rscpBool(wbData[1]); err == nil && sunMode {
+		wb.log.WARN.Println("sun mode was re-enabled - disabling for evcc control")
+		wb.disableSunMode()
 	}
 }
 
@@ -215,6 +250,8 @@ func (wb *E3dc) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 // Controls charging by setting the abort flag (inverted logic: abort=false means enabled)
 func (wb *E3dc) Enable(enable bool) error {
+	wb.ensureSunModeDisabled()
+
 	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_ABORT_CHARGING, !enable),
@@ -257,6 +294,8 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 // MaxCurrent implements the api.Charger interface.
 // Sets the maximum charging current in Ampere (whole numbers only, 6-32A typical range).
 func (wb *E3dc) MaxCurrent(current int64) error {
+	wb.ensureSunModeDisabled()
+
 	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_MAX_CHARGE_CURRENT, uint8(current)),
@@ -593,7 +632,12 @@ func (wb *E3dc) Phases1p3p(phases int) error {
 		return fmt.Errorf("invalid phases: %d (must be 1 or 3)", phases)
 	}
 
+	wb.ensureSunModeDisabled()
+
 	// Check if automatic phase switching is disabled (required for manual control)
+	// Note: We query this on every call rather than caching because the user can
+	// change this setting in the E3DC portal at any time without restarting evcc.
+	// A startup warning is also issued in checkConfiguration().
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
