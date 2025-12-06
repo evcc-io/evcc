@@ -87,6 +87,7 @@ const (
 	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
 	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanContinuous     = "planContinuous"     // charge plan continuous planning
+	Plan               = "plan"               // charge plan time slots
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
