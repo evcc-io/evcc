@@ -27,6 +27,7 @@ type vehicleStruct struct {
 	LimitSoc       int                 `json:"limitSoc,omitempty"`
 	MinCurrent     float64             `json:"minCurrent,omitempty"`
 	MaxCurrent     float64             `json:"maxCurrent,omitempty"`
+	MaxPower       float64             `json:"maxPower,omitempty"`
 	Priority       int                 `json:"priority,omitempty"`
 	Features       []string            `json:"features,omitempty"`
 	Plan           *planStruct         `json:"plan,omitempty"`
@@ -60,6 +61,7 @@ func (site *Site) publishVehicles() {
 			LimitSoc:       v.GetLimitSoc(),
 			MinCurrent:     ac.MinCurrent,
 			MaxCurrent:     ac.MaxCurrent,
+			MaxPower:       ac.MaxPower,
 			Priority:       ac.Priority,
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plan:           plan,
