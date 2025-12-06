@@ -32,10 +32,14 @@ ARG RELEASE=0
 
 WORKDIR /build
 
+# Setup Go cache
+ENV GOCACHE=/root/.cache/go-build
+ENV GOMODCACHE=/root/.cache/go-mod
+
 # download modules
 COPY go.mod .
 COPY go.sum .
-RUN go mod download
+RUN --mount=type=cache,target="/root/.cache/go-mod" go mod download
 
 # install tools
 COPY Makefile .
@@ -58,7 +62,8 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 ARG GOARM=${TARGETVARIANT#v}
 
-RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
+RUN --mount=type=cache,target="/root/.cache/go-build"  --mount=type=cache,target="/root/.cache/go-mod"\
+    RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
 
 
 # STEP 3 build a small image including module support
