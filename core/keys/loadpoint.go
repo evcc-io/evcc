@@ -77,6 +77,7 @@ const (
 	ChargeRemainingEnergy   = "chargeRemainingEnergy"   // charge remaining energy
 
 	// plan
+  Plan               = "plan"               // charge plan time slots
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
@@ -87,7 +88,6 @@ const (
 	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
 	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanContinuous     = "planContinuous"     // charge plan continuous planning
-	Plan               = "plan"               // charge plan time slots
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
