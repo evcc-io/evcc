@@ -3,6 +3,7 @@ package push
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,11 +18,10 @@ func init() {
 
 // Ntfy implements the ntfy messaging aggregator
 type Ntfy struct {
-	log       *util.Logger
-	uri       string
-	priority  string
-	tags      string
-	authToken string
+	log      *util.Logger
+	uri      string
+	priority string
+	tags     string
 }
 
 // NewNtfyFromConfig creates new Ntfy messenger
@@ -54,6 +54,10 @@ func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 		encoded = strings.TrimRight(encoded, "=")
 
 		q := u.Query()
+		if _, ok := q["auth"]; ok {
+			return nil, fmt.Errorf("uri already contains auth parameter")
+		}
+
 		q.Set("auth", encoded)
 		u.RawQuery = q.Encode()
 
@@ -67,11 +71,10 @@ func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 	}
 
 	m := &Ntfy{
-		log:       log,
-		uri:       cc.URI,
-		priority:  cc.Priority,
-		tags:      cc.Tags,
-		authToken: cc.AuthToken,
+		log:      log,
+		uri:      cc.URI,
+		priority: cc.Priority,
+		tags:     cc.Tags,
 	}
 
 	return m, nil
