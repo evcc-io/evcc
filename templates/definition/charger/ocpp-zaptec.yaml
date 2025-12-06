@@ -7,7 +7,7 @@ capabilities: ["rfid"]
 requirements:
   description:
     generic: |
-      OCPP Native mode
+      OCPP (Box-Level Integration)
 
       https://docs.zaptec.com/docs/ocpp16j
   evcc: ["sponsorship", "skiptest"]
