@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -281,8 +282,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hems hems.API
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
+		hems, err = configureHEMS(&conf.HEMS, site)
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		}
 	}
 
 	// setup MCP
@@ -311,19 +316,26 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Hems, Val: struct {
-		globalconfig.Hems
-		FromYaml bool `json:"fromYaml"`
-	}{
-		Hems:     conf.HEMS,
-		FromYaml: fromYaml.hems,
-	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
 		sponsor.Status
 		FromYaml bool `json:"fromYaml"`
 	}{
 		Status:   sponsor.GetStatus(),
 		FromYaml: fromYaml.sponsor,
+	}}
+
+	var maxPower float64
+	if hems != nil {
+		maxPower = hems.MaxPower()
+	}
+	valueChan <- util.Param{Key: keys.Hems, Val: struct {
+		Config   globalconfig.Hems `json:"config"`
+		MaxPower float64           `json:"maxPower"`
+		FromYaml bool              `json:"fromYaml"`
+	}{
+		Config:   conf.HEMS,
+		MaxPower: maxPower,
+		FromYaml: fromYaml.hems,
 	}}
 
 	// publish system infos

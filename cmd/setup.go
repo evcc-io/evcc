@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
@@ -717,34 +718,34 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
+func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	// use yaml if configured
 	if settings.Exists(keys.Hems) && conf.Type == "" {
 		*conf = globalconfig.Hems{}
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-			return err
+			return nil, err
 		}
 	} else {
 		fromYaml.hems = true
 	}
 
 	if conf.Type == "" {
-		return nil
+		return nil, nil
 	}
 
 	props, err := customDevice(conf.Other)
 	if err != nil {
-		return fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
 	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
 	if err != nil {
-		return fmt.Errorf("failed configuring hems: %w", err)
+		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
 
 	go hems.Run()
 
-	return nil
+	return hems, nil
 }
 
 // networkSettings reads/migrates network settings
