@@ -1,8 +1,11 @@
 package eebus
 
 import (
+	"time"
+
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
+	"github.com/enbility/eebus-go/usecases/cs/lpp"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/server/eebus"
 )
@@ -54,47 +57,47 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	case lpc.DataUpdateHeartbeat:
 		c.dataUpdateHeartbeat()
 
-		// // Load control obligation limit data update received
-		// //
-		// // Use `ProductionLimit` to get the current data
-		// //
-		// // Use Case LPC, Scenario 1
-		// case lpp.DataUpdateLimit:
-		// 	c.dataUpdateLimit()
+	// Load control obligation limit data update received
+	//
+	// Use `ProductionLimit` to get the current data
+	//
+	// Use Case LPC, Scenario 1
+	case lpp.DataUpdateLimit:
+		c.LPPdataUpdateLimit()
 
-		// // An incoming load control obligation limit needs to be approved or denied
-		// //
-		// // Use `PendingProductionLimits` to get the currently pending write approval requests
-		// // and invoke `ApproveOrDenyProductionLimit` for each
-		// //
-		// // Use Case LPC, Scenario 1
-		// case lpp.WriteApprovalRequired:
-		// 	c.writeApprovalRequired()
+	// An incoming load control obligation limit needs to be approved or denied
+	//
+	// Use `PendingProductionLimits` to get the currently pending write approval requests
+	// and invoke `ApproveOrDenyProductionLimit` for each
+	//
+	// Use Case LPC, Scenario 1
+	case lpp.WriteApprovalRequired:
+		c.LPPwriteApprovalRequired()
 
-		// // Failsafe limit for the produced active (real) power of the
-		// // Controllable System data update received
-		// //
-		// // Use `FailsafeProductionActivePowerLimit` to get the current data
-		// //
-		// // Use Case LPC, Scenario 2
-		// case lpp.DataUpdateFailsafeProductionActivePowerLimit:
-		// 	c.dataUpdateFailsafeProductionActivePowerLimit()
+	// Failsafe limit for the produced active (real) power of the
+	// Controllable System data update received
+	//
+	// Use `FailsafeProductionActivePowerLimit` to get the current data
+	//
+	// Use Case LPC, Scenario 2
+	case lpp.DataUpdateFailsafeProductionActivePowerLimit:
+		c.dataUpdateFailsafeProductionActivePowerLimit()
 
-		// // Minimum time the Controllable System remains in "failsafe state" unless conditions
-		// // specified in this Use Case permit leaving the "failsafe state" data update received
-		// //
-		// // Use `FailsafeDurationMinimum` to get the current data
-		// //
-		// // Use Case LPC, Scenario 2
-		// case lpp.DataUpdateFailsafeDurationMinimum:
-		// 	c.dataUpdateFailsafeDurationMinimum()
+	// Minimum time the Controllable System remains in "failsafe state" unless conditions
+	// specified in this Use Case permit leaving the "failsafe state" data update received
+	//
+	// Use `FailsafeDurationMinimum` to get the current data
+	//
+	// Use Case LPC, Scenario 2
+	case lpp.DataUpdateFailsafeDurationMinimum:
+		c.dataUpdateLPPFailsafeDurationMinimum()
 
-		// // Indicates a notify heartbeat event the application should care of.
-		// // E.g. going into or out of the Failsafe state
-		// //
-		// // Use Case LPP, Scenario 3
-		// case lpp.DataUpdateHeartbeat:
-		// 	c.dataUpdateHeartbeat()
+	// Indicates a notify heartbeat event the application should care of.
+	// E.g. going into or out of the Failsafe state
+	//
+	// Use Case LPP, Scenario 3
+	case lpp.DataUpdateHeartbeat:
+		c.dataUpdateHeartbeat()
 	}
 }
 
@@ -109,6 +112,21 @@ func (c *EEBus) dataUpdateLimit() {
 	defer c.mux.Unlock()
 
 	c.consumptionLimit = &limit
+	c.CstatusUpdated = time.Now()
+}
+
+func (c *EEBus) LPPdataUpdateLimit() {
+	limit, err := c.cs.CsLPPInterface.ProductionLimit()
+	if err != nil {
+		c.log.ERROR.Println("CS LPP ProductionLimit:", err)
+		return
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.productionLimit = &limit
+	c.PstatusUpdated = time.Now()
 }
 
 func (c *EEBus) writeApprovalRequired() {
@@ -127,6 +145,21 @@ func (c *EEBus) writeApprovalRequired() {
 	}
 }
 
+func (c *EEBus) LPPwriteApprovalRequired() {
+	for msg, limit := range c.cs.CsLPPInterface.PendingProductionLimits() {
+		c.log.DEBUG.Println("CS LPP PendingProductionLimit:", msg, limit)
+		if limit.Value > 0 {
+			c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, false, "positive limit")
+			continue
+		}
+
+		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
+		c.mux.Lock()
+		c.productionLimit = &limit
+		c.mux.Unlock()
+	}
+}
+
 func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 	limit, _, err := c.cs.CsLPCInterface.FailsafeConsumptionActivePowerLimit()
 	if err != nil {
@@ -140,10 +173,36 @@ func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 	c.failsafeLimit = limit
 }
 
+func (c *EEBus) dataUpdateFailsafeProductionActivePowerLimit() {
+	limit, _, err := c.cs.CsLPPInterface.FailsafeProductionActivePowerLimit()
+	if err != nil {
+		c.log.ERROR.Println("CS LPP FailsafeProductionActivePowerLimit:", err)
+		return
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.failsafeLimit = limit
+}
+
 func (c *EEBus) dataUpdateFailsafeDurationMinimum() {
 	duration, _, err := c.cs.CsLPCInterface.FailsafeDurationMinimum()
 	if err != nil {
 		c.log.ERROR.Println("CS LPC FailsafeDurationMinimum:", err)
+		return
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.failsafeDuration = duration
+}
+
+func (c *EEBus) dataUpdateLPPFailsafeDurationMinimum() {
+	duration, _, err := c.cs.CsLPPInterface.FailsafeDurationMinimum()
+	if err != nil {
+		c.log.ERROR.Println("CS LPP FailsafeDurationMinimum:", err)
 		return
 	}
 
