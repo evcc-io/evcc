@@ -105,7 +105,7 @@ func (c *Fnn3) run() error {
 
 	if w3 {
 		// 0%
-		return nil
+		return c.dim(0.0)
 	}
 
 	s2, err := c.s2()
@@ -115,7 +115,7 @@ func (c *Fnn3) run() error {
 
 	if s2 {
 		// 30%
-		return nil
+		return c.dim(0.3)
 	}
 
 	s1, err := c.s1()
@@ -125,13 +125,15 @@ func (c *Fnn3) run() error {
 
 	if s1 {
 		// 60%
-		return nil
+		return c.dim(0.6)
 	}
 
 	// 100%
+	return c.dim(1.0)
+}
 
-	// c.root.Dim(limit)
-	// c.root.SetMaxPower(power)
-
+func (c *Fnn3) dim(frac float64) error {
+	// c.root.Dim(percent<100)
+	// c.root.SetMaxPower(c.maxPower*frac)
 	return nil
 }
