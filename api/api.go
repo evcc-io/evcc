@@ -276,11 +276,11 @@ type Circuit interface {
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 
-	// EnWG §14a
+	// EnWG §14a - reduce demand/consumption
 	Dim(bool)
 	Dimmed() bool
 
-	// EEG §9
+	// EEG §9 - reduce feed-in to the grid
 	Curtail(bool)
 	Curtailed() bool
 }
