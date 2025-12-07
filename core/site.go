@@ -492,6 +492,13 @@ func (site *Site) publish(key string, val any) {
 	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
+var _ site.Publisher = (*Site)(nil)
+
+// publish sends values to UI and databases
+func (site *Site) Publish(key string, val any) {
+	site.publish(key, val)
+}
+
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
 	mm := make([]measurement, len(meters))
 
