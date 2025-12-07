@@ -40,14 +40,14 @@ ENV GOMODCACHE=/root/.cache/go-mod
 # download modules
 COPY go.mod .
 COPY go.sum .
-RUN --mount=type=cache,target="/root/.cache/go-mod" go mod download
+RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 
 # install tools
 COPY Makefile .
 COPY cmd/decorate/ cmd/decorate/
 COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
-RUN make install
+RUN --mount=type=cache,target=${GOMODCACHE} make install
 
 # prepare
 COPY . .
@@ -63,7 +63,7 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 ARG GOARM=${TARGETVARIANT#v}
 
-RUN --mount=type=cache,target="/root/.cache/go-build"  --mount=type=cache,target="/root/.cache/go-mod"\
+RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE} \
     RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
 
 
