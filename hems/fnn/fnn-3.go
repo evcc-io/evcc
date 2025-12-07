@@ -1,4 +1,4 @@
-package vnn
+package fnn
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type Vnn3 struct {
+type Fnn3 struct {
 	log        *util.Logger
 	root       api.Circuit
 	s1, s2, w3 func() (bool, error)
@@ -21,8 +21,8 @@ type Vnn3 struct {
 	interval   time.Duration
 }
 
-// NewFromConfig creates an Vnn3 HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Vnn3, error) {
+// NewFromConfig creates an Fnn3 HEMS from generic config
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn3, error) {
 	cc := struct {
 		MaxPower float64
 		S1       plugin.Config
@@ -44,7 +44,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*V
 	}
 
 	// register LPP circuit if not already registered
-	lpp, err := shared.GetOrCreateCircuit("lpp", "vnn-3")
+	lpp, err := shared.GetOrCreateCircuit("lpp", "fnn-3")
 	if err != nil {
 		return nil, err
 	}
@@ -71,13 +71,13 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*V
 		return nil, err
 	}
 
-	return NewVnn3(lpp, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
+	return NewFnn3(lpp, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
 }
 
-// NewVnn3 creates Vnn3 HEMS
-func NewVnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64, interval time.Duration) (*Vnn3, error) {
-	c := &Vnn3{
-		log:      util.NewLogger("vnn3"),
+// NewFnn3 creates Fnn3 HEMS
+func NewFnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64, interval time.Duration) (*Fnn3, error) {
+	c := &Fnn3{
+		log:      util.NewLogger("fnn3"),
 		root:     root,
 		maxPower: maxPower,
 		s1:       s1,
@@ -89,7 +89,7 @@ func NewVnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64
 	return c, nil
 }
 
-func (c *Vnn3) Run() {
+func (c *Fnn3) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
@@ -97,7 +97,7 @@ func (c *Vnn3) Run() {
 	}
 }
 
-func (c *Vnn3) run() error {
+func (c *Fnn3) run() error {
 	w3, err := c.w3()
 	if err != nil {
 		return err
