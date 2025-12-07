@@ -100,6 +100,23 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
     .forEach((p) => {
       values[p.Name] = p.Default;
     });
+
+  // Apply modbus defaults from template (for service dependency resolution)
+  const modbusParam = params.find((p) => p.Name === "modbus") as ModbusParam | undefined;
+  if (modbusParam) {
+    if (!values.id && modbusParam.ID) {
+      values.id = modbusParam.ID;
+    }
+    if (!values.port && modbusParam.Port) {
+      values.port = modbusParam.Port;
+    }
+    if (!values.comset && modbusParam.Comset) {
+      values.comset = modbusParam.Comset;
+    }
+    if (!values.baudrate && modbusParam.Baudrate) {
+      values.baudrate = modbusParam.Baudrate;
+    }
+  }
 }
 
 export function customChargerName(type: ConfigType, isHeating: boolean) {
