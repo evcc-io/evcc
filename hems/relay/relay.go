@@ -76,6 +76,10 @@ func NewRelay(root api.Circuit, limit func() (bool, error), maxPower float64, in
 	return c, nil
 }
 
+func (c *Relay) MaxPower() float64 {
+	return c.maxPower
+}
+
 func (c *Relay) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {

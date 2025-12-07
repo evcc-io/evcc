@@ -161,6 +161,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 	return c, nil
 }
 
+func (c *EEBus) MaxPower() float64 {
+	return c.consumptionLimit.Value
+}
+
 func (c *EEBus) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {

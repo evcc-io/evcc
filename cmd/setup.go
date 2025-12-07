@@ -712,8 +712,8 @@ func configureGo(conf []globalconfig.Go) error {
 
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
-	// migrate settings
-	if settings.Exists(keys.Hems) {
+	// use yaml if configured
+	if settings.Exists(keys.Hems) && conf.Type == "" {
 		*conf = globalconfig.Hems{}
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
