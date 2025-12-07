@@ -22,7 +22,7 @@ type loginResponse struct {
 }
 
 // jsonWrite writes a JSON response
-func jsonWrite(w http.ResponseWriter, data interface{}) {
+func jsonWrite(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
@@ -54,7 +54,7 @@ func (a *Handler) run(paramC chan<- util.Param) {
 		res := make(map[string]*AuthProvider)
 		for id, provider := range a.providers {
 			res[provider.DisplayName()] = &AuthProvider{
-				ID:            url.QueryEscape(id),
+				ID:            id,
 				Authenticated: provider.Authenticated(),
 			}
 		}
@@ -182,5 +182,5 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/#/config?callbackCompleted="+url.QueryEscape(id), http.StatusFound)
 }

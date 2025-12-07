@@ -148,6 +148,7 @@ type Loadpoint struct {
 	planTime         time.Time     // time goal
 	planPrecondition time.Duration // precondition duration
 	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
+	planEnergyOffset float64       // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time     // current plan slot end time
 	planActive       bool          // charge plan exists and has a currently active slot
 
@@ -179,7 +180,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -440,7 +441,7 @@ func (lp *Loadpoint) pushEvent(event string) {
 }
 
 // publish sends values to UI and databases
-func (lp *Loadpoint) publish(key string, val interface{}) {
+func (lp *Loadpoint) publish(key string, val any) {
 	// test helper
 	if lp.uiChan == nil {
 		return
@@ -514,6 +515,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// create charging session
 	lp.createSession()
+
+	// reset energy-based charging plan offset
+	lp.planEnergyOffset = 0
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -1079,6 +1083,8 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 		return false, err
 	}
 
+	var welcomeCharge bool
+
 	for _, status := range statusChanges {
 		prevStatus := lp.GetStatus()
 		lp.setStatus(status)
@@ -1087,8 +1093,15 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			lp.bus.Publish(ev)
 
 			// send connect/disconnect events except during startup
-			if prevStatus != api.StatusNone && (ev == evVehicleConnect || ev == evVehicleDisconnect) {
-				lp.pushEvent(ev)
+			if prevStatus != api.StatusNone {
+				switch ev {
+				case evVehicleConnect:
+					lp.pushEvent(evVehicleConnect)
+					welcomeCharge = lp.needsWelcomeCharge()
+				case evVehicleDisconnect:
+					lp.pushEvent(evVehicleDisconnect)
+					welcomeCharge = false
+				}
 			}
 		}
 	}
@@ -1096,7 +1109,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	// update whenever there is a state change
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 
-	return lp.needsWelcomeCharge(), nil
+	return welcomeCharge, nil
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
@@ -1111,8 +1124,9 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 	lp.log.DEBUG.Printf("charger status: %s", status)
 
 	// detect if charger status changed
-	if prevStatus := lp.GetStatus(); status != prevStatus {
-		res = append(res, status)
+	prevStatus := lp.GetStatus()
+	if status != prevStatus {
+		res = []api.ChargeStatus{status}
 	}
 
 	// check charger connection duration
@@ -1124,10 +1138,10 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 		defer func() { lp.connectedDuration = d }()
 
-		// connection duration dropped while status unchanged, indicates intermediate disconnect
-		if len(res) == 0 && d < lp.connectedDuration {
+		// connection duration dropped without disconnect status, indicates intermediate disconnect
+		if status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
 			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
-			res = append(res, api.StatusA, status)
+			res = []api.ChargeStatus{api.StatusA, status}
 		}
 	}
 
@@ -1136,10 +1150,6 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 // needsWelcomeCharge checks if either the charger or a vehicle requires a welcome charge
 func (lp *Loadpoint) needsWelcomeCharge() bool {
-	if !lp.connected() {
-		return false
-	}
-
 	if lp.chargerHasFeature(api.WelcomeCharge) || hasFeature(lp.defaultVehicle, api.WelcomeCharge) {
 		return true
 	}
@@ -1368,10 +1378,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 		timer = lp.phaseTimer
 	}
 
-	remaining := delay - lp.clock.Since(timer)
-	if remaining < 0 {
-		remaining = 0
-	}
+	remaining := max(delay-lp.clock.Since(timer), 0)
 
 	lp.publish(name+"Action", action)
 	lp.publish(name+"Remaining", remaining)
@@ -1739,7 +1746,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
-	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleHasFeature(api.Streaming) || lp.vehicleSocPollAllowed() {
+	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := socEstimator.Soc(lp.GetChargedEnergy())

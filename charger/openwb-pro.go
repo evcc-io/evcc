@@ -29,7 +29,7 @@ type OpenWBPro struct {
 }
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
-func NewOpenWBProFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOpenWBProFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration

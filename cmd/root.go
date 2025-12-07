@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/mcp"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -157,7 +158,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+	// configure plugin external url
+	if err == nil {
+		// network configuration complete, start dependent services like HomeAssistant discovery
+		network.Start(conf.Network)
+	}
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -172,6 +177,21 @@ func runRoot(cmd *cobra.Command, args []string) {
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
 
+	// start serving in background, watch for “routine‐only” errors
+	go func() {
+		if err := wrapFatalError(httpd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
+			log.FATAL.Println(err)
+			os.Exit(1)
+		}
+	}()
+	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+
+	// publish to UI
+	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
+
+	// signal ui listening
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
+
 	// metrics
 	if viper.GetBool("metrics") {
 		httpd.Router().Handle("/metrics", promhttp.Handler())
@@ -181,9 +201,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if viper.GetBool("profile") {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
-
-	// publish to UI
-	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
@@ -236,8 +253,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// signal restart
-	valueChan <- util.Param{Key: keys.Startup, Val: true}
+	// signal devices initialized
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
+	// show onboarding UI
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || len(site.Loadpoints()) == 0}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
@@ -249,13 +268,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// announce on mDNS
-	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
-		err = configureMDNS(conf.Network)
+	if err == nil {
+		if err := configureMDNS(conf.Network); err != nil {
+			log.WARN.Println("mDNS:", err)
+		}
 	}
 
 	// start SHM server
 	if err == nil {
-		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, conf.Network.ExternalURL(), site, httpd))
 	}
 
 	// start HEMS server
@@ -308,19 +329,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		<-signalC                        // wait for signal
 		once.Do(func() { close(stopC) }) // signal loop to end
-	}()
-
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		// exit code 1 on error
-		os.Exit(cast.ToInt(err != nil))
 	}()
 
 	// allow web access for vehicles
@@ -383,5 +391,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
+	// wait for shutdown
+	<-stopC
+
+	select {
+	case <-shutdownDoneC(): // wait for shutdown
+	case <-time.After(conf.Interval):
+	}
+
+	// exit code 1 on error
+	os.Exit(cast.ToInt(err != nil))
 }

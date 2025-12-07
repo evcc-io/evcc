@@ -46,6 +46,7 @@ function updateTheme() {
   if ($html) {
     $html.classList.add("no-transitions");
     $html.classList.toggle("dark", theme === THEME.DARK);
+    $html.setAttribute("data-bs-theme", theme!);
     window.setTimeout(function () {
       $html.classList.remove("no-transitions");
     }, 100);

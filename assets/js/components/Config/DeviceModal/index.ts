@@ -1,6 +1,7 @@
-import type { DeviceType, MeterTemplateUsage } from "@/types/evcc";
+import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
-import api from "@/api";
+import api, { baseApi } from "@/api";
+import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 export type Product = {
   group: string;
@@ -10,6 +11,10 @@ export type Product = {
 
 export type Template = {
   Params: TemplateParam[];
+  Auth?: {
+    type: string;
+    params?: string[];
+  };
   Requirements: {
     Description: string;
   };
@@ -24,14 +29,21 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
+  Service?: string;
   Usages?: TemplateParamUsage[];
+};
+
+export type ParamService = {
+  name: string;
+  dependencies: string[];
+  url: (values: Record<string, any>) => string;
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
 
 export type ModbusParam = TemplateParam & {
   ID?: string;
-  Comset?: string;
+  Comset?: MODBUS_COMSET;
   Baudrate?: number;
   Port?: number;
 };
@@ -58,6 +70,17 @@ export type ApiData = {
   title?: string;
   identifiers?: string[];
   [key: string]: any;
+};
+
+export type AuthCheckResponse = {
+  success: boolean;
+  error?: string;
+  authId?: string;
+};
+
+export type ProviderLoginResponse = {
+  loginUri?: string;
+  error?: string;
 };
 
 export function handleError(e: any, msg: string) {
@@ -90,6 +113,72 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
   }
   return `${prefix}${type}`;
 }
+
+export async function loadServiceValues(path: string) {
+  try {
+    const response = await api.get(`/config/service/${path}`, {
+      validateStatus: (status) => status >= 200 && status < 500,
+    });
+    return (response.data as string[]) || [];
+  } catch {
+    return [];
+  }
+}
+
+export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
+  return params
+    .map((param) => {
+      if (!param.Service) {
+        return null;
+      }
+      const stringValues = (values: Record<string, any>): Record<string, string> =>
+        Object.entries(values).reduce(
+          (acc, [key, val]) => {
+            if (val !== undefined && val !== null) acc[key] = String(val);
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+      return {
+        name: param.Name,
+        dependencies: extractPlaceholders(param.Service),
+        url: (values: Record<string, any>) =>
+          replacePlaceholders(param.Service!, stringValues(values)),
+      } as ParamService;
+    })
+    .filter((endpoint): endpoint is ParamService => endpoint !== null);
+};
+
+export const fetchServiceValues = async (
+  templateParams: TemplateParam[],
+  values: DeviceValues
+): Promise<Record<string, string[]>> => {
+  const endpoints = createServiceEndpoints(templateParams);
+  const result: Record<string, string[]> = {};
+
+  await Promise.all(
+    endpoints.map(async (endpoint) => {
+      const params: Record<string, any> = {};
+      endpoint.dependencies.forEach((dependency) => {
+        if (values[dependency]) {
+          params[dependency] = values[dependency];
+        }
+      });
+      if (Object.keys(params).length !== endpoint.dependencies.length) {
+        // missing dependency values, skip
+        return;
+      }
+      const url = endpoint.url(params);
+      const data = await loadServiceValues(url);
+      if (data) {
+        result[endpoint.name] = data;
+      }
+    })
+  );
+
+  return result;
+};
 
 export function createDeviceUtils(deviceType: DeviceType) {
   function test(id: number | undefined, data: any) {
@@ -142,6 +231,42 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
+  async function checkAuth(type: string, values: Record<string, any>): Promise<AuthCheckResponse> {
+    const params = { type, ...values };
+    try {
+      const { status, data = {} } = await api.post(`config/auth`, params, {
+        validateStatus: (status) => [204, 400].includes(status),
+      });
+      // already set up
+      if (status === 204) {
+        return { success: true };
+      }
+      // auth error, user has to perform login
+      if (status === 400) {
+        return { success: false, error: data?.error, authId: data?.loginRequired };
+      }
+    } catch (error) {
+      return { success: false, error: (error as any).message };
+    }
+    return { success: false, error: "unexpected error" };
+  }
+
+  async function getAuthProviderUrl(authId: string): Promise<string> {
+    try {
+      const url = `providerauth/login?id=${encodeURIComponent(authId)}`;
+      const { status, data = {} } = await baseApi.get(url, {
+        validateStatus: (code) => [200, 400].includes(code),
+      });
+      //return "https://test.example.org/auth";
+      if (status === 200) {
+        return data?.loginUri;
+      }
+      throw new Error(data?.error ?? "unknown error");
+    } catch (error) {
+      throw new Error((error as Error).message ?? "unknown error");
+    }
+  }
+
   return {
     test,
     update,
@@ -150,5 +275,8 @@ export function createDeviceUtils(deviceType: DeviceType) {
     create,
     loadProducts,
     loadTemplate,
+    loadServiceValues,
+    checkAuth,
+    getAuthProviderUrl,
   };
 }

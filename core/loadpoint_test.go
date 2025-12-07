@@ -514,7 +514,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 }
 
 // cacheExpecter can be used to verify asynchronously written values from cache
-func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.ParamCache, func(key string, val interface{})) {
+func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.ParamCache, func(key string, val any)) {
 	t.Helper()
 
 	// attach cache for verifying values
@@ -524,7 +524,7 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.ParamCache, func(key stri
 	cache := util.NewParamCache()
 	go cache.Run(paramC)
 
-	expect := func(key string, val interface{}) {
+	expect := func(key string, val any) {
 		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
 
 		p := cache.Get(key)
@@ -778,7 +778,7 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 		ch, ct,
 	}
 
-	ch.EXPECT().Status().Return(api.StatusC, nil)
+	ch.EXPECT().Status().Return(api.StatusB, nil)
 	ch.EXPECT().Enabled().AnyTimes().Return(true, nil)
 	ch.EXPECT().MaxCurrent(int64(minA)).Return(nil)
 
@@ -809,4 +809,57 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 	ctrl.Finish()
 
 	assert.NotEqual(t, connectedTime, lp.connectedTime)
+}
+
+func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	ch := api.NewMockCharger(ctrl)
+	fd := api.NewMockFeatureDescriber(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.FeatureDescriber
+	}{
+		ch, fd,
+	}
+
+	ch.EXPECT().Enabled().AnyTimes().Return(true, nil)
+	ch.EXPECT().MaxCurrent(int64(minA)).Return(nil)
+	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{
+		api.WelcomeCharge,
+	})
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		chargeMeter: &Null{},    // silence nil panics
+		chargeRater: &Null{},    // silence nil panics
+		chargeTimer: &Null{},    // silence nil panics
+		wakeUpTimer: NewTimer(), // silence nil panics
+	}
+
+	attachListeners(t, lp)
+
+	lp.enabled = true
+	lp.status = api.StatusA
+
+	// No welcome charge when not connected
+	ch.EXPECT().Status().Return(api.StatusA, nil)
+	welcomeCharge, _ := lp.updateChargerStatus()
+	assert.False(t, welcomeCharge)
+
+	// Welcome charge when connected
+	ch.EXPECT().Status().Return(api.StatusC, nil)
+	welcomeCharge, _ = lp.updateChargerStatus()
+	assert.True(t, welcomeCharge)
+
+	// No welcome charge when still connected
+	ch.EXPECT().Status().Return(api.StatusB, nil)
+	welcomeCharge, _ = lp.updateChargerStatus()
+	assert.False(t, welcomeCharge)
 }

@@ -59,7 +59,7 @@ func FuncMap(tmpl *template.Template) *template.Template {
 	funcMap := template.FuncMap{
 		// include function
 		// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
-		"include": func(name string, data interface{}) (string, error) {
+		"include": func(name string, data any) (string, error) {
 			buf := bytes.NewBuffer(nil)
 			if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
 				return "", err

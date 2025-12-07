@@ -58,8 +58,9 @@
           "heating": "Itse määritelty lämmitin"
         },
         "heatpump": "Itse määritelty lämpöpumppu",
-        "sgready": "Itse määritelty lämpöpumppu (älyverkkovalmius, kaikki)",
-        "sgready-boost": "Itse määritelty lämpöpumppu (älyverkkovalmius, tehostus)",
+        "sgready": "Itse määritelty lämpöpumppu (sg-ready pluginien kautta)",
+        "sgready-boost": "Itse määritelty lämpöpumppu (älyverkkovalmius, tehostus) (poistuva)",
+        "sgready-relay": "Itse määritelty lämpöpumppu (sg-ready releiden kautta)",
         "switchsocket": "Itse määritelty relepistorasia"
       }
     },
@@ -94,6 +95,7 @@
       "currency": "Valuutta",
       "current": "Virta",
       "currentRange": "Virta",
+      "dimmed": "Himmennetty",
       "enabled": "Käytössä",
       "energy": "Energia",
       "feedinPrice": "Sähköverkkoon myynninhinta",
@@ -156,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Ota käyttöön ja sulje",
+      "authPerform": "Yhdistä {provider}:lla",
+      "authPerformHint": "Avaa uuden välilehden. Palaa tänne jatkaaksesi.",
+      "authPrepare": "Valmistele yhteys",
       "cancel": "Peruuta",
+      "clear": "Tyhjennä",
       "close": "Sulje",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
       "customOption": "Itsemääritelty laite",
@@ -185,6 +191,7 @@
       "telemetry": "Telemetria",
       "templateLoading": "Ladataan...",
       "title": "Otsikko",
+      "typeDeprecated": "Laitetyypin '{type}' tuki on vanhentunut ohjelmistossa ja tuki tullaan poistamaan/muuttamaan tulevissa versioissa. Tarkista ohjelmiston muutoslokista tarkemmat tiedot ja määritä laite uudelleen uutena.",
       "validateSave": "Vahvista ja tallenna"
     },
     "grid": {
@@ -385,7 +392,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Salli useiden asiakkaiden käyttää yhtä Modbus-laitetta.",
+      "add": "Lisää välityspalvelimellinen (proxy) yhteys",
+      "connection": "Yhteys #{number}",
+      "description": "Jotkut Modbus-laitteet tukevat vain yhtä tai muutamaa yhteyttä. evcc voi toimia välityspalvelimena (proxy), mahdollistaen useiden samanaikaisten modbus-asiakkaiden käytön (kotiautomaatio, skriptit, jne).",
+      "device": "Laite",
+      "option": {
+        "deny": "virhe",
+        "false": "ei",
+        "true": "hiljainen"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Tallennuspyyntö estetään palauttaen Modbus-virheen.",
+          "false": "Tallennuspyyntö välitetään eteenpäin.",
+          "true": "Tallennusoikeus estetty ilman vastausta pyytäjälle."
+        },
+        "label": "Vain luku"
+      },
+      "sourcePortHelp": "Porttinumero sisäänsaapuville yhteyksellä. Täytyy olla vapaana.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -407,10 +431,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Ota mDNS käyttöön käyttämällä .local-liitettä. Olennaista mobiilisovelluksen ja joidenkin OCPP-laturien löytämisen kannalta.",
+      "descriptionExternalUrl": "Osoite muille evcc:hen yhteyttä pitäville laitteille sekä evcc-sovelluksen etsintäominaisuudelle.",
+      "descriptionHost": "Käytetään ilmoittamaan evcc:sta lähiverkkoosi.",
+      "descriptionInternalUrl": "evcc:n lähiverkko-osoite.",
       "descriptionPort": "Portti verkkokäyttöliittymälle ja API:lle. Sinun on päivitettävä selaimesi URL-osoite, jos muutat tätä.",
       "descriptionSchema": "Vaikuttaa vain URL-osoitteiden luomiseen. HTTPS:n valitseminen ei ota salausta käyttöön.",
-      "labelHost": "Isäntänimi",
+      "labelExternalUrl": "Ulkoinen URL",
+      "labelHost": "mDNS-isäntänimi",
+      "labelInternalUrl": "Sisäinen URL",
       "labelPort": "Portti",
       "labelSchema": "Kaavio",
       "title": "Verkko"
@@ -475,6 +503,7 @@
       "labelToken": "Sponsoritunnus",
       "title": "Sponsorointi",
       "tokenRequired": "Sinun on määritettävä sponsoritunnus ennen kuin voit luoda tämän laitteen.",
+      "tokenRequiredFeature": "Tämä ominaisuus vaatii sponsorointi tokenin.",
       "tokenRequiredLearnMore": "Lisätietoja.",
       "tokenRequiredShort": "Sponsorointi-tokenia ei ole määritelty.",
       "trialToken": "kokeilutunnus",
@@ -484,14 +513,14 @@
     "system": {
       "backupRestore": {
         "backup": {
-          "action": "Ladataan varmuuskopiota...",
+          "action": "Lataa varmuuskopiotiedosto...",
           "confirmationButton": "Lataa varmuuskopio",
-          "confirmationText": "Syötä salasanasi ladataksesi tietokantatiedoston.",
+          "confirmationText": "Lataa tietokantatiedosto.",
           "description": "Varmuuskopioi tietosi. Tätä tiedostoa voidaan käyttää palauttamaan tietosi järjestelmävirheen jälkeen.",
           "title": "Varmuuskopio"
         },
         "cancel": "Peruuta",
-        "description": "Varmuuskopioi, palauta ja nollaa tietosi. Hyödyllinen jos haluat siirtää tietosi toiseen järjestelmään.",
+        "description": "Varmuuskopioi, palauta ja nollaa tietosi. Toiminnoista on hyötyä, jos haluat siirtää tietosi toiseen järjestelmään.",
         "note": "Huomioi: Kaikki ylläolevat toiminnut vaikuttavat vain tietokannassa oleviin tietoihin. evcc.yaml-tiedoston määrittelyt pysyvät muuttumattomina.",
         "reset": {
           "action": "Nollaa...",
@@ -670,6 +699,7 @@
     "authProviders": {
       "confirmLogout": "Oletko varma, että haluat poistaa yhteyden {title}?",
       "loggedOut": "Kirjauduttu ulos onnistuneesti",
+      "success": "{title}-tunnistautuminen onnistui. Voit sulkea tämän välilehden.",
       "title": "Autentikointivaltuutuksen tila"
     },
     "blog": "Blogi",
@@ -999,7 +1029,8 @@
     "message": "Ei yhteyttä palvelimeen.",
     "restart": "Käynnistä uudelleen",
     "restartNeeded": "Tarvitaan muutosten käyttöönottamiseksi.",
-    "restarting": "Palvelin tulee takaisin hetken kuluttua."
+    "restarting": "Palvelin tulee takaisin hetken kuluttua.",
+    "starting": "Käynnistetään palvelinta..."
   },
   "passwordModal": {
     "description": "Aseta salasana suojellaksesi määritys asetuksia. Pääikkunan käyttö on silti mahdollista ilman kirjautumista.",
@@ -1165,6 +1196,7 @@
     "cleanTitle": "Viheränenergian lataminen verkosta",
     "co2Label": "CO₂ päästö",
     "co2Limit": "CO₂ raja",
+    "enable": "Kytke rajoitus",
     "loadpointDescription": "Mahdollistaa nopean lataamisen väliaikaisesti aurinkosähkötilassa (PV).",
     "modalTitle": "Älykäs lataus verkosta",
     "none": "ei mitään",
@@ -1187,6 +1219,7 @@
     "configuration": "Määritys",
     "description": "Tarkasta asetustiedosto. Jos virheilmoituksesta ei ole apua, katso {0}.",
     "discussions": "GitHub keskustelut",
+    "editConfiguration": "Muokkaa asetuksia",
     "fixAndRestart": "Korjaa ongelma ja käynnistä serveri uudelleen.",
     "hint": "Huomaa: Se saattaa olla sinun viallinen laitteesi (invertteri, mittari, …). Tarkista myös internetyhteytesi.",
     "lineError": "Virhe {0}.",

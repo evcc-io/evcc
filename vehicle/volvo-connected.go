@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
 )
@@ -22,7 +21,7 @@ func init() {
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		VIN         string
@@ -52,8 +51,8 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, cc.VccApiKey)
 
-	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ts, err := auth.NewOauth(ctx, "Volvo", cc.embed.GetTitle(), oc)
+	oc := connected.OAuthConfig(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
+	ts, err := connected.NewOAuth(oc, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}
@@ -65,5 +64,5 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
 	}
 
-	return v, err
+	return v, nil
 }

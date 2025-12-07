@@ -85,7 +85,7 @@ export default defineComponent({
 	computed: {
 		endDate() {
 			const end = new Date(this.startDate);
-			end.setHours(end.getHours() + 48);
+			end.setHours(end.getHours() + 96);
 			return end;
 		},
 		solarEntries() {
@@ -163,7 +163,7 @@ export default defineComponent({
 					order: active ? 0 : 1,
 				});
 			}
-			if (this.gridSlots.length > 0) {
+			if (this.gridSlots && this.gridSlots.length > 0) {
 				const active = this.selected === ForecastType.Price;
 				const color = active ? colors.price : colors.border;
 				datasets.push({
@@ -184,7 +184,7 @@ export default defineComponent({
 					order: active ? 0 : 1,
 				});
 			}
-			if (this.co2Slots.length > 0) {
+			if (this.co2Slots && this.co2Slots.length > 0) {
 				const active = this.selected === ForecastType.Co2;
 				const color = active ? colors.co2 : colors.border;
 				datasets.push({
@@ -427,6 +427,10 @@ export default defineComponent({
 			this.startDate = now;
 		},
 		filterSlots(slots: ForecastSlot[] = []) {
+			if (!slots) {
+				return undefined;
+			}
+
 			return slots.filter(
 				(slot) =>
 					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate

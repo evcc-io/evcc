@@ -24,6 +24,7 @@
 			</div>
 		</div>
 		<LoadpointSettingsModal
+			:id="id"
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
@@ -133,7 +134,7 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: String,
+		id: { type: String, required: true },
 		single: Boolean,
 
 		// main
@@ -224,6 +225,8 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {

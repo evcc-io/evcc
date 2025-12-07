@@ -62,6 +62,11 @@ func (t *Template) Validate() error {
 			continue
 		}
 
+		// Validate that a param cannot be both masked and private
+		if p.Mask && p.Private {
+			return fmt.Errorf("param %s: 'mask' and 'private' cannot be used together. Use 'mask' for sensitive data like passwords/tokens that should be hidden in UI. Use 'private' for personal data like emails/locations that should only be redacted from bug reports", p.Name)
+		}
+
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
 		}
@@ -175,8 +180,8 @@ func (t *Template) GroupTitle(lang string) string {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(renderMode int) map[string]interface{} {
-	values := make(map[string]interface{})
+func (t *Template) Defaults(renderMode int) map[string]any {
+	values := make(map[string]any)
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -226,7 +231,7 @@ func (t *Template) ModbusChoices() []string {
 var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
-func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
+func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
@@ -276,7 +281,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	t.Params = newParams
 
 	out := new(bytes.Buffer)
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Template": t.Template,
 		"Params":   t.Params,
 	}
@@ -294,7 +299,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 	t.ModbusValues(renderMode, values)
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 
 	// TODO this is an utterly horrible hack
 	//
@@ -306,7 +311,8 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 	// The actual key name is taken from the parameter to make it unique.
 	// Since predefined properties are not matched by actual parameters using
 	// ParamByName(), the lower case key name is used instead.
-	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
+	// All keys *must* be assigned or rendering will create "<no value>" artifacts. For this reason,
+	// deprecated parameters (that may still be rendered) must be evaluated, too.
 
 	for key, val := range values {
 		out := strings.ToLower(key)
@@ -316,8 +322,6 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
-		} else if p.IsDeprecated() {
-			continue
 		} else {
 			out = p.Name
 		}
@@ -325,12 +329,12 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		// TODO move yamlQuote to explicit quoting in templates, see https://github.com/evcc-io/evcc/issues/10742
 
 		switch typed := val.(type) {
-		case []interface{}:
+		case []any:
 			var list []string
 			for _, v := range typed {
 				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+			if res[out] == nil || len(res[out].([]any)) == 0 {
 				res[out] = list
 			}
 

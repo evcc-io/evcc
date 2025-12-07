@@ -3,6 +3,8 @@ package loginapps
 import (
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -52,17 +54,34 @@ func (v *Service) Exchange(q url.Values) (*Token, error) {
 }
 
 func (v *Service) Refresh(token *Token) (*Token, error) {
-	req, err := request.New(http.MethodGet, Endpoint.TokenURL, nil, map[string]string{
-		"Accept":        "application/json",
-		"Authorization": "Bearer " + token.RefreshToken,
-	})
+	body := url.Values{
+		"grant_type":    []string{"refresh_token"},
+		"refresh_token": []string{token.RefreshToken},
+		"client_id":     []string{cariad.ClientID},
+	}
 
-	var res Token
+	req, err := request.New(
+		http.MethodPost,
+		cariad.BaseURL+"/login/v1/idk/token",
+		strings.NewReader(body.Encode()),
+		request.URLEncoding,
+		map[string]string{
+			"Connection":             "keep-alive",
+			"User-Agent":             cariad.UserAgent,
+			"Accept":                 "application/json",
+			"x-android-package-name": cariad.AndroidPackageName,
+		},
+	)
+
+	var res oauth2.Token
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
-	return &res, err
+	res.Expiry = time.Now().Add(time.Duration(res.ExpiresIn) * time.Second)
+
+	t := Token(res)
+	return &t, err
 }
 
 // RefreshToken implements oauth.TokenRefresher

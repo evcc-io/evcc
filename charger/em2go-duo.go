@@ -59,7 +59,7 @@ func init() {
 }
 
 // NewEm2GoDuoFromConfig creates a Em2GoDuo charger from generic config
-func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int

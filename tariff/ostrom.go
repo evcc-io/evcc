@@ -57,7 +57,7 @@ func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, 
 	return zero, errors.New("cannot find contract")
 }
 
-func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		ClientId     string
 		ClientSecret string

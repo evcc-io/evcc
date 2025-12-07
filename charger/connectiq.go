@@ -43,7 +43,7 @@ func init() {
 }
 
 // NewConnectIqFromConfig creates a ConnectIq charger from generic config
-func NewConnectIqFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewConnectIqFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration

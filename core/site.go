@@ -136,7 +136,7 @@ type MetersConfig struct {
 }
 
 // NewSiteFromConfig creates a new site
-func NewSiteFromConfig(other map[string]interface{}) (*Site, error) {
+func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site := NewSite()
 
 	// TODO remove
@@ -483,7 +483,7 @@ func (site *Site) DumpConfig() {
 }
 
 // publish sends values to UI and databases
-func (site *Site) publish(key string, val interface{}) {
+func (site *Site) publish(key string, val any) {
 	// test helper
 	if site.uiChan == nil {
 		return
@@ -940,6 +940,10 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+
+		if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+			site.log.ERROR.Println(err)
+		}
 	}
 
 	// prioritize if possible

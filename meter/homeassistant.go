@@ -1,6 +1,6 @@
 package meter
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
 
 import (
 	"errors"
@@ -22,16 +22,30 @@ func init() {
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
-func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
-		Token    string
+		Token_   string `mapstructure:"token"` // TODO deprecated
+		Home     string // TODO deprecated
 		Power    string
 		Energy   string
 		Currents []string
 		Voltages []string
 		Soc      string
-	}{}
+
+		// pv
+		pvMaxACPower `mapstructure:",squash"`
+
+		// battery
+		batteryCapacity    `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+	}{
+		batterySocLimits: batterySocLimits{
+			MinSoc: 20,
+			MaxSoc: 95,
+		},
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -42,7 +56,8 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 	}
 
 	log := util.NewLogger("ha-meter")
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Token)
+
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
 	if err != nil {
 		return nil, err
 	}
@@ -61,28 +76,29 @@ func NewHomeAssistantFromConfig(other map[string]interface{}) (api.Meter, error)
 		energy = func() (float64, error) { return conn.GetFloatState(cc.Energy) }
 	}
 
-	if len(cc.Currents) > 0 {
-		phases, err := homeassistant.ValidatePhaseEntities(cc.Currents)
-		if err != nil {
-			return nil, fmt.Errorf("currents: %w", err)
-		}
+	// phase currents (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); len(phases) > 0 {
 		currents = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
+	} else if err != nil {
+		return nil, fmt.Errorf("currents: %w", err)
 	}
 
-	// Set up phase voltages (optional)
-	if len(cc.Voltages) > 0 {
-		phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages)
-		if err != nil {
-			return nil, fmt.Errorf("voltages: %w", err)
-		}
+	// phase voltages (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); len(phases) > 0 {
 		voltages = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
+	} else if err != nil {
+		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
 	if cc.Soc != "" {
 		soc = func() (float64, error) { return conn.GetFloatState(cc.Soc) }
 	}
 
-	return decorateHomeAssistant(m, energy, currents, voltages, soc), nil
+	return decorateHomeAssistant(m,
+		energy, currents, voltages, soc,
+		cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
+		cc.pvMaxACPower.Decorator(),
+	), nil
 }
 
 var _ api.Meter = (*HomeAssistant)(nil)
