@@ -24,8 +24,8 @@ type gpio struct {
 // NewGpioPluginFromConfig creates a GPIO provider
 func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Type GpioType
-		Pin  int
+		Function GpioType
+		Pin      int
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -33,7 +33,7 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	}
 
 	p := &gpio{
-		typ: cc.Type,
+		typ: cc.Function,
 		pin: rpio.Pin(cc.Pin),
 	}
 
@@ -43,13 +43,13 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	}
 	defer rpio.Close()
 
-	switch cc.Type {
+	switch cc.Function {
 	case GpioTypeRead:
 		p.pin.Input()
 	case GpioTypeWrite:
 		p.pin.Output()
 	default:
-		return nil, fmt.Errorf("invalid type: %s", cc.Type)
+		return nil, fmt.Errorf("invalid type: %s", cc.Function)
 	}
 
 	return p, nil
