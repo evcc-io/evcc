@@ -7,7 +7,8 @@ WORKDIR /build
 
 # install node tools
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # build ui
 COPY Makefile .
