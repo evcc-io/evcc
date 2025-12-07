@@ -79,6 +79,11 @@ var conf = globalconfig.All{
 	},
 }
 
+var fromYaml struct {
+	sponsor bool
+	hems    bool
+}
+
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
 
 func nameValid(name string) error {
@@ -492,7 +497,8 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-		sponsor.SetFromYaml(false) // from database
+	} else {
+		fromYaml.sponsor = true
 	}
 
 	// TODO migrate settings
@@ -718,6 +724,8 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
 		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
 		}
+	} else {
+		fromYaml.hems = true
 	}
 
 	if conf.Type == "" {
