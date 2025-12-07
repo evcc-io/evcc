@@ -7,8 +7,7 @@ WORKDIR /build
 
 # install node tools
 COPY package*.json ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui
 COPY Makefile .
@@ -52,7 +51,7 @@ RUN --mount=type=cache,target=${GOMODCACHE} make install
 # prepare
 COPY . .
 RUN make patch-asn1
-RUN make assets
+RUN --mount=type=cache,target=${GOMODCACHE} make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist
