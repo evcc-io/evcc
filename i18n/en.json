@@ -697,6 +697,7 @@
     "authProviders": {
       "confirmLogout": "Are you sure you want to disconnect {title}?",
       "loggedOut": "Successfully logged out",
+      "success": "Authorization with {title} was successful. You can now close this tab.",
       "title": "Authorization Status"
     },
     "blog": "Blog",

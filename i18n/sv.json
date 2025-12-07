@@ -700,6 +700,7 @@
     "authProviders": {
       "confirmLogout": "Är du säker på att du vill bryta anslutningen {title}?",
       "loggedOut": "Du har loggats ut",
+      "success": "Auktorisering av {title} lyckades. Du kan nu stänga denna flik.",
       "title": "Auktoriseringsstatus"
     },
     "blog": "Blogg",
