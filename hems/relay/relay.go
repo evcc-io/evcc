@@ -74,11 +74,12 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 // NewRelay creates Relay HEMS
 func NewRelay(root api.Circuit, limit func() (bool, error), passthrough func(bool) error, maxPower float64, interval time.Duration) (*Relay, error) {
 	c := &Relay{
-		log:      util.NewLogger("relay"),
-		root:     root,
-		maxPower: maxPower,
-		limit:    limit,
-		interval: interval,
+		log:         util.NewLogger("relay"),
+		root:        root,
+		passthrough: passthrough,
+		maxPower:    maxPower,
+		limit:       limit,
+		interval:    interval,
 	}
 
 	return c, nil
