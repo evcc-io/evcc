@@ -162,6 +162,7 @@
       "authPerformHint": "Åbnes i en ny fane. Kom tilbage hertil for at fortsætte.",
       "authPrepare": "Forbereder forbindelse",
       "cancel": "Afbryd",
+      "clear": "Slet",
       "close": "Luk",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
@@ -699,6 +700,7 @@
     "authProviders": {
       "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
       "loggedOut": "Du er nu logget ud",
+      "success": "Godkendelse med {title} lykkedes. Du kan nu lukke fanen.",
       "title": "Autorisation status"
     },
     "blog": "Blog",
