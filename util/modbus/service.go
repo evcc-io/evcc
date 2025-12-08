@@ -43,7 +43,6 @@ type ParamValue struct {
 func getParams(w http.ResponseWriter, req *http.Request) {
 	// Extract query parameters
 	templateName := req.URL.Query().Get("template")
-	usage := req.URL.Query().Get("usage")
 	uri := req.URL.Query().Get("uri")
 	host := req.URL.Query().Get("host")
 	port := req.URL.Query().Get("port")
@@ -94,21 +93,6 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 
 	// Iterate over template parameters and read those with register configuration
 	for _, param := range tmpl.Params {
-		// Skip parameters that don't match the requested usage (if specified)
-		// This allows filtering battery vs. pv parameters for all-in-one templates
-		if usage != "" && len(param.Usages) > 0 {
-			found := false
-			for _, u := range param.Usages {
-				if u == usage {
-					found = true
-					break
-				}
-			}
-			if !found {
-				continue
-			}
-		}
-
 		// Check if parameter has register configuration in properties
 		if param.Properties == nil {
 			continue
