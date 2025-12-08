@@ -729,11 +729,11 @@ export default defineComponent({
 			}, 500);
 		},
 		applyServiceDefault(paramName: string) {
-			// Auto-apply single service value when field is empty
-			// Apply for both required AND optional fields with service values
+			// Auto-apply single service value when field is empty and required
 			const values = this.serviceValues[paramName];
-			// Only auto-apply if exactly one value is returned and field is empty
-			if (values?.length === 1 && !this.values[paramName]) {
+			const param = this.templateParams.find((p) => p.Name === paramName);
+			// Only auto-apply if exactly one value is returned, field is empty, and field is required
+			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
 				this.values[paramName] = values[0];
 			}
 		},
