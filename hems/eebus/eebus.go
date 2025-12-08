@@ -30,7 +30,7 @@ type EEBus struct {
 	root        api.Circuit
 	passthrough func(bool) error
 
-	gridSessionID uint
+	smartgridID   uint
 	status        status
 	statusUpdated time.Time
 
@@ -254,7 +254,7 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 // TODO keep in sync across HEMS implementations
 func (c *EEBus) updateSession(limit float64) error {
 	// start session
-	if limit > 0 && c.gridSessionID == 0 {
+	if limit > 0 && c.smartgridID == 0 {
 		var power *float64
 		if p := c.root.GetChargePower(); p > 0 {
 			power = lo.ToPtr(p)
@@ -265,16 +265,16 @@ func (c *EEBus) updateSession(limit float64) error {
 			return err
 		}
 
-		c.gridSessionID = sid
+		c.smartgridID = sid
 	}
 
 	// stop session
-	if limit == 0 && c.gridSessionID != 0 {
-		if err := smartgrid.StopManage(c.gridSessionID); err != nil {
+	if limit == 0 && c.smartgridID != 0 {
+		if err := smartgrid.StopManage(c.smartgridID); err != nil {
 			return err
 		}
 
-		c.gridSessionID = 0
+		c.smartgridID = 0
 	}
 
 	return nil

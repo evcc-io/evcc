@@ -22,11 +22,10 @@ type Relay struct {
 	root        api.Circuit
 	passthrough func(bool) error
 
-	gridSessionID uint
-
-	limit    func() (bool, error)
-	maxPower float64
-	interval time.Duration
+	smartgridID uint
+	limit       func() (bool, error)
+	maxPower    float64
+	interval    time.Duration
 }
 
 // NewFromConfig creates an Relay HEMS from generic config
@@ -123,7 +122,7 @@ func (c *Relay) run() error {
 // TODO keep in sync across HEMS implementations
 func (c *Relay) updateSession(limit float64) error {
 	// start session
-	if limit > 0 && c.gridSessionID == 0 {
+	if limit > 0 && c.smartgridID == 0 {
 		var power *float64
 		if p := c.root.GetChargePower(); p > 0 {
 			power = lo.ToPtr(p)
@@ -134,16 +133,16 @@ func (c *Relay) updateSession(limit float64) error {
 			return err
 		}
 
-		c.gridSessionID = sid
+		c.smartgridID = sid
 	}
 
 	// stop session
-	if limit == 0 && c.gridSessionID != 0 {
-		if err := smartgrid.StopManage(c.gridSessionID); err != nil {
+	if limit == 0 && c.smartgridID != 0 {
+		if err := smartgrid.StopManage(c.smartgridID); err != nil {
 			return err
 		}
 
-		c.gridSessionID = 0
+		c.smartgridID = 0
 	}
 
 	return nil
