@@ -9,7 +9,7 @@
 			data-testid="topnavigation-button"
 		>
 			<span
-				v-if="showConfigBadge"
+				v-if="showRootBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
 				:class="badgeClass"
 			>
@@ -80,6 +80,25 @@
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
+			<template v-if="authorizationRequired">
+				<li>
+					<h6 class="dropdown-header">{{ $t("authProviders.authorizationRequired") }}</h6>
+				</li>
+				<li v-for="provider in providers" :key="provider.id">
+					<button
+						type="button"
+						class="dropdown-item"
+						@click="handleAuthRequired(provider)"
+					>
+						<span
+							class="d-inline-block p-1 rounded-circle border border-light"
+							:class="'bg-warning'"
+						></span>
+						{{ provider.title }}
+					</button>
+				</li>
+				<li><hr class="dropdown-divider" /></li>
+			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
 					<span>{{ $t("header.needHelp") }}</span>
@@ -121,6 +140,7 @@ import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { Provider } from "./types";
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -133,6 +153,7 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
+	emits: ["auth-required"],
 	data() {
 		return {
 			isApp: isApp(),
@@ -143,9 +164,24 @@ export default defineComponent({
 		batteryConfigured() {
 			return this.battery?.length;
 		},
+		providers() {
+			return Object.entries(this.authProviders)
+				.filter(([, provider]) => !provider.authenticated)
+				.map(([title, { authenticated, id }]) => ({
+					title,
+					authenticated,
+					id,
+				}));
+		},
+		authorizationRequired() {
+			return this.providers.length > 0;
+		},
 		showConfigBadge() {
 			const userConfigError = isUserConfigError(this.fatal);
 			return this.sponsor.expiresSoon || userConfigError;
+		},
+		showRootBadge() {
+			return this.authorizationRequired || this.showConfigBadge;
 		},
 		badgeClass() {
 			if (this.fatal.length > 0) {
@@ -180,6 +216,9 @@ export default defineComponent({
 		this.dropdown?.dispose();
 	},
 	methods: {
+		handleAuthRequired(provider: Provider) {
+			this.$emit("auth-required", provider);
+		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("globalSettingsModal") as HTMLElement

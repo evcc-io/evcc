@@ -1,12 +1,7 @@
 <template>
 	<div class="d-flex">
 		<Notifications :notifications="notifications" :loadpoints="loadpoints" class="me-2" />
-		<AuthIndicator
-			:auth-providers="authProviders"
-			class="me-2"
-			@auth-required="openAuthModal"
-		/>
-		<TopNavigation v-bind="topNavigation" />
+		<TopNavigation v-bind="topNavigation" @auth-required="openAuthModal" />
 		<AuthProviderModal :provider="authProvider" />
 	</div>
 </template>
@@ -16,7 +11,6 @@ import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
 import Navigation from "./Navigation.vue";
 import Notifications from "./Notifications.vue";
-import AuthIndicator from "./AuthIndicator.vue";
 import AuthProviderModal from "./AuthProviderModal.vue";
 import type { Provider } from "./types";
 import type { Notification } from "@/types/evcc";
@@ -28,7 +22,6 @@ export default defineComponent({
 	components: {
 		TopNavigation: Navigation,
 		Notifications,
-		AuthIndicator,
 		AuthProviderModal,
 	},
 	mixins: [collector],

@@ -2,6 +2,7 @@
   "authProviders": {
     "authCode": "Autorisierungscode",
     "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "authorizationRequired": "Autorisierung erforderlich",
     "buttonConnect": "Mit {provider} verbinden",
     "buttonDisconnect": "Trennen",
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
