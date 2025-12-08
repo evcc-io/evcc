@@ -5,8 +5,8 @@ group: switchsockets
 requirements:
   evcc: ["skiptest"]
   description:
-    en: Home Assistant instances in your network will be auto-discovered and suitable entities (e.g. `switch.*`, `sensor.*`) will be suggested.
-    de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `switch.*`, `sensor.*`) werden vorgeschlagen.
+    en: Home Assistant instances in your network will be auto-discovered and suitable entities (e.g. `switch.*`, `climate.*`, `input_boolean.*`, `sensor.*`) will be suggested.
+    de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `switch.*`, `climate.*`, `input_boolean.*`, `sensor.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
   params: [uri]
@@ -27,10 +27,10 @@ params:
     deprecated: true
   - name: switch
     description:
-      de: Entity ID des schaltbaren Geräts
-      en: Entity ID of the switch device
-    service: homeassistant/entities?uri={uri}&domain=switch
-    example: switch.smartsocket
+      de: Entity ID des steuerbaren Geräts
+      en: Entity ID of the controllable device
+    service: homeassistant/entities?uri={uri}&domain=switch,climate,input_boolean
+    example: switch.smartsocket, climate.smartheater, input_boolean.smartplug
     required: true
   - name: power
     description:
