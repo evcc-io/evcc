@@ -7,8 +7,21 @@
 		@close="handleClose"
 	>
 		<div class="container mx-0 px-0">
+			<!-- Success message after authentication -->
+			<template v-if="showAuthenticationSuccess">
+				<p class="mb-4 text-success">
+					{{ $t("authProviders.success", { title: providerTitle }) }}<br />
+					{{ $t("authProviders.successCloseModal") }}
+				</p>
+				<div class="d-flex justify-content-end">
+					<button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+						{{ $t("config.general.close") }}
+					</button>
+				</div>
+			</template>
+
 			<!-- Login flow -->
-			<template v-if="!isAuthenticated">
+			<template v-else-if="showAuthentication">
 				<p class="mb-4">
 					{{
 						$t("authProviders.modalDescriptionLogin", {
@@ -119,11 +132,18 @@ export default defineComponent({
 			logoutLoading: false,
 			logoutError: null as string | null,
 			auth: initialAuthState(),
+			waitingForAuthentication: false,
 		};
 	},
 	computed: {
 		isAuthenticated(): boolean {
 			return this.provider?.authenticated || false;
+		},
+		showAuthentication(): boolean {
+			return !this.isAuthenticated;
+		},
+		showAuthenticationSuccess(): boolean {
+			return this.isAuthenticated && this.waitingForAuthentication;
 		},
 		modalTitle(): string {
 			return this.providerTitle;
@@ -147,12 +167,14 @@ export default defineComponent({
 			this.auth = initialAuthState();
 			this.logoutLoading = false;
 			this.logoutError = null;
+			this.waitingForAuthentication = false;
 		},
 		handleClose() {
 			this.reset();
 		},
 		async prepareAuthentication() {
 			if (!this.providerId) return;
+			this.waitingForAuthentication = true;
 			await prepareAuthLogin(this.auth, this.providerId);
 		},
 		async performLogout() {
@@ -163,11 +185,9 @@ export default defineComponent({
 
 			const result = await performAuthLogout(this.providerId);
 			if (result.success) {
-				// Close the modal on successful logout
-				const modalElement = document.getElementById("authProviderModal");
+				const modalElement = (this.$refs["modal"] as any)?.$el;
 				if (modalElement) {
-					const modal = Modal.getInstance(modalElement);
-					modal?.hide();
+					Modal.getInstance(modalElement)?.hide();
 				}
 			} else {
 				this.logoutError = result.error || this.$t("authProviders.logoutFailed");

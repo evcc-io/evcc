@@ -10,9 +10,11 @@
     "disconnect": "disconnect",
     "loggedOut": "Successfully logged out",
     "logoutFailed": "Failed to logout",
-    "modalDescriptionLogin": "Complete the authentication process to establish connection with {provider}.",
+    "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",
     "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
-    "success": "Authorization with {title} was successful. You can now close this tab.",
+    "success": "Authorization with {title} was successful.",
+    "successCloseModal": "You can now close this dialog.",
+    "successCloseTab": "You can now close this tab.",
     "title": "Authorization Status"
   },
   "batterySettings": {
