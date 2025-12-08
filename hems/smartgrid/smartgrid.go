@@ -10,7 +10,6 @@ func init() {
 	db.Register(func() error {
 		return db.Instance.AutoMigrate(new(GridSession))
 	})
-
 }
 
 func StartManage(typ Type, grid *float64, limit float64) (uint, error) {
