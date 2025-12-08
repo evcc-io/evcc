@@ -104,11 +104,16 @@ func (c *Relay) run() error {
 		return err
 	}
 
-	if err := c.setLimited(limited); err != nil {
+	var limit float64
+	if limited {
+		limit = c.maxPower
+	}
+
+	if err := c.setLimited(limit); err != nil {
 		return err
 	}
 
-	if err := c.updateSession(c.maxPower); err != nil {
+	if err := c.updateSession(limit); err != nil {
 		return fmt.Errorf("smartgrid session: %v", err)
 	}
 
@@ -144,12 +149,12 @@ func (c *Relay) updateSession(limit float64) error {
 	return nil
 }
 
-func (c *Relay) setLimited(limited bool) error {
-	c.root.Dim(limited)
-	c.root.SetMaxPower(c.maxPower)
+func (c *Relay) setLimited(limit float64) error {
+	c.root.Dim(limit > 0)
+	c.root.SetMaxPower(limit)
 
 	if c.passthrough != nil {
-		if err := c.passthrough(limited); err != nil {
+		if err := c.passthrough(limit > 0); err != nil {
 			return fmt.Errorf("passthrough failed: %w", err)
 		}
 	}
