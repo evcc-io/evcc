@@ -10,8 +10,10 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 type Relay struct {
@@ -19,9 +21,12 @@ type Relay struct {
 
 	root        api.Circuit
 	passthrough func(bool) error
-	limit       func() (bool, error)
-	maxPower    float64
-	interval    time.Duration
+
+	gridSessionID uint
+
+	limit    func() (bool, error)
+	maxPower float64
+	interval time.Duration
 }
 
 // NewFromConfig creates an Relay HEMS from generic config
@@ -94,21 +99,57 @@ func (c *Relay) Run() {
 }
 
 func (c *Relay) run() error {
-	limit, err := c.limit()
+	limited, err := c.limit()
 	if err != nil {
 		return err
 	}
 
-	var power float64
-	if limit {
-		power = c.maxPower
+	if err := c.setLimited(limited); err != nil {
+		return err
 	}
 
-	c.root.Dim(limit)
-	c.root.SetMaxPower(power)
+	if err := c.updateSession(c.maxPower); err != nil {
+		return fmt.Errorf("smartgrid session: %v", err)
+	}
+
+	return nil
+}
+
+// TODO keep in sync across HEMS implementations
+func (c *Relay) updateSession(limit float64) error {
+	// start session
+	if limit > 0 && c.gridSessionID == 0 {
+		var power *float64
+		if p := c.root.GetChargePower(); p > 0 {
+			power = lo.ToPtr(p)
+		}
+
+		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)
+		if err != nil {
+			return err
+		}
+
+		c.gridSessionID = sid
+	}
+
+	// stop session
+	if limit == 0 && c.gridSessionID != 0 {
+		if err := smartgrid.StopManage(c.gridSessionID); err != nil {
+			return err
+		}
+
+		c.gridSessionID = 0
+	}
+
+	return nil
+}
+
+func (c *Relay) setLimited(limited bool) error {
+	c.root.Dim(limited)
+	c.root.SetMaxPower(c.maxPower)
 
 	if c.passthrough != nil {
-		if err := c.passthrough(limit); err != nil {
+		if err := c.passthrough(limited); err != nil {
 			return fmt.Errorf("passthrough failed: %w", err)
 		}
 	}

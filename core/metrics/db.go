@@ -15,6 +15,13 @@ type meter struct {
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
+func init() {
+	db.Register(func() error {
+		return Init()
+	})
+}
+
+// Init is used for testing
 func Init() error {
 	return db.Instance.AutoMigrate(new(meter))
 }

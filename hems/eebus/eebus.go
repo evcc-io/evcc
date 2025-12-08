@@ -11,9 +11,11 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 type EEBus struct {
@@ -28,6 +30,7 @@ type EEBus struct {
 	root        api.Circuit
 	passthrough func(bool) error
 
+	gridSessionID uint
 	status        status
 	statusUpdated time.Time
 
@@ -242,6 +245,39 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 	c.statusUpdated = time.Now()
 
 	c.setLimit(limit)
+
+	if err := c.updateSession(limit); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
+	}
+}
+
+// TODO keep in sync across HEMS implementations
+func (c *EEBus) updateSession(limit float64) error {
+	// start session
+	if limit > 0 && c.gridSessionID == 0 {
+		var power *float64
+		if p := c.root.GetChargePower(); p > 0 {
+			power = lo.ToPtr(p)
+		}
+
+		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)
+		if err != nil {
+			return err
+		}
+
+		c.gridSessionID = sid
+	}
+
+	// stop session
+	if limit == 0 && c.gridSessionID != 0 {
+		if err := smartgrid.StopManage(c.gridSessionID); err != nil {
+			return err
+		}
+
+		c.gridSessionID = 0
+	}
+
+	return nil
 }
 
 func (c *EEBus) setLimit(limit float64) {

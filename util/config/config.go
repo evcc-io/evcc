@@ -76,8 +76,10 @@ func (d *Config) Delete() error {
 	return db.Instance.Delete(Config{ID: d.ID}).Error
 }
 
-func Init() error {
-	return db.Instance.AutoMigrate(new(Config))
+func init() {
+	db.Register(func() error {
+		return db.Instance.AutoMigrate(new(Config))
+	})
 }
 
 // NameForID returns a unique config name for the given id
