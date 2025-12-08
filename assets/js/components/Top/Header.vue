@@ -28,7 +28,6 @@
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/settings";
 import TopNavigationArea from "./TopNavigationArea.vue";
-import type { Provider } from "./types";
 import { defineComponent, type PropType } from "vue";
 import type { Notification } from "@/types/evcc";
 
@@ -43,11 +42,11 @@ export default defineComponent({
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
 	methods: {
-		requestAuthProvider(provider: Provider) {
+		requestAuthProvider(providerId: string) {
 			const navigationArea = this.$refs["navigationArea"] as
 				| InstanceType<typeof TopNavigationArea>
 				| undefined;
-			navigationArea?.requestAuthProvider(provider);
+			navigationArea?.requestAuthProvider(providerId);
 		},
 	},
 });

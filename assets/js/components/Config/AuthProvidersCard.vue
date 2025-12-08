@@ -83,7 +83,7 @@ export default defineComponent({
 	},
 	methods: {
 		handleProviderAction(provider: Provider) {
-			this.$emit("auth-request", provider);
+			this.$emit("auth-request", provider.id);
 		},
 	},
 });

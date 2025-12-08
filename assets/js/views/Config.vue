@@ -455,7 +455,6 @@ import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
-import type { Provider } from "../components/Top/types";
 
 export default defineComponent({
 	name: "Config",
@@ -1076,9 +1075,9 @@ export default defineComponent({
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
 		},
-		handleProviderAuthRequest(provider: Provider) {
+		handleProviderAuthRequest(providerId: string) {
 			const header = this.$refs["header"] as InstanceType<typeof Header> | undefined;
-			header?.requestAuthProvider(provider);
+			header?.requestAuthProvider(providerId);
 		},
 	},
 });

@@ -30,7 +30,7 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			authProvider: null as Provider | null,
+			authProviderId: null as string | null,
 			isUnmounted: false,
 		};
 	},
@@ -44,13 +44,26 @@ export default defineComponent({
 		authProviders() {
 			return store.state?.authProviders || {};
 		},
+		authProvider(): Provider | null {
+			if (!this.authProviderId) return null;
+			const entry = Object.entries(this.authProviders).find(
+				([, value]) => value.id === this.authProviderId
+			);
+			if (!entry) return null;
+			const [title, { id, authenticated }] = entry;
+			return {
+				id,
+				title,
+				authenticated,
+			};
+		},
 	},
 	unmounted() {
 		this.isUnmounted = true;
 	},
 	methods: {
-		openAuthModal(provider: Provider) {
-			this.authProvider = provider;
+		openAuthModal(providerId: string) {
+			this.authProviderId = providerId;
 			this.$nextTick(() => {
 				if (this.isUnmounted) return;
 				const modalElement = document.getElementById("authProviderModal");
@@ -60,8 +73,8 @@ export default defineComponent({
 			});
 		},
 		// Public method for imperative calls (e.g., from Config page)
-		requestAuthProvider(provider: Provider) {
-			this.openAuthModal(provider);
+		requestAuthProvider(providerId: string) {
+			this.openAuthModal(providerId);
 		},
 	},
 });

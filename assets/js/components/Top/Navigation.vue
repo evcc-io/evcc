@@ -88,7 +88,7 @@
 					<button
 						type="button"
 						class="dropdown-item"
-						@click="handleAuthRequired(provider)"
+						@click="handleAuthRequired(provider.id)"
 					>
 						<span
 							class="d-inline-block p-1 rounded-circle border border-light"
@@ -140,7 +140,6 @@ import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
-import type { Provider } from "./types";
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -216,8 +215,8 @@ export default defineComponent({
 		this.dropdown?.dispose();
 	},
 	methods: {
-		handleAuthRequired(provider: Provider) {
-			this.$emit("auth-required", provider);
+		handleAuthRequired(providerId: string) {
+			this.$emit("auth-required", providerId);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
