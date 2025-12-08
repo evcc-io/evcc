@@ -189,6 +189,7 @@ type Param struct {
 	Preset      string       `json:"-"`          // Reference a predefined set of params
 	Required    bool         `json:",omitempty"` // cli if the user has to provide a non empty value
 	Mask        bool         `json:",omitempty"` // cli if the value should be masked, e.g. for passwords
+	Private     bool         `json:",omitempty"` // value should be redacted in bug reports, e.g. email, locations, ...
 	Advanced    bool         `json:",omitempty"` // cli if the user does not need to be asked. Requires a "Default" to be defined.
 	Deprecated  bool         `json:",omitempty"` // if the parameter is deprecated and thus should not be presented in the cli or docs
 	Default     string       `json:",omitempty"` // default value if no user value is provided in the configuration
@@ -199,6 +200,7 @@ type Param struct {
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Service     string       `json:",omitempty"` // defines a service to provide choices
 	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
@@ -235,6 +237,10 @@ func (p *Param) IsAdvanced() bool {
 
 func (p *Param) IsMasked() bool {
 	return p.Mask
+}
+
+func (p *Param) IsPrivate() bool {
+	return p.Private
 }
 
 func (p *Param) IsRequired() bool {
@@ -286,13 +292,14 @@ func (c CountryCode) IsValid() bool {
 type TemplateDefinition struct {
 	Template     string
 	Deprecated   bool             `json:"-"`
+	Auth         map[string]any   `json:",omitempty"` // OAuth parameters (if required)
 	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []string         `json:",omitempty"`
 	Countries    []CountryCode    `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements     `json:",omitempty"`
-	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
+	Linked       []LinkedTemplate `json:",omitempty"` // list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`
 	Render       string           `json:"-"` // rendering template
 }

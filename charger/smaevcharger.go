@@ -46,6 +46,7 @@ type Smaevcharger struct {
 }
 
 func init() {
+	// TODO remove deprecated
 	registry.Add("smaevcharger", NewSmaevchargerFromConfig)
 }
 

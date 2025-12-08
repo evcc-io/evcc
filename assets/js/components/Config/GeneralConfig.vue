@@ -97,8 +97,7 @@ export default {
 			return settings.hiddenFeatures === true;
 		},
 		networkStatus() {
-			const { host, port } = store.state?.network || {};
-			return host ? `${host}:${port}` : `${port || ""}`;
+			return `${store.state?.network?.port ?? ""}`;
 		},
 		controlStatus() {
 			const sec = store.state?.interval;

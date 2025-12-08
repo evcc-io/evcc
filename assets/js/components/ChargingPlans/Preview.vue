@@ -144,7 +144,7 @@ export default defineComponent({
 			base.setSeconds(0, 0);
 			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
 
-			return Array.from({ length: 48 * 4 }, (_, i) => {
+			return Array.from({ length: 96 * 4 }, (_, i) => {
 				const start = new Date(base.getTime() + quarterHour * i);
 				const end = new Date(start.getTime() + quarterHour);
 				const charging = !!this.findSlotInRange(start, end, plan);

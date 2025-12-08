@@ -114,12 +114,16 @@ func (c *EEBus) dataUpdateLimit() {
 func (c *EEBus) writeApprovalRequired() {
 	for msg, limit := range c.cs.CsLPCInterface.PendingConsumptionLimits() {
 		c.log.DEBUG.Println("CS LPC PendingConsumptionLimit:", msg, limit)
+		if limit.Value < 0 {
+			c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, false, "negative limit")
+			continue
+		}
+
 		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 
 		c.mux.Lock()
-		defer c.mux.Unlock()
-
 		c.consumptionLimit = &limit
+		c.mux.Unlock()
 	}
 }
 

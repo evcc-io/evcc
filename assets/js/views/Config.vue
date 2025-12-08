@@ -3,6 +3,11 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
+				<AuthSuccessBanner
+					v-if="callbackCompleted"
+					:provider-id="callbackCompleted"
+					:auth-providers="authProviders"
+				/>
 				<WelcomeBanner v-if="loadpointsRequired" />
 				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
@@ -354,13 +359,12 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 				<HemsModal @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
-				<ModbusProxyModal @changed="yamlChanged" />
+				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal
 					:gridMeter="gridMeter"
 					:extMeters="extMeters"
@@ -369,6 +373,7 @@
 				<EebusModal @changed="yamlChanged" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
+				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -437,6 +442,7 @@ type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 
 export default defineComponent({
@@ -453,6 +459,7 @@ export default defineComponent({
 		EebusIcon,
 		EebusModal,
 		ExperimentalBanner,
+		AuthSuccessBanner,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -523,6 +530,12 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		callbackCompleted() {
+			return this.$route.query["callbackCompleted"] as string | undefined;
+		},
+		authProviders() {
+			return store.state?.authProviders;
+		},
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
 		},
@@ -748,11 +761,13 @@ export default defineComponent({
 			const response = await api.get("/config/loadpoints");
 			this.loadpoints = response.data || [];
 		},
-		getMetersByNames(names: string[] | null) {
+		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
 				return [];
 			}
-			return this.meters.filter((m) => names.includes(m.name));
+			return names
+				.map((name) => this.meters.find((m) => m.name === name))
+				.filter((m): m is ConfigMeter => m !== undefined);
 		},
 		getMeterById(id?: number) {
 			if (!id || !this.meters) {

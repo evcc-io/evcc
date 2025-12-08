@@ -11,52 +11,57 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
+	"golang.org/x/oauth2"
 )
 
 // Connection represents a Home Assistant API connection
 type Connection struct {
 	*request.Helper
-	uri string
+	instance *proxyInstance
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, uri, token string) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
+func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
+	if home != "" {
+		log.WARN.Printf("using deprecated 'home' parameter '%s', please use 'uri' instead", home)
 	}
-	if token == "" {
-		return nil, errors.New("missing token")
+
+	if uri == "" && home == "" {
+		return nil, errors.New("missing either uri or home")
 	}
 
 	c := &Connection{
-		Helper: request.NewHelper(log.Redact(token)),
-		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		Helper: request.NewHelper(log),
+		instance: &proxyInstance{
+			home: home,
+			uri:  uri,
+		},
 	}
 
 	// Set up authentication headers
-	c.Client.Transport = &transport.Decorator{
-		Base: c.Client.Transport,
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": "Bearer " + token,
-			"Content-Type":  "application/json",
-		}),
+	c.Client.Transport = &oauth2.Transport{
+		Base:   c.Client.Transport,
+		Source: c.instance,
 	}
 
 	return c, nil
 }
 
-// StateResponse represents a Home Assistant entity state
-type StateResponse struct {
-	State      string         `json:"state"`
-	Attributes map[string]any `json:"attributes"`
+// GetStates retrieves the list of entities
+func (c *Connection) GetStates() ([]StateResponse, error) {
+	var res []StateResponse
+	uri := fmt.Sprintf("%s/api/states", c.instance.URI())
+
+	err := c.GetJSON(uri, &res)
+
+	return res, err
 }
 
 // GetState retrieves the state of an entity
 func (c *Connection) GetState(entity string) (string, error) {
 	var res StateResponse
-	uri := fmt.Sprintf("%s/api/states/%s", c.uri, url.PathEscape(entity))
+	uri := fmt.Sprintf("%s/api/states/%s", c.instance.URI(), url.PathEscape(entity))
 
 	if err := c.GetJSON(uri, &res); err != nil {
 		return "", err
@@ -136,6 +141,10 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"initialising":       api.StatusB,
 	"preparing":          api.StatusB,
 	"2":                  api.StatusB,
+	"no_power":           api.StatusB,
+	"complete":           api.StatusB,
+	"stopped":            api.StatusB,
+	"starting":           api.StatusB,
 
 	// Status A - Disconnected
 	"a":                   api.StatusA,
@@ -165,7 +174,7 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 
 // CallService calls a Home Assistant service
 func (c *Connection) CallService(domain, service string, data map[string]any) error {
-	uri := fmt.Sprintf("%s/api/services/%s/%s", c.uri, domain, service)
+	uri := fmt.Sprintf("%s/api/services/%s/%s", c.instance.URI(), domain, service)
 
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {

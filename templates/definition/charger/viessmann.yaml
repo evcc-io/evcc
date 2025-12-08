@@ -29,6 +29,7 @@ params:
     help:
       en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Viessmann developer portal."
       de: "Redirect-URI der evcc-Instanz. Muss mit der Redirect URI übereinstimmen, die Viessmann Developer Portal konfiguriert ist."
+    service: auth/redirecturi
     example: "https://evcc.example.org/providerauth/callback"
   - name: gateway_serial
     required: true
@@ -148,6 +149,9 @@ params:
       en: Parameter only exists for historic reasons. Target Temperature can be configured in the ViCare app (not supported by all devices)
     default: 45
     type: int
+auth:
+  type: viessmann
+  params: [clientid, redirecturi, gateway_serial]
 render: |
   type: sgready
   getmode:
@@ -158,7 +162,7 @@ render: |
       source: viessmann
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
-      gateway: {{ .gateway_serial }}
+      gateway_serial: {{ .gateway_serial }}
     jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
@@ -180,7 +184,7 @@ render: |
             source: viessmann
             clientid: {{ .clientid }}
             redirecturi: {{ .redirecturi }}
-            gateway: {{ .gateway_serial }}
+            gateway_serial: {{ .gateway_serial }}
           body: >
             { }
       - case: 3 # boost
@@ -194,7 +198,7 @@ render: |
             source: viessmann
             clientid: {{ .clientid }}
             redirecturi: {{ .redirecturi }}
-            gateway: {{ .gateway_serial }}
+            gateway_serial: {{ .gateway_serial }}
           body: >
             { }
       - case: 1 # dimm

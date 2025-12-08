@@ -18,16 +18,18 @@ params:
     baudrate: 9600
   - name: timeout
   - name: capacity
-    advanced: true
   - name: maxacpower
   - name: minsoc
     advanced: true
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    help:
-      en: Maximum charge power for forced charging of the battery in watts. (0 to automatically set the value of the maximum BDC rated power)
-      de: Maximale Ladeleistung für erzwungenes Laden des Speichers in Watt. (0 um automatisch den Wert der maximalen BDC-Nennleistung einzustellen)
+    default: 5000
+    advanced: true
+    required: true
+  - name: maxdischargepower
+    default: 5000
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -175,15 +177,6 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # Self-consumption mode (Default)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13049 # EMS mode selection
-              type: writesingle
-              decode: uint16
-        - source: const
           value: 0xCC # Stop (Default)
           set:
             source: modbus
@@ -192,18 +185,36 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        # Reset max battery discharge power
+        # Reset max battery discharge power, set equal to max battery charge power
+        - source: go
+          script: power
+          in:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 33046 # Battery max charge power
+                type: holding
+                decode: uint16
+          out:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 33047 # Battery max discharge power
+                type: writesingle
+                decode: uint16
         - source: const
-          {{- if .maxchargepower }}
-          value: {{ div .maxchargepower 10 }}
-          {{- else }}
-          value: 1060 # 10.6kW, max allowed value for register
-          {{- end }}
+          value: 0 # Self-consumption mode (Default)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 33047 # Battery max discharge power
+              address: 13049 # EMS mode selection
               type: writesingle
               decode: uint16
     - case: 2 # hold
@@ -260,42 +271,18 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if .maxchargepower }}
         - source: const
-          value: {{ .maxchargepower }} # W
+          value: {{ .maxchargepower }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 13051 # Charge power
+              address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
-        {{- else }}
-        - source: go
-          script: power
-          in:
-          - name: power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 5627 # BDC rated power
-                type: input
-                decode: uint16
-              scale: 100
-          out:
-          - name: power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 13051 # Charge/discharge power
-                type: writesingle
-                decode: uint16
-        {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
   {{- end }}

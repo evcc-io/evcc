@@ -195,59 +195,32 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 		}
 
+		var demand []float32
+
 		switch lp.GetMode() {
 		case api.ModeOff:
 			// disable charging
 			bat.CMax = 0
 
-		case api.ModeNow, api.ModeMinPV:
-			// forced min/max charging
-			if demand := continuousDemand(lp, minLen); demand != nil {
-				bat.PDemand = prorate(demand, firstSlotDuration)
-			}
+		case api.ModeNow:
+			// forced max charging
+			demand = continuousDemand(lp, minLen)
+
+		case api.ModeMinPV:
+			// forced min charging
+			demand = continuousDemand(lp, minLen)
+			// add smartcost limit and plan goal, if configured
+			demand = applySmartCostLimit(lp, demand, grid, minLen)
+			site.applyPlanGoal(lp, &bat, minLen)
 
 		case api.ModePV:
-			// add plan goal
-			goal, socBased := lp.GetPlanGoal()
-			if goal > 0 {
-				if v := lp.GetVehicle(); socBased && v != nil {
-					goal *= v.Capacity() * 10
-				} else {
-					goal *= 1000 // Wh
-				}
-			}
+			// add smartcost limit and plan goal, if configured
+			demand = applySmartCostLimit(lp, nil, grid, minLen)
+			site.applyPlanGoal(lp, &bat, minLen)
+		}
 
-			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
-				// TODO precise slot placement
-				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen {
-					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
-					bat.SGoal[slot] = float32(goal)
-				} else {
-					site.log.DEBUG.Printf("plan beyond forecast range: %.1f at %v", goal, ts.Round(time.Minute))
-				}
-			}
-
-			// TODO remove once (using) smartcost limit becomes obsolete
-			if costLimit := lp.GetSmartCostLimit(); costLimit != nil {
-				maxLen := min(minLen, len(grid))
-
-				// limit hit?
-				if slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
-					return r.Value <= *costLimit
-				}) {
-					maxPower := lp.EffectiveMaxPower()
-
-					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(maxPower / slotsPerHour)
-					}), firstSlotDuration)
-
-					for i := range maxLen {
-						if grid[i].Value > *costLimit {
-							bat.PDemand[i] = 0
-						}
-					}
-				}
-			}
+		if demand != nil {
+			bat.PDemand = prorate(demand, firstSlotDuration)
 		}
 
 		req.Batteries = append(req.Batteries, bat)
@@ -510,4 +483,65 @@ func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 	}
 
 	return res
+}
+
+func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minLen int) {
+	goal, socBased := lp.GetPlanGoal()
+	if goal <= 0 {
+		return
+	}
+
+	// Convert to Wh
+	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
+		goal *= vehicle.Capacity() * 10
+	} else {
+		goal *= 1000 // Wh
+	}
+
+	ts := lp.EffectivePlanTime()
+	if ts.IsZero() {
+		return
+	}
+
+	// TODO precise slot placement
+	slot := int(time.Until(ts) / tariff.SlotDuration)
+	if slot >= 0 && slot < minLen {
+		bat.SGoal = make([]float32, minLen)
+		bat.SGoal[slot] = float32(goal)
+		bat.SMax = max(bat.SMax, float32(goal))
+	} else {
+		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	}
+}
+
+// TODO remove once smart cost limit usage becomes obsolete
+func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
+	costLimit := lp.GetSmartCostLimit()
+	if costLimit == nil {
+		return demand
+	}
+
+	maxLen := min(minLen, len(grid))
+
+	// Check if any slots meet the cost limit
+	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+		return r.Value <= *costLimit
+	}); !hasAffordableSlots {
+		return demand
+	}
+
+	maxPower := lp.EffectiveMaxPower()
+
+	if demand == nil {
+		demand = make([]float32, minLen)
+	}
+
+	for i := range maxLen {
+		if grid[i].Value <= *costLimit {
+			demand[i] = float32(maxPower / slotsPerHour)
+		}
+		// else: keep existing demand (either 0 or minPower from ModeMinPV)
+	}
+
+	return demand
 }

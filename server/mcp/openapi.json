@@ -321,6 +321,22 @@
         },
         "description": "Success - Soc result"
       },
+      "SuccessResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "example": "OK",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success"
+      },
       "Unauthorized": {
         "content": {
           "text/plain": {
@@ -2038,6 +2054,29 @@
         "summary": "System state",
         "tags": [
           "general"
+        ]
+      }
+    },
+    "/system/cache": {
+      "delete": {
+        "description": "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching.",
+        "operationId": "clearCache",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessResult"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Clear cache",
+        "tags": [
+          "system"
         ]
       }
     },
