@@ -169,12 +169,11 @@ params:
   - name: maxpower
     unit: W
     description:
-      de: Maximale Ladeleistung
-      en: Maximum charging power
+      de: Maximale Ladeleistung des Fahrzeugs
+      en: Maximum vehicle charging power
     help:
-      de: Definiert die maximale Ladeleistung des Fahrzeugs
-      en: The maximum charging power of the vehicle
-    example: 10000
+      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem
+      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase
     type: int
   - name: identifiers
     description:

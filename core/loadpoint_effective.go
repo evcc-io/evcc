@@ -234,7 +234,6 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 func (lp *Loadpoint) effectiveMaxPower() float64 {
 	if lp.vehicle != nil {
 		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
-			lp.log.DEBUG.Printf("Max power from vehicle: %.2f kWh", maxPower/1000)
 			return maxPower
 		}
 	}
