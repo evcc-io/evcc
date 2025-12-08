@@ -136,7 +136,7 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import baseAPI from "./baseapi";
+import { baseApi } from "@/api";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
@@ -219,19 +219,32 @@ export default defineComponent({
 			const { title, authenticated, loginPath, logoutPath } = provider;
 			if (!authenticated) {
 				try {
-					const response = await baseAPI.get(loginPath);
-					window.location.href = response.data.loginUri;
+					const response = await baseApi.get(loginPath, {
+						validateStatus: (code) => [200, 400].includes(code),
+					});
+					if (response.status === 200) {
+						window.location.href = response.data?.loginUri;
+					} else {
+						alert(`Failed to login: ${response.data?.error}`);
+					}
 				} catch (error: any) {
 					console.error(error);
-					alert(`Failed to login: ${error.response?.data}`);
+					alert("Unexpected login error: " + error.message);
 				}
 			} else {
 				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
 					try {
-						await baseAPI.get(logoutPath);
+						const response = await baseApi.get(logoutPath, {
+							validateStatus: (code) => [200, 400, 500].includes(code),
+						});
+						if (response.status === 200) {
+							alert(this.$t("header.authProviders.loggedOut"));
+						} else {
+							alert(`Failed to logout: ${response.data?.error}`);
+						}
 					} catch (error: any) {
 						console.error(error);
-						alert(`Failed to logout: ${error.response?.data}`);
+						alert(`Unexpected logout error: ${error.response?.data}`);
 					}
 				}
 			}

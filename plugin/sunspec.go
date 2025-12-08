@@ -29,7 +29,7 @@ func init() {
 }
 
 // NewModbusSunspecFromConfig creates Modbus plugin
-func NewModbusSunspecFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Value           []string

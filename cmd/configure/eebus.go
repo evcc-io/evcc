@@ -9,7 +9,7 @@ import (
 )
 
 // configureEEBus setup EEBus
-func (c *CmdConfigure) configureEEBus(other map[string]interface{}) error {
+func (c *CmdConfigure) configureEEBus(other map[string]any) error {
 	conf := eebus.Config{
 		URI: ":4712",
 	}
@@ -29,8 +29,8 @@ func (c *CmdConfigure) configureEEBus(other map[string]interface{}) error {
 }
 
 // eebusCertificate creates EEBUS certificate and returns private/public key
-func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
-	var eebusConfig map[string]interface{}
+func (c *CmdConfigure) eebusCertificate() (map[string]any, error) {
+	var eebusConfig map[string]any
 
 	cert, err := eebus.CreateCertificate()
 	if err != nil {
@@ -42,7 +42,7 @@ func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Use"))
 	}
 
-	eebusConfig = map[string]interface{}{
+	eebusConfig = map[string]any{
 		"certificate": map[string]string{
 			"public":  pubKey,
 			"private": privKey,

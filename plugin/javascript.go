@@ -24,7 +24,7 @@ func init() {
 }
 
 // NewJavascriptPluginFromConfig creates a Javascript provider
-func NewJavascriptPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewJavascriptPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		VM     string
 		Script string

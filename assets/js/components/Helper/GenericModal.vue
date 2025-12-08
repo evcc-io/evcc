@@ -36,7 +36,9 @@
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+
+export type ModalFade = "left" | "right" | undefined;
 
 export default defineComponent({
 	name: "GenericModal",
@@ -45,11 +47,11 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
-		fade: String,
+		fade: String as PropType<ModalFade>,
 		size: String,
 		autofocus: { type: Boolean, default: true },
 	},
-	emits: ["open", "opened", "close", "closed"],
+	emits: ["open", "opened", "close", "closed", "visibilitychange"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -81,12 +83,14 @@ export default defineComponent({
 		this.$refs["modal"]?.addEventListener("shown.bs.modal", this.handleShown);
 		this.$refs["modal"]?.addEventListener("hide.bs.modal", this.handleHide);
 		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.handleHidden);
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
 	},
 	unmounted() {
 		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.handleShow);
 		this.$refs["modal"]?.removeEventListener("shown.bs.modal", this.handleShown);
 		this.$refs["modal"]?.removeEventListener("hide.bs.modal", this.handleHide);
 		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 	},
 	methods: {
 		handleShow() {
@@ -128,6 +132,11 @@ export default defineComponent({
 			// @ts-expect-error bs internal
 			console.log(this.dataTestid, "> close", modal._isShown);
 			Modal.getOrCreateInstance(modal).hide();
+		},
+		handleVisibilityChange() {
+			if (document.visibilityState === "visible" && this.isModalVisible) {
+				this.$emit("visibilitychange");
+			}
 		},
 	},
 });

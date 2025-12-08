@@ -13,7 +13,6 @@ params:
     required: true
   - name: pin
     required: true
-    mask: true
 render: |
   type: nrgkick-bluetooth
   mac: {{ .mac }}

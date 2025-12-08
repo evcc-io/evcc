@@ -58,8 +58,9 @@
           "heating": "Aquecimento personalizado"
         },
         "heatpump": "Bomba de calor personalizada",
-        "sgready": "Bomba de calor personalizada (sg-ready, tout)",
-        "sgready-boost": "Bomba de calor personalizada (sg-ready, boost)",
+        "sgready": "Bomba de calor personalizada (sg-ready via plugins)",
+        "sgready-boost": "Bomba de calor definida pelo utilizador (sg-ready-boost, obsoleta)",
+        "sgready-relay": "Bomba de calor personalizada (sg-ready via relés)",
         "switchsocket": "Tomada de interrutor definida pelo utilizador"
       }
     },
@@ -77,7 +78,6 @@
       "title": "Comportamento de controlo"
     },
     "deviceValue": {
-      "allowControl": "Permitir controlo",
       "amount": "Quantidade",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -95,6 +95,7 @@
       "currency": "Moeda",
       "current": "Corrente",
       "currentRange": "Corrente",
+      "dimmed": "Escurecido",
       "enabled": "Ativado",
       "energy": "Energia",
       "feedinPrice": "Preço de injeção na rede",
@@ -119,7 +120,7 @@
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
-      "vehicleLimitSoc": "Limite do veículo",
+      "vehicleLimitSoc": "Limite da carga",
       "yes": "sim"
     },
     "deviceValueChargeStatus": {
@@ -134,6 +135,7 @@
     "devices": {
       "auxMeter": "“Consumidor inteligente”",
       "batteryStorage": "“Bateria”",
+      "consumer": "Consumidor",
       "solarSystem": "Sistema fotovoltaico"
     },
     "editor": {
@@ -144,9 +146,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Pode ser usado para gestão de cargas ou fins estatísticos.",
-      "titleAdd": "Adicionar Contador externo",
-      "titleEdit": "Editar Contador externo"
+      "description": "Regista os valores de energia dos consumidores não controlados (por exemplo, frigorífico, máquina de lavar roupa, etc.) para fins estatísticos. Estes medidores também podem ser utilizados para a gestão de carga (por exemplo, subdistribuição).",
+      "titleAdd": "Adicionar contador de consumo",
+      "titleEdit": "Editar Contador de consumo"
     },
     "form": {
       "danger": "Perigo",
@@ -155,12 +157,22 @@
       "optional": "opcional"
     },
     "general": {
+      "applyAndClose": "Aplicar e fechar",
+      "authPerform": "Se conectar a {provider}",
+      "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
+      "authPrepare": "Preparar a ligação",
       "cancel": "Cancelar",
+      "clear": "Apagar",
+      "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
       "docsLink": "Ver documentação.",
+      "dragHandle": "Arrastar",
+      "dragItem": "Arrastável: {title}",
+      "dragList": "Lista reordenável",
       "experimental": "Experimental",
+      "forceSave": "Guardar na mesma",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
       "noFileSelected": "Nenhum ficheiro selecionado.",
@@ -169,12 +181,17 @@
       "password": "Palavra-passe",
       "readFromFile": "Ler ficheiro",
       "remove": "Apagar",
+      "required": "obrigatório",
+      "reset": "Reiniciar",
       "save": "Guardar",
+      "saved": "Guardado.",
+      "saving": "A guardar…",
       "selectFile": "Explorar",
       "showAdvancedSettings": "Mostrar definições avançadas",
       "telemetry": "Telemetria",
       "templateLoading": "Carregando...",
       "title": "Nome",
+      "typeDeprecated": "O tipo '{type}' está obsoleto e será removido numa versão futura. Verifique o registo de alterações e volte a criar este aparelho.",
       "validateSave": "Validar e guardar"
     },
     "grid": {
@@ -187,7 +204,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "alterar"
+      "change": "alterar",
+      "label": "Símbolo"
     },
     "influx": {
       "description": "Escreve dados de carregamento e outras métricas no InfluxDB. Use o Grafana ou outras ferramentas para visualizar os dados.",
@@ -335,13 +353,22 @@
       "option": {
         "aux": "Adicionar aparelho autorregulável",
         "battery": "Adicionar Contador de bateria",
-        "ext": "Adicionar Contador externo",
+        "ext": "Adicionar consumidor regular",
         "pv": "Adicionar Contador solar"
       },
       "save": "Guardar",
       "specific": "Integrações específicas",
       "template": "Fabricante",
       "titleChoice": "O que quer adicionar?",
+      "titleLabel": "Título",
+      "usage": {
+        "aux": "Consumidor autorregulador",
+        "battery": "Bateria",
+        "charge": "Consumidor / Carregador",
+        "grid": "Rede",
+        "label": "Utilização",
+        "pv": "Produção"
+      },
       "validateSave": "Validar e guardar"
     },
     "modbus": {
@@ -365,7 +392,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Permitir que vários clientes acedam ao mesmo dispositivo Modbus.",
+      "add": "Adicionar uma ligação proxy",
+      "connection": "Conexão #{number}",
+      "description": "Alguns dispositivos Modbus suportam apenas uma única conexão ou muito poucas conexões. O evcc pode atuar como um proxy, permitindo o acesso simultâneo de vários clientes (automação residencial, scripts, etc.).",
+      "device": "Aparelho",
+      "option": {
+        "deny": "erro",
+        "false": "não",
+        "true": "silencioso"
+      },
+      "readonly": {
+        "help": {
+          "deny": "O acesso de escrita está bloqueado com um erro Modbus.",
+          "false": "O acesso de escrita é transferido.",
+          "true": "Sem resposta, o acesso de escrita fica bloqueado ."
+        },
+        "label": "Somente leitura"
+      },
+      "sourcePortHelp": "Port para ligações de clientes recebidas. Deve estar disponível.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -387,10 +431,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Use sufixo .local para permitir mDNS. Importante para a descoberta do aplicativo móvel e alguns carregadores OCPP.",
+      "descriptionExternalUrl": "Endereço para outros dispositivos que desejam se conectar ao evcc e para a descoberta automática do aplicativo evcc.",
+      "descriptionHost": "Usado para anunciar o evcc na sua rede local.",
+      "descriptionInternalUrl": "Endereço de rede local do evcc.",
       "descriptionPort": "Port para a interface web e API. É preciso atualizar o URL do navegador se mudar este parâmetro.",
       "descriptionSchema": "Apenas afeta como as URLs são geradas. Selecionar HTTPS não permitirá encriptação.",
-      "labelHost": "Nome do anfitrião",
+      "labelExternalUrl": "URL externo",
+      "labelHost": "Nome de host mDNS",
+      "labelInternalUrl": "URL interna",
       "labelPort": "Porta",
       "labelSchema": "Esquema",
       "title": "Rede"
@@ -440,8 +488,6 @@
       "descriptionIds": "No Sunny Portal cada dispositivo necessita duma identidade única. O evcc gera uma identidade única com base no seu hardware. Se migrar o evcc para outro hardware estas identidades podem mudar. Se quiser manter o histórico pode substituir as identidades geradas aqui. Abra o SEMP URL(/semp) para ver as identidade atuais.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "string 8 caratecteres HEX. Prefixo geral de todas as entidades. O evcc usa o seu próprio vendor ID interno Por defeito.",
-      "labelAllowControl": "Aceitar recomendações adicionais de limite de potência do SHM.",
-      "labelControl": "Permitir controlo",
       "labelDeviceId": "Device ID",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
@@ -457,6 +503,7 @@
       "labelToken": "Token de Apoiante (Sponsor)",
       "title": "Patrocínio",
       "tokenRequired": "Tem de configurar um token de Patrocínio (Sponsor) antes de poder criar este dispositivo.",
+      "tokenRequiredFeature": "Esta funcionalidade requer um token de patrocinador.",
       "tokenRequiredLearnMore": "Mais informações.",
       "tokenRequiredShort": "Nenhum token de patrocínio configurado.",
       "trialToken": "token de teste",
@@ -468,7 +515,7 @@
         "backup": {
           "action": "Descarregar cópia de segurança...",
           "confirmationButton": "Descarregar cópia de segurança",
-          "confirmationText": "Introduza a sua palavra-passe para descarregar o ficheiro da base de dados.",
+          "confirmationText": "Descarregar o ficheiro da base de dados.",
           "description": "Faça uma cópia de segurança dos seus dados para um ficheiro. Este ficheiro pode ser utilizado para restaurar os seus dados em caso de falha do sistema.",
           "title": "Cópia de segurança"
         },
@@ -507,6 +554,10 @@
       "description": "Defina as suas tarifas de energia para calcular os custos das suas sessões de carregamento.",
       "title": "Tarifas"
     },
+    "telemetry": {
+      "description": "Configure a partilha de dados para ajudar a melhorar o evcc. A sua privacidade é importante para nós e a participação é totalmente opcional.",
+      "title": "Telemetria"
+    },
     "title": {
       "description": "Exibido no menu principal e na barra do navegador.",
       "label": "Nome",
@@ -515,7 +566,7 @@
     "validation": {
       "failed": "falhou",
       "label": "Status",
-      "running": "a validar…",
+      "running": "A validar…",
       "success": "concluído com sucesso",
       "unknown": "desconhecido",
       "validate": "validar"
@@ -647,6 +698,7 @@
     "about": "Sobre",
     "authProviders": {
       "confirmLogout": "Tem a certeza de que pretende desligar {title}?",
+      "loggedOut": "Sessão encerrada com sucesso",
       "title": "Estado da autorização"
     },
     "blog": "Blog",
@@ -661,7 +713,7 @@
   "help": {
     "discussionsButton": "Discussões no GitHub",
     "documentationButton": "Documentação",
-    "issueButton": "Reportar um erro",
+    "issueButton": "Reportar um problema",
     "issueDescription": "Encontrou um comportamento estranho ou errado?",
     "logsButton": "Ver registos",
     "logsDescription": "Verifique os registos para erros.",
@@ -677,6 +729,57 @@
     "restartButton": "Reiniciar",
     "restartDescription": "Tentou desligar e ligar de novo?",
     "secondaryActions": "Ainda não conseguiu resolver o seu problema? Aqui estão algumas sugestões mais complexas."
+  },
+  "issue": {
+    "additional": {
+      "description": "Inclua definições e registos para nos ajudar a reproduzir o problema rapidamente. Recomendamos que partilhe o máximo possível. Geralmente, o estado não é necessário.",
+      "include": "incluir",
+      "lines": "linhas",
+      "logs": "Jornais",
+      "logsDescription": "Entradas de registo recentes que podem ajudar a identificar o problema.",
+      "showDetails": "mostrar detalhes",
+      "source": "Fonte",
+      "state": "Estado",
+      "stateDescription": "Estado completo do tempo de execução, incluindo o ponto de carregamento, o dispositivo e a informação sobre a energia. Inclua apenas se solicitado.",
+      "title": "Informações adicionais",
+      "uiConfig": "Configuração (IU)",
+      "uiConfigDescription": "Definições de configuração efetuadas através da interface web.",
+      "yamlConfig": "Configuração (YAML)",
+      "yamlConfigDescription": "O seu ficheiro de configuração completo."
+    },
+    "additionalContext": "Contexto adicional",
+    "additionalContextPlaceholder": "Alguma informação adicional que possa ser útil...\n- Detalhes da configuração\n- O que tentou\n- Detalhes do ambiente",
+    "createButtonDiscussion": "Iniciar discussão no GitHub...",
+    "createButtonIssue": "Criar problema no GitHub...",
+    "description": "A sua instalação não está a funcionar conforme o esperado? Utilize esta página para obter ajuda ou para comunicar problemas. Forneça detalhes suficientes para nos ajudar a compreender e reproduzir o problema, mantendo a sua descrição concisa, clara e fácil de compreender.",
+    "helpType": {
+      "discussion": "Preciso de ajuda com a minha configuração",
+      "discussionDescription": "As discussões comunitárias fornecem respostas.",
+      "issue": "Encontrou um bug",
+      "issueDescription": "Tenho a certeza de que algo está avariado e precisa de ser reparado.",
+      "title": "De que problema estamos a falar?"
+    },
+    "issueDescription": "Descrição",
+    "issueTitle": "Título",
+    "stepsToReproduce": "Passos para reproduzir",
+    "subTitleDiscussion": "Descreva o seu problema",
+    "subTitleIssue": "Descreva o problema",
+    "summary": {
+      "confirmationButtonDiscussion": "Iniciar discussão no GitHub",
+      "confirmationButtonIssue": "Criar problema no GitHub",
+      "copied": "Copiado!",
+      "copyButton": "Copiar informações adicionais",
+      "instructions": "Devido às limitações de tamanho de URL do GitHub, este é um processo de duas etapas:",
+      "singleStepDescription": "Clique no botão abaixo para abrir o GitHub com um formulário pré-preenchido contendo os detalhes do seu problema. Os dados confidenciais foram automaticamente eliminados, mas verifique novamente antes de partilhar.",
+      "step1Description": "Clique no botão abaixo para criar uma entrada básica no GitHub com o seu título, descrição e detalhes.",
+      "step2Description": "Após criar a entrada, volte aqui para copiar as informações adicionais abaixo e colá-las no seu formulário GitHub. Os dados confidenciais foram censurados, mas verifique novamente antes de partilhar.",
+      "stepOneDiscussion": "Passo 1: Crie uma discussão básica",
+      "stepOneIssue": "Passo 1: Criar problema básico",
+      "stepTwo": "Passo 2: Copie informações adicionais",
+      "title": "Resumo do problema do GitHub"
+    },
+    "title": "Reportar um problema",
+    "version": "Versão"
   },
   "log": {
     "areaLabel": "Filtrar por área",
@@ -925,7 +1028,8 @@
     "message": "Não conectado a nenhum servidor.",
     "restart": "Reiniciar",
     "restartNeeded": "Necessário para aplicar as alterações.",
-    "restarting": "Servidor a reiniciar."
+    "restarting": "Servidor a reiniciar.",
+    "starting": "Iniciando servidor..."
   },
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
@@ -1036,6 +1140,7 @@
     "vehicle": "Veículo"
   },
   "settings": {
+    "deviceInfo": "As definições efetuadas nesta caixa de diálogo afetam apenas este dispositivo.",
     "fullscreen": {
       "enter": "Entrar em tela cheia",
       "exit": "Sair da tela cheia",
@@ -1048,6 +1153,12 @@
     "language": {
       "auto": "Automático",
       "label": "Idioma"
+    },
+    "loadpoints": {
+      "help": "Alterar a ordem e visibilidade da interface do utilizador.",
+      "hide": "Ocultar {title}",
+      "label": "Pontos de carregamento",
+      "show": "Mostrar {title}"
     },
     "sponsorToken": {
       "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}. {getNewToken} e atualize-o aqui.",
@@ -1077,13 +1188,14 @@
   },
   "smartCost": {
     "activeHours": "{active} de {total}",
-    "activeHoursLabel": "Horas ativas",
+    "activeHoursLabel": "Tempo ativo",
     "applyToAll": "Aplicar em todo o lado?",
     "batteryDescription": "Carrega a bateria doméstica com energia da Rede.",
     "cheapTitle": "Carregamento da Rede mais económico",
     "cleanTitle": "Carregamento de Rede \"Verde\"",
     "co2Label": "Emissão de CO₂",
     "co2Limit": "Limite de CO₂",
+    "enable": "Ativar limite",
     "loadpointDescription": "Permite carregamento rápido temporário no modo solar.",
     "modalTitle": "Carregamento de Rede Inteligente",
     "none": "nenhum",
@@ -1094,7 +1206,7 @@
     "saved": "Guardado."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Horas de pausa",
+    "activeHoursLabel": "Tempo de pausa",
     "description": "Faz uma pausa no carregamento quando os preços são elevados para dar prioridade à alimentação rentável da rede.",
     "priceLabel": "Taxa de alimentação",
     "priceLimit": "Limite de alimentação",
@@ -1106,6 +1218,7 @@
     "configuration": "Configuração",
     "description": "Verifique seu ficheiro de configuração. Se a mensagem de erro não ajudar, verifique as {0}.",
     "discussions": "Discussões no GitHub",
+    "editConfiguration": "Editar configuração",
     "fixAndRestart": "Por favor corrija o problema e reinicie o servidor.",
     "hint": "Nota: Pode acontecer que tenha um equipamento com defeito (inversor, contador, …). Verifique as suas conexões de rede.",
     "lineError": "Erro em {0}.",

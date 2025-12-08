@@ -5,10 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
-	"net"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,8 +20,6 @@ import (
 )
 
 const (
-	sempController   = "Sunny Home Manager"
-	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
@@ -37,24 +32,22 @@ var serverName = "EVCC SEMP Server " + util.Version
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log          *util.Logger
-	controllable bool
-	vid          string
-	did          []byte
-	uid          string
-	hostURI      string
-	port         int
-	site         site.API
+	log  *util.Logger
+	vid  string
+	did  []byte
+	uid  string
+	uri  string
+	site site.API
 }
 
 type Config struct {
-	AllowControl bool   `json:"allowControl"`
-	VendorId     string `json:"vendorId"`
-	DeviceId     string `json:"deviceId"`
+	AllowControl_ bool   `json:"allowControl,omitempty"` // deprecated
+	VendorId      string `json:"vendorId"`
+	DeviceId      string `json:"deviceId"`
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
-func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
+func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, router *mux.Router) error {
 	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"
@@ -83,25 +76,13 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	}
 
 	s := &SEMP{
-		log:          util.NewLogger("semp"),
-		site:         site,
-		uid:          uid.String(),
-		vid:          vendorId,
-		did:          did,
-		controllable: cfg.AllowControl,
+		log:  util.NewLogger("semp"),
+		site: site,
+		uid:  uid.String(),
+		vid:  vendorId,
+		did:  did,
+		uri:  hostUri,
 	}
-
-	// find external port
-	// TODO refactor network config
-	_, port, err := net.SplitHostPort(addr)
-	if err == nil {
-		s.port, err = strconv.Atoi(port)
-	}
-	if err != nil {
-		return err
-	}
-
-	s.hostURI = s.callbackURI()
 
 	s.handlers(router)
 
@@ -110,7 +91,7 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 }
 
 func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
-	descriptor := s.hostURI + basePath + "/description.xml"
+	descriptor := s.uri + basePath + "/description.xml"
 	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
@@ -141,24 +122,6 @@ func (s *SEMP) run() {
 	}
 }
 
-func (s *SEMP) callbackURI() string {
-	if uri := os.Getenv(sempBaseURLEnv); uri != "" {
-		return strings.TrimSuffix(uri, "/")
-	}
-
-	ip := "localhost"
-	ips := util.LocalIPs()
-	if len(ips) > 0 {
-		ip = ips[0].IP.String()
-	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
-	}
-
-	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-
-	return uri
-}
-
 func (s *SEMP) handlers(router *mux.Router) {
 	sempRouter := router.PathPrefix(basePath).Subrouter()
 	getRouter := sempRouter.Methods(http.MethodGet).Subrouter()
@@ -175,7 +138,7 @@ func (s *SEMP) handlers(router *mux.Router) {
 	postRouter.HandleFunc("/", s.deviceControlHandler)
 }
 
-func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
+func (s *SEMP) writeXML(w http.ResponseWriter, msg any) {
 	s.log.TRACE.Printf("send: %+v", msg)
 
 	b, err := xml.MarshalIndent(msg, "", "  ")
@@ -200,11 +163,11 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 			FriendlyName:    "evcc",
 			Manufacturer:    "evcc.io",
 			ModelName:       serverName,
-			PresentationURL: s.hostURI,
+			PresentationURL: s.uri,
 			UDN:             uid,
 			ServiceDefinition: ServiceDefinition{
 				Xmlns:          urnSEMPService,
-				Server:         s.hostURI,
+				Server:         s.uri,
 				BasePath:       basePath,
 				Transport:      "HTTP/Pull",
 				ExchangeFormat: "XML",
@@ -368,19 +331,15 @@ func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
 	chargePower := lp.GetChargePower()
 
 	status := lp.GetStatus()
-	mode := lp.GetMode()
-	isPV := mode == api.ModeMinPV || mode == api.ModePV
 
 	deviceStatus := StatusOff
 	if status == api.StatusC {
 		deviceStatus = StatusOn
 	}
 
-	connected := status == api.StatusB || status == api.StatusC
-
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: s.controllable && isPV && connected,
+		EMSignalsAccepted: false,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -461,41 +420,12 @@ func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	var msg EM2Device
 
-	err := xml.NewDecoder(r.Body).Decode(&msg)
-	s.log.TRACE.Printf("recv: %+v", msg)
-
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	if err := xml.NewDecoder(r.Body).Decode(&msg); err == nil {
+		s.log.TRACE.Printf("recv: %+v", msg)
+	} else {
+		s.log.ERROR.Printf("recv: %+v", msg)
 	}
 
-	for _, dev := range msg.DeviceControl {
-		did := dev.DeviceID
-
-		for id, lp := range s.site.Loadpoints() {
-			if did != s.deviceID(id) {
-				continue
-			}
-
-			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			// ignore requests if not controllable
-			if !s.controllable {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			demand := loadpoint.RemoteSoftDisable
-			if dev.On {
-				demand = loadpoint.RemoteEnable
-			}
-
-			lp.RemoteControl(sempController, demand)
-		}
-	}
-
-	w.WriteHeader(http.StatusOK)
+	// ignore control requests
+	w.WriteHeader(http.StatusBadRequest)
 }

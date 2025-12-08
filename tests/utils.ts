@@ -146,3 +146,12 @@ export async function dragElement(
     await page.mouse.up();
   }
 }
+
+export async function getDatalistOptions(input: Locator): Promise<string[]> {
+  return input.evaluate((element: HTMLInputElement) => {
+    const datalistId = element.getAttribute("list");
+    if (!datalistId) return [];
+    const datalist = document.getElementById(datalistId);
+    return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
+  });
+}

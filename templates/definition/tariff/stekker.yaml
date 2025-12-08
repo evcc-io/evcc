@@ -11,6 +11,9 @@ params:
   - name: region
     example: BE
     type: choice
+    required: true
+    description:
+      generic: Market region code
     choice:
       [
         "DE-LU",
@@ -48,7 +51,9 @@ params:
         "HR",
       ]
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: stekker
   region: {{ .region }}
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}

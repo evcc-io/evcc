@@ -68,6 +68,9 @@ const (
 	flagHeartbeat            = "heartbeat"
 	flagHeartbeatDescription = "After command, continue running device heartbeats (if any) until interrupted"
 
+	flagTimeout            = "timeout"
+	flagTimeoutDescription = "Timeout"
+
 	flagDigits = "digits"
 	flagDelay  = "delay"
 	flagForce  = "force"
@@ -76,7 +79,7 @@ const (
 var flagTemplateTypeDescription = "Custom template type (" + strings.Join(
 	lo.Map([]templates.Class{templates.Charger, templates.Meter, templates.Tariff, templates.Vehicle}, func(t templates.Class, _ int) string {
 		return t.String()
-	}), ", ") + " (debug only)"
+	}), ", ") + ") (debug only)"
 
 func bind(cmd *cobra.Command, key string, flagName ...string) {
 	name := key

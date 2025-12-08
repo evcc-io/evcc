@@ -1,15 +1,19 @@
 package templates
 
 import (
+	"context"
+	"errors"
 	"maps"
 	"slices"
 	"testing"
 
+	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"go.yaml.in/yaml/v4"
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
-func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
+func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map[string]any)) {
 	t.Helper()
 
 	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
@@ -19,7 +23,7 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 		return
 	}
 
-	var instance interface{}
+	var instance any
 	if err := yaml.Unmarshal(b, &instance); err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -34,7 +38,36 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 	cb(values)
 }
 
-func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
+func testAuth(other map[string]any) error {
+	if len(other) == 0 {
+		return nil
+	}
+
+	var cc struct {
+		Type   string
+		Params []string
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return err
+	}
+
+	params := make(map[string]any)
+	for _, p := range cc.Params {
+		params[p] = "foo"
+	}
+
+	_, err := auth.NewFromConfig(context.TODO(), cc.Type, params)
+
+	// ConfigError indicates invalid parameters in mapstructure decode
+	if ce := new(util.ConfigError); errors.As(err, &ce) {
+		return err
+	}
+
+	return nil
+}
+
+func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]any)) {
 	t.Parallel()
 
 	for _, tmpl := range ByClass(class, WithDeprecated()) {
@@ -60,12 +93,17 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		// https://github.com/evcc-io/evcc/pull/10272 - override example IP (192.0.2.2)
 		values["host"] = "localhost"
 
+		// test auth configuration
+		if err := testAuth(tmpl.TemplateDefinition.Auth); err != nil {
+			t.Error("authorization:", err)
+		}
+
 		usages := tmpl.Usages()
 		if len(usages) == 0 {
 			t.Run(tmpl.Template, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, values, func(values map[string]interface{}) {
+				test(t, tmpl, values, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})
@@ -82,7 +120,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, usageValues, func(values map[string]interface{}) {
+				test(t, tmpl, usageValues, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})
