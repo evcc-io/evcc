@@ -17,13 +17,15 @@ func init() {
 
 type gpio struct {
 	mu  sync.Mutex
+	typ GpioType
 	pin rpio.Pin
 }
 
 // NewGpioPluginFromConfig creates a GPIO provider
 func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Pin int
+		Function GpioType
+		Pin      int
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -31,6 +33,7 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	}
 
 	p := &gpio{
+		typ: cc.Function,
 		pin: rpio.Pin(cc.Pin),
 	}
 
@@ -40,7 +43,14 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	}
 	defer rpio.Close()
 
-	p.pin.Input()
+	switch cc.Function {
+	case GpioTypeRead:
+		p.pin.Input()
+	case GpioTypeWrite:
+		p.pin.Output()
+	default:
+		return nil, fmt.Errorf("invalid type: %s", cc.Function)
+	}
 
 	return p, nil
 }
@@ -49,6 +59,10 @@ var _ BoolGetter = (*gpio)(nil)
 
 // BoolGetter returns GPIO pin active
 func (p *gpio) BoolGetter() (func() (bool, error), error) {
+	if p.typ != GpioTypeRead {
+		return nil, fmt.Errorf("invalid gpio type: %s", p.typ)
+	}
+
 	return func() (bool, error) {
 		p.mu.Lock()
 		defer p.mu.Unlock()
@@ -59,5 +73,29 @@ func (p *gpio) BoolGetter() (func() (bool, error), error) {
 		defer rpio.Close()
 
 		return p.pin.Read() != rpio.Low, nil
+	}, nil
+}
+
+var _ BoolSetter = (*gpio)(nil)
+
+// BoolSetter returns GPIO pin active
+func (p *gpio) BoolSetter(_ string) (func(bool) error, error) {
+	if p.typ != GpioTypeWrite {
+		return nil, fmt.Errorf("invalid gpio type: %s", p.typ)
+	}
+
+	return func(b bool) error {
+		p.mu.Lock()
+		defer p.mu.Unlock()
+
+		if err := rpio.Open(); err != nil {
+			return fmt.Errorf("failed to open GPIO: %w", err)
+		}
+		defer rpio.Close()
+
+		val := map[bool]rpio.State{false: rpio.Low, true: rpio.High}[b]
+		p.pin.Write(val)
+
+		return nil
 	}, nil
 }
