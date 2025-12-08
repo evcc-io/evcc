@@ -10,9 +10,9 @@ import (
 )
 
 func init() {
-	// Register test template from the same directory as this test file
-	// Go tests run with the working directory set to the package directory
-	_ = templates.Register(templates.Meter, "testdata/modbus-service-test.tpl.yaml")
+	// Register test template from the tests directory
+	// Path is relative to the package directory (util/modbus)
+	_ = templates.Register(templates.Meter, "../../tests/modbus-service/modbus-service-test.tpl.yaml")
 }
 
 func TestGetParams_MissingTemplate(t *testing.T) {
