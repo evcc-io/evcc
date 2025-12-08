@@ -129,7 +129,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		batterySocLimiter = batterySocLimits.Decorator()
 
 		if capacity != 0 {
-			batteryCapacity = func() float64 { return capacity }
+			batteryCapacity = func() float64 { return capacity + capacity2 }
 		}
 
 		batteryMode = func(mode api.BatteryMode) error {
