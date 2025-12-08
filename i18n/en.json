@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Apply & close",
+      "authPerform": "Connect with {provider}",
+      "authPerformHint": "Will open in a new tab. Return here to continue.",
+      "authPrepare": "Prepare connection",
       "cancel": "Cancel",
+      "clear": "Clear",
       "close": "Close",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
@@ -693,6 +697,7 @@
     "authProviders": {
       "confirmLogout": "Are you sure you want to disconnect {title}?",
       "loggedOut": "Successfully logged out",
+      "success": "Authorization with {title} was successful. You can now close this tab.",
       "title": "Authorization Status"
     },
     "blog": "Blog",

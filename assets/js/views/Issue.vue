@@ -299,6 +299,7 @@ import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 import { formatJson } from "@/components/Issue/format";
 import type { HelpType, IssueData } from "@/components/Issue/types";
+import type { State } from "@/types/evcc";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
@@ -467,7 +468,6 @@ export default defineComponent({
 					"config/eebus",
 					"config/hems",
 					"config/messaging",
-					"config/modbusproxy",
 					"config/tariffs",
 				];
 
@@ -475,7 +475,8 @@ export default defineComponent({
 
 				for (const endpoint of endpoints) {
 					try {
-						const response = await api.get(endpoint);
+						// Add private=false for device endpoints to hide private data in bug reports
+						const response = await api.get(endpoint, { params: { private: false } });
 						if (response.data && Object.keys(response.data).length > 0) {
 							const key = endpoint.replace("config/", "").replace("devices/", "");
 							let data = response.data;
@@ -493,6 +494,14 @@ export default defineComponent({
 						console.error(`Failed to fetch ${endpoint}:`, error);
 					}
 				}
+
+				// read essential config data from state
+				["modbusproxy", "mqtt", "influx", "shm", "interval"].forEach((key) => {
+					const value = store.state[key as keyof State];
+					if (value) {
+						configs[key] = value;
+					}
+				});
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {

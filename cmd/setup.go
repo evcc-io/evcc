@@ -42,6 +42,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	_ "github.com/evcc-io/evcc/util/demo"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
@@ -763,7 +764,7 @@ func configureMDNS(conf globalconfig.Network) error {
 
 	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
-		return fmt.Errorf("mDNS announcement: %w", err)
+		return err
 	}
 
 	shutdown.Register(zc.Shutdown)
@@ -987,6 +988,11 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
 			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
 		}
+	}
+
+	// prevent panic
+	if conf == nil {
+		return nil
 	}
 
 	for _, cfg := range *conf {

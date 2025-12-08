@@ -1,0 +1,31 @@
+template: device-auth-demo
+group: generic
+products:
+  - description:
+      de: Auth Demo Zähler
+      en: Auth Demo Meter
+auth:
+  type: demo
+  params: ["region", "server"]
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: region
+    description:
+      generic: Region
+    type: choice
+    choice: ["EU", "US", "CN"]
+  - name: server
+    description:
+      generic: Server
+  - name: power
+    description:
+      generic: Power
+    unit: W
+    type: int
+
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}

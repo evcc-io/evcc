@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Pritaikyti ir uždaryti",
+      "authPerform": "Jungtis naudojant {provider}",
+      "authPerformHint": "Bus atidaryta naujame skirtuke. Pratęsimui grįžkite čia.",
+      "authPrepare": "Paruošti ryšį",
       "cancel": "Atšaukti",
+      "clear": "Išvalyti",
       "close": "Uždaryti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
@@ -388,7 +392,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Leidžia keliems klientams pasiekti vieną Modbus įrenginį.",
+      "add": "Pridėti tarpinio serverio ryšį",
+      "connection": "Ryšio numeris {number}",
+      "description": "Kai kurie Modbus įrenginiai palaiko tik vieną arba labai mažai jungčių. evcc gali veikti kaip tarpinis serveris, suteikdamas prieigą keliems klientams vienu metu (namų automatizavimui, scenarijams ir kt.).",
+      "device": "Įrenginys",
+      "option": {
+        "deny": "klaida",
+        "false": "ne",
+        "true": "tylus"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Įrašymo prieiga užblokuota dėl Modbus klaidos.",
+          "false": "Rašymo prieiga peradresuota.",
+          "true": "Įrašymo prieiga užblokuota be atsako."
+        },
+        "label": "Tik skaitomas"
+      },
+      "sourcePortHelp": "Įeinančių klientų ryšių prievadas. Turi būti laisvas.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -410,10 +431,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Naudokite .local priesagą, kad įgalintumėte mDNS. Tai svarbu norint aptikti progrmėlę mobiliesiems ir kai kuriuos OCPP įkroviklius.",
+      "descriptionExternalUrl": "Adresas kitiems įrenginiams, norintiems prisijungti prie evcc, ir automatiniam evcc programėlės aptikimui.",
+      "descriptionHost": "Naudojamas evcc lokacijos pranešimui vietiniame tinkle.",
+      "descriptionInternalUrl": "evcc vietinio tinklo adresas.",
       "descriptionPort": "Žiniatinklio sąsajos ir API prievadas. Jei tai pakeisite, turėsite atnaujinti naršyklės URL.",
       "descriptionSchema": "Turi įtakos tik URL generavimui. Pasirinkus HTTPS šifravimas nebus įjungtas.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "Išorinis URL",
+      "labelHost": "mDNS Hostname",
+      "labelInternalUrl": "Vidinis URL",
       "labelPort": "Port",
       "labelSchema": "Schema",
       "title": "Tinklas"
@@ -478,6 +503,7 @@
       "labelToken": "Rėmėjo žetonas",
       "title": "Rėmimas",
       "tokenRequired": "Prieš konfigūruodami šį įrenginį turite sukonfigūruoti rėmėjo žetoną.",
+      "tokenRequiredFeature": "Šiai funkcijai reikalingas rėmėjo žetonas.",
       "tokenRequiredLearnMore": "Sužinoti daugiau.",
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
       "trialToken": "bandomasis žetonas (token)",
@@ -674,6 +700,7 @@
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
       "loggedOut": "Sėkmingai atsijungta",
+      "success": "Autorizacija su {title} sėkminga. Galite uždaryti šį skirtuką.",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
@@ -1003,7 +1030,8 @@
     "message": "Nėra ryšio su serveriu.",
     "restart": "Restartuoti",
     "restartNeeded": "Būtina, kad pakeitimai įsigaliotų.",
-    "restarting": "Serveris netrukus vėl veiks."
+    "restarting": "Serveris netrukus vėl veiks.",
+    "starting": "Paleidžiamas serveris..."
   },
   "passwordModal": {
     "description": "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus.",
@@ -1192,6 +1220,7 @@
     "configuration": "Konfiguracija",
     "description": "Patikrinkite konfigūracijos failą. Jei klaidos žinutė jums nepadėjo, atsakymų ieškokite mūsų {0}.",
     "discussions": "GitHub Diskusijose",
+    "editConfiguration": "Redaguoti konfigūraciją",
     "fixAndRestart": "Pabandykite Ištaisyti klaidą ir perkrauti serverį.",
     "hint": "Pastaba: Gali būti, kad neteisingai veikia įrenginiai (inverteris, skaitiklis, ...). Patikrinkite tiklo jungtis.",
     "lineError": "Klaida čia {0}.",

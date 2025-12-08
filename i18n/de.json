@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Übernehmen & schließen",
+      "authPerform": "Mit {provider} verbinden",
+      "authPerformHint": "Öffnet ein neues Tab. Anschließend hier weiter machen.",
+      "authPrepare": "Verbindung vorbereiten",
       "cancel": "Abbrechen",
+      "clear": "Löschen",
       "close": "Schließen",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
@@ -693,6 +697,7 @@
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
       "loggedOut": "Erfolgreich abgemeldet",
+      "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
       "title": "Autorisierungsstatus"
     },
     "blog": "Blog",

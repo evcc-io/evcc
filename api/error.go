@@ -2,12 +2,16 @@ package api
 
 import (
 	"errors"
+	"net/url"
 
 	"github.com/cenkalti/backoff/v4"
 )
 
 // ErrNotAvailable indicates that a feature is not available
-var ErrNotAvailable = errors.New("not available")
+var ErrNotAvailable = backoff.Permanent(errors.New("not available"))
+
+// ErrUnsupportedPlatform indicates unsupported hardware platform
+var ErrUnsupportedPlatform error = backoff.Permanent(errors.New("unsupported platform"))
 
 // ErrMustRetry indicates that a rate-limited operation should be retried
 var ErrMustRetry = errors.New("must retry")
@@ -41,6 +45,25 @@ type ErrLoginRequired struct {
 
 func (err *ErrLoginRequired) Error() string {
 	return "login required"
+}
+
+// ErrUrl indicates that the error contains an extractable URL
+type ErrUrl struct {
+	err string
+	url *url.URL
+}
+
+// UrlError creates an error message containing an url
+func UrlError(err string, url *url.URL) *ErrUrl {
+	return &ErrUrl{err, url}
+}
+
+func (err *ErrUrl) Error() string {
+	return err.err
+}
+
+func (err *ErrUrl) URL() *url.URL {
+	return err.url
 }
 
 // ErrAsleep indicates that vehicle is asleep. Caller may chose to wake up the vehicle and retry.

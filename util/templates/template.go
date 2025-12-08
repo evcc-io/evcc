@@ -62,6 +62,11 @@ func (t *Template) Validate() error {
 			continue
 		}
 
+		// Validate that a param cannot be both masked and private
+		if p.Mask && p.Private {
+			return fmt.Errorf("param %s: 'mask' and 'private' cannot be used together. Use 'mask' for sensitive data like passwords/tokens that should be hidden in UI. Use 'private' for personal data like emails/locations that should only be redacted from bug reports", p.Name)
+		}
+
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
 		}
@@ -306,7 +311,8 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 	// The actual key name is taken from the parameter to make it unique.
 	// Since predefined properties are not matched by actual parameters using
 	// ParamByName(), the lower case key name is used instead.
-	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
+	// All keys *must* be assigned or rendering will create "<no value>" artifacts. For this reason,
+	// deprecated parameters (that may still be rendered) must be evaluated, too.
 
 	for key, val := range values {
 		out := strings.ToLower(key)
@@ -316,8 +322,6 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
-		} else if p.IsDeprecated() {
-			continue
 		} else {
 			out = p.Name
 		}
