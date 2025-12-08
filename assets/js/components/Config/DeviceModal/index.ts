@@ -104,17 +104,17 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
   // Apply modbus defaults from template (for service dependency resolution)
   const modbusParam = params.find((p) => p.Name === "modbus") as ModbusParam | undefined;
   if (modbusParam) {
-    if (!values.id && modbusParam.ID) {
-      values.id = modbusParam.ID;
+    if (!values["id"] && modbusParam.ID) {
+      values["id"] = modbusParam.ID;
     }
-    if (!values.port && modbusParam.Port) {
-      values.port = modbusParam.Port;
+    if (!values["port"] && modbusParam.Port) {
+      values["port"] = modbusParam.Port;
     }
-    if (!values.comset && modbusParam.Comset) {
-      values.comset = modbusParam.Comset;
+    if (!values["comset"] && modbusParam.Comset) {
+      values["comset"] = modbusParam.Comset;
     }
-    if (!values.baudrate && modbusParam.Baudrate) {
-      values.baudrate = modbusParam.Baudrate;
+    if (!values["baudrate"] && modbusParam.Baudrate) {
+      values["baudrate"] = modbusParam.Baudrate;
     }
   }
 }
