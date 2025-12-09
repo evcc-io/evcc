@@ -13,9 +13,9 @@ type GridSession struct {
 	LimitPower float64   `json:"limit"`
 }
 
-type Type rune
+type Type string
 
 const (
-	Dim     Type = 'D'
-	Curtail Type = 'C'
+	Dim     Type = "consumption"
+	Curtail Type = "feedin"
 )
