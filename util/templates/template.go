@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -352,6 +353,13 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
+					// validate required fields from yaml
+					if p.IsRequired() {
+						if rv := reflect.ValueOf(val); rv.IsZero() {
+							return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+						}
+					}
+
 					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
 				res[out] = s
