@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
@@ -22,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/util/otel"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -162,6 +165,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err == nil {
 		// network configuration complete, start dependent services like HomeAssistant discovery
 		network.Start(conf.Network)
+	}
+
+	// setup OpenTelemetry
+	ctx := context.Background()
+	if err == nil && conf.Otel.Enabled {
+		if initErr := otel.Init(ctx, conf.Otel); initErr != nil {
+			log.WARN.Printf("OpenTelemetry initialization failed: %v", initErr)
+			// Don't fail startup if otel fails
+		} else {
+			// Register shutdown handler
+			shutdown.Register(func() {
+				if shutdownErr := otel.Shutdown(context.Background()); shutdownErr != nil {
+					log.WARN.Printf("OpenTelemetry shutdown failed: %v", shutdownErr)
+				}
+			})
+		}
 	}
 
 	// start broadcasting values
