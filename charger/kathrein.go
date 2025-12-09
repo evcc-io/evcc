@@ -309,7 +309,7 @@ func (wb *Kathrein) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(kathreinRegVoltages, 1)
 }
 
-// removed since broken, see https://github.com/evcc-io/evcc/pull/XXXX
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25934
 // var _ api.ChargeTimer = (*Kathrein)(nil)
 
 // removed since broken, see https://github.com/evcc-io/evcc/pull/25427
