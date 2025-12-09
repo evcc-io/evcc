@@ -16,7 +16,7 @@
 					:style="{
 						borderTopRightRadius: 0,
 						borderBottomRightRadius: 0,
-						...(invalid && { borderColor: 'var(--bs-form-invalid-border-color)' })
+						...(invalid && { borderColor: 'var(--bs-form-invalid-border-color)' }),
 					}"
 					:autocomplete="masked || showDatalist ? 'off' : null"
 				/>
@@ -103,10 +103,7 @@
 			:id="id"
 			v-model="value"
 			:list="datalistId"
-			:class="[
-				showDatalist ? 'form-select' : 'form-control',
-				inputClasses
-			]"
+			:class="[showDatalist ? 'form-select' : 'form-control', inputClasses]"
 			:type="inputType"
 			:step="step"
 			:placeholder="placeholder"
