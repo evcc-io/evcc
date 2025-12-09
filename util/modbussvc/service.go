@@ -1,4 +1,4 @@
-package modbus
+package modbussvc
 
 import (
 	"context"
@@ -49,9 +49,6 @@ func init() {
 // getParams reads a parameter value from a device based on URL parameters
 // Returns single value as array (for UI compatibility)
 func getParams(w http.ResponseWriter, req *http.Request) {
-	ctx, cancel := context.WithTimeout(req.Context(), 10*time.Second)
-	defer cancel()
-
 	q := req.URL.Query()
 
 	// Build modbus settings from query parameters
@@ -85,7 +82,8 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	cacheMutex.RUnlock()
 
 	// Read value from modbus using plugin
-	value, err := readRegisterValue(ctx, settings, reg, scale)
+	// Use background context so connection isn't tied to HTTP request lifecycle
+	value, err := readRegisterValue(context.TODO(), settings, reg, scale)
 	if err != nil {
 		log.DEBUG.Printf("Failed to read register %d: %v", reg.Address, err)
 		jsonWrite(w, []string{}) // Return empty array on error

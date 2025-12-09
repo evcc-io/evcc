@@ -1,4 +1,4 @@
-package modbus
+package modbussvc
 
 import (
 	"net/http"
