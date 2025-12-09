@@ -35,7 +35,7 @@ require (
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
 	github.com/evcc-io/openapi-mcp v0.6.0
-	github.com/evcc-io/rct v0.1.2-0.20251112124403-1d380ab2264a
+	github.com/evcc-io/rct v0.1.2-0.20251121151844-04c32662cf6f
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.133.0
