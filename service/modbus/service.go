@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/plugin"
@@ -17,6 +19,18 @@ import (
 )
 
 var log = util.NewLogger("modbus")
+
+// Simple cache for service responses
+type cacheEntry struct {
+	value     float64
+	timestamp time.Time
+}
+
+var (
+	cache      = make(map[string]cacheEntry)
+	cacheMutex sync.RWMutex
+	cacheTTL   = 1 * time.Minute // Cache for 1 minute
+)
 
 const (
 	// DefaultModbusPort is the standard Modbus TCP port
@@ -54,13 +68,37 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Read value from modbus using plugin (zero duplication!)
+	// Create cache key from URI and register address
+	cacheKey := fmt.Sprintf("%s:%d", settings.URI, reg.Address)
+
+	// Check cache first
+	cacheMutex.RLock()
+	if entry, ok := cache[cacheKey]; ok && time.Since(entry.timestamp) < cacheTTL {
+		cacheMutex.RUnlock()
+		log.TRACE.Printf("Cache hit for %s", cacheKey)
+		value := entry.value
+		finalValue := applyCast(value, cast)
+		valueStr := fmt.Sprintf("%v", finalValue)
+		jsonWrite(w, []string{valueStr})
+		return
+	}
+	cacheMutex.RUnlock()
+
+	// Read value from modbus using plugin
 	value, err := readRegisterValue(ctx, settings, reg, scale)
 	if err != nil {
 		log.DEBUG.Printf("Failed to read register %d: %v", reg.Address, err)
 		jsonWrite(w, []string{}) // Return empty array on error
 		return
 	}
+
+	// Store in cache
+	cacheMutex.Lock()
+	cache[cacheKey] = cacheEntry{
+		value:     value,
+		timestamp: time.Now(),
+	}
+	cacheMutex.Unlock()
 
 	// Apply cast if specified
 	finalValue := applyCast(value, cast)
@@ -185,7 +223,7 @@ func readRegisterValue(ctx context.Context, settings modbus.Settings, reg modbus
 func applyCast(value float64, cast string) any {
 	switch cast {
 	case "int":
-		return int64(value + 0.5) // Round to nearest
+		return int64(math.Round(value))
 	case "float":
 		return value
 	case "string":
