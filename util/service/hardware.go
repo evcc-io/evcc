@@ -25,9 +25,9 @@ var (
 
 func getSerialPorts(w http.ResponseWriter, req *http.Request) {
 	once.Do(func() {
-		ports = strings.Split(os.Getenv("EVCC_SERIAL_PORTS"), ",")
-
-		if len(ports) == 0 {
+		if env := os.Getenv("EVCC_SERIAL_PORTS"); env != "" {
+			ports = strings.Split(env, ",")
+		} else {
 			ports, _ = serialports.GetPortsList()
 		}
 	})

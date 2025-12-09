@@ -108,6 +108,7 @@
 							v-model:device="values['device']"
 							v-model:baudrate="values['baudrate']"
 							v-model:comset="values['comset']"
+							component-id="device"
 							:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
 							:defaultComset="modbus.Comset"
 							:defaultBaudrate="modbus.Baudrate"
