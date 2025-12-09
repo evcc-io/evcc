@@ -50,6 +50,13 @@ func TestRequired(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, _, err = tmpl.RenderResult(0, nil)
+	_, _, err = tmpl.RenderResult(0, map[string]any{
+		"Param": "",
+	})
+	require.Error(t, err)
+
+	_, _, err = tmpl.RenderResult(0, map[string]any{
+		"Param": nil,
+	})
 	require.Error(t, err)
 }
