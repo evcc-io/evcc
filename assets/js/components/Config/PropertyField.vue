@@ -176,7 +176,11 @@ export default {
 			// value selected, dont offer single same option again
 			// Convert both to strings for comparison to handle number/string type mismatches
 			const valueStr = String(this.value ?? "");
-			if (this.value != null && valueStr !== "" && this.serviceValues.some(v => String(v) === valueStr)) {
+			if (
+				this.value != null &&
+				valueStr !== "" &&
+				this.serviceValues.some((v) => String(v) === valueStr)
+			) {
 				return false;
 			}
 			return true;
