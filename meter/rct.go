@@ -109,7 +109,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	if usage == "battery" {
 		// validate capacity configuration for dual battery setups
 		if capacity2 > 0 && capacity == 0 {
-			return nil, errors.New("capacity2 requires capacity to be set")
+			return nil, errors.New("missing first battery capacity")
 		}
 
 		batterySoc = func() (float64, error) {
