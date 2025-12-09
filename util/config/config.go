@@ -78,12 +78,12 @@ func (d *Config) Delete() error {
 
 func init() {
 	db.Register(func() error {
-		return Init()
+		return SetupSchema()
 	})
 }
 
-// Init is used for testing
-func Init() error {
+// SetupSchema is used for testing
+func SetupSchema() error {
 	return db.Instance.AutoMigrate(new(Config))
 }
 
