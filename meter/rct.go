@@ -109,23 +109,18 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	if usage == "battery" {
 		batterySoc = func() (float64, error) {
 			soc, err := m.queryFloat(rct.BatterySoC)
-
 			if err != nil {
 				return 0, err
 			}
 
-			if capacity2 != 0 {
-				soc2, err := m.queryFloat(rct.BatteryPlaceholder0Soc)
-
-				sc := soc * capacity
-				sc2 := soc2 * capacity2
-				c := capacity + capacity2
-
-				return ((sc + sc2) / c) * 100, err
+			if capacity2 == 0 {
+				return soc * 100, err
 			}
 
-			return soc * 100, err
+			soc2, err := m.queryFloat(rct.BatteryPlaceholder0Soc)
+			return (soc*capacity + soc2*capacity2) / (capacity + capacity2) * 100, err
 		}
+
 		batterySocLimiter = batterySocLimits.Decorator()
 
 		if capacity != 0 {
@@ -235,6 +230,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 
 	case "battery":
 		return m.queryFloat(rct.BatteryPowerW)
+
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
@@ -283,7 +279,6 @@ func (m *RCT) totalEnergy() (float64, error) {
 		})
 
 		err := eg.Wait()
-
 		return (in - out) / 1000, err
 
 	default:
