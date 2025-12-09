@@ -8,7 +8,10 @@ import (
 )
 
 // ErrNotAvailable indicates that a feature is not available
-var ErrNotAvailable = errors.New("not available")
+var ErrNotAvailable = backoff.Permanent(errors.New("not available"))
+
+// ErrUnsupportedPlatform indicates unsupported hardware platform
+var ErrUnsupportedPlatform error = backoff.Permanent(errors.New("unsupported platform"))
 
 // ErrMustRetry indicates that a rate-limited operation should be retried
 var ErrMustRetry = errors.New("must retry")

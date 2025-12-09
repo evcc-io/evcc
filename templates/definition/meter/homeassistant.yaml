@@ -125,6 +125,7 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
+  home: {{ .home }} # deprecated
   power: {{ .power }}
   energy: {{ .energy }}
   currents:

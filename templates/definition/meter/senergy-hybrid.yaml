@@ -1,0 +1,117 @@
+template: senergy-hybrid
+products:
+  - brand: Senergy
+    description:
+      generic: Hybrid Inverter
+  - brand: Strong Energy
+    description:
+      generic: Alfred 10
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    id: 1
+  - name: capacity
+    advanced: true
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
+  - name: maxacpower
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x1066 # Grid Total Power
+      type: holding
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x1306 # Accumulated energy of import
+      type: holding
+      decode: uint32
+    scale: 0.01
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x131D # Grid Phase A Current
+        type: holding
+        decode: int32
+      scale: 100
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x131F # Grid Phase B Current
+        type: holding
+        decode: int32
+      scale: 100
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x1321 # Grid Phase C Current
+        type: holding
+        decode: int32
+      scale: 100
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x1048 # PV Total Input Power
+      type: holding
+      decode: uint32
+    scale: 10
+  energy:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x1021 # Total Energy 
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x104C # Decimals of total energy 
+        type: holding
+        decode: uint32
+      scale: 0.001
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x2009 # Battery Power
+      type: holding
+      decode: int32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x2011 # Battery accumulated discharge energy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x2000 # Battery SOC
+      type: holding
+      decode: uint16
+  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
+  {{- end }}

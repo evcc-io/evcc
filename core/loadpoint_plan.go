@@ -104,10 +104,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.setPlanActive(active)
 	}()
 
+	var plan api.Rates
 	var planStart, planEnd time.Time
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -143,7 +145,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
+	plan = lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
 	if plan == nil {
 		return false
 	}
