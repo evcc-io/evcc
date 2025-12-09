@@ -320,18 +320,8 @@ input[type="number"]::-webkit-inner-spin-button {
 	min-width: min(200px, 100%);
 }
 
-/* Ensure datalist container helps with positioning */
-.d-flex > .position-relative {
-	display: block;
-}
-
 /* Fix text alignment when using form-select with number input */
 input.form-select[type="number"] {
 	padding-right: 2.25rem; /* Space for dropdown arrow */
-}
-
-/* Ensure input takes full width of container */
-input[list].w-100 {
-	width: 100% !important;
 }
 </style>
