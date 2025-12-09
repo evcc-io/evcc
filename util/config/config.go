@@ -78,8 +78,13 @@ func (d *Config) Delete() error {
 
 func init() {
 	db.Register(func() error {
-		return db.Instance.AutoMigrate(new(Config))
+		return Init()
 	})
+}
+
+// Init is used for testing
+func Init() error {
+	return db.Instance.AutoMigrate(new(Config))
 }
 
 // NameForID returns a unique config name for the given id
