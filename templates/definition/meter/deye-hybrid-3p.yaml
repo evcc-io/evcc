@@ -23,6 +23,24 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxacpower
+  - name: maxdischargecurrent
+    default: 100
+    advanced: true
+    description:
+      en: Maximum discharge current (normal mode)
+      de: Maximaler Entladestrom (Normalmodus)
+    help:
+      en: Battery discharge current limit when battery mode is set to normal or charge
+      de: Batterie-Entladestrom-Limit wenn Batteriemodus auf Normal oder Laden steht
+  - name: holdcurrent
+    default: 10
+    advanced: true
+    description:
+      en: Hold mode discharge current
+      de: Entladestrom im Haltemodus
+    help:
+      en: Battery discharge current limit when battery mode is set to hold (should be low enough for house baseload only)
+      de: Batterie-Entladestrom-Limit im Haltemodus (sollte niedrig genug für Hausgrundlast sein)
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -128,126 +146,39 @@ render: |
   batterymode:
     source: switch
     switch:
-    - case: 1 # normal
+    - case: 1 # normal - allow full discharge
       set:
-        source: sequence
+        source: const
+        value: {{ .maxdischargecurrent }}
         set:
-        - source: const
-          value: {{ .minsoc }} 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 166 
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 148 
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 2355 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 149 
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 0 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 172 
-              type: writemultiple
-              decode: int32s  
-    - case: 2 # hold
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 109 # Battery Max Discharging Current
+            type: writemultiple
+            decode: uint16
+    - case: 2 # hold - limit discharge to house baseload only
       set:
-        source: sequence
+        source: const
+        value: {{ .holdcurrent }}
         set:
-        - source: const
-          value: {{ .maxsoc }}
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}        
-            register:
-              address: 166 
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 148 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 2355 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 149 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 0 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 172 
-              type: writemultiple
-              decode: int32s  
-    - case: 3 # charge
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 109 # Battery Max Discharging Current
+            type: writemultiple
+            decode: uint16
+    - case: 3 # charge - allow full discharge while grid charging
       set:
-        source: sequence
+        source: const
+        value: {{ .maxdischargecurrent }}
         set:
-        - source: const
-          value: {{ .maxsoc }}
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}        
-            register:
-              address: 166 
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 148 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 2355 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 149 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 1 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 172 
-              type: writemultiple
-              decode: int32s  
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 109 # Battery Max Discharging Current
+            type: writemultiple
+            decode: uint16  
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
