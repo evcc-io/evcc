@@ -98,16 +98,20 @@ type Status struct {
 }
 
 // GetStatus returns the sponsorship status
-func GetStatus() Status {
+func GetStatus() *Status {
 	mu.RLock()
 	defer mu.RUnlock()
+
+	if len(Subject) == 0 {
+		return nil
+	}
 
 	var expiresSoon bool
 	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
 		expiresSoon = true
 	}
 
-	return Status{
+	return &Status{
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,

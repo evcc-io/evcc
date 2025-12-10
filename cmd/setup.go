@@ -498,11 +498,9 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-	} else {
+	} else if token != "" {
 		fromYaml.sponsor = true
 	}
-
-	// TODO migrate settings
 
 	return sponsor.ConfigureSponsorship(token)
 }
@@ -720,10 +718,12 @@ func configureGo(conf []globalconfig.Go) error {
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	// use yaml if configured
-	if settings.Exists(keys.Hems) && conf.Type == "" {
-		*conf = globalconfig.Hems{}
-		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-			return nil, err
+	if conf.Type == "" {
+		if settings.Exists(keys.Hems) {
+			*conf = globalconfig.Hems{}
+			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
+				return nil, err
+			}
 		}
 	} else {
 		fromYaml.hems = true

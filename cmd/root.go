@@ -15,7 +15,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/hems/hems"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -282,7 +282,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
-	var hems hems.API
+	var hems hemsapi.API
 	if err == nil {
 		hems, err = configureHEMS(&conf.HEMS, site)
 		if err != nil {
@@ -317,24 +317,20 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
-		sponsor.Status
-		FromYaml bool `json:"fromYaml"`
+		Status   *sponsor.Status `json:"status,omitempty"`
+		FromYaml bool            `json:"fromYaml"`
 	}{
 		Status:   sponsor.GetStatus(),
 		FromYaml: fromYaml.sponsor,
 	}}
 
-	var maxPower float64
-	if hems != nil {
-		maxPower = hems.MaxPower()
-	}
 	valueChan <- util.Param{Key: keys.Hems, Val: struct {
 		Config   globalconfig.Hems `json:"config"`
-		MaxPower float64           `json:"maxPower"`
+		Status   *hemsapi.Status   `json:"status,omitempty"`
 		FromYaml bool              `json:"fromYaml"`
 	}{
 		Config:   conf.HEMS,
-		MaxPower: maxPower,
+		Status:   hemsapi.GetStatus(hems),
 		FromYaml: fromYaml.hems,
 	}}
 

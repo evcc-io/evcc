@@ -27,7 +27,13 @@ func updateSponsortokenHandler(pub site.Publisher) func(w http.ResponseWriter, r
 				return
 			}
 
-			pub.Publish(keys.Sponsor, sponsor.GetStatus())
+			pub.Publish(keys.Sponsor, struct {
+				Status   *sponsor.Status `json:"status"`
+				FromYaml bool            `json:"fromYaml"`
+			}{
+				Status:   sponsor.GetStatus(),
+				FromYaml: false,
+			})
 		}
 
 		// TODO find better place
