@@ -1,15 +1,7 @@
 network:
   port: 7070
-# trial token, valid until 2025-12-11
-sponsortoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJldmNjLmlvIiwic3ViIjoidHJpYWwiLCJleHAiOjE3NjU0NDcyMDAsImlhdCI6MTc2NDg0MjQwMCwic3BlIjp0cnVlLCJzcmMiOiJtYSJ9.UT0Yj6clvjS73jtbqkOww52JIpTYdCQpfKj3P6aOGJE
-log: debug
 
-hems:
-  type: relay
-  maxPower: 8400 # Example for 2 SteuVE
-  limit:
-    source: const
-    value: true
+log: debug
 
 interval: 3s
 
