@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/fatih/structs"
+	"github.com/spf13/cast"
 )
 
 var log = util.NewLogger("modbus")
@@ -23,17 +26,18 @@ type cacheEntry struct {
 }
 
 var (
-	cache      = make(map[string]cacheEntry)
-	cacheMutex sync.RWMutex
-	cacheTTL   = 1 * time.Minute // Cache for 1 minute
+	cache    = make(map[string]cacheEntry)
+	mu       sync.RWMutex
+	cacheTTL = 1 * time.Minute // Cache for 1 minute
 )
 
 // Query combines modbus settings, register config, and additional parameters
 type Query struct {
 	modbus.Settings `mapstructure:",squash"`
 	modbus.Register `mapstructure:",squash"`
-	Scale           float64 `mapstructure:"scale"` // scaling factor
-	Cast            string  `mapstructure:"cast"`  // type cast (int, float, string)
+	Result          string
+	Scale           float64 // scaling factor
+	Cast            string  // type cast (int, float, string)
 }
 
 func init() {
@@ -53,7 +57,10 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Decode query parameters into Query struct using mapstructure
-	query := Query{Scale: 1.0}
+	query := Query{
+		Scale: 1.0,
+	}
+
 	if err := util.DecodeOther(cc, &query); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
@@ -69,20 +76,17 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	cacheKey := fmt.Sprintf("%s:%d", query.URI, query.Address)
 
 	// Check cache first
-	cacheMutex.RLock()
+	mu.RLock()
 	if entry, ok := cache[cacheKey]; ok && time.Since(entry.timestamp) < cacheTTL {
-		cacheMutex.RUnlock()
-		log.TRACE.Printf("Cache hit for %s", cacheKey)
-		finalValue := applyCast(entry.value, query.Cast)
-		valueStr := fmt.Sprintf("%v", finalValue)
-		jsonWrite(w, []string{valueStr})
+		mu.RUnlock()
+		jsonWrite(w, []string{cast.ToString(entry.value)})
 		return
 	}
-	cacheMutex.RUnlock()
+	mu.RUnlock()
 
 	// Read value from modbus using plugin
 	// Use background context so connection isn't tied to HTTP request lifecycle
-	value, err := readRegisterValue(context.TODO(), query.Settings, query.Register, query.Scale)
+	value, err := readRegisterValue(context.TODO(), query)
 	if err != nil {
 		log.DEBUG.Printf("Failed to read register %d: %v", query.Address, err)
 		jsonWrite(w, []string{}) // Return empty array on error
@@ -90,104 +94,41 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Store in cache
-	cacheMutex.Lock()
+	mu.Lock()
 	cache[cacheKey] = cacheEntry{
 		value:     value,
 		timestamp: time.Now(),
 	}
-	cacheMutex.Unlock()
+	mu.Unlock()
 
-	// Apply cast if specified
-	finalValue := applyCast(value, query.Cast)
-
-	// Return value as string array (for UI compatibility)
-	valueStr := fmt.Sprintf("%v", finalValue)
-	jsonWrite(w, []string{valueStr})
+	jsonWrite(w, []string{cast.ToString(value)})
 }
 
 // readRegisterValue reads a modbus register value by reusing the modbus plugin
-func readRegisterValue(ctx context.Context, settings modbus.Settings, reg modbus.Register, scale float64) (any, error) {
-	// Build config for plugin
-	cfg := map[string]any{
-		"uri":      settings.URI,
-		"id":       settings.ID,
-		"register": reg,
-		"scale":    scale,
-	}
-
-	// Add optional settings
-	if settings.Device != "" {
-		cfg["device"] = settings.Device
-	}
-	if settings.Comset != "" {
-		cfg["comset"] = settings.Comset
-	}
-	if settings.Baudrate != 0 {
-		cfg["baudrate"] = settings.Baudrate
-	}
-
-	// Create plugin instance (reuses connection pool automatically)
-	p, err := plugin.NewModbusFromConfig(ctx, cfg)
+func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
+	p, err := plugin.NewModbusFromConfig(ctx, structs.Map(query))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create modbus plugin: %w", err)
 	}
 
-	// Try different getters based on what the plugin supports
-	if fg, ok := p.(plugin.FloatGetter); ok {
-		getter, err := fg.FloatGetter()
-		if err != nil {
-			return nil, err
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("invalid result type: %s", query.Result)
 		}
-		return getter()
-	}
+	}()
 
-	if ig, ok := p.(plugin.IntGetter); ok {
-		getter, err := ig.IntGetter()
-		if err != nil {
-			return nil, err
-		}
-		return getter()
-	}
-
-	if bg, ok := p.(plugin.BoolGetter); ok {
-		getter, err := bg.BoolGetter()
-		if err != nil {
-			return nil, err
-		}
-		return getter()
-	}
-
-	if sg, ok := p.(plugin.StringGetter); ok {
-		getter, err := sg.StringGetter()
-		if err != nil {
-			return nil, err
-		}
-		return getter()
-	}
-
-	return nil, fmt.Errorf("plugin does not implement any supported getter interface")
-}
-
-// applyCast applies type casting to the value
-func applyCast(value any, cast string) any {
-	if cast == "" {
-		return value
-	}
-
-	switch cast {
-	case "int":
-		if v, ok := value.(float64); ok {
-			return int64(v)
-		}
+	switch strings.ToLower(query.Result) {
 	case "float":
-		if v, ok := value.(int64); ok {
-			return float64(v)
-		}
+		return p.(plugin.FloatGetter).FloatGetter()
+	case "int":
+		return p.(plugin.IntGetter).IntGetter()
+	case "bool":
+		return p.(plugin.BoolGetter).BoolGetter()
 	case "string":
-		return fmt.Sprintf("%v", value)
+		return p.(plugin.StringGetter).StringGetter()
+	default:
+		return nil, fmt.Errorf("plugin does not implement any supported getter interface")
 	}
-
-	return value
 }
 
 // jsonWrite writes a JSON response
