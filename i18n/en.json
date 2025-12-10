@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Authentication Code",
+    "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
+    "authorizationRequired": "Authorization Required",
+    "buttonConnect": "Connect to {provider}",
+    "buttonDisconnect": "Disconnect",
+    "confirmLogout": "Are you sure you want to disconnect {title}?",
+    "connect": "connect",
+    "disconnect": "disconnect",
+    "loggedOut": "Successfully logged out",
+    "logoutFailed": "Failed to logout",
+    "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",
+    "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
+    "success": "Authorization with {title} was successful.",
+    "successCloseModal": "You can now close this dialog.",
+    "successCloseTab": "You can now close this tab.",
+    "title": "Authorization Status"
+  },
   "batterySettings": {
     "batteryLevel": "Battery level",
     "bufferStart": {
@@ -164,6 +182,8 @@
       "cancel": "Cancel",
       "clear": "Clear",
       "close": "Close",
+      "copied": "Copied!",
+      "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
@@ -375,9 +395,9 @@
       "baudrate": "Baud rate",
       "comset": "ComSet",
       "connection": "Modbus connection",
-      "connectionHintSerial": "The device is directly connected to evcc via a RS485 interface.",
-      "connectionHintTcpip": "The device is addressable from evcc via LAN/Wifi.",
-      "connectionValueSerial": "Serial / USB",
+      "connectionHintSerial": "The device is directly connected via RS485 (or USB-to-RS485 adapter).",
+      "connectionHintTcpip": "The device is reachable via network (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Network",
       "device": "Device name",
       "deviceHint": "Example: /dev/ttyUSB0",
@@ -694,11 +714,6 @@
   },
   "header": {
     "about": "About",
-    "authProviders": {
-      "confirmLogout": "Are you sure you want to disconnect {title}?",
-      "loggedOut": "Successfully logged out",
-      "title": "Authorization Status"
-    },
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",

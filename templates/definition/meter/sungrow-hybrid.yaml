@@ -26,6 +26,7 @@ params:
   - name: maxchargepower
     default: 5000
     advanced: true
+    required: true
   - name: maxdischargepower
     default: 5000
     advanced: true
