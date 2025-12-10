@@ -25,7 +25,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
-    required: true    
+    required: true
   - name: maxdischargepower
     required: true
   - name: minsoc
