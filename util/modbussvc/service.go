@@ -17,8 +17,6 @@ import (
 	"github.com/spf13/cast"
 )
 
-var log = util.NewLogger("modbus")
-
 // Simple cache for service responses
 type cacheEntry struct {
 	value     any
@@ -88,7 +86,6 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	// Use background context so connection isn't tied to HTTP request lifecycle
 	value, err := readRegisterValue(context.TODO(), query)
 	if err != nil {
-		log.DEBUG.Printf("Failed to read register %d: %v", query.Address, err)
 		jsonWrite(w, []string{}) // Return empty array on error
 		return
 	}
@@ -113,7 +110,7 @@ func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("invalid result type: %s", query.Result)
+			err = fmt.Errorf("invalid result type `%s`: %v", query.Result, r)
 		}
 	}()
 
