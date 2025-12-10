@@ -317,8 +317,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
-		Status   *sponsor.Status `json:"status,omitempty"`
-		FromYaml bool            `json:"fromYaml"`
+		Status   sponsor.Status `json:"status"`
+		FromYaml bool           `json:"fromYaml"`
 	}{
 		Status:   sponsor.GetStatus(),
 		FromYaml: fromYaml.sponsor,

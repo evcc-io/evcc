@@ -289,7 +289,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, cache *util.ParamCache, a
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(site)},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(site)},
 		}
 
 		// yaml handlers

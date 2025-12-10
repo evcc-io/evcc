@@ -28,8 +28,8 @@ func updateSponsortokenHandler(pub site.Publisher) func(w http.ResponseWriter, r
 			}
 
 			pub.Publish(keys.Sponsor, struct {
-				Status   *sponsor.Status `json:"status"`
-				FromYaml bool            `json:"fromYaml"`
+				Status   sponsor.Status `json:"status"`
+				FromYaml bool           `json:"fromYaml"`
 			}{
 				Status:   sponsor.GetStatus(),
 				FromYaml: false,
@@ -44,8 +44,19 @@ func updateSponsortokenHandler(pub site.Publisher) func(w http.ResponseWriter, r
 	}
 }
 
-func deleteSponsorTokenHandler(w http.ResponseWriter, r *http.Request) {
-	settings.SetString(keys.SponsorToken, "")
-	setConfigDirty()
-	jsonWrite(w, true)
+func deleteSponsorTokenHandler(pub site.Publisher) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		settings.SetString(keys.SponsorToken, "")
+
+		pub.Publish(keys.Sponsor, struct {
+			Status   sponsor.Status `json:"status"`
+			FromYaml bool           `json:"fromYaml"`
+		}{
+			Status:   sponsor.Status{},
+			FromYaml: false,
+		})
+
+		setConfigDirty()
+		jsonWrite(w, true)
+	}
 }
