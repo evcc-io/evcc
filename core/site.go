@@ -73,7 +73,7 @@ var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	uiChan       chan<- util.Param // client push messages
+	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
 
 	*Health
@@ -485,11 +485,11 @@ func (site *Site) DumpConfig() {
 // publish sends values to UI and databases
 func (site *Site) publish(key string, val any) {
 	// test helper
-	if site.uiChan == nil {
+	if site.valueChan == nil {
 		return
 	}
 
-	site.uiChan <- util.Param{Key: key, Val: val}
+	site.valueChan <- util.Param{Key: key, Val: val}
 }
 
 var _ site.Publisher = (*Site)(nil)
@@ -1050,7 +1050,7 @@ func (site *Site) prepare() {
 }
 
 // Prepare attaches communication channels to site and loadpoints
-func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
+func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Event) {
 	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
 	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
 
@@ -1058,12 +1058,12 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 	ch := chanx.NewUnboundedChan[util.Param](context.Background(), 2)
 
 	// use ch.In for writing
-	site.uiChan = ch.In
+	site.valueChan = ch.In
 
 	// use ch.Out for reading
 	go func() {
 		for p := range ch.Out {
-			uiChan <- p
+			valueChan <- p
 		}
 	}()
 
@@ -1081,7 +1081,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 				select {
 				case param := <-lpUIChan:
 					param.Loadpoint = &id
-					site.uiChan <- param
+					site.valueChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
 					pushChan <- ev
