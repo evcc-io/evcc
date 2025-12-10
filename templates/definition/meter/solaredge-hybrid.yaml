@@ -1,7 +1,7 @@
 template: solaredge-hybrid
 products:
   - brand: SolarEdge
-    description:
+    description:https://www.reddit.com/
       generic: Hybrid Inverter
 capabilities: ["battery-control"]
 requirements:
@@ -25,9 +25,8 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargepower
-    required: true
   - name: maxdischargepower
-    required: true
+    default: 5000
   - name: minsoc
     advanced: true
   - name: maxsoc
