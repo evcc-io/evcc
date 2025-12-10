@@ -1,7 +1,7 @@
 template: solaredge-hybrid
 products:
   - brand: SolarEdge
-    description:https://www.reddit.com/
+    description:
       generic: Hybrid Inverter
 capabilities: ["battery-control"]
 requirements:
