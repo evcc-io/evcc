@@ -1,7 +1,11 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader :title="$t('config.main.title')" />
+			<TopHeader
+				ref="header"
+				:title="$t('config.main.title')"
+				:notifications="notifications"
+			/>
 			<div class="wrapper pb-5">
 				<AuthSuccessBanner
 					v-if="callbackCompleted"
@@ -177,6 +181,11 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 					<div class="p-0 config-list">
+						<AuthProvidersCard
+							:providers="authProviders"
+							data-testid="auth-providers"
+							@auth-request="handleProviderAuthRequest"
+						/>
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -423,7 +432,7 @@ import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import type {
 	Circuit,
 	ConfigCharger,
@@ -436,6 +445,7 @@ import type {
 	MeterType,
 	SiteConfig,
 	DeviceType,
+	Notification,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -444,6 +454,7 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -486,11 +497,12 @@ export default defineComponent({
 		VehicleModal,
 		WelcomeBanner,
 		PasswordModal,
+		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -1062,6 +1074,10 @@ export default defineComponent({
 			const charger = this.chargers.find((c) => c.name === chargerName);
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
+		},
+		handleProviderAuthRequest(providerId: string) {
+			const header = this.$refs["header"] as InstanceType<typeof Header> | undefined;
+			header?.requestAuthProvider(providerId);
 		},
 	},
 });
