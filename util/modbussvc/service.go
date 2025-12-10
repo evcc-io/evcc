@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"net/url"
-	"strconv"
 	"sync"
 	"time"
 
@@ -39,6 +37,16 @@ const (
 	DefaultModbusID = 1
 )
 
+// Query combines modbus settings, register config, and additional parameters
+type Query struct {
+	modbus.Settings `mapstructure:",squash"`
+	modbus.Register `mapstructure:",squash"`
+	Host  string  `mapstructure:"host"`  // for building URI
+	Port  string  `mapstructure:"port"`  // for building URI
+	Scale float64 `mapstructure:"scale"` // scaling factor
+	Cast  string  `mapstructure:"cast"`  // type cast (int, float, string)
+}
+
 func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /params", getParams)
@@ -49,24 +57,53 @@ func init() {
 // getParams reads a parameter value from a device based on URL parameters
 // Returns single value as array (for UI compatibility)
 func getParams(w http.ResponseWriter, req *http.Request) {
-	q := req.URL.Query()
+	// Convert URL query parameters to map for decoding
+	cc := make(map[string]any)
+	for k := range req.URL.Query() {
+		cc[k] = req.URL.Query().Get(k)
+	}
 
-	// Build modbus settings from query parameters
-	settings, err := settingsFromQuery(q)
-	if err != nil {
+	// Decode query parameters into Query struct using mapstructure
+	var query Query
+	if err := util.DecodeOther(cc, &query); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	// Parse register configuration from query parameters
-	reg, scale, cast, err := parseRegisterFromQuery(q)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
+	// Build URI from host/port if not directly provided
+	if query.URI == "" {
+		if query.Host == "" {
+			jsonError(w, http.StatusBadRequest, errors.New("missing uri or host parameter"))
+			return
+		}
+		port := query.Port
+		if port == "" {
+			port = DefaultModbusPort
+		}
+		query.URI = fmt.Sprintf("%s:%s", query.Host, port)
+	}
+
+	// Validate register configuration
+	if query.Address == 0 {
+		jsonError(w, http.StatusBadRequest, errors.New("missing address parameter"))
 		return
+	}
+	if query.Type == "" {
+		jsonError(w, http.StatusBadRequest, errors.New("missing type parameter (holding/input)"))
+		return
+	}
+	if query.Encoding == "" {
+		jsonError(w, http.StatusBadRequest, errors.New("missing encoding parameter"))
+		return
+	}
+
+	// Default scale to 1.0 if not specified
+	if query.Scale == 0 {
+		query.Scale = 1.0
 	}
 
 	// Create cache key from URI and register address
-	cacheKey := fmt.Sprintf("%s:%d", settings.URI, reg.Address)
+	cacheKey := fmt.Sprintf("%s:%d", query.URI, query.Address)
 
 	// Check cache first
 	cacheMutex.RLock()
@@ -74,7 +111,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 		cacheMutex.RUnlock()
 		log.TRACE.Printf("Cache hit for %s", cacheKey)
 		value := entry.value
-		finalValue := applyCast(value, cast)
+		finalValue := applyCast(value, query.Cast)
 		valueStr := fmt.Sprintf("%v", finalValue)
 		jsonWrite(w, []string{valueStr})
 		return
@@ -83,9 +120,9 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 
 	// Read value from modbus using plugin
 	// Use background context so connection isn't tied to HTTP request lifecycle
-	value, err := readRegisterValue(context.TODO(), settings, reg, scale)
+	value, err := readRegisterValue(context.TODO(), query.Settings, query.Register, query.Scale)
 	if err != nil {
-		log.DEBUG.Printf("Failed to read register %d: %v", reg.Address, err)
+		log.DEBUG.Printf("Failed to read register %d: %v", query.Address, err)
 		jsonWrite(w, []string{}) // Return empty array on error
 		return
 	}
@@ -99,84 +136,11 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	cacheMutex.Unlock()
 
 	// Apply cast if specified
-	finalValue := applyCast(value, cast)
+	finalValue := applyCast(value, query.Cast)
 
 	// Return value as string array (for UI compatibility)
 	valueStr := fmt.Sprintf("%v", finalValue)
 	jsonWrite(w, []string{valueStr})
-}
-
-// settingsFromQuery builds modbus settings from URL query parameters
-func settingsFromQuery(q url.Values) (modbus.Settings, error) {
-	var settings modbus.Settings
-
-	// Build URI from host and port, or use uri directly
-	uri := q.Get("uri")
-	if uri == "" {
-		host := q.Get("host")
-		if host == "" {
-			return settings, errors.New("missing uri or host parameter")
-		}
-		port := q.Get("port")
-		if port == "" {
-			port = DefaultModbusPort
-		}
-		uri = fmt.Sprintf("%s:%s", host, port)
-	}
-	settings.URI = uri
-
-	// Parse device ID
-	idStr := q.Get("id")
-	if idStr != "" {
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			return settings, fmt.Errorf("invalid id parameter: %w", err)
-		}
-		settings.ID = uint8(id)
-	}
-
-	return settings, nil
-}
-
-// parseRegisterFromQuery extracts register configuration from URL query parameters
-func parseRegisterFromQuery(q url.Values) (modbus.Register, float64, string, error) {
-	var reg modbus.Register
-	scale := 1.0
-
-	// Required parameters
-	addressStr := q.Get("address")
-	if addressStr == "" {
-		return reg, 0, "", errors.New("missing address parameter")
-	}
-	address, err := strconv.ParseUint(addressStr, 10, 16)
-	if err != nil {
-		return reg, 0, "", fmt.Errorf("invalid address parameter: %w", err)
-	}
-	reg.Address = uint16(address)
-
-	regType := q.Get("type")
-	if regType == "" {
-		return reg, 0, "", errors.New("missing type parameter (holding/input)")
-	}
-	reg.Type = regType
-
-	encoding := q.Get("encoding")
-	if encoding == "" {
-		return reg, 0, "", errors.New("missing encoding parameter")
-	}
-	reg.Encoding = encoding
-
-	// Optional parameters
-	if scaleStr := q.Get("scale"); scaleStr != "" {
-		scale, err = strconv.ParseFloat(scaleStr, 64)
-		if err != nil {
-			return reg, 0, "", fmt.Errorf("invalid scale parameter: %w", err)
-		}
-	}
-
-	cast := q.Get("cast")
-
-	return reg, scale, cast, nil
 }
 
 // readRegisterValue reads a modbus register value by reusing the modbus plugin
