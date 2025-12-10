@@ -45,17 +45,17 @@ func TestRequired(t *testing.T) {
 		},
 	}
 
-	_, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{
+	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": "foo",
 	})
 	require.NoError(t, err)
 
-	_, _, err = tmpl.RenderResult(RenderModeInstance, map[string]any{
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": "",
 	})
 	require.Error(t, err)
 
-	_, _, err = tmpl.RenderResult(RenderModeInstance, map[string]any{
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": nil,
 	})
 	require.Error(t, err)
