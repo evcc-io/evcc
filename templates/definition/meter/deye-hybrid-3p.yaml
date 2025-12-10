@@ -24,23 +24,35 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxdischargecurrent
+    type: int
     default: 100
     advanced: true
     description:
-      en: Maximum discharge current (normal mode)
-      de: Maximaler Entladestrom (Normalmodus)
+      en: Maximum discharge current (normal mode, in amperes)
+      de: Maximaler Entladestrom (Normalmodus, in Ampere)
     help:
-      en: Battery discharge current limit when battery mode is set to normal or charge
-      de: Batterie-Entladestrom-Limit wenn Batteriemodus auf Normal oder Laden steht
+      en: |
+        Battery discharge current limit in amperes when battery mode is set to normal or charge.
+        Valid range: 0-350A. This value should be greater than or equal to the hold mode discharge current.
+      de: |
+        Batterie-Entladestrom-Limit in Ampere, wenn der Batteriemodus auf Normal oder Laden steht.
+        Gültiger Bereich: 0-350A. Dieser Wert sollte größer oder gleich dem Entladestrom im Haltemodus sein.
   - name: holdcurrent
+    type: int
     default: 10
     advanced: true
     description:
-      en: Hold mode discharge current
-      de: Entladestrom im Haltemodus
+      en: Hold mode discharge current (in amperes)
+      de: Entladestrom im Haltemodus (in Ampere)
     help:
-      en: Battery discharge current limit when battery mode is set to hold (should be low enough for house baseload only)
-      de: Batterie-Entladestrom-Limit im Haltemodus (sollte niedrig genug für Hausgrundlast sein)
+      en: |
+        Battery discharge current limit in amperes when battery mode is set to hold.
+        Valid range: 0-350A. This should normally be lower than the maximum discharge current
+        and low enough to cover the house baseload only (typically 5-20A).
+      de: |
+        Batterie-Entladestrom-Limit in Ampere, wenn der Batteriemodus auf Halten steht.
+        Gültiger Bereich: 0-350A. Dieser Wert sollte in der Regel niedriger als der maximale Entladestrom
+        und niedrig genug für die Hausgrundlast sein (typischerweise 5-20A).
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -155,7 +167,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 109 # Battery Max Discharging Current
-            type: writemultiple
+            type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
             decode: uint16
     - case: 2 # hold - limit discharge to house baseload only
       set:
@@ -166,7 +178,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 109 # Battery Max Discharging Current
-            type: writemultiple
+            type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
             decode: uint16
     - case: 3 # charge - allow full discharge while grid charging
       set:
@@ -177,7 +189,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 109 # Battery Max Discharging Current
-            type: writemultiple
+            type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
             decode: uint16  
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
