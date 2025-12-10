@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetParams_MissingAddress(t *testing.T) {
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
@@ -19,7 +19,7 @@ func TestGetParams_MissingAddress(t *testing.T) {
 }
 
 func TestGetParams_MissingType(t *testing.T) {
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&address=100", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&address=100", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
@@ -29,7 +29,7 @@ func TestGetParams_MissingType(t *testing.T) {
 }
 
 func TestGetParams_MissingEncoding(t *testing.T) {
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&address=100&type=holding", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&address=100&type=holding", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
@@ -38,38 +38,14 @@ func TestGetParams_MissingEncoding(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "missing encoding parameter")
 }
 
-func TestGetParams_MissingUriAndHost(t *testing.T) {
+func TestGetParams_MissingUri(t *testing.T) {
 	req := httptest.NewRequest("GET", "/params?address=100&type=holding&encoding=uint16", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "missing uri or host parameter")
-}
-
-func TestGetParams_URIConstruction_WithDefaultPort(t *testing.T) {
-	// This test verifies that the service constructs URI from host with default port
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&address=100&type=holding&encoding=uint16", nil)
-	w := httptest.NewRecorder()
-
-	getParams(w, req)
-
-	// Should fail at Modbus connection (no real device)
-	// but this proves URI was constructed from host with default port
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
-}
-
-func TestGetParams_URIConstruction_WithCustomPort(t *testing.T) {
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&port=1502&address=100&type=holding&encoding=uint16", nil)
-	w := httptest.NewRecorder()
-
-	getParams(w, req)
-
-	// Should fail at Modbus connection but proves URI construction worked
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Contains(t, w.Body.String(), "missing uri parameter")
 }
 
 func TestGetParams_DirectURI(t *testing.T) {
@@ -91,7 +67,8 @@ func TestGetParams_InvalidID(t *testing.T) {
 	getParams(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "invalid id parameter")
+	assert.Contains(t, w.Body.String(), "ID")
+	assert.Contains(t, w.Body.String(), "uint8")
 }
 
 func TestGetParams_InvalidAddress(t *testing.T) {
@@ -101,7 +78,8 @@ func TestGetParams_InvalidAddress(t *testing.T) {
 	getParams(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "invalid address parameter")
+	assert.Contains(t, w.Body.String(), "Address")
+	assert.Contains(t, w.Body.String(), "uint16")
 }
 
 func TestGetParams_InvalidScale(t *testing.T) {
@@ -111,12 +89,13 @@ func TestGetParams_InvalidScale(t *testing.T) {
 	getParams(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "invalid scale parameter")
+	assert.Contains(t, w.Body.String(), "scale")
+	assert.Contains(t, w.Body.String(), "float64")
 }
 
 func TestGetParams_WithScale(t *testing.T) {
 	// Test with scale parameter
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&port=502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
@@ -128,7 +107,7 @@ func TestGetParams_WithScale(t *testing.T) {
 
 func TestGetParams_WithCast(t *testing.T) {
 	// Test with cast parameter
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&port=502&id=1&address=1068&type=holding&encoding=float32s&cast=int", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&cast=int", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
@@ -140,7 +119,7 @@ func TestGetParams_WithCast(t *testing.T) {
 
 func TestGetParams_CompleteRequest(t *testing.T) {
 	// Test complete request with all parameters
-	req := httptest.NewRequest("GET", "/params?host=192.168.1.1&port=502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&cast=int", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&cast=int", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
