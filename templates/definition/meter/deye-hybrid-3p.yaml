@@ -28,8 +28,8 @@ params:
     default: 100
     advanced: true
     description:
-      en: Maximum discharge current (normal mode, in amperes)
-      de: Maximaler Entladestrom (Normalmodus, in Ampere)
+      en: Maximum discharge current (normal mode)
+      de: Maximaler Entladestrom (Normalmodus)
     help:
       en: |
         Battery discharge current limit in amperes when battery mode is set to normal or charge.
@@ -42,8 +42,8 @@ params:
     default: 10
     advanced: true
     description:
-      en: Hold mode discharge current (in amperes)
-      de: Entladestrom im Haltemodus (in Ampere)
+      en: Hold mode discharge current
+      de: Entladestrom im Haltemodus
     help:
       en: |
         Battery discharge current limit in amperes when battery mode is set to hold.
