@@ -54,9 +54,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Decode query parameters into Query struct using mapstructure
-	query := Query{
-		Scale: 1.0, // default scale
-	}
+	query := Query{Scale: 1.0}
 	if err := util.DecodeOther(cc, &query); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
