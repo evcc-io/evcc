@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/fatih/structs"
 	"github.com/spf13/cast"
 )
 
@@ -90,6 +89,11 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Apply optional cast
+	if query.Cast != "" {
+		value = applyCast(value, query.Cast)
+	}
+
 	// Store in cache
 	mu.Lock()
 	cache[cacheKey] = cacheEntry{
@@ -103,28 +107,72 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 
 // readRegisterValue reads a modbus register value by reusing the modbus plugin
 func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
-	p, err := plugin.NewModbusFromConfig(ctx, structs.Map(query))
+	// Build config map for plugin - need to flatten embedded structs manually
+	cfg := map[string]any{
+		"uri":      query.URI,
+		"id":       query.ID,
+		"register": query.Register,
+		"scale":    query.Scale,
+	}
+
+	// Add optional settings
+	if query.Device != "" {
+		cfg["device"] = query.Device
+	}
+	if query.Comset != "" {
+		cfg["comset"] = query.Comset
+	}
+	if query.Baudrate != 0 {
+		cfg["baudrate"] = query.Baudrate
+	}
+
+	p, err := plugin.NewModbusFromConfig(ctx, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create modbus plugin: %w", err)
+		return 0, fmt.Errorf("failed to create modbus plugin: %w", err)
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("invalid result type `%s`: %v", query.Result, r)
+			res = nil
+			err = fmt.Errorf("read failed: %v", r)
 		}
 	}()
 
+	// Use appropriate getter based on result type
 	switch strings.ToLower(query.Result) {
-	case "float":
-		return p.(plugin.FloatGetter).FloatGetter()
 	case "int":
-		return p.(plugin.IntGetter).IntGetter()
+		return callGetter(p.(plugin.IntGetter).IntGetter())
 	case "bool":
-		return p.(plugin.BoolGetter).BoolGetter()
+		return callGetter(p.(plugin.BoolGetter).BoolGetter())
 	case "string":
-		return p.(plugin.StringGetter).StringGetter()
+		return callGetter(p.(plugin.StringGetter).StringGetter())
+	case "float", "":
+		// Default to float for maximum flexibility with scale
+		return callGetter(p.(plugin.FloatGetter).FloatGetter())
 	default:
-		return nil, fmt.Errorf("plugin does not implement any supported getter interface")
+		return nil, fmt.Errorf("unsupported result type: %s (supported: int, float, bool, string)", query.Result)
+	}
+}
+
+// callGetter calls a getter function and returns the result
+func callGetter[T any](getterFn func() (T, error), err error) (any, error) {
+	if err != nil {
+		return nil, err
+	}
+	return getterFn()
+}
+
+// applyCast applies optional type casting using spf13/cast
+func applyCast(value any, castType string) any {
+	switch strings.ToLower(castType) {
+	case "int":
+		return cast.ToInt64(value)
+	case "float":
+		return cast.ToFloat64(value)
+	case "string":
+		return cast.ToString(value)
+	default:
+		return value
 	}
 }
 
