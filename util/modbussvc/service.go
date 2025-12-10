@@ -41,10 +41,8 @@ const (
 type Query struct {
 	modbus.Settings `mapstructure:",squash"`
 	modbus.Register `mapstructure:",squash"`
-	Host  string  `mapstructure:"host"`  // for building URI
-	Port  string  `mapstructure:"port"`  // for building URI
-	Scale float64 `mapstructure:"scale"` // scaling factor
-	Cast  string  `mapstructure:"cast"`  // type cast (int, float, string)
+	Scale           float64 `mapstructure:"scale"` // scaling factor
+	Cast            string  `mapstructure:"cast"`  // type cast (int, float, string)
 }
 
 func init() {
@@ -70,17 +68,10 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Build URI from host/port if not directly provided
+	// Validate URI is provided
 	if query.URI == "" {
-		if query.Host == "" {
-			jsonError(w, http.StatusBadRequest, errors.New("missing uri or host parameter"))
-			return
-		}
-		port := query.Port
-		if port == "" {
-			port = DefaultModbusPort
-		}
-		query.URI = fmt.Sprintf("%s:%s", query.Host, port)
+		jsonError(w, http.StatusBadRequest, errors.New("missing uri parameter"))
+		return
 	}
 
 	// Validate register configuration
