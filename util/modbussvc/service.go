@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -19,7 +18,7 @@ var log = util.NewLogger("modbus")
 
 // Simple cache for service responses
 type cacheEntry struct {
-	value     float64
+	value     any
 	timestamp time.Time
 }
 
@@ -68,8 +67,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	if entry, ok := cache[cacheKey]; ok && time.Since(entry.timestamp) < cacheTTL {
 		cacheMutex.RUnlock()
 		log.TRACE.Printf("Cache hit for %s", cacheKey)
-		value := entry.value
-		finalValue := applyCast(value, query.Cast)
+		finalValue := applyCast(entry.value, query.Cast)
 		valueStr := fmt.Sprintf("%v", finalValue)
 		jsonWrite(w, []string{valueStr})
 		return
@@ -102,8 +100,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 }
 
 // readRegisterValue reads a modbus register value by reusing the modbus plugin
-// This completely eliminates code duplication with plugin/modbus.go
-func readRegisterValue(ctx context.Context, settings modbus.Settings, reg modbus.Register, scale float64) (float64, error) {
+func readRegisterValue(ctx context.Context, settings modbus.Settings, reg modbus.Register, scale float64) (any, error) {
 	// Build config for plugin
 	cfg := map[string]any{
 		"uri":      settings.URI,
@@ -126,31 +123,65 @@ func readRegisterValue(ctx context.Context, settings modbus.Settings, reg modbus
 	// Create plugin instance (reuses connection pool automatically)
 	p, err := plugin.NewModbusFromConfig(ctx, cfg)
 	if err != nil {
-		return 0, fmt.Errorf("failed to create modbus plugin: %w", err)
+		return nil, fmt.Errorf("failed to create modbus plugin: %w", err)
 	}
 
-	// Get float getter
-	getter, err := p.(plugin.FloatGetter).FloatGetter()
-	if err != nil {
-		return 0, fmt.Errorf("failed to get float getter: %w", err)
+	// Try different getters based on what the plugin supports
+	if fg, ok := p.(plugin.FloatGetter); ok {
+		getter, err := fg.FloatGetter()
+		if err != nil {
+			return nil, err
+		}
+		return getter()
 	}
 
-	// Read value once
-	return getter()
+	if ig, ok := p.(plugin.IntGetter); ok {
+		getter, err := ig.IntGetter()
+		if err != nil {
+			return nil, err
+		}
+		return getter()
+	}
+
+	if bg, ok := p.(plugin.BoolGetter); ok {
+		getter, err := bg.BoolGetter()
+		if err != nil {
+			return nil, err
+		}
+		return getter()
+	}
+
+	if sg, ok := p.(plugin.StringGetter); ok {
+		getter, err := sg.StringGetter()
+		if err != nil {
+			return nil, err
+		}
+		return getter()
+	}
+
+	return nil, fmt.Errorf("plugin does not implement any supported getter interface")
 }
 
 // applyCast applies type casting to the value
-func applyCast(value float64, cast string) any {
-	switch cast {
-	case "int":
-		return int64(math.Round(value))
-	case "float":
-		return value
-	case "string":
-		return fmt.Sprintf("%v", value)
-	default:
+func applyCast(value any, cast string) any {
+	if cast == "" {
 		return value
 	}
+
+	switch cast {
+	case "int":
+		if v, ok := value.(float64); ok {
+			return int64(v)
+		}
+	case "float":
+		if v, ok := value.(int64); ok {
+			return float64(v)
+		}
+	case "string":
+		return fmt.Sprintf("%v", value)
+	}
+
+	return value
 }
 
 // jsonWrite writes a JSON response
