@@ -59,6 +59,12 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Validate required parameters
+	if query.URI == "" || query.Address == 0 {
+		jsonError(w, http.StatusBadRequest, fmt.Errorf("uri and address parameters are required"))
+		return
+	}
+
 	// Create cache key from URI and register address
 	cacheKey := fmt.Sprintf("%s:%d", query.URI, query.Address)
 
