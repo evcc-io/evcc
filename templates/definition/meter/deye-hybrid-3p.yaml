@@ -47,12 +47,14 @@ params:
     help:
       en: |
         Battery discharge current limit in amperes when battery mode is set to hold.
-        Valid range: 0-350A. This should normally be lower than the maximum discharge current
-        and low enough to cover the house baseload only (typically 5-20A).
+        Valid range: 0-350A. Must be lower than or equal to the maximum discharge current.
+        Should be low enough to cover the house baseload only (typically 5-20A).
+        Note: The inverter does not enforce this relationship - ensure holdcurrent ≤ maxdischargecurrent.
       de: |
         Batterie-Entladestrom-Limit in Ampere, wenn der Batteriemodus auf Halten steht.
-        Gültiger Bereich: 0-350A. Dieser Wert sollte in der Regel niedriger als der maximale Entladestrom
-        und niedrig genug für die Hausgrundlast sein (typischerweise 5-20A).
+        Gültiger Bereich: 0-350A. Muss kleiner oder gleich dem maximalen Entladestrom sein.
+        Sollte niedrig genug für die Hausgrundlast sein (typischerweise 5-20A).
+        Hinweis: Der Wechselrichter erzwingt diese Beziehung nicht - stellen Sie sicher, dass holdcurrent ≤ maxdischargecurrent.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -160,37 +162,46 @@ render: |
     switch:
     - case: 1 # normal - allow full discharge
       set:
-        source: const
-        value: {{ .maxdischargecurrent }}
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 109 # Battery Max Discharging Current
-            type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
-            decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 109 # Battery Max Discharging Current
+              type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
+              decode: uint16
     - case: 2 # hold - limit discharge to house baseload only
       set:
-        source: const
-        value: {{ .holdcurrent }}
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 109 # Battery Max Discharging Current
-            type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
-            decode: uint16
+        - source: const
+          value: {{ .holdcurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 109 # Battery Max Discharging Current
+              type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
+              decode: uint16
     - case: 3 # charge - allow full discharge while grid charging
       set:
-        source: const
-        value: {{ .maxdischargecurrent }}
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 109 # Battery Max Discharging Current
-            type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
-            decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 109 # Battery Max Discharging Current
+              type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
+              decode: uint16
+  # Battery capacity and SOC limits are metadata only - not written to inverter registers.
+  # The inverter manages SOC limits through its own internal settings (registers 111/116).
+  # These values are used by evcc's battery control logic and BatterySocLimiter interface.
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
