@@ -190,7 +190,7 @@ render: |
           register:
             address: 109 # Battery Max Discharging Current
             type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
-            decode: uint16  
+            decode: uint16
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
