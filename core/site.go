@@ -492,8 +492,6 @@ func (site *Site) publish(key string, val any) {
 	site.valueChan <- util.Param{Key: key, Val: val}
 }
 
-var _ site.Publisher = (*Site)(nil)
-
 // publish sends values to UI and databases
 func (site *Site) Publish(key string, val any) {
 	site.publish(key, val)
