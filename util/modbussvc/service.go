@@ -162,7 +162,7 @@ func callGetter[T any](getterFn func() (T, error), err error) (any, error) {
 	return getterFn()
 }
 
-// applyCast applies optional type casting using spf13/cast
+// applyCast applies optional type casting
 func applyCast(value any, castType string) any {
 	switch strings.ToLower(castType) {
 	case "int":

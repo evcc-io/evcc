@@ -17,9 +17,7 @@ func TestGetParams_DirectURI(t *testing.T) {
 
 	// Should fail at Modbus connection but proves direct URI works
 	assert.Equal(t, http.StatusOK, w.Code)
-	// Connection failure returns zero value as string
-	body := w.Body.String()
-	assert.True(t, body == "[]\n" || body == "[\"\"]\n" || body == "[\"0\"]\n", "Expected empty or zero value for failed read, got: %s", body)
+	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
 }
 
 func TestGetParams_WithScale(t *testing.T) {
@@ -29,34 +27,31 @@ func TestGetParams_WithScale(t *testing.T) {
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), returns zero value
+	// Connection will fail (no real device), should return empty array
 	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.True(t, body == "[]\n" || body == "[\"\"]\n" || body == "[\"0\"]\n", "Expected empty or zero value for failed read, got: %s", body)
+	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
 }
 
 func TestGetParams_WithCast(t *testing.T) {
-	// Test with result parameter - encoding=float32s, result type int
-	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&result=int", nil)
+	// Test with cast parameter
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&cast=int", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), returns zero value
+	// Connection will fail (no real device), should return empty array
 	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.True(t, body == "[]\n" || body == "[\"\"]\n" || body == "[\"0\"]\n", "Expected empty or zero value for failed read, got: %s", body)
+	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
 }
 
 func TestGetParams_CompleteRequest(t *testing.T) {
 	// Test complete request with all parameters
-	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&result=int", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&cast=int", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), returns zero value
+	// Connection will fail (no real device), should return empty array
 	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.True(t, body == "[]\n" || body == "[\"\"]\n" || body == "[\"0\"]\n", "Expected empty or zero value for failed read, got: %s", body)
+	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
 }
