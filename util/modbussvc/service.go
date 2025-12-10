@@ -3,7 +3,6 @@ package modbussvc
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -55,35 +54,12 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Decode query parameters into Query struct using mapstructure
-	var query Query
+	query := Query{
+		Scale: 1.0, // default scale
+	}
 	if err := util.DecodeOther(cc, &query); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
-	}
-
-	// Validate URI is provided
-	if query.URI == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing uri parameter"))
-		return
-	}
-
-	// Validate register configuration
-	if query.Address == 0 {
-		jsonError(w, http.StatusBadRequest, errors.New("missing address parameter"))
-		return
-	}
-	if query.Type == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing type parameter (holding/input)"))
-		return
-	}
-	if query.Encoding == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing encoding parameter"))
-		return
-	}
-
-	// Default scale to 1.0 if not specified
-	if query.Scale == 0 {
-		query.Scale = 1.0
 	}
 
 	// Create cache key from URI and register address
