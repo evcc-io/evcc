@@ -3,11 +3,12 @@ package hems
 // API describes the HEMS system interface
 type API interface {
 	Run()
-	MaxPower() float64
+	ConsumptionLimit() float64
 }
 
 type Status struct {
-	MaxPower float64
+	ConsumptionLimit float64 `json:"consumptionLimit"`
+	// FeedinLimit      float64 `json:"feedinLimit,omitempty"`
 }
 
 func GetStatus(api API) *Status {
@@ -15,6 +16,6 @@ func GetStatus(api API) *Status {
 		return nil
 	}
 	return &Status{
-		MaxPower: api.MaxPower(),
+		ConsumptionLimit: api.ConsumptionLimit(),
 	}
 }

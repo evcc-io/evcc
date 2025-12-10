@@ -85,7 +85,7 @@ func NewRelay(root api.Circuit, limit func() (bool, error), passthrough func(boo
 	return c, nil
 }
 
-func (c *Relay) MaxPower() float64 {
+func (c *Relay) ConsumptionLimit() float64 {
 	return c.maxPower
 }
 
