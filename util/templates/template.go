@@ -358,8 +358,8 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if p.IsRequired() && (renderMode == RenderModeInstance && !testing.Testing() ||
-					renderMode == RenderModeUnitTest && testing.Testing()) {
+				if p.IsRequired() && (renderMode == RenderModeUnitTest ||
+					renderMode == RenderModeInstance && !testing.Testing()) {
 					if rv := reflect.ValueOf(s); rv.IsZero() {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
 					}
