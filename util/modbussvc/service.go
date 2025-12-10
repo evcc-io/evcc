@@ -30,13 +30,6 @@ var (
 	cacheTTL   = 1 * time.Minute // Cache for 1 minute
 )
 
-const (
-	// DefaultModbusPort is the standard Modbus TCP port
-	DefaultModbusPort = "502"
-	// DefaultModbusID is the default Modbus device ID
-	DefaultModbusID = 1
-)
-
 // Query combines modbus settings, register config, and additional parameters
 type Query struct {
 	modbus.Settings `mapstructure:",squash"`
