@@ -565,6 +565,11 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
+export interface SelectActionOption<T> {
+  name: string;
+  value: T;
+}
+
 export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messaging";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";

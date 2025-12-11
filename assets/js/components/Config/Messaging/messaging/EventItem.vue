@@ -3,11 +3,11 @@
 		<div class="d-flex align-items-center mb-3">
 			<div class="form-switch me-2">
 				<input
+					v-model="eventData.enabled"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
 					data-testid="static-plan-active"
-					v-model="eventData.enabled"
 					tabindex="0"
 				/>
 			</div>

@@ -37,7 +37,7 @@
 				</li>
 			</ul>
 			<div v-if="activeEventsTab">
-				<div class="mb-5" v-for="event in Object.values(MESSAGING_EVENTS)" :key="event">
+				<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
 					<EventItem :eventKey="event" :values="values" />
 				</div>
 			</div>
@@ -73,32 +73,21 @@
 					</button>
 				</div>
 				<hr v-if="values.services && values.services?.length != 0" class="mb-5" />
-				<div class="d-flex align-items-center mb-5">
-					<button
-						type="button"
-						class="d-flex btn btn-sm align-items-center gap-2 btn-outline-secondary border-0 evcc-gray"
-						data-testid="networkconnection-add"
-						tabindex="0"
-						@click="values.services = [...(values.services ?? []), addMessaging()]"
-					>
+				<DropdownButton
+					:actions="dropDownActions"
+					@click="
+						(t: MESSAGING_SERVICE_TYPE) =>
+							(values.services = [...(values.services ?? []), addMessaging(t)])
+					"
+				>
+					<div class="d-flex align-items-center gap-2">
 						<shopicon-regular-plus
 							size="s"
 							class="flex-shrink-0"
 						></shopicon-regular-plus>
-						Add messaging:
-					</button>
-					<CustomSelect
-						id="messagingSelectedServiceAdd"
-						class="options"
-						:options="serviceOptions"
-						:selected="selectedService"
-						@change="selectedService = $event.target.value"
-					>
-						<span class="evcc-gray flex-grow-1 text-truncate select-service">
-							{{ selectedService }}
-						</span>
-					</CustomSelect>
-				</div>
+						Add messaging
+					</div>
+				</DropdownButton>
 			</div>
 		</template>
 	</JsonModal>
@@ -113,7 +102,7 @@ import {
 	type Messaging,
 	type MessagingServices,
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
-	type SelectOption,
+	type SelectActionOption,
 } from "@/types/evcc";
 import defaultYaml from ".././defaultYaml/messaging.yaml?raw";
 import "@h2d2/shopicons/es/regular/plus";
@@ -131,7 +120,7 @@ import ShoutService from "./Services/ShoutService.vue";
 import NftyService from "./Services/NftyService.vue";
 import CustomService from "./Services/CustomService.vue";
 import EventItem from "./messaging/EventItem.vue";
-import CustomSelect from "@/components/Helper/CustomSelect.vue";
+import DropdownButton from "@/components/Helper/DropdownButton.vue";
 
 export default {
 	name: "MessagingModal",
@@ -147,7 +136,7 @@ export default {
 		NftyService,
 		CustomService,
 		EventItem,
-		CustomSelect,
+		DropdownButton,
 	},
 	emits: ["changed"],
 	data() {
@@ -158,11 +147,10 @@ export default {
 			MESSAGING_SERVICE_NFTY_PRIORITY,
 			activeEventsTab: true,
 			deepEqual,
-			selectedService: MESSAGING_SERVICE_TYPE.EMAIL,
 		};
 	},
 	computed: {
-		serviceOptions(): SelectOption<string>[] {
+		dropDownActions(): SelectActionOption<string>[] {
 			return Object.values(MESSAGING_SERVICE_TYPE).map((s) => ({
 				value: s,
 				name: s,
@@ -186,8 +174,10 @@ export default {
 					return "CustomService";
 			}
 		},
-		addMessaging(): MessagingServices {
-			switch (this.selectedService) {
+		addMessaging(serviceType: MESSAGING_SERVICE_TYPE): MessagingServices {
+			console.log(serviceType);
+
+			switch (serviceType) {
 				case MESSAGING_SERVICE_TYPE.PUSHOVER:
 					return {
 						type: MESSAGING_SERVICE_TYPE.PUSHOVER,
