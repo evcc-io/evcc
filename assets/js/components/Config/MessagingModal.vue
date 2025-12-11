@@ -16,26 +16,25 @@
 				<li class="nav-item">
 					<a
 						class="nav-link"
-						:class="{ active: !activeServiceTab }"
+						:class="{ active: activeEventsTab }"
 						href="#"
-						@click.prevent="activeServiceTab = null"
+						@click.prevent="activeEventsTab = true"
 					>
 						Events
 					</a>
 				</li>
-				<li v-for="n in Object.values(MESSAGING_SERVICE_TYPE)" :key="n" class="nav-item">
+				<li class="nav-item">
 					<a
-						class="nav-link text-capitalize"
-						:class="{ active: activeServiceTab === n }"
+						class="nav-link"
+						:class="{ active: !activeEventsTab }"
 						href="#"
-						@click.prevent="activeServiceTab = n"
+						@click.prevent="activeEventsTab = false"
 					>
-						{{ n }}
+						Services
 					</a>
 				</li>
 			</ul>
-
-			<div v-if="!activeServiceTab">
+			<div v-if="activeEventsTab">
 				<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event">
 					<h6>Event #{{ event }}</h6>
 					<FormRow :id="'messagingEventTitle' + event" label="Title">
@@ -57,217 +56,15 @@
 				</div>
 			</div>
 			<div v-else>
-				<div
-					v-for="(s, index) in values.services?.filter(
-						(s) => s.type === activeServiceTab
-					)"
-					:key="index"
-					class="mb-5"
-				>
+				<div v-for="(s, index) in values.services" :key="index" class="mb-5">
 					<div class="border rounded px-3 pt-4 pb-3 mb-3">
 						<div class="d-lg-block">
 							<h5 class="box-heading">
-								<div class="inner">Messaging #{{ index + 1 }}</div>
+								<div class="inner">Messaging #{{ index + 1 }} - {{ s.type }}</div>
 							</h5>
 						</div>
 
-						<div v-if="s.type === MESSAGING_SERVICE_TYPE.PUSHOVER">
-							<FormRow
-								id="messagingServicePushoverApp"
-								label="App"
-								:help="$t('config.messaging.pushover.app')"
-							>
-								<PropertyField
-									:id="'messagingServicePushoverApp'"
-									v-model="s.other.app"
-									type="String"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="messagingServicePushoverRecipients"
-								label="Recipients"
-								:help="$t('config.messaging.pushover.recipients')"
-							>
-								<PropertyField
-									id="messagingServicePushoverRecipients"
-									v-model="s.other.devices"
-									property="recipients"
-									type="List"
-									size="w-100"
-									class="me-2"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="messagingServicePushoverDevices"
-								label="Devices"
-								:help="$t('config.messaging.pushover.devices')"
-							>
-								<PropertyField
-									id="messagingServicePushoverDevices"
-									v-model="s.other.devices"
-									property="devices"
-									type="List"
-									required
-								/>
-							</FormRow>
-						</div>
-						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.TELEGRAM">
-							<FormRow
-								id="messagingServiceTelegramToken"
-								label="Token"
-								:help="$t('config.messaging.telegram.token')"
-							>
-								<PropertyField
-									id="messagingServiceTelegramToken"
-									v-model="s.other.token"
-									type="String"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="messagingServiceTelegramChats"
-								label="Recipients"
-								:help="$t('config.messaging.telegram.chats')"
-							>
-								<PropertyField
-									id="messagingServiceTelegramChats"
-									v-model="s.other.chats"
-									property="chats"
-									type="List"
-									required
-								/>
-							</FormRow>
-						</div>
-						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.EMAIL">
-							<div v-for="p in EMAIL_PROPERTY" :key="p">
-								<FormRow
-									:id="'messagingServiceEmail' + p"
-									:label="p"
-									:help="$t('config.messaging.email.' + p.toLowerCase())"
-								>
-									<PropertyField
-										:id="'messagingServiceEmail' + p"
-										:model-value="decodeEmail(s.other.uri)[p] ?? ''"
-										type="String"
-										required
-										@update:model-value="
-											(e) =>
-												(s.other.uri = changeEmailValue(s.other.uri, p, e))
-										"
-									/>
-								</FormRow>
-							</div>
-						</div>
-						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.SHOUT">
-							<FormRow
-								id="messagingServiceShoutUri"
-								label="Uri"
-								:help="$t('config.messaging.shout.uri')"
-							>
-								<PropertyField
-									id="messagingServiceShoutUri"
-									v-model="s.other.uri"
-									type="String"
-									required
-								/>
-							</FormRow>
-						</div>
-						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.NTFY">
-							<FormRow
-								id="messagingServiceNftyHost"
-								label="Host"
-								:help="$t('config.messaging.nfty.host')"
-							>
-								<PropertyField
-									id="messagingServiceNftyHost"
-									:model-value="decodeNfty(s.other.uri)[NFTY_PROPERTY.HOST]"
-									type="String"
-									required
-									@update:model-value="
-										(e) =>
-											(s.other.uri = changeNftyValue(
-												s.other.uri,
-												NFTY_PROPERTY.HOST,
-												e
-											))
-									"
-								/>
-							</FormRow>
-							<FormRow
-								id="messagingServiceNftyTopics"
-								label="Topics"
-								:help="$t('config.messaging.nfty.topics')"
-							>
-								<PropertyField
-									id="messagingServiceNftyTopics"
-									:model-value="
-										decodeNfty(s.other.uri)[NFTY_PROPERTY.TOPICS].split(',')
-									"
-									property="topics"
-									type="List"
-									required
-									@update:model-value="
-										(e) =>
-											(s.other.uri = changeNftyValue(
-												s.other.uri,
-												NFTY_PROPERTY.TOPICS,
-												e
-											))
-									"
-								/>
-							</FormRow>
-							<FormRow
-								id="messagingServiceNftyPriority"
-								label="Priority"
-								:help="$t('config.messaging.nfty.priority')"
-								optional
-							>
-								<PropertyField
-									id="messagingServiceNftyPriority"
-									property="priority"
-									type="Choice"
-									class="me-2 w-25"
-									:choice="Object.values(MESSAGING_SERVICE_NFTY_PRIORITY)"
-									:model-value="s.other.priority"
-									@update:model-value="(e) => (s.other.priority = e)"
-								/>
-							</FormRow>
-							<FormRow
-								id="messagingServiceNftyTags"
-								label="Recipients"
-								:help="$t('config.messaging.nfty.tags')"
-								optional
-							>
-								<PropertyField
-									id="messagingServiceNftyTags"
-									:model-value="s.other.tags?.split(',')"
-									property="tags"
-									type="List"
-									@update:model-value="(e: string[]) => (s.other.tags = e.join())"
-								/>
-							</FormRow>
-						</div>
-						<div v-else-if="s.type === MESSAGING_SERVICE_TYPE.CUSTOM">
-							<FormRow
-								id="messagingServiceCustomEncoding"
-								label="Encoding"
-								:help="$t('config.messaging.custom.encoding')"
-								optional
-							>
-								<PropertyField
-									id="messagingServiceCustomEncoding"
-									property="encoding"
-									type="Choice"
-									class="me-2 w-25"
-									:choice="Object.values(MESSAGING_SERVICE_NFTY_PRIORITY)"
-									:model-value="s.other.encoding"
-									@update:model-value="(e) => (s.other.encoding = e)"
-								/>
-							</FormRow>
-							<YamlEntry v-model="s.other.send" type="messaging"></YamlEntry>
-						</div>
+						<component :is="getServiceComponent(s.type)" :service="s" />
 					</div>
 
 					<button
@@ -289,20 +86,33 @@
 						{{ $t("config.general.remove") }}
 					</button>
 				</div>
-				<hr
-					v-if="values.services?.filter((s) => s.type === activeServiceTab).length != 0"
-					class="mb-5"
-				/>
-				<button
-					type="button"
-					class="d-flex btn btn-sm align-items-center gap-2 mb-5 btn-outline-secondary border-0 evcc-gray"
-					data-testid="networkconnection-add"
-					tabindex="0"
-					@click="addMessaging(values.services)"
-				>
-					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
-					Add messaging
-				</button>
+				<hr v-if="values.services && values.services?.length != 0" class="mb-5" />
+				<div class="d-flex align-items-center mb-5">
+					<button
+						type="button"
+						class="d-flex btn btn-sm align-items-center gap-2 btn-outline-secondary border-0 evcc-gray"
+						data-testid="networkconnection-add"
+						tabindex="0"
+						@click="values.services = [...(values.services ?? []), addMessaging()]"
+					>
+						<shopicon-regular-plus
+							size="s"
+							class="flex-shrink-0"
+						></shopicon-regular-plus>
+						Add messaging:
+					</button>
+					<CustomSelect
+						id="messagingSelectedServiceAdd"
+						class="options"
+						:options="serviceOptions"
+						:selected="selectedService"
+						@change="selectedService = $event.target.value"
+					>
+						<span class="evcc-gray flex-grow-1 text-truncate select-service">
+							{{ selectedService }}
+						</span>
+					</CustomSelect>
+				</div>
 			</div>
 		</template>
 	</JsonModal>
@@ -317,151 +127,114 @@ import {
 	type Messaging,
 	type MessagingServices,
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
+	type SelectOption,
 } from "@/types/evcc";
 import JsonModal from "./JsonModal.vue";
 import defaultYaml from "./defaultYaml/messaging.yaml?raw";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import YamlEntry from "./DeviceModal/YamlEntry.vue";
+import PushoverService from "./Services/PushoverService.vue";
+import TelegramService from "./Services/TelegramService.vue";
+import EmailService from "./Services/EmailService.vue";
+import ShoutService from "./Services/ShoutService.vue";
+import NftyService from "./Services/NftyService.vue";
+import CustomService from "./Services/CustomService.vue";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
+import "@h2d2/shopicons/es/regular/arrowright";
 import deepEqual from "@/utils/deepEqual";
-
-enum EMAIL_PROPERTY {
-	HOST = "Host",
-	PORT = "Port",
-	USER = "User",
-	PASSWORD = "Password",
-	FROM = "From",
-	TO = "To",
-}
-
-enum NFTY_PROPERTY {
-	HOST = "host",
-	TOPICS = "topics",
-}
+import CustomSelect from "../Helper/CustomSelect.vue";
 
 export default {
 	name: "MessagingModal",
-	components: { JsonModal, FormRow, PropertyField, YamlEntry },
+	components: {
+		JsonModal,
+		FormRow,
+		PropertyField,
+		YamlEntry,
+		PushoverService,
+		TelegramService,
+		EmailService,
+		ShoutService,
+		NftyService,
+		CustomService,
+		CustomSelect,
+	},
 	emits: ["changed"],
 	data() {
 		return {
 			defaultYaml: defaultYaml.trim(),
 			MESSAGING_EVENTS,
 			MESSAGING_SERVICE_TYPE,
-			EMAIL_PROPERTY,
 			MESSAGING_SERVICE_NFTY_PRIORITY,
-			NFTY_PROPERTY,
-			activeServiceTab: null as MESSAGING_SERVICE_TYPE | null,
+			activeEventsTab: true,
 			deepEqual,
+			selectedService: MESSAGING_SERVICE_TYPE.EMAIL,
 		};
 	},
+	computed: {
+		serviceOptions(): SelectOption<string>[] {
+			return Object.values(MESSAGING_SERVICE_TYPE).map((s) => ({
+				value: s,
+				name: s,
+			}));
+		},
+	},
 	methods: {
-		decodeEmail(uri: string) {
-			let hostname = "";
-			let port = "";
-			let username = "";
-			let password = "";
-			let from = "";
-			let to = "";
-
-			try {
-				const url = new URL(uri.replace(/^smtp/, "http"));
-				const params = new URLSearchParams(url.search);
-
-				hostname = url.hostname;
-				port = url.port;
-				username = url.username;
-				password = url.password;
-				from = params.get("fromAddress") ?? from;
-				to = params.get("toAddresses") ?? to;
-			} catch (e) {
-				console.warn(e);
-			}
-
-			return {
-				[EMAIL_PROPERTY.HOST]: hostname,
-				[EMAIL_PROPERTY.PORT]: port,
-				[EMAIL_PROPERTY.USER]: username,
-				[EMAIL_PROPERTY.PASSWORD]: password,
-				[EMAIL_PROPERTY.FROM]: from,
-				[EMAIL_PROPERTY.TO]: to,
-			};
-		},
-		changeEmailValue(uri: string, p: EMAIL_PROPERTY, v: string) {
-			const d = this.decodeEmail(uri);
-			d[p] = v;
-			return `smtp://${d[EMAIL_PROPERTY.USER]}:${d[EMAIL_PROPERTY.PASSWORD]}@${d[EMAIL_PROPERTY.HOST]}:${d[EMAIL_PROPERTY.PORT]}/?fromAddress=${d[EMAIL_PROPERTY.FROM]}&toAddresses=${d[EMAIL_PROPERTY.TO]}`;
-		},
-		decodeNfty(uri: string) {
-			let hostname = "";
-			let pathname = "";
-
-			try {
-				const url = new URL(uri);
-				hostname = url.hostname;
-				pathname = url.pathname.replace("/", "");
-			} catch (e) {
-				console.warn(e);
-			}
-
-			return {
-				[NFTY_PROPERTY.HOST]: hostname,
-				[NFTY_PROPERTY.TOPICS]: pathname,
-			};
-		},
-		changeNftyValue(uri: string, p: NFTY_PROPERTY, v: string) {
-			const d = this.decodeNfty(uri);
-			d[p] = v;
-			return `https://${d[NFTY_PROPERTY.HOST]}/${d[NFTY_PROPERTY.TOPICS]}`;
-		},
-		addMessaging(values?: MessagingServices[]) {
-			if (!values) {
-				return;
-			}
-
-			let s = {} as MessagingServices;
-
-			switch (this.activeServiceTab) {
+		getServiceComponent(type: MESSAGING_SERVICE_TYPE) {
+			switch (type) {
 				case MESSAGING_SERVICE_TYPE.PUSHOVER:
-					s = {
+					return "PushoverService";
+				case MESSAGING_SERVICE_TYPE.TELEGRAM:
+					return "TelegramService";
+				case MESSAGING_SERVICE_TYPE.EMAIL:
+					return "EmailService";
+				case MESSAGING_SERVICE_TYPE.SHOUT:
+					return "ShoutService";
+				case MESSAGING_SERVICE_TYPE.NTFY:
+					return "NftyService";
+				default:
+					return "CustomService";
+			}
+		},
+		addMessaging(): MessagingServices {
+			switch (this.selectedService) {
+				case MESSAGING_SERVICE_TYPE.PUSHOVER:
+					return {
 						type: MESSAGING_SERVICE_TYPE.PUSHOVER,
 						other: { app: "", devices: [], recipients: [] },
 					};
-					break;
 				case MESSAGING_SERVICE_TYPE.TELEGRAM:
-					s = {
+					return {
 						type: MESSAGING_SERVICE_TYPE.TELEGRAM,
 						other: { chats: [], token: "" },
 					};
-					break;
+
 				case MESSAGING_SERVICE_TYPE.EMAIL:
-					s = {
+					return {
 						type: MESSAGING_SERVICE_TYPE.EMAIL,
 						other: { uri: "" },
 					};
-					break;
+
 				case MESSAGING_SERVICE_TYPE.SHOUT:
-					s = {
+					return {
 						type: MESSAGING_SERVICE_TYPE.SHOUT,
 						other: { uri: "" },
 					};
-					break;
+
 				case MESSAGING_SERVICE_TYPE.NTFY:
-					s = {
+					return {
 						type: MESSAGING_SERVICE_TYPE.NTFY,
 						other: { uri: "" },
 					};
-					break;
+
 				default:
-					s = {
+					return {
 						type: MESSAGING_SERVICE_TYPE.CUSTOM,
 						other: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: "" },
 					};
 			}
-
-			values.push(s);
 		},
 	},
 };
@@ -485,5 +258,9 @@ h5 .inner {
 	font-weight: normal;
 	color: var(--evcc-gray);
 	text-align: center;
+}
+
+.options .select-service {
+	text-decoration: underline;
 }
 </style>
