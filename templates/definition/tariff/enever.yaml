@@ -84,6 +84,6 @@ render: |
                   ($dt | strptime("%FT%T") | mktime + 900 | strflocaltime("%FT%T")) + $tz
                 ),
                 "value": .prijs{{ .provider }} | tonumber
-              }            
+              }   
             ] | tostring
   interval: {{ .interval }}
