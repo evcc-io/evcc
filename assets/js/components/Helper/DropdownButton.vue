@@ -9,7 +9,7 @@
 			<slot></slot>
 		</button>
 		<ul class="dropdown-menu">
-			<li v-for="a in actions">
+			<li v-for="(a, index) in actions" :key="index">
 				<a class="dropdown-item" @click="$emit('click', a.value)">
 					{{ a.name }}
 				</a>

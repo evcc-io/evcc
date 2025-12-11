@@ -48,13 +48,12 @@
 
 <script lang="ts">
 import type { PropType } from "vue";
-import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
 import { MESSAGING_EVENTS, type Messaging, type MessagingEvent } from "@/types/evcc";
 
 export default {
 	name: "EventItem",
-	components: { FormRow, PropertyField },
+	components: { PropertyField },
 	props: {
 		eventKey: { type: String as PropType<MESSAGING_EVENTS>, required: true },
 		values: { type: Object as () => Messaging, required: true },
