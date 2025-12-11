@@ -34,7 +34,6 @@
 					</a>
 				</li>
 			</ul>
-			{{ values }}
 			<div v-if="activeEventsTab">
 				<div class="mb-5" v-for="event in Object.values(MESSAGING_EVENTS)" :key="event">
 					<EventItem :eventKey="event" :values="values" />
