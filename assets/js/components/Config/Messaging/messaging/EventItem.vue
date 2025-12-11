@@ -23,6 +23,7 @@
 					:id="formId('title')"
 					v-model="eventData.title"
 					type="String"
+					:disabled="!eventData.enabled"
 					required
 				/>
 			</div>
@@ -37,6 +38,7 @@
 					v-model="eventData.msg"
 					type="String"
 					property="eventMessage"
+					:disabled="!eventData.enabled"
 					required
 				/>
 			</div>
