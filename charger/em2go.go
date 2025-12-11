@@ -200,13 +200,13 @@ func (wb *Em2Go) Enable(enable bool) error {
 		// send default current
 		return wb.setCurrent(wb.current)
 	}
-	
+
 	// experimental workaround for EM2GO home FW 1.4
 	// https://github.com/evcc-io/evcc/discussions/25940#discussioncomment-15221487
 	if !enable {
 		return wb.setCurrent(0)
 	}
-	
+
 	return nil
 }
 
