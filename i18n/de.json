@@ -1172,8 +1172,10 @@
       "show": "{title} anzeigen"
     },
     "sponsorToken": {
-      "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
-      "getNew": "Hol dir ein Neues",
+      "expires": "Dein Sponsortoken läuft {inXDays} ab.",
+      "expiresUpdateUi": "{getNewToken} und aktualisiere es hier.",
+      "expiresUpdateYaml": "{getNewToken} und aktualisiere es in deiner evcc.yaml.",
+      "getNewToken": "Hol dir ein Neues",
       "hint": "Hinweis: Wir werden das zukünftig automatisieren."
     },
     "telemetry": {
