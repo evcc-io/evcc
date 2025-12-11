@@ -15,9 +15,8 @@ func TestGetParams_DirectURI(t *testing.T) {
 
 	getParams(w, req)
 
-	// Should fail at Modbus connection but proves direct URI works
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotEmpty(t, w.Body.String())
 }
 
 func TestGetParams_WithScale(t *testing.T) {
@@ -27,9 +26,8 @@ func TestGetParams_WithScale(t *testing.T) {
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), should return empty array
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotEmpty(t, w.Body.String())
 }
 
 func TestGetParams_WithResultType(t *testing.T) {
@@ -39,9 +37,8 @@ func TestGetParams_WithResultType(t *testing.T) {
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), should return empty array
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotEmpty(t, w.Body.String())
 }
 
 func TestGetParams_CompleteRequest(t *testing.T) {
@@ -51,9 +48,8 @@ func TestGetParams_CompleteRequest(t *testing.T) {
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), should return empty array
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotEmpty(t, w.Body.String())
 }
 
 func TestGetParams_RS485Serial(t *testing.T) {
@@ -63,9 +59,8 @@ func TestGetParams_RS485Serial(t *testing.T) {
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), should return empty array
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotEmpty(t, w.Body.String())
 }
 
 func TestGetParams_RS485Serial_WithResultType(t *testing.T) {
@@ -75,9 +70,8 @@ func TestGetParams_RS485Serial_WithResultType(t *testing.T) {
 
 	getParams(w, req)
 
-	// Connection will fail (no real device), should return empty array
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.NotEmpty(t, w.Body.String())
 }
 
 func TestGetParams_MissingConnection(t *testing.T) {
