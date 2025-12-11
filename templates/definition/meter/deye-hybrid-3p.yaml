@@ -39,7 +39,7 @@ params:
         Gültiger Bereich: 0-350A. Dieser Wert sollte größer oder gleich dem Entladestrom im Haltemodus sein.
   - name: holdcurrent
     type: int
-    default: 10
+    default: 0
     advanced: true
     description:
       en: Hold mode discharge current
