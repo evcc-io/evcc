@@ -63,13 +63,17 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Validate required parameters
-	if query.URI == "" || query.Address == 0 {
-		jsonError(w, http.StatusBadRequest, fmt.Errorf("uri and address parameters are required"))
+	if (query.URI == "" && query.Device == "") || query.Address == 0 {
+		jsonError(w, http.StatusBadRequest, fmt.Errorf("uri or device and address parameters are required"))
 		return
 	}
 
-	// Create cache key from URI and register address
-	cacheKey := fmt.Sprintf("%s:%d", query.URI, query.Address)
+	// Create cache key from connection string and register address
+	connStr := query.URI
+	if connStr == "" {
+		connStr = query.Device
+	}
+	cacheKey := fmt.Sprintf("%s:%d", connStr, query.Address)
 
 	// Check cache first
 	mu.RLock()
