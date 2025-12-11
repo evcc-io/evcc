@@ -20,7 +20,9 @@
 						href="#"
 						@click.prevent="activeEventsTab = true"
 					>
-						Events
+						Events ({{
+							Object.values(values.events ?? {}).filter((e) => e.enabled).length
+						}})
 					</a>
 				</li>
 				<li class="nav-item">
