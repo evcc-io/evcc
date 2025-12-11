@@ -91,3 +91,40 @@ func TestGetParams_MissingConnection(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "uri or device")
 }
+
+func TestApplyCast(t *testing.T) {
+	tests := []struct {
+		name     string
+		value    any
+		castType string
+		expected any
+	}{
+		// Int conversions
+		{"float to int", 42.7, "int", int64(42)},
+		{"string to int", "42", "int", int64(42)},
+		{"int to int", 42, "int", int64(42)},
+		{"negative float to int", -42.9, "int", int64(-42)},
+
+		// Float conversions
+		{"int to float", 42, "float", float64(42.0)},
+		{"string to float", "42.7", "float", float64(42.7)},
+		{"float to float", 42.7, "float", float64(42.7)},
+
+		// String conversions
+		{"int to string", 42, "string", "42"},
+		{"float to string", 42.7, "string", "42.7"},
+		{"string to string", "hello", "string", "hello"},
+
+		// Unknown/empty type (should return original)
+		{"unknown type", 42, "unknown", 42},
+		{"empty type", 42, "", 42},
+		{"nil value", nil, "int", int64(0)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := applyCast(tt.value, tt.castType)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
