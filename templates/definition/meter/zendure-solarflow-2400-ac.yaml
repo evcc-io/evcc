@@ -1,0 +1,39 @@
+template: zendure-solarflow-2400-ac
+products:
+  - brand: Zendure
+    description:
+      en: "Solarflow 2400 AC Battery"
+      de: "Solarflow 2400 AC Speicher"
+
+params:
+  - name: host
+    required: true
+    description:
+      en: "IP address of the Zendure Solarflow 2400 AC"
+      de: "IP-Adresse des Zendure Solarflow 2400 AC"
+
+  - name: capacity
+    required: true
+    description:
+      en: "Battery capacity in kWh"
+      de: "Speicherkapazität in kWh"
+
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+      - source: http
+        uri: http://{{ .host }}/properties/report
+        jq: .properties.packInputPower
+        scale: 1
+      - source: http
+        uri: http://{{ .host }}/properties/report
+        jq: .properties.outputPackPower
+        scale: -1
+  soc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.electricLevel
+  capacity: {{ .capacity }}
+
