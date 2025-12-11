@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/redact"
 	"github.com/gorilla/mux"
@@ -79,7 +78,7 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 	}
 }
 
-func settingsSetJsonHandler(key string, pub site.Publisher, newStruc func() any) http.HandlerFunc {
+func settingsSetJsonHandler(key string, pub publisher, newStruc func() any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		struc := newStruc()
 		dec := json.NewDecoder(r.Body)
@@ -103,18 +102,18 @@ func settingsSetJsonHandler(key string, pub site.Publisher, newStruc func() any)
 		settings.SetJson(key, struc)
 		setConfigDirty()
 
-		pub.Publish(key, struc)
+		pub(key, struc)
 
 		jsonWrite(w, true)
 	}
 }
 
-func settingsDeleteJsonHandler(key string, pub site.Publisher, struc any) http.HandlerFunc {
+func settingsDeleteJsonHandler(key string, pub publisher, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(key, "")
 		setConfigDirty()
 
-		pub.Publish(key, struc)
+		pub(key, struc)
 
 		jsonWrite(w, true)
 	}

@@ -25,6 +25,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type publisher func(string, any)
+
 type route struct {
 	Method      string
 	Pattern     string
@@ -221,7 +223,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -288,8 +290,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, cache *util.ParamCache, a
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
-			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(site)},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(site)},
+			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 		}
 
 		// yaml handlers
@@ -314,8 +316,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, cache *util.ParamCache, a
 			keys.Shm:         func() any { return new(shm.Config) },
 			keys.Influx:      func() any { return new(globalconfig.Influx) },
 		} {
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, site, fun)}
-			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, site, fun())}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
+			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
 		}
 
 		for _, r := range routes {

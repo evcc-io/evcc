@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-func updateSponsortokenHandler(pub site.Publisher) func(w http.ResponseWriter, r *http.Request) {
+func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Token string `json:"token"`
@@ -27,7 +26,7 @@ func updateSponsortokenHandler(pub site.Publisher) func(w http.ResponseWriter, r
 				return
 			}
 
-			pub.Publish(keys.Sponsor, struct {
+			pub(keys.Sponsor, struct {
 				Status   sponsor.Status `json:"status"`
 				FromYaml bool           `json:"fromYaml"`
 			}{
@@ -44,11 +43,11 @@ func updateSponsortokenHandler(pub site.Publisher) func(w http.ResponseWriter, r
 	}
 }
 
-func deleteSponsorTokenHandler(pub site.Publisher) func(w http.ResponseWriter, r *http.Request) {
+func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(keys.SponsorToken, "")
 
-		pub.Publish(keys.Sponsor, struct {
+		pub(keys.Sponsor, struct {
 			Status   sponsor.Status `json:"status"`
 			FromYaml bool           `json:"fromYaml"`
 		}{
