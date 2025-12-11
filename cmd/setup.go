@@ -44,7 +44,6 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
-	_ "github.com/evcc-io/evcc/util/modbussvc"
 	"github.com/evcc-io/evcc/util/request"
 	_ "github.com/evcc-io/evcc/util/service"
 	"github.com/evcc-io/evcc/util/sponsor"

@@ -1,4 +1,4 @@
-package modbussvc
+package service
 
 import (
 	"context"
@@ -32,9 +32,8 @@ var (
 type Query struct {
 	modbus.Settings `mapstructure:",squash"`
 	modbus.Register `mapstructure:",squash"`
-	Result          string
 	Scale           float64 // scaling factor
-	Cast            string  // type cast (int, float, string)
+	ResultType      string  // type cast (int, float, string)
 }
 
 func init() {
@@ -90,8 +89,8 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Apply optional cast
-	if query.Cast != "" {
-		value = applyCast(value, query.Cast)
+	if query.ResultType != "" {
+		value = applyCast(value, query.ResultType)
 	}
 
 	// Store in cache
@@ -138,20 +137,17 @@ func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 		}
 	}()
 
-	// Use appropriate getter based on result type
-	switch strings.ToLower(query.Result) {
-	case "int":
-		return callGetter(p.(plugin.IntGetter).IntGetter())
-	case "bool":
-		return callGetter(p.(plugin.BoolGetter).BoolGetter())
-	case "string":
+	// Choose getter based on encoding type
+	encoding := strings.ToLower(query.Encoding)
+
+	// String encodings need special handling
+	if encoding == "string" || encoding == "bytes" {
 		return callGetter(p.(plugin.StringGetter).StringGetter())
-	case "float", "":
-		// Default to float for maximum flexibility with scale
-		return callGetter(p.(plugin.FloatGetter).FloatGetter())
-	default:
-		return nil, fmt.Errorf("unsupported result type: %s (supported: int, float, bool, string)", query.Result)
 	}
+
+	// For all numeric encodings (int*, uint*, float*, bool*), use FloatGetter
+	// This is the base implementation in modbus plugin
+	return callGetter(p.(plugin.FloatGetter).FloatGetter())
 }
 
 // callGetter calls a getter function and returns the result

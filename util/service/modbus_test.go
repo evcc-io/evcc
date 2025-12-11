@@ -1,4 +1,4 @@
-package modbussvc
+package service
 
 import (
 	"net/http"
@@ -32,9 +32,9 @@ func TestGetParams_WithScale(t *testing.T) {
 	assert.Equal(t, "[]\n", w.Body.String(), "Expected empty array for failed read")
 }
 
-func TestGetParams_WithCast(t *testing.T) {
-	// Test with cast parameter
-	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&cast=int", nil)
+func TestGetParams_WithResultType(t *testing.T) {
+	// Test with resulttype parameter
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&resulttype=int", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
@@ -46,7 +46,7 @@ func TestGetParams_WithCast(t *testing.T) {
 
 func TestGetParams_CompleteRequest(t *testing.T) {
 	// Test complete request with all parameters
-	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&cast=int", nil)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&id=1&address=1068&type=holding&encoding=float32s&scale=0.001&resulttype=int", nil)
 	w := httptest.NewRecorder()
 
 	getParams(w, req)
