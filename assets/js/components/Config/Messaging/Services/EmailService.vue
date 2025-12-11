@@ -18,9 +18,9 @@
 
 <script lang="ts">
 import { type MessagingServiceEmail } from "@/types/evcc";
-import FormRow from "../FormRow.vue";
-import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
+import FormRow from "../../FormRow.vue";
+import PropertyField from "../../PropertyField.vue";
 
 const EMAIL_PROPERTIES = {
 	HOST: "Host",

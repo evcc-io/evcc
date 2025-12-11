@@ -62,9 +62,9 @@
 
 <script lang="ts">
 import { type MessagingServiceNfty, MESSAGING_SERVICE_NFTY_PRIORITY } from "@/types/evcc";
-import FormRow from "../FormRow.vue";
-import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
+import FormRow from "../../FormRow.vue";
+import PropertyField from "../../PropertyField.vue";
 
 export default {
 	name: "NftyService",

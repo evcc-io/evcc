@@ -22,10 +22,10 @@
 
 <script lang="ts">
 import { type MessagingServiceCustom, MESSAGING_SERVICE_CUSTOM_ENCODING } from "@/types/evcc";
-import FormRow from "../FormRow.vue";
-import PropertyField from "../PropertyField.vue";
-import YamlEntry from "../DeviceModal/YamlEntry.vue";
 import type { PropType } from "vue";
+import FormRow from "../../FormRow.vue";
+import PropertyField from "../../PropertyField.vue";
+import YamlEntry from "../../DeviceModal/YamlEntry.vue";
 
 export default {
 	name: "CustomService",

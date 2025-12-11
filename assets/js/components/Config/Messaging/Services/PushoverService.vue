@@ -45,8 +45,8 @@
 
 <script lang="ts">
 import { type MessagingServicePushover } from "@/types/evcc";
-import FormRow from "../FormRow.vue";
-import PropertyField from "../PropertyField.vue";
+import FormRow from "../../FormRow.vue";
+import PropertyField from "../../PropertyField.vue";
 import type { PropType } from "vue";
 
 export default {

@@ -129,22 +129,22 @@ import {
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
 	type SelectOption,
 } from "@/types/evcc";
-import JsonModal from "./JsonModal.vue";
-import defaultYaml from "./defaultYaml/messaging.yaml?raw";
-import FormRow from "./FormRow.vue";
-import PropertyField from "./PropertyField.vue";
-import YamlEntry from "./DeviceModal/YamlEntry.vue";
+import defaultYaml from ".././defaultYaml/messaging.yaml?raw";
+import "@h2d2/shopicons/es/regular/plus";
+import "@h2d2/shopicons/es/regular/trash";
+import "@h2d2/shopicons/es/regular/arrowright";
+import deepEqual from "@/utils/deepEqual";
+import JsonModal from "../JsonModal.vue";
+import FormRow from "../FormRow.vue";
+import PropertyField from "../PropertyField.vue";
+import YamlEntry from "../DeviceModal/YamlEntry.vue";
 import PushoverService from "./Services/PushoverService.vue";
 import TelegramService from "./Services/TelegramService.vue";
 import EmailService from "./Services/EmailService.vue";
 import ShoutService from "./Services/ShoutService.vue";
 import NftyService from "./Services/NftyService.vue";
 import CustomService from "./Services/CustomService.vue";
-import "@h2d2/shopicons/es/regular/plus";
-import "@h2d2/shopicons/es/regular/trash";
-import "@h2d2/shopicons/es/regular/arrowright";
-import deepEqual from "@/utils/deepEqual";
-import CustomSelect from "../Helper/CustomSelect.vue";
+import CustomSelect from "@/components/Helper/CustomSelect.vue";
 
 export default {
 	name: "MessagingModal",
