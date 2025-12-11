@@ -75,7 +75,7 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		rows="4"
+		:rows="getTextAreaRows"
 	/>
 	<div v-else class="position-relative">
 		<input
@@ -213,7 +213,16 @@ export default {
 				"chats",
 				"topics",
 				"tags",
+				"eventMessage",
 			].includes(this.property);
+		},
+		getTextAreaRows() {
+			switch (this.property) {
+				case "eventMessage":
+					return 2;
+				default:
+					return 4;
+			}
 		},
 		boolean() {
 			return this.type === "Bool";

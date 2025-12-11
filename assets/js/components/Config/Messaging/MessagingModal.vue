@@ -30,29 +30,14 @@
 						href="#"
 						@click.prevent="activeEventsTab = false"
 					>
-						Services
+						Services ({{ values.services?.length }})
 					</a>
 				</li>
 			</ul>
+			{{ values }}
 			<div v-if="activeEventsTab">
-				<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event">
-					<h6>Event #{{ event }}</h6>
-					<FormRow :id="'messagingEventTitle' + event" label="Title">
-						<PropertyField
-							:id="'messagingEventTitle' + event"
-							:model-value="values.events?.[event].title"
-							type="String"
-							required
-						/>
-					</FormRow>
-					<FormRow :id="'messagingEventMessage' + event" label="Message">
-						<PropertyField
-							:id="'messagingEventMessage' + event"
-							:model-value="values.events?.[event].msg"
-							type="String"
-							required
-						/>
-					</FormRow>
+				<div class="mb-5" v-for="event in Object.values(MESSAGING_EVENTS)" :key="event">
+					<EventItem :eventKey="event" :values="values" />
 				</div>
 			</div>
 			<div v-else>
@@ -144,6 +129,7 @@ import EmailService from "./Services/EmailService.vue";
 import ShoutService from "./Services/ShoutService.vue";
 import NftyService from "./Services/NftyService.vue";
 import CustomService from "./Services/CustomService.vue";
+import EventItem from "./messaging/EventItem.vue";
 import CustomSelect from "@/components/Helper/CustomSelect.vue";
 
 export default {
@@ -159,6 +145,7 @@ export default {
 		ShoutService,
 		NftyService,
 		CustomService,
+		EventItem,
 		CustomSelect,
 	},
 	emits: ["changed"],

@@ -422,6 +422,7 @@ export enum MESSAGING_EVENTS {
 export interface MessagingEvent {
   title: string;
   msg: string;
+  enabled: boolean;
 }
 
 export enum MESSAGING_SERVICE_TYPE {
