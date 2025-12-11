@@ -18,7 +18,9 @@ type errorResponse struct {
 }
 
 type loginResponse struct {
-	LoginUri string `json:"loginUri"`
+	LoginUri string     `json:"loginUri"`
+	Code     string     `json:"code,omitempty"`
+	Expiry   *time.Time `json:"expiry,omitempty"`
 }
 
 // jsonWrite writes a JSON response
@@ -54,7 +56,7 @@ func (a *Handler) run(paramC chan<- util.Param) {
 		res := make(map[string]*AuthProvider)
 		for id, provider := range a.providers {
 			res[provider.DisplayName()] = &AuthProvider{
-				ID:            url.QueryEscape(id),
+				ID:            id,
 				Authenticated: provider.Authenticated(),
 			}
 		}
@@ -104,13 +106,27 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
-	uri, err := provider.Login(encryptedState)
+	uri, da, err := provider.Login(encryptedState)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	jsonWrite(w, loginResponse{LoginUri: uri})
+	res := loginResponse{
+		LoginUri: uri,
+	}
+
+	if da != nil {
+		res.Expiry = &da.Expiry
+		if da.VerificationURIComplete != "" {
+			res.LoginUri = da.VerificationURIComplete
+		} else {
+			res.LoginUri = da.VerificationURI
+			res.Code = da.UserCode
+		}
+	}
+
+	jsonWrite(w, res)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -182,5 +198,5 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/#/config?callbackCompleted="+url.QueryEscape(id), http.StatusFound)
 }
