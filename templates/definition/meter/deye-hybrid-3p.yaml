@@ -199,9 +199,6 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
               decode: uint16
-  # Battery capacity and SOC limits are metadata only - not written to inverter registers.
-  # The inverter manages SOC limits through its own internal settings (registers 111/116).
-  # These values are used by evcc's battery control logic and BatterySocLimiter interface.
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
