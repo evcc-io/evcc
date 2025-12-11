@@ -678,7 +678,9 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags() {
-			return { configured: { value: store.state?.messaging || false } };
+			return {
+				configured: { value: store.state?.messaging?.services?.length != 0 || false },
+			};
 		},
 		backupRestoreProps() {
 			return {
