@@ -91,4 +91,3 @@ func TestGetParams_MissingConnection(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "uri or device")
 }
-
