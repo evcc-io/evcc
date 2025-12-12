@@ -43,7 +43,7 @@ func formatValue(mp *message.Printer, value any, digits int) string {
 
 func writeHeader(ctx context.Context, ww *csv.Writer, structType any, i18nPrefix string) error {
 	localizer := locale.Localizer
-	if val := ctx.Value(locale.Locale).(string); val != "" {
+	if val, ok := ctx.Value(locale.Locale).(string); ok && val != "" {
 		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
 	}
 
@@ -99,6 +99,9 @@ func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) e
 	lang := locale.Language
 	if language, ok := ctx.Value(locale.Locale).(string); ok && language != "" {
 		lang = language
+	}
+	if lang == "" {
+		lang = "en"
 	}
 
 	tag, err := language.Parse(lang)

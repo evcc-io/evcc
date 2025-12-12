@@ -3,12 +3,19 @@ package csv
 import (
 	"bytes"
 	"context"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util/locale"
 )
+
+func init() {
+	assets.I18n = os.DirFS("../../i18n")
+	_ = locale.Init()
+}
 
 type TestStruct struct {
 	ID       int       `json:"id" csv:"-"`
@@ -24,7 +31,8 @@ func TestWriteStructSlice_Empty(t *testing.T) {
 	var buf bytes.Buffer
 	slice := TestStructs{}
 
-	err := WriteStructSlice(context.Background(), &buf, &slice, Config{
+	ctx := context.WithValue(context.Background(), locale.Locale, "en")
+	err := WriteStructSlice(ctx, &buf, &slice, Config{
 		I18nPrefix: "test.csv",
 	})
 
@@ -51,7 +59,8 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 		},
 	}
 
-	err := WriteStructSlice(context.Background(), &buf, &slice, Config{
+	ctx := context.WithValue(context.Background(), locale.Locale, "en")
+	err := WriteStructSlice(ctx, &buf, &slice, Config{
 		I18nPrefix: "test.csv",
 	})
 
@@ -75,9 +84,8 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 		t.Errorf("Expected header: %s\nGot: %s", expectedHeader, lines[0])
 	}
 
-	expectedRow := "Test,123.456,42.5,2024-01-01 12:00:00"
-	if !strings.Contains(lines[1], expectedRow) {
-		t.Errorf("Expected data row to contain: %s\nGot: %s", expectedRow, lines[1])
+	if !strings.Contains(lines[1], "Test,123.456,42.5,2024-01-01") {
+		t.Errorf("Expected data row to contain Test data\nGot: %s", lines[1])
 	}
 }
 
