@@ -378,16 +378,8 @@
         "description": "Charging sessions",
         "items": {
           "properties": {
-            "chargeDuration": {
-              "description": "Duration of active charging",
-              "type": "number"
-            },
             "chargedEnergy": {
               "description": "Charged energy in kWh",
-              "type": "number"
-            },
-            "co2PerKWh": {
-              "description": "Average CO₂ emissions per kWh",
               "type": "number"
             },
             "created": {
@@ -417,18 +409,6 @@
               "nullable": true,
               "type": "number"
             },
-            "price": {
-              "description": "Total price of the session",
-              "type": "number"
-            },
-            "pricePerKWh": {
-              "description": "Average price per kWh",
-              "type": "number"
-            },
-            "solarPercentage": {
-              "description": "Solar percentage of the session",
-              "type": "number"
-            },
             "vehicle": {
               "$ref": "#/components/schemas/VehicleName"
             }
@@ -453,6 +433,60 @@
         "example": 25.5,
         "minimum": 0,
         "type": "number"
+      },
+      "GridSessions": {
+        "description": "Grid limitation sessions",
+        "items": {
+          "properties": {
+            "chargeDuration": {
+              "description": "Duration of active charging",
+              "type": "number"
+            },
+            "co2PerKWh": {
+              "description": "Average CO₂ emissions per kWh",
+              "type": "number"
+            },
+            "created": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "finished": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "gridPower": {
+              "description": "Grid power in watts",
+              "type": "number"
+            },
+            "id": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "limitPower": {
+              "description": "Limitation power in watts",
+              "type": "number"
+            },
+            "price": {
+              "description": "Total price of the session",
+              "type": "number"
+            },
+            "pricePerKWh": {
+              "description": "Average price per kWh",
+              "type": "number"
+            },
+            "solarPercentage": {
+              "description": "Solar percentage of the session",
+              "type": "number"
+            },
+            "type": {
+              "description": "Type of grid limitation event",
+              "enum": [
+                "consumption",
+                "feedin"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": "array"
       },
       "HourMinuteTime": {
         "description": "Time in `HH:MM` format",
@@ -988,6 +1022,62 @@
         "summary": "Set battery buffer start SoC",
         "tags": [
           "battery"
+        ]
+      }
+    },
+    "/gridsessions": {
+      "get": {
+        "description": "Returns a list of HEMS grid limitation events.",
+        "operationId": "getGridSessions",
+        "parameters": [
+          {
+            "description": "Response format (default json)",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "csv"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language (defaults to accept header)",
+            "in": "query",
+            "name": "lang",
+            "schema": {
+              "example": "de",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/GridSessions"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "description": "Download csv-file",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Grid limitation sessions",
+        "tags": [
+          "sessions"
         ]
       }
     },

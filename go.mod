@@ -35,7 +35,7 @@ require (
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
 	github.com/evcc-io/openapi-mcp v0.6.0
-	github.com/evcc-io/rct v0.1.2-0.20251112124403-1d380ab2264a
+	github.com/evcc-io/rct v0.1.2-0.20251121151844-04c32662cf6f
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.133.0
@@ -103,6 +103,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20250808161051-499ae856f44e
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
+	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/crypto v0.45.0
@@ -146,6 +147,7 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
+	github.com/creack/goselect v0.1.2 // indirect
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect

@@ -50,9 +50,24 @@ func New(driver, dsn string) (*gorm.DB, error) {
 	})
 }
 
-func NewInstance(driver, dsn string) (err error) {
-	Instance, err = New(strings.ToLower(driver), dsn)
-	return
+func NewInstance(driver, dsn string) error {
+	inst, err := New(strings.ToLower(driver), dsn)
+	if err != nil {
+		return err
+	}
+
+	Instance = inst
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	for _, f := range registry {
+		if err := f(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func Close() error {

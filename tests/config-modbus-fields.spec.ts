@@ -48,7 +48,7 @@ test.describe("modbus fields", async () => {
 
   test("rs485serial", async ({ page }) => {
     const modal = await openMeterModal(page, "Serial Test");
-    await expect(page.getByLabel("Serial / USB")).toBeChecked();
+    await expect(page.getByLabel("RS485")).toBeChecked();
     await expect(modal.getByLabel("Device name")).toHaveValue("/dev/ttyUSB5");
     await expect(modal.getByLabel("Baud rate")).toHaveValue("19200");
     await expect(modal.getByLabel("ComSet")).toHaveValue("8E1");

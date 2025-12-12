@@ -394,8 +394,10 @@
       "label": "Språk"
     },
     "sponsorToken": {
-      "expires": "Sponsorsymbolet ditt utløper om {inXDays}. {getNewToken} og oppdater oppsettsfilen din.",
-      "getNew": "Få en ny token",
+      "expires": "Sponsorsymbolet ditt utløper om {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} og oppdater oppsettsfilen din.",
+      "expiresUpdateYaml": "{getNewToken} og oppdater i evcc.yaml.",
+      "getNewToken": "Få en ny token",
       "hint": "Merk: Dette vil bli automatisert i fremtiden."
     },
     "telemetry": {

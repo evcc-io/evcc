@@ -38,12 +38,14 @@ params:
       ]
     required: true
   - preset: tariff-base
+  - preset: tariff-features
   - name: interval
     default: 3h
     advanced: true
 render: |
   type: custom
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
   forecast:
     source: go
     script: |
@@ -54,12 +56,16 @@ render: |
         type: string
         config:
           source: http
-          uri: https://enever.nl/api/stroomprijs_vandaag.php?token={{ .token }}
+          uri: https://enever.nl/apiv3/stroomprijs_vandaag.php?token={{ .token }}
           jq: |
-            [ .data.[] |
-              {
-                "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
-                "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
+           [ .data.[] |
+             {
+                "start": .datum,
+                "end": (
+                  (.datum[0:19]) as $dt |
+                  (.datum[19:]) as $tz |
+                  ($dt | strptime("%FT%T") | mktime + 900 | strflocaltime("%FT%T")) + $tz
+                ),
                 "value": .prijs{{ .provider }} | tonumber
               }
             ] | tostring
@@ -67,13 +73,17 @@ render: |
         type: string
         config:
           source: http
-          uri: https://enever.nl/api/stroomprijs_morgen.php?token={{ .token }}
+          uri: https://enever.nl/apiv3/stroomprijs_morgen.php?token={{ .token }}
           jq: |
             [ .data.[] |
-              {
-                "start": .datum | strptime("%F %T") | strflocaltime("%FT%T%:z"),
-                "end":   .datum | strptime("%F %T") | strflocaltime("%FT%T%:z") | strptime("%FT%T%z") | mktime + 3600 | strflocaltime("%FT%T%:z"),
+             {
+                "start": .datum,
+                "end": (
+                  (.datum[0:19]) as $dt |
+                  (.datum[19:]) as $tz |
+                  ($dt | strptime("%FT%T") | mktime + 900 | strflocaltime("%FT%T")) + $tz
+                ),
                 "value": .prijs{{ .provider }} | tonumber
-              }
+              }   
             ] | tostring
   interval: {{ .interval }}

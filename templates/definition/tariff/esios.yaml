@@ -1,4 +1,5 @@
-template: esios-tariff-api
+template: esios
+covers: [esios-tariff-api]
 products:
   - brand: REE
 requirements:

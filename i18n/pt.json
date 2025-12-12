@@ -1161,8 +1161,10 @@
       "show": "Mostrar {title}"
     },
     "sponsorToken": {
-      "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}. {getNewToken} e atualize-o aqui.",
-      "getNew": "Adquira um novo",
+      "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} e atualize-o aqui.",
+      "expiresUpdateYaml": "{getNewToken} e atualize-o no seu evcc.yaml.",
+      "getNewToken": "Adquira um novo",
       "hint": "Nota: Vamos tornar isso automático no futuro."
     },
     "telemetry": {
