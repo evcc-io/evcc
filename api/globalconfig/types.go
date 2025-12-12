@@ -144,7 +144,7 @@ type Messaging struct {
 type MessagingEventTemplate struct {
 	Title   string `json:"title"`
 	Msg     string `json:"msg"`
-	Enabled bool   `json:enabled`
+	Enabled bool   `json:"enabled"`
 }
 
 func (c Messaging) Configured() bool {
