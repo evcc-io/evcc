@@ -12,7 +12,7 @@
 		>
 			<PropertyField
 				id="messagingServiceShoutUri"
-				v-model="service.other.uri"
+				v-model="serviceData.other.uri"
 				type="String"
 				required
 			/>
@@ -34,6 +34,11 @@ export default {
 			type: Object as PropType<MessagingServiceShout>,
 			required: true,
 		},
+	},
+	data() {
+		return {
+			serviceData: this.service,
+		};
 	},
 };
 </script>

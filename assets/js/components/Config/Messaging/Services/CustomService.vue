@@ -17,8 +17,8 @@
 				type="Choice"
 				class="me-2 w-25"
 				:choice="Object.values(MESSAGING_SERVICE_CUSTOM_ENCODING)"
-				:model-value="service.other.encoding"
-				@update:model-value="(e) => (service.other.encoding = e)"
+				:model-value="serviceData.other.encoding"
+				@update:model-value="(e) => (serviceData.other.encoding = e)"
 			/>
 		</FormRow>
 		<FormRow
@@ -30,7 +30,7 @@
 				})
 			"
 		>
-			<YamlEditorContainer v-model="service.other.send" />
+			<YamlEditorContainer v-model="serviceData.other.send" />
 		</FormRow>
 	</div>
 </template>
@@ -57,11 +57,15 @@ export default {
 		},
 	},
 	data() {
-		return { MESSAGING_SERVICE_CUSTOM_ENCODING, DEAFULT_SEND_PLUGIN };
+		return {
+			serviceData: this.service,
+			MESSAGING_SERVICE_CUSTOM_ENCODING,
+			DEAFULT_SEND_PLUGIN,
+		};
 	},
 	computed: {
 		getEncodingFormat() {
-			switch (this.service.other.encoding) {
+			switch (this.serviceData.other.encoding) {
 				case MESSAGING_SERVICE_CUSTOM_ENCODING.JSON:
 					return '`{ "msg": <MSG>, "title": <TITLE> }`';
 				case MESSAGING_SERVICE_CUSTOM_ENCODING.CSV:
@@ -76,8 +80,8 @@ export default {
 		},
 	},
 	mounted() {
-		if (!this.service.other.send) {
-			this.service.other.send = DEAFULT_SEND_PLUGIN;
+		if (!this.serviceData.other.send) {
+			this.serviceData.other.send = DEAFULT_SEND_PLUGIN;
 		}
 	},
 };
