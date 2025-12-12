@@ -98,37 +98,26 @@ func fromMilliOreToKrona(val int) float64 {
 func (t *Greenely) rates(sp greenely.SpotPrice) api.Rates {
 	data := make(api.Rates, 0, len(sp.Data)*4)
 	for _, hourData := range sp.Data {
-		q1Start := hourData.LocalTime.Time.Local()
-		q1End := q1Start.Add(SlotDuration).Local()
-		data = append(data, api.Rate{
-			Start: q1Start,
-			End:   q1Start.Add(SlotDuration),
-			Value: t.totalPrice(fromMilliOreToKrona(hourData.QuartersPrices.Quarter1), q1Start),
-		})
+		start := hourData.LocalTime.Time.Local()
 
-		q2Start := q1End
-		q2End := q2Start.Add(SlotDuration).Local()
-		data = append(data, api.Rate{
-			Start: q2Start,
-			End:   q2End,
-			Value: t.totalPrice(fromMilliOreToKrona(hourData.QuartersPrices.Quarter2), q2Start),
-		})
+		prices := []int{
+			hourData.QuartersPrices.Quarter1,
+			hourData.QuartersPrices.Quarter2,
+			hourData.QuartersPrices.Quarter3,
+			hourData.QuartersPrices.Quarter4,
+		}
 
-		q3Start := q2End
-		q3End := q3Start.Add(SlotDuration).Local()
-		data = append(data, api.Rate{
-			Start: q3Start,
-			End:   q3End,
-			Value: t.totalPrice(fromMilliOreToKrona(hourData.QuartersPrices.Quarter3), q3Start),
-		})
+		for _, p := range prices {
+			end := start.Add(SlotDuration)
 
-		q4Start := q3End
-		q4End := q4Start.Add(SlotDuration).Local()
-		data = append(data, api.Rate{
-			Start: q4Start,
-			End:   q4End,
-			Value: t.totalPrice(fromMilliOreToKrona(hourData.QuartersPrices.Quarter4), q4Start),
-		})
+			data = append(data, api.Rate{
+				Start: start,
+				End:   end,
+				Value: t.totalPrice(fromMilliOreToKrona(p), start),
+			})
+
+			start = end
+		}
 	}
 	return data
 }
