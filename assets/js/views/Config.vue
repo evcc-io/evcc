@@ -1,8 +1,17 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader :title="$t('config.main.title')" />
+			<TopHeader
+				ref="header"
+				:title="$t('config.main.title')"
+				:notifications="notifications"
+			/>
 			<div class="wrapper pb-5">
+				<AuthSuccessBanner
+					v-if="callbackCompleted"
+					:provider-id="callbackCompleted"
+					:auth-providers="authProviders"
+				/>
 				<WelcomeBanner v-if="loadpointsRequired" />
 				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
@@ -172,6 +181,11 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 					<div class="p-0 config-list">
+						<AuthProvidersCard
+							:providers="authProviders"
+							data-testid="auth-providers"
+							@auth-request="handleProviderAuthRequest"
+						/>
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -286,7 +300,7 @@
 						</DeviceCard>
 						<DeviceCard
 							:title="$t('config.hems.title')"
-							editable
+							:editable="!hems?.fromYaml"
 							:error="hasClassError('hems')"
 							data-testid="hems"
 							@edit="openModal('hemsModal')"
@@ -434,7 +448,7 @@ import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import type {
 	Circuit,
 	ConfigCharger,
@@ -447,13 +461,16 @@ import type {
 	MeterType,
 	SiteConfig,
 	DeviceType,
+	Notification,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -471,6 +488,7 @@ export default defineComponent({
 		OcppIcon,
 		OcppModal,
 		ExperimentalBanner,
+		AuthSuccessBanner,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -497,11 +515,12 @@ export default defineComponent({
 		VehicleModal,
 		WelcomeBanner,
 		PasswordModal,
+		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -541,6 +560,12 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		callbackCompleted() {
+			return this.$route.query["callbackCompleted"] as string | undefined;
+		},
+		authProviders() {
+			return store.state?.authProviders;
+		},
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
 		},
@@ -629,8 +654,11 @@ export default defineComponent({
 		shmTags() {
 			return { configured: { value: true } };
 		},
+		hems() {
+			return store.state?.hems;
+		},
 		hemsTags() {
-			const { type } = store.state?.hems || {};
+			const type = this.hems?.config?.type;
 			if (!type) {
 				return { configured: { value: false } };
 			}
@@ -649,15 +677,14 @@ export default defineComponent({
 
 			return result;
 		},
-		isSponsor() {
-			const { name } = store.state?.sponsor || {};
-			return !!name;
+		sponsor() {
+			return store.state?.sponsor;
+		},
+		isSponsor(): boolean {
+			return !!this.sponsor?.status.name;
 		},
 		ocpp() {
 			return store.state?.ocpp;
-		},
-		sponsor() {
-			return store.state?.sponsor;
 		},
 		telemetry() {
 			// @ts-expect-error: telemetry property exists but not in TypeScript definitions
@@ -1092,6 +1119,10 @@ export default defineComponent({
 			const charger = this.chargers.find((c) => c.name === chargerName);
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
+		},
+		handleProviderAuthRequest(providerId: string) {
+			const header = this.$refs["header"] as InstanceType<typeof Header> | undefined;
+			header?.requestAuthProvider(providerId);
 		},
 	},
 });

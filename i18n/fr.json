@@ -162,6 +162,7 @@
       "authPerformHint": "Va s’ouvrir dans un nouvel onglet. Revenez ici pour continuer.",
       "authPrepare": "Préparer la connexion",
       "cancel": "Annuler",
+      "clear": "Effacer",
       "close": "Fermer",
       "customHelp": "Créer un appareil sur mesure en utilisant le système de plugins d’evcc.",
       "customOption": "Appareil sur mesure",
@@ -698,6 +699,7 @@
     "authProviders": {
       "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
       "loggedOut": "Déconnexion réussie",
+      "success": "L’autorisation avec {title} a fonctionné. Vous pouvez fermer cet onglet.",
       "title": "Statut de l'autorisation"
     },
     "blog": "Blog",
@@ -1160,8 +1162,10 @@
       "show": "Afficher {title}"
     },
     "sponsorToken": {
-      "expires": "Votre jeton de sponsor expire dans {inXDays}. {getNewToken} et mettez-le à jour ici.",
-      "getNew": "Obtenez-en un nouveau",
+      "expires": "Votre jeton de sponsor expire dans {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} et mettez-le à jour ici.",
+      "expiresUpdateYaml": "{getNewToken} et mettez-le à jour dans votre evcc.yaml.",
+      "getNewToken": "Obtenez-en un nouveau",
       "hint": "Remarque : nous allons automatiser cela à l'avenir."
     },
     "telemetry": {

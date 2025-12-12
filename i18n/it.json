@@ -927,8 +927,10 @@
       "label": "Lingua"
     },
     "sponsorToken": {
-      "expires": "Il tuo token sponsor scadrà in {inXDays}. {getNewToken} e inseriscilo qua.",
-      "getNew": "Prendine uno nuovo",
+      "expires": "Il tuo token sponsor scadrà in {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} e inseriscilo qua.",
+      "expiresUpdateYaml": "{getNewToken} e inseriscilo nel tuo evcc.yaml.",
+      "getNewToken": "Prendine uno nuovo",
       "hint": "Nota: questa funzione verrà automatizzata."
     },
     "telemetry": {

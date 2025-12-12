@@ -847,8 +847,10 @@
       "show": "Pokaż {title}"
     },
     "sponsorToken": {
-      "expires": "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj tutaj.",
-      "getNew": "Weź świeżego",
+      "expires": "Twój token sponsora wygasa {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} i zaktualizuj tutaj.",
+      "expiresUpdateYaml": "{getNewToken} i zaktualizuj w swoim evcc.yaml.",
+      "getNewToken": "Weź świeżego",
       "hint": "Uwaga: zautomatyzujemy to w przyszłości."
     },
     "telemetry": {

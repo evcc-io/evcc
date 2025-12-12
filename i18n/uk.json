@@ -700,6 +700,7 @@
     "authProviders": {
       "confirmLogout": "Ви впевнені, що хочете відключити {title}?",
       "loggedOut": "Успішно вийшов з системи",
+      "success": "Авторизація для {title} успішна. Тепер ви можете закрити цю вкладку.",
       "title": "Статус авторизації"
     },
     "blog": "Блог",
@@ -1162,8 +1163,10 @@
       "show": "Показати {title}"
     },
     "sponsorToken": {
-      "expires": "Термін дії вашого спонсорського токена закінчується {inXDays}. {getNewToken} і оновіть його тут.",
-      "getNew": "Візьми свіжий",
+      "expires": "Термін дії вашого спонсорського токена закінчується {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} і оновіть його тут.",
+      "expiresUpdateYaml": "{getNewToken} і оновіть його у вашому evcc.yaml.",
+      "getNewToken": "Візьми свіжий",
       "hint": "Примітка: Ми автоматизуємо це в майбутньому."
     },
     "telemetry": {

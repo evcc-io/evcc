@@ -1142,8 +1142,10 @@
       "show": "Εμφάνιση {title}"
     },
     "sponsorToken": {
-      "expires": "Το sponsor token λήγει {inXDays}. {getNewToken} και κάντε εδώ μία ενημέρωση.",
-      "getNew": "Πάρτε ένα φρέσκο",
+      "expires": "Το sponsor token λήγει {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} και κάντε εδώ μία ενημέρωση.",
+      "expiresUpdateYaml": "{getNewToken} και ενημερώστε το στο evcc.yaml σας.",
+      "getNewToken": "Πάρτε ένα φρέσκο",
       "hint": "Σημείωση: Θα το αυτοματοποιήσουμε στο μέλλον."
     },
     "telemetry": {

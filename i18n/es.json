@@ -728,8 +728,10 @@
       "label": "Idioma"
     },
     "sponsorToken": {
-      "expires": "Tu token de patrocinador expira en {inXDays}. {getNewToken} y puedes renovarlo aquí.",
-      "getNew": "Coge uno nuevo",
+      "expires": "Tu token de patrocinador expira en {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} y puedes renovarlo aquí.",
+      "expiresUpdateYaml": "{getNewToken} y actualízalo en tu evcc.yaml.",
+      "getNewToken": "Coge uno nuevo",
       "hint": "Nota: automatizaremos esto en el futuro."
     },
     "telemetry": {

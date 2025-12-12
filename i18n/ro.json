@@ -408,8 +408,10 @@
       "label": "Limba"
     },
     "sponsorToken": {
-      "expires": "Tokenul de sponsorizare expira {inXDays}. {getNewToken} si adauga-l in fisierul de configurare.",
-      "getNew": "Descarcati unul nou",
+      "expires": "Tokenul de sponsorizare expira {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} si adauga-l in fisierul de configurare.",
+      "expiresUpdateYaml": "{getNewToken} si adauga-l în fișierul evcc.yaml.",
+      "getNewToken": "Descarcati unul nou",
       "hint": "Nota: Vom automatiza acest proces in viitor."
     },
     "telemetry": {

@@ -939,8 +939,10 @@
       "label": "语言"
     },
     "sponsorToken": {
-      "expires": "您的赞助令牌将在 {inXDays} 后过期。{getNewToken} 并在此处更新。",
-      "getNew": "获取一个新的",
+      "expires": "您的赞助令牌将在 {inXDays} 后过期。",
+      "expiresUpdateUi": "{getNewToken} 并在此处更新。",
+      "expiresUpdateYaml": "{getNewToken} 并在你的 evcc.yaml 中更新。",
+      "getNewToken": "获取一个新的",
       "hint": "注意：我们将来会自动化此过程。"
     },
     "telemetry": {

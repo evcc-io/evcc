@@ -1,0 +1,34 @@
+template: zendure-solarflow-2400-ac
+products:
+  - brand: Zendure
+    description:
+      generic: Solarflow 2400 AC
+
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+    required: true
+  - name: capacity
+    required: true
+
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+      - source: http
+        uri: http://{{ .host }}/properties/report
+        jq: .properties.packInputPower
+        cache: 1s
+      - source: http
+        uri: http://{{ .host }}/properties/report
+        jq: .properties.outputPackPower
+        scale: -1
+        cache: 1s
+  soc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.electricLevel
+    cache: 1s
+  capacity: {{ .capacity }}
