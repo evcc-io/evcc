@@ -5,9 +5,10 @@ products:
       generic: Solarflow 2400 AC
 
 params:
+  - name: usage
+    choice: ["battery"]
   - name: host
     required: true
-
   - name: capacity
     required: true
 
