@@ -679,7 +679,7 @@ export default defineComponent({
 		},
 		messagingTags() {
 			return {
-				configured: { value: store.state?.messaging?.services?.length != 0 || false },
+				configured: { value: store.state?.messaging?.services?.length !== 0 || false },
 			};
 		},
 		backupRestoreProps() {
