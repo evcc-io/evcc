@@ -26,7 +26,7 @@ type Config struct {
 var (
 	once        sync.Once
 	instance    *CS
-	port        int
+	port        = 8887
 	externalUrl string
 )
 
