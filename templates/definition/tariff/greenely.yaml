@@ -1,0 +1,32 @@
+template: greenely
+products:
+  - brand: Greenely
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["SE"]
+params:
+  - name: email
+    description:
+      generic: Email accociated with your Greenely account
+    example: user@example.com
+    required: true
+  - name: password
+    description:
+      generic: Your Greenely account password
+    example: password123
+    required: true
+  - name: facilityid
+    description:
+      generic: Ask Greenely for your facility ID if you need it
+    example: 123456
+    help:
+      de: Nur erforderlich, wenn du mehrere Häuser in deinem Greenely-Konto hast.
+      en: Only required if you have multiple homes in your Greenely account.
+  - preset: tariff-base
+render: |
+  type: greenely
+  email: {{ .email }}
+  password: {{ .password }}
+  facilityid: {{ .facilityid }}
+  {{ include "tariff-base" . }}
