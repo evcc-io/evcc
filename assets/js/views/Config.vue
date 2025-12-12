@@ -680,8 +680,9 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags() {
+			const s = store.state?.messaging?.services || [];
 			return {
-				configured: { value: store.state?.messaging?.services?.length !== 0 || false },
+				configured: { value: s.length !== 0 || false },
 			};
 		},
 		backupRestoreProps() {
