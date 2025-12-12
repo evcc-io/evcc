@@ -9,6 +9,7 @@
 		disable-remove
 		data-testid="messaging-modal"
 		size="xl"
+		:transformReadValues="transformReadValues"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: Messaging }">
@@ -32,16 +33,20 @@
 						href="#"
 						@click.prevent="activeEventsTab = false"
 					>
-						Services ({{ values.services?.length }})
+						Services ({{ values.services?.length ?? 0 }})
 					</a>
 				</li>
 			</ul>
 			<div v-if="activeEventsTab">
-				<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
-					<EventItem :eventKey="event" :values="values" />
+				<p>{{ values.events }}</p>
+				<div v-if="values.events">
+					<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
+						<EventItem :eventType="event" :eventObject="values.events[event]" />
+					</div>
 				</div>
 			</div>
 			<div v-else>
+				<p>{{ values.services }}</p>
 				<div v-for="(s, index) in values.services" :key="index" class="mb-5">
 					<div class="border rounded px-3 pt-4 pb-3 mb-3">
 						<div class="d-lg-block">
@@ -98,7 +103,6 @@ import {
 	MESSAGING_EVENTS,
 	MESSAGING_SERVICE_TYPE,
 	MESSAGING_SERVICE_NFTY_PRIORITY,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	type Messaging,
 	type MessagingServices,
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
@@ -174,9 +178,25 @@ export default {
 					return "CustomService";
 			}
 		},
-		addMessaging(serviceType: MESSAGING_SERVICE_TYPE): MessagingServices {
-			console.log(serviceType);
+		transformReadValues(values: Messaging) {
+			const v = values ?? {};
 
+			if (!v.events) {
+				v.events = {} as Messaging["events"];
+			}
+
+			Object.values(MESSAGING_EVENTS).forEach((evt) => {
+				const e = v.events![evt];
+				v.events![evt] = {
+					enabled: e?.enabled ?? false,
+					title: e?.title ?? "",
+					msg: e?.msg ?? "",
+				};
+			});
+
+			return v;
+		},
+		addMessaging(serviceType: MESSAGING_SERVICE_TYPE): MessagingServices {
 			switch (serviceType) {
 				case MESSAGING_SERVICE_TYPE.PUSHOVER:
 					return {

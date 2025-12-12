@@ -364,6 +364,43 @@
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
+          "title": "When charging is paused",
+          "titleDefault": "Vehicle asleep"
+        },
+        "connect": {
+          "messageDefault": "Car connected at {pvPower}kW PV",
+          "title": "When a car connects",
+          "titleDefault": "Car connected"
+        },
+        "disconnect": {
+          "messageDefault": "Car disconnected after {connectedDuration}",
+          "title": "When a car disconnects",
+          "titleDefault": "Car disconnected"
+        },
+        "guest": {
+          "messageDefault": "Unknown vehicle, guest connected?",
+          "title": "When an unknown car connects",
+          "titleDefault": "Unknown vehicle"
+        },
+        "soc": {
+          "messageDefault": "Battery charged to {vehicleSoc}%",
+          "title": "For SoC updates",
+          "titleDefault": "Soc updated"
+        },
+        "start": {
+          "messageDefault": "Started charging in {mode} mode.",
+          "title": "When charging starts",
+          "titleDefault": "Charge started"
+        },
+        "stop": {
+          "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
+          "title": "When charging stops",
+          "titleDefault": "Charge finished"
+        }
+      },
       "service": {
         "custom": {
           "encoding": "Encoding",
