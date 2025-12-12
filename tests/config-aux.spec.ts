@@ -1,12 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  editorClear,
-  editorPaste,
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-} from "./utils";
+import { editorClear, editorPaste, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -22,7 +16,6 @@ test.afterEach(async () => {
 test.describe("aux meter", async () => {
   test("create and remove aux meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("aux")).toHaveCount(0);
 
@@ -67,7 +60,6 @@ test.describe("aux meter", async () => {
 
   test("user-defined meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const modal = page.getByTestId("meter-modal");
@@ -160,7 +152,6 @@ energy:
 
   test("user-defined meter with errors", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
 

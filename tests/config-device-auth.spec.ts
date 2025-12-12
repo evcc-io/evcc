@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -22,7 +22,6 @@ test.afterEach(async () => {
 test.describe("config device auth", async () => {
   test("create grid meter with redirect auth", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, true);
 
     // verify no grid meter exists yet
     await expect(page.getByTestId("grid")).toHaveCount(0);
@@ -95,7 +94,6 @@ test.describe("config device auth", async () => {
 
   test("create grid meter with device-code auth", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, true);
 
     // create a grid meter with device-code auth
     await page.getByRole("button", { name: "Add grid meter" }).click();
@@ -117,7 +115,6 @@ test.describe("config device auth", async () => {
 
   test("error region shows auth error", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, true);
 
     await page.getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");

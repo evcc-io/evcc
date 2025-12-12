@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
-  enableExperimental,
   expectModalHidden,
   expectModalVisible,
   openTopNavigation,
@@ -39,7 +38,6 @@ test.describe("general", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
@@ -69,7 +67,6 @@ test.describe("general", async () => {
 test.describe("network modal", async () => {
   test("persists host and external url across restart", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const networkEntry = page.getByTestId("generalconfig-network");
     await expect(networkEntry).toBeVisible();
