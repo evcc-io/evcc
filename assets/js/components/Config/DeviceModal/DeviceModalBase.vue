@@ -43,7 +43,9 @@
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<SponsorTokenRequired v-if="sponsorTokenRequired" />
-					<Markdown v-if="description" :markdown="description" class="my-4" />
+					<slot name="template-description">
+						<Markdown v-if="description" :markdown="description" class="my-4" />
+					</slot>
 
 					<div v-if="authRequired">
 						<PropertyEntry
@@ -257,7 +259,15 @@ export default defineComponent({
 		// Optional: hide template fields, e.g. because ocpp step was not completed
 		hideTemplateFields: { type: Boolean, default: false },
 	},
-	emits: ["added", "updated", "removed", "close", "template-changed", "update:externalTemplate"],
+	emits: [
+		"added",
+		"updated",
+		"removed",
+		"close",
+		"template-changed",
+		"update:externalTemplate",
+		"reset",
+	],
 	data() {
 		return {
 			isModalVisible: false,
@@ -515,6 +525,7 @@ export default defineComponent({
 			this.values = { ...this.initialValues } as DeviceValues;
 			this.test = initialTestState();
 			this.resetAuthStatus();
+			this.$emit("reset");
 		},
 		async loadConfiguration() {
 			try {

@@ -21,6 +21,7 @@
 		@updated="$emit('updated')"
 		@removed="$emit('removed')"
 		@close="$emit('close')"
+		@reset="reset"
 	>
 		<template v-if="isOcpp" #template-description>
 			<p>{{ $t("config.charger.ocppDescription") }}</p>
@@ -318,6 +319,11 @@ export default defineComponent({
 			) {
 				this.ocppNextStepConfirmed = true;
 			}
+		},
+		reset() {
+			this.ocppNextStepConfirmed = false;
+			this.currentTemplate = null;
+			this.currentValues = {} as DeviceValues;
 		},
 	},
 });
