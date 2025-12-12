@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Autorisierungscode",
+    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "authorizationRequired": "Autorisierung erforderlich",
+    "buttonConnect": "Mit {provider} verbinden",
+    "buttonDisconnect": "Trennen",
+    "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+    "connect": "verbinden",
+    "disconnect": "trennen",
+    "loggedOut": "Erfolgreich abgemeldet",
+    "logoutFailed": "Abmeldung fehlgeschlagen",
+    "modalDescriptionLogin": "Schließe die Autorisierung ab, um eine Verbindung mit {provider} herzustellen.",
+    "modalDescriptionLogout": "Dies trennt dein {provider}-Konto und entfernt den Zugriff auf dessen Daten.",
+    "success": "Die Autorisierung mit {title} war erfolgreich.",
+    "successCloseModal": "Du kannst diesen Dialog jetzt schließen.",
+    "successCloseTab": "Du kannst diesen Tab jetzt schließen.",
+    "title": "Autorisierungsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Ladestand der Batterie",
     "bufferStart": {
@@ -164,6 +182,8 @@
       "cancel": "Abbrechen",
       "clear": "Löschen",
       "close": "Schließen",
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
@@ -375,9 +395,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus Verbindung",
-      "connectionHintSerial": "Das Gerät ist direkt an evcc über eine RS485 Schnittstelle angeschlossen.",
-      "connectionHintTcpip": "Das Gerät ist von evcc aus über LAN/Wifi erreichbar.",
-      "connectionValueSerial": "Seriell / USB",
+      "connectionHintSerial": "Das Gerät ist direkt über RS485 (oder USB-zu-RS485 Adapter) angeschlossen.",
+      "connectionHintTcpip": "Das Gerät ist über Netzwerk (LAN/WiFi) erreichbar.",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwerk",
       "device": "Gerätename",
       "deviceHint": "Beispiel: /dev/ttyUSB0",
@@ -694,12 +714,6 @@
   },
   "header": {
     "about": "Über",
-    "authProviders": {
-      "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
-      "loggedOut": "Erfolgreich abgemeldet",
-      "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
-      "title": "Autorisierungsstatus"
-    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
@@ -1158,8 +1172,10 @@
       "show": "{title} anzeigen"
     },
     "sponsorToken": {
-      "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
-      "getNew": "Hol dir ein Neues",
+      "expires": "Dein Sponsortoken läuft {inXDays} ab.",
+      "expiresUpdateUi": "{getNewToken} und aktualisiere es hier.",
+      "expiresUpdateYaml": "{getNewToken} und aktualisiere es in deiner evcc.yaml.",
+      "getNewToken": "Hol dir ein Neues",
       "hint": "Hinweis: Wir werden das zukünftig automatisieren."
     },
     "telemetry": {

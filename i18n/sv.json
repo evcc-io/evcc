@@ -1163,8 +1163,10 @@
       "show": "Visa {title}"
     },
     "sponsorToken": {
-      "expires": "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera här.",
-      "getNew": "Hämta en ny",
+      "expires": "Din sponsortoken löper ut om {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} och uppdatera här.",
+      "expiresUpdateYaml": "{getNewToken} och uppdatera i din evcc.yaml.",
+      "getNewToken": "Hämta en ny",
       "hint": "Observera: Vi kommer att automatisera detta i framtiden."
     },
     "telemetry": {

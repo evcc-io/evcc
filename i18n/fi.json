@@ -1162,8 +1162,10 @@
       "show": "Näytä {title}"
     },
     "sponsorToken": {
-      "expires": "Sponsorointitunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä se tänne.",
-      "getNew": "Ota uusi",
+      "expires": "Sponsorointitunnuksesi vanhenee {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} ja päivitä se tänne.",
+      "expiresUpdateYaml": "{getNewToken} ja päivitä se evcc.yaml-tiedostossa.",
+      "getNewToken": "Ota uusi",
       "hint": "Huomaa: automatisoimme tämän tulevaisuudessa."
     },
     "telemetry": {

@@ -87,11 +87,11 @@
 									</h5>
 								</div>
 								<Modbus
-									:id="index"
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
 									v-model:device="c.settings.device"
 									:modbus="getModbus(c.settings)"
+									:component-id="`proxy-${index}`"
 									:host="getHost(c.settings.uri)"
 									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
