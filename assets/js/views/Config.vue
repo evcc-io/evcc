@@ -695,7 +695,7 @@ export default defineComponent({
 		},
 		ocppTags() {
 			const ocpp = store.state?.ocpp;
-			const stations = ocpp?.stations || [];
+			const stations = ocpp?.status?.stations || [];
 			if (stations.length === 0) {
 				return { configured: { value: false } };
 			}

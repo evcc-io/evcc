@@ -76,7 +76,7 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
 import Markdown from "./Markdown.vue";
-import type { OcppConfig, OcppStationStatus } from "@/types/evcc";
+import type { Ocpp, OcppStationStatus } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
 
 export default defineComponent({
@@ -88,11 +88,17 @@ export default defineComponent({
 	},
 	props: {
 		ocpp: {
-			type: Object as PropType<OcppConfig>,
-			default: () => ({ port: 0, stations: [] }),
+			type: Object as PropType<Ocpp>,
+			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
 		},
 	},
 	computed: {
+		status() {
+			return this.ocpp.status;
+		},
+		stations() {
+			return this.status.stations;
+		},
 		ocppUrl(): string {
 			return getOcppUrl(this.ocpp);
 		},
@@ -100,12 +106,12 @@ export default defineComponent({
 			return getOcppUrlWithStationId(this.ocpp);
 		},
 		connectedStations(): OcppStationStatus[] {
-			return this.ocpp.stations.filter(
+			return this.stations.filter(
 				(s) => s.status === "connected" || s.status === "configured"
 			);
 		},
 		detectedStations(): OcppStationStatus[] {
-			return this.ocpp.stations.filter((s) => s.status === "unknown");
+			return this.stations.filter((s) => s.status === "unknown");
 		},
 	},
 	methods: {

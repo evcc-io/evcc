@@ -92,13 +92,21 @@ export interface State {
   authDisabled?: boolean;
   config?: string;
   database?: string;
-  ocpp?: OcppConfig;
+  ocpp?: Ocpp;
 }
 
 export interface OcppConfig {
   port: number;
+}
+
+export interface OcppStatus {
   externalUrl?: string;
   stations: OcppStationStatus[];
+}
+
+export interface Ocpp {
+  config: OcppConfig;
+  status: OcppStatus;
 }
 
 export interface OcppStationStatus {

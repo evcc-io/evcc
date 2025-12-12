@@ -99,47 +99,49 @@
 					<div v-else>
 						<slot name="after-template-info" :values="values"></slot>
 
-						<Modbus
-							v-if="modbus"
-							v-model:modbus="values['modbus']"
-							v-model:id="values['id']"
-							v-model:host="values['host']"
-							v-model:port="values['port']"
-							v-model:device="values['device']"
-							v-model:baudrate="values['baudrate']"
-							v-model:comset="values['comset']"
-							component-id="device"
-							:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
-							:defaultComset="modbus.Comset"
-							:defaultBaudrate="modbus.Baudrate"
-							:defaultPort="modbus.Port"
-							:capabilities="modbusCapabilities"
-						/>
+						<div v-if="!hideTemplateFields">
+							<Modbus
+								v-if="modbus"
+								v-model:modbus="values['modbus']"
+								v-model:id="values['id']"
+								v-model:host="values['host']"
+								v-model:port="values['port']"
+								v-model:device="values['device']"
+								v-model:baudrate="values['baudrate']"
+								v-model:comset="values['comset']"
+								component-id="device"
+								:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
+								:defaultComset="modbus.Comset"
+								:defaultBaudrate="modbus.Baudrate"
+								:defaultPort="modbus.Port"
+								:capabilities="modbusCapabilities"
+							/>
 
-						<PropertyEntry
-							v-for="param in normalParams"
-							:id="`${deviceType}Param${param.Name}`"
-							:key="param.Name"
-							v-bind="param"
-							v-model="values[param.Name]"
-							:service-values="serviceValues[param.Name]"
-						/>
+							<PropertyEntry
+								v-for="param in normalParams"
+								:id="`${deviceType}Param${param.Name}`"
+								:key="param.Name"
+								v-bind="param"
+								v-model="values[param.Name]"
+								:service-values="serviceValues[param.Name]"
+							/>
 
-						<PropertyCollapsible>
-							<template v-if="advancedParams.length" #advanced>
-								<PropertyEntry
-									v-for="param in advancedParams"
-									:id="`${deviceType}Param${param.Name}`"
-									:key="param.Name"
-									v-bind="param"
-									v-model="values[param.Name]"
-									:service-values="serviceValues[param.Name]"
-								/>
-							</template>
-							<template v-if="$slots['collapsible-more']" #more>
-								<slot name="collapsible-more" :values="values"></slot>
-							</template>
-						</PropertyCollapsible>
+							<PropertyCollapsible>
+								<template v-if="advancedParams.length" #advanced>
+									<PropertyEntry
+										v-for="param in advancedParams"
+										:id="`${deviceType}Param${param.Name}`"
+										:key="param.Name"
+										v-bind="param"
+										v-model="values[param.Name]"
+										:service-values="serviceValues[param.Name]"
+									/>
+								</template>
+								<template v-if="$slots['collapsible-more']" #more>
+									<slot name="collapsible-more" :values="values"></slot>
+								</template>
+							</PropertyCollapsible>
+						</div>
 					</div>
 				</div>
 
@@ -252,6 +254,8 @@ export default defineComponent({
 		onConfigurationLoaded: Function as PropType<(values: DeviceValues) => void>,
 		// Optional: external template selection control (for parent to reset template)
 		externalTemplate: String as PropType<string | null>,
+		// Optional: hide template fields, e.g. because ocpp step was not completed
+		hideTemplateFields: { type: Boolean, default: false },
 	},
 	emits: ["added", "updated", "removed", "close", "template-changed", "update:externalTemplate"],
 	data() {
@@ -367,7 +371,19 @@ export default defineComponent({
 			return !this.isNew;
 		},
 		showActions() {
-			return (this.templateName && !this.authRequired) || this.showYamlInput;
+			// explicitly hide template fields (ocpp step 1)
+			if (this.hideTemplateFields) {
+				return false;
+			}
+			// yaml input type
+			if (this.showYamlInput) {
+				return true;
+			}
+			// template selected and no auth prerequisit
+			if (this.templateName && !this.authRequired) {
+				return true;
+			}
+			return false;
 		},
 		showYamlInput() {
 			return this.isYamlInputTypeByValue(this.values.type);

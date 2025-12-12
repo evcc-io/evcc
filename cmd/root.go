@@ -175,9 +175,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// start OCPP server
 	ocppCS := ocpp.Instance()
 	ocppCS.SetUpdated(func() {
-		valueChan <- util.Param{Key: keys.Ocpp, Val: ocpp.Status()}
+		// republish when OCPP state updates
+		valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
+			Config ocpp.Config `json:"config"`
+			Status ocpp.Status `json:"status"`
+		}{
+			Config: conf.Ocpp,
+			Status: ocpp.GetStatus(),
+		}}
 	})
-	log.INFO.Printf("OCPP local:    ws://127.0.0.1:%d/<stationId>", ocpp.Port())
+	log.INFO.Printf("OCPP local:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
 	if ocpp.ExternalUrl() != "" {
 		log.INFO.Printf("OCPP external: %s/<stationId>", ocpp.ExternalUrl())
 	}
@@ -330,7 +337,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Ocpp, Val: ocpp.Status()}
+	valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
+		Config ocpp.Config `json:"config"`
+		Status ocpp.Status `json:"status"`
+	}{
+		Config: conf.Ocpp,
+		Status: ocpp.GetStatus(),
+	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
 		Status   sponsor.Status `json:"status"`
 		FromYaml bool           `json:"fromYaml"`

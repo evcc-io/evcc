@@ -26,21 +26,16 @@ type Config struct {
 var (
 	once        sync.Once
 	instance    *CS
-	port        = 8887
+	port        int
 	externalUrl string
 )
 
-// Status returns the OCPP status
-func Status() status {
+// GetStatus returns the OCPP runtime status
+func GetStatus() Status {
 	if instance == nil {
-		return status{}
+		return Status{}
 	}
 	return instance.status()
-}
-
-// Port returns the configured OCPP port
-func Port() int {
-	return port
 }
 
 // ExternalUrl returns the auto-generated OCPP external URL based on network external URL
@@ -56,7 +51,7 @@ func ExternalUrl() string {
 
 	// Replace protocol: http -> ws, https -> wss
 	u.Scheme = strings.Replace(u.Scheme, "http", "ws", 1)
-	u.Host = fmt.Sprintf("%s:%d", strings.Split(u.Host, ":")[0], 8887)
+	u.Host = fmt.Sprintf("%s:%d", strings.Split(u.Host, ":")[0], 8887) // deliberately fixed, port configurability only for testing
 
 	return u.String()
 }

@@ -36,14 +36,14 @@ type stationStatus struct {
 	Status StationStatus `json:"status"`
 }
 
-type status struct {
-	Port        int             `json:"port"`
+// Status represents the runtime OCPP status
+type Status struct {
 	ExternalUrl string          `json:"externalUrl,omitempty"`
 	Stations    []stationStatus `json:"stations"`
 }
 
-// status returns the OCPP status
-func (cs *CS) status() status {
+// status returns the OCPP runtime status
+func (cs *CS) status() Status {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
@@ -69,8 +69,7 @@ func (cs *CS) status() status {
 		})
 	}
 
-	return status{
-		Port:        port,
+	return Status{
 		ExternalUrl: ExternalUrl(),
 		Stations:    stations,
 	}

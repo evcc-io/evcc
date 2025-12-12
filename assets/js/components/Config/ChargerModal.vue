@@ -102,7 +102,7 @@ import switchsocketHeaterYaml from "./defaultYaml/switchsocketHeater.yaml?raw";
 import switchsocketChargerYaml from "./defaultYaml/switchsocketCharger.yaml?raw";
 import sgreadyYaml from "./defaultYaml/sgready.yaml?raw";
 import sgreadyRelayYaml from "./defaultYaml/sgreadyRelay.yaml?raw";
-import { LOADPOINT_TYPE, type LoadpointType, type OcppConfig } from "@/types/evcc";
+import { LOADPOINT_TYPE, type LoadpointType, type Ocpp } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
 
 const initialValues = {
@@ -125,7 +125,10 @@ export default defineComponent({
 		id: Number,
 		loadpointType: { type: String as PropType<LoadpointType>, default: null },
 		fade: String as PropType<ModalFade>,
-		ocpp: { type: Object as PropType<OcppConfig>, default: () => ({ stations: [] }) },
+		ocpp: {
+			type: Object as PropType<Ocpp>,
+			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
+		},
 		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
@@ -165,9 +168,11 @@ export default defineComponent({
 			return this.isOcpp ? getOcppUrlWithStationId(this.ocpp) : null;
 		},
 		ocppStationIdDetected(): string | undefined {
-			return this.isOcpp
-				? this.ocpp.stations.find((station) => station.status === "unknown")?.id
-				: undefined;
+			if (!this.isOcpp) {
+				return undefined;
+			}
+			const stations = this.ocpp.status.stations;
+			return stations.find((station) => station.status === "unknown")?.id;
 		},
 		hideTemplateFields(): boolean {
 			return this.isOcpp && !this.ocppNextStepConfirmed;

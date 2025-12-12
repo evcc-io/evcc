@@ -1,13 +1,13 @@
-import type { OcppConfig } from "@/types/evcc";
+import type { Ocpp } from "@/types/evcc";
 
-export function getOcppUrl(ocppConfig: OcppConfig): string {
+export function getOcppUrl(ocpp: Ocpp): string {
   // User specified url, e.g., for reverse proxy setups
-  if (ocppConfig.externalUrl) {
-    return ocppConfig.externalUrl;
+  if (ocpp.status.externalUrl) {
+    return ocpp.status.externalUrl;
   }
-  return `ws://${window.location.hostname}:${ocppConfig.port}/`;
+  return `ws://${window.location.hostname}:${ocpp.config.port}/`;
 }
 
-export function getOcppUrlWithStationId(ocppConfig: OcppConfig): string {
-  return `${getOcppUrl(ocppConfig)}<station-id>`;
+export function getOcppUrlWithStationId(ocpp: Ocpp): string {
+  return `${getOcppUrl(ocpp)}<station-id>`;
 }
