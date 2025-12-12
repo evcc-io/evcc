@@ -76,7 +76,7 @@ func (t *Greenely) run(done chan error) {
 				return err
 			}
 
-			r, err := t.client.GetSpotPrice(ctx, time.Now(), time.Now().Add(24*time.Hour))
+			r, err := t.client.GetSpotPrice(ctx, time.Now(), time.Now().Add(48*time.Hour))
 			resp = r
 			return err
 		}, bo()); err != nil {
