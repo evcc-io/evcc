@@ -115,11 +115,6 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
-	// re-check since plannerActive() is called before connected() check in Update()
-	if !lp.connected() {
-		return false
-	}
-
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
 		return false
@@ -158,6 +153,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	planStart = planner.Start(plan)
 	planEnd = planner.End(plan)
+
+	// re-check since plannerActive() is called before connected() check in Update()
+	if !lp.connected() {
+		return false
+	}
+
 	lp.log.DEBUG.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
