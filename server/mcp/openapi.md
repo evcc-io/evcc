@@ -858,6 +858,28 @@ call deleteSession {
 }
 ```
 
+## getGridSessions
+
+Returns a list of HEMS grid limitation events.
+
+**Tags:** sessions
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| format | string | Response format (default json) |
+| lang | string | Language (defaults to accept header) |
+
+**Example call:**
+
+```json
+call getGridSessions {
+  "format": "example",
+  "lang": "example"
+}
+```
+
 ## getSessions
 
 Returns a list of charging sessions.

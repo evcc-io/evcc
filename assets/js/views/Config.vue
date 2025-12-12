@@ -368,7 +368,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal @changed="yamlChanged" />
+				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
@@ -636,8 +636,11 @@ export default defineComponent({
 		shmTags() {
 			return { configured: { value: true } };
 		},
+		hems() {
+			return store.state?.hems;
+		},
 		hemsTags() {
-			const { type } = store.state?.hems || {};
+			const type = this.hems?.config?.type;
 			if (!type) {
 				return { configured: { value: false } };
 			}
@@ -656,12 +659,11 @@ export default defineComponent({
 
 			return result;
 		},
-		isSponsor() {
-			const { name } = store.state?.sponsor || {};
-			return !!name;
-		},
 		sponsor() {
 			return store.state?.sponsor;
+		},
+		isSponsor(): boolean {
+			return !!this.sponsor?.status.name;
 		},
 		telemetry() {
 			// @ts-expect-error: telemetry property exists but not in TypeScript definitions

@@ -12,8 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -280,8 +282,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hems hemsapi.API
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
+		hems, err = configureHEMS(&conf.HEMS, site)
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		}
 	}
 
 	// setup MCP
@@ -303,7 +309,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
-	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
@@ -311,7 +316,23 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
+	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
+		Status   sponsor.Status `json:"status"`
+		FromYaml bool           `json:"fromYaml"`
+	}{
+		Status:   sponsor.GetStatus(),
+		FromYaml: fromYaml.sponsor,
+	}}
+
+	valueChan <- util.Param{Key: keys.Hems, Val: struct {
+		Config   globalconfig.Hems `json:"config"`
+		Status   *hemsapi.Status   `json:"status,omitempty"`
+		FromYaml bool              `json:"fromYaml"`
+	}{
+		Config:   conf.HEMS,
+		Status:   hemsapi.GetStatus(hems),
+		FromYaml: fromYaml.hems,
+	}}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
@@ -347,7 +368,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
 	}
 
-	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {
+	httpd.RegisterSystemHandler(site, func(k string, v any) {
+		valueChan <- util.Param{Key: k, Val: v}
+	}, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end

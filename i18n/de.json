@@ -220,8 +220,19 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
+      "csv": {
+        "created": "Startzeit",
+        "finished": "Endzeit",
+        "gridpower": "Netzbezug (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Typ"
+      },
       "description": "Leistungsbegrenzung durch externe Systeme (bspw. Steuerboxen, § 14a EnWG). Setzt Lastmanagementkonfiguration voraus.",
-      "title": "HEMS"
+      "downloadCsv": "CSV herunterladen",
+      "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "lastEvent": "Zuletzt {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
     },
     "icon": {
       "change": "ändern",
@@ -1172,8 +1183,10 @@
       "show": "{title} anzeigen"
     },
     "sponsorToken": {
-      "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
-      "getNew": "Hol dir ein Neues",
+      "expires": "Dein Sponsortoken läuft {inXDays} ab.",
+      "expiresUpdateUi": "{getNewToken} und aktualisiere es hier.",
+      "expiresUpdateYaml": "{getNewToken} und aktualisiere es in deiner evcc.yaml.",
+      "getNewToken": "Hol dir ein Neues",
       "hint": "Hinweis: Wir werden das zukünftig automatisieren."
     },
     "telemetry": {

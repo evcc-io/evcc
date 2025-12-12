@@ -1161,8 +1161,10 @@
       "show": "{title} göster"
     },
     "sponsorToken": {
-      "expires": "Sponsor jetonun {inXDays} sonra sona erecek. {getNewToken} ve burada güncelle.",
-      "getNew": "Yeni bir tane al",
+      "expires": "Sponsor jetonun {inXDays} sonra sona erecek.",
+      "expiresUpdateUi": "{getNewToken} ve burada güncelle.",
+      "expiresUpdateYaml": "{getNewToken} ve evcc.yaml dosyanızda güncelle.",
+      "getNewToken": "Yeni bir tane al",
       "hint": "Not: İleride bunu otomatik hale getireceğiz."
     },
     "telemetry": {

@@ -22,10 +22,9 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
@@ -34,7 +33,6 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -77,6 +75,11 @@ var conf = globalconfig.All{
 		Type: "sqlite",
 		Dsn:  "",
 	},
+}
+
+var fromYaml struct {
+	sponsor bool
+	hems    bool
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -492,10 +495,9 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-		sponsor.SetFromYaml(false) // from database
+	} else if token != "" {
+		fromYaml.sponsor = true
 	}
-
-	// TODO migrate settings
 
 	return sponsor.ConfigureSponsorship(token)
 }
@@ -570,26 +572,6 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
-		return err
-	}
-
-	if err := session.Init(); err != nil {
-		return err
-	}
-
-	if err := metrics.Init(); err != nil {
-		return err
-	}
-
-	if err := settings.Init(); err != nil {
-		return err
-	}
-
-	if err := cache.Init(); err != nil {
-		return err
-	}
-
-	if err := config.Init(); err != nil {
 		return err
 	}
 
@@ -711,32 +693,36 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
-	// migrate settings
-	if settings.Exists(keys.Hems) {
-		*conf = globalconfig.Hems{}
-		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-			return err
+func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
+	// use yaml if configured
+	if conf.Type == "" {
+		if settings.Exists(keys.Hems) {
+			*conf = globalconfig.Hems{}
+			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
+				return nil, err
+			}
 		}
+	} else {
+		fromYaml.hems = true
 	}
 
 	if conf.Type == "" {
-		return nil
+		return nil, nil
 	}
 
 	props, err := customDevice(conf.Other)
 	if err != nil {
-		return fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
 	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
 	if err != nil {
-		return fmt.Errorf("failed configuring hems: %w", err)
+		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
 
 	go hems.Run()
 
-	return nil
+	return hems, nil
 }
 
 // networkSettings reads/migrates network settings
