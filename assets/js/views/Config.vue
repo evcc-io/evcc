@@ -288,7 +288,7 @@
 						</DeviceCard>
 						<DeviceCard
 							:title="$t('config.hems.title')"
-							:editable="!hems?.fromYaml"
+							editable
 							:error="hasClassError('hems')"
 							data-testid="hems"
 							@edit="openModal('hemsModal')"
@@ -368,7 +368,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal @changed="yamlChanged" />
+				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />

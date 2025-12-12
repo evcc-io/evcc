@@ -22,8 +22,6 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -35,7 +33,6 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -575,26 +572,6 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
-		return err
-	}
-
-	if err := session.Init(); err != nil {
-		return err
-	}
-
-	if err := metrics.Init(); err != nil {
-		return err
-	}
-
-	if err := settings.Init(); err != nil {
-		return err
-	}
-
-	if err := cache.Init(); err != nil {
-		return err
-	}
-
-	if err := config.Init(); err != nil {
 		return err
 	}
 

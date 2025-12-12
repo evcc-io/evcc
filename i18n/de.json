@@ -220,8 +220,19 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
+      "csv": {
+        "created": "Startzeit",
+        "finished": "Endzeit",
+        "gridpower": "Netzbezug (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Typ"
+      },
       "description": "Leistungsbegrenzung durch externe Systeme (bspw. Steuerboxen, § 14a EnWG). Setzt Lastmanagementkonfiguration voraus.",
-      "title": "HEMS"
+      "downloadCsv": "CSV herunterladen",
+      "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "lastEvent": "Zuletzt {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
     },
     "icon": {
       "change": "ändern",

@@ -19,7 +19,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	clock.Add(time.Hour)
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, metrics.Init())
+	require.NoError(t, metrics.SetupSchema())
 
 	metrics.Persist(clock.Now(), 0)
 
@@ -56,7 +56,7 @@ func TestUpdateHouseholdProfile(t *testing.T) {
 	clock.Set(now.With(clock.Now()).BeginningOfDay())
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	metrics.Init()
+	require.NoError(t, metrics.SetupSchema())
 
 	// 2 days of data
 	// day 1:   0 ...  95
