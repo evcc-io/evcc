@@ -38,7 +38,6 @@
 				</li>
 			</ul>
 			<div v-if="activeEventsTab">
-				<p>{{ values.events }}</p>
 				<div v-if="values.events">
 					<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
 						<EventItem :eventType="event" :eventObject="values.events[event]" />
@@ -46,7 +45,6 @@
 				</div>
 			</div>
 			<div v-else>
-				<p>{{ values.services }}</p>
 				<div v-for="(s, index) in values.services" :key="index" class="mb-5">
 					<div class="border rounded px-3 pt-4 pb-3 mb-3">
 						<div class="d-lg-block">
