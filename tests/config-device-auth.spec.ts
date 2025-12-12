@@ -20,7 +20,7 @@ test.afterEach(async () => {
 });
 
 test.describe("config device auth", async () => {
-  test("create grid meter with demo auth", async ({ page }) => {
+  test("create grid meter with redirect auth", async ({ page }) => {
     await page.goto("/#/config");
 
     // verify no grid meter exists yet
@@ -35,14 +35,15 @@ test.describe("config device auth", async () => {
 
     // step 1: auth view
     await expect(meterModal.getByLabel("Region")).toBeVisible();
-    await expect(meterModal.getByLabel("Server")).toBeVisible();
+    await expect(meterModal.getByLabel("Authentication Method")).toBeVisible();
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Save" })).not.toBeVisible();
     await meterModal.getByLabel("Region").selectOption("EU");
-    await meterModal.getByLabel("Server").fill("my.server.org");
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
-    await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
+    await expect(meterModal.getByLabel("Authentication Code")).not.toBeVisible();
 
     // we dont navigate to localhost, just trigger ui update because demo auth state is already established
     await page.evaluate(() => {
@@ -51,7 +52,7 @@ test.describe("config device auth", async () => {
 
     // step 2: show regular device form
     await expect(meterModal.getByLabel("Region")).toHaveValue("EU");
-    await expect(meterModal.getByLabel("Server")).toHaveValue("my.server.org");
+    await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
     await expect(meterModal.getByLabel("Power")).toBeVisible();
     await meterModal.getByLabel("Power").fill("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -69,7 +70,7 @@ test.describe("config device auth", async () => {
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
     await expect(meterModal.getByLabel("Region")).toHaveValue("EU");
-    await expect(meterModal.getByLabel("Server")).toHaveValue("my.server.org");
+    await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
     await expect(meterModal.getByLabel("Power")).toHaveValue("5000");
     await expect(meterModal.getByRole("button", { name: "Prepare connection" })).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -84,10 +85,53 @@ test.describe("config device auth", async () => {
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
     await expect(meterModal.getByLabel("Region")).toHaveValue("EU");
-    await expect(meterModal.getByLabel("Server")).toHaveValue("my.server.org");
+    await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
-    // note: prepare connection step is auto-executed, since all required fields (server, token) are already present
-    await expect(meterModal.getByRole("link", { name: "Connect with localhost" })).toBeVisible();
+    // note: prepare connection step is auto-executed, since all required fields are already present
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
+  });
+
+  test("create grid meter with device-code auth", async ({ page }) => {
+    await page.goto("/#/config");
+
+    // create a grid meter with device-code auth
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
+
+    // select device-code method
+    await meterModal.getByLabel("Region").selectOption("EU");
+    await meterModal.getByLabel("Authentication Method").selectOption("device-code");
+    await meterModal.getByRole("button", { name: "Prepare connection" }).click();
+
+    // verify device code is displayed
+    await expect(meterModal.getByLabel("Authentication Code")).toHaveValue("12AB345");
+    await expect(meterModal).toContainText("Valid for");
+    await expect(meterModal).toContainText("Copy this code");
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
+  });
+
+  test("error region shows auth error", async ({ page }) => {
+    await page.goto("/#/config");
+
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
+    await meterModal.getByLabel("Region").selectOption("ERROR");
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
+    await meterModal.getByRole("button", { name: "Prepare connection" }).click();
+
+    await expect(meterModal).toContainText("region not supported");
+    await expect(meterModal.getByRole("button", { name: "Prepare connection" })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).not.toBeVisible();
+    await expect(meterModal.getByLabel("Authentication Code")).not.toBeVisible();
+    await expect(meterModal.getByLabel("Power")).not.toBeVisible();
+
+    // clear error on input change
+    await meterModal.getByLabel("Region").selectOption("EU");
+    await expect(meterModal).not.toContainText("region not supported");
   });
 });

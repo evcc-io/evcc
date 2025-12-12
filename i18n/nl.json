@@ -162,6 +162,7 @@
       "authPerformHint": "Wordt in een nieuw tabblad geopend. Ga terug naar deze pagina om verder te gaan.",
       "authPrepare": "Verbinding voorbereiden",
       "cancel": "Annuleren",
+      "clear": "Leegmaken",
       "close": "Sluiten",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
@@ -1160,8 +1161,10 @@
       "show": "{title} tonen"
     },
     "sponsorToken": {
-      "expires": "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier.",
-      "getNew": "Vraag een nieuwe aan",
+      "expires": "Je sponsortoken vervalt {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} en update het hier.",
+      "expiresUpdateYaml": "{getNewToken} en update het in je evcc.yaml.",
+      "getNewToken": "Vraag een nieuwe aan",
       "hint": "Notabene: We zullen dit in de toekomst automatiseren."
     },
     "telemetry": {

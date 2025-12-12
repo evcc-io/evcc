@@ -1157,8 +1157,10 @@
       "show": "Prikaži {title}"
     },
     "sponsorToken": {
-      "expires": "Vaš sponzorski token isteče {inXDays}. {getNewToken} i obnovi ga ovdje.",
-      "getNew": "Preuzmi novi",
+      "expires": "Vaš sponzorski token isteče {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} i obnovi ga ovdje.",
+      "expiresUpdateYaml": "{getNewToken} i obnovi ga u svojoj evcc.yaml.",
+      "getNewToken": "Preuzmi novi",
       "hint": "Napomena: To ćemo automatizirati u budućnosti."
     },
     "telemetry": {

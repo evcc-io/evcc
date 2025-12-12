@@ -4,6 +4,7 @@
 		:class="{
 			'round-box': !unconfigured,
 			'round-box--error': error,
+			'round-box--warning': warning,
 			'root--unconfigured': unconfigured,
 		}"
 	>
@@ -21,12 +22,12 @@
 				ref="tooltip"
 				type="button"
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 edit-button"
-				:class="{ 'opacity-25': !editable }"
+				:class="{ 'opacity-25': !editable, invisible: noEditButton }"
 				data-bs-toggle="tooltip"
 				data-bs-html="true"
 				:title="tooltipTitle"
 				:aria-label="editable ? $t('config.main.edit') : null"
-				:disabled="!editable"
+				:disabled="!editable || noEditButton"
 				@click="edit"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
@@ -50,6 +51,8 @@ export default {
 		editable: Boolean,
 		error: Boolean,
 		unconfigured: Boolean,
+		warning: Boolean,
+		noEditButton: Boolean,
 	},
 	emits: ["edit"],
 	data() {

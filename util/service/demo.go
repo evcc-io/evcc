@@ -1,4 +1,4 @@
-package demo
+package service
 
 import (
 	"encoding/json"

@@ -1129,8 +1129,10 @@
       "show": "Prikaži {title}"
     },
     "sponsorToken": {
-      "expires": "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in ga posodobite tukaj.",
-      "getNew": "Zgrabi svežega",
+      "expires": "Sponzorskemu žetonu poteče veljavnost čez {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} in ga posodobite tukaj.",
+      "expiresUpdateYaml": "{getNewToken} in ga posodobite v svoji evcc.yaml.",
+      "getNewToken": "Zgrabi svežega",
       "hint": "Opomba: To bomo v prihodnosti avtomatizirali."
     },
     "telemetry": {

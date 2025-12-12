@@ -29,10 +29,8 @@ params:
       en: "Can be read out in VRM portal or via remoteUI."
   # battery control
   - name: minsoc
-    type: int
     advanced: true
   - name: maxsoc
-    type: int
     advanced: true
   - name: maxchargepower
   - name: maxdischargepower

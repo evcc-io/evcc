@@ -162,6 +162,7 @@
       "authPerformHint": "Mécht een neien Tab op. Duerno hei weidermaachen.",
       "authPrepare": "Verbindung virbereeden",
       "cancel": "Ofbriechen",
+      "clear": "Läschen",
       "close": "Zoumaachen",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
@@ -1160,8 +1161,10 @@
       "show": "{title} uweisen"
     },
     "sponsorToken": {
-      "expires": "Däi Sponsor Token leeft aus an {inXDays}. {getNewToken} an update et hei.",
-      "getNew": "Huel dir een neit",
+      "expires": "Däi Sponsor Token leeft aus an {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} an update et hei.",
+      "expiresUpdateYaml": "{getNewToken} an update et an dengem evcc.yaml.",
+      "getNewToken": "Huel dir een neit",
       "hint": "N.b.: Mir wäerten dëst an Zukunft automatiséieren."
     },
     "telemetry": {
