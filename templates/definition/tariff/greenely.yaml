@@ -8,7 +8,7 @@ countries: ["SE"]
 params:
   - name: email
     description:
-      generic: Email accociated with your Greenely account
+      generic: Email associated with your Greenely account
     example: user@example.com
     required: true
   - name: password
