@@ -220,8 +220,19 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
+      "csv": {
+        "created": "Created",
+        "finished": "Finished",
+        "gridpower": "Grid Power (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Type"
+      },
       "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
-      "title": "HEMS"
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Recorded {count} grid limitation events.",
+      "lastEvent": "Most recent {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
     },
     "icon": {
       "change": "change",

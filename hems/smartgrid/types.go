@@ -1,7 +1,11 @@
 package smartgrid
 
 import (
+	"context"
+	"io"
 	"time"
+
+	csvutil "github.com/evcc-io/evcc/util/csv"
 )
 
 type GridSession struct {
@@ -19,3 +23,12 @@ const (
 	Dim     Type = "consumption"
 	Curtail Type = "feedin"
 )
+
+type GridSessions []GridSession
+
+// WriteCsv implements the api.CsvWriter interface
+func (t *GridSessions) WriteCsv(ctx context.Context, w io.Writer) error {
+	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+		I18nPrefix: "config.hems.csv",
+	})
+}
