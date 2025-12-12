@@ -2,8 +2,9 @@
 	<div>
 		<FormRow
 			id="messagingServiceTelegramToken"
-			label="Token"
-			:help="$t('config.messaging.telegram.token')"
+			:label="$t('config.messaging.service.telegram.token')"
+			:help="$t('config.messaging.service.telegram.tokenHelp')"
+			example="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
 		>
 			<PropertyField
 				id="messagingServiceTelegramToken"
@@ -14,8 +15,9 @@
 		</FormRow>
 		<FormRow
 			id="messagingServiceTelegramChats"
-			label="Recipients"
-			:help="$t('config.messaging.telegram.chats')"
+			:label="$t('config.messaging.service.telegram.chats')"
+			:help="$t('config.messaging.service.telegram.chatsHelp')"
+			example="-210987654"
 		>
 			<PropertyField
 				id="messagingServiceTelegramChats"

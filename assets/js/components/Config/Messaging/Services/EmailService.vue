@@ -2,8 +2,9 @@
 	<div v-for="p in emailProperties" :key="p">
 		<FormRow
 			:id="'messagingServiceEmail' + p"
-			:label="p"
-			:help="$t('config.messaging.email.' + p.toLowerCase())"
+			:label="$t(`config.messaging.service.email.${p}`)"
+			:help="$t(`config.messaging.service.email.${p}Help`)"
+			:example="EMAIL_PROPERTIES_EXAMPLES[p]"
 		>
 			<PropertyField
 				:id="'messagingServiceEmail' + p"
@@ -23,12 +24,21 @@ import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
 
 const EMAIL_PROPERTIES = {
-	HOST: "Host",
-	PORT: "Port",
-	USER: "User",
-	PASSWORD: "Password",
-	FROM: "From",
-	TO: "To",
+	HOST: "host",
+	PORT: "port",
+	USER: "user",
+	PASSWORD: "password",
+	FROM: "from",
+	TO: "to",
+} as const;
+
+const EMAIL_PROPERTIES_EXAMPLES = {
+	[EMAIL_PROPERTIES.HOST]: "emailserver.example.com",
+	[EMAIL_PROPERTIES.PORT]: "587",
+	[EMAIL_PROPERTIES.USER]: "john.doe",
+	[EMAIL_PROPERTIES.PASSWORD]: "secret123",
+	[EMAIL_PROPERTIES.FROM]: "john.doe@mail.com",
+	[EMAIL_PROPERTIES.TO]: "recipient@mail.com",
 } as const;
 
 export default {
@@ -41,7 +51,7 @@ export default {
 		},
 	},
 	data() {
-		return { emailProperties: Object.values(EMAIL_PROPERTIES) };
+		return { emailProperties: Object.values(EMAIL_PROPERTIES), EMAIL_PROPERTIES_EXAMPLES };
 	},
 	computed: {
 		decoded(): Record<string, string> {

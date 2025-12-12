@@ -18,6 +18,7 @@
 				:rows="lines"
 				:value="modelValue"
 				:disabled="disabled"
+				:required="required"
 				data-testid="yaml-editor-fallback"
 				@input="$emit('update:modelValue', $event.target.value)"
 			/>
@@ -41,6 +42,7 @@ export default {
 		errorLine: Number,
 		removeKey: String,
 		disabled: Boolean,
+		required: Boolean,
 	},
 	emits: ["update:modelValue"],
 	data() {

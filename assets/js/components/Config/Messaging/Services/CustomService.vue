@@ -2,8 +2,13 @@
 	<div>
 		<FormRow
 			id="messagingServiceCustomEncoding"
-			label="Encoding"
-			:help="$t('config.messaging.custom.encoding')"
+			:label="$t('config.messaging.service.custom.encoding')"
+			:help="
+				$t('config.messaging.service.custom.encodingHelp', {
+					send: '`${send}`',
+					format: getEncodingFormat,
+				})
+			"
 			optional
 		>
 			<PropertyField
@@ -16,7 +21,13 @@
 				@update:model-value="(e) => (service.other.encoding = e)"
 			/>
 		</FormRow>
-		<YamlEntry v-model="service.other.send" type="messaging"></YamlEntry>
+		<FormRow
+			id="messagingServiceCustomSend"
+			:label="$t('config.messaging.service.custom.send')"
+			:help="$t('config.messaging.service.custom.sendHelp')"
+		>
+			<YamlEditorContainer v-model="service.other.send" />
+		</FormRow>
 	</div>
 </template>
 
@@ -25,11 +36,16 @@ import { type MessagingServiceCustom, MESSAGING_SERVICE_CUSTOM_ENCODING } from "
 import type { PropType } from "vue";
 import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
-import YamlEntry from "../../DeviceModal/YamlEntry.vue";
+import YamlEditorContainer from "../../YamlEditorContainer.vue";
+
+const DEAFULT_SEND_PLUGIN = `send:
+    source: script
+    cmd: /usr/local/bin/evcc_message "{{.send}}"
+`;
 
 export default {
 	name: "CustomService",
-	components: { FormRow, PropertyField, YamlEntry },
+	components: { FormRow, PropertyField, YamlEditorContainer },
 	props: {
 		service: {
 			type: Object as PropType<MessagingServiceCustom>,
@@ -37,7 +53,28 @@ export default {
 		},
 	},
 	data() {
-		return { MESSAGING_SERVICE_CUSTOM_ENCODING };
+		return { MESSAGING_SERVICE_CUSTOM_ENCODING, DEAFULT_SEND_PLUGIN };
+	},
+	computed: {
+		getEncodingFormat() {
+			switch (this.service.other.encoding) {
+				case MESSAGING_SERVICE_CUSTOM_ENCODING.JSON:
+					return '`{ "msg": <MSG>, "title": <TITLE> }`';
+				case MESSAGING_SERVICE_CUSTOM_ENCODING.CSV:
+					return "`<TITLE>,<MSG>`";
+				case MESSAGING_SERVICE_CUSTOM_ENCODING.TITLE:
+					return "`<TITLE>`";
+				case MESSAGING_SERVICE_CUSTOM_ENCODING.TSV:
+					return "`<TITLE><TAB><MSG>`";
+				default:
+					return "`<MSG>`";
+			}
+		},
+	},
+	mounted() {
+		if (!this.service.other.send) {
+			this.service.other.send = DEAFULT_SEND_PLUGIN;
+		}
 	},
 };
 </script>

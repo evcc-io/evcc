@@ -2,8 +2,8 @@
 	<div>
 		<FormRow
 			id="messagingServiceNftyHost"
-			label="Host"
-			:help="$t('config.messaging.nfty.host')"
+			:label="$t('config.messaging.service.nfty.host')"
+			:help="$t('config.messaging.service.nfty.hostHelp')"
 		>
 			<PropertyField
 				id="messagingServiceNftyHost"
@@ -15,8 +15,8 @@
 		</FormRow>
 		<FormRow
 			id="messagingServiceNftyTopics"
-			label="Topics"
-			:help="$t('config.messaging.nfty.topics')"
+			:label="$t('config.messaging.service.nfty.topics')"
+			:help="$t('config.messaging.service.nfty.topicsHelp')"
 		>
 			<PropertyField
 				id="messagingServiceNftyTopics"
@@ -29,8 +29,12 @@
 		</FormRow>
 		<FormRow
 			id="messagingServiceNftyPriority"
-			label="Priority"
-			:help="$t('config.messaging.nfty.priority')"
+			:label="$t('config.messaging.service.nfty.priority')"
+			:help="
+				$t('config.messaging.service.nfty.priorityHelp', {
+					url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish/#message-priority)',
+				})
+			"
 			optional
 		>
 			<PropertyField
@@ -45,8 +49,12 @@
 		</FormRow>
 		<FormRow
 			id="messagingServiceNftyTags"
-			label="Recipients"
-			:help="$t('config.messaging.nfty.tags')"
+			:label="$t('config.messaging.service.nfty.tags')"
+			:help="
+				$t('config.messaging.service.nfty.tagsHelp', {
+					url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish/#tags-emojis)',
+				})
+			"
 			optional
 		>
 			<PropertyField

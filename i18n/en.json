@@ -364,6 +364,56 @@
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
+      "service": {
+        "custom": {
+          "encoding": "Encoding",
+          "encodingHelp": "The value for {send} is provided in the format {format}.",
+          "send": "Plugin for sending",
+          "sendHelp": "Defines the plugin to be used to send the title and/or message. The plugin must support write mode."
+        },
+        "email": {
+          "from": "From",
+          "fromHelp": "Sender's email address.",
+          "host": "Host",
+          "hostHelp": "Host name or IP address of the email server.",
+          "password": "Password",
+          "passwordHelp": "User password.",
+          "port": "Port",
+          "portHelp": "Port address of the email server.",
+          "to": "To",
+          "toHelp": "Recipient's email address.",
+          "user": "User",
+          "userHelp": "Username for the email server."
+        },
+        "nfty": {
+          "host": "Host",
+          "hostHelp": "Host name or IP address of the nfty server.",
+          "priority": "Priority",
+          "priorityHelp": "Messages have a priority level that determines how urgently your phone notifies you. On Android, you can customize notification sounds and vibration patterns based on these priority levels. For more details, see {url}.",
+          "tags": "Tags & emojis",
+          "tagsHelp": "Messages can be tagged with emojis or strings, which will be shown in the title or message. For more details, see {url}. One entry per line.",
+          "topics": "Topics",
+          "topicsHelp": "One entry per line."
+        },
+        "pushover": {
+          "app": "Token",
+          "appHelp": "API token of the application. Get it from {url}.",
+          "devices": "Device names",
+          "devicesHelp": "One entry per line.",
+          "recipients": "Recipients",
+          "recipientsHelp": "User identifiers and group identifiers can be specified. One entry per line. Groups created in Pushover can be restricted to specific devices."
+        },
+        "shout": {
+          "uri": "Uri",
+          "uriHelp": "Specify the URL format. An overview of the supported services can be found at {url}."
+        },
+        "telegram": {
+          "chats": "Chat IDs",
+          "chatsHelp": "Chat identifiers and group identifiers can be specified. The latter have a minus sign. One entry per line.",
+          "token": "Token",
+          "tokenHelp": "Also called Bot ID."
+        }
+      },
       "title": "Notifications"
     },
     "meter": {

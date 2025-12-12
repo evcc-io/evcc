@@ -2,8 +2,13 @@
 	<div>
 		<FormRow
 			id="messagingServicePushoverApp"
-			label="App"
-			:help="$t('config.messaging.pushover.app')"
+			:label="$t('config.messaging.service.pushover.app')"
+			:help="
+				$t('config.messaging.service.pushover.appHelp', {
+					url: '[pushover.net](https://pushover.net/apps/build)',
+				})
+			"
+			example="azGDORePK8gMaC0QOYAMyEEuzJnyUi"
 		>
 			<PropertyField
 				id="messagingServicePushoverApp"
@@ -14,12 +19,13 @@
 		</FormRow>
 		<FormRow
 			id="messagingServicePushoverRecipients"
-			label="Recipients"
-			:help="$t('config.messaging.pushover.recipients')"
+			:label="$t('config.messaging.service.pushover.recipients')"
+			:help="$t('config.messaging.service.pushover.recipientsHelp')"
+			example="uQiRzpo4DXghDmr9QzzfQu27cmVRsG"
 		>
 			<PropertyField
 				id="messagingServicePushoverRecipients"
-				v-model="pushoverOther.devices"
+				v-model="pushoverOther.recipients"
 				property="recipients"
 				type="List"
 				size="w-100"
@@ -29,8 +35,9 @@
 		</FormRow>
 		<FormRow
 			id="messagingServicePushoverDevices"
-			label="Devices"
-			:help="$t('config.messaging.pushover.devices')"
+			:label="$t('config.messaging.service.pushover.devices')"
+			:help="$t('config.messaging.service.pushover.devicesHelp')"
+			example="droid2"
 		>
 			<PropertyField
 				id="messagingServicePushoverDevices"
@@ -59,7 +66,7 @@ export default {
 		},
 	},
 	computed: {
-		pushoverOther(): any {
+		pushoverOther() {
 			return this.service.other;
 		},
 	},

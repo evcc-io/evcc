@@ -1,6 +1,15 @@
 <template>
 	<div>
-		<FormRow id="messagingServiceShoutUri" label="Uri" :help="$t('config.messaging.shout.uri')">
+		<FormRow
+			id="messagingServiceShoutUri"
+			:label="$t('config.messaging.service.shout.uri')"
+			:help="
+				$t('config.messaging.service.shout.uriHelp', {
+					url: '[containrrr.dev](https://containrrr.dev/shoutrrr/latest/services/overview/)',
+				})
+			"
+			example="gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1"
+		>
 			<PropertyField
 				id="messagingServiceShoutUri"
 				v-model="service.other.uri"
