@@ -162,7 +162,6 @@ func (c *Client) GetSpotPrice(ctx context.Context, from, to time.Time) (SpotPric
 	start := fmt.Sprintf("?from=%04d-%02d-%02d", from.Year(), from.Month(), from.Day())
 	end := fmt.Sprintf("&to=%04d-%02d-%02d", to.Year(), to.Month(), to.Day())
 	url := urlFacilitiesBase + fmt.Sprint(c.FacilityID) + "/spot-price" + start + end + "&resolution=hourly"
-	fmt.Println("Getting: " + url)
 	body, status, err := c.get(ctx, url)
 	if err != nil {
 		return SpotPrice{}, err
