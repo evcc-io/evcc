@@ -312,11 +312,7 @@ export default defineComponent({
 			return values.deviceProduct || templateName || "";
 		},
 		confirmOcppNextStep() {
-			if (
-				window.confirm(
-					"Your charger has not connected to evcc yet. Are you sure you want to continue?"
-				)
-			) {
+			if (window.confirm(this.$t("config.charger.ocppConfirmContinue"))) {
 				this.ocppNextStepConfirmed = true;
 			}
 		},

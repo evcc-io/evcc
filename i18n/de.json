@@ -58,6 +58,7 @@
       "chargers": "Wallboxen",
       "generic": "Generische Integrationen",
       "heatingdevices": "Wärmeerzeuger",
+      "ocppConfirmContinue": "Deine Wallbox hat sich noch nicht mit evcc verbunden. Möchtest du wirklich fortfahren?",
       "ocppConnected": "Verbunden!",
       "ocppDescription": "evcc hat einen eingebauten OCPP-Server. Folge diesen Schritten:",
       "ocppHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`",

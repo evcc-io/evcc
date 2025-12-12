@@ -58,6 +58,7 @@
       "chargers": "EV chargers",
       "generic": "Generic integrations",
       "heatingdevices": "Heating devices",
+      "ocppConfirmContinue": "Your charger has not connected to evcc yet. Are you sure you want to continue?",
       "ocppConnected": "Connected!",
       "ocppDescription": "evcc has a built-in OCPP server. Follow these steps:",
       "ocppHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`",

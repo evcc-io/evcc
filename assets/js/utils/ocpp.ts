@@ -9,5 +9,5 @@ export function getOcppUrl(ocpp: Ocpp): string {
 }
 
 export function getOcppUrlWithStationId(ocpp: Ocpp): string {
-  return `${getOcppUrl(ocpp)}<station-id>`;
+  return `${getOcppUrl(ocpp)}<stationId>`;
 }
