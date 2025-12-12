@@ -1172,8 +1172,10 @@
       "show": "Show {title}"
     },
     "sponsorToken": {
-      "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",
-      "getNew": "Grab a fresh one",
+      "expires": "You sponsor token expires {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} and update it here.",
+      "expiresUpdateYaml": "{getNewToken} and update it in your evcc.yaml.",
+      "getNewToken": "Grab a fresh one",
       "hint": "Note: We will automate this in the future."
     },
     "telemetry": {

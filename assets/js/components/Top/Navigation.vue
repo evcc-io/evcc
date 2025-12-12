@@ -175,9 +175,11 @@ export default defineComponent({
 		authorizationRequired() {
 			return this.providers.length > 0;
 		},
+		sponsorExpires(): boolean {
+			return !!this.sponsor?.status.expiresSoon;
+		},
 		showConfigBadge() {
-			const userConfigError = isUserConfigError(this.fatal);
-			return this.sponsor.expiresSoon || userConfigError;
+			return this.sponsorExpires || isUserConfigError(this.fatal);
 		},
 		showRootBadge() {
 			return this.authorizationRequired || this.showConfigBadge;

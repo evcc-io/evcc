@@ -34,7 +34,17 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: any;
+  type: string;
+}
+
+export interface HemsStatus {
+  maxPower: number;
+}
+
+export interface Hems {
+  status?: HemsStatus;
+  config: HemsConfig;
+  fromYaml: boolean;
 }
 
 export interface ShmConfig {
@@ -69,7 +79,7 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: HemsConfig;
+  hems?: Hems;
   shm?: ShmConfig;
   sponsor?: Sponsor;
   eebus?: any;
@@ -345,11 +355,15 @@ export type SessionInfoKey =
   | "price"
   | "co2";
 
-export interface Sponsor {
-  name: string;
-  expiresAt: string;
-  expiresSoon: boolean;
+export interface SponsorStatus {
+  name?: string;
+  expiresAt?: string;
+  expiresSoon?: boolean;
   token?: string;
+}
+
+export interface Sponsor {
+  status: SponsorStatus;
   fromYaml: boolean;
 }
 
