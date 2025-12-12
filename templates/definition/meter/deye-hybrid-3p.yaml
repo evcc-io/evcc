@@ -24,37 +24,23 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxdischargecurrent
-    type: int
     default: 100
     advanced: true
     description:
-      en: Maximum discharge current (normal mode)
-      de: Maximaler Entladestrom (Normalmodus)
+      en: Max Discharge Current
+      de: Max Entladestrom
     help:
-      en: |
-        Battery discharge current limit in amperes when battery mode is set to normal or charge.
-        Valid range: 0-350A. This value should be greater than or equal to the hold mode discharge current.
-      de: |
-        Batterie-Entladestrom-Limit in Ampere, wenn der Batteriemodus auf Normal oder Laden steht.
-        Gültiger Bereich: 0-350A. Dieser Wert sollte größer oder gleich dem Entladestrom im Haltemodus sein.
+      en: Maximum battery discharge current in Amperes (A) for normal mode. Typical range 50-350A depending on battery capacity.
+      de: Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
   - name: holdcurrent
-    type: int
     default: 0
     advanced: true
     description:
-      en: Hold mode discharge current
-      de: Entladestrom im Haltemodus
+      en: Hold Mode Current
+      de: Haltemodus-Strom
     help:
-      en: |
-        Battery discharge current limit in amperes when battery mode is set to hold.
-        Valid range: 0-350A. Must be lower than or equal to the maximum discharge current.
-        Should be low enough to cover the house baseload only (typically 5-20A).
-        Note: The inverter does not enforce this relationship - ensure holdcurrent ≤ maxdischargecurrent.
-      de: |
-        Batterie-Entladestrom-Limit in Ampere, wenn der Batteriemodus auf Halten steht.
-        Gültiger Bereich: 0-350A. Muss kleiner oder gleich dem maximalen Entladestrom sein.
-        Sollte niedrig genug für die Hausgrundlast sein (typischerweise 5-20A).
-        Hinweis: Der Wechselrichter erzwingt diese Beziehung nicht - stellen Sie sicher, dass holdcurrent ≤ maxdischargecurrent.
+      en: Battery discharge current in Amperes (A) for hold mode. Low value (5-15A) to prevent discharge while allowing essential loads.
+      de: Batterieentladestrom in Ampere (A) für Haltemodus. Niedriger Wert (5-15A) um Entladung zu verhindern aber wesentliche Lasten zu erlauben.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -160,10 +146,28 @@ render: |
   batterymode:
     source: switch
     switch:
-    - case: 1 # normal - allow full discharge
+    - case: 1 # normal - allow discharge
       set:
         source: sequence
         set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 130 # Battery Grid Charging (1=enabled)
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 255
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 146 # Time of Use (0x00FF=Week, enable TOU)
+              type: writemultiple
+              decode: uint16
         - source: const
           value: {{ .maxdischargecurrent }}
           set:
@@ -171,12 +175,21 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 109 # Battery Max Discharging Current
-              type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
+              type: writemultiple
               decode: uint16
-    - case: 2 # hold - limit discharge to house baseload only
+    - case: 2 # hold - prevent discharge
       set:
         source: sequence
         set:
+        - source: const
+          value: 255
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 146 # Time of Use (0x00FF=Week, enable TOU)
+              type: writemultiple
+              decode: uint16
         - source: const
           value: {{ .holdcurrent }}
           set:
@@ -184,12 +197,30 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 109 # Battery Max Discharging Current
-              type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
+              type: writemultiple
               decode: uint16
-    - case: 3 # charge - allow full discharge while grid charging
+    - case: 3 # charge - enable grid charging
       set:
         source: sequence
         set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 130 # Battery Grid Charging (1=enabled)
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 146 # Time of Use (0x0000=Disabled, ignore TOU schedule)
+              type: writemultiple
+              decode: uint16
         - source: const
           value: {{ .maxdischargecurrent }}
           set:
@@ -197,7 +228,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 109 # Battery Max Discharging Current
-              type: writemultiple # Deye requires FC16 (Write Multiple) even for single register
+              type: writemultiple
               decode: uint16
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
