@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Primjeni i zatvori",
+      "authPerform": "Spoji sa {provider}",
+      "authPerformHint": "Otvorit će se u novoj kartici. Vratite se ovdje za nastavak.",
+      "authPrepare": "Pripremi vezu",
       "cancel": "Odustani",
+      "clear": "Očisti",
       "close": "Zatvori",
       "customHelp": "Izradite posebni uređaj koristeći evcc sustav dodataka.",
       "customOption": "Posebni uređaj",
@@ -695,6 +699,7 @@
     "authProviders": {
       "confirmLogout": "Stvarno želiš odspojiti {title}?",
       "loggedOut": "Uspješna odjava",
+      "success": "Autorizacija s {title} je bila uspješna. Sada možete zatvoriti ovu karticu.",
       "title": "Status autorizacije"
     },
     "blog": "Blog",
