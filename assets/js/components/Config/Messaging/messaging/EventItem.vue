@@ -7,7 +7,7 @@
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
-					data-testid="static-plan-active"
+					:data-testid="`event-${eventType}-switch`"
 					tabindex="0"
 				/>
 			</div>
@@ -21,6 +21,7 @@
 			<div class="col-10">
 				<PropertyField
 					:id="formId('title')"
+					:data-testid="`event-${eventType}-title`"
 					v-model="eventObjectData.title"
 					type="String"
 					:disabled="!eventObjectData.enabled"
@@ -35,6 +36,7 @@
 			<div class="col-10">
 				<PropertyField
 					:id="formId('message')"
+					:data-testid="`event-${eventType}-message`"
 					v-model="eventObjectData.msg"
 					type="String"
 					property="eventMessage"
