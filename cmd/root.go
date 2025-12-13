@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -171,6 +172,23 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
+	// start OCPP server
+	ocppCS := ocpp.Instance()
+	ocppCS.SetUpdated(func() {
+		// republish when OCPP state updates
+		valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
+			Config ocpp.Config `json:"config"`
+			Status ocpp.Status `json:"status"`
+		}{
+			Config: conf.Ocpp,
+			Status: ocpp.GetStatus(),
+		}}
+	})
+	log.INFO.Printf("OCPP local:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+	if ocpp.ExternalUrl() != "" {
+		log.INFO.Printf("OCPP external: %s/<stationId>", ocpp.ExternalUrl())
+	}
+
 	// value cache
 	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
@@ -186,7 +204,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI local:      http://127.0.0.1:%d", conf.Network.Port)
+	if conf.Network.ExternalUrl != "" {
+		log.INFO.Printf("UI external:   %s", conf.Network.ExternalURL())
+	}
 
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
@@ -316,6 +337,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
+	valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
+		Config ocpp.Config `json:"config"`
+		Status ocpp.Status `json:"status"`
+	}{
+		Config: conf.Ocpp,
+		Status: ocpp.GetStatus(),
+	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
 		Status   sponsor.Status `json:"status"`
 		FromYaml bool           `json:"fromYaml"`

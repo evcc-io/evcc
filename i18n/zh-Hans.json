@@ -40,7 +40,7 @@
       "chargers": "电动汽车充电桩",
       "generic": "通用集成",
       "heatingdevices": "加热设备",
-      "ocppHelp": "将此地址复制到您的充电桩配置中。",
+      "ocppHelp": "将此URL复制到您的充电器配置中。详细信息请查看制造商的手册。充电器将自动将其唯一标识符（站点ID）附加到URL。在极少数情况下，您可能需要手动指定标识符。示例：`{url}`",
       "ocppLabel": "OCPP 服务器 URL",
       "switchsockets": "可切换插座",
       "template": "制造商",

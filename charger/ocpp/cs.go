@@ -24,16 +24,75 @@ func newRegistration() *registration {
 
 type CS struct {
 	ocpp16.CentralSystem
-	mu    sync.Mutex
-	log   *util.Logger
-	regs  map[string]*registration // guarded by mu mutex
-	txnId atomic.Int64
+	mu          sync.Mutex
+	log         *util.Logger
+	regs        map[string]*registration // guarded by mu mutex
+	txnId       atomic.Int64
+	publishFunc func()
+}
+
+type stationStatus struct {
+	ID     string        `json:"id"`
+	Status StationStatus `json:"status"`
+}
+
+// Status represents the runtime OCPP status
+type Status struct {
+	ExternalUrl string          `json:"externalUrl,omitempty"`
+	Stations    []stationStatus `json:"stations"`
+}
+
+// status returns the OCPP runtime status
+func (cs *CS) status() Status {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	stations := []stationStatus{}
+
+	for id, reg := range cs.regs {
+		if id == "" {
+			continue // skip anonymous registrations
+		}
+
+		state := StationStatusUnknown
+		if cp := reg.cp; cp != nil {
+			if cp.Connected() {
+				state = StationStatusConnected
+			} else {
+				state = StationStatusConfigured
+			}
+		}
+
+		stations = append(stations, stationStatus{
+			ID:     id,
+			Status: state,
+		})
+	}
+
+	return Status{
+		ExternalUrl: ExternalUrl(),
+		Stations:    stations,
+	}
+}
+
+// SetUpdated sets a callback function that is called when the status changes
+func (cs *CS) SetUpdated(f func()) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	cs.publishFunc = f
 }
 
 // errorHandler logs error channel
 func (cs *CS) errorHandler(errC <-chan error) {
 	for err := range errC {
 		cs.log.ERROR.Println(err)
+	}
+}
+
+// publish triggers the publish callback if set
+func (cs *CS) publish() {
+	if cs.publishFunc != nil {
+		cs.publishFunc()
 	}
 }
 
@@ -76,6 +135,7 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	}
 
 	cs.mu.Unlock()
+	cs.publish()
 
 	// serialise on chargepoint id
 	reg.setup.Lock()
@@ -112,22 +172,21 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
-	defer cs.mu.Unlock()
 
 	// check for configured charge point
 	reg, ok := cs.regs[chargePoint.ID()]
 	if ok {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
-		// trigger initial connection if charge point is already setup
+		// trigger initial connection
 		if cp := reg.cp; cp != nil {
 			cp.connect(true)
 		}
 
+		cs.mu.Unlock()
+		cs.publish()
 		return
 	}
-
-	cs.log.WARN.Printf("unknown charge point connected: %s", chargePoint.ID())
 
 	// check for configured anonymous charge point
 	reg, ok = cs.regs[""]
@@ -142,12 +201,17 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		cp.connect(true)
 
+		cs.mu.Unlock()
+		cs.publish()
 		return
 	}
 
 	// register unknown charge point
-	// when charge point setup is complete, it will eventually be associated with the connected id
 	cs.regs[chargePoint.ID()] = newRegistration()
+	cs.log.WARN.Printf("unknown charge point connected: %s", chargePoint.ID())
+
+	cs.mu.Unlock()
+	cs.publish()
 }
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
@@ -157,4 +221,6 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
+
+	cs.publish()
 }
