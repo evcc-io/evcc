@@ -220,8 +220,19 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
+      "csv": {
+        "created": "Skapad",
+        "finished": "Klar",
+        "gridpower": "Näteffekt (kW)",
+        "limitpower": "Begränsning (kW)",
+        "type": "Typ"
+      },
       "description": "Effektbegränsning mha externt system (tex. §14a EnWG styrbox). Fordrar lasthanteringskonfiguration.",
-      "title": "HEMS"
+      "downloadCsv": "Hämta CSV",
+      "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
+      "lastEvent": "Senaste {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här."
     },
     "icon": {
       "change": "ändra",
