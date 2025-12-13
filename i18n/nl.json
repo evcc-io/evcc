@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Authenticatie code",
+    "authCodeHelp": "Kopieer deze code en gebruik het in de volgende stap. Geldig voor {duration}.",
+    "authorizationRequired": "Autorisatie vereist",
+    "buttonConnect": "Verbind met {provider}",
+    "buttonDisconnect": "Verbinding verbreken",
+    "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
+    "connect": "verbinden",
+    "disconnect": "verbinding verbreken",
+    "loggedOut": "Succesvol uitgelogd",
+    "logoutFailed": "Uitloggen mislukt",
+    "modalDescriptionLogin": "Voltooi het autorisatieproces om verbinding te maken met {provider}.",
+    "modalDescriptionLogout": "Hiermee wordt de verbinding met uw {provider} account verbroken en heeft u geen toegang meer tot de gegevens.",
+    "success": "Autorisatie met {title} is gelukt.",
+    "successCloseModal": "U kunt dit venster nu sluiten.",
+    "successCloseTab": "U kunt dit tabblad nu sluiten.",
+    "title": "Autorisatiestatus"
+  },
   "batterySettings": {
     "batteryLevel": "Batterijniveau",
     "bufferStart": {
@@ -8,18 +26,18 @@
     },
     "capacity": "{energy} van {total}",
     "control": "Batterijsturing",
-    "discharge": "Voorkom het ontladen van de thuisaccu bij gebruik van de snelle modus of bij gepland laden.",
+    "discharge": "Voorkom het ontladen van de thuisbatterij bij gebruik van de snelle modus of bij gepland laden.",
     "disclaimerHint": "Opgelet:",
     "disclaimerText": "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast.",
     "gridChargeTab": "Netladen",
-    "legendBottomName": "Thuisaccu heeft prioriteit",
+    "legendBottomName": "Thuisbatterij heeft prioriteit",
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
-    "legendMiddleSubline": "als de thuisaccu {soc} bereikt heeft.",
+    "legendMiddleSubline": "als de thuisbatterij {soc} bereikt heeft.",
     "legendTopAutostart": "Laden vanuit de thuisbatterij",
-    "legendTopName": "Opladen met energie uit de thuisaccu",
-    "legendTopSubline": "eens de thuisaccu {soc} bereikt heeft.",
-    "modalTitle": "Thuisaccu",
+    "legendTopName": "Opladen met energie uit de thuisbatterij",
+    "legendTopSubline": "eens de thuisbatterij {soc} bereikt heeft.",
+    "modalTitle": "Thuisbatterij",
     "usageTab": "Batterijgebruik"
   },
   "config": {
@@ -29,12 +47,12 @@
       "titleEdit": "Zelfregulerende verbruiker bewerken"
     },
     "battery": {
-      "titleAdd": "Voeg accu toe",
-      "titleEdit": "Accu aanpassen"
+      "titleAdd": "Voeg batterij toe",
+      "titleEdit": "Batterij aanpassen"
     },
     "charge": {
-      "titleAdd": "Voeg Lader Meter toe",
-      "titleEdit": "Bewerk Lader Meter"
+      "titleAdd": "Voeg lader meter toe",
+      "titleEdit": "Bewerk lader meter"
     },
     "charger": {
       "chargers": "EV laders",
@@ -45,7 +63,7 @@
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
       "titleAdd": {
-        "charging": "Voeg Lader toe",
+        "charging": "Voeg lader toe",
         "heating": "Voeg verwarmer toe"
       },
       "titleEdit": {
@@ -134,7 +152,7 @@
     },
     "devices": {
       "auxMeter": "Slimme verbruiker",
-      "batteryStorage": "Thuisaccu",
+      "batteryStorage": "Batterijopslag",
       "consumer": "Verbruiker",
       "solarSystem": "PV systeem"
     },
@@ -164,6 +182,8 @@
       "cancel": "Annuleren",
       "clear": "Leegmaken",
       "close": "Sluiten",
+      "copied": "Gekopieerd!",
+      "copy": "Kopieer",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
@@ -699,6 +719,7 @@
     "authProviders": {
       "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
       "loggedOut": "Succesvol uitgelogd",
+      "success": "Succesvolle authorisatie met {title}. Dit tabblad kan nu gesloten worden.",
       "title": "Authorisatie Status"
     },
     "blog": "Blog",
@@ -718,7 +739,7 @@
     "logsButton": "Bekijk logboeken",
     "logsDescription": "Kijk in de logboeken voor foutmeldingen.",
     "modalTitle": "Hulp nodig?",
-    "primaryActions": "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp te krijgen.",
+    "primaryActions": "Werkt iets niet naar behoren? Dit zijn goede plaatsen om hulp te krijgen.",
     "restart": {
       "cancel": "Annuleren",
       "confirm": "Ja, herstarten!",
@@ -727,7 +748,7 @@
       "modalTitle": "Ben je zeker dat je wil herstarten?"
     },
     "restartButton": "Herstart",
-    "restartDescription": "Geprobeerd het uit en weer aan te zetten?",
+    "restartDescription": "Geprobeerd om het uit en weer aan te zetten?",
     "secondaryActions": "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
   },
   "issue": {

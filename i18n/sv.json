@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Autentiseringskod",
+    "authCodeHelp": "Kopiera koden och använd i nästa steg. Giltig i {duration}.",
+    "authorizationRequired": "Auktorisering erfordras",
+    "buttonConnect": "Anslut till {provider}",
+    "buttonDisconnect": "Koppla från",
+    "confirmLogout": "Är du säker på att du vill koppla från {title}?",
+    "connect": "anslut",
+    "disconnect": "koppla från",
+    "loggedOut": "Utloggningen lyckades",
+    "logoutFailed": "Utloggning misslyckades",
+    "modalDescriptionLogin": "Slutför auktoriseringsprocessen för att upprätta anslutning med {provider}.",
+    "modalDescriptionLogout": "Ditt {provider}-konto kommer att kopplas från, och åtkomsten till dess data tas bort.",
+    "success": "Auktoriseringen med {title} lyckades.",
+    "successCloseModal": "Du kan stänga det här fönstret nu.",
+    "successCloseTab": "Du kan nu stänga denna flik.",
+    "title": "Auktoriseringsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Batterinivå",
     "bufferStart": {
@@ -164,6 +182,8 @@
       "cancel": "Avbryt",
       "clear": "Rensa",
       "close": "Stäng",
+      "copied": "Kopierad!",
+      "copy": "Kopiera",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
@@ -200,8 +220,19 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
+      "csv": {
+        "created": "Skapad",
+        "finished": "Klar",
+        "gridpower": "Näteffekt (kW)",
+        "limitpower": "Begränsning (kW)",
+        "type": "Typ"
+      },
       "description": "Effektbegränsning mha externt system (tex. §14a EnWG styrbox). Fordrar lasthanteringskonfiguration.",
-      "title": "HEMS"
+      "downloadCsv": "Hämta CSV",
+      "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
+      "lastEvent": "Senaste {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här."
     },
     "icon": {
       "change": "ändra",
@@ -375,9 +406,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus förbindelse",
-      "connectionHintSerial": "Enheten är direkt förbunden till evcc via RS485 interface.",
-      "connectionHintTcpip": "Enheten kan adresseras via LAN/Wifi.",
-      "connectionValueSerial": "Seriell / USB",
+      "connectionHintSerial": "Enheten är direkt förbunden via RS485 (eller USB-till-RS485 adapter).",
+      "connectionHintTcpip": "Enheten kan nås via nätverk (LAN/Wifi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Nätverk",
       "device": "Enhetsnamn",
       "deviceHint": "Exempel: /dev/ttyUSB0",
