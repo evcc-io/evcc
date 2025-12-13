@@ -11,16 +11,19 @@ params:
     required: true
   - name: capacity
     required: true
+  - name: cache
+    advanced: true
+    default: 1s
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.packInputPower - .properties.outputPackPower
-    cache: 1s
+    cache: {{ .cache }}
   soc:
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
-    cache: 1s
+    cache: {{ .cache }}
   capacity: {{ .capacity }}

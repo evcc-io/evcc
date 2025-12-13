@@ -11,6 +11,9 @@ params:
     default: 1.92 # kWh
   - name: maxacpower
     default: 800 # W
+  - name: cache
+    advanced: true
+    default: 1s
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -18,14 +21,14 @@ render: |
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.energyPower
-    cache: 1s
+    cache: {{ .cache }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.solarInputPower
-    cache: 1s
+    cache: {{ .cache }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -33,11 +36,11 @@ render: |
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.packInputPower - .properties.outputPackPower
-    cache: 1s
+    cache: {{ .cache }}
   soc:
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
-    cache: 1s
+    cache: {{ .cache }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
