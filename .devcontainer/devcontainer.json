@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "evcc",
-	"image": "mcr.microsoft.com/devcontainers/go",
+	"image": "mcr.microsoft.com/devcontainers/go:2.0.5-1.25-bookworm",
 	"features": {
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
 			"moby": true,
