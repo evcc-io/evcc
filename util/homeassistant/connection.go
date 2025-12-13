@@ -113,7 +113,7 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 
 	state = strings.ToLower(state)
 	switch state {
-	case "on", "true", "1", "active", "yes":
+	case "on", "true", "1", "active", "yes", "heat", "cool", "heat_cool", "auto", "dry", "fan_only", "aux_heat":
 		return true, nil
 	case "off", "false", "0", "inactive", "no":
 		return false, nil
