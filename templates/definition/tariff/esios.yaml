@@ -1,0 +1,53 @@
+template: esios
+covers: [esios-tariff-api]
+products:
+  - brand: REE
+requirements:
+  description:
+    en: "Spain PVPC tariff extracted from https://api.esios.ree.es. It is possible to create grid and feed-in tariffs. You need a token in order to be able to use the api"
+group: price
+countries: ["ES"]
+params:
+  - name: securitytoken
+    description:
+      generic: "Esios personal Security token"
+    help:
+      en: Request your token at <a href="mailto:consultasios@ree.es?subject=Personal token request">consultasios@ree.es</a>
+    required: true
+  - name: indicator
+    description:
+      generic: "Indicator to retrieve from the API."
+    help:
+      en: 1001 = Grid Tariff, 1739 = Feed-in Tariff
+    example: 1001
+    type: choice
+    choice: [1001, 1739]
+    required: true
+  - name: region
+    description:
+      generic: "Retrieve 1 out of 5 regions from the API."
+    help:
+      en: Península, Canarias, Baleares, Ceuta, Melilla
+    example: Península
+    type: choice
+    choice: ["Península", "Canarias", "Baleares", "Ceuta", "Melilla"]
+    required: true
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.esios.ree.es/indicators/{{.indicator}}
+    auth:
+      type: bearer
+      token: {{ .securitytoken }}
+    jq: |
+      [.indicator.values[] 
+        | select(.geo_name == "{{.region}}") 
+        | {
+          start: .datetime_utc,
+          end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
+          value: (.value | tonumber) / 1000
+          }
+      ] | tostring

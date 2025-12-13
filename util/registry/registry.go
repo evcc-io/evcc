@@ -38,7 +38,7 @@ func (r registry[T]) Get(name string) (factoryFunc[T], error) {
 }
 
 func (r registry[T]) Types() []string {
-	return slices.Collect(maps.Keys(r.data))
+	return slices.Sorted(maps.Keys(r.data))
 }
 
 func New[T any](typ string) registry[T] {

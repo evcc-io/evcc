@@ -36,6 +36,6 @@ render: |
     jq: |
       [ .[] | {
         start: .from,
-        end:   (.from | fromdate + 3600 | todate),
+        end:   (.from | fromdate + 900 | todate),
         value: (.price/100)
       } ] | tostring

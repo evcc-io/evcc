@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -20,9 +21,12 @@ type EEBus struct {
 	log *util.Logger
 
 	*eebus.Connector
-	uc *eebus.UseCasesCS
+	cs *eebus.ControllableSystem
+	ma *eebus.MonitoringAppliance
+	eg *eebus.EnergyGuard
 
-	root api.Circuit
+	root        api.Circuit
+	passthrough func(bool) error
 
 	status        status
 	statusUpdated time.Time
@@ -43,11 +47,12 @@ type Limits struct {
 }
 
 // NewFromConfig creates an EEBus HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.API) (*EEBus, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
-		Ski      string
-		Limits   `mapstructure:",squash"`
-		Interval time.Duration
+		Ski         string
+		Limits      `mapstructure:",squash"`
+		Passthrough *plugin.Config
+		Interval    time.Duration
 	}{
 		Limits: Limits{
 			ContractualConsumptionNominalMax:    24800,
@@ -59,6 +64,11 @@ func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	passthroughS, err := cc.Passthrough.BoolSetter(ctx, "dim")
+	if err != nil {
 		return nil, err
 	}
 
@@ -80,22 +90,25 @@ func NewFromConfig(ctx context.Context, other map[string]interface{}, site site.
 	}
 	site.SetCircuit(lpc)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, lpc, cc.Interval)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, interval time.Duration) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
-		log:       util.NewLogger("eebus"),
-		root:      root,
-		uc:        eebus.Instance.ControllableSystem(),
-		Connector: eebus.NewConnector(),
-		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
-		interval:  interval,
+		log:         util.NewLogger("eebus"),
+		root:        root,
+		passthrough: passthrough,
+		cs:          eebus.Instance.ControllableSystem(),
+		ma:          eebus.Instance.MonitoringAppliance(),
+		eg:          eebus.Instance.EnergyGuard(),
+		Connector:   eebus.NewConnector(),
+		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
+		interval:    interval,
 
 		consumptionLimit: &ucapi.LoadLimit{
 			Value:        limits.ConsumptionLimit,
@@ -119,32 +132,46 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 		return nil, err
 	}
 
-	// scenarios
-	for _, s := range c.uc.LPC.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("LPC RemoteEntitiesScenarios:", s.Scenarios)
+	// controllable system
+	for _, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("CS LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.uc.LPP.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("LPP RemoteEntitiesScenarios:", s.Scenarios)
+	for _, s := range c.cs.CsLPPInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("CS LPP RemoteEntitiesScenarios:", s.Scenarios)
 	}
-	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
+
+	// monitoring appliance
+	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MA MPC RemoteEntitiesScenarios:", s.Scenarios)
+	}
+	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	// energy guard
+	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
 	// set initial values
-	if err := c.uc.LPC.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("LPC SetConsumptionNominalMax:", err)
+	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
 	}
-	if err := c.uc.LPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
-		c.log.ERROR.Println("LPC SetConsumptionLimit:", err)
+	if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
+		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
-		c.log.ERROR.Println("LPC SetFailsafeConsumptionActivePowerLimit:", err)
+	if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
+		c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
-		c.log.ERROR.Println("LPC SetFailsafeDurationMinimum:", err)
+	if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
 	}
 
 	return c, nil
+}
+
+func (c *EEBus) ConsumptionLimit() float64 {
+	return c.consumptionLimit.Value
 }
 
 func (c *EEBus) Run() {
@@ -157,8 +184,8 @@ func (c *EEBus) Run() {
 
 // TODO check state machine against spec
 func (c *EEBus) run() error {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	c.log.TRACE.Println("status:", c.status)
 
@@ -205,7 +232,7 @@ func (c *EEBus) run() error {
 
 	case StatusFailsafe:
 		// LPC-914/2
-		if d := c.failsafeDuration; heartbeatErr == nil && time.Since(c.statusUpdated) > d {
+		if d := c.failsafeDuration; heartbeatErr == nil || time.Since(c.statusUpdated) > d {
 			c.log.DEBUG.Println("heartbeat returned and failsafe duration exceeded- return to normal")
 			c.setStatusAndLimit(StatusUnlimited, 0)
 		}
@@ -224,4 +251,10 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 func (c *EEBus) setLimit(limit float64) {
 	c.root.Dim(limit > 0)
 	c.root.SetMaxPower(limit)
+
+	if c.passthrough != nil {
+		if err := c.passthrough(limit > 0); err != nil {
+			c.log.ERROR.Printf("passthrough failed: %v", err)
+		}
+	}
 }

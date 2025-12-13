@@ -12,6 +12,9 @@ jobs:
   call-build-workflow:
     if: startsWith(github.ref, 'refs/tags')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
+    permissions:
+      contents: read
+      actions: write
 
   docker:
     name: Publish Docker :release
@@ -22,7 +25,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -64,7 +67,7 @@ jobs:
       actions: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -102,7 +105,7 @@ jobs:
       - name: Create Github Release
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
           # use RELEASE_DEPLOY_TOKEN for access to evcc-io/homebrew-tap
@@ -132,7 +135,7 @@ jobs:
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: superfly/flyctl-actions/setup-flyctl@master
@@ -154,7 +157,6 @@ jobs:
           repository: evcc-io/hassio-addon
           token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
           path: ./hassio
-          persist-credentials: false
 
       - name: Update version
         run: |

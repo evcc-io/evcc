@@ -1,0 +1,31 @@
+template: device-auth-demo
+group: generic
+products:
+  - description:
+      de: Auth Demo Zähler
+      en: Auth Demo Meter
+auth:
+  type: demo
+  params: ["region", "method"]
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: region
+    description:
+      generic: Region
+    choice: ["EU", "US", "CN", "ERROR"]
+  - name: method
+    description:
+      generic: Authentication Method
+    choice: ["redirect", "device-code"]
+  - name: power
+    description:
+      generic: Power
+    unit: W
+    type: int
+
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}

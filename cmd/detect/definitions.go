@@ -64,7 +64,7 @@ func init() {
 		ID:      TaskModbus,
 		Type:    tasks.Tcp,
 		Depends: TaskPing,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ports": []int{502, 1502},
 		},
 	})
@@ -73,7 +73,7 @@ func init() {
 		ID:      TaskSunspec,
 		Type:    tasks.Modbus,
 		Depends: TaskModbus,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":    sunspecIDs,
 			"models": []int{1},
 			"point":  "Mn",
@@ -84,7 +84,7 @@ func init() {
 		ID:      taskInverter,
 		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     sunspecIDs,
 			"models":  []int{101, 103},
 			"point":   "W",
@@ -96,7 +96,7 @@ func init() {
 		ID:      taskStrings,
 		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     sunspecIDs,
 			"models":  []int{160},
 			"point":   "N",
@@ -108,7 +108,7 @@ func init() {
 		ID:      taskBattery,
 		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     sunspecIDs,
 			"models":  []int{124},
 			"point":   "ChaSt",
@@ -120,7 +120,7 @@ func init() {
 		ID:      taskMeter,
 		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":    sunspecIDs,
 			"models": []int{201, 203, 211, 213},
 			"point":  "W",
@@ -131,7 +131,7 @@ func init() {
 		ID:      taskE3DC,
 		Type:    tasks.Modbus,
 		Depends: TaskModbus,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     []int{1, 2, 3, 4, 5, 6},
 			"address": 40000,
 			"type":    "holding",
@@ -144,7 +144,7 @@ func init() {
 		ID:      taskWallbe,
 		Type:    tasks.Modbus,
 		Depends: TaskModbus,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     []int{255},
 			"address": 100,
 			"type":    "input",
@@ -157,7 +157,7 @@ func init() {
 		ID:      taskPhoenixEMEth,
 		Type:    tasks.Modbus,
 		Depends: TaskModbus,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     []int{180},
 			"address": 100,
 			"type":    "input",
@@ -170,7 +170,7 @@ func init() {
 		ID:      taskPhoenixEVEth,
 		Type:    tasks.Modbus,
 		Depends: TaskModbus,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ids":     []int{255},
 			"address": 100,
 			"type":    "input",
@@ -183,7 +183,7 @@ func init() {
 		ID:      taskOpenwb,
 		Type:    tasks.Mqtt,
 		Depends: TaskPing,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"topic": "openWB",
 		},
 	})
@@ -192,7 +192,7 @@ func init() {
 		ID:      TaskHttp,
 		Type:    tasks.Tcp,
 		Depends: TaskPing,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"ports": []int{80, 443},
 		},
 	})
@@ -201,7 +201,7 @@ func init() {
 		ID:      taskGoE,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/status",
 			"jq":   ".car",
 		},
@@ -211,7 +211,7 @@ func init() {
 		ID:      taskEVSEWifi,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/getParameters",
 			"jq":   ".type",
 		},
@@ -221,7 +221,7 @@ func init() {
 		ID:      taskSonnen,
 		Type:    tasks.Http,
 		Depends: TaskPing,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"port": 8080,
 			"path": "/api/v1/status",
 			"jq":   ".GridFeedIn_W",
@@ -232,7 +232,7 @@ func init() {
 		ID:      taskPowerwall,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/api/meters/aggregates",
 			"jq":   ".load",
 		},
@@ -242,7 +242,7 @@ func init() {
 		ID:      taskFroniusWeb,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/solar_api/GetAPIVersion.cgi",
 			"jq":   ".BaseURL",
 		},
@@ -252,7 +252,7 @@ func init() {
 		ID:      taskTasmota,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/cm?cmnd=Module",
 			"jq":   ".Module",
 		},
@@ -273,7 +273,7 @@ func init() {
 		ID:      "volkszähler",
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/middleware.php/entity.json",
 			"jq":   ".version",
 		},
@@ -283,7 +283,7 @@ func init() {
 		ID:      taskShelly,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"path": "/shelly",
 			"jq":   ".type",
 		},

@@ -321,6 +321,22 @@
         },
         "description": "Success - Soc result"
       },
+      "SuccessResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "example": "OK",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success"
+      },
       "Unauthorized": {
         "content": {
           "text/plain": {
@@ -602,17 +618,6 @@
           },
           "weekdays": {
             "$ref": "#/components/schemas/Weekdays"
-          }
-        },
-        "type": "object"
-      },
-      "RepeatingPlans": {
-        "properties": {
-          "plans": {
-            "items": {
-              "$ref": "#/components/schemas/RepeatingPlan"
-            },
-            "type": "array"
           }
         },
         "type": "object"
@@ -1594,6 +1599,49 @@
         ]
       }
     },
+    "/loadpoints/{id}/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Delete limit for feed-in priority optimization.",
+        "operationId": "deleteLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Delete smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Set limit for feed-in priority optimization.",
+        "operationId": "setLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
     "/loadpoints/{id}/vehicle": {
       "delete": {
         "description": "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.",
@@ -1863,24 +1911,6 @@
         ]
       }
     },
-    "/settings/telemetry": {
-      "get": {
-        "description": "Returns the current telemetry status.",
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
-        },
-        "operationId": "getTelemetryStatus",
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/BooleanResult"
-          }
-        },
-        "summary": "Telemetry status",
-        "tags": [
-          "system"
-        ]
-      }
-    },
     "/settings/telemetry/{enable}": {
       "post": {
         "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
@@ -1942,6 +1972,41 @@
         ]
       }
     },
+    "/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "removeGlobalSmartFeedInPriorityLimit",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Remove smart feed-in priority limit for all loadpoints.",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "setGlobalSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit for all loadpoints",
+        "tags": [
+          "general"
+        ]
+      }
+    },
     "/state": {
       "get": {
         "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
@@ -1989,6 +2054,29 @@
         "summary": "System state",
         "tags": [
           "general"
+        ]
+      }
+    },
+    "/system/cache": {
+      "delete": {
+        "description": "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching.",
+        "operationId": "clearCache",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessResult"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Clear cache",
+        "tags": [
+          "system"
         ]
       }
     },
@@ -2250,7 +2338,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RepeatingPlans"
+                "items": {
+                  "$ref": "#/components/schemas/RepeatingPlan"
+                },
+                "type": "array"
               }
             }
           },
@@ -2263,7 +2354,10 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/RepeatingPlans"
+                      "items": {
+                        "$ref": "#/components/schemas/RepeatingPlan"
+                      },
+                      "type": "array"
                     }
                   },
                   "type": "object"

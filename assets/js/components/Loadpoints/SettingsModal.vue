@@ -10,23 +10,25 @@
 		<div class="container">
 			<SmartCostLimit
 				:current-limit="smartCostLimit"
+				:last-limit="lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
 				is-loadpoint
-				:loadpoint-id="Number(loadpointId)"
+				:loadpoint-id="loadpointId"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
 				:tariff="forecast?.planner"
-				class="mt-2"
+				class="mt-2 mb-4"
 			/>
 			<SmartFeedInPriority
 				:current-limit="smartFeedInPriorityLimit"
+				:last-limit="lastSmartFeedInPriorityLimit"
 				:currency="currency"
-				:loadpoint-id="Number(loadpointId)"
+				:loadpoint-id="loadpointId"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
-				class="mt-2"
+				class="mt-2 mb-4"
 			/>
 			<LoadpointSettingsBatteryBoost
 				v-if="batteryBoostAvailable"
@@ -161,7 +163,7 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: [String, Number],
+		id: { type: String, required: true },
 		phasesConfigured: { type: Number, default: 0 },
 		chargerPhases1p3p: Boolean,
 		chargerSinglePhase: Boolean,
@@ -181,6 +183,8 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	emits: [
 		"phasesconfigured-updated",
@@ -269,7 +273,7 @@ export default defineComponent({
 		},
 		currentOption(current: number, isDefault: boolean, phases: number) {
 			const kw = this.fmtPhasePower(current, phases);
-			let name = `${this.fmtNumber(current, current <= 1 ? undefined : 0)} A (${kw})`;
+			let name = `${this.fmtNumber(current, undefined)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}

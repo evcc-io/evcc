@@ -4,22 +4,38 @@
 		<p>
 			{{ description }}
 		</p>
-		<div class="row mb-3">
+		<div class="row mb-3 align-items-center">
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
 			</label>
 			<div class="col-sm-8 col-lg-4 pe-0">
-				<select
-					:id="formId"
-					v-model.number="selectedLimit"
-					class="form-select form-select-sm mb-1"
-					@change="changeLimit"
-				>
-					<option value="null">{{ $t("smartCost.none") }}</option>
-					<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
-						{{ name }}
-					</option>
-				</select>
+				<div class="input-group input-group-sm mb-1 mb-lg-0">
+					<div class="input-group-text">
+						<div class="form-check form-switch m-0">
+							<input
+								:id="formId + 'Active'"
+								:checked="active"
+								class="form-check-input"
+								type="checkbox"
+								role="switch"
+								:aria-label="$t('smartCost.enable')"
+								@change="toggleActive"
+							/>
+						</div>
+					</div>
+					<select
+						:id="formId"
+						v-model.number="selectedLimit"
+						class="form-select form-select-sm"
+						:disabled="!active"
+						:aria-label="limitLabel"
+						@change="changeLimit"
+					>
+						<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
+							{{ name }}
+						</option>
+					</select>
+				</div>
 			</div>
 			<div
 				v-if="applyToAllVisible"
@@ -32,7 +48,7 @@
 			</div>
 		</div>
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
-			<div class="text-start">
+			<div class="text-start" data-testid="active-hours">
 				<div class="label">
 					{{ activeHoursLabel }}
 				</div>
@@ -91,6 +107,7 @@ export default defineComponent({
 			type: [Number, null] as PropType<number | null>,
 			required: true,
 		},
+		lastLimit: { type: Number, default: 0 },
 		isCo2: Boolean,
 		currency: String as PropType<CURRENCY>,
 		applyAll: Boolean,
@@ -118,6 +135,7 @@ export default defineComponent({
 			selectedLimit: null as number | null,
 			activeIndex: null as number | null,
 			applyToAllVisible: false,
+			active: false,
 		};
 	},
 	computed: {
@@ -136,7 +154,7 @@ export default defineComponent({
 
 			const values = [] as number[];
 			const stepSize = this.optionStepSize;
-			for (let i = 1; i <= 100; i++) {
+			for (let i = 0; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
 				if (max !== undefined && value > max + stepSize) break;
 				values.push(this.roundLimit(value) as number);
@@ -191,45 +209,38 @@ export default defineComponent({
 				return [];
 			}
 
-			const result = [] as Slot[];
 			const rates = this.rates;
-			const startTime = new Date();
-			const oneHour = 3600000;
+			const quarterHour = 15 * 60 * 1000;
 
-			for (let i = 0; i < 42; i++) {
-				const start = new Date(startTime.getTime() + oneHour * i);
-				const startHour = start.getHours();
-				start.setMinutes(0);
-				start.setSeconds(0);
-				start.setMilliseconds(0);
-				const end = new Date(start.getTime());
-				end.setHours(startHour + 1);
-				const endHour = end.getHours();
-				const day = this.weekdayShort(start);
+			const base = new Date();
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
+
+			return Array.from({ length: 96 * 4 }, (_, i) => {
+				const start = new Date(base.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
 				const value = this.findRateInRange(start, end, rates)?.value;
 				const active =
 					this.limitDirection === "below" &&
-					this.selectedLimit !== null &&
+					this.currentLimit !== null &&
 					value !== undefined &&
-					value <= this.selectedLimit;
+					value <= this.currentLimit;
 				const warning =
 					this.limitDirection === "above" &&
-					this.selectedLimit !== null &&
+					this.currentLimit !== null &&
 					value !== undefined &&
-					value >= this.selectedLimit;
-				const selectable = value !== undefined;
-				result.push({
-					day,
-					value,
-					startHour,
-					endHour,
-					charging: active,
-					selectable,
-					warning,
-				});
-			}
+					value >= this.currentLimit;
 
-			return result;
+				return {
+					day: this.weekdayShort(start),
+					value,
+					start,
+					end,
+					charging: active,
+					selectable: value !== undefined,
+					warning,
+				};
+			});
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -258,8 +269,8 @@ export default defineComponent({
 		},
 		activeSlotName() {
 			if (this.activeSlot) {
-				const { day, startHour, endHour } = this.activeSlot;
-				const range = `${startHour}–${endHour}`;
+				const { day, start, end } = this.activeSlot;
+				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
@@ -271,30 +282,36 @@ export default defineComponent({
 			return this.warningSlots.length ? "text-warning" : "value-inactive";
 		},
 		activeHoursText() {
-			const params = {
-				active:
-					this.limitDirection === "below"
-						? this.activeSlots.length
-						: this.warningSlots.length,
-				total: this.totalSlots.length,
-			};
-			return this.$t("smartCost.activeHours", params);
+			const active =
+				this.limitDirection === "below"
+					? this.activeSlots.length
+					: this.warningSlots.length;
+			return this.fmtDurationLong(active * 15 * 60, "short");
 		},
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";
 		},
 	},
 	watch: {
-		currentLimit(limit) {
-			this.selectedLimit = this.roundLimit(limit);
+		currentLimit() {
+			this.initLimit();
 		},
 	},
 	mounted() {
-		this.selectedLimit = this.roundLimit(this.currentLimit);
+		this.initLimit();
 	},
 	methods: {
 		roundLimit(limit: number | null): number | null {
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
+		},
+		initLimit() {
+			if (this.currentLimit === null) {
+				this.active = false;
+				this.selectedLimit = this.lastLimit;
+			} else {
+				this.active = true;
+				this.selectedLimit = this.roundLimit(this.currentLimit);
+			}
 		},
 		formatLimit(limit: number | null): string {
 			if (limit === null) {
@@ -348,18 +365,27 @@ export default defineComponent({
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;
 				this.selectedLimit = valueRounded;
-				this.saveLimit(`${valueRounded}`);
+				this.active = true;
+				this.saveLimit(valueRounded);
 			}
 		},
 		changeLimit($event: Event) {
-			const value = ($event.target as HTMLSelectElement).value;
-			if (value === "null") {
-				this.resetLimit();
+			const value = parseFloat(($event.target as HTMLSelectElement).value);
+			this.saveLimit(value);
+		},
+		toggleActive($event: Event) {
+			const active = ($event.target as HTMLInputElement).checked;
+			if (active) {
+				this.saveLimit(this.lastLimit);
 			} else {
-				this.saveLimit(value);
+				this.resetLimit();
+			}
+			this.active = active;
+			if (this.applyAll) {
+				this.applyToAllVisible = true;
 			}
 		},
-		saveLimit(limit: string) {
+		saveLimit(limit: number) {
 			this.$emit("save-limit", limit);
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
@@ -372,7 +398,7 @@ export default defineComponent({
 			}
 		},
 		applyToAll() {
-			this.$emit("apply-to-all", this.selectedLimit);
+			this.$emit("apply-to-all", this.currentLimit);
 			this.applyToAllVisible = false;
 		},
 	},

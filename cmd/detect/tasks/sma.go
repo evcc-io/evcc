@@ -23,7 +23,7 @@ type SmaResult struct {
 	Http   bool
 }
 
-func SMAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func SMAHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := SMAHandler{
 		Timeout:  5 * time.Second,
 		Password: "0000",

@@ -27,16 +27,16 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("dacia", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("dacia", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("dacia", other)
 	})
-	registry.Add("renault", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("renault", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("renault", other)
 	})
 }
 
 // NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
-func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
@@ -72,12 +72,12 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	api := kamereon.New(log, keys.Kamereon, identity, func() error {
+	api := kamereon.NewAPI(log, keys.Kamereon, identity, func() error {
 		return identity.Login(cc.User, cc.Password)
 	})
 	api.Client.Timeout = cc.Timeout
 
-	accountID, err := api.Person(identity.PersonID, brand)
+	accountID, err := api.AccountID(identity.PersonID, brand)
 	if err != nil {
 		return nil, err
 	}

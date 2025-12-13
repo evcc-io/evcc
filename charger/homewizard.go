@@ -23,7 +23,7 @@ func init() {
 }
 
 // NewHomeWizardFromConfig creates a HomeWizard charger from generic config
-func NewHomeWizardFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHomeWizardFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string

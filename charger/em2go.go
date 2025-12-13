@@ -72,7 +72,7 @@ func init() {
 //go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
-func NewEm2GoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEm2GoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int // TODO remove deprecated
@@ -199,6 +199,12 @@ func (wb *Em2Go) Enable(enable bool) error {
 
 		// send default current
 		return wb.setCurrent(wb.current)
+	}
+
+	// experimental workaround for EM2GO home FW 1.4
+	// https://github.com/evcc-io/evcc/discussions/25940#discussioncomment-15221487
+	if !enable {
+		return wb.setCurrent(0)
 	}
 
 	return nil
@@ -371,7 +377,7 @@ func (wb *Em2Go) Diagnose() {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	var serial []byte
-	for reg := 0; reg < 8; reg++ {
+	for reg := range 8 {
 		b, err := wb.conn.ReadHoldingRegisters(em2GoRegSerial+2*uint16(reg), 2)
 		if err != nil {
 			return

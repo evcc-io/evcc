@@ -8,11 +8,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/vehicle"
-)
-
-const (
-	smallSlotDuration = 10 * time.Minute // small planner slot duration we might ignore
-	smallGapDuration  = 60 * time.Minute // small gap duration between planner slots we might ignore
+	"github.com/evcc-io/evcc/tariff"
 )
 
 // TODO planActive is not guarded by mutex
@@ -41,7 +37,7 @@ func (lp *Loadpoint) finishPlan() {
 
 // remainingPlanEnergy returns missing energy amount in kWh
 func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
-	return max(0, planEnergy-lp.getChargedEnergy()/1e3)
+	return max(0, planEnergy-(lp.getChargedEnergy()/1e3-lp.planEnergyOffset))
 }
 
 // GetPlanRequiredDuration is the estimated total charging duration
@@ -108,10 +104,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.setPlanActive(active)
 	}()
 
+	var plan api.Rates
 	var planStart, planEnd time.Time
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -147,7 +145,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
+	plan = lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
 	if plan == nil {
 		return false
 	}
@@ -174,7 +172,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
@@ -193,11 +191,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
-		case requiredDuration < smallSlotDuration:
+		case requiredDuration < tariff.SlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
-		case lp.clock.Until(planStart) < smallGapDuration:
-			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", smallGapDuration, lp.clock.Until(planStart).Round(time.Second))
+		case lp.clock.Until(planStart) < tariff.SlotDuration:
+			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
 	}

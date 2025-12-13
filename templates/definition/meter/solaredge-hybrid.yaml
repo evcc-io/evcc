@@ -24,6 +24,13 @@ params:
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+  - name: maxdischargepower
+    default: 5000
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
   - name: watchdog
     type: duration
     default: 60s
@@ -114,6 +121,14 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    value:
+      - 101:WH
+      - 103:WH
+    scale: 0.001
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -134,6 +149,8 @@ render: |
       address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32nans
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}
@@ -155,7 +172,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 5000 # W
+            value: {{ .maxdischargepower }} # W
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -208,4 +225,6 @@ render: |
                 type: writemultiple
                 encoding: float32s
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

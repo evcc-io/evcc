@@ -1,4 +1,5 @@
 template: energinet-price
+covers: ["energinet"]
 products:
   - brand: Energinet
 requirements:
@@ -17,15 +18,16 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://api.energidataservice.dk/dataset/Elspotprices?filter={"PriceArea":["{{ .region }}"]}
+    uri: https://api.energidataservice.dk/dataset/DayAheadPrices?start=now&filter={"PriceArea":["{{ .region }}"]}
     jq: |
-      [.records[] |
-        {
-          start: (.HourUTC[0:13] + ":00:00Z"),
-          end: (.HourUTC[0:13] 
-                | strptime("%Y-%m-%dT%H") 
-                | mktime + 3600 
+      [.records[]
+        | {
+          start: .TimeUTC + "Z",
+          end: (.TimeUTC
+                | strptime("%Y-%m-%dT%H:%M:%S")
+                | mktime + 900
                 | strftime("%Y-%m-%dT%H:%M:%SZ")),
-          value: .SpotPriceDKK / 1e3
+          value: .DayAheadPriceDKK / 1e3
         }
-      ] | tostring
+      ]
+      | tostring

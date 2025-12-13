@@ -17,7 +17,7 @@ import (
 )
 
 // surveyAskOne asks the user for input
-func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
+func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response any, opts ...survey.AskOpt) error {
 	opts = append(opts, survey.WithIcons(func(icons *survey.IconSet) {
 		icons.Question.Text = ""
 	}))
@@ -180,7 +180,7 @@ func (c *CmdConfigure) askValue(q question) string {
 		return chargingModes[modeChoice]
 	}
 
-	validate := func(val interface{}) error {
+	validate := func(val any) error {
 		value := val.(string)
 		if q.invalidValues != nil && slices.Contains(q.invalidValues, value) {
 			return errors.New(c.localizedString("ValueError_Used"))

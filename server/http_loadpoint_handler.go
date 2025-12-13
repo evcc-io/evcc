@@ -15,30 +15,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// remoteDemandHandler updates minimum soc
-func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+type PlanResponse struct {
+	PlanId       int       `json:"planId"`
+	PlanTime     time.Time `json:"planTime"`
+	Duration     int64     `json:"duration"`
+	Precondition int64     `json:"precondition"`
+	Plan         api.Rates `json:"plan"`
+	Power        float64   `json:"power"`
+}
 
-		source := vars["source"]
-		demand, err := loadpoint.RemoteDemandString(vars["demand"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		lp.RemoteControl(source, demand)
-
-		res := struct {
-			Demand loadpoint.RemoteDemand `json:"demand"`
-			Source string                 `json:"source"`
-		}{
-			Source: source,
-			Demand: demand,
-		}
-
-		jsonWrite(w, res)
-	}
+type PlanPreviewResponse struct {
+	PlanTime     time.Time `json:"planTime"`
+	Duration     int64     `json:"duration"`
+	Precondition int64     `json:"precondition"`
+	Plan         api.Rates `json:"plan"`
+	Power        float64   `json:"power"`
 }
 
 // planHandler returns the current plan
@@ -53,14 +44,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := struct {
-			PlanId       int       `json:"planId"`
-			PlanTime     time.Time `json:"planTime"`
-			Duration     int64     `json:"duration"`
-			Precondition int64     `json:"precondition"`
-			Plan         api.Rates `json:"plan"`
-			Power        float64   `json:"power"`
-		}{
+		res := PlanResponse{
 			PlanId:       id,
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
@@ -117,13 +101,7 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := struct {
-			PlanTime     time.Time `json:"planTime"`
-			Duration     int64     `json:"duration"`
-			Precondition int64     `json:"precondition"`
-			Plan         api.Rates `json:"plan"`
-			Power        float64   `json:"power"`
-		}{
+		res := PlanPreviewResponse{
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
 			Precondition: int64(precondition.Seconds()),
@@ -144,7 +122,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		tz := vars["tz"]
 
 		var weekdays []int
-		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
+		for weekdayStr := range strings.SplitSeq(vars["weekdays"], ",") {
 			weekday, err := strconv.Atoi(weekdayStr)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
@@ -175,13 +153,7 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := struct {
-			PlanTime     time.Time `json:"planTime"`
-			Duration     int64     `json:"duration"`
-			Precondition int64     `json:"precondition"`
-			Plan         api.Rates `json:"plan"`
-			Power        float64   `json:"power"`
-		}{
+		res := PlanPreviewResponse{
 			PlanTime:     planTime,
 			Duration:     int64(requiredDuration.Seconds()),
 			Precondition: int64(precondition.Seconds()),
