@@ -786,11 +786,12 @@
       "modalTitle": "Töltési Tervezet",
       "none": "nincs",
       "planNumber": "Terv {number}",
-      "preconditionDescription": "Töltse {duration} indulás előtt az akkumulátor előkondícionálásához.",
-      "preconditionLong": "Késleltetett Töltés",
-      "preconditionOptionAll": "minden",
-      "preconditionOptionNo": "nem",
-      "preconditionShort": "Később",
+      "precondition": {
+        "description": "Töltse {duration} indulás előtt az akkumulátor előkondícionálásához.",
+        "label": "Késleltetett Töltés",
+        "optionAll": "minden",
+        "optionNo": "nem"
+      },
       "remove": "Törlés",
       "repeating": "ismétlődő",
       "repeatingPlans": "Ismétlődő tervek",
