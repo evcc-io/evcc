@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/cast"
 )
 
@@ -114,24 +115,15 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 
 // readRegisterValue reads a modbus register value by reusing the modbus plugin
 func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
-	// Build config map for plugin - need to flatten embedded structs manually
-	cfg := map[string]any{
-		"uri":      query.URI,
-		"id":       query.ID,
-		"register": query.Register,
-		"scale":    query.Scale,
+	// Convert Settings to map (plugin expects Settings fields at top level)
+	cfg := make(map[string]any)
+	if err := mapstructure.Decode(query.Settings, &cfg); err != nil {
+		return nil, err
 	}
 
-	// Add optional settings
-	if query.Device != "" {
-		cfg["device"] = query.Device
-	}
-	if query.Comset != "" {
-		cfg["comset"] = query.Comset
-	}
-	if query.Baudrate != 0 {
-		cfg["baudrate"] = query.Baudrate
-	}
+	// Plugin expects Register as nested object, not flattened
+	cfg["register"] = query.Register
+	cfg["scale"] = query.Scale
 
 	p, err := plugin.NewModbusFromConfig(ctx, cfg)
 	if err != nil {
