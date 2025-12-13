@@ -4,9 +4,11 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
+	"testing"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -354,6 +356,15 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				if val != nil {
 					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
+
+				// validate required fields from yaml
+				if p.IsRequired() && (renderMode == RenderModeUnitTest ||
+					renderMode == RenderModeInstance && !testing.Testing()) {
+					if rv := reflect.ValueOf(s); rv.IsZero() {
+						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
+				}
+
 				res[out] = s
 			}
 		}
