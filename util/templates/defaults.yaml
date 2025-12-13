@@ -166,6 +166,15 @@ params:
       en: The maximum amperage per connected phase that can be used
     example: 16
     type: int
+  - name: maxpower
+    unit: W
+    description:
+      de: Maximale Ladeleistung des Fahrzeugs
+      en: Maximum vehicle charging power
+    help:
+      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst.
+      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. The offered current of the loadpoint is not affected.
+    type: int
   - name: identifiers
     description:
       de: Identifikation
@@ -469,6 +478,8 @@ presets:
       advanced: true
     - name: maxCurrent
       advanced: true
+    - name: maxPower
+      advanced: true
     - name: identifiers
       advanced: true
     - name: priority
@@ -489,6 +500,8 @@ presets:
     - name: minCurrent
       advanced: true
     - name: maxCurrent
+      advanced: true
+    - name: maxPower
       advanced: true
     - name: identifiers
       advanced: true
