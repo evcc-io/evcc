@@ -142,20 +142,19 @@ func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 
 	// String encodings need special handling
 	if encoding == "string" || encoding == "bytes" {
-		return callGetter(p.(plugin.StringGetter).StringGetter())
+		g, err := p.(plugin.StringGetter).StringGetter()
+		if err != nil {
+			return nil, err
+		}
+		return g()
 	}
 
 	// For all numeric encodings (int*, uint*, float*, bool*), use FloatGetter
-	// This is the base implementation in modbus plugin
-	return callGetter(p.(plugin.FloatGetter).FloatGetter())
-}
-
-// callGetter calls a getter function and returns the result
-func callGetter[T any](getterFn func() (T, error), err error) (any, error) {
+	g, err := p.(plugin.FloatGetter).FloatGetter()
 	if err != nil {
 		return nil, err
 	}
-	return getterFn()
+	return g()
 }
 
 // applyCast applies optional type casting
