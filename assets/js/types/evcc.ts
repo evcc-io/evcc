@@ -84,7 +84,7 @@ export interface State {
   sponsor?: Sponsor;
   eebus?: any;
   modbusproxy?: ModbusProxy[];
-  messaging?: any;
+  messaging?: Messaging;
   interval?: number;
   circuits?: Record<string, Circuit>;
   siteTitle?: string;
@@ -418,6 +418,94 @@ export interface ModbusProxySettings {
   comset?: MODBUS_COMSET;
 }
 
+export interface Messaging {
+  events?: Record<MESSAGING_EVENTS, MessagingEvent>;
+  services?: MessagingServices[];
+}
+
+export enum MESSAGING_EVENTS {
+  START = "start",
+  STOP = "stop",
+  CONNECT = "connect",
+  DISCONNECT = "disconnect",
+  SOC = "soc",
+  GUEST = "guest",
+  ASLEEP = "asleep",
+}
+
+export interface MessagingEvent {
+  title: string;
+  msg: string;
+  enabled: boolean;
+}
+
+export enum MESSAGING_SERVICE_TYPE {
+  PUSHOVER = "Pushover",
+  TELEGRAM = "Telegram",
+  EMAIL = "Email",
+  SHOUT = "Shout",
+  NTFY = "Ntfy",
+  CUSTOM = "Custom",
+}
+
+export type MessagingServices =
+  | MessagingServicePushover
+  | MessagingServiceTelegram
+  | MessagingServiceEmail
+  | MessagingServiceShout
+  | MessagingServiceNfty
+  | MessagingServiceCustom;
+
+export interface MessagingServicePushover {
+  type: MESSAGING_SERVICE_TYPE.PUSHOVER;
+  other: {
+    app: string;
+    recipients: string[];
+    devices: string[];
+  };
+}
+export interface MessagingServiceTelegram {
+  type: MESSAGING_SERVICE_TYPE.TELEGRAM;
+  other: {
+    token: string;
+    chats: number[];
+  };
+}
+export interface MessagingServiceEmail {
+  type: MESSAGING_SERVICE_TYPE.EMAIL;
+  other: {
+    uri: string;
+  };
+}
+export interface MessagingServiceShout {
+  type: MESSAGING_SERVICE_TYPE.SHOUT;
+  other: { uri: string };
+}
+export interface MessagingServiceNfty {
+  type: MESSAGING_SERVICE_TYPE.NTFY;
+  other: { uri: string; priority?: MESSAGING_SERVICE_NFTY_PRIORITY; tags?: string };
+}
+export enum MESSAGING_SERVICE_NFTY_PRIORITY {
+  MAX = "max",
+  HIGH = "high",
+  DEFAULT = "default",
+  LOW = "low",
+  min = "min",
+}
+export interface MessagingServiceCustom {
+  type: MESSAGING_SERVICE_TYPE.CUSTOM;
+  other: {
+    encoding?: MESSAGING_SERVICE_CUSTOM_ENCODING;
+    send: string;
+  };
+}
+export enum MESSAGING_SERVICE_CUSTOM_ENCODING {
+  JSON = "json",
+  CSV = "csv",
+  TSV = "tsv",
+  TITLE = "title",
+}
+
 export interface Notification {
   message: string;
   time: Date;
@@ -491,7 +579,12 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export interface SelectActionOption<T> {
+  name: string;
+  value: T;
+}
+
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messaging";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 

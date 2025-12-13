@@ -33,8 +33,16 @@ type Hub struct {
 
 // NewHub creates push hub with definitions and receiver
 func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
-	// instantiate all event templates
+	// keep only enabled events
+	filtered := make(map[string]globalconfig.MessagingEventTemplate, len(cc))
 	for k, v := range cc {
+		if v.Enabled {
+			filtered[k] = v
+		}
+	}
+
+	// instantiate all event templates
+	for k, v := range filtered {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
 			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
 		}
@@ -44,7 +52,7 @@ func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cach
 	}
 
 	h := &Hub{
-		definitions: cc,
+		definitions: filtered,
 		cache:       cache,
 		vehicles:    vv,
 	}
