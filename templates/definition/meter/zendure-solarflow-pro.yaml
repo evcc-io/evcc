@@ -1,4 +1,4 @@
-template: zendure-solarflow
+template: zendure-solarflow-pro
 products:
   - brand: Zendure
     description:
@@ -13,11 +13,19 @@ params:
     default: 800 # W
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.energyPower
+    cache: 1s
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.solarInputPower
+    cache: 1s
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -25,15 +33,11 @@ render: |
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.packInputPower - .properties.outputPackPower
+    cache: 1s
   soc:
     source: http
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
+    cache: 1s
   capacity: {{ .capacity }} # kWh
-  {{- end }}
-  {{- if eq .usage "grid" }}
-  power:
-    source: http
-    uri: http://{{ .host }}/properties/report
-    jq: .properties.energyPower
   {{- end }}
