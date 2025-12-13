@@ -220,8 +220,19 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
+      "csv": {
+        "created": "Oprettet",
+        "finished": "Afsluttet",
+        "gridpower": "Strømforbrug fra elnettet (kW)",
+        "limitpower": "Grænse (kW)",
+        "type": "Type"
+      },
       "description": "Effektbegrænsning fra eksterne systemer (fx EnWG 14a-styringer). Kræver konfiguration af belastningsstyring.",
-      "title": "HEMS"
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "lastEvent": "Sidst {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her."
     },
     "icon": {
       "change": "ændre",
