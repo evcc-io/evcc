@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/go-viper/mapstructure/v2"
+	"github.com/fatih/structs"
 	"github.com/spf13/cast"
 )
 
@@ -65,7 +65,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Validate required parameters
-	if (query.URI == "" && query.Device == "") || query.Address == 0 {
+	if (query.URI == "" && query.Device == "") || cc["address"] == nil {
 		jsonError(w, http.StatusBadRequest, fmt.Errorf("uri or device and address parameters are required"))
 		return
 	}
@@ -116,10 +116,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 // readRegisterValue reads a modbus register value by reusing the modbus plugin
 func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 	// Convert Settings to map (plugin expects Settings fields at top level)
-	cfg := make(map[string]any)
-	if err := mapstructure.Decode(query.Settings, &cfg); err != nil {
-		return nil, err
-	}
+	cfg := structs.Map(query.Settings)
 
 	// Plugin expects Register as nested object, not flattened
 	cfg["register"] = query.Register
@@ -149,7 +146,7 @@ func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 		return g()
 	}
 
-	// For all numeric encodings (int*, uint*, float*, bool*), use FloatGetter
+	// For all numeric encodings (int*, float*, bool*), use FloatGetter
 	g, err := p.(plugin.FloatGetter).FloatGetter()
 	if err != nil {
 		return nil, err
@@ -164,6 +161,8 @@ func applyCast(value any, castType string) any {
 		return cast.ToInt64(value)
 	case "float":
 		return cast.ToFloat64(value)
+	case "bool":
+		return cast.ToBool(value)
 	case "string":
 		return cast.ToString(value)
 	default:

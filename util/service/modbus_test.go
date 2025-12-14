@@ -86,6 +86,28 @@ func TestGetParams_MissingConnection(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "uri or device")
 }
 
+func TestGetParams_MissingAddress(t *testing.T) {
+	// Test that address parameter is required
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&type=holding&encoding=uint16", nil)
+	w := httptest.NewRecorder()
+
+	getParams(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "address")
+}
+
+func TestGetParams_AddressZero(t *testing.T) {
+	// Test that address=0 is valid (not treated as missing)
+	req := httptest.NewRequest("GET", "/params?uri=192.168.1.1:502&address=0&type=holding&encoding=uint16", nil)
+	w := httptest.NewRecorder()
+
+	getParams(w, req)
+
+	// Should NOT return 400 - address 0 is valid, will fail at connection
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
 func TestApplyCast(t *testing.T) {
 	tests := []struct {
 		name     string
