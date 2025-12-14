@@ -42,11 +42,15 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxchargerate
+    deprecated: true
     advanced: true
   - name: minsoc
     advanced: true
   - name: maxsoc
     advanced: true
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
   - name: watchdog
     type: duration
     default: 60s
@@ -95,35 +99,42 @@ render: |
       - case: 1 # normal
         set:
           source: const
-          value: 0 # % (set once to reset from forced charge)
+          value: 0 # W (set once to reset from forced charge)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 2 # hold
         set:
           source: const
-          value: 0 # %
+          value: 0 # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: const
-          value: -{{ .maxchargerate }} # %
+          value: -{{ .maxchargepower }} # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

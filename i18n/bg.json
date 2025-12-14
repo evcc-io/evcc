@@ -965,8 +965,10 @@
       "label": "Език"
     },
     "sponsorToken": {
-      "expires": "Вашият спонсорски токен изтича след {inXDays}. {getNewToken} и го актуализирайте тук.",
-      "getNew": "Вземете нов",
+      "expires": "Вашият спонсорски токен изтича след {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} и го актуализирайте тук.",
+      "expiresUpdateYaml": "{getNewToken} и го актуализирайте във вашия evcc.yaml.",
+      "getNewToken": "Вземете нов",
       "hint": "Забележка: В бъдеще ще автоматизираме това."
     },
     "telemetry": {

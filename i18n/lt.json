@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Pritaikyti ir uždaryti",
+      "authPerform": "Jungtis naudojant {provider}",
+      "authPerformHint": "Bus atidaryta naujame skirtuke. Pratęsimui grįžkite čia.",
+      "authPrepare": "Paruošti ryšį",
       "cancel": "Atšaukti",
+      "clear": "Išvalyti",
       "close": "Uždaryti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
@@ -696,6 +700,7 @@
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
       "loggedOut": "Sėkmingai atsijungta",
+      "success": "Autorizacija su {title} sėkminga. Galite uždaryti šį skirtuką.",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
@@ -1158,8 +1163,10 @@
       "show": "Rodyti {title}"
     },
     "sponsorToken": {
-      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",
-      "getNew": "Gaukite naują",
+      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} ir išsaugokite jį čia.",
+      "expiresUpdateYaml": "{getNewToken} ir išsaugokite jį savo evcc.yaml faile.",
+      "getNewToken": "Gaukite naują",
       "hint": "Pastaba: ateityje šis procesas bus automatizuotas."
     },
     "telemetry": {

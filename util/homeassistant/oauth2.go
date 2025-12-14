@@ -3,6 +3,9 @@ package homeassistant
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
@@ -19,22 +22,29 @@ func init() {
 
 func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Home string
+		URI  string
+		Home string // TODO remove deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	uri := instanceUriByName(cc.Home)
-	if uri == "" {
-		return nil, fmt.Errorf("unknown instance: %s", cc.Home)
+	uri := cc.URI
+
+	if uri == "" && cc.Home != "" {
+		uri = instanceUriByName(cc.Home)
+		if uri == "" {
+			return nil, fmt.Errorf("unknown instance: %s", cc.Home)
+		}
 	}
 
-	return NewHomeAssistant(cc.Home, uri)
+	return NewHomeAssistant(uri)
 }
 
-func NewHomeAssistant(home, uri string) (oauth2.TokenSource, error) {
+func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
+	uri = strings.TrimRight(uri, "/") // normalize
+
 	extUrl := network.Config().ExternalURL()
 	redirectUri := extUrl + network.CallbackPath
 
@@ -45,10 +55,27 @@ func NewHomeAssistant(home, uri string) (oauth2.TokenSource, error) {
 		ClientID:    extUrl,
 		RedirectURL: redirectUri,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  uri + "/auth/authorize",
-			TokenURL: uri + "/auth/token",
+			AuthURL:   uri + "/auth/authorize",
+			TokenURL:  uri + "/auth/token",
+			AuthStyle: oauth2.AuthStyleInParams,
 		},
 	}
 
-	return auth.NewOAuth(ctx, "HomeAssistant", home, &oc)
+	// validate url
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	host := u.Host
+	if h, _, err := net.SplitHostPort(u.Host); err == nil {
+		host = h
+	}
+
+	// use instance name instead of host if discovered on mDNS
+	if name := instanceNameByUri(uri); name != "" {
+		host = name
+	}
+
+	return auth.NewOAuth(ctx, "HomeAssistant", host, &oc)
 }

@@ -80,21 +80,21 @@
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
-			<template v-if="providerLogins.length > 0">
+			<template v-if="authorizationRequired">
 				<li>
-					<h6 class="dropdown-header">{{ $t("header.authProviders.title") }}</h6>
+					<h6 class="dropdown-header">{{ $t("authProviders.authorizationRequired") }}</h6>
 				</li>
-				<li v-for="l in providerLogins" :key="l.title">
+				<li v-for="provider in providers" :key="provider.id">
 					<button
 						type="button"
 						class="dropdown-item"
-						@click="handleProviderAuthorization(l)"
+						@click="handleAuthRequired(provider.id)"
 					>
 						<span
-							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
-							:class="l.authenticated ? 'bg-success' : 'bg-warning'"
+							class="d-inline-block p-1 rounded-circle border border-light"
+							:class="'bg-warning'"
 						></span>
-						{{ l.title }}
+						{{ provider.title }}
 					</button>
 				</li>
 				<li><hr class="dropdown-divider" /></li>
@@ -136,12 +136,10 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import { baseApi } from "@/api";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, AuthProviders, EvOpt } from "@/types/evcc";
-import type { Provider as Provider } from "./types";
+import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -154,6 +152,7 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
+	emits: ["auth-required"],
 	data() {
 		return {
 			isApp: isApp(),
@@ -164,23 +163,26 @@ export default defineComponent({
 		batteryConfigured() {
 			return this.battery?.length;
 		},
-		providerLogins(): Provider[] {
-			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
-				title,
-				authenticated,
-				loginPath: "providerauth/login?id=" + id,
-				logoutPath: "providerauth/logout?id=" + id,
-			}));
+		providers() {
+			return Object.entries(this.authProviders)
+				.filter(([, provider]) => !provider.authenticated)
+				.map(([title, { authenticated, id }]) => ({
+					title,
+					authenticated,
+					id,
+				}));
 		},
-		loginRequired() {
-			return Object.values(this.authProviders).some((p) => !p.authenticated);
+		authorizationRequired() {
+			return this.providers.length > 0;
+		},
+		sponsorExpires(): boolean {
+			return !!this.sponsor?.status.expiresSoon;
 		},
 		showConfigBadge() {
-			const userConfigError = isUserConfigError(this.fatal);
-			return this.sponsor.expiresSoon || userConfigError;
+			return this.sponsorExpires || isUserConfigError(this.fatal);
 		},
 		showRootBadge() {
-			return this.loginRequired || this.showConfigBadge;
+			return this.authorizationRequired || this.showConfigBadge;
 		},
 		badgeClass() {
 			if (this.fatal.length > 0) {
@@ -215,39 +217,8 @@ export default defineComponent({
 		this.dropdown?.dispose();
 	},
 	methods: {
-		async handleProviderAuthorization(provider: Provider) {
-			const { title, authenticated, loginPath, logoutPath } = provider;
-			if (!authenticated) {
-				try {
-					const response = await baseApi.get(loginPath, {
-						validateStatus: (code) => [200, 400].includes(code),
-					});
-					if (response.status === 200) {
-						window.location.href = response.data?.loginUri;
-					} else {
-						alert(`Failed to login: ${response.data?.error}`);
-					}
-				} catch (error: any) {
-					console.error(error);
-					alert("Unexpected login error: " + error.message);
-				}
-			} else {
-				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
-					try {
-						const response = await baseApi.get(logoutPath, {
-							validateStatus: (code) => [200, 400, 500].includes(code),
-						});
-						if (response.status === 200) {
-							alert(this.$t("header.authProviders.loggedOut"));
-						} else {
-							alert(`Failed to logout: ${response.data?.error}`);
-						}
-					} catch (error: any) {
-						console.error(error);
-						alert(`Unexpected logout error: ${error.response?.data}`);
-					}
-				}
-			}
+		handleAuthRequired(providerId: string) {
+			this.$emit("auth-required", providerId);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
