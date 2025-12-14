@@ -29,7 +29,7 @@ async function validateServices(modal: Locator) {
   const telegramRecipients = telegramBox.getByLabel("Chat IDs");
 
   await expect(telegramToken).toHaveValue("telegramToken");
-  await expect(telegramRecipients).toHaveValue(["chatid1", "chatid2", "chatid3"].join("\n"));
+  await expect(telegramRecipients).toHaveValue(["12345", "-54321", "111"].join("\n"));
 
   // Validate Email
   const emailBox = modal.getByTestId("service-box-email");
@@ -72,9 +72,7 @@ async function validateServices(modal: Locator) {
 
   await expect(customEncoding).toHaveValue("title");
   await expect(customPlugin).toHaveText(
-    ["1234", "send:", "    source: script", '    cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join(
-      ""
-    )
+    ["12", "source: script", 'cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join("")
   );
 }
 
@@ -184,7 +182,7 @@ test.describe("messaging", async () => {
     const telegramRecipients = telegramBox.getByLabel("Chat IDs");
 
     await telegramToken.fill("telegramToken");
-    await telegramRecipients.fill(["chatid1", "chatid2", "chatid3"].join("\n"));
+    await telegramRecipients.fill(["12345", "-54321", "111"].join("\n"));
 
     //  Email
     await modal.getByRole("button", { name: "Add messaging" }).click();
@@ -238,21 +236,14 @@ test.describe("messaging", async () => {
 
     await customEncoding.selectOption({ label: "title" });
     await expect(customPlugin).toHaveText(
-      [
-        "1234",
-        "send:",
-        "    source: script",
-        '    cmd: /usr/local/bin/evcc_message "{{.send}}"',
-      ].join("")
+      ["12", "source: script", 'cmd: /usr/local/bin/evcc_message "{{.send}}"'].join("")
     );
 
     await editorClear(customPlugin);
     await editorPaste(
       customPlugin,
       page,
-      ["send:", "    source: script", '    cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join(
-        "\n"
-      ) + "\n"
+      ["source: script", 'cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join("\n")
     );
 
     // validate connection
@@ -269,7 +260,11 @@ test.describe("messaging", async () => {
     await restart();
     await page.reload();
 
-    validateServices(modal);
+    await messagingCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+
+    await modal.getByRole("link", { name: "Services (6)" }).click();
+    await validateServices(modal);
   });
 
   test("messaging via db (yaml to json migration)", async ({ page }) => {
@@ -288,6 +283,6 @@ test.describe("messaging", async () => {
 
     // validate services
     await modal.getByRole("link", { name: "Services (6)" }).click();
-    validateServices(modal);
+    await validateServices(modal);
   });
 });

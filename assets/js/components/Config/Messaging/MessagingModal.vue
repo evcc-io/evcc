@@ -145,8 +145,8 @@ export default {
 		EventItem,
 		DropdownButton,
 	},
-	emits: ["changed"],
 	mixins: [formatter],
+	emits: ["changed"],
 	data() {
 		return {
 			defaultYaml: defaultYaml.trim(),

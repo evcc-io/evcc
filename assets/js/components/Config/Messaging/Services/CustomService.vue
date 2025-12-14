@@ -42,10 +42,7 @@ import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
 import YamlEditorContainer from "../../YamlEditorContainer.vue";
 
-const DEAFULT_SEND_PLUGIN = `send:
-    source: script
-    cmd: /usr/local/bin/evcc_message "{{.send}}"
-`;
+const DEAFULT_SEND_PLUGIN = 'source: script\ncmd: /usr/local/bin/evcc_message "{{.send}}"';
 
 export default {
 	name: "CustomService",

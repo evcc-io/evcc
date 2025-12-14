@@ -43,9 +43,9 @@ services:
 - type: telegram
   token: telegramToken
   chats:
-    - chatid1
-    - chatid2
-    - chatid3
+    - 12345
+    - -54321
+    - 111
 - type: email
   uri: smtp://john.doe:secret123@emailserver.example.com:587/?fromAddress=john.doe@mail.com&toAddresses=recipient@mail.com
 - type: shout
