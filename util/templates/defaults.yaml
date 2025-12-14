@@ -188,8 +188,8 @@ params:
       de: Standby-Leistung
       en: Standby power
     help:
-      de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
-      en: Power values above this value will be considered as charging power
+      de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung und damit Status "laden" gewertet. Negative Werte deaktivieren die Statuserkennung.
+      en: Power values above this value will be considered as charging power and hence status "charging". Negative values deactivate status detection.
     type: int
   - name: language
     description:
