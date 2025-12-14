@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
 import {
   editorClear,
@@ -9,6 +9,74 @@ import {
 } from "./utils";
 
 const CONFIG_MESSAGING_MIGRATE = "config-messaging-migrate.sql";
+
+async function validateServices(modal: Locator) {
+  // Validate Pushover
+  const pushoverBox = modal.getByTestId("service-box-pushover");
+  const pushoverToken = pushoverBox.getByLabel("Token");
+  const pushoverRecipients = pushoverBox.getByLabel("Recipients");
+  const pushoverDevices = pushoverBox.getByLabel("Device names");
+
+  await expect(pushoverToken).toHaveValue("pushoverToken");
+  await expect(pushoverRecipients).toHaveValue(
+    ["recipient1", "recipient2", "recipient3"].join("\n")
+  );
+  await expect(pushoverDevices).toHaveValue(["device1", "device2", "device3"].join("\n"));
+
+  // Validate Telegram
+  const telegramBox = modal.getByTestId("service-box-telegram");
+  const telegramToken = telegramBox.getByLabel("Token");
+  const telegramRecipients = telegramBox.getByLabel("Chat IDs");
+
+  await expect(telegramToken).toHaveValue("telegramToken");
+  await expect(telegramRecipients).toHaveValue(["chatid1", "chatid2", "chatid3"].join("\n"));
+
+  // Validate Email
+  const emailBox = modal.getByTestId("service-box-email");
+  const emailHost = emailBox.getByLabel("Host");
+  const emailPort = emailBox.getByLabel("Port");
+  const emailUser = emailBox.getByLabel("User");
+  const emailPassword = emailBox.getByLabel("Password");
+  const emailFrom = emailBox.getByLabel("From");
+  const emailTo = emailBox.getByLabel("To");
+
+  await expect(emailHost).toHaveValue("emailserver.example.com");
+  await expect(emailPort).toHaveValue("587");
+  await expect(emailUser).toHaveValue("john.doe");
+  await expect(emailPassword).toHaveValue("secret123");
+  await expect(emailFrom).toHaveValue("john.doe@mail.com");
+  await expect(emailTo).toHaveValue("recipient@mail.com");
+
+  // Validate Shout
+  const shoutBox = modal.getByTestId("service-box-shout");
+  const shoutUri = shoutBox.getByLabel("Uri");
+
+  await expect(shoutUri).toHaveValue("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
+
+  // Validate Ntfy
+  const ntfyBox = modal.getByTestId("service-box-ntfy");
+  const ntfyHost = ntfyBox.getByLabel("Host");
+  const ntfyTopics = ntfyBox.getByLabel("Topics");
+  const ntfyPriority = ntfyBox.getByLabel("Priority");
+  const ntfyTagsAndEmojis = ntfyBox.getByLabel("Tags & emojis");
+
+  await expect(ntfyHost).toHaveValue("ntfy.sh");
+  await expect(ntfyTopics).toHaveValue(["evcc_alert", "evcc_pushmessage"].join("\n"));
+  await expect(ntfyPriority).toHaveValue("low");
+  await expect(ntfyTagsAndEmojis).toHaveValue(["+1", "blue_car"].join("\n"));
+
+  // Validate Custom
+  const customBox = modal.getByTestId("service-box-custom");
+  const customEncoding = customBox.getByLabel("Encoding");
+  const customPlugin = customBox.getByTestId("yaml-editor");
+
+  await expect(customEncoding).toHaveValue("title");
+  await expect(customPlugin).toHaveText(
+    ["1234", "send:", "    source: script", '    cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join(
+      ""
+    )
+  );
+}
 
 test.use({ baseURL: baseUrl() });
 
@@ -169,15 +237,22 @@ test.describe("messaging", async () => {
     const customPlugin = customBox.getByTestId("yaml-editor");
 
     await customEncoding.selectOption({ label: "title" });
-    await expect(customPlugin).toContainText(
-      ["send:", "source: script", 'cmd: /usr/local/bin/evcc_message "{{.send}}"'].join("\n")
+    await expect(customPlugin).toHaveText(
+      [
+        "1234",
+        "send:",
+        "    source: script",
+        '    cmd: /usr/local/bin/evcc_message "{{.send}}"',
+      ].join("")
     );
 
     await editorClear(customPlugin);
     await editorPaste(
       customPlugin,
       page,
-      ["send:", "source: script", 'cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join("\n")
+      ["send:", "    source: script", '    cmd: /usr/local/bin/evcc "Title: {{.send}}"'].join(
+        "\n"
+      ) + "\n"
     );
 
     // validate connection
@@ -194,14 +269,7 @@ test.describe("messaging", async () => {
     await restart();
     await page.reload();
 
-    await messagingCard.getByRole("button", { name: "edit" }).click();
-
-    // validate Pushover
-    // validate Telegram
-    // validate Email
-    // validate Shout
-    // validate Ntfy
-    // validate Custom
+    validateServices(modal);
   });
 
   test("messaging via db (yaml to json migration)", async ({ page }) => {
@@ -211,5 +279,15 @@ test.describe("messaging", async () => {
 
     const messagingCard = page.getByTestId("messaging");
     await expect(messagingCard).toContainText(["Amount", "6"].join(""));
+
+    await messagingCard.getByRole("button", { name: "edit" }).click();
+    const modal = page.getByTestId("messaging-modal");
+    await expectModalVisible(modal);
+
+    // TODO: validate events
+
+    // validate services
+    await modal.getByRole("link", { name: "Services (6)" }).click();
+    validateServices(modal);
   });
 });
