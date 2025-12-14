@@ -21,8 +21,8 @@
 			<div class="col-10">
 				<PropertyField
 					:id="formId('title')"
-					:data-testid="`event-${eventType}-title`"
 					v-model="eventObjectData.title"
+					:data-testid="`event-${eventType}-title`"
 					type="String"
 					:disabled="!eventObjectData.enabled"
 					required
@@ -36,8 +36,8 @@
 			<div class="col-10">
 				<PropertyField
 					:id="formId('message')"
-					:data-testid="`event-${eventType}-message`"
 					v-model="eventObjectData.msg"
+					:data-testid="`event-${eventType}-message`"
 					type="String"
 					property="eventMessage"
 					:disabled="!eventObjectData.enabled"
