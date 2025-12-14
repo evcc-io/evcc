@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/sirupsen/logrus"
 	"github.com/spali/go-rscp/rscp"
 	"github.com/spf13/cast"
@@ -113,6 +114,10 @@ func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, id uint8) (*E3dc, error
 		return nil, err
 	}
 
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	wb := &E3dc{
 		log:  log,
 		conn: conn,
@@ -120,27 +125,27 @@ func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, id uint8) (*E3dc, error
 	}
 
 	// Check wallbox configuration and warn if not optimal for evcc control
-	wb.checkConfiguration()
+	if err := wb.checkConfiguration(); err != nil {
+		return nil, err
+	}
 
 	return wb, nil
 }
 
 // checkConfiguration verifies wallbox settings and adjusts them for evcc control
-func (wb *E3dc) checkConfiguration() {
+func (wb *E3dc) checkConfiguration() error {
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
 		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
 	}))
 	if err != nil {
-		wb.log.WARN.Printf("failed to query wallbox configuration: %v", err)
-		return
+		return fmt.Errorf("failed to query wallbox configuration: %w", err)
 	}
 
 	wbData, err := rscpContainer(*res, 3)
 	if err != nil {
-		wb.log.WARN.Printf("failed to parse wallbox configuration: %v", err)
-		return
+		return fmt.Errorf("failed to parse wallbox configuration: %v", err)
 	}
 
 	// Check and disable sun mode - evcc needs to control charging
@@ -157,6 +162,8 @@ func (wb *E3dc) checkConfiguration() {
 	if autoPhase, err := rscpBool(wbData[2]); err == nil && autoPhase {
 		wb.log.WARN.Println("wallbox auto phase switching is enabled - disable in E3DC portal if you want evcc to control 1p/3p switching")
 	}
+
+	return nil
 }
 
 // disableSunMode sends the command to disable sun mode
@@ -435,25 +442,25 @@ func (wb *E3dc) powers() (float64, float64, float64, error) {
 	return p1, p2, p3, nil
 }
 
-var _ api.PhaseCurrents = (*E3dc)(nil)
+// var _ api.PhaseCurrents = (*E3dc)(nil)
 
-// Currents implements the api.PhaseCurrents interface
-// Calculates current from power readings as voltage readings are not accessible
-func (wb *E3dc) Currents() (float64, float64, float64, error) {
-	p1, p2, p3, err := wb.powers()
-	if err != nil {
-		return 0, 0, 0, err
-	}
+// // Currents implements the api.PhaseCurrents interface
+// // Calculates current from power readings as voltage readings are not accessible
+// func (wb *E3dc) Currents() (float64, float64, float64, error) {
+// 	p1, p2, p3, err := wb.powers()
+// 	if err != nil {
+// 		return 0, 0, 0, err
+// 	}
 
-	// Calculate current from power using nominal 230V
-	// Note: WB_REQ_DIAG_PHASE_VOLTAGE returns ERR_ACCESS_DENIED
-	const voltage = 230.0
-	i1 := p1 / voltage
-	i2 := p2 / voltage
-	i3 := p3 / voltage
+// 	// Calculate current from power using nominal 230V
+// 	// Note: WB_REQ_DIAG_PHASE_VOLTAGE returns ERR_ACCESS_DENIED
+// 	const voltage = 230.0
+// 	i1 := p1 / voltage
+// 	i2 := p2 / voltage
+// 	i3 := p3 / voltage
 
-	return i1, i2, i3, nil
-}
+// 	return i1, i2, i3, nil
+// }
 
 var _ api.PhaseGetter = (*E3dc)(nil)
 
