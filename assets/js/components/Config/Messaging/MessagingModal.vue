@@ -53,7 +53,9 @@
 							</h5>
 						</div>
 
-						<component :is="getServiceComponent(s.type)" :service="s" />
+						<div :data-testid="`service-box-${s.type.toLowerCase()}`">
+							<component :is="getServiceComponent(s.type)" :service="s" />
+						</div>
 					</div>
 
 					<button

@@ -10,7 +10,7 @@
 		</button>
 		<ul class="dropdown-menu">
 			<li v-for="(a, index) in actions" :key="index">
-				<a class="dropdown-item" @click="$emit('click', a.value)">
+				<a href="#" class="dropdown-item" @click.prevent="$emit('click', a.value)">
 					{{ a.name }}
 				</a>
 			</li>
