@@ -57,7 +57,7 @@ services:
 - type: custom
   encoding: title
   send:
-    cmd: /usr/local/bin/evcc_message "{{.send}}"
+    cmd: /usr/local/bin/evcc "Title: {{.send}}"
     source: script');
 
 COMMIT;
