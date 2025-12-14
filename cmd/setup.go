@@ -50,6 +50,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/oasdiff/yaml"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -786,9 +787,24 @@ func configureEEBus(conf *eebus.Config) error {
 // setup messaging
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	if settings.Exists(keys.Messaging) {
-		// TODO: delete if not needed any more
-		if err := migrateYamlToJson[globalconfig.Messaging](keys.Messaging); err != nil {
-			return nil, err
+		// TODO: delete migration if not needed any more
+		if !settings.IsJson(keys.Messaging) {
+			// normalize other.send to string for custom messaging
+			var data globalconfig.Messaging
+			if err := settings.Yaml(keys.Messaging, new(globalconfig.Messaging), &data); err != nil {
+				return nil, err
+			}
+			if err := normalizeMessagingCustomSend(data.Services); err != nil {
+				return nil, err
+			}
+			if err := settings.SetYaml(keys.Messaging, data); err != nil {
+				return nil, err
+			}
+
+			// migrate from yaml to json
+			if err := migrateYamlToJson[globalconfig.Messaging](keys.Messaging); err != nil {
+				return nil, err
+			}
 		}
 
 		if err := settings.Json(keys.Messaging, &conf); err != nil {
@@ -819,6 +835,24 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 	go messageHub.Run(messageChan, valueChan)
 
 	return messageChan, nil
+}
+
+// normalizeMessagingCustomSend converts structured other.send objects for custom services into YAML strings
+func normalizeMessagingCustomSend(services []config.Typed) error {
+	for i := range services {
+		if services[i].Type != "custom" {
+			continue
+		}
+
+		if v, ok := services[i].Other["send"]; ok {
+			if b, err := yaml.Marshal(v); err == nil {
+				s := strings.TrimSuffix(string(b), "\n")
+				services[i].Other["send"] = s
+			}
+		}
+	}
+
+	return nil
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {

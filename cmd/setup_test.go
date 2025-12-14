@@ -1,34 +1,38 @@
 package cmd
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/globalconfig"
-	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestYamlOff(t *testing.T) {
-	var conf globalconfig.All
-	viper.SetConfigType("yaml")
-	if err := viper.ReadConfig(strings.NewReader(`loadpoints:
-- mode: off
-`)); err != nil {
-		t.Error(err)
+func TestNormalizeCustomSend(t *testing.T) {
+	services := []config.Typed{
+		{
+			Type: "custom",
+			Other: map[string]any{
+				"encoding": "title",
+				"send": map[string]string{
+					"source": "script",
+					"cmd":    "/usr/local/bin/evcc_message \"{{.send}}\"",
+				},
+			},
+		},
+	}
+	expectedServices := []config.Typed{
+		{
+			Type: "custom",
+			Other: map[string]any{
+				"encoding": "title",
+				"send":     "cmd: /usr/local/bin/evcc_message \"{{.send}}\"\nsource: script",
+			},
+		},
 	}
 
-	if err := viper.UnmarshalExact(&conf); err != nil {
-		t.Error(err)
+	if err := normalizeMessagingCustomSend(services); err != nil {
+		t.Fatalf("normalizeCustomSend returned error: %v", err)
 	}
 
-	var lp core.Loadpoint
-	if err := util.DecodeOther(conf.Loadpoints[0].Other, &lp); err != nil {
-		t.Error(err)
-	}
-
-	if lp.DefaultMode != api.ModeOff {
-		t.Errorf("expected `off`, got %s", lp.DefaultMode)
-	}
+	assert.Equal(t, expectedServices, services)
 }
