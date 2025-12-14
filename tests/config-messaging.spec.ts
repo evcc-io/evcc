@@ -72,7 +72,7 @@ async function validateServices(modal: Locator) {
 
   await expect(customEncoding).toHaveValue("title");
   await expect(customPlugin).toHaveText(
-    ["12", 'cmd: /usr/local/bin/evcc "Title: {{.send}}"', "source: script"].join("")
+    ["12", 'cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("")
   );
 }
 
@@ -243,7 +243,7 @@ test.describe("messaging", async () => {
     await editorPaste(
       customPlugin,
       page,
-      ['cmd: /usr/local/bin/evcc "Title: {{.send}}"', "source: script"].join("\n")
+      ['cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("\n")
     );
 
     // validate connection
