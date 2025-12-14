@@ -16,18 +16,6 @@ INSERT INTO settings("key", value) VALUES('messaging', 'events:
   connect:
     title: Car connected
     msg: "Car connected at ${pvPower:%.1fk}kW PV"
-  disconnect:
-    title: Car disconnected
-    msg: Car disconnected after ${connectedDuration}
-  soc:
-    title: Soc updated
-    msg: Battery charged to ${vehicleSoc:%.0f}%
-  guest:
-    title: Unknown vehicle
-    msg: Unknown vehicle, guest connected?
-  asleep:
-    title: Vehicle asleep
-    msg: Charge release, vehicle {{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}not charging.
 
 services:
 - type: pushover

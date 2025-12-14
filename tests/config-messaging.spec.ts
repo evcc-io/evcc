@@ -279,7 +279,13 @@ test.describe("messaging", async () => {
     const modal = page.getByTestId("messaging-modal");
     await expectModalVisible(modal);
 
-    // TODO: validate events
+    // validate events
+    for (const e of ["start", "stop", "connect"]) {
+      await expect(modal.getByTestId(`event-${e}-switch`)).toBeChecked();
+    }
+    for (const e of ["disconnect", "guest", "soc", "asleep"]) {
+      await expect(modal.getByTestId(`event-${e}-switch`)).not.toBeChecked();
+    }
 
     // validate services
     await modal.getByRole("link", { name: "Services (6)" }).click();

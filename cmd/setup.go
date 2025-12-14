@@ -794,6 +794,11 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 			if err := settings.Yaml(keys.Messaging, new(globalconfig.Messaging), &data); err != nil {
 				return nil, err
 			}
+			// events already created by the user in yaml should be enabled
+			for k, v := range data.Events {
+				v.Enabled = true
+				data.Events[k] = v
+			}
 			if err := normalizeMessagingCustomSend(data.Services); err != nil {
 				return nil, err
 			}
