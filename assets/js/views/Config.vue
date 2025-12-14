@@ -680,10 +680,11 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags() {
-			const s = store.state?.messaging?.services || [];
-			return {
-				configured: { value: s.length !== 0 || false },
-			};
+			const config = store.state?.messaging?.services || [];
+			if (config.length > 0) {
+				return { amount: { value: config.length } };
+			}
+			return { configured: { value: false } };
 		},
 		backupRestoreProps() {
 			return {
