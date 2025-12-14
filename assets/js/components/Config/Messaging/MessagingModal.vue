@@ -104,7 +104,7 @@
 import {
 	MESSAGING_EVENTS,
 	MESSAGING_SERVICE_TYPE,
-	MESSAGING_SERVICE_NFTY_PRIORITY,
+	MESSAGING_SERVICE_NTFY_PRIORITY,
 	type Messaging,
 	type MessagingServices,
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
@@ -123,7 +123,7 @@ import PushoverService from "./Services/PushoverService.vue";
 import TelegramService from "./Services/TelegramService.vue";
 import EmailService from "./Services/EmailService.vue";
 import ShoutService from "./Services/ShoutService.vue";
-import NftyService from "./Services/NftyService.vue";
+import NtfyService from "./Services/NtfyService.vue";
 import CustomService from "./Services/CustomService.vue";
 import EventItem from "./messaging/EventItem.vue";
 import DropdownButton from "@/components/Helper/DropdownButton.vue";
@@ -140,7 +140,7 @@ export default {
 		TelegramService,
 		EmailService,
 		ShoutService,
-		NftyService,
+		NtfyService,
 		CustomService,
 		EventItem,
 		DropdownButton,
@@ -152,7 +152,7 @@ export default {
 			defaultYaml: defaultYaml.trim(),
 			MESSAGING_EVENTS,
 			MESSAGING_SERVICE_TYPE,
-			MESSAGING_SERVICE_NFTY_PRIORITY,
+			MESSAGING_SERVICE_NTFY_PRIORITY,
 			activeEventsTab: true,
 			deepEqual,
 		};
@@ -177,7 +177,7 @@ export default {
 				case MESSAGING_SERVICE_TYPE.SHOUT:
 					return "ShoutService";
 				case MESSAGING_SERVICE_TYPE.NTFY:
-					return "NftyService";
+					return "NtfyService";
 				default:
 					return "CustomService";
 			}

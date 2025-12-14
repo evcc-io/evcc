@@ -433,9 +433,9 @@
           "user": "User",
           "userHelp": "Username for the email server."
         },
-        "nfty": {
+        "ntfy": {
           "host": "Host",
-          "hostHelp": "Host name or IP address of the nfty server.",
+          "hostHelp": "Host name or IP address of the ntfy server.",
           "priority": "Priority",
           "priorityHelp": "Messages have a priority level that determines how urgently your phone notifies you. On Android, you can customize notification sounds and vibration patterns based on these priority levels. For more details, see {url}.",
           "tags": "Tags & emojis",

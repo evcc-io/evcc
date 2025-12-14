@@ -453,7 +453,7 @@ export type MessagingServices =
   | MessagingServiceTelegram
   | MessagingServiceEmail
   | MessagingServiceShout
-  | MessagingServiceNfty
+  | MessagingServiceNtfy
   | MessagingServiceCustom;
 
 export interface MessagingServicePushover {
@@ -481,11 +481,11 @@ export interface MessagingServiceShout {
   type: MESSAGING_SERVICE_TYPE.SHOUT;
   other: { uri: string };
 }
-export interface MessagingServiceNfty {
+export interface MessagingServiceNtfy {
   type: MESSAGING_SERVICE_TYPE.NTFY;
-  other: { uri: string; priority?: MESSAGING_SERVICE_NFTY_PRIORITY; tags?: string };
+  other: { uri: string; priority?: MESSAGING_SERVICE_NTFY_PRIORITY; tags?: string };
 }
-export enum MESSAGING_SERVICE_NFTY_PRIORITY {
+export enum MESSAGING_SERVICE_NTFY_PRIORITY {
   MAX = "max",
   HIGH = "high",
   DEFAULT = "default",
