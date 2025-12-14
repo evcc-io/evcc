@@ -53,6 +53,9 @@ export default defineComponent({
     };
   },
   methods: {
+    capitalizeFirstLetter(s: string) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    },
     round(num: number, precision: number) {
       const base = 10 ** precision;
       return (Math.round(num * base) / base).toFixed(precision);

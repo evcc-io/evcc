@@ -440,12 +440,12 @@ export interface MessagingEvent {
 }
 
 export enum MESSAGING_SERVICE_TYPE {
-  PUSHOVER = "Pushover",
-  TELEGRAM = "Telegram",
-  EMAIL = "Email",
-  SHOUT = "Shout",
-  NTFY = "Ntfy",
-  CUSTOM = "Custom",
+  PUSHOVER = "pushover",
+  TELEGRAM = "telegram",
+  EMAIL = "email",
+  SHOUT = "shout",
+  NTFY = "ntfy",
+  CUSTOM = "custom",
 }
 
 export type MessagingServices =

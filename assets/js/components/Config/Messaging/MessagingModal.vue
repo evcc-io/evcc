@@ -49,7 +49,9 @@
 					<div class="border rounded px-3 pt-4 pb-3 mb-3">
 						<div class="d-lg-block">
 							<h5 class="box-heading">
-								<div class="inner">Messaging #{{ index + 1 }} - {{ s.type }}</div>
+								<div class="inner">
+									Messaging #{{ index + 1 }} - {{ capitalizeFirstLetter(s.type) }}
+								</div>
 							</h5>
 						</div>
 
@@ -125,6 +127,7 @@ import NftyService from "./Services/NftyService.vue";
 import CustomService from "./Services/CustomService.vue";
 import EventItem from "./messaging/EventItem.vue";
 import DropdownButton from "@/components/Helper/DropdownButton.vue";
+import formatter from "@/mixins/formatter";
 
 export default {
 	name: "MessagingModal",
@@ -143,6 +146,7 @@ export default {
 		DropdownButton,
 	},
 	emits: ["changed"],
+	mixins: [formatter],
 	data() {
 		return {
 			defaultYaml: defaultYaml.trim(),
