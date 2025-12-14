@@ -4,6 +4,7 @@
 			id="messagingServiceNftyHost"
 			:label="$t('config.messaging.service.nfty.host')"
 			:help="$t('config.messaging.service.nfty.hostHelp')"
+			example="ntfy.sh"
 		>
 			<PropertyField
 				id="messagingServiceNftyHost"
@@ -17,6 +18,7 @@
 			id="messagingServiceNftyTopics"
 			:label="$t('config.messaging.service.nfty.topics')"
 			:help="$t('config.messaging.service.nfty.topicsHelp')"
+			example="evcc_alert"
 		>
 			<PropertyField
 				id="messagingServiceNftyTopics"
@@ -55,6 +57,7 @@
 					url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish/#tags-emojis)',
 				})
 			"
+			example="electric_plug,blue_car"
 			optional
 		>
 			<PropertyField
