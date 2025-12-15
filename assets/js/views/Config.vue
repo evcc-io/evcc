@@ -293,7 +293,7 @@
 					</DeviceCard>
 					<DeviceCard
 						:title="$t('config.hems.title')"
-						:editable="!hems?.fromYaml"
+						editable
 						:error="hasClassError('hems')"
 						:unconfigured="isUnconfigured(hemsTags)"
 						data-testid="hems"
