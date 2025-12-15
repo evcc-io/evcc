@@ -17,13 +17,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -35,7 +34,6 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -67,6 +65,9 @@ var conf = globalconfig.All{
 	Network: globalconfig.Network{
 		Host: "",
 		Port: 7070,
+	},
+	Ocpp: ocpp.Config{
+		Port: 8887,
 	},
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
@@ -550,6 +551,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassMqtt, configureMqtt(&conf.Mqtt))
 	}
 
+	// setup OCPP server
+	if err == nil {
+		configureOCPP(&conf.Ocpp, conf.Network.ExternalUrl)
+	}
+
 	// setup EEBus server
 	if err == nil {
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
@@ -575,26 +581,6 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
-		return err
-	}
-
-	if err := session.Init(); err != nil {
-		return err
-	}
-
-	if err := metrics.Init(); err != nil {
-		return err
-	}
-
-	if err := settings.Init(); err != nil {
-		return err
-	}
-
-	if err := cache.Init(); err != nil {
-		return err
-	}
-
-	if err := config.Init(); err != nil {
 		return err
 	}
 
@@ -779,6 +765,11 @@ func configureMDNS(conf globalconfig.Network) error {
 	shutdown.Register(zc.Shutdown)
 
 	return nil
+}
+
+// setup OCPP
+func configureOCPP(cfg *ocpp.Config, externalUrl string) {
+	ocpp.Init(*cfg, externalUrl)
 }
 
 // setup EEBus

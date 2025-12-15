@@ -1,4 +1,5 @@
-template: zendure
+template: zendure-hyper
+covers: [zendure]
 products:
   - brand: Zendure
     description:

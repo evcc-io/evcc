@@ -58,8 +58,16 @@
       "chargers": "EV chargers",
       "generic": "Generic integrations",
       "heatingdevices": "Heating devices",
-      "ocppHelp": "Copy this address into your chargers configuration.",
+      "ocppConfirmContinue": "Your charger has not connected to evcc yet. Are you sure you want to continue?",
+      "ocppConnected": "Connected!",
+      "ocppDescription": "evcc has a built-in OCPP server. Follow these steps:",
+      "ocppHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Next step",
+      "ocppStep1": "Configure your charger to use evcc as OCPP server.",
+      "ocppStep2": "Wait for your charger to connect to evcc.",
+      "ocppStep3": "Proceed and complete the configuration.",
+      "ocppWaiting": "Waiting for connection",
       "switchsockets": "Switchable sockets",
       "template": "Manufacturer",
       "titleAdd": {
@@ -109,10 +117,12 @@
       "chargedEnergy": "Charged",
       "co2": "Grid CO₂",
       "configured": "Configured",
+      "connections": "Connections",
       "controllable": "Controllable",
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "detected": "Detected",
       "dimmed": "Dimmed",
       "enabled": "Enabled",
       "energy": "Energy",
@@ -220,8 +230,19 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
+      "csv": {
+        "created": "Created",
+        "finished": "Finished",
+        "gridpower": "Grid Power (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Type"
+      },
       "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
-      "title": "HEMS"
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Recorded {count} grid limitation events.",
+      "lastEvent": "Most recent {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
     },
     "icon": {
       "change": "change",
@@ -462,6 +483,23 @@
       "labelInternalUrl": "Internal URL",
       "labelPort": "Port",
       "title": "Network"
+    },
+    "ocpp": {
+      "connectedChargers": "Connected chargers",
+      "connectionStatus": "Configured station IDs",
+      "connectionStatusHelp": "Connection status of configured chargers.",
+      "detectedChargers": "Detected station IDs",
+      "detectedHelp": "These chargers have tried to connect to evcc. To use a charger, create a loadpoint with its station ID.",
+      "noChargers": "No OCPP chargers detected.",
+      "noStations": "No stations connected",
+      "status": {
+        "configured": "Not connected",
+        "connected": "Connected",
+        "unknown": "Unknown"
+      },
+      "title": "OCPP Server",
+      "url": "Server URL",
+      "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
     },
     "options": {
       "boolean": {

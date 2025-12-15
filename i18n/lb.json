@@ -40,7 +40,7 @@
       "chargers": "Wallboxen",
       "generic": "Generesch Integratiounen",
       "heatingdevices": "Heizungsgerät",
-      "ocppHelp": "Kopéier dës Adress an d'Konfiguratioun vun der Wallbox.",
+      "ocppHelp": "Kopéier dës URL an d'Konfiguratioun vun dengem Luedapparat. Kuck am Handbuch vum Hiersteller fir Detailer. De Luedapparat setzt automatesch säin eenzegaartegen Identifikator (Statiounen-ID) un d'URL. A seltenen Fäll muss de vläicht den Identifikator manuell uginn. Beispill: `{url}`",
       "ocppLabel": "URL vum OCPP-Server",
       "switchsockets": "Schaltbar Steckdousen",
       "template": "Hiersteller",
