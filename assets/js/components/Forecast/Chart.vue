@@ -225,33 +225,24 @@ export default defineComponent({
 				datasets,
 			};
 		},
-		chartDataMinMax() {
-			let min = new Date();
-			let max = new Date();
+		chartDataMaxDate() {
+			let result: Date | null = null;
 			for (const dataset of this.chartData.datasets) {
 				for (const data of dataset.data) {
-					if (data.x.getTime() < min.getTime()) {
-						min = data.x;
-					}
-					if (data.x.getTime() > max.getTime()) {
-						max = data.x;
-					}
+					if (!result || data.x.getTime() > result.getTime()) result = data.x;
 				}
 			}
-			return { min, max };
+			return result;
 		},
 		chartWidth() {
 			const minWidth = 780;
 			const maxWidth = 1500; // allow diagram to to grow depending on available data
-			const realStart = this.chartDataMinMax.min;
-			const realEnd = this.chartDataMinMax.max;
-			const maxEnd = this.endDate;
-
-			// 0 = no data, 1 = chart has values until end
-			const scale =
-				(realEnd.getTime() - realStart.getTime()) /
-				(maxEnd.getTime() - realStart.getTime());
-
+			const realEndDate = this.chartDataMaxDate;
+			if (!realEndDate) return minWidth;
+			const maxRange = this.endDate.getTime() - this.startDate.getTime();
+			const realRange = realEndDate.getTime() - this.startDate.getTime();
+			if (maxRange <= 0 || realRange <= 0) return minWidth;
+			const scale = realRange / maxRange;
 			return Math.round(Math.min(maxWidth, Math.max(minWidth, scale * maxWidth)));
 		},
 		options() {
