@@ -329,7 +329,7 @@ render: |
               type: writemultiple
               decode: uint16
         - source: const
-          value: 255
+          value: 0x00FF # Week, enable TOU
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -338,7 +338,7 @@ render: |
               type: writemultiple
               decode: uint16
         - source: const
-          value: {{ .holdcurrent }}
+          value: 0
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
