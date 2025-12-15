@@ -24,6 +24,7 @@ params:
     advanced: true
   - name: maxacpower
   - name: maxdischargecurrent
+    required: true
     default: 100
     advanced: true
     description:
@@ -37,6 +38,7 @@ params:
         Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
         Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 100A * 48V = 4800W (4,8kW).
   - name: gridchargecurrent
+    required: true
     default: 60
     advanced: true
     description:
@@ -154,7 +156,7 @@ render: |
   batterymode:
     source: switch
     switch:
-    - case: 1 # normal - allow discharge
+    - case: 1 # normal
       set:
         source: sequence
         set:
@@ -222,12 +224,12 @@ render: |
               type: writemultiple
               decode: uint16
         - source: const
-          value: 1
+          value: 1 # enabled
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 130 # Battery Grid Charging (1=enabled)
+              address: 130 # Battery Grid Charging
               type: writemultiple
               decode: uint16
         - source: const
@@ -356,12 +358,12 @@ render: |
               type: writemultiple
               decode: uint16
         - source: const
-          value: 1
+          value: 1 # enabled
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 130 # Battery Grid Charging (1=enabled)
+              address: 130 # Battery Grid Charging
               type: writemultiple
               decode: uint16
         - source: const
