@@ -26,7 +26,7 @@
 			test-id="generalconfig-experimental"
 			:label="$t('config.general.experimental')"
 			:text="$t(`config.general.${hiddenFeatures ? 'on' : 'off'}`)"
-			modal-id="globalSettingsModal"
+			modal-id="experimentalModal"
 		/>
 
 		<GeneralConfigEntry

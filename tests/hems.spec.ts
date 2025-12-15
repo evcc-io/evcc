@@ -31,7 +31,6 @@ test.describe("HEMS", () => {
   test("grid sessions", async ({ page }) => {
     await start(CONFIG, "hems.sql");
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
@@ -55,7 +54,6 @@ test.describe("HEMS", () => {
   test("modal yaml-configured", async ({ page }) => {
     await start("hems-yaml.evcc.yaml");
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");

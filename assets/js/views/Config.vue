@@ -379,6 +379,7 @@
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
+				<ExperimentalModal />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal
 					:gridMeter="gridMeter"
@@ -438,6 +439,7 @@ import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
+import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
@@ -506,6 +508,7 @@ export default defineComponent({
 		SponsorModal,
 		TariffsModal,
 		TelemetryModal,
+		ExperimentalModal,
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,

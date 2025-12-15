@@ -173,6 +173,10 @@
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Enable user interface for features that are still being tested and may change in future versions.",
+      "title": "Experimental"
+    },
     "ext": {
       "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
       "titleAdd": "Add Consumer Meter",
@@ -1199,7 +1203,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Show experimental UI features."
+      "value": "Show experimental features."
     },
     "language": {
       "auto": "Automatic",

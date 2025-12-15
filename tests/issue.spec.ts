@@ -53,8 +53,6 @@ test.describe("issue creation", () => {
     await start(CONFIG);
     await page.goto("/#/config");
 
-    // Enable experimental features
-
     // Create a Shelly meter with username (to test private data redaction)
     await page.getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");

@@ -1,11 +1,12 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
 export async function enableExperimental(page: Page): Promise<void> {
-  await openTopNavigation(page);
-  await page.getByTestId("topnavigation-settings").click();
-  const modal = page.getByTestId("global-settings-modal");
+  await page.goto("/#/config");
+
+  await page.getByTestId("generalconfig-experimental").click();
+  const modal = page.getByTestId("experimental-modal");
   await expectModalVisible(modal);
-  await modal.getByLabel("Experimental 🧪").click();
+  await modal.getByLabel("Show experimental UI features.").click();
   await modal.getByRole("button", { name: "Close" }).click();
   await expectModalHidden(modal);
   await expect(page.locator(".modal-backdrop")).not.toBeVisible();
