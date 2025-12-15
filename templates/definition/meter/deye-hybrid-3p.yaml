@@ -365,7 +365,7 @@ render: |
               type: writemultiple
               decode: uint16
         - source: const
-          value: 0
+          value: 0x0000 # Disabled, ignore TOU schedule
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
