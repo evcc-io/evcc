@@ -40,7 +40,7 @@
       "chargers": "Caricatori EV",
       "generic": "Integrazioni generiche",
       "heatingdevices": "Dispositivi di riscaldamento",
-      "ocppHelp": "Copia questo indirizzo nella configurazione dei tuoi caricatori",
+      "ocppHelp": "Copia questo URL nella configurazione del tuo caricatore. Consulta il manuale del produttore per i dettagli. Il caricatore aggiungerà automaticamente il suo identificatore univoco (ID stazione) all'URL. In rari casi, potrebbe essere necessario specificare manualmente l'identificatore. Esempio: `{url}`",
       "ocppLabel": "URL Server OCPP",
       "switchsockets": "Prese commutabili",
       "template": "Produttore",

@@ -40,7 +40,7 @@
       "chargers": "EV nabíječky",
       "generic": "Obecné integrace",
       "heatingdevices": "Zařízení pro vytápění",
-      "ocppHelp": "Zkopíruj tuto adresu do konfiguračního nástroje nabíječky.",
+      "ocppHelp": "Zkopírujte tuto URL adresu do konfigurace vaší nabíječky. Podrobnosti naleznete v manuálu výrobce. Nabíječka automaticky připojí svůj unikátní identifikátor (ID stanice) k URL. Ve vzácných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Přepínatelné zásuvky",
       "template": "Výrobce",

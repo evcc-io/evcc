@@ -664,12 +664,12 @@ test.describe("sponsor token", () => {
     await page.goto("/#/config");
     await enableExperimental(page);
 
-    // add loadpoint with OCPP charger
-    await newLoadpoint(page, "OCPP Test Charger");
+    // add loadpoint with Peblar charger
+    await newLoadpoint(page, "Peblar Test Charger");
     await page.getByTestId("loadpoint-modal").getByRole("button", { name: "Add charger" }).click();
     const chargerModal = page.getByTestId("charger-modal");
     await expectModalVisible(chargerModal);
-    await chargerModal.getByLabel("Manufacturer").selectOption({ label: "OCPP 1.6J compatible" });
+    await chargerModal.getByLabel("Manufacturer").selectOption({ label: "Peblar Business" });
 
     // verify disabled save button
     await expect(chargerModal.getByRole("button", { name: "Save" })).toBeDisabled();

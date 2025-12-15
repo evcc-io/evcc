@@ -40,7 +40,7 @@
       "chargers": "Doldurma cihazları",
       "generic": "Genel entegrasyon",
       "heatingdevices": "Isıtma cihazları",
-      "ocppHelp": "Bu adresi doldurma cihazının yapılandırmasına kopyala.",
+      "ocppHelp": "Bu URL'yi şarj cihazınızın yapılandırmasına kopyalayın. Ayrıntılar için üreticinin kılavuzuna bakın. Şarj cihazı, benzersiz tanımlayıcısını (istasyon kimliği) URL'ye otomatik olarak ekleyecektir. Nadir durumlarda tanımlayıcıyı manuel olarak belirtmeniz gerekebilir. Örnek: `{url}`",
       "ocppLabel": "OCPP sunucusu URL'si",
       "switchsockets": "“Açılıp kapanabilen prizler”",
       "template": "Üretici",
