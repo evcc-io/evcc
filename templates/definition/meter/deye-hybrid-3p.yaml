@@ -334,7 +334,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 146 # Time of Use (0x00FF=Week, enable TOU)
+              address: 146 # Time of Use
               type: writemultiple
               decode: uint16
         - source: const
