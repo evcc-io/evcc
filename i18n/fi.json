@@ -40,7 +40,7 @@
       "chargers": "Sähköauton latausasemat",
       "generic": "Yleiset integraatiot",
       "heatingdevices": "Lämmityslaitteet",
-      "ocppHelp": "Kopioi tämä osoite laturien määrityksiin.",
+      "ocppHelp": "Kopioi tämä URL-osoite laturisi asetuksiin. Katso lisätietoja valmistajan käsikirjasta. Laturi lisää automaattisesti yksilöllisen tunnisteensa (aseman tunniste) URL-osoitteeseen. Harvinaisissa tapauksissa saatat joutua määrittämään tunnisteen manuaalisesti. Esimerkki: `{url}`",
       "ocppLabel": "OCPP-palvelimen URL",
       "switchsockets": "Kytkettävät pistorasiat",
       "template": "Valmistaja",

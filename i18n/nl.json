@@ -58,7 +58,7 @@
       "chargers": "EV laders",
       "generic": "Algemene integraties",
       "heatingdevices": "Warmtepompen",
-      "ocppHelp": "Kopieer dit adres in de configuratie van jouw lader.",
+      "ocppHelp": "Kopieer deze URL naar de configuratie van je lader. Raadpleeg de handleiding van de fabrikant voor details. De lader voegt automatisch zijn unieke identificatie (station-ID) toe aan de URL. In zeldzame gevallen moet je de identificatie mogelijk handmatig opgeven. Voorbeeld: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",

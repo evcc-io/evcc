@@ -58,7 +58,7 @@
       "chargers": "Elektromobilių įkrovikliai",
       "generic": "Tipinės integracijos",
       "heatingdevices": "Šildymo prietaisai",
-      "ocppHelp": "Nukopijuokite šį adresą į jūsų įkroviklio nustatymus.",
+      "ocppHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis automatiškai pridės savo unikalų identifikatorių (stoties ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`",
       "ocppLabel": "OCPP-Serverio URL",
       "switchsockets": "Išmanios rozetės",
       "template": "Gamintojas",
