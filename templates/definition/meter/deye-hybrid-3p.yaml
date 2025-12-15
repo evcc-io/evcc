@@ -30,8 +30,12 @@ params:
       en: Max Discharge Current
       de: Max Entladestrom
     help:
-      en: Maximum battery discharge current in Amperes (A) for normal mode. Typical range 50-350A depending on battery capacity.
-      de: Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
+      en: |
+        Maximum battery discharge current in Amperes (A) for normal mode. Typical range 50-350A depending on battery capacity.
+        Power calculation: P(W) = Current(A) * Voltage(V). Example with 48V battery: 100A * 48V = 4800W (4.8kW).
+      de: |
+        Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
+        Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 100A * 48V = 4800W (4,8kW).
   - name: holdcurrent
     default: 0
     advanced: true
@@ -39,8 +43,25 @@ params:
       en: Hold Mode Current
       de: Haltemodus-Strom
     help:
-      en: Battery discharge current in Amperes (A) for hold mode. Low value (5-15A) to prevent discharge while allowing essential loads.
-      de: Batterieentladestrom in Ampere (A) für Haltemodus. Niedriger Wert (5-15A) um Entladung zu verhindern aber wesentliche Lasten zu erlauben.
+      en: |
+        Battery discharge current in Amperes (A) for hold mode. Low value (5-15A) to prevent discharge while allowing essential loads.
+        Set to 0A to completely prevent battery discharge.
+      de: |
+        Batterieentladestrom in Ampere (A) für Haltemodus. Niedriger Wert (5-15A) um Entladung zu verhindern aber wesentliche Lasten zu erlauben.
+        Bei 0A wird die Batterie nicht mehr entladen.
+  - name: gridchargecurrent
+    default: 60
+    advanced: true
+    description:
+      en: Grid Charge Current
+      de: Netzladestrom
+    help:
+      en: |
+        Maximum battery charging current in Amperes (A) from grid for charge mode. Typical range 30-350A depending on battery and inverter capacity.
+        Power calculation: P(W) = Current(A) * Voltage(V). Example with 48V battery: 60A * 48V = 2880W (2.9kW).
+      de: |
+        Maximaler Batterieladestrom in Ampere (A) aus dem Netz für Lademodus. Typischer Bereich 30-350A abhängig von Batterie- und Wechselrichterkapazität.
+        Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 60A * 48V = 2880W (2,9kW).
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -151,6 +172,69 @@ render: |
         source: sequence
         set:
         - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 127 # Battery Grid Charging Start (set to minsoc)
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # Program 1 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 167 # Program 2 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 168 # Program 3 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 169 # Program 4 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 170 # Program 5 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 171 # Program 6 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
           value: 1
           set:
             source: modbus
@@ -182,6 +266,69 @@ render: |
         source: sequence
         set:
         - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 127 # Battery Grid Charging Start (set to minsoc)
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # Program 1 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 167 # Program 2 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 168 # Program 3 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 169 # Program 4 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 170 # Program 5 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 171 # Program 6 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
           value: 255
           set:
             source: modbus
@@ -203,6 +350,24 @@ render: |
       set:
         source: sequence
         set:
+        - source: const
+          value: {{ .gridchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 128 # Battery Grid Charging Current
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 127 # Battery Grid Charging Start (SOC target)
+              type: writemultiple
+              decode: uint16
         - source: const
           value: 1
           set:
