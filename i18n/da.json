@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Godkendelseskode",
+    "authCodeHelp": "Kopiér koden og anvend den i næste trin. Den er gyldig i {duration}.",
+    "authorizationRequired": "Godkendelse krævet",
+    "buttonConnect": "Opret forbindelse til {provider}",
+    "buttonDisconnect": "Afbryd forbindelse",
+    "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
+    "connect": "forbind",
+    "disconnect": "afbryd",
+    "loggedOut": "Du er nu logget ud",
+    "logoutFailed": "Kunne ikke logge ud",
+    "modalDescriptionLogin": "Fuldfør autorisationsprocessen for at etablere forbindelsen med {provider}.",
+    "modalDescriptionLogout": "Dette vil afbryde din {provider}-konto og fjerne adgangen til dens data.",
+    "success": "Godkendelse med {title} er gennemført.",
+    "successCloseModal": "Du kan nu lukke dialogboksen.",
+    "successCloseTab": "Du kan nu lukke denne fane.",
+    "title": "Godkendelsesstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Batteri-niveau",
     "bufferStart": {
@@ -164,6 +182,8 @@
       "cancel": "Afbryd",
       "clear": "Slet",
       "close": "Luk",
+      "copied": "Kopieret!",
+      "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
@@ -200,8 +220,19 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
+      "csv": {
+        "created": "Oprettet",
+        "finished": "Afsluttet",
+        "gridpower": "Strømforbrug fra elnettet (kW)",
+        "limitpower": "Grænse (kW)",
+        "type": "Type"
+      },
       "description": "Effektbegrænsning fra eksterne systemer (fx EnWG 14a-styringer). Kræver konfiguration af belastningsstyring.",
-      "title": "HEMS"
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "lastEvent": "Sidst {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her."
     },
     "icon": {
       "change": "ændre",
@@ -375,9 +406,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus forbindelse",
-      "connectionHintSerial": "Enheden er direkte forbundet til evcc via et RS485-interface.",
-      "connectionHintTcpip": "Enheden kan adresseres fra evcc via LAN/Wifi.",
-      "connectionValueSerial": "Serial / USB",
+      "connectionHintSerial": "Enheden er direkte forbundet via RS485 (eller USB-til-RS485-adapter).",
+      "connectionHintTcpip": "Enheden er tilgængelig via netværk (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netværk",
       "device": "Enhedsnavn",
       "deviceHint": "Eksempel: /dev/ttyUSB0",
