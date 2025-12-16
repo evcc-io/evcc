@@ -640,6 +640,8 @@
       "maximumCurrentHelp": "Must be greater than minimum current.",
       "maximumPhases": "Maximum phases",
       "maximumPhasesHelp": "How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration.",
+      "maximumPower": "Maximum charging power",
+      "maximumPowerHelp": "Maximum power the vehicle can consume",
       "minimumCurrent": "Minimum current",
       "minimumCurrentHelp": "Only go below 6A if you know what you're doing.",
       "online": "Vehicles with online API",
