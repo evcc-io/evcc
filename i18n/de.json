@@ -583,7 +583,7 @@
       "maximumPhases": "Maximale Phasen",
       "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
       "maximumPower": "Maximale Ladeleistung",
-      "maximumPowerHelp": "Maximale Leistung die dein Fahrzeug beziehen kann.",
+      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann.",
       "minimumCurrent": "Minimaler Strom",
       "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
