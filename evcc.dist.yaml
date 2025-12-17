@@ -217,7 +217,7 @@ messaging:
       msg: Charge release, vehicle {{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}not charging.
     overrun: # current plan is going to overrun
       title: Plan overrun
-      msg: {{- if .vehicleTitle }} Plan for {{ .vehicleTitle }} will overrun.{{ else }} Plan will overrun.{{end}}
+      msg: "Plan {{- if .vehicleTitle }} for {{ .vehicleTitle }} will overrun.{{ else }} will overrun.{{end}}"
   services:
   # - type: pushover
   #   app: # app id
