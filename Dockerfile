@@ -66,62 +66,42 @@ RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE}
     RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
 
 
-# STEP 3 build a small image including module support
+# STEP 3 build final image
 FROM alpine:3.22
 
 WORKDIR /app
-
 ENV TZ=Europe/Berlin
 
-# --- START TRACKING SERVICE SETUP ---
-# Install MQTT client and UUID generator
+# 1. Install dependencies
 RUN apk update && apk add --no-cache mosquitto-clients uuidgen
 
-# Create a single unified entrypoint
-RUN echo '#!/bin/sh' > /app/run.sh && \
-    echo 'INSTANCE_ID=$(uuidgen)' >> /app/run.sh && \
-    # Create the heartbeat loop as a background function
-    echo 'heartbeat() {' >> /app/run.sh && \
-    echo '  echo "[tracker] Starting heartbeat for $INSTANCE_ID" >&2' >> /app/run.sh && \
-    echo '  sleep 15' >> /app/run.sh && \
-    echo '  while true; do' >> /app/run.sh && \
-    echo '    mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$INSTANCE_ID" -m "online" || echo "[tracker] Failed" >&2' >> /app/run.sh && \
-    echo '    sleep 600' >> /app/run.sh && \
-    echo '  done' >> /app/run.sh && \
-    echo '}' >> /app/run.sh && \
-    # Run the function in the background with nohup to detach it
-    echo 'nohup heartbeat > /dev/null 2>&1 &' >> /app/run.sh && \
-    # Now run the original entrypoint script
-    echo 'exec /app/entrypoint.sh "$@"' >> /app/run.sh && \
-    chmod +x /app/run.sh
-# --- END TRACKING SERVICE SETUP ---
-
-# Import from builder
+# 2. Import from builder and project folders
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
-
+# This line copies the original evcc entrypoint.sh to /app/
 COPY packaging/docker/bin/* /app/
 
-# mDNS
-EXPOSE 5353/udp
-# EEBus
-EXPOSE 4712/tcp
-# mDNS
-EXPOSE 5353/udp
-# UI and /api
-EXPOSE 7070/tcp
-# KEBA charger
-EXPOSE 7090/udp
-# OCPP charger
-EXPOSE 8887/tcp
-# Modbus UDP
-EXPOSE 8899/udp
-# SMA Energy Manager
-EXPOSE 9522/udp
+# 3. Create the HEARTBEAT script
+RUN echo '#!/bin/sh' > /usr/local/bin/tracker.sh && \
+    echo 'ID=$(uuidgen)' >> /usr/local/bin/tracker.sh && \
+    echo 'while true; do' >> /usr/local/bin/tracker.sh && \
+    echo '  mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$ID" -m "online"' >> /usr/local/bin/tracker.sh && \
+    echo '  sleep 60' >> /usr/local/bin/tracker.sh && \
+    echo 'done' >> /usr/local/bin/tracker.sh && \
+    chmod +x /usr/local/bin/tracker.sh
 
+# 4. Create a UNIQUE wrapper entrypoint (so it's not overwritten)
+RUN echo '#!/bin/sh' > /app/start-all.sh && \
+    echo 'echo "[tracker] Starting global installation tracking..." >&2' >> /app/start-all.sh && \
+    echo '/usr/local/bin/tracker.sh &' >> /app/start-all.sh && \
+    echo 'exec /app/entrypoint.sh "$@"' >> /app/start-all.sh && \
+    chmod +x /app/start-all.sh
+
+# ... existing EXPOSE and HEALTHCHECK commands ...
+EXPOSE 7070/tcp 4712/tcp 5353/udp 7090/udp 8887/tcp 8899/udp 9522/udp
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
-ENTRYPOINT [ "/app/run.sh" ]
-# ENTRYPOINT [ "/app/entrypoint.sh" ]
+# 5. Use the UNIQUE wrapper
+ENTRYPOINT [ "/app/start-all.sh" ]
 CMD [ "evcc" ]
