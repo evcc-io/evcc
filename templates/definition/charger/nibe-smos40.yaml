@@ -25,7 +25,7 @@ params:
     choice: ["Brauchwasser_oben", "Brauchwasser"]
     default: Brauchwasser
     description:
-      de: Temperatursensor Warmwasser
+      de: Temperatursensor
       en: Temperature sensor
 render: |
   type: sgready
