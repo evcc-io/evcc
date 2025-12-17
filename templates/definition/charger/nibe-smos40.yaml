@@ -75,9 +75,3 @@ render: |
       type: input
       encoding: uint16
     scale: 10
-
-  {{- if .maxheat }}
-  limittemp: # temperature limit (°C) configured in device
-    source: const
-    value: {{ .maxheat }}
-  {{- end }}
