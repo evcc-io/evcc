@@ -17,18 +17,17 @@ requirements:
       The value “1” (uint8) must be written once to holding register 3032.
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485"]
     id: 1
   - name: tempsource
     required: true
     type: choice
-    choice: ["Brauchwasser_oben", "Brauchwasser"]
+    choice: ["Brauchwasser_oben“, "Brauchwasser“]
     default: Brauchwasser
     description:
       de: Temperatursensor Warmwasser
       en: Sensor hot water
   - name: maxheat
-    type: int
     default: 58
     required: false
     description:
@@ -53,10 +52,10 @@ render: |
   getmode: # operation mode (1: reduced, 2: normal, 3 boost)
     source: map
     values:
-      10: 2 # Heatpump "Free" → evcc "normal"
-      20: 1 # Heatpump "Block" → evcc "block"
-      30: 3 # Heatpump "Cheap Energy" → evcc "boost"
-      40: 3 # Heatpump "Forced on" → evcc "boost"
+      10: 2 # Gerät "Free" → evcc "normal"
+      20: 1 # block
+      30: 3 # cheap
+      40: 3 # Gerät "Forced on" → evcc "boost"
     get:
       source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -69,7 +68,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .tempsource "Brauchwasser_oben" -}} 8 {{ else }} 9 {{- end }}
+      address: {{ if eq .tempsource "Brauchwasser_oben“ -}} 8 {{ else }} 9 {{- end }}
       type: input
       encoding: uint16
     scale: 0.1
@@ -88,7 +87,3 @@ render: |
     source: const
     value: {{ .maxheat }}
   {{- end }}
-
-
-
-
