@@ -40,7 +40,7 @@
       "chargers": "Doldurma cihazları",
       "generic": "Genel entegrasyon",
       "heatingdevices": "Isıtma cihazları",
-      "ocppHelp": "Bu adresi doldurma cihazının yapılandırmasına kopyala.",
+      "ocppHelp": "Bu URL'yi şarj cihazınızın yapılandırmasına kopyalayın. Ayrıntılar için üreticinin kılavuzuna bakın. Şarj cihazı, benzersiz tanımlayıcısını (istasyon kimliği) URL'ye otomatik olarak ekleyecektir. Nadir durumlarda tanımlayıcıyı manuel olarak belirtmeniz gerekebilir. Örnek: `{url}`",
       "ocppLabel": "OCPP sunucusu URL'si",
       "switchsockets": "“Açılıp kapanabilen prizler”",
       "template": "Üretici",
@@ -162,6 +162,7 @@
       "authPerformHint": "Yeni bir sekmede açılacak. Devam etmek için buraya geri dön.",
       "authPrepare": "Bağlantıyı hazırla",
       "cancel": "İptal",
+      "clear": "Temizle",
       "close": "Kapat",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
       "customOption": "Kullanıcı tanımlı cihaz",
@@ -1160,8 +1161,10 @@
       "show": "{title} göster"
     },
     "sponsorToken": {
-      "expires": "Sponsor jetonun {inXDays} sonra sona erecek. {getNewToken} ve burada güncelle.",
-      "getNew": "Yeni bir tane al",
+      "expires": "Sponsor jetonun {inXDays} sonra sona erecek.",
+      "expiresUpdateUi": "{getNewToken} ve burada güncelle.",
+      "expiresUpdateYaml": "{getNewToken} ve evcc.yaml dosyanızda güncelle.",
+      "getNewToken": "Yeni bir tane al",
       "hint": "Not: İleride bunu otomatik hale getireceğiz."
     },
     "telemetry": {

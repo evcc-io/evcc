@@ -1,7 +1,11 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader :title="$t('config.main.title')" />
+			<TopHeader
+				ref="header"
+				:title="$t('config.main.title')"
+				:notifications="notifications"
+			/>
 			<div class="wrapper pb-5">
 				<AuthSuccessBanner
 					v-if="callbackCompleted"
@@ -177,6 +181,11 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 					<div class="p-0 config-list">
+						<AuthProvidersCard
+							:providers="authProviders"
+							data-testid="auth-providers"
+							@auth-request="handleProviderAuthRequest"
+						/>
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -223,6 +232,18 @@
 							<template #icon><EebusIcon /></template>
 							<template #tags>
 								<DeviceTags :tags="eebusTags" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:title="$t('config.ocpp.title')"
+							editable
+							:error="hasClassError('ocpp')"
+							data-testid="ocpp"
+							@edit="openModal('ocppModal')"
+						>
+							<template #icon><OcppIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="ocppTags" />
 							</template>
 						</DeviceCard>
 
@@ -350,6 +371,7 @@
 					:loadpointType="selectedLoadpointType"
 					:fade="loadpointSubModalOpen ? 'right' : undefined"
 					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
 					@added="chargerAdded"
 					@updated="chargerChanged"
 					@removed="chargerRemoved"
@@ -359,7 +381,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal @changed="yamlChanged" />
+				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
@@ -371,6 +393,7 @@
 					@changed="yamlChanged"
 				/>
 				<EebusModal @changed="yamlChanged" />
+				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
@@ -395,6 +418,8 @@ import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
+import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
+import OcppModal from "../components/Config/OcppModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -423,7 +448,7 @@ import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import type {
 	Circuit,
 	ConfigCharger,
@@ -436,6 +461,7 @@ import type {
 	MeterType,
 	SiteConfig,
 	DeviceType,
+	Notification,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -444,6 +470,7 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -458,6 +485,8 @@ export default defineComponent({
 		DeviceTags,
 		EebusIcon,
 		EebusModal,
+		OcppIcon,
+		OcppModal,
 		ExperimentalBanner,
 		AuthSuccessBanner,
 		GeneralConfig,
@@ -486,11 +515,12 @@ export default defineComponent({
 		VehicleModal,
 		WelcomeBanner,
 		PasswordModal,
+		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -624,8 +654,11 @@ export default defineComponent({
 		shmTags() {
 			return { configured: { value: true } };
 		},
+		hems() {
+			return store.state?.hems;
+		},
 		hemsTags() {
-			const { type } = store.state?.hems || {};
+			const type = this.hems?.config?.type;
 			if (!type) {
 				return { configured: { value: false } };
 			}
@@ -644,12 +677,14 @@ export default defineComponent({
 
 			return result;
 		},
-		isSponsor() {
-			const { name } = store.state?.sponsor || {};
-			return !!name;
-		},
 		sponsor() {
 			return store.state?.sponsor;
+		},
+		isSponsor(): boolean {
+			return !!this.sponsor?.status.name;
+		},
+		ocpp() {
+			return store.state?.ocpp;
 		},
 		telemetry() {
 			// @ts-expect-error: telemetry property exists but not in TypeScript definitions
@@ -657,6 +692,28 @@ export default defineComponent({
 		},
 		eebusTags() {
 			return { configured: { value: store.state?.eebus || false } };
+		},
+		ocppTags() {
+			const ocpp = store.state?.ocpp;
+			const stations = ocpp?.status?.stations || [];
+			if (stations.length === 0) {
+				return { configured: { value: false } };
+			}
+
+			const connected = stations.filter((s) => s.status === "connected").length;
+			const configured = stations.filter((s) => s.status === "configured").length;
+			const detected = stations.filter((s) => s.status === "unknown").length;
+			const total = connected + configured;
+
+			const tags: Record<string, any> = {
+				connections: { value: `${connected}/${total}` },
+			};
+
+			if (detected > 0) {
+				tags["detected"] = { value: detected };
+			}
+
+			return tags;
 		},
 		modbusproxyTags() {
 			const config = store.state?.modbusproxy || [];
@@ -1062,6 +1119,10 @@ export default defineComponent({
 			const charger = this.chargers.find((c) => c.name === chargerName);
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
+		},
+		handleProviderAuthRequest(providerId: string) {
+			const header = this.$refs["header"] as InstanceType<typeof Header> | undefined;
+			header?.requestAuthProvider(providerId);
 		},
 	},
 });

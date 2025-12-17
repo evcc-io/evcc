@@ -40,7 +40,7 @@
       "chargers": "Carregadores de Veículos Eléctricos",
       "generic": "Integrações genéricas",
       "heatingdevices": "Equipamentos de aquecimento",
-      "ocppHelp": "Copie este endereço para a configuração do seu carregador.",
+      "ocppHelp": "Copie este URL para a configuração do seu carregador. Consulte o manual do fabricante para obter detalhes. O carregador adicionará automaticamente seu identificador único (ID da estação) ao URL. Em casos raros, pode ser necessário especificar o identificador manualmente. Exemplo: `{url}`",
       "ocppLabel": "URL do servidor OCPP",
       "switchsockets": "Tomadas comandadas",
       "template": "Fabricante",
@@ -162,6 +162,7 @@
       "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
       "authPrepare": "Preparar a ligação",
       "cancel": "Cancelar",
+      "clear": "Apagar",
       "close": "Fechar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
@@ -1160,8 +1161,10 @@
       "show": "Mostrar {title}"
     },
     "sponsorToken": {
-      "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}. {getNewToken} e atualize-o aqui.",
-      "getNew": "Adquira um novo",
+      "expires": "O seu token de Apoiante (Sponsor) expira em {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} e atualize-o aqui.",
+      "expiresUpdateYaml": "{getNewToken} e atualize-o no seu evcc.yaml.",
+      "getNewToken": "Adquira um novo",
       "hint": "Nota: Vamos tornar isso automático no futuro."
     },
     "telemetry": {

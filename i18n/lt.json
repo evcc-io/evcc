@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Autentifikavimo kodas",
+    "authCodeHelp": "Nukopijuokite šį kodą ir panaudokite jį kitame žingsnyje. Galioja {duration}.",
+    "authorizationRequired": "Reikalingas autorizavimas",
+    "buttonConnect": "Prisijungti prie {provider}",
+    "buttonDisconnect": "Atsijungti",
+    "confirmLogout": "Ar tikrai norite atjungti {title}?",
+    "connect": "prisijungti",
+    "disconnect": "atjungti",
+    "loggedOut": "Sėkmingai atsijungta",
+    "logoutFailed": "Nepavyko atsijungti",
+    "modalDescriptionLogin": "Užbaikite autorizacijos procesą, kad užmegztumėte ryšį su {provider}.",
+    "modalDescriptionLogout": "Tai atjungs jūsų {provider} paskyrą ir panaikins prieigą prie jos duomenų.",
+    "success": "Autorizacija su {title} sėkminga.",
+    "successCloseModal": "Dabar galite uždaryti šį dialogo langą.",
+    "successCloseTab": "Dabar galite uždaryti šį skirtuką.",
+    "title": "Autorizacijos būsena"
+  },
   "batterySettings": {
     "batteryLevel": "Kaupiklio įkrova",
     "bufferStart": {
@@ -40,7 +58,7 @@
       "chargers": "Elektromobilių įkrovikliai",
       "generic": "Tipinės integracijos",
       "heatingdevices": "Šildymo prietaisai",
-      "ocppHelp": "Nukopijuokite šį adresą į jūsų įkroviklio nustatymus.",
+      "ocppHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis automatiškai pridės savo unikalų identifikatorių (stoties ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`",
       "ocppLabel": "OCPP-Serverio URL",
       "switchsockets": "Išmanios rozetės",
       "template": "Gamintojas",
@@ -164,6 +182,8 @@
       "cancel": "Atšaukti",
       "clear": "Išvalyti",
       "close": "Uždaryti",
+      "copied": "Nukopijuota!",
+      "copy": "Kopijuoti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
@@ -200,8 +220,19 @@
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
+      "csv": {
+        "created": "Sukurta",
+        "finished": "Baigta",
+        "gridpower": "Tinklo Galia (kW)",
+        "limitpower": "Limitas (kW)",
+        "type": "Tipas"
+      },
       "description": "Galios ribojimas naudojant išorinę sistemą (pvz. “EnWG 14a” valdiklį). Reikia apkrovos valdymo konfigūracijos.",
-      "title": "HEMS"
+      "downloadCsv": "Atsisiųsti CSV failą",
+      "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
+      "lastEvent": "Naujausias {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia."
     },
     "icon": {
       "change": "pakeisti",
@@ -375,9 +406,9 @@
       "baudrate": "Duomenų perdavimo greitis",
       "comset": "ComSet tipas",
       "connection": "Modbus jungtis",
-      "connectionHintSerial": "Įrenginys prijungtas prie evcc tiesiai per RS485.",
-      "connectionHintTcpip": "evcc pasiekia įrenginį per LAN/Wifi.",
-      "connectionValueSerial": "Serijinis portas / USB",
+      "connectionHintSerial": "Įrenginys prijungtas tiesiogiai per RS485 (arba USB-RS485 adapterį).",
+      "connectionHintTcpip": "Įrenginys pasiekiamas per tinklą (LAN / WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Tinklas",
       "device": "Įrenginio pavadinimas",
       "deviceHint": "Pvz: /dev/ttyUSB0",
@@ -700,6 +731,7 @@
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
       "loggedOut": "Sėkmingai atsijungta",
+      "success": "Autorizacija su {title} sėkminga. Galite uždaryti šį skirtuką.",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
@@ -1162,8 +1194,10 @@
       "show": "Rodyti {title}"
     },
     "sponsorToken": {
-      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",
-      "getNew": "Gaukite naują",
+      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} ir išsaugokite jį čia.",
+      "expiresUpdateYaml": "{getNewToken} ir išsaugokite jį savo evcc.yaml faile.",
+      "getNewToken": "Gaukite naują",
       "hint": "Pastaba: ateityje šis procesas bus automatizuotas."
     },
     "telemetry": {
