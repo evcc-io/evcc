@@ -632,10 +632,10 @@ func (site *Site) updateBatteryMeters() []measurement {
 		if m, ok := meter.(api.Battery); ok {
 			batSoc, err := soc.Guard(m.Soc())
 			if err == nil {
-				mm[i].Soc = lo.ToPtr(batSoc)
+				mm[i].Soc = new(batSoc)
 
 				if m, ok := m.(api.BatteryCapacity); ok {
-					mm[i].Capacity = lo.ToPtr(m.Capacity())
+					mm[i].Capacity = new(m.Capacity())
 				}
 
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
@@ -645,7 +645,7 @@ func (site *Site) updateBatteryMeters() []measurement {
 		}
 
 		_, controllable := meter.(api.BatteryController)
-		mm[i].Controllable = lo.ToPtr(controllable)
+		mm[i].Controllable = new(controllable)
 	}
 
 	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {

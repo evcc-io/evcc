@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 type EEBus struct {
