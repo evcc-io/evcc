@@ -28,7 +28,7 @@ params:
       de: Temperatursensor Warmwasser
       en: Sensor hot water
   - name: maxheat
-    type: number
+    type: int
     default: 58
     required: false
     description:
@@ -88,4 +88,5 @@ render: |
     source: const
     value: {{ .maxheat }}
   {{- end }}
+
 
