@@ -215,6 +215,7 @@ jobs:
     permissions:
       contents: read
       actions: write
+      pull-requests: write # Needed for commenting coverage reports on PRs
 
     steps:
       - uses: actions/checkout@v6
@@ -268,10 +269,11 @@ jobs:
         run: npx playwright install-deps chromium
 
       - name: Run tests
-        run: npx playwright test
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=results.json npx playwright test
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin
+        continue-on-error: true
 
       - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
@@ -279,6 +281,14 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+      - uses: daun/playwright-report-summary@v3
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          report-file: results.json
+          create-comment: true
+          job-summary: true
 
   code_coverage:
     name: "Code coverage report"

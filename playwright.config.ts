@@ -8,7 +8,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 4 : 0,
   timeout: 60000, // 60s
-  reporter: [[process.env.CI ? "github" : "list"], ["html", { open: "never" }]],
+  reporter: [[process.env.CI ? "github" : "list"], ["json"], ["html", {open: "never"}]],
   use: {
     baseURL: "http://127.0.0.1:7070",
     trace: "on-first-retry",
