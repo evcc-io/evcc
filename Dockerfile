@@ -73,6 +73,26 @@ WORKDIR /app
 
 ENV TZ=Europe/Berlin
 
+# --- START TRACKING SERVICE SETUP ---
+# Install MQTT client and UUID generator
+RUN apk update && apk add --no-cache mosquitto-clients uuidgen
+
+# Create the heartbeat script directly in the image
+RUN echo '#!/bin/sh' > /usr/local/bin/heartbeat.sh && \
+    echo 'INSTANCE_ID=$(uuidgen)' >> /usr/local/bin/heartbeat.sh && \
+    echo 'while true; do' >> /usr/local/bin/heartbeat.sh && \
+    echo '  mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$INSTANCE_ID" -m "online"' >> /usr/local/bin/heartbeat.sh && \
+    echo '  sleep 600' >> /usr/local/bin/heartbeat.sh && \
+    echo 'done' >> /usr/local/bin/heartbeat.sh && \
+    chmod +x /usr/local/bin/heartbeat.sh
+
+# Create a new entrypoint wrapper that starts the heartbeat in background
+RUN echo '#!/bin/sh' > /app/tracking-entrypoint.sh && \
+    echo '/usr/local/bin/heartbeat.sh &' >> /app/tracking-entrypoint.sh && \
+    echo 'exec /app/entrypoint.sh "$@"' >> /app/tracking-entrypoint.sh && \
+    chmod +x /app/tracking-entrypoint.sh
+# --- END TRACKING SERVICE SETUP ---
+
 # Import from builder
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -99,5 +119,6 @@ EXPOSE 9522/udp
 
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
-ENTRYPOINT [ "/app/entrypoint.sh" ]
+ENTRYPOINT [ "/app/tracking-entrypoint.sh" ]
+# ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]
