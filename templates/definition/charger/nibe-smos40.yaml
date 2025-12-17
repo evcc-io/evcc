@@ -17,7 +17,7 @@ requirements:
       The value “1” (uint8) must be written once to holding register 3032.
 params:
   - name: modbus
-    choice: ["rs485"]
+    choice: ["tcpip"]
     id: 1
   - name: tempsource
     required: true
@@ -88,5 +88,6 @@ render: |
     source: const
     value: {{ .maxheat }}
   {{- end }}
+
 
 
