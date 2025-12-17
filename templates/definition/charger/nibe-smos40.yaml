@@ -75,3 +75,12 @@ render: |
       type: input
       encoding: uint16
     scale: 10
+
+  energy: 
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3823
+      type: input
+      encoding: uint16
+    scale: 0.1
