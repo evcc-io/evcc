@@ -77,16 +77,18 @@ ENV TZ=Europe/Berlin
 # Install MQTT client and UUID generator
 RUN apk update && apk add --no-cache mosquitto-clients uuidgen
 
-# Create the heartbeat script directly in the image
+# Heartbeat script with initial delay and logging
 RUN echo '#!/bin/sh' > /usr/local/bin/heartbeat.sh && \
     echo 'INSTANCE_ID=$(uuidgen)' >> /usr/local/bin/heartbeat.sh && \
+    echo 'echo "Starting heartbeat for instance $INSTANCE_ID..." >&2' >> /usr/local/bin/heartbeat.sh && \
+    echo 'sleep 10' >> /usr/local/bin/heartbeat.sh && \
     echo 'while true; do' >> /usr/local/bin/heartbeat.sh && \
-    echo '  mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$INSTANCE_ID" -m "online"' >> /usr/local/bin/heartbeat.sh && \
+    echo '  mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$INSTANCE_ID" -m "online" || echo "Heartbeat failed" >&2' >> /usr/local/bin/heartbeat.sh && \
     echo '  sleep 600' >> /usr/local/bin/heartbeat.sh && \
     echo 'done' >> /usr/local/bin/heartbeat.sh && \
     chmod +x /usr/local/bin/heartbeat.sh
 
-# Create a new entrypoint wrapper that starts the heartbeat in background
+# Entrypoint wrapper
 RUN echo '#!/bin/sh' > /app/tracking-entrypoint.sh && \
     echo '/usr/local/bin/heartbeat.sh &' >> /app/tracking-entrypoint.sh && \
     echo 'exec /app/entrypoint.sh "$@"' >> /app/tracking-entrypoint.sh && \
