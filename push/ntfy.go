@@ -50,8 +50,7 @@ func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 
 	if cc.AuthToken != "" {
 		bearer := "Bearer " + cc.AuthToken
-		encoded := base64.StdEncoding.EncodeToString([]byte(bearer))
-		encoded = strings.TrimRight(encoded, "=")
+		encoded := base64.RawStdEncoding.EncodeToString([]byte(bearer))
 
 		q := u.Query()
 		if _, ok := q["auth"]; ok {
