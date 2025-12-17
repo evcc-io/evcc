@@ -1,0 +1,90 @@
+template: nibe-smos40
+products:
+  - brand: NIBE
+    description:
+      generic: Nibe SMO S40 (SG Ready)
+group: heating
+requirements:
+  description:
+    de: |
+      Modbus Verbindung zur NIBE SMO S40 Wärmepumpe. Firmware 4.7.5 benötigt.
+      In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
+      Es muss einmalig im Holding Register 3032 der Wert „1“ (uint8) geschrieben werden.
+    en: |
+      Modbus connection to the NIBE SMO S40 heat pump.
+      Firmware version 4.7.5 is required.
+      In the indoor unit, Modbus must be enabled in menu 7.5.9
+      The value “1” (uint8) must be written once to holding register 3032.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: tempsource
+    required: true
+    type: choice
+    choice: ["Brauchwasser_oben", "Brauchwasser"]
+    default: Brauchwasser
+    description:
+      de: Temperatursensor Warmwasser
+      en: Sensor hot water
+  - name: maxheat
+    type: int
+    default: 58
+    required: false
+    description:
+      de: Maximale Warmwassertemperatur
+      en: maximum hot water temperature
+render: |
+  type: sgready
+  setmode:
+    source: map
+    values:
+      1: 0
+      2: 1
+      3: 3
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6008
+        type: writeholding
+        encoding: int16
+
+  getmode: # operation mode (1: reduced, 2: normal, 3 boost)
+    source: map
+    values:
+      10: 2 # Heatpump "Free" → evcc "normal"
+      20: 1 # Heatpump "Block" → evcc "block"
+      30: 3 # Heatpump "Cheap Energy" → evcc "boost"
+      40: 3 # Heatpump "Forced on" → evcc "boost"
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1911
+        type: input
+        encoding: uint16
+
+  temp: # current temperature (°C)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "Brauchwasser_oben" -}} 8 {{ else }} 9 {{- end }}
+      type: input
+      encoding: uint16
+    scale: 0.1
+
+  power: # charge power in W
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2305
+      type: input
+      encoding: uint16
+    scale: 10
+
+  {{- if .maxheat }}
+  limittemp: # temperature limit (°C) configured in device
+    source: const
+    value: {{ .maxheat }}
+  {{- end }}
