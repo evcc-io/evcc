@@ -80,4 +80,3 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
-
