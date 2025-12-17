@@ -279,8 +279,10 @@
       "label": "Idioma"
     },
     "sponsorToken": {
-      "expires": "El teu token de patrocinador expira en {inXDays}. {getNewToken} i actualitza el teu fitxer de configuració.",
-      "getNew": "Agafa'n un de nou",
+      "expires": "El teu token de patrocinador expira en {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} i actualitza el teu fitxer de configuració.",
+      "expiresUpdateYaml": "{getNewToken} i actualitza'l al teu evcc.yaml.",
+      "getNewToken": "Agafa'n un de nou",
       "hint": "Nota: automatitzarém això en el futur."
     },
     "telemetry": {

@@ -1,0 +1,54 @@
+template: e3dc-rscp
+products:
+  - brand: E3/DC
+    description:
+      generic: Multi Connect II Wallbox
+capabilities: ["1p3p", "rfid"]
+requirements:
+  description:
+    de: |
+      Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key (=RSCP-Passwort) muss im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt werden.
+
+      Für Phasenumschaltung muss "Automatische Phasenumschaltung" im E3DC Dashboard deaktiviert sein.
+    en: |
+      Username and password are identical to Web Portal or My E3/DC App access. Key (=RSCP-Password) must be set in the E3/DC system at Personalize/User Profile.
+
+      For phase switching, "Automatic phase switching" must be disabled in E3DC dashboard.
+params:
+  - name: host
+  - name: port
+    default: 5033
+  - name: user
+    description:
+      en: E3DC portal username
+      de: E3DC Portal Benutzername
+    required: true
+  - name: password
+    description:
+      en: E3DC portal password
+      de: E3DC Portal Passwort
+    mask: true
+    required: true
+  - name: key
+    description:
+      en: RSCP password
+      de: RSCP-Passwort
+    help:
+      en: Must be set on the screen of your E3/DC system at 'Personalize' > 'User Profile'.
+      de: Muss auf dem Bildschirm des Hauskraftwerks unter 'Personalisieren' > 'Benutzerprofil' angelegt werden.
+    mask: true
+    required: true
+  - name: id
+    description:
+      de: Wallbox Index (0 für erste Wallbox)
+      en: Wallbox index (0 for first wallbox)
+    type: int
+    default: 0
+    advanced: true
+render: |
+  type: e3dc-rscp
+  uri: {{ .host }}:{{ .port }}
+  user: {{ .user }}
+  password: {{ .password }}
+  key: {{ .key }}
+  id: {{ .id }}

@@ -1,0 +1,29 @@
+template: zendure-solarflow-ac
+covers: [zendure-solarflow-2400-ac]
+products:
+  - brand: Zendure
+    description:
+      generic: Solarflow AC
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+    required: true
+  - name: capacity
+    required: true
+  - name: cache
+    advanced: true
+    default: 1s
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.packInputPower - .properties.outputPackPower
+    cache: {{ .cache }}
+  soc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.electricLevel
+    cache: {{ .cache }}
+  capacity: {{ .capacity }}

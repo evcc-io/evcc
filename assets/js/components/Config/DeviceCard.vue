@@ -1,5 +1,8 @@
 <template>
-	<div class="root round-box" :class="{ 'round-box--error': error }">
+	<div
+		class="root round-box"
+		:class="{ 'round-box--error': error, 'round-box--warning': warning }"
+	>
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
@@ -14,12 +17,12 @@
 				ref="tooltip"
 				type="button"
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
-				:class="{ 'opacity-25': !editable }"
+				:class="{ 'opacity-25': !editable, invisible: noEditButton }"
 				data-bs-toggle="tooltip"
 				data-bs-html="true"
 				:title="tooltipTitle"
 				:aria-label="editable ? $t('config.main.edit') : null"
-				:disabled="!editable"
+				:disabled="!editable || noEditButton"
 				@click="edit"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
@@ -42,6 +45,8 @@ export default {
 		title: String,
 		editable: Boolean,
 		error: Boolean,
+		warning: Boolean,
+		noEditButton: Boolean,
 	},
 	emits: ["edit"],
 	data() {

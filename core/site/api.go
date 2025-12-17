@@ -5,8 +5,15 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
+// publisher gives access to the site's publish function
+type Publisher interface {
+	Publish(key string, val any)
+}
+
 // API is the external site API
 type API interface {
+	Publisher
+
 	Healthy() bool
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
