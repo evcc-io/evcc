@@ -655,9 +655,9 @@ func (site *Site) updateBatteryMeters() []measurement {
 
 		_, controllable := meter.(api.BatteryController)
 
-		mm[i].Soc = lo.ToPtr(batSoc)
-		mm[i].Capacity = lo.ToPtr(capacity)
-		mm[i].Controllable = lo.ToPtr(controllable)
+		mm[i].Soc = new(batSoc)
+		mm[i].Capacity = new(capacity)
+		mm[i].Controllable = new(controllable)
 	}
 
 	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {

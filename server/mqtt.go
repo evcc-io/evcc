@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -223,7 +222,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
 		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
 			if m == nil {
-				m = lo.ToPtr(api.BatteryUnknown)
+				m = new(api.BatteryUnknown)
 			}
 			return site.SetBatteryModeExternal(*m)
 		})},

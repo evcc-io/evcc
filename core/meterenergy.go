@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/samber/lo"
 )
 
 type meterEnergy struct {
@@ -34,7 +33,7 @@ func (m *meterEnergy) AccumulatedEnergy() float64 {
 func (m *meterEnergy) AddMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.meter = lo.ToPtr(v)
+		m.meter = new(v)
 	}()
 
 	if m.meter == nil {

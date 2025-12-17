@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/samber/lo"
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -83,7 +82,7 @@ func ReplaceFormatted(s string, kv map[string]any) (string, error) {
 		if val == nil {
 			wanted = append(wanted, key)
 			format = "%s"
-			val = lo.ToPtr(any("?"))
+			val = new(any("?"))
 		}
 
 		// update all literal matches
