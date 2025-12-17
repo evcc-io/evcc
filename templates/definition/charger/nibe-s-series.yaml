@@ -1,18 +1,18 @@
-template: nibe-smos40
+template: nibe-s-series
 products:
   - brand: NIBE
     description:
-      generic: Nibe SMO S40 (SG Ready)
+      generic: Nibe S-Series (SG Ready)
 group: heating
 requirements:
   description:
     de: |
-      Modbus Verbindung zur NIBE SMO S40 Wärmepumpe. Firmware 4.7.5 benötigt.
+      Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.
       In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
       Es muss einmalig im Holding Register 3032 der Wert „1“ (uint8) geschrieben werden.
     en: |
-      Modbus connection to the NIBE SMO S40 heat pump.
-      Firmware version 4.7.5 is required.
+      Modbus connection to the NIBE S heat pump.
+      Firmware version 4.7.5 or newer is required.
       In the indoor unit, Modbus must be enabled in menu 7.5.9
       The value “1” (uint8) must be written once to holding register 3032.
 params:
@@ -80,3 +80,4 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
+
