@@ -26,7 +26,7 @@ params:
     default: Brauchwasser
     description:
       de: Temperatursensor Warmwasser
-      en: Sensor hot water
+      en: Temperature sensor
   - name: maxheat
     type: int
     default: 58
