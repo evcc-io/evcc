@@ -77,22 +77,23 @@ ENV TZ=Europe/Berlin
 # Install MQTT client and UUID generator
 RUN apk update && apk add --no-cache mosquitto-clients uuidgen
 
-# Heartbeat script with initial delay and logging
-RUN echo '#!/bin/sh' > /usr/local/bin/heartbeat.sh && \
-    echo 'INSTANCE_ID=$(uuidgen)' >> /usr/local/bin/heartbeat.sh && \
-    echo 'echo "Starting heartbeat for instance $INSTANCE_ID..." >&2' >> /usr/local/bin/heartbeat.sh && \
-    echo 'sleep 10' >> /usr/local/bin/heartbeat.sh && \
-    echo 'while true; do' >> /usr/local/bin/heartbeat.sh && \
-    echo '  mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$INSTANCE_ID" -m "online" || echo "Heartbeat failed" >&2' >> /usr/local/bin/heartbeat.sh && \
-    echo '  sleep 600' >> /usr/local/bin/heartbeat.sh && \
-    echo 'done' >> /usr/local/bin/heartbeat.sh && \
-    chmod +x /usr/local/bin/heartbeat.sh
-
-# Entrypoint wrapper
-RUN echo '#!/bin/sh' > /app/tracking-entrypoint.sh && \
-    echo '/usr/local/bin/heartbeat.sh &' >> /app/tracking-entrypoint.sh && \
-    echo 'exec /app/entrypoint.sh "$@"' >> /app/tracking-entrypoint.sh && \
-    chmod +x /app/tracking-entrypoint.sh
+# Create a single unified entrypoint
+RUN echo '#!/bin/sh' > /app/run.sh && \
+    echo 'INSTANCE_ID=$(uuidgen)' >> /app/run.sh && \
+    # Create the heartbeat loop as a background function
+    echo 'heartbeat() {' >> /app/run.sh && \
+    echo '  echo "[tracker] Starting heartbeat for $INSTANCE_ID" >&2' >> /app/run.sh && \
+    echo '  sleep 15' >> /app/run.sh && \
+    echo '  while true; do' >> /app/run.sh && \
+    echo '    mosquitto_pub -h test.mosquitto.org -t "evcc4fr33/installs/$INSTANCE_ID" -m "online" || echo "[tracker] Failed" >&2' >> /app/run.sh && \
+    echo '    sleep 600' >> /app/run.sh && \
+    echo '  done' >> /app/run.sh && \
+    echo '}' >> /app/run.sh && \
+    # Run the function in the background with nohup to detach it
+    echo 'nohup heartbeat > /dev/null 2>&1 &' >> /app/run.sh && \
+    # Now run the original entrypoint script
+    echo 'exec /app/entrypoint.sh "$@"' >> /app/run.sh && \
+    chmod +x /app/run.sh
 # --- END TRACKING SERVICE SETUP ---
 
 # Import from builder
@@ -121,6 +122,6 @@ EXPOSE 9522/udp
 
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
-ENTRYPOINT [ "/app/tracking-entrypoint.sh" ]
+ENTRYPOINT [ "/app/run.sh" ]
 # ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]
