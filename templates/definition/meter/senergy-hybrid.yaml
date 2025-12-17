@@ -91,7 +91,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x1021 # Total Energy 
+      address: 0x1021 # Total Energy
       type: holding
       decode: uint32
   maxacpower: {{ .maxacpower }} # W
@@ -120,6 +120,16 @@ render: |
       address: 0x2000 # Battery SOC
       type: holding
       decode: uint16
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x211B # Capacity of discharge end (%) 
+        type: writesingle
+        decode: uint16
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
