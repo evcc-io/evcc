@@ -22,8 +22,8 @@ params:
   - name: tempsource
     required: true
     type: choice
-    choice: ["Brauchwasser_oben", "Brauchwasser"]
-    default: Brauchwasser
+    choice: ["water_top", "water_mid"]
+    default: water_mid
     description:
       de: Temperatursensor
       en: Temperature sensor
@@ -62,7 +62,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .tempsource "Brauchwasser_oben" -}} 8 {{ else }} 9 {{- end }}
+      address: {{ if eq .tempsource "water_top" -}} 8 {{ else }} 9 {{- end }}
       type: input
       encoding: uint16
     scale: 0.1
@@ -84,3 +84,4 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
+
