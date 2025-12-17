@@ -3,6 +3,10 @@ products:
   - brand: RCT
     description:
       generic: Power
+requirements:
+  description:
+    de: Es wird mindestens die BMS-Version 5615 benötigt.
+    en: At least BMS version 5615 is needed.
 capabilities: ["battery-control"]
 requirements:
   evcc: ["skiptest"]
