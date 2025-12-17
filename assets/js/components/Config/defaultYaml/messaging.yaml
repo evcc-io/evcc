@@ -34,6 +34,6 @@
 #  uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
 #- type: ntfy
 #  uri: https://<host>/<topics>
-#  auth_token: <auth_token>
+#  authtoken: <auth_token>
 #  priority: <priority>
 #  tags: <tags>
