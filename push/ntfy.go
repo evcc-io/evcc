@@ -53,7 +53,7 @@ func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 		encoded := base64.RawStdEncoding.EncodeToString([]byte(bearer))
 
 		q := u.Query()
-		if _, ok := q["auth"]; ok {
+		if q.Has("auth") {
 			return nil, fmt.Errorf("uri already contains auth parameter")
 		}
 
