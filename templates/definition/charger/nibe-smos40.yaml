@@ -27,13 +27,6 @@ params:
     description:
       de: Temperatursensor Warmwasser
       en: Temperature sensor
-  - name: maxheat
-    type: int
-    default: 58
-    required: false
-    description:
-      de: Maximale Warmwassertemperatur
-      en: maximum hot water temperature
 render: |
   type: sgready
   setmode:
