@@ -26,7 +26,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // finishPlan deletes the charging plan, either loadpoint or vehicle
 func (lp *Loadpoint) finishPlan() {
-	lp.planOverrunSend = false
+	lp.planOverrunSent = false
 	if lp.repeatingPlanning() {
 		return // noting to do
 	} else if !lp.socBasedPlanning() {
@@ -155,9 +155,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 		planOverrun = excessDuration
-		if !lp.planOverrunSend {
+		if !lp.planOverrunSent {
 			lp.pushEvent("planOverrun")
-			lp.planOverrunSend = true
+			lp.planOverrunSent = true
 		}
 	}
 
