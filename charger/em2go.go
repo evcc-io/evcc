@@ -136,6 +136,13 @@ func (wb *Em2Go) initialize() (api.Charger, error) {
 		maxCurrent = wb.maxCurrentMillis
 	}
 
+	// experimental workaround for EM2GO home FW >= 1.4
+	// https://github.com/evcc-io/evcc/discussions/25940#discussioncomment-15221487
+	// https://github.com/evcc-io/evcc/discussions/26014#discussioncomment-15281715
+	// disable charger as wb.maxCurrentMillis(6.1) above might have been started
+	// charging as non-compliant side effect
+	wb.Enable(false)
+	
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
