@@ -69,6 +69,8 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  system?: string;
+  timezone?: string;
   battery?: BatteryMeter[];
   pv?: Meter[];
   aux?: Meter[];
