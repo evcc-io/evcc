@@ -159,6 +159,8 @@ export default defineComponent({
 		provider(newProvider) {
 			if (newProvider) {
 				this.reset();
+				// auto-run the prepare step. no user input needed
+				this.prepareAuthentication();
 			}
 		},
 	},

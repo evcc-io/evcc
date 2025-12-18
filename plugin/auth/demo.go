@@ -17,38 +17,42 @@ func init() {
 }
 
 type demo struct {
-	token  *oauth2.Token
-	region string
-	method string
+	token       *oauth2.Token
+	server      string
+	method      string
+	redirectUri string
 }
 
 var demoInstance *demo
 
 func NewDemoFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Region string
-		Method string
+		Server      string
+		Method      string
+		RedirectUri string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDemo(cc.Region, cc.Method)
+	return NewDemo(cc.Server, cc.Method, cc.RedirectUri)
 }
 
-func NewDemo(region string, method string) (oauth2.TokenSource, error) {
+func NewDemo(server string, method string, redirectUri string) (oauth2.TokenSource, error) {
 	// reuse instance (similar to oauth.go getInstance pattern)
 	if demoInstance != nil {
 		// update existing instance with new values
-		demoInstance.region = region
+		demoInstance.server = server
 		demoInstance.method = method
+		demoInstance.redirectUri = redirectUri
 		return demoInstance, nil
 	}
 
 	demoInstance = &demo{
-		region: region,
-		method: method,
+		server:      server,
+		method:      method,
+		redirectUri: redirectUri,
 	}
 
 	if _, err := providerauth.Register("demo", demoInstance); err != nil {
@@ -65,32 +69,26 @@ func (o *demo) Token() (*oauth2.Token, error) {
 	return o.token, nil
 }
 
-func (o *demo) Login(_ string) (string, *oauth2.DeviceAuthResponse, error) {
-	// Simulate error for ERROR region
-	if o.region == "ERROR" {
-		return "", nil, fmt.Errorf("region not supported")
+func (o *demo) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
+	// Simulate error for ERROR server
+	if o.server == "ERROR" {
+		return "", nil, fmt.Errorf("server not supported")
 	}
 
-	// For demo, immediately authenticate without requiring external flow
-	o.token = &oauth2.Token{
-		AccessToken: "demo-token",
-		Expiry:      time.Now().Add(24 * time.Hour),
-	}
-
-	// TODO use network settings after https://github.com/evcc-io/evcc/pull/25141
-	uri := "http://localhost:7070/providerauth/callback"
+	// Build mock login URL with state and redirectUri parameters
+	mockLoginURL := fmt.Sprintf("%s/mock-login?state=%s&redirectUri=%s", o.server, state, o.redirectUri)
 
 	if o.method == "device-code" {
 		// Device code flow: URI comes from DeviceAuthResponse
 		return "", &oauth2.DeviceAuthResponse{
 			UserCode:        "12AB345",
-			VerificationURI: uri,
+			VerificationURI: mockLoginURL,
 			Expiry:          time.Now().Add(10 * time.Minute),
 		}, nil
 	}
 
 	// Redirect flow: URI in first return value
-	return uri, nil, nil
+	return mockLoginURL, nil, nil
 }
 
 func (o *demo) Logout() error {
@@ -99,7 +97,18 @@ func (o *demo) Logout() error {
 }
 
 func (o *demo) HandleCallback(params url.Values) error {
-	// no-op: token already set in Login()
+	// Extract code from callback parameters
+	code := params.Get("code")
+	if code == "" {
+		return fmt.Errorf("missing code parameter")
+	}
+
+	// Create token based on code (for demo, we use a fixed token)
+	o.token = &oauth2.Token{
+		AccessToken: code, // Use the code as the access token
+		Expiry:      time.Now().Add(24 * time.Hour),
+	}
+
 	return nil
 }
 

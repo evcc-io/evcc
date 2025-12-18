@@ -6,14 +6,18 @@ products:
       en: Auth Demo Meter
 auth:
   type: demo
-  params: ["region", "method"]
+  params: ["server", "method", "redirectUri"]
 params:
   - name: usage
     choice: ["grid"]
-  - name: region
+  - name: server
     description:
-      generic: Region
-    choice: ["EU", "US", "CN", "ERROR"]
+      generic: Server
+    default: "http://localhost:7072"
+  - name: redirectUri
+    description:
+      generic: Redirect URI
+    required: true
   - name: method
     description:
       generic: Authentication Method

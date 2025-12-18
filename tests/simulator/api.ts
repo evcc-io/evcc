@@ -135,6 +135,93 @@ const updateOcppState = () => {
   }));
 };
 
+const demoAuthMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  if (req.method === "GET" && req.originalUrl && req.originalUrl.startsWith("/mock-login")) {
+    console.log("[simulator] GET /mock-login");
+    const url = new URL(req.originalUrl, `http://${req.headers.host}`);
+    const state = url.searchParams.get("state");
+    const redirectUri = url.searchParams.get("redirectUri");
+
+    if (!state) {
+      res.statusCode = 400;
+      res.end("Missing state parameter");
+      return;
+    }
+
+    if (!redirectUri) {
+      res.statusCode = 400;
+      res.end("Missing redirectUri parameter");
+      return;
+    }
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Demo Auth - Mock Login</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 20px;
+    }
+    h1 { color: #333; }
+    button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      font-size: 16px;
+      cursor: pointer;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      background: white;
+    }
+    button:hover { background: #f0f0f0; }
+    .info {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="info">
+    <strong>Mock External Login Page</strong>
+    <p>This simulates an external OAuth provider login screen.</p>
+  </div>
+
+  <h1>Select User to Login</h1>
+
+  <button onclick="login('demo-token')">
+    ✓ Login Successfully
+  </button>
+
+  <script>
+    function login(code) {
+      // Redirect back to evcc callback with state and code
+      const callbackUrl = "${redirectUri}/providerauth/callback?state=${state}&code=" + code;
+      console.log('Redirecting to:', callbackUrl);
+      window.location.href = callbackUrl;
+    }
+  </script>
+</body>
+</html>`;
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Content-Length", Buffer.byteLength(html));
+    res.end(html);
+    return;
+  }
+  next();
+};
+
 const ocppMiddleware = (
   req: Connect.IncomingMessage,
   res: ServerResponse,
@@ -213,6 +300,7 @@ export default () => ({
       server.middlewares.use(openemsMiddleware);
       server.middlewares.use(teslaloggerMiddleware);
       server.middlewares.use(shellyMiddleware);
+      server.middlewares.use(demoAuthMiddleware);
       server.middlewares.use(ocppMiddleware);
     };
   },
