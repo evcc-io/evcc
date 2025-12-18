@@ -1,5 +1,5 @@
-import { mergeConfig } from "vite";
-import { defineConfig } from "vitest/config";
+import {mergeConfig} from "vite";
+import {defineConfig} from "vitest/config";
 import viteConfig from "./vite.config";
 
 export default mergeConfig(
@@ -7,6 +7,11 @@ export default mergeConfig(
   defineConfig({
     test: {
       environment: "happy-dom",
+      coverage: {
+        reporters: ['default', "json", "json-summary"],
+        enabled: true,
+        reportOnFailure: true
+      }
     },
   })
 );

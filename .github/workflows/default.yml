@@ -168,6 +168,7 @@ jobs:
     permissions:
       contents: read
       actions: write
+      pull-requests: write
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
@@ -188,6 +189,13 @@ jobs:
 
       - name: Test
         run: make test-ui
+
+      - name: 'Report UI Coverage'
+        # Set if: always() to also generate the report if tests are failing
+        # Only works if you set `reportOnFailure: true` in your vite config as specified above
+        if: always()
+        continue-on-error: true
+        uses: davelosert/vitest-coverage-report-action@v2
 
       - name: License
         run: make license-ui

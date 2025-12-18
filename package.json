@@ -4,7 +4,7 @@
   "author": "evcc-io",
   "scripts": {
     "build": "vite build",
-    "test": "cross-env TZ=Europe/Berlin vitest",
+    "test": "cross-env TZ=Europe/Berlin vitest --coverage",
     "lint": "npm run lint:prettier && npm run lint:eslint && npm run lint:tsc && npm run lint:i18n",
     "lint:prettier": "prettier assets tests **/*.{yaml,sh} i18n/*.json --write",
     "lint:eslint": "eslint --fix --max-warnings=0",
@@ -66,6 +66,8 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-legacy": "^7.2.1",
     "@vitejs/plugin-vue": "^6.0.2",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/ui": "^4.0.16",
     "@vue/compiler-sfc": "^3.2.30",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
