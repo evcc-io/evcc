@@ -142,7 +142,7 @@ func (wb *Em2Go) initialize() (api.Charger, error) {
 	// disable charger as wb.maxCurrentMillis(6.1) above might have been started
 	// charging as non-compliant side effect
 	wb.Enable(false)
-	
+
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
