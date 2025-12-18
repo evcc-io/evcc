@@ -16,6 +16,7 @@ import (
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
+		lp.planOverrunSent = false
 		lp.planSlotEnd = time.Time{}
 	}
 	if lp.planActive != active {
@@ -26,7 +27,6 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // finishPlan deletes the charging plan, either loadpoint or vehicle
 func (lp *Loadpoint) finishPlan() {
-	lp.planOverrunSent = false
 	if lp.repeatingPlanning() {
 		return // noting to do
 	} else if !lp.socBasedPlanning() {
@@ -156,7 +156,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 		planOverrun = excessDuration
 		if !lp.planOverrunSent {
-			lp.pushEvent("planOverrun")
+			lp.pushEvent("overrun")
 			lp.planOverrunSent = true
 		}
 	}
