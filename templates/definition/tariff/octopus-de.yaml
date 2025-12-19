@@ -3,12 +3,15 @@ products:
   - brand: Octopus Energy Germany
     description:
       generic: Deutschland
+requirements:
+  evcc: ["skiptest"]
 countries: ["DE"]
 group: price
 params:
   - name: email
     type: string
     required: true
+    example: "user@example.com"
     description:
       en: Email Address
       de: E-Mail-Adresse
@@ -19,6 +22,7 @@ params:
     type: string
     required: true
     mask: true
+    example: "secret"
     description:
       en: Password
       de: Passwort
