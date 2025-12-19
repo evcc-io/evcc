@@ -1,6 +1,6 @@
-template: octopusde
+template: octopus-de
 products:
-  - brand: Octopus Energy
+  - brand: Octopus Energy Germany
     description:
       generic: Deutschland
 countries: ["DE"]
@@ -28,7 +28,7 @@ params:
   - name: accountNumber
     type: string
     required: true
-    example: "A-12345678"
+    example: "A-XX345678"
     description:
       en: Account Number
       de: Kundennummer
@@ -36,7 +36,7 @@ params:
       de: "Ihre Octopus Energy Kundennummer (z.B. A-12345678)."
       en: "Your Octopus Energy account number (e.g., A-12345678)."
 render: |
-  type: octopusde
+  type: octopus-de
+  accountNumber: {{ .accountNumber }}
   email: {{ .email }}
   password: {{ .password }}
-  accountNumber: {{ .accountNumber }}

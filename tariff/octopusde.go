@@ -23,7 +23,7 @@ type OctopusDe struct {
 var _ api.Tariff = (*OctopusDe)(nil)
 
 func init() {
-	registry.Add("octopusde", NewOctopusDeFromConfig)
+	registry.Add("octopus-de", NewOctopusDeFromConfig)
 }
 
 // NewOctopusDeFromConfig creates the tariff provider from the given config map, and runs it.
@@ -45,7 +45,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		AccountNumber string
 	}
 
-	logger := util.NewLogger("octopusde")
+	logger := util.NewLogger("octopus-de")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
