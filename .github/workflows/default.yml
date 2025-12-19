@@ -7,9 +7,6 @@ on:
   pull_request:
   workflow_call:
 
-env:
-  COVERAGE_ARTIFACT_NAME: code-coverage
-
 jobs:
   clean:
     name: Clean
@@ -123,7 +120,7 @@ jobs:
       - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
-          name: ${{ env.COVERAGE_ARTIFACT_NAME }}
+          name: code-coverage-${{ github.sha }}
           path: coverage.out
           retention-days: 14
 
@@ -302,5 +299,5 @@ jobs:
 
       - uses: fgrosse/go-coverage-report@v1.1.1
         with:
-          coverage-artifact-name: ${{ env.COVERAGE_ARTIFACT_NAME }}
+          coverage-artifact-name: code-coverage-${{ github.sha }}
           coverage-file-name: coverage.out
