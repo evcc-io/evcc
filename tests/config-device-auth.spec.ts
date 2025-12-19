@@ -13,6 +13,11 @@ const templateFlags = [
   "tests/config-device-auth-demo.tpl.yaml",
 ];
 
+// Build complete redirect URI with callback path
+function getRedirectUri(url: string): string {
+  return new URL(url).origin + "/providerauth/callback";
+}
+
 test.beforeEach(async () => {
   await startSimulator();
   await start(undefined, undefined, templateFlags);
@@ -45,12 +50,12 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Save" })).not.toBeVisible();
     await meterModal.getByLabel("Server").fill(simulatorUrl());
-    await meterModal.getByLabel("Redirect URI").fill(page.url());
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
     await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
     // Get the login link and remove target="_blank" to keep it in same page
-    const loginLink = meterModal.getByRole("link", { name: /Connect/ });
+    const loginLink = meterModal.getByRole("link", { name: "Connect to localhost" });
     await expect(loginLink).toBeVisible();
     await loginLink.evaluate((el) => el.removeAttribute("target"));
     await loginLink.click();
@@ -59,7 +64,7 @@ test.describe("config device auth", async () => {
     await page.waitForLoadState("networkidle");
 
     // Click login button on mock page - use evaluate to ensure JS executes
-    const loginButton = page.getByRole("button", { name: /Login Successfully/ });
+    const loginButton = page.getByRole("button", { name: "Login Successfully" });
     await expect(loginButton).toBeVisible();
     await loginButton.evaluate((btn: HTMLButtonElement) => btn.click());
 
@@ -74,7 +79,7 @@ test.describe("config device auth", async () => {
 
     // step 2: show regular device form - auth is complete, fill in server details again
     await meterModal.getByLabel("Server").fill(simulatorUrl());
-    await meterModal.getByLabel("Redirect URI").fill(page.url());
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
     await meterModal.getByLabel("Authentication Method").selectOption("redirect");
 
     // Even though auth is already done, still need to click prepare connection to proceed to device fields
@@ -117,7 +122,7 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
     // note: prepare connection step is auto-executed, since all required fields are already present
-    await expect(meterModal.getByRole("link", { name: /Connect/ })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
   });
 
@@ -133,7 +138,7 @@ test.describe("config device auth", async () => {
 
     // select device-code method
     await meterModal.getByLabel("Server").fill(simulatorUrl());
-    await meterModal.getByLabel("Redirect URI").fill(page.url());
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
     await meterModal.getByLabel("Authentication Method").selectOption("device-code");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
@@ -141,7 +146,7 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByLabel("Authentication Code")).toHaveValue("12AB345");
     await expect(meterModal).toContainText("Valid for");
     await expect(meterModal).toContainText("Copy this code");
-    await expect(meterModal.getByRole("link", { name: /Connect/ })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
   });
 
   test("error server shows auth error", async ({ page }) => {
@@ -152,19 +157,56 @@ test.describe("config device auth", async () => {
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
-    await meterModal.getByLabel("Server").fill("ERROR");
-    await meterModal.getByLabel("Redirect URI").fill(page.url());
+    await meterModal.getByLabel("Server").fill("invalid-url-without-scheme");
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
     await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
-    await expect(meterModal).toContainText("server not supported");
+    await expect(meterModal).toContainText("server must start with http:// or https://");
     await expect(meterModal.getByRole("button", { name: "Prepare connection" })).toBeVisible();
-    await expect(meterModal.getByRole("link", { name: /Connect/ })).not.toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).not.toBeVisible();
     await expect(meterModal.getByLabel("Authentication Code")).not.toBeVisible();
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
 
     // clear error on input change
     await meterModal.getByLabel("Server").fill(simulatorUrl());
-    await expect(meterModal).not.toContainText("server not supported");
+    await expect(meterModal).not.toContainText("server must start with http:// or https://");
+  });
+
+  test("user denies authorization shows error banner", async ({ page }) => {
+    await page.goto("/#/config");
+    await enableExperimental(page, true);
+
+    // create a grid meter with auth
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
+    await meterModal.getByLabel("Server").fill(simulatorUrl());
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
+    await meterModal.getByRole("button", { name: "Prepare connection" }).click();
+
+    // Get the login link and remove target="_blank" to keep it in same page
+    const loginLink = meterModal.getByRole("link", { name: "Connect to localhost" });
+    await expect(loginLink).toBeVisible();
+    await loginLink.evaluate((el) => el.removeAttribute("target"));
+    await loginLink.click();
+
+    // Wait for navigation to mock login page
+    await page.waitForLoadState("networkidle");
+
+    // Click deny button on mock page
+    const denyButton = page.getByRole("button", { name: "Deny Access" });
+    await expect(denyButton).toBeVisible();
+    await denyButton.evaluate((btn: HTMLButtonElement) => btn.click());
+
+    // Wait for redirect back to config page (first goes through callback, then to config)
+    await page.waitForURL(/.*\/#\/config.*callbackError.*/);
+
+    // Wait for the error banner to appear
+    const errorBanner = page.getByTestId("auth-error-banner");
+    await expect(errorBanner).toBeVisible();
+    await expect(errorBanner).toContainText("access_denied: User denied authorization");
   });
 });

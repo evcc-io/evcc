@@ -1,6 +1,25 @@
 <template>
+	<!-- Mock Login View -->
+	<div v-if="mockLoginMode" class="container" style="max-width: 400px; margin-top: 5rem">
+		<div class="alert alert-info mb-4">
+			<strong>Mock External Login Page</strong>
+			<p class="mb-0">This simulates an external OAuth provider login screen.</p>
+		</div>
+
+		<h1 class="mb-4">Select Action</h1>
+
+		<button type="button" class="btn btn-success w-100 mb-3" @click="mockLogin('demo-token')">
+			Login Successfully
+		</button>
+
+		<button type="button" class="btn btn-danger w-100 mb-3" @click="mockDeny()">
+			Deny Access
+		</button>
+	</div>
+
+	<!-- Regular Simulator View -->
 	<form
-		v-if="state"
+		v-else-if="state"
 		class="container"
 		style="max-width: 500px; margin-bottom: 8rem"
 		@submit.prevent="save"
@@ -338,6 +357,9 @@ export default defineComponent({
 	name: "Simulator",
 	data() {
 		return {
+			mockLoginMode: false,
+			mockLoginState: "",
+			mockLoginRedirectUri: "",
 			state: null as {
 				site: {
 					grid: { power: number };
@@ -362,9 +384,33 @@ export default defineComponent({
 		};
 	},
 	mounted() {
-		this.load();
+		this.checkMockLoginMode();
+		if (!this.mockLoginMode) {
+			this.load();
+		}
 	},
 	methods: {
+		checkMockLoginMode() {
+			const urlParams = new URLSearchParams(window.location.search);
+			const state = urlParams.get("state");
+			const redirectUri = urlParams.get("redirectUri");
+
+			if (state && redirectUri) {
+				this.mockLoginMode = true;
+				this.mockLoginState = state;
+				this.mockLoginRedirectUri = redirectUri;
+			}
+		},
+		mockLogin(code: string) {
+			const callbackUrl = `${this.mockLoginRedirectUri}?state=${this.mockLoginState}&code=${code}`;
+			console.log("Redirecting to:", callbackUrl);
+			window.location.href = callbackUrl;
+		},
+		mockDeny() {
+			const callbackUrl = `${this.mockLoginRedirectUri}?state=${this.mockLoginState}&error=access_denied&error_description=User denied authorization`;
+			console.log("Redirecting to:", callbackUrl);
+			window.location.href = callbackUrl;
+		},
 		async save() {
 			await axios.post("/api/state", this.state);
 		},

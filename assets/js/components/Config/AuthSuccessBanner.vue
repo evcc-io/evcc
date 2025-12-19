@@ -1,6 +1,14 @@
 <template>
-	<div class="alert alert-success my-4 pb-0" role="alert" data-testid="auth-success-banner">
-		<p>
+	<div
+		class="alert my-4 pb-0"
+		:class="isError ? 'alert-danger' : 'alert-success'"
+		role="alert"
+		:data-testid="testId"
+	>
+		<p v-if="isError">
+			{{ errorMessage }}
+		</p>
+		<p v-else>
 			{{ $t("authProviders.success", { title: providerName }) }}
 			{{ $t("authProviders.successCloseTab") }}
 		</p>
@@ -14,10 +22,17 @@ import { defineComponent, type PropType } from "vue";
 export default defineComponent({
 	name: "AuthSuccessBanner",
 	props: {
-		providerId: { type: String, required: true },
+		providerId: { type: String, default: "" },
+		error: { type: String, default: "" },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 	},
 	computed: {
+		isError() {
+			return !!this.error;
+		},
+		errorMessage() {
+			return this.error || "Authentication failed";
+		},
 		providerName() {
 			for (const [name, provider] of Object.entries(this.authProviders)) {
 				if (provider.id === this.providerId) {
@@ -25,6 +40,9 @@ export default defineComponent({
 				}
 			}
 			return "Unknown";
+		},
+		testId() {
+			return this.isError ? "auth-error-banner" : "auth-success-banner";
 		},
 	},
 });

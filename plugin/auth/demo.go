@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,6 +22,7 @@ type demo struct {
 	server      string
 	method      string
 	redirectUri string
+	onlineC     chan<- bool
 }
 
 var demoInstance *demo
@@ -55,9 +57,14 @@ func NewDemo(server string, method string, redirectUri string) (oauth2.TokenSour
 		redirectUri: redirectUri,
 	}
 
-	if _, err := providerauth.Register("demo", demoInstance); err != nil {
+	onlineC, err := providerauth.Register("demo", demoInstance)
+	if err != nil {
 		return nil, err
 	}
+	demoInstance.onlineC = onlineC
+
+	// Send initial auth status
+	demoInstance.onlineC <- false
 
 	return demoInstance, nil
 }
@@ -70,12 +77,17 @@ func (o *demo) Token() (*oauth2.Token, error) {
 }
 
 func (o *demo) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
-	// Simulate error for ERROR server
-	if o.server == "ERROR" {
-		return "", nil, fmt.Errorf("server not supported")
+	// Validate server URL has proper scheme
+	if !strings.HasPrefix(o.server, "http://") && !strings.HasPrefix(o.server, "https://") {
+		return "", nil, fmt.Errorf("server must start with http:// or https://")
 	}
 
-	// Build mock login URL with state and redirectUri parameters
+	// Validate redirect URI has proper scheme
+	if !strings.HasPrefix(o.redirectUri, "http://") && !strings.HasPrefix(o.redirectUri, "https://") {
+		return "", nil, fmt.Errorf("redirectUri must start with http:// or https://")
+	}
+
+	// Build mock login URL with state and redirectUri (complete callback URL)
 	mockLoginURL := fmt.Sprintf("%s/mock-login?state=%s&redirectUri=%s", o.server, state, o.redirectUri)
 
 	if o.method == "device-code" {
@@ -93,6 +105,9 @@ func (o *demo) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
 
 func (o *demo) Logout() error {
 	o.token = nil
+	if o.onlineC != nil {
+		o.onlineC <- false
+	}
 	return nil
 }
 
@@ -109,6 +124,11 @@ func (o *demo) HandleCallback(params url.Values) error {
 		Expiry:      time.Now().Add(24 * time.Hour),
 	}
 
+	// Notify that authentication succeeded
+	if o.onlineC != nil {
+		o.onlineC <- true
+	}
+
 	return nil
 }
 
@@ -117,5 +137,5 @@ func (o *demo) Authenticated() bool {
 }
 
 func (o *demo) DisplayName() string {
-	return "demo"
+	return "Demo Auth"
 }

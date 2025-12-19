@@ -14,14 +14,17 @@ params:
     description:
       generic: Server
     default: "http://localhost:7072"
+    required: true
   - name: redirectUri
     description:
       generic: Redirect URI
+    example: "http://localhost:7070/providerauth/callback"
     required: true
   - name: method
     description:
       generic: Authentication Method
     choice: ["redirect", "device-code"]
+    required: true
   - name: power
     description:
       generic: Power
