@@ -70,7 +70,6 @@ test.describe("config device auth", async () => {
 
     // Wait for redirect back to config page
     await page.waitForURL(/.*\/#\/config.*/);
-    await page.waitForTimeout(1000);
 
     // After successful auth, reopen the meter modal to continue configuration
     await page.getByRole("button", { name: "Add grid meter" }).click();
@@ -208,5 +207,76 @@ test.describe("config device auth", async () => {
     const errorBanner = page.getByTestId("auth-error-banner");
     await expect(errorBanner).toBeVisible();
     await expect(errorBanner).toContainText("access_denied: User denied authorization");
+  });
+
+  test("authorization card connect and disconnect flow", async ({ page }) => {
+    await page.goto("/#/config");
+    await enableExperimental(page, true);
+
+    // create a grid meter with auth and prepare connection
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
+    await meterModal.getByLabel("Server").fill(simulatorUrl());
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
+    await meterModal.getByRole("button", { name: "Prepare connection" }).click();
+
+    // verify connection link is ready but close modal instead of clicking it
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).toBeVisible();
+    await meterModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(meterModal);
+
+    // check that authorization card appeared with Demo Auth entry
+    const authCard = page.getByTestId("auth-providers");
+    await expect(authCard).toBeVisible();
+    await expect(authCard).toContainText("Demo Auth");
+    const connectButton = authCard.getByRole("button", { name: "Connect" });
+    await expect(connectButton).toBeVisible();
+
+    // click connect button and verify auth provider modal opens
+    await connectButton.click();
+    const authModal = page.getByTestId("auth-provider-modal");
+    await expectModalVisible(authModal);
+    const loginLink = authModal.getByRole("link", { name: "Connect to localhost" });
+    await expect(loginLink).toBeVisible();
+
+    // complete authentication flow
+    await loginLink.evaluate((el) => el.removeAttribute("target"));
+    await loginLink.click();
+
+    // wait for navigation to mock login page
+    await page.waitForLoadState("networkidle");
+
+    // click login button on mock page
+    const loginButton = page.getByRole("button", { name: "Login Successfully" });
+    await expect(loginButton).toBeVisible();
+    await loginButton.evaluate((btn: HTMLButtonElement) => btn.click());
+
+    // wait for redirect back to config page
+    await page.waitForURL(/.*\/#\/config.*/);
+
+    // verify card still exists and Demo Auth now shows disconnect button
+    await expect(authCard).toBeVisible();
+    await expect(authCard).toContainText("Demo Auth");
+    const disconnectButton = authCard.getByRole("button", { name: "disconnect" });
+    await expect(disconnectButton).toBeVisible();
+
+    // click disconnect and verify modal contents
+    await disconnectButton.click();
+    await expectModalVisible(authModal);
+    await expect(authModal).toContainText("Demo Auth");
+    const confirmDisconnectButton = authModal.getByRole("button", { name: "disconnect" });
+    await expect(confirmDisconnectButton).toBeVisible();
+
+    // confirm disconnect
+    await confirmDisconnectButton.click();
+    await expectModalHidden(authModal);
+
+    // verify card still exists and Demo Auth shows connect button again
+    await expect(authCard).toBeVisible();
+    await expect(authCard).toContainText("Demo Auth");
+    await expect(authCard.getByRole("button", { name: "Connect" })).toBeVisible();
   });
 });
