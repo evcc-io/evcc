@@ -120,8 +120,9 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 
 	// http cache
 	p.Client.Transport = &httpcache.Transport{
-		Cache:     mc,
-		Transport: p.Client.Transport,
+		Cache:               mc,
+		MarkCachedResponses: true,
+		Transport:           p.Client.Transport,
 	}
 
 	if cache > 0 {
